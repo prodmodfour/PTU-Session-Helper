@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./ptu.db"
+}
+
+// Human characters (players and NPCs)
+model HumanCharacter {
+  id            String   @id @default(uuid())
+  name          String
+  characterType String   @default("npc") // 'player' or 'npc'
+
+  // Stats
+  level         Int      @default(1)
+  hp            Int      @default(10)
+  attack        Int      @default(5)
+  defense       Int      @default(5)
+  specialAttack Int      @default(5)
+  specialDefense Int     @default(5)
+  speed         Int      @default(5)
+  currentHp     Int      @default(10)
+
+  // Classes and skills stored as JSON
+  trainerClasses String  @default("[]") // JSON array
+  skills         String  @default("{}") // JSON object
+
+  // Inventory
+  inventory     String   @default("[]") // JSON array
+  money         Int      @default(0)
+
+  // Status
+  statusConditions String @default("[]") // JSON array
+  stageModifiers   String @default("{}") // JSON object
+  injuries         Int    @default(0)
+  temporaryHp      Int    @default(0)
+
+  // Display
+  avatarUrl     String?
+
+  // Library
+  isInLibrary   Boolean  @default(true)
+  notes         String?
+
+  // Relations
+  pokemon       Pokemon[]
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Pokemon
+model Pokemon {
+  id            String   @id @default(uuid())
+  species       String
+  nickname      String?
+  level         Int      @default(1)
+  experience    Int      @default(0)
+
+  // Nature stored as JSON
+  nature        String   @default("{}") // JSON object
+
+  // Types
+  type1         String
+  type2         String?
+
+  // Base stats
+  baseHp        Int
+  baseAttack    Int
+  baseDefense   Int
+  baseSpAtk     Int
+  baseSpDef     Int
+  baseSpeed     Int
+
+  // Current stats (calculated)
+  currentHp     Int
+  maxHp         Int
+  currentAttack Int
+  currentDefense Int
+  currentSpAtk  Int
+  currentSpDef  Int
+  currentSpeed  Int
+
+  // Stage modifiers stored as JSON
+  stageModifiers String  @default("{}") // JSON object
+
+  // Abilities and moves stored as JSON
+  abilities     String   @default("[]") // JSON array
+  moves         String   @default("[]") // JSON array
+
+  // Item
+  heldItem      String?
+
+  // Status
+  statusConditions String @default("[]") // JSON array
+  injuries         Int    @default(0)
+  temporaryHp      Int    @default(0)
+
+  // Display
+  spriteUrl     String?
+  shiny         Boolean  @default(false)
+  gender        String   @default("Genderless")
+
+  // Library
+  isInLibrary   Boolean  @default(true)
+  notes         String?
+
+  // Ownership
+  ownerId       String?
+  owner         HumanCharacter? @relation(fields: [ownerId], references: [id])
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Encounters
+model Encounter {
+  id            String   @id @default(uuid())
+  name          String
+  battleType    String   @default("trainer") // 'trainer' or 'full_contact'
+
+  // Combatants stored as JSON (includes all combat state)
+  combatants    String   @default("[]") // JSON array
+
+  // Turn tracking
+  currentRound  Int      @default(1)
+  currentTurnIndex Int   @default(0)
+  turnOrder     String   @default("[]") // JSON array of combatant IDs
+
+  // State
+  isActive      Boolean  @default(true)
+  isPaused      Boolean  @default(false)
+  isServed      Boolean  @default(false) // Whether this encounter is served to the Group View
+
+  // History
+  moveLog       String   @default("[]") // JSON array
+
+  // XP tracking
+  defeatedEnemies String @default("[]") // JSON array
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Move reference data
+model MoveData {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  type          String
+  damageClass   String   // 'Physical', 'Special', 'Status'
+  frequency     String
+  ac            Int?
+  damageBase    Int?
+  range         String
+  effect        String
+  contestType   String?
+  contestEffect String?
+}
+
+// Ability reference data
+model AbilityData {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  effect        String
+  trigger       String?
+}
+
+// Pokemon species reference data
+model SpeciesData {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  type1         String
+  type2         String?
+  baseHp        Int
+  baseAttack    Int
+  baseDefense   Int
+  baseSpAtk     Int
+  baseSpDef     Int
+  baseSpeed     Int
+  abilities     String   // JSON array of ability names
+  eggGroups     String   // JSON array
+  evolutionStage Int     @default(1)
+}

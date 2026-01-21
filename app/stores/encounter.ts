@@ -1,0 +1,711 @@
+import { defineStore } from 'pinia'
+import type { Encounter, Combatant, MoveLogEntry, CombatSide, Pokemon, HumanCharacter, Move, TurnPhase, BattleType } from '~/types'
+
+// History composable for undo/redo
+let historyComposable: ReturnType<typeof useEncounterHistory> | null = null
+
+const getHistory = () => {
+  if (!historyComposable) {
+    historyComposable = useEncounterHistory()
+  }
+  return historyComposable
+}
+
+export const useEncounterStore = defineStore('encounter', {
+  state: () => ({
+    encounter: null as Encounter | null,
+    loading: false,
+    error: null as string | null,
+  }),
+
+  getters: {
+    isActive: (state) => state.encounter?.isActive ?? false,
+    isPaused: (state) => state.encounter?.isPaused ?? false,
+    isServed: (state) => state.encounter?.isServed ?? false,
+    currentRound: (state) => state.encounter?.currentRound ?? 0,
+    sceneNumber: (state) => state.encounter?.sceneNumber ?? 1,
+
+    // Battle type
+    battleType: (state): BattleType => state.encounter?.battleType ?? 'full_contact',
+    isLeagueBattle: (state): boolean => state.encounter?.battleType === 'trainer',
+
+    // PTU Turn Phase (for League battles)
+    currentPhase: (state): TurnPhase => state.encounter?.currentPhase ?? 'pokemon',
+
+    combatantsByInitiative: (state): Combatant[] => {
+      if (!state.encounter) return []
+      const order = state.encounter.turnOrder
+      return order.map(id => state.encounter!.combatants.find(c => c.id === id)).filter(Boolean) as Combatant[]
+    },
+
+    // League Battle: Trainer turn order (low speed to high for declarations)
+    trainersByTurnOrder: (state): Combatant[] => {
+      if (!state.encounter) return []
+      const order = state.encounter.trainerTurnOrder ?? []
+      return order.map(id => state.encounter!.combatants.find(c => c.id === id)).filter(Boolean) as Combatant[]
+    },
+
+    // League Battle: Pokemon turn order (high speed to low for actions)
+    pokemonByTurnOrder: (state): Combatant[] => {
+      if (!state.encounter) return []
+      const order = state.encounter.pokemonTurnOrder ?? []
+      return order.map(id => state.encounter!.combatants.find(c => c.id === id)).filter(Boolean) as Combatant[]
+    },
+
+    currentCombatant: (state): Combatant | null => {
+      if (!state.encounter || state.encounter.turnOrder.length === 0) return null
+      const currentId = state.encounter.turnOrder[state.encounter.currentTurnIndex]
+      return state.encounter.combatants.find(c => c.id === currentId) ?? null
+    },
+
+    playerCombatants: (state): Combatant[] => {
+      return state.encounter?.combatants.filter(c => c.side === 'players') ?? []
+    },
+
+    allyCombatants: (state): Combatant[] => {
+      return state.encounter?.combatants.filter(c => c.side === 'allies') ?? []
+    },
+
+    enemyCombatants: (state): Combatant[] => {
+      return state.encounter?.combatants.filter(c => c.side === 'enemies') ?? []
+    },
+
+    // Get combatants with injuries
+    injuredCombatants: (state): Combatant[] => {
+      return state.encounter?.combatants.filter(c => c.injuries.count > 0) ?? []
+    },
+
+    // Get combatants who can still act this turn (have remaining actions)
+    combatantsWithActions: (state): Combatant[] => {
+      return state.encounter?.combatants.filter(c => {
+        const ts = c.turnState
+        return !ts.hasActed || !ts.standardActionUsed || !ts.shiftActionUsed || !ts.swiftActionUsed
+      }) ?? []
+    },
+
+    moveLog: (state): MoveLogEntry[] => {
+      return state.encounter?.moveLog ?? []
+    },
+  },
+
+  actions: {
+    // Load encounter from API
+    async loadEncounter(id: string) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${id}`)
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to load encounter'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // Create new encounter
+    async createEncounter(name: string, battleType: 'trainer' | 'full_contact') {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await $fetch<{ data: Encounter }>('/api/encounters', {
+          method: 'POST',
+          body: { name, battleType }
+        })
+        this.encounter = response.data
+        return response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to create encounter'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // Add combatant to encounter
+    async addCombatant(
+      entityId: string,
+      entityType: 'pokemon' | 'human',
+      side: CombatSide,
+      initiativeBonus: number = 0
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/combatants`, {
+          method: 'POST',
+          body: { entityId, entityType, side, initiativeBonus }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to add combatant'
+        throw e
+      }
+    },
+
+    // Remove combatant from encounter
+    async removeCombatant(combatantId: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/combatants/${combatantId}`, {
+          method: 'DELETE'
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to remove combatant'
+        throw e
+      }
+    },
+
+    // Clear encounter after ending
+    async endAndClear() {
+      if (!this.encounter) return
+
+      try {
+        await this.endEncounter()
+        this.encounter = null
+      } catch (e: any) {
+        this.error = e.message || 'Failed to end encounter'
+        throw e
+      }
+    },
+
+    // Start encounter (sort initiative)
+    async startEncounter() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/start`, {
+          method: 'POST'
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to start encounter'
+        throw e
+      }
+    },
+
+    // Next turn
+    async nextTurn() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/next-turn`, {
+          method: 'POST'
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to advance turn'
+        throw e
+      }
+    },
+
+    // Execute move
+    async executeMove(
+      actorId: string,
+      moveId: string,
+      targetIds: string[],
+      damage?: number,
+      notes?: string
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/move`, {
+          method: 'POST',
+          body: { actorId, moveId, targetIds, damage, notes }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to execute move'
+        throw e
+      }
+    },
+
+    // Apply damage to combatant
+    async applyDamage(combatantId: string, damage: number) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/damage`, {
+          method: 'POST',
+          body: { combatantId, damage }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to apply damage'
+        throw e
+      }
+    },
+
+    // Heal combatant (supports HP, temp HP, and injury healing)
+    async healCombatant(
+      combatantId: string,
+      amount: number = 0,
+      tempHp: number = 0,
+      healInjuries: number = 0
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/heal`, {
+          method: 'POST',
+          body: { combatantId, amount, tempHp, healInjuries }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to heal combatant'
+        throw e
+      }
+    },
+
+    // Set ready action
+    async setReadyAction(combatantId: string, readyAction: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/ready`, {
+          method: 'POST',
+          body: { combatantId, readyAction }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to set ready action'
+        throw e
+      }
+    },
+
+    // End encounter
+    async endEncounter() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/end`, {
+          method: 'POST'
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to end encounter'
+        throw e
+      }
+    },
+
+    // Update encounter from websocket
+    updateFromWebSocket(data: Encounter) {
+      this.encounter = data
+    },
+
+    // Clear encounter
+    clearEncounter() {
+      this.encounter = null
+      this.error = null
+    },
+
+    // ===========================================
+    // Serve/Unserve Actions (Group View)
+    // ===========================================
+
+    // Serve encounter to Group View
+    async serveEncounter() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/serve`, {
+          method: 'POST'
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to serve encounter'
+        throw e
+      }
+    },
+
+    // Unserve encounter from Group View
+    async unserveEncounter() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/unserve`, {
+          method: 'POST'
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to unserve encounter'
+        throw e
+      }
+    },
+
+    // Load served encounter (for Group View)
+    async loadServedEncounter() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await $fetch<{ data: Encounter | null }>('/api/encounters/served')
+        this.encounter = response.data
+        return response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to load served encounter'
+        return null
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // ===========================================
+    // Undo/Redo Actions
+    // ===========================================
+
+    // Capture current state before an action (GM only)
+    captureSnapshot(actionName: string) {
+      if (this.encounter) {
+        const history = getHistory()
+        history.pushSnapshot(actionName, this.encounter)
+      }
+    },
+
+    // Undo last action
+    async undoAction() {
+      const history = getHistory()
+      if (!history.canUndo.value || !this.encounter) return false
+
+      const previousState = history.undo()
+      if (!previousState) return false
+
+      try {
+        // Sync to database
+        await $fetch(`/api/encounters/${this.encounter.id}`, {
+          method: 'PUT',
+          body: previousState
+        })
+        this.encounter = previousState
+        return true
+      } catch (e: any) {
+        this.error = e.message || 'Failed to undo action'
+        // Restore the redo state since we failed
+        history.redo()
+        return false
+      }
+    },
+
+    // Redo previously undone action
+    async redoAction() {
+      const history = getHistory()
+      if (!history.canRedo.value || !this.encounter) return false
+
+      const nextState = history.redo()
+      if (!nextState) return false
+
+      try {
+        // Sync to database
+        await $fetch(`/api/encounters/${this.encounter.id}`, {
+          method: 'PUT',
+          body: nextState
+        })
+        this.encounter = nextState
+        return true
+      } catch (e: any) {
+        this.error = e.message || 'Failed to redo action'
+        // Restore the previous state since we failed
+        history.undo()
+        return false
+      }
+    },
+
+    // Get undo/redo state
+    getUndoRedoState() {
+      const history = getHistory()
+      return {
+        canUndo: history.canUndo.value,
+        canRedo: history.canRedo.value,
+        lastActionName: history.lastActionName.value,
+        nextActionName: history.nextActionName.value
+      }
+    },
+
+    // Initialize history when encounter loads
+    initializeHistory() {
+      if (this.encounter) {
+        const history = getHistory()
+        history.initializeHistory(this.encounter)
+      }
+    },
+
+    // ===========================================
+    // PTU Turn State Actions
+    // ===========================================
+
+    // Use standard action for a combatant
+    async useStandardAction(combatantId: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/action`, {
+          method: 'POST',
+          body: { combatantId, actionType: 'standard' }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to use standard action'
+        throw e
+      }
+    },
+
+    // Use shift action for a combatant
+    async useShiftAction(combatantId: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/action`, {
+          method: 'POST',
+          body: { combatantId, actionType: 'shift' }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to use shift action'
+        throw e
+      }
+    },
+
+    // Use swift action for a combatant
+    async useSwiftAction(combatantId: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/action`, {
+          method: 'POST',
+          body: { combatantId, actionType: 'swift' }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to use swift action'
+        throw e
+      }
+    },
+
+    // Reset all actions for a combatant (start of their turn)
+    resetCombatantActions(combatantId: string) {
+      if (!this.encounter) return
+
+      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
+      if (combatant) {
+        combatant.turnState = {
+          hasActed: false,
+          standardActionUsed: false,
+          shiftActionUsed: false,
+          swiftActionUsed: false,
+          canBeCommanded: combatant.turnState.canBeCommanded,
+          isHolding: false,
+          heldUntilInitiative: undefined
+        }
+      }
+    },
+
+    // ===========================================
+    // PTU Injury Actions
+    // ===========================================
+
+    // Add injury to a combatant
+    async addInjury(combatantId: string, source: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/injury`, {
+          method: 'POST',
+          body: { combatantId, source }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to add injury'
+        throw e
+      }
+    },
+
+    // Remove injury from a combatant (healing)
+    async removeInjury(combatantId: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/injury`, {
+          method: 'DELETE',
+          body: { combatantId }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to remove injury'
+        throw e
+      }
+    },
+
+    // ===========================================
+    // PTU Scene Management
+    // ===========================================
+
+    // Advance to next scene (reset scene-frequency moves)
+    async nextScene() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/next-scene`, {
+          method: 'POST'
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to advance scene'
+        throw e
+      }
+    },
+
+    // ===========================================
+    // PTU League Battle Phase Actions
+    // ===========================================
+
+    // Switch to trainer phase (for League battles)
+    async setTrainerPhase() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/phase`, {
+          method: 'POST',
+          body: { phase: 'trainer' }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to set trainer phase'
+        throw e
+      }
+    },
+
+    // Switch to pokemon phase (for League battles)
+    async setPokemonPhase() {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/phase`, {
+          method: 'POST',
+          body: { phase: 'pokemon' }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to set pokemon phase'
+        throw e
+      }
+    },
+
+    // ===========================================
+    // PTU Status Condition Management
+    // ===========================================
+
+    // Add status condition to a combatant
+    async addStatusCondition(combatantId: string, condition: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/status`, {
+          method: 'POST',
+          body: { combatantId, add: [condition] }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to add status condition'
+        throw e
+      }
+    },
+
+    // Remove status condition from a combatant
+    async removeStatusCondition(combatantId: string, condition: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/status`, {
+          method: 'POST',
+          body: { combatantId, remove: [condition] }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to remove status condition'
+        throw e
+      }
+    },
+
+    // Update status conditions (bulk add/remove)
+    async updateStatusConditions(
+      combatantId: string,
+      add: string[] = [],
+      remove: string[] = []
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/status`, {
+          method: 'POST',
+          body: { combatantId, add, remove }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to update status conditions'
+        throw e
+      }
+    },
+
+    // ===========================================
+    // PTU Combat Stage Management
+    // ===========================================
+
+    // Modify combat stage for a combatant (delta change)
+    async modifyStage(combatantId: string, stat: string, amount: number) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/stages`, {
+          method: 'POST',
+          body: { combatantId, changes: { [stat]: amount } }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to modify combat stage'
+        throw e
+      }
+    },
+
+    // Set combat stages (absolute values)
+    async setCombatStages(
+      combatantId: string,
+      stages: Record<string, number>,
+      absolute: boolean = true
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/stages`, {
+          method: 'POST',
+          body: { combatantId, changes: stages, absolute }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to set combat stages'
+        throw e
+      }
+    },
+
+    // ===========================================
+    // PTU Special Actions
+    // ===========================================
+
+    // Take a Breather - Full Action that resets stages, removes temp HP, cures volatile status
+    async takeABreather(combatantId: string) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/breather`, {
+          method: 'POST',
+          body: { combatantId }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to take a breather'
+        throw e
+      }
+    }
+  }
+})
