@@ -137,7 +137,7 @@ function parseMoveCSV(csvPath: string): MoveRow[] {
 async function seedMoves() {
   console.log('Seeding moves...')
 
-  const csvPath = path.resolve(__dirname, '../../../PTU 1.05 - Moves Data.csv')
+  const csvPath = path.resolve(__dirname, '../data/moves.csv')
 
   if (!fs.existsSync(csvPath)) {
     console.error(`CSV file not found at: ${csvPath}`)

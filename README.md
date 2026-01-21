@@ -38,7 +38,10 @@ npm install
 
 ```bash
 npx prisma db push
+npx prisma db seed
 ```
+
+This creates the database and seeds it with all PTU 1.05 moves from the included CSV data.
 
 ### Development
 
