@@ -1,7 +1,21 @@
-- This tool will be used on two screens
-- The GM view will be used on my 1080p laptop monitor
-- The Player view will be used on my 4k smart tv
-- I will stream the Player view to the smart tv using a google tv streamer
-- This tool is just for in person use, not online use
+# Dual-Display Setup
 
-- This should allow us to play the game without the rulebook
+## GM View (`/gm`)
+- Used on GM's 1080p laptop monitor
+- Full control over encounters, characters, and combat
+
+## Group View (`/group`)
+- Displayed on 4K smart TV via Google TV Streamer
+- Read-only display optimized for 4K resolution
+- Auto-connects when GM serves an encounter
+- Chrome tab casting from laptop to TV
+
+## Serve/Unserve System
+- GM clicks "Serve to Group" to display encounter on TV
+- Group View auto-polls for served encounters
+- WebSocket keeps views synchronized in real-time
+
+## Local Use Only
+- Designed for in-person tabletop sessions
+- Both views run on same local network
+- No authentication required (trusted local environment)
