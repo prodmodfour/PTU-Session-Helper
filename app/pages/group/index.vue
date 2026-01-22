@@ -1,7 +1,7 @@
 <template>
   <div class="group-view">
     <!-- No Served Encounter -->
-    <div v-if="!encounter || !encounter.isActive" class="group-view__waiting">
+    <div v-if="!encounter || !encounter.isServed" class="group-view__waiting">
       <div class="waiting-content">
         <h1>PTU Session Helper</h1>
         <p>Waiting for GM to serve an encounter...</p>
@@ -93,8 +93,8 @@ let pollInterval: ReturnType<typeof setInterval> | null = null
 
 const checkForServedEncounter = async () => {
   try {
-    const response = await $fetch<{ data: any }>('/api/encounters/served')
-    const servedEncounter = response.data
+    // Use the store's loadServedEncounter which handles everything
+    const servedEncounter = await encounterStore.loadServedEncounter()
 
     if (servedEncounter) {
       // Stop polling once we find a served encounter
@@ -103,18 +103,10 @@ const checkForServedEncounter = async () => {
         pollInterval = null
       }
 
-      // Load the full encounter into the store
-      await encounterStore.loadEncounter(servedEncounter.id)
-
       // Identify as group and join the encounter via WebSocket
       if (isConnected.value) {
         identify('group', servedEncounter.id)
         joinEncounter(servedEncounter.id)
-      }
-    } else {
-      // No served encounter, clear current encounter if any
-      if (encounterStore.encounter) {
-        encounterStore.clearEncounter()
       }
     }
   } catch (error) {
@@ -127,7 +119,7 @@ onMounted(async () => {
   await checkForServedEncounter()
 
   // If no served encounter found, poll every 2 seconds
-  if (!encounterStore.encounter?.isActive) {
+  if (!encounterStore.encounter?.isServed) {
     pollInterval = setInterval(checkForServedEncounter, 2000)
   }
 })

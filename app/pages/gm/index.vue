@@ -264,6 +264,7 @@ useHead({
 
 const encounterStore = useEncounterStore()
 const libraryStore = useLibraryStore()
+const { send, isConnected, identify, joinEncounter } = useWebSocket()
 
 // Undo/Redo state
 const undoRedoState = ref({
@@ -296,6 +297,25 @@ onMounted(async () => {
 // Cleanup keyboard shortcuts
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyboardShortcuts)
+})
+
+// Identify as GM when WebSocket connects or when encounter is created
+watch(isConnected, (connected) => {
+  if (connected) {
+    // Identify as GM even without encounter
+    identify('gm', encounterStore.encounter?.id)
+    if (encounterStore.encounter?.id) {
+      joinEncounter(encounterStore.encounter.id)
+    }
+  }
+}, { immediate: true })
+
+// Also identify/join when encounter is created
+watch(() => encounterStore.encounter?.id, (encounterId) => {
+  if (isConnected.value && encounterId) {
+    identify('gm', encounterId)
+    joinEncounter(encounterId)
+  }
 })
 
 // Keyboard shortcuts handler
@@ -362,10 +382,25 @@ const endEncounter = async () => {
 
 const serveEncounter = async () => {
   await encounterStore.serveEncounter()
+  // Notify group views via WebSocket
+  if (encounterStore.encounter) {
+    send({
+      type: 'serve_encounter',
+      data: { encounterId: encounterStore.encounter.id, encounter: encounterStore.encounter }
+    })
+  }
 }
 
 const unserveEncounter = async () => {
+  const encounterId = encounterStore.encounter?.id
   await encounterStore.unserveEncounter()
+  // Notify group views via WebSocket
+  if (encounterId) {
+    send({
+      type: 'encounter_unserved',
+      data: { encounterId }
+    })
+  }
 }
 
 // Undo/Redo handlers

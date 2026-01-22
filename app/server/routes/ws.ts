@@ -62,6 +62,7 @@ async function sendEncounterState(peer: Peer, encounterId: string) {
         turnOrder: JSON.parse(encounter.turnOrder),
         isActive: encounter.isActive,
         isPaused: encounter.isPaused,
+        isServed: encounter.isServed,
         moveLog: JSON.parse(encounter.moveLog),
         defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
       }
