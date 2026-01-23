@@ -199,11 +199,199 @@ async function seedTypeEffectiveness() {
   // No need to store in database
 }
 
+interface SpeciesRow {
+  name: string
+  type1: string
+  type2: string | null
+  baseHp: number
+  baseAttack: number
+  baseDefense: number
+  baseSpAtk: number
+  baseSpDef: number
+  baseSpeed: number
+  abilities: string[]
+  evolutionStage: number
+  overland: number
+  swim: number
+  sky: number
+  burrow: number
+  levitate: number
+}
+
+function parsePokedexMarkdown(mdPath: string): SpeciesRow[] {
+  const content = fs.readFileSync(mdPath, 'utf-8')
+  const species: SpeciesRow[] = []
+  const seenNames = new Set<string>()
+
+  // Split by page markers to find Pokemon entries
+  const pages = content.split(/## Page \d+/)
+
+  for (const page of pages) {
+    const lines = page.split('\n')
+
+    // Find Pokemon name - it's usually a line in all caps after the page number
+    let pokemonName: string | null = null
+    let startLineIdx = 0
+
+    for (let i = 0; i < lines.length && i < 10; i++) {
+      const line = lines[i].trim()
+      // Pokemon name is usually in ALL CAPS and at least 3 characters
+      if (line.length >= 3 && /^[A-Z][A-Z\s\-\(\)'É]+$/.test(line) && !line.match(/^\d+$/)) {
+        // Skip common non-Pokemon lines
+        if (['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST'].includes(line)) continue
+        pokemonName = line
+          .replace(/\s+/g, ' ')
+          .trim()
+          .split(' ')
+          .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+          .join(' ')
+          .replace(/\(f\)/i, '♀')
+          .replace(/\(m\)/i, '♂')
+        startLineIdx = i
+        break
+      }
+    }
+
+    if (!pokemonName) continue
+
+    // Skip duplicates
+    if (seenNames.has(pokemonName.toUpperCase())) continue
+    seenNames.add(pokemonName.toUpperCase())
+
+    const pageText = lines.slice(startLineIdx).join('\n')
+
+    // Parse base stats
+    const hpMatch = pageText.match(/HP:\s*(\d+)/i)
+    const atkMatch = pageText.match(/Attack:\s*(\d+)/i)
+    const defMatch = pageText.match(/Defense:\s*(\d+)/i)
+    const spAtkMatch = pageText.match(/Special Attack:\s*(\d+)/i)
+    const spDefMatch = pageText.match(/Special Defense:\s*(\d+)/i)
+    const speedMatch = pageText.match(/Speed:\s*(\d+)/i)
+
+    // Parse types
+    const typeMatch = pageText.match(/Type\s*:\s*([A-Za-z]+)(?:\s*\/\s*([A-Za-z]+))?/i)
+
+    // Parse abilities
+    const abilities: string[] = []
+    const abilityPatterns = [
+      /Basic Ability \d:\s*([^\n]+)/gi,
+      /Adv Ability \d:\s*([^\n]+)/gi,
+      /High Ability:\s*([^\n]+)/gi
+    ]
+    for (const pattern of abilityPatterns) {
+      let match
+      while ((match = pattern.exec(pageText)) !== null) {
+        const ability = match[1].trim()
+        if (ability && ability !== 'None' && !abilities.includes(ability)) {
+          abilities.push(ability)
+        }
+      }
+    }
+
+    // Parse evolution stage
+    let evolutionStage = 1
+    const evoMatch = pageText.match(/Evolution:\s*\n?\s*(\d)\s*-\s*\w+/i)
+    if (evoMatch) {
+      evolutionStage = parseInt(evoMatch[1], 10)
+    }
+    // Try to infer from name patterns
+    if (pokemonName.includes('Mega ')) evolutionStage = 3
+
+    // Parse movement capabilities
+    const capText = pageText.match(/Capability List[\s\S]*?(?=Skill List|Move List|$)/i)?.[0] || ''
+    const overlandMatch = capText.match(/Overland\s+(\d+)/i)
+    const swimMatch = capText.match(/Swim\s+(\d+)/i)
+    const skyMatch = capText.match(/Sky\s+(\d+)/i)
+    const burrowMatch = capText.match(/Burrow\s+(\d+)/i)
+    const levitateMatch = capText.match(/Levitate\s+(\d+)/i)
+
+    // Validate we have the essential data
+    if (!hpMatch || !typeMatch) continue
+
+    species.push({
+      name: pokemonName,
+      type1: typeMatch[1].charAt(0).toUpperCase() + typeMatch[1].slice(1).toLowerCase(),
+      type2: typeMatch[2] ? typeMatch[2].charAt(0).toUpperCase() + typeMatch[2].slice(1).toLowerCase() : null,
+      baseHp: parseInt(hpMatch[1], 10),
+      baseAttack: parseInt(atkMatch?.[1] || '5', 10),
+      baseDefense: parseInt(defMatch?.[1] || '5', 10),
+      baseSpAtk: parseInt(spAtkMatch?.[1] || '5', 10),
+      baseSpDef: parseInt(spDefMatch?.[1] || '5', 10),
+      baseSpeed: parseInt(speedMatch?.[1] || '5', 10),
+      abilities,
+      evolutionStage,
+      overland: parseInt(overlandMatch?.[1] || '5', 10),
+      swim: parseInt(swimMatch?.[1] || '0', 10),
+      sky: parseInt(skyMatch?.[1] || '0', 10),
+      burrow: parseInt(burrowMatch?.[1] || '0', 10),
+      levitate: parseInt(levitateMatch?.[1] || '0', 10)
+    })
+  }
+
+  return species
+}
+
+async function seedSpecies() {
+  console.log('Seeding species data...')
+
+  const mdPath = path.resolve(__dirname, '../../books/markdown/Combined_Pokedex.md')
+
+  if (!fs.existsSync(mdPath)) {
+    console.error(`Pokedex file not found at: ${mdPath}`)
+    return
+  }
+
+  const species = parsePokedexMarkdown(mdPath)
+  console.log(`Parsed ${species.length} unique Pokemon species`)
+
+  // Clear existing species
+  await prisma.speciesData.deleteMany()
+
+  // Insert species
+  let inserted = 0
+  for (const s of species) {
+    try {
+      await prisma.speciesData.create({
+        data: {
+          name: s.name,
+          type1: s.type1,
+          type2: s.type2,
+          baseHp: s.baseHp,
+          baseAttack: s.baseAttack,
+          baseDefense: s.baseDefense,
+          baseSpAtk: s.baseSpAtk,
+          baseSpDef: s.baseSpDef,
+          baseSpeed: s.baseSpeed,
+          abilities: JSON.stringify(s.abilities),
+          eggGroups: '[]', // Not parsed for now
+          evolutionStage: s.evolutionStage,
+          overland: s.overland,
+          swim: s.swim,
+          sky: s.sky,
+          burrow: s.burrow,
+          levitate: s.levitate,
+          teleport: 0
+        }
+      })
+      inserted++
+      if (inserted % 50 === 0) {
+        console.log(`Inserted ${inserted}/${species.length} species...`)
+      }
+    } catch (error) {
+      console.error(`Failed to insert species: ${s.name}`, error)
+    }
+  }
+
+  const count = await prisma.speciesData.count()
+  console.log(`Total species in database: ${count}`)
+}
+
 async function main() {
   console.log('Starting database seed...')
 
   try {
     await seedMoves()
+    await seedSpecies()
     await seedTypeEffectiveness()
 
     console.log('Seed completed successfully!')

@@ -237,6 +237,45 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
       }
     },
 
+    // Update entry in table
+    async updateEntry(tableId: string, entryId: string, data: {
+      weight?: number
+      levelRange?: LevelRange | null
+    }): Promise<void> {
+      try {
+        const body: Record<string, unknown> = {}
+        if (data.weight !== undefined) {
+          body.weight = data.weight
+        }
+        if (data.levelRange !== undefined) {
+          body.levelMin = data.levelRange?.min ?? null
+          body.levelMax = data.levelRange?.max ?? null
+        }
+
+        await $fetch(`/api/encounter-tables/${tableId}/entries/${entryId}`, {
+          method: 'PUT',
+          body
+        })
+
+        // Update local state
+        const table = this.tables.find(t => t.id === tableId)
+        if (table) {
+          const entry = table.entries.find(e => e.id === entryId)
+          if (entry) {
+            if (data.weight !== undefined) {
+              entry.weight = data.weight
+            }
+            if (data.levelRange !== undefined) {
+              entry.levelRange = data.levelRange ?? undefined
+            }
+          }
+        }
+      } catch (e: any) {
+        this.error = e.message || 'Failed to update entry'
+        throw e
+      }
+    },
+
     // Remove entry from table
     async removeEntry(tableId: string, entryId: string) {
       try {
@@ -433,6 +472,36 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
         search: '',
         sortBy: 'name',
         sortOrder: 'asc'
+      }
+    },
+
+    // Export table as JSON
+    async exportTable(tableId: string): Promise<void> {
+      try {
+        // Trigger download via direct navigation
+        window.location.href = `/api/encounter-tables/${tableId}/export`
+      } catch (e: any) {
+        this.error = e.message || 'Failed to export table'
+        throw e
+      }
+    },
+
+    // Import table from JSON
+    async importTable(jsonData: unknown): Promise<{ table: EncounterTable; warnings: string | null }> {
+      try {
+        const response = await $fetch<{
+          data: EncounterTable
+          warnings: string | null
+        }>('/api/encounter-tables/import', {
+          method: 'POST',
+          body: jsonData as Record<string, unknown>
+        })
+        // Add to local state
+        this.tables.push(response.data)
+        return { table: response.data, warnings: response.warnings }
+      } catch (e: any) {
+        this.error = e.message || 'Failed to import table'
+        throw e
       }
     }
   }
