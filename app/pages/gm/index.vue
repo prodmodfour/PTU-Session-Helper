@@ -287,7 +287,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition } from '~/types'
+import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition, HumanCharacter, Pokemon } from '~/types'
 
 definePageMeta({
   layout: 'gm'
@@ -393,6 +393,17 @@ const playerCombatants = computed(() => encounterStore.playerCombatants)
 const allyCombatants = computed(() => encounterStore.allyCombatants)
 const enemyCombatants = computed(() => encounterStore.enemyCombatants)
 const moveLog = computed(() => encounterStore.moveLog.slice().reverse())
+
+// Helper to get combatant display name with proper type narrowing
+const getCombatantName = (combatant?: Combatant): string => {
+  if (!combatant?.entity) return 'Unknown'
+  if (combatant.type === 'human') {
+    return (combatant.entity as HumanCharacter).name
+  } else {
+    const pokemon = combatant.entity as Pokemon
+    return pokemon.nickname ?? pokemon.species
+  }
+}
 
 // Grid config with fallback defaults
 const gridConfig = computed(() => encounter.value?.gridConfig ?? {
@@ -500,7 +511,7 @@ const handleAction = async (combatantId: string, action: { type: string; data: a
 const handleDamage = async (combatantId: string, damage: number) => {
   // Find combatant name for snapshot
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = combatant?.entity?.name ?? combatant?.entity?.species ?? 'Unknown'
+  const name = getCombatantName(combatant)
   encounterStore.captureSnapshot(`Applied ${damage} damage to ${name}`)
   await encounterStore.applyDamage(combatantId, damage)
   refreshUndoRedoState()
@@ -508,7 +519,7 @@ const handleDamage = async (combatantId: string, damage: number) => {
 
 const handleHeal = async (combatantId: string, amount: number, tempHp?: number, healInjuries?: number) => {
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = combatant?.entity?.name ?? combatant?.entity?.species ?? 'Unknown'
+  const name = getCombatantName(combatant)
   const parts: string[] = []
   if (amount > 0) parts.push(`${amount} HP`)
   if (tempHp && tempHp > 0) parts.push(`${tempHp} Temp HP`)
@@ -520,7 +531,7 @@ const handleHeal = async (combatantId: string, amount: number, tempHp?: number, 
 
 const handleStages = async (combatantId: string, changes: Partial<StageModifiers>, absolute: boolean) => {
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = combatant?.entity?.name ?? combatant?.entity?.species ?? 'Unknown'
+  const name = getCombatantName(combatant)
   encounterStore.captureSnapshot(`Changed ${name}'s combat stages`)
   await encounterStore.setCombatStages(combatantId, changes as Record<string, number>, absolute)
   refreshUndoRedoState()
@@ -528,7 +539,7 @@ const handleStages = async (combatantId: string, changes: Partial<StageModifiers
 
 const handleStatus = async (combatantId: string, add: StatusCondition[], remove: StatusCondition[]) => {
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = combatant?.entity?.name ?? combatant?.entity?.species ?? 'Unknown'
+  const name = getCombatantName(combatant)
   const parts: string[] = []
   if (add.length > 0) parts.push(`added ${add.join(', ')}`)
   if (remove.length > 0) parts.push(`removed ${remove.join(', ')}`)
@@ -544,7 +555,7 @@ const handleGridConfigUpdate = async (config: GridConfig) => {
 
 const handleTokenMove = async (combatantId: string, position: GridPosition) => {
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = combatant?.entity?.name ?? combatant?.entity?.species ?? 'Unknown'
+  const name = getCombatantName(combatant)
   encounterStore.captureSnapshot(`Moved ${name} to (${position.x}, ${position.y})`)
   await encounterStore.updateCombatantPosition(combatantId, position)
   refreshUndoRedoState()

@@ -19,6 +19,7 @@
 - Real-time sync between GM/Player views
 
 ---
+- Important: Use playwright mcp for e2e tests
 
 ## Phase 1: Foundation & Database Setup
 

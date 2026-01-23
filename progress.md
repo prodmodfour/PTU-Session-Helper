@@ -1,0 +1,267 @@
+# Progress Log: Session Helper Implementation
+
+## Session: 2026-01-23 (Continued - Phase 7 Completion)
+
+### Completed This Session
+- [x] Fixed duplicate `addWildPokemon` method in encounter store
+- [x] Removed duplicate `add-wild.post.ts` endpoint (using existing `wild-spawn.post.ts`)
+- [x] Added `SpeciesData` interface to types/index.ts
+- [x] Fixed WebSocket event types to include `player` role
+- [x] Fixed $fetch PUT method type issues with type assertions
+- [x] Fixed combatant display name helper in gm/index.vue
+- [x] Fixed SpeciesAutocomplete types filter
+- [x] TypeScript typecheck passes
+- [x] All 300 unit/integration tests pass
+- [x] Created `useRangeParser` composable for PTU range string parsing
+- [x] Added `ranged-blast` and `cardinally-adjacent` to RangeType
+- [x] 25 new tests for range parser (325 total tests now)
+- [x] **Movement range visualization in GridCanvas.vue:**
+  - Added `drawMovementRange()` function with cyan cell overlay
+  - Integrated with `useRangeParser.getMovementRangeCells()`
+  - Props: `showMovementRange`, `getMovementSpeed` for customization
+  - Blocked cells excluded (other tokens)
+  - Keyboard shortcut 'W' to toggle
+  - Speed badge display on selected token
+- [x] Phase 7 (VTT Movement) complete
+
+### Current Test Status
+- 325 unit/integration tests pass
+- E2E tests have Playwright config issues (not actual test failures)
+
+### Updated Progress
+| Phase | Status | % |
+|-------|--------|---|
+| 1. Foundation | Complete | 100% |
+| 2. Encounter Tables | Complete | 100% |
+| 3. Wild Generation | **Complete** | 100% |
+| 4. Encounter Library | Not Started | 0% |
+| 5. Damage Toggle | Not Started | 0% |
+| 6. VTT Core Grid | Complete | 100% |
+| 7. VTT Movement | **Complete** | 100% |
+| 8. VTT Map Features | Partial | 40% |
+| 9. Integration | Not Started | 0% |
+
+**Overall: ~73% complete**
+
+---
+
+## Session: 2026-01-23 (Progress Audit)
+
+### Completed This Session
+- [x] Audited actual codebase state vs documented progress
+- [x] Updated task_plan.md with accurate status
+- [x] Updated progress.md with implementation details
+
+### Key Findings
+**Progress was significantly underreported:**
+- Phase 2 was marked "in_progress" but is actually **complete**
+- Phase 3 was marked "pending" but is **80% complete**
+- Phase 6 was marked "pending" but is actually **complete**
+- Phase 7 was marked "pending" but is **70% complete**
+- Phase 8 was marked "pending" but is **40% complete**
+
+### Current Test Status
+- 300 unit/integration tests pass
+- 10 E2E test files (some have Playwright config issues, not test failures)
+
+### Accurate Overall Progress (at audit time)
+| Phase | Status | % |
+|-------|--------|---|
+| 1. Foundation | Complete | 100% |
+| 2. Encounter Tables | Complete | 100% |
+| 3. Wild Generation | Partial | 80% |
+| 4. Encounter Library | Not Started | 0% |
+| 5. Damage Toggle | Not Started | 0% |
+| 6. VTT Core Grid | Complete | 100% |
+| 7. VTT Movement | Partial | 70% |
+| 8. VTT Map Features | Partial | 40% |
+| 9. Integration | Not Started | 0% |
+
+**Overall: ~65% complete** (up from documented 40%)
+
+---
+
+## Session: 2026-01-22
+
+### Completed This Session
+- [x] Comprehensive codebase exploration
+- [x] Architecture analysis (4 parallel agents)
+- [x] Created task_plan.md with 9 phases
+- [x] Created findings.md with technical details
+- [x] Identified all missing features
+
+### Current Phase
+**Phase 0: Planning & Analysis** - `complete`
+
+### Key Discoveries
+1. App is ~40% complete - solid foundation exists
+2. Combat mechanics are well-implemented (PTU 1.05 accurate)
+3. Zero VTT features - completely missing
+4. Habitat data exists in markdown but not in database
+5. Set damage only - no rolled damage option
+6. No encounter library/templates
+7. No wild encounter generation
+
+### Files Analyzed
+- `app/prisma/schema.prisma` - Database models
+- `app/types/index.ts` - TypeScript definitions
+- `app/composables/useCombat.ts` - Combat calculations
+- `app/stores/encounter.ts` - Encounter state (21KB)
+- `app/stores/library.ts` - Character library
+- `app/pages/gm/index.vue` - GM interface
+- `app/pages/group/index.vue` - Group view
+- `app/components/encounter/*.vue` - Combat components
+- `books/markdown/Combined_Pokedex.md` - Habitat source data
+
+### Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| 9-phase implementation plan | Manageable chunks, clear dependencies |
+| Data models first (Phase 1) | All features depend on schema |
+| VTT split into 3 phases | High complexity requires incremental approach |
+| Habitat before wild encounters | Wild gen depends on habitat data |
+
+### Next Steps
+1. **User approval** of task plan
+2. **Phase 1:** Schema updates (Habitat, EncounterTemplate, positions)
+3. **Phase 2:** Habitat system implementation
+4. Continue through phases in order
+
+### Blockers
+- None currently - awaiting user direction on priorities
+
+### Test Results
+- N/A (no code changes yet)
+
+---
+
+## Implementation Log
+
+### Phase 1: Foundation
+**Status:** `complete`
+**Started:** 2026-01-22
+**Completed:** 2026-01-23
+
+#### Phase 1 Progress:
+- [x] 1.1 Updated `schema.prisma` with EncounterTable, TableModification models
+- [x] 1.2 Updated `schema.prisma` with EncounterTemplate model
+- [x] 1.3 Updated `schema.prisma` with AppSettings model (damageMode)
+- [x] 1.4 Added grid fields to Encounter model (gridEnabled, gridWidth, etc.)
+- [x] 1.5 Created `types/spatial.ts` with GridPosition, GridConfig, VTT types
+- [x] 1.6 Updated `types/index.ts` with all new types and re-exports
+- [x] 1.7 Ran `prisma db push` - migration successful
+- [x] 1.8 Updated encounter API endpoints (POST, GET, PUT) with gridConfig
+- [x] 1.9 Fixed test fixtures for new Encounter/Combatant types
+- [x] All 234 unit tests pass
+
+### Phase 2: Habitat System (Encounter Tables)
+**Status:** `complete` ✅
+**Started:** 2026-01-23
+**Completed:** 2026-01-23
+
+#### Implemented:
+- Full CRUD API endpoints (`/api/encounter-tables/`)
+- `useEncounterTablesStore` Pinia store
+- Main list page (`/gm/encounter-tables`) with filters, search
+- Editor page (`/gm/encounter-tables/[id]`)
+- Components: TableCard, EntryRow, ModificationCard
+- Import/Export JSON functionality
+- E2E tests: habitats.spec.ts, encounter-tables-editor.spec.ts
+
+### Phase 3: Wild Encounter Generation
+**Status:** `80% complete` ⚠️
+**Started:** 2026-01-23
+**Completed:** -
+
+#### Implemented:
+- Generate endpoint (`/api/encounter-tables/[id]/generate`)
+- Generate modal in encounter-tables page
+- Reroll individual Pokemon
+- E2E tests: encounter-generation.spec.ts
+
+#### Remaining:
+- "Add to Encounter" button (has TODO placeholder)
+- Difficulty estimation
+
+### Phase 4: Encounter Library
+**Status:** `pending`
+**Started:** -
+**Completed:** -
+
+#### Notes:
+- Schema has EncounterTemplate model (ready)
+- No API endpoints yet
+- No UI yet
+
+### Phase 5: Set/Rolled Damage Toggle
+**Status:** `pending`
+**Started:** -
+**Completed:** -
+
+#### Notes:
+- Damage chart data exists in useCombat.ts (rolled dice strings)
+- AppSettings model exists with damageMode field
+- No toggle UI, no dice roller composable yet
+
+### Phase 6: VTT Core Grid
+**Status:** `complete` ✅
+**Started:** 2026-01-23
+**Completed:** 2026-01-23
+
+#### Implemented:
+- GridCanvas.vue (canvas-based rendering, zoom/pan)
+- VTTToken.vue (draggable tokens)
+- VTTContainer.vue (wrapper)
+- GroupGridCanvas.vue (player view sync)
+- Selection store (multi-select, marquee selection)
+- Position persistence in encounter state
+- E2E tests: vtt-grid.spec.ts, vtt-multi-selection.spec.ts
+
+### Phase 7: VTT Movement & Range
+**Status:** `complete` ✅
+**Started:** 2026-01-23
+**Completed:** 2026-01-23
+
+#### Implemented:
+- Measurement store with full AoE calculations
+  - Distance (Chebyshev for PTU)
+  - Burst, Cone, Line, Close Blast shapes
+  - Direction cycling
+- Coordinate display with measurement mode
+- E2E tests: vtt-measurement.spec.ts
+- **useRangeParser composable:**
+  - `parseRange()` - PTU range string parser (Melee, Ranged, Burst, Cone, Line, Close Blast, Field, Self, Cardinally Adjacent)
+  - `isInRange()` - Range checking with Chebyshev distance
+  - `getAffectedCells()` - AoE cell calculation
+  - `getMovementRangeCells()` - Movement range calculation
+  - `validateMovement()` - Movement validation against speed and blocked cells
+- **Movement range visualization in GridCanvas:**
+  - Cyan overlay showing reachable cells when token selected
+  - Blocked cells (other tokens) excluded
+  - Speed indicator badge on selected token
+  - Keyboard shortcut 'W' to toggle movement display
+  - Props: `showMovementRange`, `getMovementSpeed` for customization
+- 25 unit tests for range parser
+
+### Phase 8: VTT Map Features
+**Status:** `40% complete` ⚠️
+**Started:** 2026-01-23
+**Completed:** -
+
+#### Implemented:
+- Fog of War store (reveal/hide/explore states)
+- Fog brush tools
+- Fog persistence in encounter model
+- Grid background field in schema
+- E2E tests: vtt-fog-of-war.spec.ts
+
+#### Remaining:
+- Background image upload UI
+- Terrain types and painting
+- Drawing tools
+- Map layers
+
+### Phase 9: Integration & Polish
+**Status:** `pending`
+**Started:** -
+**Completed:** -

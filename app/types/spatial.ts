@@ -59,14 +59,16 @@ export interface TerrainCell {
 
 // Range types from PTU moves
 export type RangeType =
-  | 'melee'        // Adjacent only (1 cell)
-  | 'ranged'       // Specific distance
-  | 'self'         // Targets self only
-  | 'burst'        // Circle around user
-  | 'cone'         // Cone from user
-  | 'line'         // Line from user
-  | 'close-blast'  // Square adjacent to user
-  | 'field';       // Affects entire battlefield
+  | 'melee'              // Adjacent only (1 cell)
+  | 'ranged'             // Specific distance
+  | 'self'               // Targets self only
+  | 'burst'              // Circle around user or target
+  | 'cone'               // Cone from user
+  | 'line'               // Line from user
+  | 'close-blast'        // Square adjacent to user
+  | 'ranged-blast'       // Square at range
+  | 'cardinally-adjacent' // Only orthogonal adjacent (not diagonal)
+  | 'field';             // Affects entire battlefield
 
 // Parsed range from move data
 export interface ParsedRange {

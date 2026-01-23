@@ -218,6 +218,16 @@
               </div>
             </div>
           </div>
+
+          <!-- Error message -->
+          <div v-if="addToEncounterError" class="add-error">
+            {{ addToEncounterError }}
+          </div>
+
+          <!-- No active encounter hint -->
+          <div v-if="generateModal.results.length > 0 && !encounterStore.encounter" class="no-encounter-hint">
+            💡 No active encounter. <NuxtLink to="/gm" class="hint-link">Go to GM page</NuxtLink> to create one first.
+          </div>
         </div>
         <div class="modal__footer">
           <button type="button" class="btn btn--secondary" @click="generateModal.show = false">
@@ -234,9 +244,10 @@
             v-if="generateModal.results.length > 0"
             type="button"
             class="btn btn--success"
+            :disabled="addingToEncounter || !encounterStore.encounter"
             @click="addToEncounter"
           >
-            Add to Encounter
+            {{ addingToEncounter ? 'Adding...' : 'Add to Encounter' }}
           </button>
         </div>
       </div>
@@ -314,6 +325,7 @@ useHead({
 
 const router = useRouter()
 const tablesStore = useEncounterTablesStore()
+const encounterStore = useEncounterStore()
 
 // Load tables on mount
 onMounted(async () => {
@@ -363,6 +375,7 @@ const generateModal = ref({
   levelMin: null as number | null,
   levelMax: null as number | null,
   results: [] as Array<{
+    speciesId: string
     speciesName: string
     level: number
     weight: number
@@ -456,10 +469,45 @@ const rerollPokemon = async (index: number) => {
   }
 }
 
-const addToEncounter = () => {
-  // TODO: Implement adding generated Pokemon to current encounter
-  alert('TODO: Add to encounter functionality will be implemented in Phase 3')
-  generateModal.value.show = false
+// State for adding to encounter
+const addingToEncounter = ref(false)
+const addToEncounterError = ref<string | null>(null)
+
+const addToEncounter = async () => {
+  if (generateModal.value.results.length === 0) {
+    addToEncounterError.value = 'No Pokemon generated'
+    return
+  }
+
+  if (!encounterStore.encounter) {
+    addToEncounterError.value = 'No active encounter. Please create or load an encounter first from the GM page.'
+    return
+  }
+
+  addingToEncounter.value = true
+  addToEncounterError.value = null
+
+  try {
+    const pokemonToAdd = generateModal.value.results.map(p => ({
+      speciesId: p.speciesId || '',
+      speciesName: p.speciesName,
+      level: p.level
+    }))
+
+    const created = await encounterStore.addWildPokemon(pokemonToAdd, 'enemies')
+
+    // Success - close modal and show confirmation
+    generateModal.value.show = false
+    generateModal.value.results = []
+
+    // Navigate to GM page to see the encounter
+    router.push('/gm')
+  } catch (error) {
+    console.error('Failed to add to encounter:', error)
+    addToEncounterError.value = error instanceof Error ? error.message : 'Failed to add Pokemon to encounter'
+  } finally {
+    addingToEncounter.value = false
+  }
 }
 
 // Export
@@ -822,5 +870,34 @@ const doImport = async () => {
   border-radius: $border-radius-sm;
   color: #ffc107;
   font-size: 0.875rem;
+}
+
+.add-error {
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-danger, 0.1);
+  border: 1px solid rgba($color-danger, 0.3);
+  border-radius: $border-radius-sm;
+  color: $color-danger;
+  font-size: 0.875rem;
+}
+
+.no-encounter-hint {
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-primary, 0.1);
+  border: 1px solid rgba($color-primary, 0.3);
+  border-radius: $border-radius-sm;
+  color: $color-text-muted;
+  font-size: 0.875rem;
+
+  .hint-link {
+    color: $color-primary;
+    text-decoration: underline;
+
+    &:hover {
+      color: lighten($color-primary, 10%);
+    }
+  }
 }
 </style>

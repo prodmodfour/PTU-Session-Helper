@@ -22,8 +22,8 @@
         <span class="autocomplete-item__name">{{ species.name }}</span>
         <span class="autocomplete-item__types">
           <span
-            v-for="type in species.types"
-            :key="type"
+            v-for="(type, idx) in [species.type1, species.type2].filter((t): t is string => !!t)"
+            :key="idx"
             class="type-badge"
             :class="`type-badge--${type.toLowerCase()}`"
           >

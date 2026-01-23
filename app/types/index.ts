@@ -371,7 +371,7 @@ export interface ApiResponse<T> {
 // Websocket events
 export type WebSocketEvent =
   | { type: 'connected'; data: { peerId: string } }
-  | { type: 'identify'; data: { role: 'gm' | 'group'; encounterId?: string } }
+  | { type: 'identify'; data: { role: 'gm' | 'group' | 'player'; encounterId?: string } }
   | { type: 'join_encounter'; data: { encounterId: string } }
   | { type: 'leave_encounter'; data: null }
   | { type: 'encounter_update'; data: Encounter }
@@ -385,7 +385,7 @@ export type WebSocketEvent =
   | { type: 'combatant_removed'; data: { combatantId: string } }
   | { type: 'player_action'; data: { playerId: string; action: string; targetId?: string; moveId?: string } }
   | { type: 'sync_request'; data: null }
-  | { type: 'serve_encounter'; data: { encounterId: string } }
+  | { type: 'serve_encounter'; data: { encounterId: string; encounter?: Encounter } }
   | { type: 'encounter_served'; data: { encounterId: string; encounter: Encounter } }
   | { type: 'encounter_unserved'; data: { encounterId: string } };
 
@@ -395,6 +395,33 @@ export interface EncounterSnapshot {
   timestamp: Date;
   actionName: string;
   state: Encounter;
+}
+
+// ============================================
+// SPECIES DATA (From Database)
+// ============================================
+
+export interface SpeciesData {
+  id: string;
+  name: string;
+  type1: string;
+  type2?: string | null;
+  baseHp: number;
+  baseAttack: number;
+  baseDefense: number;
+  baseSpAtk: number;
+  baseSpDef: number;
+  baseSpeed: number;
+  abilities: string; // JSON array of ability names
+  eggGroups: string; // JSON array
+  evolutionStage: number;
+  // Movement capabilities (for VTT)
+  overland: number;
+  swim: number;
+  sky: number;
+  burrow: number;
+  levitate: number;
+  teleport: number;
 }
 
 // ============================================

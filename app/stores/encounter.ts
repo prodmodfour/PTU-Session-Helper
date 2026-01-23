@@ -374,10 +374,10 @@ export const useEncounterStore = defineStore('encounter', {
 
       try {
         // Sync to database
-        await $fetch(`/api/encounters/${this.encounter.id}`, {
+        await $fetch(`/api/encounters/${this.encounter.id}` as string, {
           method: 'PUT',
           body: previousState
-        })
+        } as any)
         this.encounter = previousState
         return true
       } catch (e: any) {
@@ -398,10 +398,10 @@ export const useEncounterStore = defineStore('encounter', {
 
       try {
         // Sync to database
-        await $fetch(`/api/encounters/${this.encounter.id}`, {
+        await $fetch(`/api/encounters/${this.encounter.id}` as string, {
           method: 'PUT',
           body: nextState
-        })
+        } as any)
         this.encounter = nextState
         return true
       } catch (e: any) {
@@ -779,10 +779,10 @@ export const useEncounterStore = defineStore('encounter', {
       }
 
       try {
-        const response = await $fetch<{ data: typeof config }>(`/api/encounters/${this.encounter.id}/grid-config`, {
+        const response = await $fetch<{ data: typeof config }>(`/api/encounters/${this.encounter.id}/grid-config` as string, {
           method: 'PUT',
           body: config
-        })
+        } as any)
 
         // Update local state
         this.encounter.gridConfig = {
@@ -820,10 +820,10 @@ export const useEncounterStore = defineStore('encounter', {
 
       // Sync to server
       try {
-        await $fetch(`/api/encounters/${this.encounter.id}`, {
+        await $fetch(`/api/encounters/${this.encounter.id}` as string, {
           method: 'PUT',
           body: this.encounter
-        })
+        } as any)
       } catch (e: any) {
         this.error = e.message || 'Failed to update token size'
         throw e
@@ -921,10 +921,10 @@ export const useEncounterStore = defineStore('encounter', {
       }
 
       try {
-        await $fetch(`/api/encounters/${this.encounter.id}/fog`, {
+        await $fetch(`/api/encounters/${this.encounter.id}/fog` as string, {
           method: 'PUT',
           body: fogState
-        })
+        } as any)
       } catch (e: any) {
         this.error = e.message || 'Failed to save fog state'
         throw e

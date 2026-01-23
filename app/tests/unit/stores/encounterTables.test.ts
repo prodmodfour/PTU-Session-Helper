@@ -42,7 +42,7 @@ const createMockTable = (overrides: Partial<EncounterTable> = {}): EncounterTabl
   id: 'table-123',
   name: 'Route 1 Grass',
   description: 'Wild Pokemon in tall grass',
-  imageUrl: null,
+  imageUrl: undefined,
   levelRange: { min: 2, max: 5 },
   entries: [],
   modifications: [],

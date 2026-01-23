@@ -90,6 +90,7 @@ import type { GridConfig, GridPosition, Combatant } from '~/types'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore } from '~/stores/measurement'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
+import { useRangeParser } from '~/composables/useRangeParser'
 
 interface TokenData {
   combatantId: string
@@ -105,6 +106,8 @@ const props = defineProps<{
   isGm?: boolean
   showZoomControls?: boolean
   showCoordinates?: boolean
+  showMovementRange?: boolean
+  getMovementSpeed?: (combatantId: string) => number
 }>()
 
 const emit = defineEmits<{
@@ -123,6 +126,12 @@ const measurementStore = useMeasurementStore()
 // Fog of War Store
 const fogOfWarStore = useFogOfWarStore()
 
+// Range Parser
+const { getMovementRangeCells } = useRangeParser()
+
+// Default movement speed if not provided
+const DEFAULT_MOVEMENT_SPEED = 5
+
 // Fog painting state
 const isFogPainting = ref(false)
 const lastPaintedCell = ref<GridPosition | null>(null)
@@ -139,6 +148,7 @@ const panStart = ref({ x: 0, y: 0 })
 const selectedTokenId = ref<string | null>(null)
 const hoveredCell = ref<GridPosition | null>(null)
 const draggingTokenId = ref<string | null>(null)
+const movementRangeEnabled = ref(false)
 
 // Marquee selection state
 const isMarqueeSelecting = ref(false)
@@ -203,6 +213,40 @@ const tokenPositions = computed(() => {
   }))
 })
 
+// Selected token for movement range display
+const selectedTokenForMovement = computed(() => {
+  // Show movement range if prop is true OR local toggle is on
+  const shouldShow = props.showMovementRange || movementRangeEnabled.value
+  if (!shouldShow || !selectedTokenId.value) return null
+  return props.tokens.find(t => t.combatantId === selectedTokenId.value)
+})
+
+// Get movement speed for a combatant
+const getSpeed = (combatantId: string): number => {
+  if (props.getMovementSpeed) {
+    return props.getMovementSpeed(combatantId)
+  }
+  return DEFAULT_MOVEMENT_SPEED
+}
+
+// Get blocked cells (cells occupied by other tokens)
+const getBlockedCells = (excludeCombatantId?: string): GridPosition[] => {
+  const blocked: GridPosition[] = []
+  props.tokens.forEach(token => {
+    if (token.combatantId === excludeCombatantId) return
+    // Add all cells occupied by this token
+    for (let dx = 0; dx < token.size; dx++) {
+      for (let dy = 0; dy < token.size; dy++) {
+        blocked.push({
+          x: token.position.x + dx,
+          y: token.position.y + dy
+        })
+      }
+    }
+  })
+  return blocked
+}
+
 // Methods
 const getCombatant = (combatantId: string): Combatant | undefined => {
   return props.combatants.find(c => c.id === combatantId)
@@ -259,6 +303,11 @@ const render = () => {
 
   // Draw grid
   drawGrid(ctx)
+
+  // Draw movement range overlay (before measurement and fog)
+  if (props.showMovementRange && selectedTokenForMovement.value) {
+    drawMovementRange(ctx)
+  }
 
   // Draw measurement overlay
   if (measurementStore.mode !== 'none' && measurementStore.affectedCells.length > 0) {
@@ -432,6 +481,64 @@ const drawFogOfWarPreview = (ctx: CanvasRenderingContext2D) => {
       // 'revealed' cells show no preview overlay
     }
   }
+}
+
+// Draw movement range overlay for selected token
+const drawMovementRange = (ctx: CanvasRenderingContext2D) => {
+  const token = selectedTokenForMovement.value
+  if (!token) return
+
+  const { cellSize } = props.config
+  const speed = getSpeed(token.combatantId)
+  const blocked = getBlockedCells(token.combatantId)
+  const rangeCells = getMovementRangeCells(token.position, speed, blocked)
+
+  // Draw reachable cells with cyan tint
+  ctx.fillStyle = 'rgba(34, 211, 238, 0.2)' // Cyan-400 with low opacity
+  ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)'
+  ctx.lineWidth = 1
+
+  rangeCells.forEach(cell => {
+    // Only draw cells within grid bounds
+    if (cell.x >= 0 && cell.x < props.config.width &&
+        cell.y >= 0 && cell.y < props.config.height) {
+      ctx.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize)
+      ctx.strokeRect(cell.x * cellSize + 0.5, cell.y * cellSize + 0.5, cellSize - 1, cellSize - 1)
+    }
+  })
+
+  // Draw token origin marker with pulsing ring
+  const originX = token.position.x * cellSize + (token.size * cellSize) / 2
+  const originY = token.position.y * cellSize + (token.size * cellSize) / 2
+
+  ctx.strokeStyle = 'rgba(34, 211, 238, 0.8)'
+  ctx.lineWidth = 2
+  ctx.setLineDash([4, 4])
+  ctx.beginPath()
+  ctx.arc(originX, originY, (token.size * cellSize) / 2 + 4, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.setLineDash([])
+
+  // Draw speed indicator text at bottom-right of token
+  ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
+  ctx.font = 'bold 12px system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const speedText = `${speed}m`
+  const textX = token.position.x * cellSize + token.size * cellSize - 10
+  const textY = token.position.y * cellSize + token.size * cellSize - 10
+
+  // Background for text
+  const textMetrics = ctx.measureText(speedText)
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+  ctx.fillRect(
+    textX - textMetrics.width / 2 - 3,
+    textY - 8,
+    textMetrics.width + 6,
+    16
+  )
+  ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
+  ctx.fillText(speedText, textX, textY)
 }
 
 const screenToGrid = (screenX: number, screenY: number): GridPosition => {
@@ -746,6 +853,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
     return
   }
 
+  // W - Toggle movement range display
+  if (event.key === 'w' || event.key === 'W') {
+    movementRangeEnabled.value = !movementRangeEnabled.value
+    render()
+    return
+  }
+
   // F - Toggle fog of war
   if (event.key === 'f' || event.key === 'F') {
     fogOfWarStore.setEnabled(!fogOfWarStore.enabled)
@@ -816,6 +930,11 @@ watch(() => props.config, () => {
 watch(() => props.tokens, () => {
   render()
 }, { deep: true })
+
+// Re-render when selected token changes (for movement range display)
+watch(selectedTokenId, () => {
+  render()
+})
 
 // Expose methods for parent
 defineExpose({
