@@ -139,6 +139,7 @@
             :combatants="encounter.combatants"
             :current-turn-id="currentCombatant?.id"
             :is-gm="true"
+            :encounter-id="encounter.id"
             @config-update="handleGridConfigUpdate"
             @token-move="handleTokenMove"
             @background-upload="handleBackgroundUpload"
