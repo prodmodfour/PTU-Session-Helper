@@ -2,7 +2,7 @@
 
 ## Current Status
 **Phase**: 5 - VTT Grid Advanced
-**Overall Progress**: ~50%
+**Overall Progress**: ~55%
 
 ---
 
@@ -14,7 +14,7 @@
 | 2 | Habitat System | ✅ Complete | 100% |
 | 3 | Wild Encounter Generation | ✅ Complete | 100% |
 | 4 | VTT Grid - Foundation | ✅ Complete | 100% |
-| 5 | VTT Grid - Advanced | ⏳ Pending | 0% |
+| 5 | VTT Grid - Advanced | 🚧 In Progress | 30% |
 | 6 | Encounter Library | ⏳ Pending | 0% |
 | 7 | Set/Rolled Damage | ⏳ Pending | 0% |
 | 8 | Integration & Polish | ⏳ Pending | 0% |
@@ -127,9 +127,59 @@
 
 ---
 
+## Phase 5 Detailed Progress
+
+### Multi-Token Selection ✅
+- [x] Selection Store (Pinia) - stores/selection.ts
+  - [x] selectedIds Set for tracking multiple selections
+  - [x] Marquee selection state (start, end, active)
+  - [x] Actions: select, addToSelection, toggleSelection, clearSelection
+  - [x] selectInRect for marquee selection
+- [x] VTTToken.vue multi-selection support
+  - [x] isMultiSelected prop
+  - [x] Multi-selection CSS styling (dashed outline, highlight)
+  - [x] Pass MouseEvent with select emit for modifier key detection
+- [x] GridCanvas.vue multi-selection features
+  - [x] Shift+click additive selection
+  - [x] Ctrl/Cmd+A select all tokens
+  - [x] Escape to clear selection
+  - [x] Marquee drag-select overlay
+  - [x] multiSelect event emit
+- [x] VTTContainer.vue integration
+  - [x] Selection count display in header
+  - [x] multiSelect event forwarding
+
+### Measurement Tools ⏳
+- [ ] Distance measurement (click-drag between cells)
+- [ ] AoE preview overlays
+- [ ] Range circles
+
+### Fog of War ⏳
+- [ ] FogOfWarStore for visibility tracking
+- [ ] FoW canvas overlay rendering
+- [ ] GM reveal/hide tools
+- [ ] Player view integration (hide unrevealed areas)
+
+### E2E Tests 🚧
+- [x] vtt-multi-selection.spec.ts created
+
+---
+
 ## Recent Changes
 
 ### 2026-01-23
+- **Phase 5 Progress (30%)**
+- Implemented Multi-Token Selection
+  - Created stores/selection.ts Pinia store
+  - Added isMultiSelected prop and styling to VTTToken.vue
+  - Added marquee selection overlay to GridCanvas.vue
+  - Added Shift+click additive selection
+  - Added Ctrl/Cmd+A select all shortcut
+  - Added Escape to clear selection
+  - Added selection count display in VTTContainer header
+- Created vtt-multi-selection.spec.ts E2E tests
+- Build passes successfully
+
 - **Phase 4 Complete (100%)**
 - Added background image upload functionality
   - Created POST /api/encounters/[id]/background endpoint

@@ -28,12 +28,20 @@
         :combatant="getCombatant(token.combatantId)"
         :is-current-turn="token.combatantId === currentTurnId"
         :is-selected="token.combatantId === selectedTokenId"
+        :is-multi-selected="selectionStore.isSelected(token.combatantId)"
         :is-gm="isGm"
-        @select="handleTokenSelect"
+        @select="(id, evt) => handleTokenSelect(id, evt)"
         @drag-start="handleTokenDragStart"
         @drag-end="handleTokenDragEnd"
       />
     </div>
+
+    <!-- Marquee Selection Overlay -->
+    <div
+      v-if="selectionStore.isMarqueeActive && marqueePixelRect"
+      class="marquee-selection"
+      :style="marqueePixelRect"
+    />
 
     <!-- Coordinate Display -->
     <div v-if="showCoordinates && hoveredCell" class="coordinate-display">
@@ -73,6 +81,7 @@
 
 <script setup lang="ts">
 import type { GridConfig, GridPosition, Combatant } from '~/types'
+import { useSelectionStore } from '~/stores/selection'
 
 interface TokenData {
   combatantId: string
@@ -94,7 +103,11 @@ const emit = defineEmits<{
   tokenMove: [combatantId: string, position: GridPosition]
   tokenSelect: [combatantId: string | null]
   cellClick: [position: GridPosition]
+  multiSelect: [combatantIds: string[]]
 }>()
+
+// Selection Store
+const selectionStore = useSelectionStore()
 
 // Refs
 const containerRef = ref<HTMLDivElement | null>(null)
@@ -108,6 +121,10 @@ const panStart = ref({ x: 0, y: 0 })
 const selectedTokenId = ref<string | null>(null)
 const hoveredCell = ref<GridPosition | null>(null)
 const draggingTokenId = ref<string | null>(null)
+
+// Marquee selection state
+const isMarqueeSelecting = ref(false)
+const marqueeStartScreen = ref<{ x: number; y: number } | null>(null)
 
 // Background image
 const backgroundImage = ref<HTMLImageElement | null>(null)
@@ -138,6 +155,34 @@ const visibleTokens = computed(() => {
     return pos.x >= 0 && pos.x < props.config.width &&
            pos.y >= 0 && pos.y < props.config.height
   })
+})
+
+// Marquee pixel rect for visual overlay (in screen coordinates)
+const marqueePixelRect = computed(() => {
+  const rect = selectionStore.marqueeRect
+  if (!rect) return null
+
+  // Convert grid coords to screen pixels
+  const left = rect.x * props.config.cellSize * zoom.value + panOffset.value.x
+  const top = rect.y * props.config.cellSize * zoom.value + panOffset.value.y
+  const width = rect.width * props.config.cellSize * zoom.value
+  const height = rect.height * props.config.cellSize * zoom.value
+
+  return {
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${width}px`,
+    height: `${height}px`,
+  }
+})
+
+// Token positions for marquee selection
+const tokenPositions = computed(() => {
+  return props.tokens.map(t => ({
+    id: t.combatantId,
+    position: t.position,
+    size: t.size,
+  }))
 })
 
 // Methods
@@ -272,9 +317,31 @@ const handleMouseDown = (event: MouseEvent) => {
     return
   }
 
-  // Left click - check for cell click
+  // Left click
   if (event.button === 0 && !draggingTokenId.value) {
     const gridPos = screenToGrid(event.clientX, event.clientY)
+
+    // Check if clicking on a token
+    const clickedToken = getTokenAtPosition(gridPos)
+
+    if (clickedToken) {
+      // Token click handled by VTTToken component
+      return
+    }
+
+    // If GM and not clicking on token, start marquee selection
+    if (props.isGm) {
+      isMarqueeSelecting.value = true
+      marqueeStartScreen.value = { x: event.clientX, y: event.clientY }
+      selectionStore.startMarquee(gridPos)
+
+      // Clear selection unless shift is held
+      if (!event.shiftKey) {
+        selectionStore.clearSelection()
+      }
+    }
+
+    // Emit cell click
     if (gridPos.x >= 0 && gridPos.x < props.config.width &&
         gridPos.y >= 0 && gridPos.y < props.config.height) {
       emit('cellClick', gridPos)
@@ -282,9 +349,24 @@ const handleMouseDown = (event: MouseEvent) => {
   }
 }
 
+const getTokenAtPosition = (gridPos: GridPosition): TokenData | undefined => {
+  return props.tokens.find(token => {
+    const right = token.position.x + token.size - 1
+    const bottom = token.position.y + token.size - 1
+    return gridPos.x >= token.position.x && gridPos.x <= right &&
+           gridPos.y >= token.position.y && gridPos.y <= bottom
+  })
+}
+
 const handleMouseMove = (event: MouseEvent) => {
   // Update hovered cell
-  hoveredCell.value = screenToGrid(event.clientX, event.clientY)
+  const gridPos = screenToGrid(event.clientX, event.clientY)
+  hoveredCell.value = gridPos
+
+  // Handle marquee selection
+  if (isMarqueeSelecting.value && selectionStore.isMarqueeActive) {
+    selectionStore.updateMarquee(gridPos)
+  }
 
   // Handle panning
   if (isPanning.value) {
@@ -296,13 +378,42 @@ const handleMouseMove = (event: MouseEvent) => {
   }
 }
 
-const handleMouseUp = () => {
+const handleMouseUp = (event: MouseEvent) => {
   isPanning.value = false
+
+  // Finalize marquee selection
+  if (isMarqueeSelecting.value) {
+    const rect = selectionStore.marqueeRect
+    if (rect && (rect.width > 1 || rect.height > 1)) {
+      // Only select if marquee is bigger than 1 cell
+      selectionStore.selectInRect(rect, tokenPositions.value, event.shiftKey)
+      emit('multiSelect', selectionStore.selectedArray)
+    }
+
+    isMarqueeSelecting.value = false
+    marqueeStartScreen.value = null
+    selectionStore.endMarquee()
+  }
 }
 
-const handleTokenSelect = (combatantId: string) => {
+const handleTokenSelect = (combatantId: string, event?: MouseEvent) => {
   selectedTokenId.value = combatantId
   emit('tokenSelect', combatantId)
+
+  // Handle multi-selection with modifier keys
+  if (props.isGm) {
+    // Check if we have a keyboard event from the token click
+    const shiftKey = event?.shiftKey ?? false
+    const ctrlKey = event?.ctrlKey ?? event?.metaKey ?? false
+
+    if (shiftKey || ctrlKey) {
+      selectionStore.toggleSelection(combatantId)
+    } else {
+      // Single click without modifier - clear and select
+      selectionStore.select(combatantId)
+    }
+    emit('multiSelect', selectionStore.selectedArray)
+  }
 }
 
 const handleTokenDragStart = (combatantId: string) => {
@@ -339,6 +450,31 @@ const resetView = () => {
   render()
 }
 
+// Keyboard shortcuts
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (!props.isGm) return
+
+  // Ctrl/Cmd + A - Select all tokens
+  if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+    event.preventDefault()
+    const allIds = props.tokens.map(t => t.combatantId)
+    selectionStore.selectMultiple(allIds)
+    emit('multiSelect', selectionStore.selectedArray)
+    return
+  }
+
+  // Escape - Clear selection
+  if (event.key === 'Escape') {
+    selectionStore.clearSelection()
+    selectedTokenId.value = null
+    emit('tokenSelect', null)
+    emit('multiSelect', [])
+    return
+  }
+
+  // Delete - Could be used for removing tokens in future
+}
+
 // Lifecycle
 onMounted(() => {
   loadBackgroundImage()
@@ -346,10 +482,14 @@ onMounted(() => {
 
   // Handle window resize
   window.addEventListener('resize', render)
+
+  // Handle keyboard shortcuts
+  window.addEventListener('keydown', handleKeyDown)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', render)
+  window.removeEventListener('keydown', handleKeyDown)
 })
 
 // Watch for config changes
@@ -459,5 +599,14 @@ defineExpose({
   font-size: $font-size-xs;
   min-width: 40px;
   text-align: center;
+}
+
+.marquee-selection {
+  position: absolute;
+  background: rgba($color-accent-teal, 0.2);
+  border: 2px dashed $color-accent-teal;
+  pointer-events: none;
+  z-index: 50;
+  box-shadow: 0 0 10px rgba($color-accent-teal, 0.3);
 }
 </style>

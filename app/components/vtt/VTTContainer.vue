@@ -5,6 +5,9 @@
       <div class="vtt-header__title">
         <h3>Battle Grid</h3>
         <span class="vtt-header__size">{{ config.width }}×{{ config.height }}</span>
+        <span v-if="selectionStore.selectedCount > 0" class="vtt-header__selection">
+          {{ selectionStore.selectedCount }} selected
+        </span>
       </div>
 
       <div class="vtt-header__controls">
@@ -137,6 +140,7 @@
         @token-move="handleTokenMove"
         @token-select="handleTokenSelect"
         @cell-click="handleCellClick"
+        @multi-select="handleMultiSelect"
       />
     </div>
 
@@ -170,6 +174,7 @@
 import type { GridConfig, GridPosition, Combatant, Pokemon, HumanCharacter } from '~/types'
 import { DEFAULT_SETTINGS } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
+import { useSelectionStore } from '~/stores/selection'
 
 interface TokenData {
   combatantId: string
@@ -189,7 +194,11 @@ const emit = defineEmits<{
   tokenMove: [combatantId: string, position: GridPosition]
   backgroundUpload: [file: File]
   backgroundRemove: []
+  multiSelect: [combatantIds: string[]]
 }>()
+
+// Selection Store
+const selectionStore = useSelectionStore()
 
 // Refs
 const gridCanvasRef = ref<InstanceType<typeof GridCanvas> | null>(null)
@@ -266,6 +275,10 @@ const handleTokenSelect = (combatantId: string | null) => {
 const handleCellClick = (position: GridPosition) => {
   // Could be used for placing tokens, targeting, etc.
   console.log('Cell clicked:', position)
+}
+
+const handleMultiSelect = (combatantIds: string[]) => {
+  emit('multiSelect', combatantIds)
 }
 
 // File upload methods
@@ -353,6 +366,15 @@ defineExpose({
   &__size {
     color: $color-text-muted;
     font-size: $font-size-sm;
+  }
+
+  &__selection {
+    color: $color-accent-teal;
+    font-size: $font-size-sm;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: rgba($color-accent-teal, 0.15);
+    border-radius: $border-radius-sm;
   }
 
   &__controls {

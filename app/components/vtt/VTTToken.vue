@@ -3,6 +3,7 @@
     class="vtt-token"
     :class="{
       'vtt-token--selected': isSelected,
+      'vtt-token--multi-selected': isMultiSelected,
       'vtt-token--current': isCurrentTurn,
       'vtt-token--dragging': isDragging,
       'vtt-token--player': side === 'players',
@@ -68,11 +69,12 @@ const props = defineProps<{
   combatant?: Combatant
   isCurrentTurn?: boolean
   isSelected?: boolean
+  isMultiSelected?: boolean
   isGm?: boolean
 }>()
 
 const emit = defineEmits<{
-  select: [combatantId: string]
+  select: [combatantId: string, event: MouseEvent]
   dragStart: [combatantId: string]
   dragEnd: [combatantId: string, event: MouseEvent]
 }>()
@@ -144,8 +146,8 @@ const hpColorClass = computed(() => {
 })
 
 // Methods
-const handleClick = () => {
-  emit('select', props.token.combatantId)
+const handleClick = (event: MouseEvent) => {
+  emit('select', props.token.combatantId, event)
 }
 
 const handleMouseDown = (event: MouseEvent) => {
@@ -207,6 +209,21 @@ const handleMouseDown = (event: MouseEvent) => {
     .vtt-token__label {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  &--multi-selected {
+    outline: 2px dashed $color-accent-teal;
+    outline-offset: 2px;
+    z-index: 9;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: rgba($color-accent-teal, 0.15);
+      pointer-events: none;
     }
   }
 
