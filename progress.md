@@ -1,5 +1,53 @@
 # Progress Log: Session Helper Implementation
 
+## Session: 2026-01-23 (Phase 5 - Set/Rolled Damage Toggle)
+
+### Completed This Session
+- [x] Created `utils/diceRoller.ts` - Dice notation parser and roller
+  - `parseDiceNotation()` - Parse "2d6+8" format
+  - `rollDie()`, `rollDice()` - Roll individual/multiple dice
+  - `roll()` - Full roll with breakdown
+  - `rollCritical()` - Critical hit rolling (double dice, single modifier)
+  - `getMinRoll()`, `getMaxRoll()`, `getAverageRoll()` - Calculate bounds
+- [x] Created `stores/settings.ts` - Pinia settings store
+  - `loadSettings()` - Load from localStorage
+  - `saveSettings()` - Persist to localStorage
+  - `setDamageMode()`, `toggleDamageMode()` - Damage mode control
+  - `setDefaultGridDimensions()`, `setDefaultCellSize()` - Grid defaults
+  - `resetToDefaults()` - Reset all settings
+- [x] Updated `composables/useCombat.ts` with damage mode functions:
+  - `getSetDamageByType()` - Get min/avg/max set damage
+  - `rollDamageBase()` - Roll dice for damage base
+  - `getDamageByMode()` - Get damage based on mode (set or rolled)
+- [x] Added damage mode toggle UI to `pages/gm/index.vue`
+  - Toggle buttons: 📊 Set | 🎲 Rolled
+  - Persists setting to localStorage
+- [x] Created unit tests for dice roller (25 tests)
+- [x] Created unit tests for settings store (14 tests)
+- [x] TypeScript check passes
+- [x] All 370 unit tests pass
+
+### Current Test Status
+- 370 unit/integration tests pass
+- E2E tests have Playwright config issues (not actual test failures)
+
+### Updated Progress
+| Phase | Status | % |
+|-------|--------|---|
+| 1. Foundation | Complete | 100% |
+| 2. Encounter Tables | Complete | 100% |
+| 3. Wild Generation | Complete | 100% |
+| 4. Encounter Library | Complete | 100% |
+| 5. Damage Toggle | **Complete** | 100% |
+| 6. VTT Core Grid | Complete | 100% |
+| 7. VTT Movement | Complete | 100% |
+| 8. VTT Map Features | Partial | 40% |
+| 9. Integration | Not Started | 0% |
+
+**Overall: ~82% complete**
+
+---
+
 ## Session: 2026-01-23 (Continued - Phase 7 Completion)
 
 ### Completed This Session
@@ -184,24 +232,39 @@
 - Difficulty estimation
 
 ### Phase 4: Encounter Library
-**Status:** `pending`
-**Started:** -
-**Completed:** -
+**Status:** `complete` ✅
+**Started:** 2026-01-23
+**Completed:** 2026-01-23
 
-#### Notes:
-- Schema has EncounterTemplate model (ready)
-- No API endpoints yet
-- No UI yet
+#### Implemented:
+- `stores/encounterLibrary.ts` - Pinia store for encounter templates
+- CRUD API endpoints (`/api/encounter-templates/`)
+- Template creation from current encounters
+- Template loading into new encounters
+- Integration with encounter store
+- 38 unit tests for encounterLibrary store
 
 ### Phase 5: Set/Rolled Damage Toggle
-**Status:** `pending`
-**Started:** -
-**Completed:** -
+**Status:** `complete` ✅
+**Started:** 2026-01-23
+**Completed:** 2026-01-23
 
-#### Notes:
-- Damage chart data exists in useCombat.ts (rolled dice strings)
-- AppSettings model exists with damageMode field
-- No toggle UI, no dice roller composable yet
+#### Implemented:
+- `utils/diceRoller.ts` - Full dice notation parser and roller
+  - `parseDiceNotation()` - Parse "XdY+Z" format
+  - `roll()` - Roll with breakdown
+  - `rollCritical()` - Double dice, single modifier
+  - `getMinRoll()`, `getMaxRoll()`, `getAverageRoll()` - Bounds
+- `stores/settings.ts` - Pinia settings store with localStorage persistence
+  - `loadSettings()`, `saveSettings()` - Storage operations
+  - `setDamageMode()`, `toggleDamageMode()` - Mode control
+  - `setDefaultGridDimensions()`, `setDefaultCellSize()` - Grid defaults
+- `composables/useCombat.ts` updates:
+  - `getSetDamageByType()` - Get min/avg/max set damage values
+  - `rollDamageBase()` - Roll dice for damage base
+  - `getDamageByMode()` - Mode-aware damage getter
+- UI toggle in GM view (📊 Set | 🎲 Rolled buttons)
+- 39 unit tests (25 diceRoller + 14 settings)
 
 ### Phase 6: VTT Core Grid
 **Status:** `complete` ✅

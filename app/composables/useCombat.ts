@@ -1,4 +1,5 @@
-import type { Combatant, Pokemon, HumanCharacter, StageModifiers, Move, Stats, PokemonType } from '~/types'
+import type { Combatant, Pokemon, HumanCharacter, StageModifiers, Move, Stats, PokemonType, DamageMode } from '~/types'
+import { roll, rollCritical, type DiceRollResult } from '~/utils/diceRoller'
 
 // PTU 1.05 combat calculations and utilities
 export function useCombat() {
@@ -133,6 +134,39 @@ export function useCombat() {
   const getDamageRoll = (damageBase: number): string => {
     const clamped = Math.max(1, Math.min(28, damageBase))
     return damageBaseChart[clamped]?.rolled ?? '1d6+1'
+  }
+
+  // Get set damage value by type (min, avg, max)
+  const getSetDamageByType = (damageBase: number, type: 'min' | 'avg' | 'max'): number => {
+    const clamped = Math.max(1, Math.min(28, damageBase))
+    const setValues = damageBaseChart[clamped]?.set ?? [2, 5, 7]
+    const index = type === 'min' ? 0 : type === 'avg' ? 1 : 2
+    return setValues[index]
+  }
+
+  // Roll damage for a damage base
+  const rollDamageBase = (damageBase: number, critical: boolean = false): DiceRollResult => {
+    const notation = getDamageRoll(damageBase)
+    return critical ? rollCritical(notation) : roll(notation)
+  }
+
+  // Get damage based on mode
+  const getDamageByMode = (
+    damageBase: number,
+    mode: DamageMode,
+    critical: boolean = false
+  ): { value: number; rollResult?: DiceRollResult } => {
+    if (mode === 'rolled') {
+      const rollResult = rollDamageBase(damageBase, critical)
+      return { value: rollResult.total, rollResult }
+    } else {
+      // Set damage mode - use average, double for critical
+      let value = getSetDamageByType(damageBase, 'avg')
+      if (critical) {
+        value *= 2
+      }
+      return { value }
+    }
   }
 
   // ===========================================
@@ -400,7 +434,10 @@ export function useCombat() {
     // Damage calculations
     damageBaseChart,
     getSetDamage,
+    getSetDamageByType,
     getDamageRoll,
+    rollDamageBase,
+    getDamageByMode,
     calculateDamage,
     calculateSetDamage,
 

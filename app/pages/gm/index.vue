@@ -127,24 +127,49 @@
         </div>
       </div>
 
-      <!-- View Tabs -->
-      <div class="view-tabs">
-        <button
-          class="view-tab"
-          :class="{ 'view-tab--active': activeView === 'list' }"
-          @click="activeView = 'list'"
-          data-testid="list-view-tab"
-        >
-          📋 List View
-        </button>
-        <button
-          class="view-tab"
-          :class="{ 'view-tab--active': activeView === 'grid' }"
-          @click="activeView = 'grid'"
-          data-testid="grid-view-tab"
-        >
-          🗺 Grid View
-        </button>
+      <!-- View Tabs & Settings Row -->
+      <div class="view-tabs-row">
+        <div class="view-tabs">
+          <button
+            class="view-tab"
+            :class="{ 'view-tab--active': activeView === 'list' }"
+            @click="activeView = 'list'"
+            data-testid="list-view-tab"
+          >
+            📋 List View
+          </button>
+          <button
+            class="view-tab"
+            :class="{ 'view-tab--active': activeView === 'grid' }"
+            @click="activeView = 'grid'"
+            data-testid="grid-view-tab"
+          >
+            🗺 Grid View
+          </button>
+        </div>
+
+        <!-- Damage Mode Toggle -->
+        <div class="damage-mode-toggle">
+          <span class="damage-mode-label">Damage Mode:</span>
+          <button
+            class="damage-mode-btn"
+            :class="{ 'damage-mode-btn--active': settingsStore.damageMode === 'set' }"
+            @click="settingsStore.setDamageMode('set')"
+            title="Use fixed average damage values"
+            data-testid="set-damage-btn"
+          >
+            📊 Set
+          </button>
+          <button
+            class="damage-mode-btn"
+            :class="{ 'damage-mode-btn--active': settingsStore.damageMode === 'rolled' }"
+            @click="settingsStore.setDamageMode('rolled')"
+            title="Roll dice for damage"
+            data-testid="rolled-damage-btn"
+          >
+            🎲 Rolled
+          </button>
+        </div>
       </div>
 
       <!-- Main Content -->
@@ -333,6 +358,7 @@ useHead({
 
 const encounterStore = useEncounterStore()
 const libraryStore = useLibraryStore()
+const settingsStore = useSettingsStore()
 const { send, isConnected, identify, joinEncounter } = useWebSocket()
 
 // Undo/Redo state
@@ -352,6 +378,9 @@ const refreshUndoRedoState = () => {
 // Load library on mount, initialize history, and set up keyboard shortcuts
 onMounted(async () => {
   await libraryStore.loadLibrary()
+
+  // Load settings from localStorage
+  settingsStore.loadSettings()
 
   // Initialize history if encounter exists
   if (encounterStore.encounter) {
@@ -938,10 +967,18 @@ const handleBackgroundRemove = async () => {
   }
 }
 
+.view-tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+}
+
 .view-tabs {
   display: flex;
   gap: $spacing-sm;
-  margin-bottom: $spacing-lg;
 }
 
 .view-tab {
@@ -964,6 +1001,46 @@ const handleBackgroundRemove = async () => {
     border-color: transparent;
     color: $color-text;
     box-shadow: $shadow-glow-scarlet;
+  }
+}
+
+.damage-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-md;
+  padding: $spacing-xs $spacing-sm;
+}
+
+.damage-mode-label {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+.damage-mode-btn {
+  padding: $spacing-xs $spacing-sm;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius-sm;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $color-bg-tertiary;
+    color: $color-text;
+  }
+
+  &--active {
+    background: rgba($color-accent-teal, 0.2);
+    border-color: $color-accent-teal;
+    color: $color-accent-teal;
   }
 }
 
