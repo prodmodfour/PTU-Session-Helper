@@ -347,6 +347,7 @@ import GridCanvas from '~/components/vtt/GridCanvas.vue'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore, type MeasurementMode } from '~/stores/measurement'
 import { useFogOfWarStore, type FogOfWarState } from '~/stores/fogOfWar'
+import { useTerrainStore } from '~/stores/terrain'
 
 interface TokenData {
   combatantId: string
@@ -374,16 +375,23 @@ const emit = defineEmits<{
 const selectionStore = useSelectionStore()
 const measurementStore = useMeasurementStore()
 const fogOfWarStore = useFogOfWarStore()
+const terrainStore = useTerrainStore()
 
 // Fog persistence
-const { loadFogState, debouncedSave, cancelPendingSave } = useFogPersistence()
-const fogSaveTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+const { loadFogState, debouncedSave: debouncedSaveFog, cancelPendingSave: cancelPendingFogSave } = useFogPersistence()
 
-// Load fog state when encounter changes
+// Terrain persistence
+const { loadTerrainState, debouncedSave: debouncedSaveTerrain, cancelPendingSave: cancelPendingTerrainSave } = useTerrainPersistence()
+
+// Load fog and terrain state when encounter changes
 watch(() => props.encounterId, async (newId, oldId) => {
   if (newId && newId !== oldId) {
-    const loaded = await loadFogState(newId)
-    if (loaded) {
+    // Load both fog and terrain states
+    const [fogLoaded, terrainLoaded] = await Promise.all([
+      loadFogState(newId),
+      loadTerrainState(newId)
+    ])
+    if (fogLoaded || terrainLoaded) {
       // Re-render grid canvas if available
       gridCanvasRef.value?.render()
     }
@@ -393,13 +401,21 @@ watch(() => props.encounterId, async (newId, oldId) => {
 // Auto-save fog state when it changes (debounced)
 watch(() => fogOfWarStore.$state, () => {
   if (props.encounterId && props.isGm) {
-    debouncedSave(props.encounterId)
+    debouncedSaveFog(props.encounterId)
+  }
+}, { deep: true })
+
+// Auto-save terrain state when it changes (debounced)
+watch(() => terrainStore.$state, () => {
+  if (props.encounterId && props.isGm) {
+    debouncedSaveTerrain(props.encounterId)
   }
 }, { deep: true })
 
 // Clean up on unmount
 onUnmounted(() => {
-  cancelPendingSave()
+  cancelPendingFogSave()
+  cancelPendingTerrainSave()
 })
 
 // Refs

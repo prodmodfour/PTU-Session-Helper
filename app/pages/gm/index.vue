@@ -124,6 +124,14 @@
           >
             💾 Save Template
           </button>
+          <button
+            class="btn btn--ghost btn--icon-only"
+            @click="showShortcutsHelp = true"
+            title="Keyboard shortcuts (?)"
+            data-testid="help-btn"
+          >
+            ❓
+          </button>
         </div>
       </div>
 
@@ -342,6 +350,13 @@
       @close="showLoadTemplateModal = false"
       @load="handleLoadTemplate"
     />
+
+    <!-- Keyboard Shortcuts Help Modal -->
+    <Teleport to="body">
+      <div v-if="showShortcutsHelp" class="modal-backdrop" @click.self="showShortcutsHelp = false">
+        <KeyboardShortcutsHelp @close="showShortcutsHelp = false" />
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -418,7 +433,26 @@ watch(() => encounterStore.encounter?.id, (encounterId) => {
 
 // Keyboard shortcuts handler
 const handleKeyboardShortcuts = (event: KeyboardEvent) => {
-  // Check for Ctrl/Cmd key
+  // Ignore if typing in an input/textarea
+  const target = event.target as HTMLElement
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+    return
+  }
+
+  // Toggle shortcuts help with ? key
+  if (event.key === '?' || (event.shiftKey && event.key === '/')) {
+    event.preventDefault()
+    showShortcutsHelp.value = !showShortcutsHelp.value
+    return
+  }
+
+  // Close shortcuts help with Escape
+  if (event.key === 'Escape' && showShortcutsHelp.value) {
+    showShortcutsHelp.value = false
+    return
+  }
+
+  // Check for Ctrl/Cmd key for undo/redo
   const isMod = event.ctrlKey || event.metaKey
 
   if (!isMod) return
@@ -452,6 +486,9 @@ const addingSide = ref<CombatSide>('players')
 // Template modals
 const showSaveTemplateModal = ref(false)
 const showLoadTemplateModal = ref(false)
+
+// Keyboard shortcuts help
+const showShortcutsHelp = ref(false)
 
 // Computed from store
 const encounter = computed(() => encounterStore.encounter)
@@ -1046,5 +1083,19 @@ const handleBackgroundRemove = async () => {
 
 .grid-view-panel {
   grid-column: 1 / -1;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 </style>

@@ -104,6 +104,8 @@
 
 <script setup lang="ts">
 import type { Combatant, Pokemon, HumanCharacter, GridConfig } from '~/types'
+import { useFogOfWarStore } from '~/stores/fogOfWar'
+import { useTerrainStore } from '~/stores/terrain'
 
 definePageMeta({
   layout: 'group'
@@ -114,13 +116,27 @@ useHead({
 })
 
 const encounterStore = useEncounterStore()
+const fogOfWarStore = useFogOfWarStore()
+const terrainStore = useTerrainStore()
 const { isConnected, identify, joinEncounter } = useWebSocket()
+
+// Persistence composables (read-only for group view)
+const { loadFogState } = useFogPersistence()
+const { loadTerrainState } = useTerrainPersistence()
 
 // View state
 const activeView = ref<'list' | 'grid'>('list')
 
 // Poll for served encounters
 let pollInterval: ReturnType<typeof setInterval> | null = null
+
+// Load VTT state (fog, terrain) for a specific encounter
+const loadVttState = async (encounterId: string) => {
+  await Promise.all([
+    loadFogState(encounterId),
+    loadTerrainState(encounterId)
+  ])
+}
 
 const checkForServedEncounter = async () => {
   try {
@@ -133,6 +149,9 @@ const checkForServedEncounter = async () => {
         clearInterval(pollInterval)
         pollInterval = null
       }
+
+      // Load VTT state for the encounter
+      await loadVttState(servedEncounter.id)
 
       // Identify as group and join the encounter via WebSocket
       if (isConnected.value) {
