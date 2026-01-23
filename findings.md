@@ -193,24 +193,28 @@ but these are NOT used - they're just reference for GM when building custom list
 
 ## Virtual Tabletop Status
 
-### Current: ZERO VTT Features
-The app is a **combat ledger**, not a spatial VTT.
+### Current: FULL VTT Implementation (Phases 6-8 Complete)
+The app now includes a complete Virtual Tabletop with spatial features.
 
 ### What Exists
 - Card-based combatant display
 - HP bars, status badges
 - Turn indicator
 - Sectioned layout (players/allies/enemies)
+- ✅ **GridCanvas.vue** - Canvas-based grid rendering with zoom/pan
+- ✅ **VTTToken.vue** - Draggable token components
+- ✅ **Token positioning** with x,y coordinates persisted
+- ✅ **Range calculations** - Chebyshev distance (PTU standard)
+- ✅ **AoE visualization** - Burst, Cone, Line, Close Blast shapes
+- ✅ **Terrain system** - 6 terrain types with movement costs
+- ✅ **Fog of War** - Reveal/hide/explore states with brush tools
+- ✅ **Map backgrounds** - Image upload and persistence
+- ✅ **Movement range** - Dijkstra pathfinding respecting terrain
 
-### What's Missing
-- ❌ Grid/map rendering
-- ❌ Token positioning (no x,y coordinates)
-- ❌ Drag-and-drop movement
-- ❌ Range calculations
-- ❌ Area of effect visualization
-- ❌ Terrain/obstacles
-- ❌ Line of sight
-- ❌ Map backgrounds
+### Still Missing (Phase 9)
+- ❌ GM view integration toggle (card view vs grid view)
+- ❌ Line of sight calculations
+- ❌ Full keyboard shortcuts documentation
 
 ### Move Range Data
 Ranges stored as strings in MoveData:

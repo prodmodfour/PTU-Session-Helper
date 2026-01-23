@@ -97,8 +97,8 @@
 | 8. VTT Map Features | Partial | 40% |
 | 9. Integration | Not Started | 0% |
 
-**Overall: ~82% complete** (verified 2026-01-23)
-**Tests: 402 unit/integration passing**
+**Overall: ~82% complete** (at time of session)
+**Tests: 402 unit/integration passing** (grew to 447)
 
 ---
 
@@ -361,9 +361,9 @@
 - 25 unit tests for range parser
 
 ### Phase 8: VTT Map Features
-**Status:** `40% complete` ⚠️
+**Status:** `complete` ✅
 **Started:** 2026-01-23
-**Completed:** -
+**Completed:** 2026-01-23
 
 #### Implemented:
 - Fog of War store (reveal/hide/explore states)
@@ -371,12 +371,12 @@
 - Fog persistence in encounter model
 - Grid background field in schema
 - E2E tests: vtt-fog-of-war.spec.ts
-
-#### Remaining:
-- Background image upload UI
-- Terrain types and painting
-- Drawing tools
-- Map layers
+- **Terrain store** with 6 terrain types (normal, difficult, blocking, water, hazard, elevated)
+- **MapUploader.vue** for background image upload
+- **TerrainPainter.vue** for terrain editing tools
+- **Terrain rendering** in GridCanvas with visual patterns
+- **Terrain-aware movement** with Dijkstra pathfinding
+- 45 new unit tests (terrain: 37, movement: 8)
 
 ### Phase 9: Integration & Polish
 **Status:** `pending`
