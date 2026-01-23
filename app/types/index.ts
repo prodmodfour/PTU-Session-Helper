@@ -1,3 +1,9 @@
+// Import spatial types for use in this file
+import type { GridPosition, GridConfig } from './spatial';
+
+// Re-export spatial types
+export * from './spatial';
+
 // Pokemon Types
 export type PokemonType =
   | 'Normal' | 'Fire' | 'Water' | 'Electric' | 'Grass' | 'Ice'
@@ -241,6 +247,10 @@ export interface Combatant {
   specialEvasion: number;
   speedEvasion: number;
 
+  // VTT Position (grid coordinates)
+  position?: GridPosition;
+  tokenSize: number; // 1 = 1x1, 2 = 2x2 (for large Pokemon)
+
   // Reference to actual data
   entity: Pokemon | HumanCharacter;
 }
@@ -309,6 +319,9 @@ export interface Encounter {
   isActive: boolean;
   isPaused: boolean;
   isServed: boolean;
+
+  // VTT Grid configuration
+  gridConfig: GridConfig;
 
   // Scene tracking (for Scene-frequency moves)
   sceneNumber: number;
@@ -382,4 +395,158 @@ export interface EncounterSnapshot {
   timestamp: Date;
   actionName: string;
   state: Encounter;
+}
+
+// ============================================
+// ENCOUNTER TABLE SYSTEM (Habitats)
+// ============================================
+
+// Rarity presets with standard weights
+export type RarityPreset = 'common' | 'uncommon' | 'rare' | 'very-rare' | 'legendary';
+
+export const RARITY_WEIGHTS: Record<RarityPreset, number> = {
+  'common': 10,
+  'uncommon': 5,
+  'rare': 3,
+  'very-rare': 1,
+  'legendary': 0.1,
+};
+
+// Level range for encounter generation
+export interface LevelRange {
+  min: number;
+  max: number;
+}
+
+// Entry in an encounter table (Pokemon + weight)
+export interface EncounterTableEntry {
+  id: string;
+  speciesId: string;
+  speciesName: string;  // Denormalized for display
+  weight: number;
+  levelRange?: LevelRange; // Override table default if set
+}
+
+// Encounter Table (a.k.a. Habitat)
+export interface EncounterTable {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  levelRange: LevelRange;
+  entries: EncounterTableEntry[];
+  modifications: TableModification[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Modification entry (override, add, or remove from parent)
+export interface ModificationEntry {
+  id: string;
+  speciesName: string;
+  weight?: number;      // If set, overrides parent weight (or adds new)
+  remove: boolean;      // If true, exclude from table
+  levelRange?: LevelRange;
+}
+
+// Table Modification (a.k.a. Sub-habitat)
+export interface TableModification {
+  id: string;
+  name: string;
+  description?: string;
+  parentTableId: string;
+  levelRange?: LevelRange; // Override parent if set
+  entries: ModificationEntry[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Resolved table entry (after applying modifications)
+export interface ResolvedTableEntry {
+  speciesName: string;
+  speciesId?: string;
+  weight: number;
+  levelRange: LevelRange;
+  source: 'parent' | 'modification' | 'added';
+}
+
+// ============================================
+// ENCOUNTER TEMPLATE LIBRARY
+// ============================================
+
+// Combatant configuration for template (simplified, no runtime state)
+export interface TemplateCombatant {
+  type: 'pokemon' | 'human';
+  entityId?: string;     // Reference to existing entity (optional)
+  speciesOrName: string; // Species name (Pokemon) or character name (Human)
+  level: number;
+  side: CombatSide;
+  position?: GridPosition;
+}
+
+// Saved encounter template
+export interface EncounterTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  battleType: BattleType;
+  combatants: TemplateCombatant[];
+  gridConfig?: Partial<GridConfig>;
+  category?: string;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================
+// APP SETTINGS
+// ============================================
+
+// Damage calculation mode
+export type DamageMode = 'set' | 'rolled';
+
+// App-wide settings
+export interface AppSettings {
+  damageMode: DamageMode;
+  defaultGridWidth: number;
+  defaultGridHeight: number;
+  defaultCellSize: number;
+}
+
+// Default settings
+export const DEFAULT_SETTINGS: AppSettings = {
+  damageMode: 'set',
+  defaultGridWidth: 20,
+  defaultGridHeight: 15,
+  defaultCellSize: 40,
+};
+
+// ============================================
+// WILD ENCOUNTER GENERATION
+// ============================================
+
+// Options for generating a wild encounter
+export interface WildEncounterOptions {
+  tableId: string;
+  modificationId?: string;  // Optional sub-habitat
+  count: number;            // Number of Pokemon to generate
+  levelRange?: LevelRange;  // Override table default
+  allowDuplicates: boolean;
+}
+
+// Generated Pokemon (preview before adding to encounter)
+export interface GeneratedPokemon {
+  speciesName: string;
+  level: number;
+  weight: number;          // Weight that led to selection (for display)
+  source: 'parent' | 'modification' | 'added';
+  rerolled: boolean;       // Whether user rerolled this slot
+}
+
+// Result of wild encounter generation
+export interface WildEncounterResult {
+  pokemon: GeneratedPokemon[];
+  tableUsed: string;
+  modificationUsed?: string;
+  levelRange: LevelRange;
 }

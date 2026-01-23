@@ -375,7 +375,7 @@ describe('CombatantCard Type Display', () => {
         entity: createMockPokemonEntity({ types: ['Fire'] })
       })
 
-      expect(combatant.entity.types).toEqual(['Fire'])
+      expect((combatant.entity as any).types).toEqual(['Fire'])
     })
 
     it('should display dual types', () => {
@@ -383,9 +383,9 @@ describe('CombatantCard Type Display', () => {
         entity: createMockPokemonEntity({ types: ['Water', 'Ice'] })
       })
 
-      expect(combatant.entity.types).toHaveLength(2)
-      expect(combatant.entity.types).toContain('Water')
-      expect(combatant.entity.types).toContain('Ice')
+      expect((combatant.entity as any).types).toHaveLength(2)
+      expect((combatant.entity as any).types).toContain('Water')
+      expect((combatant.entity as any).types).toContain('Ice')
     })
   })
 

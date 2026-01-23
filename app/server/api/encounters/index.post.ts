@@ -1,4 +1,13 @@
 import { prisma } from '~/server/utils/prisma'
+import type { GridConfig } from '~/types'
+
+// Default grid configuration
+const DEFAULT_GRID_CONFIG: GridConfig = {
+  enabled: false,
+  width: 20,
+  height: 15,
+  cellSize: 40,
+}
 
 export default defineEventHandler(async (event) => {
   try {
@@ -14,6 +23,12 @@ export default defineEventHandler(async (event) => {
         turnOrder: '[]',
         isActive: false,
         isPaused: false,
+        isServed: false,
+        gridEnabled: body.gridEnabled ?? false,
+        gridWidth: body.gridWidth ?? 20,
+        gridHeight: body.gridHeight ?? 15,
+        gridCellSize: body.gridCellSize ?? 40,
+        gridBackground: body.gridBackground ?? null,
         moveLog: '[]',
         defeatedEnemies: '[]'
       }
@@ -27,8 +42,20 @@ export default defineEventHandler(async (event) => {
       currentRound: encounter.currentRound,
       currentTurnIndex: encounter.currentTurnIndex,
       turnOrder: [],
+      currentPhase: 'pokemon' as const,
+      trainerTurnOrder: [],
+      pokemonTurnOrder: [],
       isActive: encounter.isActive,
       isPaused: encounter.isPaused,
+      isServed: encounter.isServed,
+      gridConfig: {
+        enabled: encounter.gridEnabled,
+        width: encounter.gridWidth,
+        height: encounter.gridHeight,
+        cellSize: encounter.gridCellSize,
+        background: encounter.gridBackground ?? undefined,
+      } as GridConfig,
+      sceneNumber: 1,
       moveLog: [],
       defeatedEnemies: []
     }

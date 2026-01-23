@@ -123,7 +123,7 @@ model Encounter {
   name          String
   battleType    String   @default("trainer") // 'trainer' or 'full_contact'
 
-  // Combatants stored as JSON (includes all combat state)
+  // Combatants stored as JSON (includes all combat state + positions)
   combatants    String   @default("[]") // JSON array
 
   // Turn tracking
@@ -135,6 +135,13 @@ model Encounter {
   isActive      Boolean  @default(true)
   isPaused      Boolean  @default(false)
   isServed      Boolean  @default(false) // Whether this encounter is served to the Group View
+
+  // VTT Grid configuration
+  gridEnabled   Boolean  @default(false)
+  gridWidth     Int      @default(20)
+  gridHeight    Int      @default(15)
+  gridCellSize  Int      @default(40) // pixels
+  gridBackground String? // URL to background image
 
   // History
   moveLog       String   @default("[]") // JSON array
@@ -185,4 +192,157 @@ model SpeciesData {
   abilities     String   // JSON array of ability names
   eggGroups     String   // JSON array
   evolutionStage Int     @default(1)
+
+  // Movement capabilities (for VTT)
+  overland      Int      @default(5)
+  swim          Int      @default(0)
+  sky           Int      @default(0)
+  burrow        Int      @default(0)
+  levitate      Int      @default(0)
+  teleport      Int      @default(0)
+
+  // Relation to encounter table entries
+  encounterTableEntries EncounterTableEntry[]
+}
+
+// ============================================
+// ENCOUNTER TABLE SYSTEM (Habitats)
+// ============================================
+
+// Encounter Table (a.k.a. Habitat) - weighted list of Pokemon for a location
+model EncounterTable {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  imageUrl      String?
+
+  // Default level range for generated Pokemon
+  levelMin      Int      @default(1)
+  levelMax      Int      @default(10)
+
+  // Entries (Pokemon in this table)
+  entries       EncounterTableEntry[]
+
+  // Sub-tables (modifications of this table)
+  modifications TableModification[]
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Entry in an Encounter Table (Pokemon + weight)
+model EncounterTableEntry {
+  id            String   @id @default(uuid())
+
+  // Reference to species
+  speciesId     String
+  species       SpeciesData @relation(fields: [speciesId], references: [id])
+
+  // Weight determines encounter probability (higher = more common)
+  weight        Int      @default(10)
+
+  // Optional level override (null = use table's default range)
+  levelMin      Int?
+  levelMax      Int?
+
+  // Parent table
+  tableId       String
+  table         EncounterTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  @@unique([tableId, speciesId])
+}
+
+// Table Modification (a.k.a. Sub-habitat) - modifications to a parent table
+model TableModification {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+
+  // Parent table this modifies
+  parentTableId String
+  parentTable   EncounterTable @relation(fields: [parentTableId], references: [id], onDelete: Cascade)
+
+  // Optional level range override
+  levelMin      Int?
+  levelMax      Int?
+
+  // Modification entries
+  entries       ModificationEntry[]
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Entry in a Table Modification (override weight, add, or remove)
+model ModificationEntry {
+  id            String   @id @default(uuid())
+
+  // Species name (not foreign key - allows adding species not in parent)
+  speciesName   String
+
+  // Action: override weight, or remove from table
+  // If weight is null and remove is true, this species is excluded
+  // If weight is set, it overrides parent weight (or adds if not in parent)
+  weight        Int?
+  remove        Boolean  @default(false)
+
+  // Optional level override
+  levelMin      Int?
+  levelMax      Int?
+
+  // Parent modification
+  modificationId String
+  modification  TableModification @relation(fields: [modificationId], references: [id], onDelete: Cascade)
+
+  @@unique([modificationId, speciesName])
+}
+
+// ============================================
+// ENCOUNTER TEMPLATE LIBRARY
+// ============================================
+
+// Saved encounter template for reuse
+model EncounterTemplate {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  battleType    String   @default("trainer")
+
+  // Stored combatant configurations (JSON)
+  combatants    String   @default("[]")
+
+  // Optional grid configuration
+  gridWidth     Int?
+  gridHeight    Int?
+  gridCellSize  Int?
+
+  // Organization
+  category      String?
+  tags          String   @default("[]") // JSON array
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================
+// APP SETTINGS
+// ============================================
+
+// App-wide settings (single row table)
+model AppSettings {
+  id            String   @id @default("default")
+
+  // Damage mode: 'set' uses average damage, 'rolled' simulates dice
+  damageMode    String   @default("set") // 'set' | 'rolled'
+
+  // VTT defaults
+  defaultGridWidth  Int  @default(20)
+  defaultGridHeight Int  @default(15)
+  defaultCellSize   Int  @default(40) // pixels
+
+  // Timestamps
+  updatedAt     DateTime @updatedAt
 }

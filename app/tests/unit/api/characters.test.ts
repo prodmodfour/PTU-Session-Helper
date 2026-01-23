@@ -138,8 +138,8 @@ describe('Characters API', () => {
       const result = await mockPrisma.humanCharacter.create({
         data: {
           name: inputBody.name,
-          characterType: inputBody.characterType || 'npc',
-          level: inputBody.level || 1,
+          characterType: expectedDefaults.characterType,
+          level: expectedDefaults.level,
           hp: 10,
           attack: 5,
           defense: 5,

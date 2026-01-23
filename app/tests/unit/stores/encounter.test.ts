@@ -11,17 +11,49 @@ import { useEncounterStore } from '~/stores/encounter'
 // Test data helpers
 const createMockCombatant = (overrides = {}) => ({
   id: 'comb-123',
-  name: 'Pikachu',
-  entityType: 'pokemon' as const,
+  type: 'pokemon' as const,
   entityId: 'poke-123',
   side: 'players' as const,
-  currentHp: 85,
-  maxHp: 85,
-  speed: 90,
   initiative: 95,
+  initiativeBonus: 0,
+  turnState: {
+    hasActed: false,
+    standardActionUsed: false,
+    shiftActionUsed: false,
+    swiftActionUsed: false,
+    canBeCommanded: true,
+    isHolding: false,
+  },
   hasActed: false,
-  types: ['Electric'],
-  moves: [{ name: 'Thunderbolt', type: 'Electric', damageBase: 9 }],
+  actionsRemaining: 1,
+  shiftActionsRemaining: 1,
+  injuries: { count: 0, sources: [] },
+  physicalEvasion: 2,
+  specialEvasion: 2,
+  speedEvasion: 2,
+  tokenSize: 1,
+  entity: {
+    id: 'poke-123',
+    species: 'Pikachu',
+    nickname: 'Sparky',
+    level: 25,
+    experience: 0,
+    nature: { name: 'Hardy', raisedStat: null, loweredStat: null },
+    types: ['Electric'] as const,
+    baseStats: { hp: 35, attack: 55, defense: 40, specialAttack: 50, specialDefense: 50, speed: 90 },
+    currentStats: { hp: 35, attack: 55, defense: 40, specialAttack: 50, specialDefense: 50, speed: 90 },
+    currentHp: 85,
+    maxHp: 85,
+    stageModifiers: { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0, accuracy: 0, evasion: 0 },
+    abilities: [],
+    moves: [{ id: 'm1', name: 'Thunderbolt', type: 'Electric', damageClass: 'Special', frequency: 'At-Will', ac: 2, damageBase: 9, range: '6', effect: '' }],
+    statusConditions: [],
+    injuries: 0,
+    temporaryHp: 0,
+    shiny: false,
+    gender: 'Male' as const,
+    isInLibrary: false,
+  },
   ...overrides
 })
 
@@ -39,6 +71,13 @@ const createMockEncounter = (overrides = {}) => ({
   sceneNumber: 1,
   isActive: false,
   isPaused: false,
+  isServed: false,
+  gridConfig: {
+    enabled: false,
+    width: 20,
+    height: 15,
+    cellSize: 40,
+  },
   moveLog: [],
   defeatedEnemies: [],
   ...overrides
@@ -102,9 +141,9 @@ describe('Encounter Store', () => {
     it('should return combatants in turn order', () => {
       const store = useEncounterStore()
       const combatants = [
-        createMockCombatant({ id: 'comb-1', name: 'Pikachu', initiative: 95 }),
-        createMockCombatant({ id: 'comb-2', name: 'Charizard', initiative: 105 }),
-        createMockCombatant({ id: 'comb-3', name: 'Snorlax', initiative: 35 })
+        createMockCombatant({ id: 'comb-1', entity: { ...createMockCombatant().entity, species: 'Pikachu' }, initiative: 95 }),
+        createMockCombatant({ id: 'comb-2', entity: { ...createMockCombatant().entity, species: 'Charizard' }, initiative: 105 }),
+        createMockCombatant({ id: 'comb-3', entity: { ...createMockCombatant().entity, species: 'Snorlax' }, initiative: 35 })
       ]
 
       store.encounter = createMockEncounter({
@@ -113,9 +152,9 @@ describe('Encounter Store', () => {
       })
 
       const sorted = store.combatantsByInitiative
-      expect(sorted[0].name).toBe('Charizard')
-      expect(sorted[1].name).toBe('Pikachu')
-      expect(sorted[2].name).toBe('Snorlax')
+      expect((sorted[0].entity as any).species).toBe('Charizard')
+      expect((sorted[1].entity as any).species).toBe('Pikachu')
+      expect((sorted[2].entity as any).species).toBe('Snorlax')
     })
   })
 
@@ -136,9 +175,9 @@ describe('Encounter Store', () => {
     it('should return current combatant based on turn index', () => {
       const store = useEncounterStore()
       const combatants = [
-        createMockCombatant({ id: 'comb-1', name: 'First' }),
-        createMockCombatant({ id: 'comb-2', name: 'Second' }),
-        createMockCombatant({ id: 'comb-3', name: 'Third' })
+        createMockCombatant({ id: 'comb-1', entity: { ...createMockCombatant().entity, species: 'First' } }),
+        createMockCombatant({ id: 'comb-2', entity: { ...createMockCombatant().entity, species: 'Second' } }),
+        createMockCombatant({ id: 'comb-3', entity: { ...createMockCombatant().entity, species: 'Third' } })
       ]
 
       store.encounter = createMockEncounter({
@@ -147,7 +186,7 @@ describe('Encounter Store', () => {
         currentTurnIndex: 1
       })
 
-      expect(store.currentCombatant?.name).toBe('Second')
+      expect((store.currentCombatant?.entity as any)?.species).toBe('Second')
     })
   })
 
@@ -155,10 +194,10 @@ describe('Encounter Store', () => {
     it('should filter combatants by side', () => {
       const store = useEncounterStore()
       const combatants = [
-        createMockCombatant({ id: '1', name: 'Player Pokemon', side: 'players' }),
-        createMockCombatant({ id: '2', name: 'Ally Pokemon', side: 'allies' }),
-        createMockCombatant({ id: '3', name: 'Enemy Pokemon', side: 'enemies' }),
-        createMockCombatant({ id: '4', name: 'Another Player', side: 'players' })
+        createMockCombatant({ id: '1', side: 'players' }),
+        createMockCombatant({ id: '2', side: 'allies' }),
+        createMockCombatant({ id: '3', side: 'enemies' }),
+        createMockCombatant({ id: '4', side: 'players' })
       ]
 
       store.encounter = createMockEncounter({ combatants })
@@ -322,18 +361,18 @@ describe('Encounter Store', () => {
     it('should apply damage to combatant', async () => {
       const store = useEncounterStore()
       store.encounter = createMockEncounter({
-        combatants: [createMockCombatant({ id: 'comb-1', currentHp: 85 })]
+        combatants: [createMockCombatant({ id: 'comb-1', entity: { ...createMockCombatant().entity, currentHp: 85 } })]
       })
 
       const updatedEncounter = createMockEncounter({
-        combatants: [createMockCombatant({ id: 'comb-1', currentHp: 60 })]
+        combatants: [createMockCombatant({ id: 'comb-1', entity: { ...createMockCombatant().entity, currentHp: 60 } })]
       })
 
       mockFetch.mockResolvedValueOnce({ data: updatedEncounter })
 
       await store.applyDamage('comb-1', 25)
 
-      expect(store.encounter?.combatants[0].currentHp).toBe(60)
+      expect((store.encounter?.combatants[0].entity as any).currentHp).toBe(60)
     })
   })
 
@@ -341,18 +380,18 @@ describe('Encounter Store', () => {
     it('should heal combatant', async () => {
       const store = useEncounterStore()
       store.encounter = createMockEncounter({
-        combatants: [createMockCombatant({ id: 'comb-1', currentHp: 50 })]
+        combatants: [createMockCombatant({ id: 'comb-1', entity: { ...createMockCombatant().entity, currentHp: 50 } })]
       })
 
       const updatedEncounter = createMockEncounter({
-        combatants: [createMockCombatant({ id: 'comb-1', currentHp: 70 })]
+        combatants: [createMockCombatant({ id: 'comb-1', entity: { ...createMockCombatant().entity, currentHp: 70 } })]
       })
 
       mockFetch.mockResolvedValueOnce({ data: updatedEncounter })
 
       await store.healCombatant('comb-1', 20)
 
-      expect(store.encounter?.combatants[0].currentHp).toBe(70)
+      expect((store.encounter?.combatants[0].entity as any).currentHp).toBe(70)
     })
   })
 

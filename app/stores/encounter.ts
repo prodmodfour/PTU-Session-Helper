@@ -706,6 +706,37 @@ export const useEncounterStore = defineStore('encounter', {
         this.error = e.message || 'Failed to take a breather'
         throw e
       }
+    },
+
+    // ===========================================
+    // Wild Pokemon Spawning (From Encounter Tables)
+    // ===========================================
+
+    // Add wild Pokemon to encounter from generated data
+    async addWildPokemon(
+      pokemon: Array<{ speciesId?: string; speciesName: string; level: number }>,
+      side: CombatSide = 'enemies'
+    ): Promise<Array<{ pokemonId: string; combatantId: string; species: string; level: number }>> {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      try {
+        const response = await $fetch<{
+          data: {
+            encounter: Encounter
+            addedPokemon: Array<{ pokemonId: string; combatantId: string; species: string; level: number }>
+          }
+        }>(`/api/encounters/${this.encounter.id}/wild-spawn`, {
+          method: 'POST',
+          body: { pokemon, side }
+        })
+        this.encounter = response.data.encounter
+        return response.data.addedPokemon
+      } catch (e: any) {
+        this.error = e.message || 'Failed to add wild Pokemon'
+        throw e
+      }
     }
   }
 })

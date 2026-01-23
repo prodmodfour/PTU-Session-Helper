@@ -1,4 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
+import type { GridConfig } from '~/types'
 
 export default defineEventHandler(async () => {
   try {
@@ -14,8 +15,20 @@ export default defineEventHandler(async () => {
       currentRound: e.currentRound,
       currentTurnIndex: e.currentTurnIndex,
       turnOrder: JSON.parse(e.turnOrder),
+      currentPhase: 'pokemon' as const,
+      trainerTurnOrder: [],
+      pokemonTurnOrder: [],
       isActive: e.isActive,
       isPaused: e.isPaused,
+      isServed: e.isServed,
+      gridConfig: {
+        enabled: e.gridEnabled,
+        width: e.gridWidth,
+        height: e.gridHeight,
+        cellSize: e.gridCellSize,
+        background: e.gridBackground ?? undefined,
+      } as GridConfig,
+      sceneNumber: 1,
       moveLog: JSON.parse(e.moveLog),
       defeatedEnemies: JSON.parse(e.defeatedEnemies)
     }))
