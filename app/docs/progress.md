@@ -14,7 +14,7 @@
 | 2 | Habitat System | ✅ Complete | 100% |
 | 3 | Wild Encounter Generation | ✅ Complete | 100% |
 | 4 | VTT Grid - Foundation | ✅ Complete | 100% |
-| 5 | VTT Grid - Advanced | 🚧 In Progress | 30% |
+| 5 | VTT Grid - Advanced | 🚧 In Progress | 65% |
 | 6 | Encounter Library | ⏳ Pending | 0% |
 | 7 | Set/Rolled Damage | ⏳ Pending | 0% |
 | 8 | Integration & Polish | ⏳ Pending | 0% |
@@ -149,10 +149,28 @@
   - [x] Selection count display in header
   - [x] multiSelect event forwarding
 
-### Measurement Tools ⏳
-- [ ] Distance measurement (click-drag between cells)
-- [ ] AoE preview overlays
-- [ ] Range circles
+### Measurement Tools ✅
+- [x] Measurement Store (Pinia) - stores/measurement.ts
+  - [x] MeasurementMode types (none, distance, burst, cone, line, close-blast)
+  - [x] Distance calculation (Chebyshev distance for PTU)
+  - [x] Affected cells calculation for all AoE types
+  - [x] AoE direction and size management
+- [x] GridCanvas.vue measurement features
+  - [x] drawMeasurementOverlay() with color-coded shapes
+  - [x] Mouse handlers for measurement mode
+  - [x] Keyboard shortcuts (M, B, C, L, R, +/-)
+  - [x] Coordinate display with mode and distance
+- [x] VTTContainer.vue measurement toolbar
+  - [x] Mode selection buttons (distance, burst, cone, line, close-blast)
+  - [x] Size controls for AoE shapes
+  - [x] Direction controls with visual arrows
+  - [x] Clear button
+- [x] Helper functions for AoE calculations
+  - [x] getLineCells() - Bresenham's line algorithm
+  - [x] getBurstCells() - Circle with Chebyshev distance
+  - [x] getConeCells() - Expanding cone shape
+  - [x] getCloseBlastCells() - Square adjacent to user
+- [x] E2E Tests - vtt-measurement.spec.ts (17 tests)
 
 ### Fog of War ⏳
 - [ ] FogOfWarStore for visibility tracking
@@ -160,15 +178,25 @@
 - [ ] GM reveal/hide tools
 - [ ] Player view integration (hide unrevealed areas)
 
-### E2E Tests 🚧
-- [x] vtt-multi-selection.spec.ts created
+### E2E Tests ✅
+- [x] vtt-multi-selection.spec.ts created (8 tests)
+- [x] vtt-measurement.spec.ts created (17 tests)
 
 ---
 
 ## Recent Changes
 
 ### 2026-01-23
-- **Phase 5 Progress (30%)**
+- **Phase 5 Progress (65%)**
+- Implemented Measurement Tools
+  - Created stores/measurement.ts Pinia store with full AoE calculations
+  - Added drawMeasurementOverlay() to GridCanvas.vue with color-coded shapes
+  - Added measurement toolbar to VTTContainer.vue with mode buttons
+  - Added size and direction controls for AoE shapes
+  - Added keyboard shortcuts (M, B, C, L, R, +/-)
+  - Created vtt-measurement.spec.ts with 17 E2E tests
+  - All 44 VTT E2E tests passing (19 grid + 8 multi-selection + 17 measurement)
+
 - Implemented Multi-Token Selection
   - Created stores/selection.ts Pinia store
   - Added isMultiSelected prop and styling to VTTToken.vue

@@ -34,6 +34,90 @@
       </div>
     </div>
 
+    <!-- Measurement Toolbar -->
+    <div v-if="config.enabled" class="vtt-measurement-toolbar" data-testid="measurement-toolbar">
+      <div class="vtt-measurement-toolbar__modes">
+        <button
+          class="measurement-btn"
+          :class="{ 'measurement-btn--active': measurementStore.mode === 'distance' }"
+          @click="setMeasurementMode('distance')"
+          title="Distance (M)"
+          data-testid="measure-distance-btn"
+        >
+          📏 Distance
+        </button>
+        <button
+          class="measurement-btn"
+          :class="{ 'measurement-btn--active': measurementStore.mode === 'burst' }"
+          @click="setMeasurementMode('burst')"
+          title="Burst AoE (B)"
+          data-testid="measure-burst-btn"
+        >
+          💥 Burst
+        </button>
+        <button
+          class="measurement-btn"
+          :class="{ 'measurement-btn--active': measurementStore.mode === 'cone' }"
+          @click="setMeasurementMode('cone')"
+          title="Cone AoE (C)"
+          data-testid="measure-cone-btn"
+        >
+          🔺 Cone
+        </button>
+        <button
+          class="measurement-btn"
+          :class="{ 'measurement-btn--active': measurementStore.mode === 'line' }"
+          @click="setMeasurementMode('line')"
+          title="Line AoE (L)"
+          data-testid="measure-line-btn"
+        >
+          ➖ Line
+        </button>
+        <button
+          class="measurement-btn"
+          :class="{ 'measurement-btn--active': measurementStore.mode === 'close-blast' }"
+          @click="setMeasurementMode('close-blast')"
+          title="Close Blast"
+          data-testid="measure-close-blast-btn"
+        >
+          ⬛ Close Blast
+        </button>
+      </div>
+
+      <div v-if="measurementStore.mode !== 'none'" class="vtt-measurement-toolbar__options">
+        <template v-if="measurementStore.mode !== 'distance'">
+          <label>Size:</label>
+          <button
+            class="size-btn"
+            @click="measurementStore.setAoeSize(measurementStore.aoeSize - 1)"
+            :disabled="measurementStore.aoeSize <= 1"
+          >-</button>
+          <span class="size-display">{{ measurementStore.aoeSize }}</span>
+          <button
+            class="size-btn"
+            @click="measurementStore.setAoeSize(measurementStore.aoeSize + 1)"
+            :disabled="measurementStore.aoeSize >= 10"
+          >+</button>
+        </template>
+
+        <template v-if="['cone', 'close-blast', 'line'].includes(measurementStore.mode)">
+          <span class="separator">|</span>
+          <label>Dir:</label>
+          <button class="dir-btn" @click="measurementStore.cycleDirection">
+            {{ directionArrow }}
+          </button>
+        </template>
+
+        <button
+          class="measurement-btn measurement-btn--clear"
+          @click="clearMeasurement"
+          title="Clear (Escape)"
+        >
+          ✕ Clear
+        </button>
+      </div>
+    </div>
+
     <!-- Grid Settings Panel -->
     <div v-if="showSettings && isGm" class="vtt-settings" data-testid="vtt-settings">
       <div class="vtt-settings__row">
@@ -175,6 +259,7 @@ import type { GridConfig, GridPosition, Combatant, Pokemon, HumanCharacter } fro
 import { DEFAULT_SETTINGS } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
 import { useSelectionStore } from '~/stores/selection'
+import { useMeasurementStore, type MeasurementMode } from '~/stores/measurement'
 
 interface TokenData {
   combatantId: string
@@ -197,8 +282,9 @@ const emit = defineEmits<{
   multiSelect: [combatantIds: string[]]
 }>()
 
-// Selection Store
+// Stores
 const selectionStore = useSelectionStore()
+const measurementStore = useMeasurementStore()
 
 // Refs
 const gridCanvasRef = ref<InstanceType<typeof GridCanvas> | null>(null)
@@ -231,6 +317,21 @@ const tokens = computed((): TokenData[] => {
 const selectedCombatant = computed(() => {
   if (!selectedTokenId.value) return null
   return props.combatants.find(c => c.id === selectedTokenId.value)
+})
+
+// Direction arrow mapping
+const directionArrow = computed(() => {
+  const arrows: Record<string, string> = {
+    north: '↑',
+    south: '↓',
+    east: '→',
+    west: '←',
+    northeast: '↗',
+    northwest: '↖',
+    southeast: '↘',
+    southwest: '↙',
+  }
+  return arrows[measurementStore.aoeDirection] || '↑'
 })
 
 // Methods
@@ -279,6 +380,20 @@ const handleCellClick = (position: GridPosition) => {
 
 const handleMultiSelect = (combatantIds: string[]) => {
   emit('multiSelect', combatantIds)
+}
+
+// Measurement methods
+const setMeasurementMode = (mode: MeasurementMode) => {
+  if (measurementStore.mode === mode) {
+    measurementStore.setMode('none')
+  } else {
+    measurementStore.setMode(mode)
+  }
+}
+
+const clearMeasurement = () => {
+  measurementStore.setMode('none')
+  measurementStore.clearMeasurement()
 }
 
 // File upload methods
@@ -516,5 +631,108 @@ defineExpose({
     font-size: $font-size-sm;
     color: $color-text-muted;
   }
+}
+
+.vtt-measurement-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-md;
+
+  &__modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+  }
+
+  &__options {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    margin-left: auto;
+    padding-left: $spacing-sm;
+    border-left: 1px solid $border-color-default;
+
+    label {
+      font-size: $font-size-xs;
+      color: $color-text-muted;
+    }
+  }
+}
+
+.measurement-btn {
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-xs;
+  background: $color-bg-secondary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: $color-bg-primary;
+    border-color: $color-accent-teal;
+  }
+
+  &--active {
+    background: rgba($color-accent-teal, 0.2);
+    border-color: $color-accent-teal;
+    color: $color-accent-teal;
+  }
+
+  &--clear {
+    background: rgba($color-danger, 0.1);
+    border-color: $color-danger;
+    color: $color-danger;
+
+    &:hover {
+      background: rgba($color-danger, 0.2);
+    }
+  }
+}
+
+.size-btn,
+.dir-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-secondary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: $font-size-sm;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $color-bg-primary;
+    border-color: $color-accent-teal;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.dir-btn {
+  font-size: $font-size-md;
+  width: 28px;
+}
+
+.size-display {
+  min-width: 20px;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-text;
+}
+
+.separator {
+  color: $border-color-default;
 }
 </style>

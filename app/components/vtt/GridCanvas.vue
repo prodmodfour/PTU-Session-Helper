@@ -46,6 +46,12 @@
     <!-- Coordinate Display -->
     <div v-if="showCoordinates && hoveredCell" class="coordinate-display">
       {{ hoveredCell.x }}, {{ hoveredCell.y }}
+      <template v-if="measurementStore.mode !== 'none'">
+        <span class="coordinate-display__mode">| {{ measurementStore.mode }}</span>
+        <span v-if="measurementStore.distance > 0" class="coordinate-display__distance">
+          | {{ measurementStore.distance }}m
+        </span>
+      </template>
     </div>
 
     <!-- Zoom Controls -->
@@ -82,6 +88,7 @@
 <script setup lang="ts">
 import type { GridConfig, GridPosition, Combatant } from '~/types'
 import { useSelectionStore } from '~/stores/selection'
+import { useMeasurementStore } from '~/stores/measurement'
 
 interface TokenData {
   combatantId: string
@@ -108,6 +115,9 @@ const emit = defineEmits<{
 
 // Selection Store
 const selectionStore = useSelectionStore()
+
+// Measurement Store
+const measurementStore = useMeasurementStore()
 
 // Refs
 const containerRef = ref<HTMLDivElement | null>(null)
@@ -242,6 +252,11 @@ const render = () => {
   // Draw grid
   drawGrid(ctx)
 
+  // Draw measurement overlay
+  if (measurementStore.mode !== 'none' && measurementStore.affectedCells.length > 0) {
+    drawMeasurementOverlay(ctx)
+  }
+
   ctx.restore()
 }
 
@@ -265,6 +280,71 @@ const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.moveTo(0, y * cellSize)
     ctx.lineTo(width * cellSize, y * cellSize)
     ctx.stroke()
+  }
+}
+
+const drawMeasurementOverlay = (ctx: CanvasRenderingContext2D) => {
+  const { cellSize } = props.config
+  const cells = measurementStore.affectedCells
+  const origin = measurementStore.startPosition
+
+  // Color based on measurement mode
+  const colors: Record<string, { fill: string; stroke: string }> = {
+    distance: { fill: 'rgba(59, 130, 246, 0.3)', stroke: 'rgba(59, 130, 246, 0.8)' },
+    burst: { fill: 'rgba(239, 68, 68, 0.3)', stroke: 'rgba(239, 68, 68, 0.8)' },
+    cone: { fill: 'rgba(245, 158, 11, 0.3)', stroke: 'rgba(245, 158, 11, 0.8)' },
+    line: { fill: 'rgba(34, 197, 94, 0.3)', stroke: 'rgba(34, 197, 94, 0.8)' },
+    'close-blast': { fill: 'rgba(168, 85, 247, 0.3)', stroke: 'rgba(168, 85, 247, 0.8)' },
+  }
+
+  const color = colors[measurementStore.mode] || colors.distance
+
+  // Draw affected cells
+  ctx.fillStyle = color.fill
+  ctx.strokeStyle = color.stroke
+  ctx.lineWidth = 2
+
+  cells.forEach(cell => {
+    // Only draw cells within grid bounds
+    if (cell.x >= 0 && cell.x < props.config.width &&
+        cell.y >= 0 && cell.y < props.config.height) {
+      ctx.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize)
+      ctx.strokeRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize)
+    }
+  })
+
+  // Draw origin marker
+  if (origin) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
+    ctx.beginPath()
+    ctx.arc(
+      origin.x * cellSize + cellSize / 2,
+      origin.y * cellSize + cellSize / 2,
+      cellSize / 4,
+      0,
+      Math.PI * 2
+    )
+    ctx.fill()
+  }
+
+  // Draw distance line for distance mode
+  if (measurementStore.mode === 'distance' && origin && measurementStore.endPosition) {
+    ctx.strokeStyle = 'rgba(59, 130, 246, 1)'
+    ctx.lineWidth = 3
+    ctx.setLineDash([5, 5])
+
+    ctx.beginPath()
+    ctx.moveTo(
+      origin.x * cellSize + cellSize / 2,
+      origin.y * cellSize + cellSize / 2
+    )
+    ctx.lineTo(
+      measurementStore.endPosition.x * cellSize + cellSize / 2,
+      measurementStore.endPosition.y * cellSize + cellSize / 2
+    )
+    ctx.stroke()
+
+    ctx.setLineDash([])
   }
 }
 
@@ -321,6 +401,13 @@ const handleMouseDown = (event: MouseEvent) => {
   if (event.button === 0 && !draggingTokenId.value) {
     const gridPos = screenToGrid(event.clientX, event.clientY)
 
+    // If in measurement mode, start measuring
+    if (measurementStore.mode !== 'none') {
+      measurementStore.startMeasurement(gridPos)
+      render()
+      return
+    }
+
     // Check if clicking on a token
     const clickedToken = getTokenAtPosition(gridPos)
 
@@ -363,6 +450,12 @@ const handleMouseMove = (event: MouseEvent) => {
   const gridPos = screenToGrid(event.clientX, event.clientY)
   hoveredCell.value = gridPos
 
+  // Handle measurement mode
+  if (measurementStore.isActive) {
+    measurementStore.updateMeasurement(gridPos)
+    render()
+  }
+
   // Handle marquee selection
   if (isMarqueeSelecting.value && selectionStore.isMarqueeActive) {
     selectionStore.updateMarquee(gridPos)
@@ -380,6 +473,11 @@ const handleMouseMove = (event: MouseEvent) => {
 
 const handleMouseUp = (event: MouseEvent) => {
   isPanning.value = false
+
+  // End measurement (but keep the result visible)
+  if (measurementStore.isActive) {
+    measurementStore.endMeasurement()
+  }
 
   // Finalize marquee selection
   if (isMarqueeSelecting.value) {
@@ -463,12 +561,67 @@ const handleKeyDown = (event: KeyboardEvent) => {
     return
   }
 
-  // Escape - Clear selection
+  // Escape - Clear selection and measurement
   if (event.key === 'Escape') {
     selectionStore.clearSelection()
+    measurementStore.clearMeasurement()
+    measurementStore.setMode('none')
     selectedTokenId.value = null
     emit('tokenSelect', null)
     emit('multiSelect', [])
+    render()
+    return
+  }
+
+  // M - Toggle distance measurement mode
+  if (event.key === 'm' || event.key === 'M') {
+    if (measurementStore.mode === 'distance') {
+      measurementStore.setMode('none')
+    } else {
+      measurementStore.setMode('distance')
+    }
+    render()
+    return
+  }
+
+  // B - Toggle burst mode
+  if (event.key === 'b' || event.key === 'B') {
+    if (measurementStore.mode === 'burst') {
+      measurementStore.setMode('none')
+    } else {
+      measurementStore.setMode('burst')
+    }
+    render()
+    return
+  }
+
+  // C - Toggle cone mode
+  if (event.key === 'c' || event.key === 'C') {
+    if (measurementStore.mode === 'cone') {
+      measurementStore.setMode('none')
+    } else {
+      measurementStore.setMode('cone')
+    }
+    render()
+    return
+  }
+
+  // R - Rotate AoE direction (for cone/close-blast)
+  if (event.key === 'r' || event.key === 'R') {
+    measurementStore.cycleDirection()
+    render()
+    return
+  }
+
+  // +/- - Adjust AoE size
+  if (event.key === '+' || event.key === '=') {
+    measurementStore.setAoeSize(measurementStore.aoeSize + 1)
+    render()
+    return
+  }
+  if (event.key === '-' || event.key === '_') {
+    measurementStore.setAoeSize(measurementStore.aoeSize - 1)
+    render()
     return
   }
 
@@ -556,6 +709,19 @@ defineExpose({
   border-radius: $border-radius-sm;
   font-size: $font-size-xs;
   font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+
+  &__mode {
+    color: $color-accent-teal;
+    text-transform: capitalize;
+  }
+
+  &__distance {
+    color: $color-accent-scarlet;
+    font-weight: 600;
+  }
 }
 
 .zoom-controls {
