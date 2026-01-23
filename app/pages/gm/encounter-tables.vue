@@ -71,7 +71,7 @@
 
     <!-- Create Modal -->
     <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
-      <div class="modal">
+      <div class="modal" data-testid="encounter-table-modal">
         <div class="modal__header">
           <h3>Create Encounter Table</h3>
           <button class="modal__close" @click="showCreateModal = false">&times;</button>
@@ -86,6 +86,7 @@
                 class="form-input"
                 placeholder="e.g., Glowlace Forest"
                 required
+                data-testid="table-name-input"
               />
             </div>
             <div class="form-group">
@@ -95,6 +96,7 @@
                 class="form-input"
                 rows="3"
                 placeholder="Describe this habitat..."
+                data-testid="table-description-input"
               ></textarea>
             </div>
             <div class="form-row">
@@ -106,6 +108,7 @@
                   class="form-input"
                   min="1"
                   max="100"
+                  data-testid="level-min-input"
                 />
               </div>
               <div class="form-group">
@@ -116,6 +119,7 @@
                   class="form-input"
                   min="1"
                   max="100"
+                  data-testid="level-max-input"
                 />
               </div>
             </div>
@@ -124,7 +128,7 @@
             <button type="button" class="btn btn--secondary" @click="showCreateModal = false">
               Cancel
             </button>
-            <button type="submit" class="btn btn--primary" :disabled="!newTable.name">
+            <button type="submit" class="btn btn--primary" :disabled="!newTable.name" data-testid="save-table-btn">
               Create
             </button>
           </div>

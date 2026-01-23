@@ -258,7 +258,7 @@ defineEmits<{
 kbd {
   display: inline-block;
   padding: 2px 6px;
-  font-family: $font-family-mono;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: $font-size-xs;
   color: $color-text;
   background: $color-bg-tertiary;
