@@ -881,6 +881,54 @@ export const useEncounterStore = defineStore('encounter', {
         this.error = e.message || 'Failed to remove background image'
         throw e
       }
+    },
+
+    // ===========================================
+    // Fog of War Actions
+    // ===========================================
+
+    // Load fog state from server
+    async loadFogState() {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      try {
+        const response = await $fetch<{
+          success: boolean
+          data: {
+            enabled: boolean
+            cells: [string, string][]
+            defaultState: string
+          }
+        }>(`/api/encounters/${this.encounter.id}/fog`)
+
+        return response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to load fog state'
+        throw e
+      }
+    },
+
+    // Save fog state to server
+    async saveFogState(fogState: {
+      enabled: boolean
+      cells: [string, string][]
+      defaultState: string
+    }) {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      try {
+        await $fetch(`/api/encounters/${this.encounter.id}/fog`, {
+          method: 'PUT',
+          body: fogState
+        })
+      } catch (e: any) {
+        this.error = e.message || 'Failed to save fog state'
+        throw e
+      }
     }
   }
 })

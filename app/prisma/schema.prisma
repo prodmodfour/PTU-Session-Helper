@@ -143,6 +143,10 @@ model Encounter {
   gridCellSize  Int      @default(40) // pixels
   gridBackground String? // URL to background image
 
+  // Fog of War state (JSON: { cells: [key, state][], defaultState: string })
+  fogOfWarEnabled Boolean @default(false)
+  fogOfWarState   String  @default("{}") // JSON object for fog state persistence
+
   // History
   moveLog       String   @default("[]") // JSON array
 

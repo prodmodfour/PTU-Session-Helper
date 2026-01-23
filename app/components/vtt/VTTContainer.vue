@@ -118,6 +118,92 @@
       </div>
     </div>
 
+    <!-- Fog of War Toolbar (GM Only) -->
+    <div v-if="config.enabled && isGm" class="vtt-fow-toolbar" data-testid="fow-toolbar">
+      <div class="vtt-fow-toolbar__header">
+        <button
+          class="fow-toggle-btn"
+          :class="{ 'fow-toggle-btn--active': fogOfWarStore.enabled }"
+          @click="toggleFogOfWar"
+          data-testid="toggle-fow-btn"
+        >
+          {{ fogOfWarStore.enabled ? '🌫 Fog On' : '☀ Fog Off' }}
+        </button>
+
+        <template v-if="fogOfWarStore.enabled">
+          <span class="separator">|</span>
+
+          <div class="vtt-fow-toolbar__tools">
+            <button
+              class="fow-btn"
+              :class="{ 'fow-btn--active': fogOfWarStore.toolMode === 'reveal' }"
+              @click="setFogTool('reveal')"
+              title="Reveal (V)"
+              data-testid="fow-reveal-btn"
+            >
+              👁 Reveal
+            </button>
+            <button
+              class="fow-btn"
+              :class="{ 'fow-btn--active': fogOfWarStore.toolMode === 'hide' }"
+              @click="setFogTool('hide')"
+              title="Hide (H)"
+              data-testid="fow-hide-btn"
+            >
+              🙈 Hide
+            </button>
+            <button
+              class="fow-btn"
+              :class="{ 'fow-btn--active': fogOfWarStore.toolMode === 'explore' }"
+              @click="setFogTool('explore')"
+              title="Explore (E)"
+              data-testid="fow-explore-btn"
+            >
+              🔍 Explore
+            </button>
+          </div>
+
+          <span class="separator">|</span>
+
+          <div class="vtt-fow-toolbar__brush">
+            <label>Brush:</label>
+            <button
+              class="size-btn"
+              @click="fogOfWarStore.setBrushSize(fogOfWarStore.brushSize - 1)"
+              :disabled="fogOfWarStore.brushSize <= 1"
+            >-</button>
+            <span class="size-display">{{ fogOfWarStore.brushSize }}</span>
+            <button
+              class="size-btn"
+              @click="fogOfWarStore.setBrushSize(fogOfWarStore.brushSize + 1)"
+              :disabled="fogOfWarStore.brushSize >= 10"
+            >+</button>
+          </div>
+
+          <span class="separator">|</span>
+
+          <div class="vtt-fow-toolbar__actions">
+            <button
+              class="fow-btn fow-btn--small"
+              @click="revealAllFog"
+              title="Reveal All"
+              data-testid="fow-reveal-all-btn"
+            >
+              Reveal All
+            </button>
+            <button
+              class="fow-btn fow-btn--small fow-btn--danger"
+              @click="hideAllFog"
+              title="Hide All"
+              data-testid="fow-hide-all-btn"
+            >
+              Hide All
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <!-- Grid Settings Panel -->
     <div v-if="showSettings && isGm" class="vtt-settings" data-testid="vtt-settings">
       <div class="vtt-settings__row">
@@ -260,6 +346,7 @@ import { DEFAULT_SETTINGS } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore, type MeasurementMode } from '~/stores/measurement'
+import { useFogOfWarStore, type FogOfWarState } from '~/stores/fogOfWar'
 
 interface TokenData {
   combatantId: string
@@ -272,6 +359,7 @@ const props = defineProps<{
   combatants: Combatant[]
   currentTurnId?: string
   isGm?: boolean
+  encounterId?: string
 }>()
 
 const emit = defineEmits<{
@@ -285,6 +373,34 @@ const emit = defineEmits<{
 // Stores
 const selectionStore = useSelectionStore()
 const measurementStore = useMeasurementStore()
+const fogOfWarStore = useFogOfWarStore()
+
+// Fog persistence
+const { loadFogState, debouncedSave, cancelPendingSave } = useFogPersistence()
+const fogSaveTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+
+// Load fog state when encounter changes
+watch(() => props.encounterId, async (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    const loaded = await loadFogState(newId)
+    if (loaded) {
+      // Re-render grid canvas if available
+      gridCanvasRef.value?.render()
+    }
+  }
+}, { immediate: true })
+
+// Auto-save fog state when it changes (debounced)
+watch(() => fogOfWarStore.$state, () => {
+  if (props.encounterId && props.isGm) {
+    debouncedSave(props.encounterId)
+  }
+}, { deep: true })
+
+// Clean up on unmount
+onUnmounted(() => {
+  cancelPendingSave()
+})
 
 // Refs
 const gridCanvasRef = ref<InstanceType<typeof GridCanvas> | null>(null)
@@ -374,8 +490,8 @@ const handleTokenSelect = (combatantId: string | null) => {
 }
 
 const handleCellClick = (position: GridPosition) => {
-  // Could be used for placing tokens, targeting, etc.
-  console.log('Cell clicked:', position)
+  // Cell clicks for fog painting are handled in GridCanvas
+  // This event is available for future features like token placement
 }
 
 const handleMultiSelect = (combatantIds: string[]) => {
@@ -394,6 +510,23 @@ const setMeasurementMode = (mode: MeasurementMode) => {
 const clearMeasurement = () => {
   measurementStore.setMode('none')
   measurementStore.clearMeasurement()
+}
+
+// Fog of War methods
+const toggleFogOfWar = () => {
+  fogOfWarStore.setEnabled(!fogOfWarStore.enabled)
+}
+
+const setFogTool = (tool: FogOfWarState['toolMode']) => {
+  fogOfWarStore.setToolMode(tool)
+}
+
+const revealAllFog = () => {
+  fogOfWarStore.revealAll(props.config.width, props.config.height)
+}
+
+const hideAllFog = () => {
+  fogOfWarStore.hideAll()
 }
 
 // File upload methods
@@ -734,5 +867,99 @@ defineExpose({
 
 .separator {
   color: $border-color-default;
+}
+
+// Fog of War Toolbar
+.vtt-fow-toolbar {
+  padding: $spacing-sm;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-md;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__tools {
+    display: flex;
+    gap: $spacing-xs;
+  }
+
+  &__brush {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+
+    label {
+      font-size: $font-size-xs;
+      color: $color-text-muted;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-xs;
+  }
+}
+
+.fow-toggle-btn {
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-xs;
+  background: $color-bg-secondary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: $color-bg-primary;
+    border-color: $color-accent-teal;
+  }
+
+  &--active {
+    background: rgba($color-accent-teal, 0.2);
+    border-color: $color-accent-teal;
+    color: $color-accent-teal;
+  }
+}
+
+.fow-btn {
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-xs;
+  background: $color-bg-secondary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: $color-bg-primary;
+    border-color: $color-accent-teal;
+  }
+
+  &--active {
+    background: rgba($color-accent-teal, 0.2);
+    border-color: $color-accent-teal;
+    color: $color-accent-teal;
+  }
+
+  &--small {
+    padding: $spacing-xs;
+    font-size: $font-size-xs;
+  }
+
+  &--danger {
+    border-color: rgba($color-danger, 0.5);
+
+    &:hover {
+      background: rgba($color-danger, 0.1);
+      border-color: $color-danger;
+      color: $color-danger;
+    }
+  }
 }
 </style>

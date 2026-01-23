@@ -89,6 +89,7 @@
 import type { GridConfig, GridPosition, Combatant } from '~/types'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore } from '~/stores/measurement'
+import { useFogOfWarStore } from '~/stores/fogOfWar'
 
 interface TokenData {
   combatantId: string
@@ -118,6 +119,13 @@ const selectionStore = useSelectionStore()
 
 // Measurement Store
 const measurementStore = useMeasurementStore()
+
+// Fog of War Store
+const fogOfWarStore = useFogOfWarStore()
+
+// Fog painting state
+const isFogPainting = ref(false)
+const lastPaintedCell = ref<GridPosition | null>(null)
 
 // Refs
 const containerRef = ref<HTMLDivElement | null>(null)
@@ -257,6 +265,16 @@ const render = () => {
     drawMeasurementOverlay(ctx)
   }
 
+  // Draw fog of war overlay (only for non-GM players)
+  if (fogOfWarStore.enabled && !props.isGm) {
+    drawFogOfWar(ctx)
+  }
+
+  // Draw fog of war preview for GM (semi-transparent)
+  if (fogOfWarStore.enabled && props.isGm) {
+    drawFogOfWarPreview(ctx)
+  }
+
   ctx.restore()
 }
 
@@ -348,6 +366,74 @@ const drawMeasurementOverlay = (ctx: CanvasRenderingContext2D) => {
   }
 }
 
+// Draw fog of war for players (fully opaque fog on hidden cells)
+const drawFogOfWar = (ctx: CanvasRenderingContext2D) => {
+  const { width, height, cellSize } = props.config
+
+  // Draw fog on each hidden cell
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const fogState = fogOfWarStore.getCellState(x, y)
+
+      if (fogState === 'hidden') {
+        // Full fog - completely opaque black
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.95)'
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+      } else if (fogState === 'explored') {
+        // Explored fog - semi-transparent (dimmed)
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.5)'
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+      }
+      // 'revealed' cells are not covered
+    }
+  }
+}
+
+// Draw fog of war preview for GM (shows fog state without blocking view)
+const drawFogOfWarPreview = (ctx: CanvasRenderingContext2D) => {
+  const { width, height, cellSize } = props.config
+
+  // Draw fog state indicator on each cell
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const fogState = fogOfWarStore.getCellState(x, y)
+
+      if (fogState === 'hidden') {
+        // Dim red tint for hidden cells
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+
+        // Draw cross pattern for hidden cells
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(x * cellSize + 2, y * cellSize + 2)
+        ctx.lineTo((x + 1) * cellSize - 2, (y + 1) * cellSize - 2)
+        ctx.moveTo((x + 1) * cellSize - 2, y * cellSize + 2)
+        ctx.lineTo(x * cellSize + 2, (y + 1) * cellSize - 2)
+        ctx.stroke()
+      } else if (fogState === 'explored') {
+        // Yellow tint for explored cells
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.15)'
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+
+        // Draw dots for explored cells
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.4)'
+        ctx.beginPath()
+        ctx.arc(
+          x * cellSize + cellSize / 2,
+          y * cellSize + cellSize / 2,
+          2,
+          0,
+          Math.PI * 2
+        )
+        ctx.fill()
+      }
+      // 'revealed' cells show no preview overlay
+    }
+  }
+}
+
 const screenToGrid = (screenX: number, screenY: number): GridPosition => {
   const container = containerRef.value
   if (!container) return { x: -1, y: -1 }
@@ -408,6 +494,19 @@ const handleMouseDown = (event: MouseEvent) => {
       return
     }
 
+    // If fog of war is enabled and GM, start fog painting
+    if (props.isGm && fogOfWarStore.enabled) {
+      // Check if clicking within grid bounds
+      if (gridPos.x >= 0 && gridPos.x < props.config.width &&
+          gridPos.y >= 0 && gridPos.y < props.config.height) {
+        isFogPainting.value = true
+        lastPaintedCell.value = gridPos
+        fogOfWarStore.applyTool(gridPos.x, gridPos.y)
+        render()
+        return
+      }
+    }
+
     // Check if clicking on a token
     const clickedToken = getTokenAtPosition(gridPos)
 
@@ -456,6 +555,22 @@ const handleMouseMove = (event: MouseEvent) => {
     render()
   }
 
+  // Handle fog painting while dragging
+  if (isFogPainting.value && props.isGm && fogOfWarStore.enabled) {
+    // Only paint if moved to a new cell
+    if (!lastPaintedCell.value ||
+        lastPaintedCell.value.x !== gridPos.x ||
+        lastPaintedCell.value.y !== gridPos.y) {
+      // Check within bounds
+      if (gridPos.x >= 0 && gridPos.x < props.config.width &&
+          gridPos.y >= 0 && gridPos.y < props.config.height) {
+        lastPaintedCell.value = gridPos
+        fogOfWarStore.applyTool(gridPos.x, gridPos.y)
+        render()
+      }
+    }
+  }
+
   // Handle marquee selection
   if (isMarqueeSelecting.value && selectionStore.isMarqueeActive) {
     selectionStore.updateMarquee(gridPos)
@@ -473,6 +588,12 @@ const handleMouseMove = (event: MouseEvent) => {
 
 const handleMouseUp = (event: MouseEvent) => {
   isPanning.value = false
+
+  // End fog painting
+  if (isFogPainting.value) {
+    isFogPainting.value = false
+    lastPaintedCell.value = null
+  }
 
   // End measurement (but keep the result visible)
   if (measurementStore.isActive) {
@@ -622,6 +743,47 @@ const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === '-' || event.key === '_') {
     measurementStore.setAoeSize(measurementStore.aoeSize - 1)
     render()
+    return
+  }
+
+  // F - Toggle fog of war
+  if (event.key === 'f' || event.key === 'F') {
+    fogOfWarStore.setEnabled(!fogOfWarStore.enabled)
+    render()
+    return
+  }
+
+  // V - Reveal fog tool
+  if (event.key === 'v' || event.key === 'V') {
+    if (fogOfWarStore.enabled) {
+      fogOfWarStore.setToolMode('reveal')
+    }
+    return
+  }
+
+  // H - Hide fog tool
+  if (event.key === 'h' || event.key === 'H') {
+    if (fogOfWarStore.enabled) {
+      fogOfWarStore.setToolMode('hide')
+    }
+    return
+  }
+
+  // E - Explore fog tool
+  if (event.key === 'e' || event.key === 'E') {
+    if (fogOfWarStore.enabled) {
+      fogOfWarStore.setToolMode('explore')
+    }
+    return
+  }
+
+  // [ and ] - Adjust fog brush size
+  if (event.key === '[') {
+    fogOfWarStore.setBrushSize(fogOfWarStore.brushSize - 1)
+    return
+  }
+  if (event.key === ']') {
+    fogOfWarStore.setBrushSize(fogOfWarStore.brushSize + 1)
     return
   }
 
