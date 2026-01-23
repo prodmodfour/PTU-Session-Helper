@@ -1,8 +1,8 @@
 # Implementation Progress
 
 ## Current Status
-**Phase**: 4 - VTT Grid Foundation
-**Overall Progress**: ~35%
+**Phase**: 5 - VTT Grid Advanced
+**Overall Progress**: ~50%
 
 ---
 
@@ -13,7 +13,7 @@
 | 1 | Foundation - Data Models | ✅ Complete | 100% |
 | 2 | Habitat System | ✅ Complete | 100% |
 | 3 | Wild Encounter Generation | ✅ Complete | 100% |
-| 4 | VTT Grid - Foundation | ⏳ Pending | 0% |
+| 4 | VTT Grid - Foundation | ✅ Complete | 100% |
 | 5 | VTT Grid - Advanced | ⏳ Pending | 0% |
 | 6 | Encounter Library | ⏳ Pending | 0% |
 | 7 | Set/Rolled Damage | ⏳ Pending | 0% |
@@ -87,9 +87,79 @@
 
 ---
 
+## Phase 4 Detailed Progress
+
+### VTT Components ✅
+- [x] GridCanvas.vue - HTML5 Canvas grid rendering with zoom/pan
+- [x] VTTToken.vue - Token component with drag support
+- [x] VTTContainer.vue - Container with settings panel
+
+### API Endpoints ✅
+- [x] PUT /api/encounters/[id]/grid-config - Update grid configuration
+- [x] POST /api/encounters/[id]/position - Update combatant position
+
+### Store Actions ✅
+- [x] updateCombatantPosition() - Update combatant position
+- [x] updateGridConfig() - Update grid settings
+- [x] toggleGrid() - Enable/disable grid
+- [x] setTokenSize() - Set combatant token size
+
+### UI Integration ✅
+- [x] View tabs (List/Grid) in GM page
+- [x] VTTContainer integrated into GM encounter view
+- [x] Grid settings panel with width/height/cellSize/background
+
+### E2E Tests ✅
+- [x] vtt-grid.spec.ts created with test coverage (19 tests passing)
+
+### Background Image Upload ✅
+- [x] POST /api/encounters/[id]/background - Upload background image
+- [x] DELETE /api/encounters/[id]/background - Remove background image
+- [x] uploadBackgroundImage() store action
+- [x] removeBackgroundImage() store action
+- [x] File upload UI in VTTContainer with preview
+
+### Group View Integration ✅
+- [x] GroupGridCanvas.vue - Read-only grid component for Group View
+- [x] View tabs (List/Grid) in Group View when grid is enabled
+- [x] Auto-switch to grid view when GM enables grid
+- [x] Responsive 4K optimized styles
+
+---
+
 ## Recent Changes
 
 ### 2026-01-23
+- **Phase 4 Complete (100%)**
+- Added background image upload functionality
+  - Created POST /api/encounters/[id]/background endpoint
+  - Created DELETE /api/encounters/[id]/background endpoint
+  - Added uploadBackgroundImage() and removeBackgroundImage() store actions
+  - Replaced URL input with file upload UI in VTTContainer
+  - Added background preview and remove button
+- Integrated VTT Grid with Group View
+  - Created GroupGridCanvas.vue component (read-only grid)
+  - Added view tabs (List/Grid) to Group View header
+  - Auto-switches to grid view when GM enables grid
+  - 4K optimized responsive styles
+- Updated E2E test for file upload UI
+- All 19 VTT Grid E2E tests passing
+- Build passes successfully
+
+- **Phase 4 Previously (90%)**
+- Created GridCanvas.vue component with HTML5 Canvas rendering
+- Created VTTToken.vue component for combatant tokens
+- Created VTTContainer.vue wrapper with settings panel
+- Created PUT /api/encounters/[id]/grid-config endpoint
+- Created POST /api/encounters/[id]/position endpoint
+- Added VTT store actions to encounter store
+- Integrated VTT into GM page with List/Grid view tabs
+- Created vtt-grid.spec.ts E2E tests (19 tests passing)
+- Fixed VTTContainer import issue (GridCanvas explicit import)
+- Fixed gridConfig fallback with computed property
+- Fixed E2E test selectors for toggle button, coordinate display, and reset button
+- Build passes successfully
+
 - **Phase 3 Complete**
 - Created weighted random generation algorithm
 - Created /api/encounter-tables/[id]/generate endpoint
@@ -119,9 +189,12 @@
 ---
 
 ## Next Steps
-1. **Phase 4: VTT Grid Foundation**
-   - Create grid canvas component
-   - Implement coordinate system
-   - Token placement API
-   - Background image support
-   - Write E2E tests (vtt-grid.spec.ts)
+1. **Phase 5: VTT Grid Advanced**
+   - Token drag-and-drop interactions
+   - Multi-token selection
+   - Fog of war
+   - Measurement tools
+
+2. **Phase 6: Encounter Library**
+   - Save/load encounter presets
+   - Template management

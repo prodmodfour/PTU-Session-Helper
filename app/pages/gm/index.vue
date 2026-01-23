@@ -110,10 +110,44 @@
         </div>
       </div>
 
+      <!-- View Tabs -->
+      <div class="view-tabs">
+        <button
+          class="view-tab"
+          :class="{ 'view-tab--active': activeView === 'list' }"
+          @click="activeView = 'list'"
+          data-testid="list-view-tab"
+        >
+          📋 List View
+        </button>
+        <button
+          class="view-tab"
+          :class="{ 'view-tab--active': activeView === 'grid' }"
+          @click="activeView = 'grid'"
+          data-testid="grid-view-tab"
+        >
+          🗺 Grid View
+        </button>
+      </div>
+
       <!-- Main Content -->
       <div class="encounter-content">
-        <!-- Combatants Panel -->
-        <div class="combatants-panel">
+        <!-- Grid View -->
+        <div v-if="activeView === 'grid'" class="grid-view-panel">
+          <VTTContainer
+            :config="gridConfig"
+            :combatants="encounter.combatants"
+            :current-turn-id="currentCombatant?.id"
+            :is-gm="true"
+            @config-update="handleGridConfigUpdate"
+            @token-move="handleTokenMove"
+            @background-upload="handleBackgroundUpload"
+            @background-remove="handleBackgroundRemove"
+          />
+        </div>
+
+        <!-- Combatants Panel (List View) -->
+        <div v-else class="combatants-panel">
           <!-- Current Turn Indicator -->
           <div v-if="currentCombatant && encounter.isActive" class="current-turn">
             <h3>Current Turn</h3>
@@ -252,7 +286,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CombatSide, Combatant, StageModifiers, StatusCondition } from '~/types'
+import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition } from '~/types'
 
 definePageMeta({
   layout: 'gm'
@@ -340,6 +374,9 @@ const handleKeyboardShortcuts = (event: KeyboardEvent) => {
   }
 }
 
+// View state
+const activeView = ref<'list' | 'grid'>('list')
+
 // New encounter form
 const newEncounterName = ref('')
 const newBattleType = ref<'trainer' | 'full_contact'>('trainer')
@@ -355,6 +392,15 @@ const playerCombatants = computed(() => encounterStore.playerCombatants)
 const allyCombatants = computed(() => encounterStore.allyCombatants)
 const enemyCombatants = computed(() => encounterStore.enemyCombatants)
 const moveLog = computed(() => encounterStore.moveLog.slice().reverse())
+
+// Grid config with fallback defaults
+const gridConfig = computed(() => encounter.value?.gridConfig ?? {
+  enabled: false,
+  width: 20,
+  height: 15,
+  cellSize: 40,
+  background: undefined
+})
 
 // Actions
 const createNewEncounter = async () => {
@@ -488,6 +534,35 @@ const handleStatus = async (combatantId: string, add: StatusCondition[], remove:
   encounterStore.captureSnapshot(`${name}: ${parts.join('; ')}`)
   await encounterStore.updateStatusConditions(combatantId, add, remove)
   refreshUndoRedoState()
+}
+
+// VTT Grid handlers
+const handleGridConfigUpdate = async (config: GridConfig) => {
+  await encounterStore.updateGridConfig(config)
+}
+
+const handleTokenMove = async (combatantId: string, position: GridPosition) => {
+  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
+  const name = combatant?.entity?.name ?? combatant?.entity?.species ?? 'Unknown'
+  encounterStore.captureSnapshot(`Moved ${name} to (${position.x}, ${position.y})`)
+  await encounterStore.updateCombatantPosition(combatantId, position)
+  refreshUndoRedoState()
+}
+
+const handleBackgroundUpload = async (file: File) => {
+  try {
+    await encounterStore.uploadBackgroundImage(file)
+  } catch (error) {
+    console.error('Failed to upload background:', error)
+  }
+}
+
+const handleBackgroundRemove = async () => {
+  try {
+    await encounterStore.removeBackgroundImage()
+  } catch (error) {
+    console.error('Failed to remove background:', error)
+  }
 }
 </script>
 
@@ -761,5 +836,38 @@ const handleStatus = async (combatantId: string, add: StatusCondition[], remove:
     padding: $spacing-lg;
     font-style: italic;
   }
+}
+
+.view-tabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.view-tab {
+  padding: $spacing-sm $spacing-lg;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-md;
+  color: $color-text-muted;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $color-bg-secondary;
+    color: $color-text;
+  }
+
+  &--active {
+    background: $gradient-scarlet;
+    border-color: transparent;
+    color: $color-text;
+    box-shadow: $shadow-glow-scarlet;
+  }
+}
+
+.grid-view-panel {
+  grid-column: 1 / -1;
 }
 </style>

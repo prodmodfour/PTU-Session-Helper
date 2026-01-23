@@ -737,6 +737,150 @@ export const useEncounterStore = defineStore('encounter', {
         this.error = e.message || 'Failed to add wild Pokemon'
         throw e
       }
+    },
+
+    // ===========================================
+    // VTT Grid Actions
+    // ===========================================
+
+    // Update combatant position on the grid
+    async updateCombatantPosition(combatantId: string, position: { x: number; y: number }) {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      try {
+        await $fetch(`/api/encounters/${this.encounter.id}/position`, {
+          method: 'POST',
+          body: { combatantId, position }
+        })
+
+        // Update local state
+        const combatant = this.encounter.combatants.find(c => c.id === combatantId)
+        if (combatant) {
+          combatant.position = position
+        }
+      } catch (e: any) {
+        this.error = e.message || 'Failed to update position'
+        throw e
+      }
+    },
+
+    // Update grid configuration
+    async updateGridConfig(config: Partial<{
+      enabled: boolean
+      width: number
+      height: number
+      cellSize: number
+      background?: string
+    }>) {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      try {
+        const response = await $fetch<{ data: typeof config }>(`/api/encounters/${this.encounter.id}/grid-config`, {
+          method: 'PUT',
+          body: config
+        })
+
+        // Update local state
+        this.encounter.gridConfig = {
+          ...this.encounter.gridConfig,
+          ...response.data
+        }
+      } catch (e: any) {
+        this.error = e.message || 'Failed to update grid config'
+        throw e
+      }
+    },
+
+    // Toggle grid enabled/disabled
+    async toggleGrid() {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      await this.updateGridConfig({
+        enabled: !this.encounter.gridConfig.enabled
+      })
+    },
+
+    // Set token size for a combatant
+    async setTokenSize(combatantId: string, size: number) {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      // Update local state first
+      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
+      if (combatant) {
+        combatant.tokenSize = size
+      }
+
+      // Sync to server
+      try {
+        await $fetch(`/api/encounters/${this.encounter.id}`, {
+          method: 'PUT',
+          body: this.encounter
+        })
+      } catch (e: any) {
+        this.error = e.message || 'Failed to update token size'
+        throw e
+      }
+    },
+
+    // Upload background image for grid
+    async uploadBackgroundImage(file: File) {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      try {
+        const response = await $fetch<{ data: { background: string } }>(
+          `/api/encounters/${this.encounter.id}/background`,
+          {
+            method: 'POST',
+            body: formData
+          }
+        )
+
+        // Update local state
+        this.encounter.gridConfig = {
+          ...this.encounter.gridConfig,
+          background: response.data.background
+        }
+
+        return response.data.background
+      } catch (e: any) {
+        this.error = e.message || 'Failed to upload background image'
+        throw e
+      }
+    },
+
+    // Remove background image from grid
+    async removeBackgroundImage() {
+      if (!this.encounter) {
+        throw new Error('No active encounter')
+      }
+
+      try {
+        await $fetch(`/api/encounters/${this.encounter.id}/background`, {
+          method: 'DELETE'
+        })
+
+        // Update local state
+        this.encounter.gridConfig = {
+          ...this.encounter.gridConfig,
+          background: undefined
+        }
+      } catch (e: any) {
+        this.error = e.message || 'Failed to remove background image'
+        throw e
+      }
     }
   }
 })

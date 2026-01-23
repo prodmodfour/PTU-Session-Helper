@@ -21,12 +21,40 @@
           <span class="turn-label">Current Turn:</span>
           <span class="turn-name">{{ getCombatantName(currentCombatant) }}</span>
         </div>
+        <!-- View Toggle (only if grid is enabled) -->
+        <div v-if="gridConfig.enabled" class="group-header__view-toggle">
+          <button
+            class="view-btn"
+            :class="{ 'view-btn--active': activeView === 'list' }"
+            @click="activeView = 'list'"
+            data-testid="group-list-view-btn"
+          >
+            List
+          </button>
+          <button
+            class="view-btn"
+            :class="{ 'view-btn--active': activeView === 'grid' }"
+            @click="activeView = 'grid'"
+            data-testid="group-grid-view-btn"
+          >
+            Grid
+          </button>
+        </div>
       </header>
 
       <!-- Main Content -->
       <main class="group-main">
-        <!-- All Combatants -->
-        <div class="combatants-display">
+        <!-- Grid View -->
+        <div v-if="activeView === 'grid' && gridConfig.enabled" class="grid-view-panel" data-testid="group-grid-panel">
+          <GroupGridCanvas
+            :config="gridConfig"
+            :combatants="encounter.combatants"
+            :current-turn-id="currentCombatant?.id"
+          />
+        </div>
+
+        <!-- List View - All Combatants -->
+        <div v-else class="combatants-display">
           <!-- Players Section -->
           <section class="combatant-section combatant-section--players">
             <h2>Players</h2>
@@ -75,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Pokemon, HumanCharacter } from '~/types'
+import type { Combatant, Pokemon, HumanCharacter, GridConfig } from '~/types'
 
 definePageMeta({
   layout: 'group'
@@ -87,6 +115,9 @@ useHead({
 
 const encounterStore = useEncounterStore()
 const { isConnected, identify, joinEncounter } = useWebSocket()
+
+// View state
+const activeView = ref<'list' | 'grid'>('list')
 
 // Poll for served encounters
 let pollInterval: ReturnType<typeof setInterval> | null = null
@@ -146,6 +177,24 @@ const currentCombatant = computed(() => encounterStore.currentCombatant)
 const playerCombatants = computed(() => encounterStore.playerCombatants)
 const allyCombatants = computed(() => encounterStore.allyCombatants)
 const enemyCombatants = computed(() => encounterStore.enemyCombatants)
+
+// Grid config with fallback defaults
+const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
+  enabled: false,
+  width: 20,
+  height: 15,
+  cellSize: 40,
+  background: undefined
+})
+
+// Auto-switch to grid view when GM enables grid
+watch(() => gridConfig.value.enabled, (enabled) => {
+  if (enabled) {
+    activeView.value = 'grid'
+  } else {
+    activeView.value = 'list'
+  }
+})
 
 // Helpers
 const getCombatantName = (combatant: Combatant): string => {
@@ -277,6 +326,54 @@ const getCombatantName = (combatant: Combatant): string => {
       font-size: $font-size-xxl;
       gap: $spacing-lg;
     }
+  }
+
+  &__view-toggle {
+    display: flex;
+    gap: $spacing-xs;
+    background: $color-bg-tertiary;
+    padding: $spacing-xs;
+    border-radius: $border-radius-md;
+  }
+}
+
+.view-btn {
+  padding: $spacing-sm $spacing-md;
+  background: transparent;
+  border: none;
+  color: $color-text-muted;
+  font-size: $font-size-md;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $color-text;
+    background: rgba($color-text, 0.1);
+  }
+
+  &--active {
+    color: $color-text;
+    background: $color-bg-secondary;
+    box-shadow: $shadow-sm;
+  }
+
+  // 4K optimization
+  @media (min-width: 3000px) {
+    font-size: $font-size-lg;
+    padding: $spacing-md $spacing-lg;
+  }
+}
+
+.grid-view-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-lg;
+
+  // 4K optimization
+  @media (min-width: 3000px) {
+    padding: $spacing-xl;
   }
 }
 
