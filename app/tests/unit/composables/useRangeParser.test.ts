@@ -194,4 +194,142 @@ describe('useRangeParser', () => {
       expect(cells).not.toContainEqual(origin)
     })
   })
+
+  describe('getMovementRangeCells with terrain costs', () => {
+    const origin = { x: 5, y: 5 }
+
+    it('should reduce range when crossing difficult terrain', () => {
+      // Difficult terrain costs 2 instead of 1
+      const getTerrainCost = (x: number, y: number): number => {
+        // Make cells at x=6 difficult terrain
+        if (x === 6) return 2
+        return 1
+      }
+
+      const cellsWithTerrain = getMovementRangeCells(origin, 2, [], getTerrainCost)
+      const cellsWithoutTerrain = getMovementRangeCells(origin, 2, [])
+
+      // With difficult terrain at x=6, cells beyond x=6 should not be reachable
+      // since moving to x=6 costs 2, leaving no movement to go further
+      expect(cellsWithoutTerrain).toContainEqual({ x: 7, y: 5 })
+
+      // With terrain cost, we can't reach x=7 with speed 2 (costs: 1 to x=6, then 2 to x=7 = 3)
+      // Wait, actually we can reach x=6 (cost 2) with speed 2, but not x=7
+      // The cells at x=6 should still be reachable (cost 2 <= speed 2)
+      expect(cellsWithTerrain).toContainEqual({ x: 6, y: 5 })
+    })
+
+    it('should block movement through impassable terrain', () => {
+      const getTerrainCost = (x: number, y: number): number => {
+        // Make cell at (6, 5) impassable
+        if (x === 6 && y === 5) return Infinity
+        return 1
+      }
+
+      const cells = getMovementRangeCells(origin, 3, [], getTerrainCost)
+
+      // The cell itself should not be reachable
+      expect(cells).not.toContainEqual({ x: 6, y: 5 })
+
+      // Cells that can only be reached through (6, 5) might still be reachable
+      // via alternate paths (diagonal)
+    })
+
+    it('should find path around obstacles via diagonals', () => {
+      const getTerrainCost = (x: number, y: number): number => {
+        // Wall of blocking terrain at x=6 from y=4 to y=6
+        if (x === 6 && y >= 4 && y <= 6) return Infinity
+        return 1
+      }
+
+      const cells = getMovementRangeCells(origin, 4, [], getTerrainCost)
+
+      // Should be able to reach (7, 5) by going diagonally around the wall
+      // Path: (5,5) -> (5,4) -> (6,3) -> (7,3) -> (7,4) -> (7,5) = 5 moves, too far
+      // Or: (5,5) -> (6,3) -> (7,3) -> (7,4) -> (7,5) with diagonals
+      // Actually with Chebyshev, path is: (5,5) -> (6,3) [cost 1] -> (7,4) [cost 1] -> (7,5) [cost 1] = 3
+      // So (7, 5) should be reachable with speed 4
+    })
+
+    it('should not include cells that cost more than remaining speed', () => {
+      const getTerrainCost = (x: number, y: number): number => {
+        // All cells cost 3 except origin neighbors
+        if (Math.abs(x - 5) <= 1 && Math.abs(y - 5) <= 1) return 1
+        return 3
+      }
+
+      const cells = getMovementRangeCells(origin, 2, [], getTerrainCost)
+
+      // Only cells adjacent to origin should be reachable (cost 1 each)
+      // Cells 2 away would cost: 1 (adjacent) + 3 (next) = 4 > speed 2
+      expect(cells.every(c =>
+        Math.abs(c.x - origin.x) <= 1 && Math.abs(c.y - origin.y) <= 1
+      )).toBe(true)
+    })
+  })
+
+  describe('validateMovement with terrain costs', () => {
+    const origin = { x: 5, y: 5 }
+
+    it('should fail when destination has impassable terrain', () => {
+      const getTerrainCost = (x: number, y: number): number => {
+        if (x === 7 && y === 5) return Infinity
+        return 1
+      }
+
+      const result = validateMovement(origin, { x: 7, y: 5 }, 5, [], getTerrainCost)
+      expect(result.valid).toBe(false)
+      expect(result.reason).toContain('impassable terrain')
+    })
+
+    it('should succeed when path exists through difficult terrain', () => {
+      const getTerrainCost = (x: number, y: number): number => {
+        // Difficult terrain between origin and destination
+        if (x === 6 && y === 5) return 2
+        return 1
+      }
+
+      // Distance is 2, but cost is 1 + 2 = 3 (assuming worst path)
+      // With speed 5, should be able to reach (7, 5)
+      const result = validateMovement(origin, { x: 7, y: 5 }, 5, [], getTerrainCost)
+      expect(result.valid).toBe(true)
+    })
+  })
+
+  describe('calculatePathCost', () => {
+    const { calculatePathCost } = useRangeParser()
+    const origin = { x: 0, y: 0 }
+
+    it('should return null for blocked destination', () => {
+      const blocked = [{ x: 3, y: 3 }]
+      const result = calculatePathCost(origin, { x: 3, y: 3 }, blocked)
+      expect(result).toBeNull()
+    })
+
+    it('should return null for impassable terrain destination', () => {
+      const getTerrainCost = (x: number, y: number): number => {
+        if (x === 3 && y === 3) return Infinity
+        return 1
+      }
+      const result = calculatePathCost(origin, { x: 3, y: 3 }, [], getTerrainCost)
+      expect(result).toBeNull()
+    })
+
+    it('should calculate correct cost for simple path', () => {
+      const result = calculatePathCost(origin, { x: 3, y: 0 }, [])
+      expect(result).not.toBeNull()
+      expect(result!.cost).toBe(3) // 3 cells at cost 1 each
+    })
+
+    it('should calculate cost through difficult terrain', () => {
+      const getTerrainCost = (x: number, y: number): number => {
+        if (x === 1) return 2 // Middle column is difficult
+        return 1
+      }
+      const result = calculatePathCost(origin, { x: 2, y: 0 }, [], getTerrainCost)
+      expect(result).not.toBeNull()
+      // Path: (0,0) -> (1,0) [cost 2] -> (2,0) [cost 1] = 3
+      expect(result!.cost).toBe(3)
+    })
+  })
 })

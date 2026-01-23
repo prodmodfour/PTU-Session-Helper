@@ -147,6 +147,9 @@ model Encounter {
   fogOfWarEnabled Boolean @default(false)
   fogOfWarState   String  @default("{}") // JSON object for fog state persistence
 
+  // Terrain state (JSON: { cells: TerrainCell[] })
+  terrainState    String  @default("{}") // JSON object for terrain persistence
+
   // History
   moveLog       String   @default("[]") // JSON array
 

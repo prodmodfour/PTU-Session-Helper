@@ -86,10 +86,11 @@
 </template>
 
 <script setup lang="ts">
-import type { GridConfig, GridPosition, Combatant } from '~/types'
+import type { GridConfig, GridPosition, Combatant, TerrainType } from '~/types'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore } from '~/stores/measurement'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
+import { useTerrainStore, TERRAIN_COLORS } from '~/stores/terrain'
 import { useRangeParser } from '~/composables/useRangeParser'
 
 interface TokenData {
@@ -126,6 +127,9 @@ const measurementStore = useMeasurementStore()
 // Fog of War Store
 const fogOfWarStore = useFogOfWarStore()
 
+// Terrain Store
+const terrainStore = useTerrainStore()
+
 // Range Parser
 const { getMovementRangeCells } = useRangeParser()
 
@@ -135,6 +139,10 @@ const DEFAULT_MOVEMENT_SPEED = 5
 // Fog painting state
 const isFogPainting = ref(false)
 const lastPaintedCell = ref<GridPosition | null>(null)
+
+// Terrain painting state
+const isTerrainPainting = ref(false)
+const lastTerrainCell = ref<GridPosition | null>(null)
 
 // Refs
 const containerRef = ref<HTMLDivElement | null>(null)
@@ -301,6 +309,11 @@ const render = () => {
     )
   }
 
+  // Draw terrain layer (before grid for visual layering)
+  if (terrainStore.terrainCount > 0) {
+    drawTerrain(ctx)
+  }
+
   // Draw grid
   drawGrid(ctx)
 
@@ -348,6 +361,136 @@ const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.lineTo(width * cellSize, y * cellSize)
     ctx.stroke()
   }
+}
+
+const drawTerrain = (ctx: CanvasRenderingContext2D) => {
+  const { width, height, cellSize } = props.config
+
+  // Draw all terrain cells
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const terrain = terrainStore.getTerrainAt(x, y)
+
+      if (terrain === 'normal') continue // Skip normal terrain
+
+      const colors = TERRAIN_COLORS[terrain]
+      if (!colors) continue
+
+      // Fill cell with terrain color
+      ctx.fillStyle = colors.fill
+      ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+
+      // Draw border
+      ctx.strokeStyle = colors.stroke
+      ctx.lineWidth = 1
+      ctx.strokeRect(x * cellSize + 0.5, y * cellSize + 0.5, cellSize - 1, cellSize - 1)
+
+      // Draw pattern/icon for certain terrain types
+      drawTerrainPattern(ctx, x, y, terrain, cellSize)
+    }
+  }
+}
+
+const drawTerrainPattern = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  terrain: TerrainType,
+  cellSize: number
+) => {
+  const centerX = x * cellSize + cellSize / 2
+  const centerY = y * cellSize + cellSize / 2
+
+  ctx.save()
+
+  switch (terrain) {
+    case 'blocking':
+      // Draw X pattern for blocking
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(x * cellSize + 4, y * cellSize + 4)
+      ctx.lineTo((x + 1) * cellSize - 4, (y + 1) * cellSize - 4)
+      ctx.moveTo((x + 1) * cellSize - 4, y * cellSize + 4)
+      ctx.lineTo(x * cellSize + 4, (y + 1) * cellSize - 4)
+      ctx.stroke()
+      break
+
+    case 'water':
+      // Draw wave pattern for water
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      for (let i = 0; i < 3; i++) {
+        const waveY = y * cellSize + 8 + i * 10
+        ctx.moveTo(x * cellSize + 4, waveY)
+        ctx.quadraticCurveTo(
+          x * cellSize + cellSize / 4, waveY - 3,
+          x * cellSize + cellSize / 2, waveY
+        )
+        ctx.quadraticCurveTo(
+          x * cellSize + (3 * cellSize) / 4, waveY + 3,
+          (x + 1) * cellSize - 4, waveY
+        )
+      }
+      ctx.stroke()
+      break
+
+    case 'hazard':
+      // Draw warning triangle for hazard
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+      ctx.beginPath()
+      ctx.moveTo(centerX, y * cellSize + 6)
+      ctx.lineTo(x * cellSize + 6, (y + 1) * cellSize - 6)
+      ctx.lineTo((x + 1) * cellSize - 6, (y + 1) * cellSize - 6)
+      ctx.closePath()
+      ctx.fill()
+
+      // Exclamation mark
+      ctx.fillStyle = 'rgba(255, 69, 0, 0.8)'
+      ctx.font = 'bold 10px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('!', centerX, centerY + 2)
+      break
+
+    case 'elevated':
+      // Draw up arrow for elevated
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(centerX, y * cellSize + 8)
+      ctx.lineTo(centerX, (y + 1) * cellSize - 8)
+      ctx.moveTo(centerX - 5, y * cellSize + 14)
+      ctx.lineTo(centerX, y * cellSize + 8)
+      ctx.lineTo(centerX + 5, y * cellSize + 14)
+      ctx.stroke()
+      break
+
+    case 'difficult':
+      // Draw dots pattern for difficult terrain
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+      const dotSize = 2
+      const spacing = cellSize / 4
+      for (let dx = 1; dx < 4; dx++) {
+        for (let dy = 1; dy < 4; dy++) {
+          if ((dx + dy) % 2 === 0) {
+            ctx.beginPath()
+            ctx.arc(
+              x * cellSize + dx * spacing,
+              y * cellSize + dy * spacing,
+              dotSize,
+              0,
+              Math.PI * 2
+            )
+            ctx.fill()
+          }
+        }
+      }
+      break
+  }
+
+  ctx.restore()
 }
 
 const drawMeasurementOverlay = (ctx: CanvasRenderingContext2D) => {
@@ -483,6 +626,11 @@ const drawFogOfWarPreview = (ctx: CanvasRenderingContext2D) => {
   }
 }
 
+// Get terrain cost at a position for movement calculations
+const getTerrainCostAt = (x: number, y: number): number => {
+  return terrainStore.getMovementCost(x, y, false) // TODO: Pass canSwim based on combatant
+}
+
 // Draw movement range overlay for selected token
 const drawMovementRange = (ctx: CanvasRenderingContext2D) => {
   const token = selectedTokenForMovement.value
@@ -491,7 +639,10 @@ const drawMovementRange = (ctx: CanvasRenderingContext2D) => {
   const { cellSize } = props.config
   const speed = getSpeed(token.combatantId)
   const blocked = getBlockedCells(token.combatantId)
-  const rangeCells = getMovementRangeCells(token.position, speed, blocked)
+
+  // Pass terrain cost getter if terrain is present
+  const terrainCostGetter = terrainStore.terrainCount > 0 ? getTerrainCostAt : undefined
+  const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
 
   // Draw reachable cells with cyan tint
   ctx.fillStyle = 'rgba(34, 211, 238, 0.2)' // Cyan-400 with low opacity
@@ -614,6 +765,19 @@ const handleMouseDown = (event: MouseEvent) => {
       }
     }
 
+    // If terrain editing is enabled and GM, start terrain painting
+    if (props.isGm && terrainStore.enabled) {
+      // Check if clicking within grid bounds
+      if (gridPos.x >= 0 && gridPos.x < props.config.width &&
+          gridPos.y >= 0 && gridPos.y < props.config.height) {
+        isTerrainPainting.value = true
+        lastTerrainCell.value = gridPos
+        terrainStore.applyTool(gridPos.x, gridPos.y)
+        render()
+        return
+      }
+    }
+
     // Check if clicking on a token
     const clickedToken = getTokenAtPosition(gridPos)
 
@@ -678,6 +842,22 @@ const handleMouseMove = (event: MouseEvent) => {
     }
   }
 
+  // Handle terrain painting while dragging
+  if (isTerrainPainting.value && props.isGm && terrainStore.enabled) {
+    // Only paint if moved to a new cell
+    if (!lastTerrainCell.value ||
+        lastTerrainCell.value.x !== gridPos.x ||
+        lastTerrainCell.value.y !== gridPos.y) {
+      // Check within bounds
+      if (gridPos.x >= 0 && gridPos.x < props.config.width &&
+          gridPos.y >= 0 && gridPos.y < props.config.height) {
+        lastTerrainCell.value = gridPos
+        terrainStore.applyTool(gridPos.x, gridPos.y)
+        render()
+      }
+    }
+  }
+
   // Handle marquee selection
   if (isMarqueeSelecting.value && selectionStore.isMarqueeActive) {
     selectionStore.updateMarquee(gridPos)
@@ -700,6 +880,12 @@ const handleMouseUp = (event: MouseEvent) => {
   if (isFogPainting.value) {
     isFogPainting.value = false
     lastPaintedCell.value = null
+  }
+
+  // End terrain painting
+  if (isTerrainPainting.value) {
+    isTerrainPainting.value = false
+    lastTerrainCell.value = null
   }
 
   // End measurement (but keep the result visible)
@@ -863,6 +1049,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
   // F - Toggle fog of war
   if (event.key === 'f' || event.key === 'F') {
     fogOfWarStore.setEnabled(!fogOfWarStore.enabled)
+    render()
+    return
+  }
+
+  // T - Toggle terrain editing
+  if (event.key === 't' || event.key === 'T') {
+    terrainStore.setEnabled(!terrainStore.enabled)
     render()
     return
   }

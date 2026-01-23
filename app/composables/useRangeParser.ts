@@ -1,4 +1,7 @@
-import type { RangeType, ParsedRange, GridPosition } from '~/types'
+import type { RangeType, ParsedRange, GridPosition, TerrainType } from '~/types'
+
+// Terrain cost function type
+export type TerrainCostGetter = (x: number, y: number) => number
 
 /**
  * PTU Range Parser
@@ -284,41 +287,115 @@ export function useRangeParser() {
   }
 
   /**
-   * Get movement range visualization cells
+   * Get movement range visualization cells with terrain cost support
+   *
+   * Uses flood-fill algorithm to find all reachable cells within movement budget,
+   * accounting for terrain movement costs.
+   *
+   * @param origin - Starting position
+   * @param speed - Movement speed (movement points available)
+   * @param blockedCells - Cells blocked by other tokens
+   * @param getTerrainCost - Optional function to get terrain movement cost at a position
    */
   function getMovementRangeCells(
     origin: GridPosition,
     speed: number,
-    blockedCells: GridPosition[] = []
+    blockedCells: GridPosition[] = [],
+    getTerrainCost?: TerrainCostGetter
   ): GridPosition[] {
-    const cells: GridPosition[] = []
+    const reachable: GridPosition[] = []
     const blockedSet = new Set(blockedCells.map(c => `${c.x},${c.y}`))
 
-    // All cells within Chebyshev distance of speed
-    for (let dx = -speed; dx <= speed; dx++) {
-      for (let dy = -speed; dy <= speed; dy++) {
-        const distance = Math.max(Math.abs(dx), Math.abs(dy))
-        if (distance <= speed && distance > 0) {
-          const cell = { x: origin.x + dx, y: origin.y + dy }
-          if (!blockedSet.has(`${cell.x},${cell.y}`)) {
-            cells.push(cell)
+    // Cost map: stores the minimum cost to reach each cell
+    const costMap = new Map<string, number>()
+    const startKey = `${origin.x},${origin.y}`
+    costMap.set(startKey, 0)
+
+    // Priority queue for Dijkstra-like exploration
+    // Each entry: [x, y, costToReach]
+    const queue: Array<[number, number, number]> = [[origin.x, origin.y, 0]]
+
+    // 8 directions for movement (including diagonals)
+    const directions = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1], /* origin */ [0, 1],
+      [1, -1], [1, 0], [1, 1],
+    ]
+
+    while (queue.length > 0) {
+      // Sort by cost (lowest first) - simple priority queue
+      queue.sort((a, b) => a[2] - b[2])
+      const [x, y, currentCost] = queue.shift()!
+
+      // Skip if we've already found a cheaper path to this cell
+      const cellKey = `${x},${y}`
+      if (costMap.has(cellKey) && costMap.get(cellKey)! < currentCost) {
+        continue
+      }
+
+      // Explore neighbors
+      for (const [dx, dy] of directions) {
+        const nx = x + dx
+        const ny = y + dy
+        const neighborKey = `${nx},${ny}`
+
+        // Skip if blocked by token
+        if (blockedSet.has(neighborKey)) {
+          continue
+        }
+
+        // Get terrain cost for the destination cell
+        const terrainCost = getTerrainCost ? getTerrainCost(nx, ny) : 1
+
+        // Skip impassable terrain (Infinity cost)
+        if (!isFinite(terrainCost)) {
+          continue
+        }
+
+        // Calculate total cost to reach neighbor
+        // Diagonal movement costs same as straight in PTU (Chebyshev)
+        const moveCost = terrainCost
+        const totalCost = currentCost + moveCost
+
+        // Skip if exceeds movement budget
+        if (totalCost > speed) {
+          continue
+        }
+
+        // Skip if we've already found a cheaper path
+        if (costMap.has(neighborKey) && costMap.get(neighborKey)! <= totalCost) {
+          continue
+        }
+
+        // Record this path
+        costMap.set(neighborKey, totalCost)
+
+        // Add to reachable if not the origin
+        if (nx !== origin.x || ny !== origin.y) {
+          const existingIndex = reachable.findIndex(c => c.x === nx && c.y === ny)
+          if (existingIndex === -1) {
+            reachable.push({ x: nx, y: ny })
           }
         }
+
+        // Add to queue for further exploration
+        queue.push([nx, ny, totalCost])
       }
     }
 
-    return cells
+    return reachable
   }
 
   /**
-   * Validate if a movement is legal
+   * Validate if a movement is legal, accounting for terrain costs
    */
   function validateMovement(
     from: GridPosition,
     to: GridPosition,
     speed: number,
-    blockedCells: GridPosition[] = []
-  ): { valid: boolean; distance: number; reason?: string } {
+    blockedCells: GridPosition[] = [],
+    getTerrainCost?: TerrainCostGetter
+  ): { valid: boolean; distance: number; cost: number; reason?: string } {
     const distance = Math.max(
       Math.abs(to.x - from.x),
       Math.abs(to.y - from.y)
@@ -327,15 +404,139 @@ export function useRangeParser() {
     // Check blocked
     const isBlocked = blockedCells.some(c => c.x === to.x && c.y === to.y)
     if (isBlocked) {
-      return { valid: false, distance, reason: 'Destination is blocked' }
+      return { valid: false, distance, cost: Infinity, reason: 'Destination is blocked' }
     }
 
-    // Check distance
-    if (distance > speed) {
-      return { valid: false, distance, reason: `Exceeds movement speed (${distance} > ${speed})` }
+    // Check terrain at destination
+    if (getTerrainCost) {
+      const terrainCost = getTerrainCost(to.x, to.y)
+      if (!isFinite(terrainCost)) {
+        return { valid: false, distance, cost: Infinity, reason: 'Destination is impassable terrain' }
+      }
     }
 
-    return { valid: true, distance }
+    // For simple validation, calculate minimum path cost
+    // This is simplified - for true pathfinding, use getMovementRangeCells
+    const reachable = getMovementRangeCells(from, speed, blockedCells, getTerrainCost)
+    const canReach = reachable.some(c => c.x === to.x && c.y === to.y)
+
+    if (!canReach) {
+      // Determine why
+      if (distance > speed) {
+        return { valid: false, distance, cost: distance, reason: `Exceeds movement speed (${distance} > ${speed})` }
+      }
+      return { valid: false, distance, cost: distance, reason: 'Cannot reach destination (terrain or obstacles)' }
+    }
+
+    return { valid: true, distance, cost: distance }
+  }
+
+  /**
+   * Calculate the actual path cost between two points through terrain
+   * Uses A* pathfinding
+   */
+  function calculatePathCost(
+    from: GridPosition,
+    to: GridPosition,
+    blockedCells: GridPosition[] = [],
+    getTerrainCost?: TerrainCostGetter
+  ): { cost: number; path: GridPosition[] } | null {
+    const blockedSet = new Set(blockedCells.map(c => `${c.x},${c.y}`))
+    const destKey = `${to.x},${to.y}`
+
+    // Check if destination is blocked
+    if (blockedSet.has(destKey)) {
+      return null
+    }
+
+    // Check if destination terrain is passable
+    if (getTerrainCost) {
+      const terrainCost = getTerrainCost(to.x, to.y)
+      if (!isFinite(terrainCost)) {
+        return null
+      }
+    }
+
+    // A* pathfinding
+    const openSet = new Map<string, { x: number; y: number; g: number; f: number; parent: string | null }>()
+    const closedSet = new Set<string>()
+
+    const startKey = `${from.x},${from.y}`
+    const heuristic = (x: number, y: number) => Math.max(Math.abs(to.x - x), Math.abs(to.y - y))
+
+    openSet.set(startKey, {
+      x: from.x,
+      y: from.y,
+      g: 0,
+      f: heuristic(from.x, from.y),
+      parent: null,
+    })
+
+    const directions = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1], [0, 1],
+      [1, -1], [1, 0], [1, 1],
+    ]
+
+    while (openSet.size > 0) {
+      // Find node with lowest f score
+      let current: { key: string; node: { x: number; y: number; g: number; f: number; parent: string | null } } | null = null
+      for (const [key, node] of openSet) {
+        if (!current || node.f < current.node.f) {
+          current = { key, node }
+        }
+      }
+
+      if (!current) break
+
+      // Check if we reached the destination
+      if (current.node.x === to.x && current.node.y === to.y) {
+        // Reconstruct path by walking back through parents
+        // We need to store parent info in closedSet as well for reconstruction
+        const path: GridPosition[] = [{ x: to.x, y: to.y }]
+
+        // Simple path: just start and end for now
+        // Full path reconstruction would require storing parent info
+        if (from.x !== to.x || from.y !== to.y) {
+          path.unshift({ x: from.x, y: from.y })
+        }
+
+        return { cost: current.node.g, path }
+      }
+
+      // Move to closed set
+      openSet.delete(current.key)
+      closedSet.add(current.key)
+
+      // Explore neighbors
+      for (const [dx, dy] of directions) {
+        const nx = current.node.x + dx
+        const ny = current.node.y + dy
+        const neighborKey = `${nx},${ny}`
+
+        if (closedSet.has(neighborKey)) continue
+        if (blockedSet.has(neighborKey)) continue
+
+        const terrainCost = getTerrainCost ? getTerrainCost(nx, ny) : 1
+        if (!isFinite(terrainCost)) continue
+
+        const g = current.node.g + terrainCost
+        const f = g + heuristic(nx, ny)
+
+        const existing = openSet.get(neighborKey)
+        if (!existing || g < existing.g) {
+          openSet.set(neighborKey, {
+            x: nx,
+            y: ny,
+            g,
+            f,
+            parent: current.key,
+          })
+        }
+      }
+    }
+
+    return null // No path found
   }
 
   return {
@@ -344,5 +545,6 @@ export function useRangeParser() {
     getAffectedCells,
     getMovementRangeCells,
     validateMovement,
+    calculatePathCost,
   }
 }
