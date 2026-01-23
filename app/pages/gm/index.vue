@@ -27,6 +27,16 @@
         <button class="btn btn--primary" @click="createNewEncounter">
           Start New Encounter
         </button>
+
+        <div class="template-options">
+          <span class="template-divider">or</span>
+          <button class="btn btn--secondary" @click="showLoadTemplateModal = true">
+            📂 Load from Template
+          </button>
+          <NuxtLink to="/gm/encounters" class="btn btn--ghost">
+            Browse Library
+          </NuxtLink>
+        </div>
       </div>
     </div>
 
@@ -106,6 +116,13 @@
           </button>
           <button class="btn btn--danger" @click="endEncounter">
             End Encounter
+          </button>
+          <button
+            class="btn btn--ghost"
+            @click="showSaveTemplateModal = true"
+            title="Save current setup as a reusable template"
+          >
+            💾 Save Template
           </button>
         </div>
       </div>
@@ -283,6 +300,23 @@
       @close="showAddModal = false"
       @add="addCombatant"
     />
+
+    <!-- Save Template Modal -->
+    <EncounterLibrarySaveTemplateModal
+      v-if="showSaveTemplateModal && encounter"
+      :encounter-id="encounter.id"
+      :combatant-count="encounter.combatants.length"
+      :has-grid="encounter.gridConfig?.enabled ?? false"
+      @close="showSaveTemplateModal = false"
+      @saved="handleTemplateSaved"
+    />
+
+    <!-- Load Template Modal -->
+    <EncounterLibraryLoadTemplateModal
+      v-if="showLoadTemplateModal"
+      @close="showLoadTemplateModal = false"
+      @load="handleLoadTemplate"
+    />
   </div>
 </template>
 
@@ -386,6 +420,10 @@ const newBattleType = ref<'trainer' | 'full_contact'>('trainer')
 const showAddModal = ref(false)
 const addingSide = ref<CombatSide>('players')
 
+// Template modals
+const showSaveTemplateModal = ref(false)
+const showLoadTemplateModal = ref(false)
+
 // Computed from store
 const encounter = computed(() => encounterStore.encounter)
 const currentCombatant = computed(() => encounterStore.currentCombatant)
@@ -482,6 +520,24 @@ const showAddCombatant = (side: CombatSide) => {
 const addCombatant = async (entityId: string, entityType: 'pokemon' | 'human', initiativeBonus: number) => {
   await encounterStore.addCombatant(entityId, entityType, addingSide.value, initiativeBonus)
   showAddModal.value = false
+}
+
+// Template handlers
+const handleTemplateSaved = (_templateId: string) => {
+  showSaveTemplateModal.value = false
+  // Could show a success toast here
+}
+
+const handleLoadTemplate = async (data: { templateId: string; encounterName: string }) => {
+  try {
+    await encounterStore.loadFromTemplate(data.templateId, data.encounterName)
+    showLoadTemplateModal.value = false
+    // Initialize history for the new encounter
+    encounterStore.initializeHistory()
+    refreshUndoRedoState()
+  } catch (error) {
+    console.error('Failed to load template:', error)
+  }
 }
 
 const removeCombatant = async (combatantId: string) => {
@@ -617,6 +673,38 @@ const handleBackgroundRemove = async () => {
       width: 100%;
       margin-top: $spacing-md;
     }
+  }
+}
+
+.template-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-lg;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $glass-border;
+
+  .btn {
+    margin-top: 0;
+  }
+}
+
+.template-divider {
+  color: $color-text-muted;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid $glass-border;
+  color: $color-text-muted;
+
+  &:hover {
+    border-color: $color-primary;
+    color: $color-text;
   }
 }
 

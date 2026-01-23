@@ -1,8 +1,8 @@
 # Implementation Progress
 
 ## Current Status
-**Phase**: 5 - VTT Grid Advanced
-**Overall Progress**: ~55%
+**Phase**: 7 - Set/Rolled Damage Toggle
+**Overall Progress**: ~70%
 
 ---
 
@@ -14,8 +14,8 @@
 | 2 | Habitat System | ✅ Complete | 100% |
 | 3 | Wild Encounter Generation | ✅ Complete | 100% |
 | 4 | VTT Grid - Foundation | ✅ Complete | 100% |
-| 5 | VTT Grid - Advanced | 🚧 In Progress | 65% |
-| 6 | Encounter Library | ⏳ Pending | 0% |
+| 5 | VTT Grid - Advanced | ✅ Complete | 100% |
+| 6 | Encounter Library | ✅ Complete | 100% |
 | 7 | Set/Rolled Damage | ⏳ Pending | 0% |
 | 8 | Integration & Polish | ⏳ Pending | 0% |
 | 9 | Documentation | ⏳ Pending | 0% |
@@ -184,7 +184,83 @@
 
 ---
 
+## Phase 6 Detailed Progress
+
+### API Endpoints ✅
+- [x] GET /api/encounter-templates - List all templates with filters
+- [x] POST /api/encounter-templates - Create new template
+- [x] GET /api/encounter-templates/[id] - Get single template
+- [x] PUT /api/encounter-templates/[id] - Update template
+- [x] DELETE /api/encounter-templates/[id] - Delete template
+- [x] POST /api/encounter-templates/from-encounter - Create from existing encounter
+- [x] POST /api/encounter-templates/[id]/load - Create encounter from template
+
+### Pinia Store ✅
+- [x] stores/encounterLibrary.ts created
+  - [x] EncounterTemplate interface
+  - [x] TemplateCombatant, TemplatePokemonData, TemplateHumanData interfaces
+  - [x] CRUD actions for templates
+  - [x] Filter/search/sort functionality
+  - [x] Duplicate template action
+  - [x] Create from encounter action
+- [x] Added loadFromTemplate action to encounter store
+
+### UI Components ✅
+- [x] /gm/encounters.vue - Encounter Library page
+  - [x] Template grid display
+  - [x] Search/category/sort filters
+  - [x] Create/Edit/Duplicate modals
+  - [x] Delete confirmation
+  - [x] Load template action
+- [x] components/encounter-library/TemplateCard.vue
+  - [x] Template display with metadata
+  - [x] Battle type badge
+  - [x] Combatants preview
+  - [x] Tags display
+  - [x] Action buttons (Load, Edit, Duplicate, Delete)
+- [x] components/encounter-library/SaveTemplateModal.vue
+  - [x] Save current encounter as template
+  - [x] Name/description/category/tags input
+  - [x] Encounter summary preview
+- [x] components/encounter-library/LoadTemplateModal.vue
+  - [x] Browse and select templates
+  - [x] Search and filter
+  - [x] Template preview with combatants
+  - [x] Create encounter with custom name
+- [x] GM index.vue integration
+  - [x] "Save as Template" button in header
+  - [x] "Load from Template" option in empty state
+  - [x] Modal integration
+
+### Unit Tests ✅
+- [x] tests/unit/stores/encounterLibrary.test.ts (38 tests)
+  - [x] Initial state tests
+  - [x] Getter tests (filteredTemplates, categories, tags)
+  - [x] Action tests (fetch, create, update, delete, duplicate)
+  - [x] Filter setter tests
+
+---
+
 ## Recent Changes
+
+### 2026-01-23 (Continued)
+- **Phase 6 Complete (100%)**
+- Implemented Encounter Library feature
+  - Created 7 API endpoints for template CRUD + load/save
+  - Created encounterLibrary Pinia store with full CRUD actions
+  - Created TemplateCard.vue component for template display
+  - Created SaveTemplateModal.vue for saving encounters as templates
+  - Created LoadTemplateModal.vue for loading templates into encounters
+  - Created /gm/encounters.vue library page with search/filter
+  - Integrated "Save as Template" and "Load from Template" into GM view
+  - Added 38 unit tests for encounterLibrary store
+  - All 331 unit tests passing
+- **Phase 5 Complete (100%)**
+- Added Movement Range Visualization
+  - Added getMovementRangeCells() helper using Chebyshev distance
+  - Added drawMovementRange() with cyan overlay and blocked cell detection
+  - Added 'W' keyboard shortcut to toggle movement range display
+  - Displays movement speed badge on selected token
 
 ### 2026-01-23
 - **Phase 5 Progress (65%)**
