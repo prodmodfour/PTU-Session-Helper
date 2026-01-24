@@ -35,7 +35,12 @@ export const useEncounterStore = defineStore('encounter', {
     combatantsByInitiative: (state): Combatant[] => {
       if (!state.encounter) return []
       const order = state.encounter.turnOrder
-      return order.map(id => state.encounter!.combatants.find(c => c.id === id)).filter(Boolean) as Combatant[]
+      // If turnOrder exists, use it; otherwise sort combatants by initiative (descending)
+      if (order.length > 0) {
+        return order.map(id => state.encounter!.combatants.find(c => c.id === id)).filter(Boolean) as Combatant[]
+      }
+      // Fallback: sort by initiative descending
+      return [...state.encounter.combatants].sort((a, b) => b.initiative - a.initiative)
     },
 
     // League Battle: Trainer turn order (low speed to high for declarations)
