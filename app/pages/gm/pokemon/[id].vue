@@ -183,8 +183,8 @@
               <div class="move-card__details">
                 <span><strong>Class:</strong> {{ move.damageClass }}</span>
                 <span><strong>Freq:</strong> {{ move.frequency }}</span>
-                <span v-if="move.ac"><strong>AC:</strong> {{ move.ac }}</span>
-                <span v-if="move.damageBase"><strong>DB:</strong> {{ move.damageBase }}</span>
+                <span v-if="move.ac !== null"><strong>AC:</strong> {{ move.ac }}</span>
+                <span v-if="move.damageBase"><strong>Damage:</strong> {{ getMoveDamageFormula(move) }}</span>
               </div>
               <div class="move-card__range">
                 <strong>Range:</strong> {{ move.range }}
@@ -434,6 +434,27 @@ const rollSkill = (skill: string, notation: string) => {
   lastSkillRoll.value = { skill, result }
 }
 
+// Move helpers
+const getAttackStat = (move: Move): number => {
+  if (!pokemon.value) return 0
+  if (move.damageClass === 'Physical') {
+    return pokemon.value.currentStats?.attack || 0
+  } else if (move.damageClass === 'Special') {
+    return pokemon.value.currentStats?.specialAttack || 0
+  }
+  return 0
+}
+
+const getMoveDamageFormula = (move: Move): string => {
+  if (!move.damageBase) return '-'
+  const diceNotation = getDamageRoll(move.damageBase)
+  const stat = getAttackStat(move)
+  if (stat > 0) {
+    return `${diceNotation}+${stat}`
+  }
+  return diceNotation
+}
+
 // Move rolling
 const rollAttack = (move: Move) => {
   const result = roll('1d20')
@@ -469,7 +490,21 @@ const rollDamage = (move: Move, isCrit: boolean) => {
   if (!move.damageBase) return
 
   const notation = getDamageRoll(move.damageBase)
-  const result = isCrit ? rollCritical(notation) : roll(notation)
+  const diceResult = isCrit ? rollCritical(notation) : roll(notation)
+  const stat = getAttackStat(move)
+
+  // Add stat to the total
+  const total = diceResult.total + stat
+  const statLabel = move.damageClass === 'Physical' ? 'Atk' : 'SpAtk'
+  const breakdown = stat > 0
+    ? `${diceResult.breakdown.replace(/ = \d+$/, '')} + ${stat} (${statLabel}) = ${total}`
+    : diceResult.breakdown
+
+  const result: DiceRollResult = {
+    ...diceResult,
+    total,
+    breakdown
+  }
 
   lastMoveRoll.value = {
     moveName: move.name,
