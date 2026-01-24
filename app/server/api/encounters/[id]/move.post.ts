@@ -48,7 +48,8 @@ export default defineEventHandler(async (event) => {
     }
     const moveName = move?.name || body.moveId || 'Unknown Move'
 
-    // Process targets
+    // Process targets and collect database updates
+    const dbUpdates: Promise<any>[] = []
     const targets = body.targetIds.map((targetId: string) => {
       const target = combatants.find((c: any) => c.id === targetId)
       if (!target) return null
@@ -61,6 +62,19 @@ export default defineEventHandler(async (event) => {
       if (body.damage && body.damage > 0) {
         const newHp = Math.max(0, target.entity.currentHp - body.damage)
         target.entity.currentHp = newHp
+
+        // Also update the actual entity in database
+        if (target.type === 'pokemon') {
+          dbUpdates.push(prisma.pokemon.update({
+            where: { id: target.entityId },
+            data: { currentHp: newHp }
+          }))
+        } else {
+          dbUpdates.push(prisma.humanCharacter.update({
+            where: { id: target.entityId },
+            data: { currentHp: newHp }
+          }))
+        }
       }
 
       return {
@@ -71,6 +85,11 @@ export default defineEventHandler(async (event) => {
         hit: true
       }
     }).filter(Boolean)
+
+    // Execute all database updates for damaged targets
+    if (dbUpdates.length > 0) {
+      await Promise.all(dbUpdates)
+    }
 
     // Create log entry
     const logEntry = {
