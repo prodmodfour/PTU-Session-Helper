@@ -1,6 +1,14 @@
 <template>
   <div class="entry-row">
-    <span class="col-name">{{ entry.speciesName }}</span>
+    <span class="col-name">
+      <img
+        :src="getSpriteUrl(entry.speciesName)"
+        :alt="entry.speciesName"
+        class="species-sprite"
+        @error="handleSpriteError($event)"
+      />
+      {{ entry.speciesName }}
+    </span>
     <span class="col-weight">
       <input
         :value="entry.weight"
@@ -55,6 +63,13 @@ const props = defineProps<{
   totalWeight: number
   tableLevelRange: LevelRange
 }>()
+
+const { getSpriteUrl } = usePokemonSprite()
+
+const handleSpriteError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/images/pokemon-placeholder.svg'
+}
 
 const emit = defineEmits<{
   (e: 'remove', entry: EncounterTableEntry): void
@@ -123,8 +138,19 @@ const updateLevelRange = (min: number | null, max: number | null) => {
 }
 
 .col-name {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
   font-weight: 500;
   color: $color-text;
+}
+
+.species-sprite {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
 }
 
 .col-weight {
