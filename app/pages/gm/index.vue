@@ -220,7 +220,7 @@
               @heal="handleHeal"
               @stages="handleStages"
               @status="handleStatus"
-              @open-actions="handleOpenActions"
+              @openActions="handleOpenActions"
             />
           </div>
 
@@ -247,7 +247,7 @@
                   @remove="removeCombatant"
                   @stages="handleStages"
                   @status="handleStatus"
-                  @open-actions="handleOpenActions"
+                  @openActions="handleOpenActions"
                 />
                 <p v-if="playerCombatants.length === 0" class="side__empty">
                   No players added
@@ -276,7 +276,7 @@
                   @remove="removeCombatant"
                   @stages="handleStages"
                   @status="handleStatus"
-                  @open-actions="handleOpenActions"
+                  @openActions="handleOpenActions"
                 />
                 <p v-if="allyCombatants.length === 0" class="side__empty">
                   No allies
@@ -305,7 +305,7 @@
                   @remove="removeCombatant"
                   @stages="handleStages"
                   @status="handleStatus"
-                  @open-actions="handleOpenActions"
+                  @openActions="handleOpenActions"
                 />
                 <p v-if="enemyCombatants.length === 0" class="side__empty">
                   No enemies
@@ -764,9 +764,12 @@ const handleStatus = async (combatantId: string, add: StatusCondition[], remove:
 
 // GM Action Modal handlers
 const handleOpenActions = (combatantId: string) => {
+  console.log('[GM] handleOpenActions called with:', combatantId)
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
+  console.log('[GM] Found combatant:', combatant?.id, combatant?.type)
   if (combatant) {
     actionModalCombatant.value = combatant
+    console.log('[GM] actionModalCombatant set to:', actionModalCombatant.value?.id)
   }
 }
 

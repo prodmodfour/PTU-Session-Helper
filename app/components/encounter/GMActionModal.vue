@@ -30,14 +30,14 @@
         <div class="header-actions">
           <span class="action-count">
             <span class="action-count__label">Standard:</span>
-            <span :class="{ 'action-count--used': combatant.turnState.standardActionUsed }">
-              {{ combatant.turnState.standardActionUsed ? 0 : 1 }}
+            <span :class="{ 'action-count--used': turnState.standardActionUsed }">
+              {{ turnState.standardActionUsed ? 0 : 1 }}
             </span>
           </span>
           <span class="action-count">
             <span class="action-count__label">Shift:</span>
-            <span :class="{ 'action-count--used': combatant.turnState.shiftActionUsed }">
-              {{ combatant.turnState.shiftActionUsed ? 0 : 1 }}
+            <span :class="{ 'action-count--used': turnState.shiftActionUsed }">
+              {{ turnState.shiftActionUsed ? 0 : 1 }}
             </span>
           </span>
         </div>
@@ -55,7 +55,7 @@
               :key="move.id || move.name"
               class="move-btn"
               :class="`move-btn--${move.type?.toLowerCase() || 'normal'}`"
-              :disabled="combatant.turnState.standardActionUsed"
+              :disabled="turnState.standardActionUsed"
               @click="selectMove(move)"
             >
               <div class="move-btn__main">
@@ -79,7 +79,7 @@
           <div class="standard-actions">
             <button
               class="action-btn action-btn--shift"
-              :disabled="combatant.turnState.shiftActionUsed"
+              :disabled="turnState.shiftActionUsed"
               @click="executeStandardAction('shift')"
             >
               <span class="action-btn__icon">
@@ -94,7 +94,7 @@
             <button
               v-if="isPokemon"
               class="action-btn action-btn--struggle"
-              :disabled="combatant.turnState.standardActionUsed"
+              :disabled="turnState.standardActionUsed"
               @click="selectStruggle"
             >
               <span class="action-btn__icon">
@@ -154,6 +154,16 @@ const { getSpriteUrl } = usePokemonSprite()
 const selectedMove = ref<Move | null>(null)
 
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
+
+// Provide default turnState if not present
+const turnState = computed(() => props.combatant.turnState ?? {
+  hasActed: false,
+  standardActionUsed: false,
+  shiftActionUsed: false,
+  swiftActionUsed: false,
+  canBeCommanded: true,
+  isHolding: false
+})
 
 const displayName = computed(() => {
   if (isPokemon.value) {

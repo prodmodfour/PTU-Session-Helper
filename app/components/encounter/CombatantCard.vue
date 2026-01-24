@@ -157,7 +157,7 @@
       <button
         class="btn btn--sm btn--primary"
         title="Take Action"
-        @click="$emit('openActions', combatant.id)"
+        @click="handleActClick"
       >
         Act
       </button>
@@ -482,6 +482,11 @@ const applyStatuses = () => {
     emit('status', props.combatant.id, added, removed)
   }
   showStatusModal.value = false
+}
+
+const handleActClick = () => {
+  console.log('[CombatantCard] Act button clicked for:', props.combatant.id)
+  emit('openActions', props.combatant.id)
 }
 </script>
 
