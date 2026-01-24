@@ -61,7 +61,6 @@
           v-for="table in filteredTables"
           :key="table.id"
           :table="table"
-          @edit="editTable"
           @delete="deleteTable"
           @generate="generateFromTable"
           @export="exportTable"
@@ -415,10 +414,6 @@ const createTable = async () => {
   } catch (error) {
     console.error('Failed to create table:', error)
   }
-}
-
-const editTable = (table: EncounterTable) => {
-  router.push(`/gm/encounter-tables/${table.id}`)
 }
 
 const deleteTable = async (table: EncounterTable) => {

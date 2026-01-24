@@ -1,8 +1,8 @@
 <template>
-  <div class="table-card">
+  <NuxtLink :to="`/gm/encounter-tables/${table.id}`" class="table-card">
     <div class="table-card__header">
       <h3 class="table-card__name">{{ table.name }}</h3>
-      <div class="table-card__actions">
+      <div class="table-card__actions" @click.stop.prevent>
         <button
           class="btn btn--icon btn--ghost"
           @click="$emit('generate', table)"
@@ -16,13 +16,6 @@
           title="Export Table"
         >
           <img src="/icons/phosphor/download-simple.svg" alt="Export" class="action-icon" />
-        </button>
-        <button
-          class="btn btn--icon btn--ghost"
-          @click="$emit('edit', table)"
-          title="Edit Table"
-        >
-          <img src="/icons/phosphor/pencil-simple.svg" alt="Edit" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost btn--danger"
@@ -86,7 +79,7 @@
         </span>
       </div>
     </div>
-  </div>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
@@ -97,7 +90,6 @@ const props = defineProps<{
 }>()
 
 defineEmits<{
-  (e: 'edit', table: EncounterTable): void
   (e: 'delete', table: EncounterTable): void
   (e: 'generate', table: EncounterTable): void
   (e: 'export', table: EncounterTable): void
@@ -131,15 +123,21 @@ const getRarityClass = (weight: number): string => {
 
 <style lang="scss" scoped>
 .table-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
   background: $glass-bg;
   backdrop-filter: $glass-blur;
   border: 1px solid $glass-border;
   border-radius: $border-radius-lg;
   padding: $spacing-md;
-  transition: border-color 0.2s ease;
+  transition: all $transition-normal;
+  cursor: pointer;
 
   &:hover {
     border-color: $color-primary;
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
   }
 
   &__header {
