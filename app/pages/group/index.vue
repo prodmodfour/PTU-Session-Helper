@@ -75,6 +75,145 @@
             :movement-preview="movementPreview"
           />
         </div>
+
+        <!-- Current Combatant Details -->
+        <aside class="combatant-details" v-if="currentCombatant">
+          <h3 class="combatant-details__title">Current Turn</h3>
+
+          <!-- Header with sprite/avatar and name -->
+          <div class="combatant-details__header">
+            <img
+              v-if="currentCombatant.type === 'pokemon'"
+              :src="getSpriteUrl((currentCombatant.entity as Pokemon).species)"
+              :alt="getCombatantName(currentCombatant)"
+              class="combatant-details__sprite"
+              @error="handleSpriteError($event)"
+            />
+            <div v-else class="combatant-details__avatar">
+              {{ getCombatantName(currentCombatant).charAt(0) }}
+            </div>
+            <div class="combatant-details__name-block">
+              <span class="combatant-details__name">{{ getCombatantName(currentCombatant) }}</span>
+              <span class="combatant-details__type-badge" :class="'side--' + currentCombatant.side">
+                {{ currentCombatant.side === 'players' ? 'Player' : currentCombatant.side === 'allies' ? 'Ally' : 'Enemy' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Pokemon Types -->
+          <div v-if="currentCombatant.type === 'pokemon'" class="combatant-details__types">
+            <span
+              v-for="pType in (currentCombatant.entity as Pokemon).types"
+              :key="pType"
+              class="type-badge"
+              :class="'type-badge--' + pType.toLowerCase()"
+            >
+              {{ pType }}
+            </span>
+          </div>
+
+          <!-- HP Bar -->
+          <div class="combatant-details__hp">
+            <div class="hp-label">
+              <span>HP</span>
+              <span v-if="isPlayerSide(currentCombatant)">
+                {{ currentCombatant.entity.currentHp }} / {{ currentCombatant.entity.maxHp }}
+              </span>
+              <span v-else>{{ Math.round(getHpPercentage(currentCombatant)) }}%</span>
+            </div>
+            <div class="hp-bar">
+              <div
+                class="hp-bar__fill"
+                :style="{ width: getHpPercentage(currentCombatant) + '%' }"
+                :class="getHpClass(currentCombatant)"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Player-only details -->
+          <template v-if="isPlayerSide(currentCombatant)">
+            <!-- Stats -->
+            <div class="combatant-details__stats">
+              <div class="stat-row">
+                <span class="stat-label">ATK</span>
+                <span class="stat-value">{{ getStatValue(currentCombatant, 'attack') }}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">DEF</span>
+                <span class="stat-value">{{ getStatValue(currentCombatant, 'defense') }}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">SP.ATK</span>
+                <span class="stat-value">{{ getStatValue(currentCombatant, 'specialAttack') }}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">SP.DEF</span>
+                <span class="stat-value">{{ getStatValue(currentCombatant, 'specialDefense') }}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">SPD</span>
+                <span class="stat-value">{{ getStatValue(currentCombatant, 'speed') }}</span>
+              </div>
+            </div>
+
+            <!-- Abilities (Pokemon only) -->
+            <div v-if="currentCombatant.type === 'pokemon' && (currentCombatant.entity as Pokemon).abilities?.length" class="combatant-details__section">
+              <h4>Abilities</h4>
+              <div class="ability-list">
+                <span
+                  v-for="ability in (currentCombatant.entity as Pokemon).abilities"
+                  :key="ability.name"
+                  class="ability-tag"
+                >
+                  {{ ability.name }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Moves (Pokemon only) -->
+            <div v-if="currentCombatant.type === 'pokemon' && (currentCombatant.entity as Pokemon).moves?.length" class="combatant-details__section">
+              <h4>Moves</h4>
+              <div class="move-list">
+                <div
+                  v-for="move in (currentCombatant.entity as Pokemon).moves"
+                  :key="move.name"
+                  class="move-tag"
+                  :class="'move-tag--' + move.type.toLowerCase()"
+                >
+                  {{ move.name }}
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Status Conditions (shown for all) -->
+          <div v-if="currentCombatant.entity.statusConditions?.length" class="combatant-details__section">
+            <h4>Status</h4>
+            <div class="status-list">
+              <span
+                v-for="status in currentCombatant.entity.statusConditions"
+                :key="status"
+                class="status-tag"
+                :class="'status-tag--' + status.toLowerCase()"
+              >
+                {{ status }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Combat Stages (if any non-zero, player-side only) -->
+          <div v-if="isPlayerSide(currentCombatant) && hasNonZeroStages(currentCombatant)" class="combatant-details__section">
+            <h4>Combat Stages</h4>
+            <div class="stages-grid">
+              <template v-for="(value, key) in currentCombatant.entity.stageModifiers" :key="key">
+                <div v-if="value !== 0" class="stage-item" :class="value > 0 ? 'stage-item--positive' : 'stage-item--negative'">
+                  <span class="stage-label">{{ formatStageName(key as string) }}</span>
+                  <span class="stage-value">{{ value > 0 ? '+' : '' }}{{ value }}</span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </aside>
       </main>
     </div>
   </div>
@@ -211,6 +350,39 @@ const getHpClass = (combatant: Combatant): string => {
   if (percentage <= 25) return 'health--critical'
   if (percentage <= 50) return 'health--low'
   return 'health--good'
+}
+
+const isPlayerSide = (combatant: Combatant): boolean => {
+  return combatant.side === 'players' || combatant.side === 'allies'
+}
+
+const getStatValue = (combatant: Combatant, stat: string): number => {
+  if (combatant.type === 'pokemon') {
+    const pokemon = combatant.entity as Pokemon
+    return pokemon.currentStats?.[stat as keyof typeof pokemon.currentStats] ?? 0
+  } else {
+    const human = combatant.entity as HumanCharacter
+    return human.stats?.[stat as keyof typeof human.stats] ?? 0
+  }
+}
+
+const hasNonZeroStages = (combatant: Combatant): boolean => {
+  const stages = combatant.entity.stageModifiers
+  if (!stages) return false
+  return Object.values(stages).some(v => v !== 0)
+}
+
+const formatStageName = (key: string): string => {
+  const names: Record<string, string> = {
+    attack: 'ATK',
+    defense: 'DEF',
+    specialAttack: 'SP.ATK',
+    specialDefense: 'SP.DEF',
+    speed: 'SPD',
+    accuracy: 'ACC',
+    evasion: 'EVA'
+  }
+  return names[key] || key.toUpperCase()
 }
 </script>
 
@@ -586,5 +758,342 @@ const getHpClass = (combatant: Combatant): string => {
       padding: $spacing-xs $spacing-sm;
     }
   }
+}
+
+// Combatant Details Panel
+.combatant-details {
+  width: 320px;
+  flex-shrink: 0;
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-lg;
+  padding: $spacing-md;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  // 4K optimization
+  @media (min-width: 3000px) {
+    width: 450px;
+    padding: $spacing-lg;
+    gap: $spacing-lg;
+  }
+
+  &__title {
+    font-size: $font-size-md;
+    font-weight: 600;
+    color: $color-text;
+    margin: 0;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $glass-border;
+
+    @media (min-width: 3000px) {
+      font-size: $font-size-lg;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+  }
+
+  &__sprite {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    background: rgba($color-bg-tertiary, 0.5);
+    border-radius: $border-radius-md;
+    padding: $spacing-xs;
+
+    @media (min-width: 3000px) {
+      width: 96px;
+      height: 96px;
+    }
+  }
+
+  &__avatar {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $gradient-sv-cool;
+    border-radius: $border-radius-md;
+    font-size: $font-size-xxl;
+    font-weight: 700;
+    color: $color-text;
+
+    @media (min-width: 3000px) {
+      width: 96px;
+      height: 96px;
+      font-size: $font-size-xxxl;
+    }
+  }
+
+  &__name-block {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__name {
+    font-size: $font-size-lg;
+    font-weight: 600;
+    color: $color-text;
+
+    @media (min-width: 3000px) {
+      font-size: $font-size-xl;
+    }
+  }
+
+  &__type-badge {
+    font-size: $font-size-xs;
+    font-weight: 600;
+    padding: 2px $spacing-sm;
+    border-radius: $border-radius-sm;
+    text-transform: uppercase;
+    width: fit-content;
+
+    &.side--players {
+      background: rgba($color-accent-scarlet, 0.2);
+      color: $color-accent-scarlet;
+    }
+
+    &.side--allies {
+      background: rgba($color-success, 0.2);
+      color: $color-success;
+    }
+
+    &.side--enemies {
+      background: rgba($color-accent-violet, 0.2);
+      color: $color-accent-violet;
+    }
+  }
+
+  &__types {
+    display: flex;
+    gap: $spacing-xs;
+  }
+
+  &__hp {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: $spacing-xs;
+    background: rgba($color-bg-tertiary, 0.5);
+    border-radius: $border-radius-md;
+    padding: $spacing-sm;
+  }
+
+  &__section {
+    h4 {
+      font-size: $font-size-sm;
+      font-weight: 600;
+      color: $color-text-muted;
+      margin: 0 0 $spacing-sm 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+}
+
+.hp-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.hp-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba($color-bg-tertiary, 0.8);
+  border-radius: 4px;
+  overflow: hidden;
+
+  @media (min-width: 3000px) {
+    height: 12px;
+    border-radius: 6px;
+  }
+
+  &__fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+
+    &.health--good {
+      background: linear-gradient(90deg, $color-success 0%, lighten($color-success, 10%) 100%);
+    }
+
+    &.health--low {
+      background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+    }
+
+    &.health--critical {
+      background: linear-gradient(90deg, $color-danger 0%, lighten($color-danger, 10%) 100%);
+    }
+  }
+}
+
+.stat-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: $font-size-md;
+  font-weight: 700;
+  color: $color-text;
+}
+
+.type-badge {
+  font-size: $font-size-xs;
+  font-weight: 600;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-sm;
+  text-transform: uppercase;
+
+  // Pokemon type colors
+  &--normal { background: #A8A878; color: #fff; }
+  &--fire { background: #F08030; color: #fff; }
+  &--water { background: #6890F0; color: #fff; }
+  &--electric { background: #F8D030; color: #000; }
+  &--grass { background: #78C850; color: #fff; }
+  &--ice { background: #98D8D8; color: #000; }
+  &--fighting { background: #C03028; color: #fff; }
+  &--poison { background: #A040A0; color: #fff; }
+  &--ground { background: #E0C068; color: #000; }
+  &--flying { background: #A890F0; color: #fff; }
+  &--psychic { background: #F85888; color: #fff; }
+  &--bug { background: #A8B820; color: #fff; }
+  &--rock { background: #B8A038; color: #fff; }
+  &--ghost { background: #705898; color: #fff; }
+  &--dragon { background: #7038F8; color: #fff; }
+  &--dark { background: #705848; color: #fff; }
+  &--steel { background: #B8B8D0; color: #000; }
+  &--fairy { background: #EE99AC; color: #000; }
+}
+
+.ability-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.ability-tag {
+  font-size: $font-size-sm;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba($color-accent-teal, 0.2);
+  border: 1px solid rgba($color-accent-teal, 0.4);
+  border-radius: $border-radius-sm;
+  color: $color-accent-teal;
+}
+
+.move-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.move-tag {
+  font-size: $font-size-sm;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  color: #fff;
+
+  // Inherit from type-badge colors
+  &--normal { background: #A8A878; }
+  &--fire { background: #F08030; }
+  &--water { background: #6890F0; }
+  &--electric { background: #F8D030; color: #000; }
+  &--grass { background: #78C850; }
+  &--ice { background: #98D8D8; color: #000; }
+  &--fighting { background: #C03028; }
+  &--poison { background: #A040A0; }
+  &--ground { background: #E0C068; color: #000; }
+  &--flying { background: #A890F0; }
+  &--psychic { background: #F85888; }
+  &--bug { background: #A8B820; }
+  &--rock { background: #B8A038; }
+  &--ghost { background: #705898; }
+  &--dragon { background: #7038F8; }
+  &--dark { background: #705848; }
+  &--steel { background: #B8B8D0; color: #000; }
+  &--fairy { background: #EE99AC; color: #000; }
+}
+
+.status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.status-tag {
+  font-size: $font-size-xs;
+  font-weight: 600;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-sm;
+  text-transform: uppercase;
+
+  &--burned, &--burn { background: #F08030; color: #fff; }
+  &--frozen, &--freeze { background: #98D8D8; color: #000; }
+  &--paralyzed, &--paralysis { background: #F8D030; color: #000; }
+  &--poisoned, &--poison { background: #A040A0; color: #fff; }
+  &--badly-poisoned { background: #682a68; color: #fff; }
+  &--asleep, &--sleep { background: #705898; color: #fff; }
+  &--confused, &--confusion { background: #F85888; color: #fff; }
+  &--flinched, &--flinch { background: #705848; color: #fff; }
+  &--infatuated, &--infatuation { background: #EE99AC; color: #000; }
+}
+
+.stages-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.stage-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+
+  &--positive {
+    background: rgba($color-success, 0.2);
+    color: $color-success;
+  }
+
+  &--negative {
+    background: rgba($color-danger, 0.2);
+    color: $color-danger;
+  }
+}
+
+.stage-label {
+  font-weight: 500;
+}
+
+.stage-value {
+  font-weight: 700;
 }
 </style>
