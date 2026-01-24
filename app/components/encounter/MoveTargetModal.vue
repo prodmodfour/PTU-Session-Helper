@@ -54,10 +54,33 @@
           </div>
         </div>
 
-        <!-- Fixed Damage Notice (for moves like Dragon Rage) -->
-        <div v-if="fixedDamage" class="fixed-damage-notice">
-          <span class="label">Fixed Damage:</span>
-          <span class="value">{{ fixedDamage }}</span>
+        <!-- Damage Section -->
+        <div v-if="fixedDamage" class="damage-section damage-section--fixed">
+          <span class="damage-section__label">Fixed Damage:</span>
+          <span class="damage-section__value">{{ fixedDamage }}</span>
+        </div>
+
+        <div v-else-if="move.damageBase" class="damage-section">
+          <div class="damage-section__header">
+            <span class="damage-section__label">Damage (DB {{ move.damageBase }}):</span>
+            <span class="damage-section__notation">{{ damageNotation }}</span>
+          </div>
+
+          <div v-if="!hasRolled" class="damage-section__roll-prompt">
+            <button class="btn btn--primary btn--roll" @click="rollDamage">
+              🎲 Roll Damage
+            </button>
+          </div>
+
+          <div v-else class="damage-section__result">
+            <div class="roll-result">
+              <span class="roll-result__total">{{ damageRollResult?.total }}</span>
+              <span class="roll-result__breakdown">{{ damageRollResult?.breakdown }}</span>
+            </div>
+            <button class="btn btn--secondary btn--sm" @click="rollDamage">
+              Reroll
+            </button>
+          </div>
         </div>
       </div>
 
@@ -65,7 +88,7 @@
         <button class="btn btn--secondary" @click="$emit('cancel')">Cancel</button>
         <button
           class="btn btn--primary"
-          :disabled="selectedTargets.length === 0"
+          :disabled="selectedTargets.length === 0 || (move.damageBase && !fixedDamage && !hasRolled)"
           @click="confirm"
         >
           Use {{ move.name }}
@@ -77,6 +100,7 @@
 
 <script setup lang="ts">
 import type { Move, Combatant, Pokemon, HumanCharacter } from '~/types'
+import type { DiceRollResult } from '~/utils/diceRoller'
 
 const props = defineProps<{
   move: Move
@@ -85,18 +109,21 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  confirm: [targetIds: string[], damage?: number]
+  confirm: [targetIds: string[], damage?: number, rollResult?: DiceRollResult]
   cancel: []
 }>()
 
+const { rollDamageBase, getDamageRoll } = useCombat()
+
 const selectedTargets = ref<string[]>([])
+const damageRollResult = ref<DiceRollResult | null>(null)
+const hasRolled = ref(false)
 
 // Parse move effect for fixed damage (e.g., Dragon Rage = 40, Sonic Boom = 20)
 const fixedDamage = computed((): number | null => {
   if (!props.move.effect) return null
 
   // Common patterns for fixed damage moves
-  // "deals 40 damage", "40 damage", "always deals 40"
   const patterns = [
     /deals?\s+(\d+)\s+damage/i,
     /always\s+deals?\s+(\d+)/i,
@@ -113,6 +140,19 @@ const fixedDamage = computed((): number | null => {
 
   return null
 })
+
+// Get the dice notation for this move's damage
+const damageNotation = computed(() => {
+  if (!props.move.damageBase) return null
+  return getDamageRoll(props.move.damageBase)
+})
+
+// Roll damage for the move
+const rollDamage = () => {
+  if (!props.move.damageBase) return
+  damageRollResult.value = rollDamageBase(props.move.damageBase, false)
+  hasRolled.value = true
+}
 
 const toggleTarget = (targetId: string) => {
   const index = selectedTargets.value.indexOf(targetId)
@@ -132,8 +172,9 @@ const getTargetName = (target: Combatant): string => {
 }
 
 const confirm = () => {
-  // Pass fixed damage if the move has it, otherwise no damage (rolled separately)
-  emit('confirm', selectedTargets.value, fixedDamage.value || undefined)
+  // Priority: fixed damage > rolled damage > no damage
+  const damage = fixedDamage.value ?? damageRollResult.value?.total ?? undefined
+  emit('confirm', selectedTargets.value, damage, damageRollResult.value ?? undefined)
 }
 </script>
 
@@ -286,25 +327,81 @@ const confirm = () => {
   }
 }
 
-.fixed-damage-notice {
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
+.damage-section {
   padding: $spacing-md;
-  background: linear-gradient(135deg, rgba($color-accent-scarlet, 0.15) 0%, rgba($color-accent-violet, 0.1) 100%);
-  border: 1px solid rgba($color-accent-scarlet, 0.3);
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
   border-radius: $border-radius-md;
 
-  .label {
+  &--fixed {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    background: linear-gradient(135deg, rgba($color-accent-scarlet, 0.15) 0%, rgba($color-accent-violet, 0.1) 100%);
+    border-color: rgba($color-accent-scarlet, 0.3);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+  }
+
+  &__label {
     font-size: $font-size-sm;
     color: $color-text-muted;
     font-weight: 500;
   }
 
-  .value {
-    font-size: $font-size-lg;
+  &__notation {
+    font-family: monospace;
+    font-size: $font-size-sm;
+    color: $color-accent-violet;
+    background: $color-bg-secondary;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $border-radius-sm;
+  }
+
+  &__value {
+    font-size: $font-size-xl;
     font-weight: 700;
     color: $color-accent-scarlet;
+  }
+
+  &__roll-prompt {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-md;
+  }
+}
+
+.btn--roll {
+  font-size: $font-size-lg;
+  padding: $spacing-md $spacing-xl;
+}
+
+.roll-result {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-md;
+
+  &__total {
+    font-size: $font-size-2xl;
+    font-weight: 700;
+    color: $color-accent-scarlet;
+  }
+
+  &__breakdown {
+    font-size: $font-size-sm;
+    font-family: monospace;
+    color: $color-text-muted;
   }
 }
 
