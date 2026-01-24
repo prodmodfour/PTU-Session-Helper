@@ -335,7 +335,7 @@
     />
 
     <!-- Save Template Modal -->
-    <EncounterLibrarySaveTemplateModal
+    <SaveTemplateModal
       v-if="showSaveTemplateModal && encounter"
       :encounter-id="encounter.id"
       :combatant-count="encounter.combatants.length"
@@ -345,7 +345,7 @@
     />
 
     <!-- Load Template Modal -->
-    <EncounterLibraryLoadTemplateModal
+    <LoadTemplateModal
       v-if="showLoadTemplateModal"
       @close="showLoadTemplateModal = false"
       @load="handleLoadTemplate"
