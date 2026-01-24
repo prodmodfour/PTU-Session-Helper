@@ -486,7 +486,7 @@ const addToEncounter = async (pokemon?: Array<{ speciesId: string; speciesName: 
   try {
     // Always create a fresh encounter
     const tableName = generateModal.value.table?.name || 'Wild Encounter'
-    await encounterStore.createEncounter(tableName, 'trainer')
+    await encounterStore.createEncounter(tableName, 'full_contact')
 
     await encounterStore.addWildPokemon(pokemonToAdd, 'enemies')
 

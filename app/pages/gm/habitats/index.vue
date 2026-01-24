@@ -189,7 +189,7 @@ const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesN
   try {
     // Always create a fresh encounter
     const tableName = generatingFromTable.value?.name || 'Wild Encounter'
-    await encounterStore.createEncounter(tableName, 'trainer')
+    await encounterStore.createEncounter(tableName, 'full_contact')
 
     const added = await encounterStore.addWildPokemon(pokemon, 'enemies')
     generatingFromTable.value = null
