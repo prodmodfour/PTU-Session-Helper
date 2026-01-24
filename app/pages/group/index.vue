@@ -405,26 +405,31 @@ const loadVttState = async (encounterId: string) => {
   ])
 }
 
+// Track the current served encounter ID to detect changes
+let currentServedEncounterId: string | null = null
+
 const checkForServedEncounter = async () => {
   try {
     // Use the store's loadServedEncounter which handles everything
     const servedEncounter = await encounterStore.loadServedEncounter()
 
     if (servedEncounter) {
-      // Stop polling once we find a served encounter
-      if (pollInterval) {
-        clearInterval(pollInterval)
-        pollInterval = null
-      }
+      // Check if this is a different encounter than before
+      if (servedEncounter.id !== currentServedEncounterId) {
+        currentServedEncounterId = servedEncounter.id
 
-      // Load VTT state for the encounter
-      await loadVttState(servedEncounter.id)
+        // Load VTT state for the new encounter
+        await loadVttState(servedEncounter.id)
 
-      // Identify as group and join the encounter via WebSocket
-      if (isConnected.value) {
-        identify('group', servedEncounter.id)
-        joinEncounter(servedEncounter.id)
+        // Identify as group and join the encounter via WebSocket
+        if (isConnected.value) {
+          identify('group', servedEncounter.id)
+          joinEncounter(servedEncounter.id)
+        }
       }
+    } else {
+      // No served encounter - reset tracking
+      currentServedEncounterId = null
     }
   } catch (error) {
     console.error('Failed to fetch served encounter:', error)
@@ -438,10 +443,8 @@ onMounted(async () => {
 
   await checkForServedEncounter()
 
-  // If no served encounter found, poll every 2 seconds
-  if (!encounterStore.encounter?.isServed) {
-    pollInterval = setInterval(checkForServedEncounter, 2000)
-  }
+  // Always poll for served encounters to detect changes
+  pollInterval = setInterval(checkForServedEncounter, 2000)
 
   // Start polling for wild spawn preview (every 1 second for responsive TV display)
   await checkForWildSpawn()
