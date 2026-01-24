@@ -32,6 +32,12 @@
             <span class="label">{{ attackStatLabel }}:</span>
             <span>{{ attackStatValue }}</span>
           </div>
+          <div v-if="attackerAccuracyStage !== 0" class="move-info__stat">
+            <span class="label">Accuracy:</span>
+            <span :class="attackerAccuracyStage > 0 ? 'stat-boost' : 'stat-drop'">
+              {{ attackerAccuracyStage > 0 ? '+' : '' }}{{ attackerAccuracyStage }}
+            </span>
+          </div>
         </div>
 
         <div v-if="move.effect" class="move-effect">
@@ -49,7 +55,9 @@
               :class="{
                 'target-btn--selected': selectedTargets.includes(target.id),
                 'target-btn--ally': target.side === 'players' || target.side === 'allies',
-                'target-btn--enemy': target.side === 'enemies'
+                'target-btn--enemy': target.side === 'enemies',
+                'target-btn--hit': accuracyResults[target.id]?.hit,
+                'target-btn--miss': accuracyResults[target.id] && !accuracyResults[target.id].hit
               }"
               @click="toggleTarget(target.id)"
             >
@@ -57,7 +65,29 @@
                 <span class="target-btn__name">{{ getTargetName(target) }}</span>
                 <span class="target-btn__hp">{{ target.entity.currentHp }}/{{ target.entity.maxHp }}</span>
               </div>
-              <div v-if="selectedTargets.includes(target.id) && hasRolled && targetDamageCalcs[target.id]" class="target-btn__damage-preview">
+              <!-- Accuracy result display -->
+              <div v-if="selectedTargets.includes(target.id) && accuracyResults[target.id]" class="target-btn__accuracy">
+                <span class="accuracy-roll">
+                  d20: {{ accuracyResults[target.id].roll }}
+                  <span v-if="accuracyResults[target.id].isNat20" class="crit-badge">NAT 20!</span>
+                  <span v-if="accuracyResults[target.id].isNat1" class="fumble-badge">NAT 1</span>
+                </span>
+                <span class="accuracy-threshold">vs {{ accuracyResults[target.id].threshold }}</span>
+                <span
+                  class="accuracy-result"
+                  :class="accuracyResults[target.id].hit ? 'accuracy-result--hit' : 'accuracy-result--miss'"
+                >
+                  {{ accuracyResults[target.id].hit ? 'HIT' : 'MISS' }}
+                </span>
+              </div>
+              <!-- Evasion preview before accuracy roll -->
+              <div v-else-if="selectedTargets.includes(target.id) && move.ac && !hasRolledAccuracy" class="target-btn__evasion">
+                <span class="evasion-label">{{ evasionTypeLabel }}:</span>
+                <span class="evasion-value">+{{ getTargetEvasion(target.id) }}</span>
+                <span class="evasion-threshold">→ Need {{ getAccuracyThreshold(target.id) }}+</span>
+              </div>
+              <!-- Damage preview (only for hits) -->
+              <div v-if="selectedTargets.includes(target.id) && hasRolledDamage && targetDamageCalcs[target.id] && (accuracyResults[target.id]?.hit || !move.ac)" class="target-btn__damage-preview">
                 <span
                   class="effectiveness-badge"
                   :class="'effectiveness-badge--' + targetDamageCalcs[target.id].effectivenessClass"
@@ -72,14 +102,43 @@
           </div>
         </div>
 
+        <!-- Accuracy Section (for moves with AC) -->
+        <div v-if="move.ac && selectedTargets.length > 0" class="accuracy-section">
+          <div class="accuracy-section__header">
+            <span class="accuracy-section__label">
+              Accuracy Check (AC {{ move.ac }})
+            </span>
+            <span v-if="attackerAccuracyStage !== 0" class="accuracy-section__modifier">
+              {{ attackerAccuracyStage > 0 ? '+' : '' }}{{ attackerAccuracyStage }} Accuracy
+            </span>
+          </div>
+
+          <div v-if="!hasRolledAccuracy" class="accuracy-section__roll-prompt">
+            <button class="btn btn--primary btn--roll" @click="rollAccuracy">
+              Roll Accuracy
+            </button>
+          </div>
+
+          <div v-else class="accuracy-section__result">
+            <div class="accuracy-summary">
+              <span class="accuracy-summary__hits">{{ hitCount }} Hit{{ hitCount !== 1 ? 's' : '' }}</span>
+              <span class="accuracy-summary__separator">/</span>
+              <span class="accuracy-summary__misses">{{ missCount }} Miss{{ missCount !== 1 ? 'es' : '' }}</span>
+            </div>
+            <button class="btn btn--secondary btn--sm" @click="rollAccuracy">
+              Reroll Accuracy
+            </button>
+          </div>
+        </div>
+
         <!-- Damage Section -->
-        <div v-if="fixedDamage" class="damage-section damage-section--fixed">
+        <div v-if="fixedDamage && canShowDamageSection" class="damage-section damage-section--fixed">
           <span class="damage-section__label">Fixed Damage:</span>
           <span class="damage-section__value">{{ fixedDamage }}</span>
           <span class="damage-section__note">(ignores stats & type effectiveness)</span>
         </div>
 
-        <div v-else-if="move.damageBase" class="damage-section">
+        <div v-else-if="move.damageBase && canShowDamageSection" class="damage-section">
           <div class="damage-section__header">
             <span class="damage-section__label">
               Damage (DB {{ effectiveDB }}{{ hasSTAB ? ' with STAB' : '' }}):
@@ -87,7 +146,7 @@
             <span class="damage-section__notation">{{ damageNotation }}</span>
           </div>
 
-          <div v-if="!hasRolled" class="damage-section__roll-prompt">
+          <div v-if="!hasRolledDamage" class="damage-section__roll-prompt">
             <button class="btn btn--primary btn--roll" @click="rollDamage">
               Roll Damage
             </button>
@@ -114,11 +173,11 @@
             </button>
           </div>
 
-          <!-- Per-target damage breakdown (after rolling) -->
-          <div v-if="hasRolled && selectedTargets.length > 0" class="target-damages">
+          <!-- Per-target damage breakdown (after rolling, only for hits) -->
+          <div v-if="hasRolledDamage && hitTargets.length > 0" class="target-damages">
             <h4>Damage Per Target</h4>
             <div
-              v-for="targetId in selectedTargets"
+              v-for="targetId in hitTargets"
               :key="targetId"
               class="target-damage-row"
             >
@@ -140,13 +199,18 @@
             </div>
           </div>
         </div>
+
+        <!-- Miss message when all targets missed -->
+        <div v-if="hasRolledAccuracy && hitCount === 0" class="miss-message">
+          All targets evaded the attack!
+        </div>
       </div>
 
       <div class="modal__footer">
         <button class="btn btn--secondary" @click="$emit('cancel')">Cancel</button>
         <button
           class="btn btn--primary"
-          :disabled="selectedTargets.length === 0 || (move.damageBase && !fixedDamage && !hasRolled)"
+          :disabled="!canConfirm"
           @click="confirm"
         >
           Use {{ move.name }}
@@ -159,6 +223,7 @@
 <script setup lang="ts">
 import type { Move, Combatant, Pokemon, HumanCharacter, PokemonType } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
+import { roll } from '~/utils/diceRoller'
 
 interface TargetDamageCalc {
   targetId: string
@@ -167,6 +232,15 @@ interface TargetDamageCalc {
   effectivenessText: string
   effectivenessClass: string
   finalDamage: number
+}
+
+interface AccuracyResult {
+  targetId: string
+  roll: number
+  threshold: number
+  hit: boolean
+  isNat1: boolean
+  isNat20: boolean
 }
 
 const props = defineProps<{
@@ -186,12 +260,17 @@ const {
   hasSTAB: checkSTAB,
   getTypeEffectiveness,
   getEffectivenessDescription,
-  applyStageModifier
+  applyStageModifier,
+  calculatePhysicalEvasion,
+  calculateSpecialEvasion,
+  calculateSpeedEvasion
 } = useCombat()
 
 const selectedTargets = ref<string[]>([])
 const damageRollResult = ref<DiceRollResult | null>(null)
-const hasRolled = ref(false)
+const hasRolledDamage = ref(false)
+const hasRolledAccuracy = ref(false)
+const accuracyResults = ref<Record<string, AccuracyResult>>({})
 
 // Get actor's types
 const actorTypes = computed((): string[] => {
@@ -272,11 +351,131 @@ const getPokemonSpDefStat = (entity: any): number => {
 }
 
 // Helper to get human character stat
-const getHumanStat = (entity: any, stat: 'attack' | 'specialAttack' | 'defense' | 'specialDefense'): number => {
+const getHumanStat = (entity: any, stat: 'attack' | 'specialAttack' | 'defense' | 'specialDefense' | 'speed'): number => {
   if (entity?.stats?.[stat] !== undefined) return entity.stats[stat]
   if (entity?.[stat] !== undefined) return entity[stat]
   return 0
 }
+
+// Helper to safely get a Pokemon's speed stat
+const getPokemonSpeedStat = (entity: any): number => {
+  if (entity?.currentStats?.speed !== undefined) return entity.currentStats.speed
+  if (entity?.currentSpeed !== undefined) return entity.currentSpeed
+  if (entity?.baseStats?.speed !== undefined) return entity.baseStats.speed
+  if (entity?.baseSpeed !== undefined) return entity.baseSpeed
+  return 0
+}
+
+// Get attacker's accuracy combat stage
+const attackerAccuracyStage = computed((): number => {
+  const stages = getStageModifiers(props.actor.entity)
+  return stages.accuracy || 0
+})
+
+// Evasion type label based on move damage class
+const evasionTypeLabel = computed((): string => {
+  return props.move.damageClass === 'Physical' ? 'Phys Evasion' : 'Spec Evasion'
+})
+
+// Get a target's evasion value based on move type
+const getTargetEvasion = (targetId: string): number => {
+  const target = props.targets.find(t => t.id === targetId)
+  if (!target || !target.entity) return 0
+
+  const entity = target.entity
+  const stages = getStageModifiers(entity)
+
+  if (props.move.damageClass === 'Physical') {
+    // Physical evasion from Defense
+    const defStat = target.type === 'pokemon'
+      ? getPokemonDefenseStat(entity)
+      : getHumanStat(entity, 'defense')
+    return calculatePhysicalEvasion(defStat, stages.defense)
+  } else {
+    // Special evasion from Sp. Defense
+    const spDefStat = target.type === 'pokemon'
+      ? getPokemonSpDefStat(entity)
+      : getHumanStat(entity, 'specialDefense')
+    return calculateSpecialEvasion(spDefStat, stages.specialDefense)
+  }
+}
+
+// Calculate accuracy threshold needed to hit a target
+const getAccuracyThreshold = (targetId: string): number => {
+  if (!props.move.ac) return 0
+
+  const evasion = getTargetEvasion(targetId)
+  // Threshold = Move AC + Evasion - Accuracy stages
+  // But evasion is capped at +9 total
+  const effectiveEvasion = Math.min(9, evasion)
+  return Math.max(1, props.move.ac + effectiveEvasion - attackerAccuracyStage.value)
+}
+
+// Roll accuracy for all selected targets
+const rollAccuracy = () => {
+  if (!props.move.ac) return
+
+  const results: Record<string, AccuracyResult> = {}
+
+  for (const targetId of selectedTargets.value) {
+    const d20Result = roll('1d20')
+    const naturalRoll = d20Result.dice[0] // dice array, not rolls
+    const threshold = getAccuracyThreshold(targetId)
+
+    const isNat1 = naturalRoll === 1
+    const isNat20 = naturalRoll === 20
+
+    // Natural 1 always misses, Natural 20 always hits
+    let hit: boolean
+    if (isNat1) {
+      hit = false
+    } else if (isNat20) {
+      hit = true
+    } else {
+      hit = naturalRoll >= threshold
+    }
+
+    results[targetId] = {
+      targetId,
+      roll: naturalRoll,
+      threshold,
+      hit,
+      isNat1,
+      isNat20
+    }
+  }
+
+  accuracyResults.value = results
+  hasRolledAccuracy.value = true
+
+  // Reset damage roll when accuracy is rerolled
+  hasRolledDamage.value = false
+  damageRollResult.value = null
+}
+
+// Count hits and misses
+const hitCount = computed(() => {
+  return Object.values(accuracyResults.value).filter(r => r.hit).length
+})
+
+const missCount = computed(() => {
+  return Object.values(accuracyResults.value).filter(r => !r.hit).length
+})
+
+// Get list of targets that were hit (for damage calculation)
+const hitTargets = computed((): string[] => {
+  if (!props.move.ac) {
+    // No AC = auto-hit (status moves, etc.)
+    return selectedTargets.value
+  }
+  return selectedTargets.value.filter(id => accuracyResults.value[id]?.hit)
+})
+
+// Can show damage section? Only if there are hits (or no AC check needed)
+const canShowDamageSection = computed((): boolean => {
+  if (!props.move.ac) return true // No accuracy check needed
+  return hasRolledAccuracy.value && hitCount.value > 0
+})
 
 // Get actor's attack stat (Attack or Special Attack based on move class)
 const attackStatValue = computed((): number => {
@@ -344,13 +543,14 @@ const damageNotation = computed(() => {
   return getDamageRoll(effectiveDB.value)
 })
 
-// Calculate damage for each selected target
+// Calculate damage for each selected target (only for hits)
 const targetDamageCalcs = computed((): Record<string, TargetDamageCalc> => {
-  if (!hasRolled.value || !damageRollResult.value) return {}
+  if (!hasRolledDamage.value || !damageRollResult.value) return {}
 
   const calcs: Record<string, TargetDamageCalc> = {}
 
-  for (const targetId of selectedTargets.value) {
+  // Only calculate for targets that were hit
+  for (const targetId of hitTargets.value) {
     const target = props.targets.find(t => t.id === targetId)
     if (!target || !target.entity) continue
 
@@ -425,7 +625,7 @@ const getEffectivenessClass = (effectiveness: number): string => {
 const rollDamage = () => {
   if (!effectiveDB.value) return
   damageRollResult.value = rollDamageBase(effectiveDB.value, false)
-  hasRolled.value = true
+  hasRolledDamage.value = true
 }
 
 const toggleTarget = (targetId: string) => {
@@ -435,6 +635,12 @@ const toggleTarget = (targetId: string) => {
   } else {
     selectedTargets.value.splice(index, 1)
   }
+
+  // Reset accuracy and damage rolls when targets change
+  hasRolledAccuracy.value = false
+  hasRolledDamage.value = false
+  accuracyResults.value = {}
+  damageRollResult.value = null
 }
 
 const getTargetName = (target: Combatant): string => {
@@ -450,30 +656,47 @@ const getTargetNameById = (targetId: string): string => {
   return target ? getTargetName(target) : '???'
 }
 
+// Can confirm the action?
+const canConfirm = computed((): boolean => {
+  if (selectedTargets.value.length === 0) return false
+
+  // If move has AC, accuracy must be rolled
+  if (props.move.ac && !hasRolledAccuracy.value) return false
+
+  // If move has damage and there are hits, damage must be rolled
+  if (props.move.damageBase && !fixedDamage.value && hitTargets.value.length > 0 && !hasRolledDamage.value) {
+    return false
+  }
+
+  // All checks passed (even if all misses, we can confirm to log the miss)
+  return true
+})
+
 const confirm = () => {
-  // For fixed damage moves, use flat damage for all targets
+  // For fixed damage moves, apply flat damage to hit targets only
   if (fixedDamage.value) {
     const targetDamages: Record<string, number> = {}
-    for (const targetId of selectedTargets.value) {
+    for (const targetId of hitTargets.value) {
       targetDamages[targetId] = fixedDamage.value
     }
     emit('confirm', selectedTargets.value, fixedDamage.value, undefined, targetDamages)
     return
   }
 
-  // For normal moves, send per-target calculated damages
-  if (hasRolled.value && Object.keys(targetDamageCalcs.value).length > 0) {
+  // For normal moves, send per-target calculated damages (only for hits)
+  if (hasRolledDamage.value && Object.keys(targetDamageCalcs.value).length > 0) {
     const targetDamages: Record<string, number> = {}
     for (const [targetId, calc] of Object.entries(targetDamageCalcs.value)) {
       targetDamages[targetId] = calc.finalDamage
     }
-    // Use first target's damage as "main" damage for backward compatibility
-    const firstTargetDamage = targetDamages[selectedTargets.value[0]]
+    // Use first hit target's damage as "main" damage for backward compatibility
+    const firstHitTarget = hitTargets.value[0]
+    const firstTargetDamage = firstHitTarget ? targetDamages[firstHitTarget] : undefined
     emit('confirm', selectedTargets.value, firstTargetDamage, damageRollResult.value ?? undefined, targetDamages)
     return
   }
 
-  // Status moves or no damage
+  // Status moves, all misses, or no damage
   emit('confirm', selectedTargets.value, undefined, undefined, undefined)
 }
 </script>
@@ -544,6 +767,16 @@ const confirm = () => {
   padding: 2px $spacing-sm;
   border-radius: $border-radius-sm;
   text-transform: uppercase;
+}
+
+.stat-boost {
+  color: $color-success;
+  font-weight: 600;
+}
+
+.stat-drop {
+  color: $color-side-enemy;
+  font-weight: 600;
 }
 
 .move-info {
@@ -649,6 +882,17 @@ const confirm = () => {
     border-left: 4px solid $color-side-enemy;
   }
 
+  &--hit {
+    border-color: $color-success;
+    background: linear-gradient(135deg, rgba($color-success, 0.15) 0%, rgba($color-success, 0.05) 100%);
+  }
+
+  &--miss {
+    border-color: rgba($color-text-muted, 0.5);
+    background: rgba($color-text-muted, 0.05);
+    opacity: 0.7;
+  }
+
   &__name {
     font-weight: 500;
   }
@@ -657,6 +901,85 @@ const confirm = () => {
     font-size: $font-size-sm;
     color: $color-text-muted;
   }
+
+  &__accuracy {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    width: 100%;
+    padding-top: $spacing-xs;
+    border-top: 1px solid rgba($glass-border, 0.5);
+    font-size: $font-size-sm;
+  }
+
+  &__evasion {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    width: 100%;
+    padding-top: $spacing-xs;
+    border-top: 1px solid rgba($glass-border, 0.5);
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+
+    .evasion-value {
+      color: $color-accent-violet;
+      font-weight: 600;
+    }
+
+    .evasion-threshold {
+      margin-left: auto;
+      color: $color-text-muted;
+    }
+  }
+}
+
+.accuracy-roll {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-family: monospace;
+}
+
+.accuracy-threshold {
+  color: $color-text-muted;
+}
+
+.accuracy-result {
+  margin-left: auto;
+  font-weight: 700;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-sm;
+
+  &--hit {
+    background: rgba($color-success, 0.2);
+    color: $color-success;
+  }
+
+  &--miss {
+    background: rgba($color-text-muted, 0.2);
+    color: $color-text-muted;
+  }
+}
+
+.crit-badge {
+  background: linear-gradient(135deg, gold 0%, darken(gold, 10%) 100%);
+  color: $color-bg-primary;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  padding: 1px $spacing-xs;
+  border-radius: $border-radius-sm;
+  text-transform: uppercase;
+}
+
+.fumble-badge {
+  background: rgba($color-side-enemy, 0.3);
+  color: $color-side-enemy;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  padding: 1px $spacing-xs;
+  border-radius: $border-radius-sm;
+  text-transform: uppercase;
 }
 
 .effectiveness-badge {
@@ -853,6 +1176,80 @@ const confirm = () => {
     padding: 2px $spacing-sm;
     border-radius: $border-radius-sm;
   }
+}
+
+.accuracy-section {
+  margin-bottom: $spacing-lg;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-md;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+  }
+
+  &__label {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    font-weight: 500;
+  }
+
+  &__modifier {
+    font-size: $font-size-sm;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $border-radius-sm;
+    background: $color-bg-secondary;
+    color: $color-accent-violet;
+    font-weight: 600;
+  }
+
+  &__roll-prompt {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-md;
+  }
+}
+
+.accuracy-summary {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: $font-size-lg;
+
+  &__hits {
+    color: $color-success;
+    font-weight: 700;
+  }
+
+  &__separator {
+    color: $color-text-muted;
+  }
+
+  &__misses {
+    color: $color-text-muted;
+    font-weight: 500;
+  }
+}
+
+.miss-message {
+  padding: $spacing-lg;
+  text-align: center;
+  color: $color-text-muted;
+  font-size: $font-size-lg;
+  font-style: italic;
+  background: $color-bg-tertiary;
+  border: 1px dashed $border-color-default;
+  border-radius: $border-radius-md;
 }
 
 .btn--roll {
