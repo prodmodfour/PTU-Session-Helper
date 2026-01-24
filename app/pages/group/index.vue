@@ -651,12 +651,6 @@ const formatStageName = (key: string): string => {
     gap: $spacing-md;
   }
 
-  &--current {
-    background: rgba($color-accent-scarlet, 0.2);
-    border: 1px solid $color-accent-scarlet;
-    box-shadow: $shadow-glow-scarlet;
-  }
-
   &--player {
     border-left: 3px solid $color-side-player;
   }
@@ -667,6 +661,28 @@ const formatStageName = (key: string): string => {
 
   &--enemy {
     border-left: 3px solid $color-side-enemy;
+  }
+
+  // Current turn highlight - matches side color
+  &--current.initiative-entry--player {
+    background: rgba($color-side-player, 0.2);
+    border: 1px solid $color-side-player;
+    border-left: 3px solid $color-side-player;
+    box-shadow: 0 0 12px rgba($color-side-player, 0.4);
+  }
+
+  &--current.initiative-entry--ally {
+    background: rgba($color-side-ally, 0.2);
+    border: 1px solid $color-side-ally;
+    border-left: 3px solid $color-side-ally;
+    box-shadow: 0 0 12px rgba($color-side-ally, 0.4);
+  }
+
+  &--current.initiative-entry--enemy {
+    background: rgba($color-side-enemy, 0.2);
+    border: 1px solid $color-side-enemy;
+    border-left: 3px solid $color-side-enemy;
+    box-shadow: 0 0 12px rgba($color-side-enemy, 0.4);
   }
 
   &__order {

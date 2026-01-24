@@ -6,6 +6,7 @@
         <span class="type-badge" :class="`type-badge--${move.type?.toLowerCase() || 'normal'}`">
           {{ move.type }}
         </span>
+        <span v-if="hasSTAB" class="stab-badge">STAB</span>
       </div>
 
       <div class="modal__body">
@@ -16,8 +17,8 @@
             <span>{{ move.damageClass }}</span>
           </div>
           <div v-if="move.damageBase" class="move-info__stat">
-            <span class="label">Damage Base:</span>
-            <span>{{ move.damageBase }}</span>
+            <span class="label">DB:</span>
+            <span>{{ move.damageBase }}{{ hasSTAB ? ' → ' + effectiveDB : '' }}</span>
           </div>
           <div v-if="move.ac" class="move-info__stat">
             <span class="label">AC:</span>
@@ -26,6 +27,10 @@
           <div class="move-info__stat">
             <span class="label">Range:</span>
             <span>{{ move.range }}</span>
+          </div>
+          <div v-if="move.damageBase && attackStatValue" class="move-info__stat">
+            <span class="label">{{ attackStatLabel }}:</span>
+            <span>{{ attackStatValue }}</span>
           </div>
         </div>
 
@@ -48,8 +53,21 @@
               }"
               @click="toggleTarget(target.id)"
             >
-              <span class="target-btn__name">{{ getTargetName(target) }}</span>
-              <span class="target-btn__hp">{{ target.entity.currentHp }}/{{ target.entity.maxHp }}</span>
+              <div class="target-btn__main">
+                <span class="target-btn__name">{{ getTargetName(target) }}</span>
+                <span class="target-btn__hp">{{ target.entity.currentHp }}/{{ target.entity.maxHp }}</span>
+              </div>
+              <div v-if="selectedTargets.includes(target.id) && hasRolled && targetDamageCalcs[target.id]" class="target-btn__damage-preview">
+                <span
+                  class="effectiveness-badge"
+                  :class="'effectiveness-badge--' + targetDamageCalcs[target.id].effectivenessClass"
+                >
+                  {{ targetDamageCalcs[target.id].effectivenessText }}
+                </span>
+                <span class="target-btn__final-damage">
+                  {{ targetDamageCalcs[target.id].finalDamage }} dmg
+                </span>
+              </div>
             </button>
           </div>
         </div>
@@ -58,28 +76,68 @@
         <div v-if="fixedDamage" class="damage-section damage-section--fixed">
           <span class="damage-section__label">Fixed Damage:</span>
           <span class="damage-section__value">{{ fixedDamage }}</span>
+          <span class="damage-section__note">(ignores stats & type effectiveness)</span>
         </div>
 
         <div v-else-if="move.damageBase" class="damage-section">
           <div class="damage-section__header">
-            <span class="damage-section__label">Damage (DB {{ move.damageBase }}):</span>
+            <span class="damage-section__label">
+              Damage (DB {{ effectiveDB }}{{ hasSTAB ? ' with STAB' : '' }}):
+            </span>
             <span class="damage-section__notation">{{ damageNotation }}</span>
           </div>
 
           <div v-if="!hasRolled" class="damage-section__roll-prompt">
             <button class="btn btn--primary btn--roll" @click="rollDamage">
-              🎲 Roll Damage
+              Roll Damage
             </button>
           </div>
 
           <div v-else class="damage-section__result">
-            <div class="roll-result">
-              <span class="roll-result__total">{{ damageRollResult?.total }}</span>
-              <span class="roll-result__breakdown">{{ damageRollResult?.breakdown }}</span>
+            <div class="damage-breakdown">
+              <div class="damage-breakdown__row">
+                <span class="damage-breakdown__label">Base Roll:</span>
+                <span class="damage-breakdown__value">{{ damageRollResult?.total }}</span>
+                <span class="damage-breakdown__detail">{{ damageRollResult?.breakdown }}</span>
+              </div>
+              <div class="damage-breakdown__row">
+                <span class="damage-breakdown__label">+ {{ attackStatLabel }}:</span>
+                <span class="damage-breakdown__value">{{ attackStatValue }}</span>
+              </div>
+              <div class="damage-breakdown__row damage-breakdown__row--total">
+                <span class="damage-breakdown__label">Pre-Defense Total:</span>
+                <span class="damage-breakdown__value">{{ preDefenseTotal }}</span>
+              </div>
             </div>
             <button class="btn btn--secondary btn--sm" @click="rollDamage">
               Reroll
             </button>
+          </div>
+
+          <!-- Per-target damage breakdown (after rolling) -->
+          <div v-if="hasRolled && selectedTargets.length > 0" class="target-damages">
+            <h4>Damage Per Target</h4>
+            <div
+              v-for="targetId in selectedTargets"
+              :key="targetId"
+              class="target-damage-row"
+            >
+              <span class="target-damage-row__name">{{ getTargetNameById(targetId) }}</span>
+              <div class="target-damage-row__calc" v-if="targetDamageCalcs[targetId]">
+                <span class="target-damage-row__step">{{ preDefenseTotal }}</span>
+                <span class="target-damage-row__op">−</span>
+                <span class="target-damage-row__step">{{ targetDamageCalcs[targetId].defenseStat }} {{ defenseStatLabel }}</span>
+                <span class="target-damage-row__op">×</span>
+                <span
+                  class="target-damage-row__step effectiveness-badge"
+                  :class="'effectiveness-badge--' + targetDamageCalcs[targetId].effectivenessClass"
+                >
+                  {{ targetDamageCalcs[targetId].effectiveness }}
+                </span>
+                <span class="target-damage-row__op">=</span>
+                <span class="target-damage-row__result">{{ targetDamageCalcs[targetId].finalDamage }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -99,8 +157,17 @@
 </template>
 
 <script setup lang="ts">
-import type { Move, Combatant, Pokemon, HumanCharacter } from '~/types'
+import type { Move, Combatant, Pokemon, HumanCharacter, PokemonType } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
+
+interface TargetDamageCalc {
+  targetId: string
+  defenseStat: number
+  effectiveness: number
+  effectivenessText: string
+  effectivenessClass: string
+  finalDamage: number
+}
 
 const props = defineProps<{
   move: Move
@@ -109,28 +176,156 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  confirm: [targetIds: string[], damage?: number, rollResult?: DiceRollResult]
+  confirm: [targetIds: string[], damage?: number, rollResult?: DiceRollResult, targetDamages?: Record<string, number>]
   cancel: []
 }>()
 
-const { rollDamageBase, getDamageRoll } = useCombat()
+const {
+  rollDamageBase,
+  getDamageRoll,
+  hasSTAB: checkSTAB,
+  getTypeEffectiveness,
+  getEffectivenessDescription,
+  applyStageModifier
+} = useCombat()
 
 const selectedTargets = ref<string[]>([])
 const damageRollResult = ref<DiceRollResult | null>(null)
 const hasRolled = ref(false)
 
-// Parse move effect for fixed damage (e.g., Dragon Rage = 15 HP, Sonic Boom = 20)
+// Get actor's types
+const actorTypes = computed((): string[] => {
+  if (props.actor.type === 'pokemon') {
+    return (props.actor.entity as Pokemon).types
+  }
+  // Humans don't have types, so no STAB
+  return []
+})
+
+// Check if move gets STAB
+const hasSTAB = computed(() => {
+  if (!props.move.type) return false
+  return checkSTAB(props.move.type, actorTypes.value)
+})
+
+// Effective damage base (with STAB +2)
+const effectiveDB = computed(() => {
+  if (!props.move.damageBase) return 0
+  return hasSTAB.value ? props.move.damageBase + 2 : props.move.damageBase
+})
+
+// Helper to safely get stage modifiers (handles string JSON and missing data)
+const getStageModifiers = (entity: any) => {
+  const defaultStages = { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0, accuracy: 0, evasion: 0 }
+  if (!entity?.stageModifiers) return defaultStages
+
+  // Handle case where stageModifiers is a JSON string
+  if (typeof entity.stageModifiers === 'string') {
+    try {
+      return { ...defaultStages, ...JSON.parse(entity.stageModifiers) }
+    } catch {
+      return defaultStages
+    }
+  }
+
+  return { ...defaultStages, ...entity.stageModifiers }
+}
+
+// Helper to safely get a Pokemon's attack stat
+const getPokemonAttackStat = (entity: any): number => {
+  // Try currentStats.attack first
+  if (entity?.currentStats?.attack !== undefined) return entity.currentStats.attack
+  // Try flat field (database format)
+  if (entity?.currentAttack !== undefined) return entity.currentAttack
+  // Try baseStats.attack
+  if (entity?.baseStats?.attack !== undefined) return entity.baseStats.attack
+  // Try flat base field
+  if (entity?.baseAttack !== undefined) return entity.baseAttack
+  return 0
+}
+
+// Helper to safely get a Pokemon's special attack stat
+const getPokemonSpAtkStat = (entity: any): number => {
+  if (entity?.currentStats?.specialAttack !== undefined) return entity.currentStats.specialAttack
+  if (entity?.currentSpAtk !== undefined) return entity.currentSpAtk
+  if (entity?.baseStats?.specialAttack !== undefined) return entity.baseStats.specialAttack
+  if (entity?.baseSpAtk !== undefined) return entity.baseSpAtk
+  return 0
+}
+
+// Helper to safely get a Pokemon's defense stat
+const getPokemonDefenseStat = (entity: any): number => {
+  if (entity?.currentStats?.defense !== undefined) return entity.currentStats.defense
+  if (entity?.currentDefense !== undefined) return entity.currentDefense
+  if (entity?.baseStats?.defense !== undefined) return entity.baseStats.defense
+  if (entity?.baseDefense !== undefined) return entity.baseDefense
+  return 0
+}
+
+// Helper to safely get a Pokemon's special defense stat
+const getPokemonSpDefStat = (entity: any): number => {
+  if (entity?.currentStats?.specialDefense !== undefined) return entity.currentStats.specialDefense
+  if (entity?.currentSpDef !== undefined) return entity.currentSpDef
+  if (entity?.baseStats?.specialDefense !== undefined) return entity.baseStats.specialDefense
+  if (entity?.baseSpDef !== undefined) return entity.baseSpDef
+  return 0
+}
+
+// Helper to get human character stat
+const getHumanStat = (entity: any, stat: 'attack' | 'specialAttack' | 'defense' | 'specialDefense'): number => {
+  if (entity?.stats?.[stat] !== undefined) return entity.stats[stat]
+  if (entity?.[stat] !== undefined) return entity[stat]
+  return 0
+}
+
+// Get actor's attack stat (Attack or Special Attack based on move class)
+const attackStatValue = computed((): number => {
+  if (!props.move.damageBase) return 0
+
+  const entity = props.actor.entity
+  if (!entity) return 0
+
+  const stages = getStageModifiers(entity)
+
+  if (props.move.damageClass === 'Physical') {
+    const baseStat = props.actor.type === 'pokemon'
+      ? getPokemonAttackStat(entity)
+      : getHumanStat(entity, 'attack')
+    return applyStageModifier(baseStat, stages.attack)
+  } else if (props.move.damageClass === 'Special') {
+    const baseStat = props.actor.type === 'pokemon'
+      ? getPokemonSpAtkStat(entity)
+      : getHumanStat(entity, 'specialAttack')
+    return applyStageModifier(baseStat, stages.specialAttack)
+  }
+  return 0
+})
+
+const attackStatLabel = computed(() => {
+  return props.move.damageClass === 'Physical' ? 'ATK' : 'SP.ATK'
+})
+
+const defenseStatLabel = computed(() => {
+  return props.move.damageClass === 'Physical' ? 'DEF' : 'SP.DEF'
+})
+
+// Pre-defense total (base roll + attack stat)
+const preDefenseTotal = computed(() => {
+  if (!damageRollResult.value) return 0
+  return damageRollResult.value.total + attackStatValue.value
+})
+
+// Parse move effect for fixed damage (e.g., Dragon Rage = 15 HP)
 const fixedDamage = computed((): number | null => {
   if (!props.move.effect) return null
 
-  // Common patterns for fixed damage moves
   const patterns = [
-    /lose\s+(\d+)\s+(?:HP|Hit\s*Points?)/i,  // "lose 15 HP", "lose 15 Hit Points"
-    /deals?\s+(\d+)\s+damage/i,               // "deals 40 damage"
-    /always\s+deals?\s+(\d+)/i,               // "always deals 40"
-    /(\d+)\s+damage\s+flat/i,                 // "40 damage flat"
-    /flat\s+(\d+)\s+damage/i,                 // "flat 40 damage"
-    /(\d+)\s+Damage/                          // "15 Damage" (from moves.csv range field)
+    /lose\s+(\d+)\s+(?:HP|Hit\s*Points?)/i,
+    /deals?\s+(\d+)\s+damage/i,
+    /always\s+deals?\s+(\d+)/i,
+    /(\d+)\s+damage\s+flat/i,
+    /flat\s+(\d+)\s+damage/i,
+    /(\d+)\s+Damage/
   ]
 
   for (const pattern of patterns) {
@@ -143,16 +338,93 @@ const fixedDamage = computed((): number | null => {
   return null
 })
 
-// Get the dice notation for this move's damage
+// Get the dice notation for this move's damage (using effective DB)
 const damageNotation = computed(() => {
-  if (!props.move.damageBase) return null
-  return getDamageRoll(props.move.damageBase)
+  if (!effectiveDB.value) return null
+  return getDamageRoll(effectiveDB.value)
 })
 
-// Roll damage for the move
+// Calculate damage for each selected target
+const targetDamageCalcs = computed((): Record<string, TargetDamageCalc> => {
+  if (!hasRolled.value || !damageRollResult.value) return {}
+
+  const calcs: Record<string, TargetDamageCalc> = {}
+
+  for (const targetId of selectedTargets.value) {
+    const target = props.targets.find(t => t.id === targetId)
+    if (!target || !target.entity) continue
+
+    // Get target's defense stat
+    const entity = target.entity
+    const stages = getStageModifiers(entity)
+
+    let defenseStat: number
+    if (props.move.damageClass === 'Physical') {
+      const baseStat = target.type === 'pokemon'
+        ? getPokemonDefenseStat(entity)
+        : getHumanStat(entity, 'defense')
+      defenseStat = applyStageModifier(baseStat, stages.defense)
+    } else {
+      const baseStat = target.type === 'pokemon'
+        ? getPokemonSpDefStat(entity)
+        : getHumanStat(entity, 'specialDefense')
+      defenseStat = applyStageModifier(baseStat, stages.specialDefense)
+    }
+
+    // Get target's types for effectiveness
+    let targetTypes: string[]
+    if (target.type === 'pokemon') {
+      targetTypes = (entity as Pokemon).types || []
+    } else {
+      // Humans are typeless (neutral effectiveness)
+      targetTypes = []
+    }
+
+    // Calculate type effectiveness
+    const effectiveness = props.move.type
+      ? getTypeEffectiveness(props.move.type, targetTypes)
+      : 1
+
+    // Calculate final damage
+    // (Pre-defense total - Defense) × Effectiveness, minimum 1
+    let damage = preDefenseTotal.value - defenseStat
+    damage = Math.max(1, damage) // Minimum 1 before effectiveness
+    damage = Math.floor(damage * effectiveness)
+    damage = Math.max(1, damage) // Final minimum 1
+
+    // Immunity check
+    if (effectiveness === 0) {
+      damage = 0
+    }
+
+    const effectivenessText = getEffectivenessDescription(effectiveness)
+
+    calcs[targetId] = {
+      targetId,
+      defenseStat,
+      effectiveness,
+      effectivenessText,
+      effectivenessClass: getEffectivenessClass(effectiveness),
+      finalDamage: damage
+    }
+  }
+
+  return calcs
+})
+
+const getEffectivenessClass = (effectiveness: number): string => {
+  if (effectiveness === 0) return 'immune'
+  if (effectiveness <= 0.25) return 'double-resist'
+  if (effectiveness < 1) return 'resist'
+  if (effectiveness >= 2) return 'double-super'
+  if (effectiveness > 1) return 'super'
+  return 'neutral'
+}
+
+// Roll damage for the move (using effective DB with STAB)
 const rollDamage = () => {
-  if (!props.move.damageBase) return
-  damageRollResult.value = rollDamageBase(props.move.damageBase, false)
+  if (!effectiveDB.value) return
+  damageRollResult.value = rollDamageBase(effectiveDB.value, false)
   hasRolled.value = true
 }
 
@@ -173,10 +445,36 @@ const getTargetName = (target: Combatant): string => {
   return (target.entity as HumanCharacter).name
 }
 
+const getTargetNameById = (targetId: string): string => {
+  const target = props.targets.find(t => t.id === targetId)
+  return target ? getTargetName(target) : '???'
+}
+
 const confirm = () => {
-  // Priority: fixed damage > rolled damage > no damage
-  const damage = fixedDamage.value ?? damageRollResult.value?.total ?? undefined
-  emit('confirm', selectedTargets.value, damage, damageRollResult.value ?? undefined)
+  // For fixed damage moves, use flat damage for all targets
+  if (fixedDamage.value) {
+    const targetDamages: Record<string, number> = {}
+    for (const targetId of selectedTargets.value) {
+      targetDamages[targetId] = fixedDamage.value
+    }
+    emit('confirm', selectedTargets.value, fixedDamage.value, undefined, targetDamages)
+    return
+  }
+
+  // For normal moves, send per-target calculated damages
+  if (hasRolled.value && Object.keys(targetDamageCalcs.value).length > 0) {
+    const targetDamages: Record<string, number> = {}
+    for (const [targetId, calc] of Object.entries(targetDamageCalcs.value)) {
+      targetDamages[targetId] = calc.finalDamage
+    }
+    // Use first target's damage as "main" damage for backward compatibility
+    const firstTargetDamage = targetDamages[selectedTargets.value[0]]
+    emit('confirm', selectedTargets.value, firstTargetDamage, damageRollResult.value ?? undefined, targetDamages)
+    return
+  }
+
+  // Status moves or no damage
+  emit('confirm', selectedTargets.value, undefined, undefined, undefined)
 }
 </script>
 
@@ -199,8 +497,8 @@ const confirm = () => {
   border: 1px solid $glass-border;
   border-radius: $border-radius-xl;
   width: 100%;
-  max-width: 500px;
-  max-height: 80vh;
+  max-width: 550px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   box-shadow: $shadow-xl, 0 0 40px rgba($color-accent-violet, 0.15);
@@ -236,6 +534,16 @@ const confirm = () => {
     border-top: 1px solid $glass-border;
     background: rgba($color-bg-primary, 0.5);
   }
+}
+
+.stab-badge {
+  background: linear-gradient(135deg, $color-success 0%, darken($color-success, 10%) 100%);
+  color: white;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-sm;
+  text-transform: uppercase;
 }
 
 .move-info {
@@ -290,8 +598,8 @@ const confirm = () => {
 
 .target-btn {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: $spacing-xs;
   padding: $spacing-md;
   background: $color-bg-tertiary;
   border: 2px solid transparent;
@@ -299,6 +607,28 @@ const confirm = () => {
   color: $color-text;
   cursor: pointer;
   transition: all $transition-fast;
+  text-align: left;
+
+  &__main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__damage-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-top: $spacing-xs;
+    border-top: 1px solid rgba($glass-border, 0.5);
+  }
+
+  &__final-damage {
+    font-weight: 700;
+    color: $color-accent-scarlet;
+  }
 
   &:hover {
     background: $color-bg-hover;
@@ -329,6 +659,43 @@ const confirm = () => {
   }
 }
 
+.effectiveness-badge {
+  font-size: $font-size-xs;
+  font-weight: 600;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-sm;
+
+  &--immune {
+    background: rgba(128, 128, 128, 0.3);
+    color: #888;
+  }
+
+  &--double-resist {
+    background: rgba($color-side-ally, 0.2);
+    color: $color-side-ally;
+  }
+
+  &--resist {
+    background: rgba($color-side-ally, 0.15);
+    color: lighten($color-side-ally, 10%);
+  }
+
+  &--neutral {
+    background: rgba(255, 255, 255, 0.1);
+    color: $color-text-muted;
+  }
+
+  &--super {
+    background: rgba($color-side-enemy, 0.15);
+    color: lighten($color-side-enemy, 10%);
+  }
+
+  &--double-super {
+    background: rgba($color-side-enemy, 0.25);
+    color: $color-side-enemy;
+  }
+}
+
 .damage-section {
   padding: $spacing-md;
   background: $color-bg-tertiary;
@@ -339,6 +706,7 @@ const confirm = () => {
     display: flex;
     align-items: center;
     gap: $spacing-md;
+    flex-wrap: wrap;
     background: linear-gradient(135deg, rgba($color-accent-scarlet, 0.15) 0%, rgba($color-accent-violet, 0.1) 100%);
     border-color: rgba($color-accent-scarlet, 0.3);
   }
@@ -371,6 +739,12 @@ const confirm = () => {
     color: $color-accent-scarlet;
   }
 
+  &__note {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-style: italic;
+  }
+
   &__roll-prompt {
     display: flex;
     justify-content: center;
@@ -378,33 +752,112 @@ const confirm = () => {
 
   &__result {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: $spacing-md;
   }
 }
 
-.btn--roll {
-  font-size: $font-size-lg;
-  padding: $spacing-md $spacing-xl;
-}
+.damage-breakdown {
+  background: $color-bg-secondary;
+  border-radius: $border-radius-md;
+  padding: $spacing-md;
 
-.roll-result {
-  display: flex;
-  align-items: baseline;
-  gap: $spacing-md;
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-xs 0;
 
-  &__total {
-    font-size: $font-size-xxl;
-    font-weight: 700;
-    color: $color-accent-scarlet;
+    &--total {
+      border-top: 1px solid $border-color-default;
+      margin-top: $spacing-xs;
+      padding-top: $spacing-sm;
+
+      .damage-breakdown__value {
+        color: $color-accent-scarlet;
+        font-size: $font-size-lg;
+      }
+    }
   }
 
-  &__breakdown {
+  &__label {
     font-size: $font-size-sm;
+    color: $color-text-muted;
+    min-width: 120px;
+  }
+
+  &__value {
+    font-weight: 700;
+    color: $color-text;
+  }
+
+  &__detail {
+    font-size: $font-size-xs;
     font-family: monospace;
     color: $color-text-muted;
   }
+}
+
+.target-damages {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid $border-color-default;
+
+  h4 {
+    margin-bottom: $spacing-md;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.target-damage-row {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-sm;
+  background: $color-bg-secondary;
+  border-radius: $border-radius-sm;
+  margin-bottom: $spacing-sm;
+
+  &__name {
+    font-weight: 600;
+    font-size: $font-size-sm;
+  }
+
+  &__calc {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    flex-wrap: wrap;
+    font-size: $font-size-sm;
+  }
+
+  &__step {
+    background: $color-bg-tertiary;
+    padding: 2px $spacing-sm;
+    border-radius: $border-radius-sm;
+  }
+
+  &__op {
+    color: $color-text-muted;
+    font-weight: 500;
+  }
+
+  &__result {
+    font-weight: 700;
+    font-size: $font-size-md;
+    color: $color-accent-scarlet;
+    background: rgba($color-accent-scarlet, 0.15);
+    padding: 2px $spacing-sm;
+    border-radius: $border-radius-sm;
+  }
+}
+
+.btn--roll {
+  font-size: $font-size-md;
+  padding: $spacing-md $spacing-xl;
 }
 
 @keyframes fadeIn {

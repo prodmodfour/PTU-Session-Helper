@@ -231,6 +231,7 @@ export const useEncounterStore = defineStore('encounter', {
       moveId: string,
       targetIds: string[],
       damage?: number,
+      targetDamages?: Record<string, number>,
       notes?: string
     ) {
       if (!this.encounter) return
@@ -238,7 +239,7 @@ export const useEncounterStore = defineStore('encounter', {
       try {
         const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/move`, {
           method: 'POST',
-          body: { actorId, moveId, targetIds, damage, notes }
+          body: { actorId, moveId, targetIds, damage, targetDamages, notes }
         })
         this.encounter = response.data
       } catch (e: any) {

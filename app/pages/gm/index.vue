@@ -209,7 +209,15 @@
         <!-- Combatants Panel (List View) -->
         <div v-else class="combatants-panel">
           <!-- Current Turn Indicator -->
-          <div v-if="currentCombatant && encounter.isActive" class="current-turn">
+          <div
+            v-if="currentCombatant && encounter.isActive"
+            class="current-turn"
+            :class="{
+              'current-turn--player': currentCombatant.side === 'players',
+              'current-turn--ally': currentCombatant.side === 'allies',
+              'current-turn--enemy': currentCombatant.side === 'enemies'
+            }"
+          >
             <h3>Current Turn</h3>
             <CombatantCard
               :combatant="currentCombatant"
@@ -772,7 +780,7 @@ const handleOpenActions = (combatantId: string) => {
   actionModalCombatantId.value = combatantId
 }
 
-const handleExecuteMove = async (combatantId: string, moveId: string, targetIds: string[], damage?: number) => {
+const handleExecuteMove = async (combatantId: string, moveId: string, targetIds: string[], damage?: number, targetDamages?: Record<string, number>) => {
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
   if (!combatant) return
 
@@ -782,7 +790,7 @@ const handleExecuteMove = async (combatantId: string, moveId: string, targetIds:
     : moveId)
 
   encounterStore.captureSnapshot(`${getCombatantName(combatant)} used ${moveName}`)
-  await encounterStore.executeMove(combatantId, moveId, targetIds, damage)
+  await encounterStore.executeMove(combatantId, moveId, targetIds, damage, targetDamages)
   refreshUndoRedoState()
   await nextTick()
 
@@ -1101,19 +1109,45 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
 }
 
 .current-turn {
-  background: linear-gradient(135deg, rgba($color-accent-scarlet, 0.15) 0%, rgba($color-accent-violet, 0.1) 100%);
-  border: 2px solid $color-accent-scarlet;
   border-radius: $border-radius-lg;
   padding: $spacing-lg;
-  box-shadow: $shadow-glow-scarlet;
 
   h3 {
     margin-bottom: $spacing-md;
-    background: $gradient-sv-cool;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     font-weight: 600;
+  }
+
+  // Player turn - green
+  &--player {
+    background: linear-gradient(135deg, rgba($color-side-player, 0.15) 0%, rgba($color-side-player, 0.05) 100%);
+    border: 2px solid $color-side-player;
+    box-shadow: 0 0 20px rgba($color-side-player, 0.3);
+
+    h3 {
+      color: $color-side-player;
+    }
+  }
+
+  // Ally turn - blue
+  &--ally {
+    background: linear-gradient(135deg, rgba($color-side-ally, 0.15) 0%, rgba($color-side-ally, 0.05) 100%);
+    border: 2px solid $color-side-ally;
+    box-shadow: 0 0 20px rgba($color-side-ally, 0.3);
+
+    h3 {
+      color: $color-side-ally;
+    }
+  }
+
+  // Enemy turn - red
+  &--enemy {
+    background: linear-gradient(135deg, rgba($color-side-enemy, 0.15) 0%, rgba($color-side-enemy, 0.05) 100%);
+    border: 2px solid $color-side-enemy;
+    box-shadow: 0 0 20px rgba($color-side-enemy, 0.3);
+
+    h3 {
+      color: $color-side-enemy;
+    }
   }
 }
 

@@ -49,6 +49,7 @@ export default defineEventHandler(async (event) => {
     const moveName = move?.name || body.moveId || 'Unknown Move'
 
     // Process targets and collect database updates
+    // Support per-target damage (body.targetDamages) or single damage (body.damage)
     const dbUpdates: Promise<any>[] = []
     const targets = body.targetIds.map((targetId: string) => {
       const target = combatants.find((c: any) => c.id === targetId)
@@ -58,9 +59,13 @@ export default defineEventHandler(async (event) => {
         ? (target.entity.nickname || target.entity.species)
         : target.entity.name
 
+      // Get damage for this specific target
+      // Priority: per-target damage > single damage > 0
+      const targetDamage = body.targetDamages?.[targetId] ?? body.damage ?? 0
+
       // Apply damage if provided
-      if (body.damage && body.damage > 0) {
-        const newHp = Math.max(0, target.entity.currentHp - body.damage)
+      if (targetDamage > 0) {
+        const newHp = Math.max(0, target.entity.currentHp - targetDamage)
         target.entity.currentHp = newHp
 
         // Also update the actual entity in database
@@ -80,7 +85,7 @@ export default defineEventHandler(async (event) => {
       return {
         id: targetId,
         name: targetName,
-        damage: body.damage || 0,
+        damage: targetDamage,
         effect: body.effect || null,
         hit: true
       }

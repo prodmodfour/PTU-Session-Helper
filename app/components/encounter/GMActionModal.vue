@@ -250,7 +250,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  executeMove: [combatantId: string, moveId: string, targetIds: string[], damage?: number]
+  executeMove: [combatantId: string, moveId: string, targetIds: string[], damage?: number, targetDamages?: Record<string, number>]
   executeAction: [combatantId: string, actionType: string]
   updateStatus: [combatantId: string, add: StatusCondition[], remove: StatusCondition[]]
 }>()
@@ -449,11 +449,11 @@ const selectStruggle = () => {
   selectedMove.value = struggleMove
 }
 
-const handleMoveConfirm = (targetIds: string[], damage?: number) => {
+const handleMoveConfirm = (targetIds: string[], damage?: number, rollResult?: any, targetDamages?: Record<string, number>) => {
   if (selectedMove.value) {
     // Use move name as identifier since id might be undefined
     const moveIdentifier = selectedMove.value.id || selectedMove.value.name
-    emit('executeMove', props.combatant.id, moveIdentifier, targetIds, damage)
+    emit('executeMove', props.combatant.id, moveIdentifier, targetIds, damage, targetDamages)
     selectedMove.value = null
     emit('close')
   }
