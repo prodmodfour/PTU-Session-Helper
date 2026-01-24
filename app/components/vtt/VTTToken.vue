@@ -190,26 +190,9 @@ const handleMouseDown = (event: MouseEvent) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, filter 0.15s ease;
   box-sizing: border-box;
-
-  // Side colors
-  &--player {
-    border: 2px solid $color-accent-teal;
-    box-shadow: 0 0 8px rgba($color-accent-teal, 0.4);
-  }
-
-  &--ally {
-    border: 2px solid $color-success;
-    box-shadow: 0 0 8px rgba($color-success, 0.4);
-  }
-
-  &--enemy {
-    border: 2px solid $color-accent-scarlet;
-    box-shadow: 0 0 8px rgba($color-accent-scarlet, 0.4);
-  }
 
   // States
   &--selected {
@@ -226,19 +209,10 @@ const handleMouseDown = (event: MouseEvent) => {
     outline: 2px dashed $color-accent-teal;
     outline-offset: 2px;
     z-index: 9;
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      background: rgba($color-accent-teal, 0.15);
-      pointer-events: none;
-    }
   }
 
   &--current {
-    animation: pulse 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px $color-accent-scarlet) drop-shadow(0 0 16px $color-accent-scarlet);
   }
 
   &--dragging {
@@ -264,13 +238,11 @@ const handleMouseDown = (event: MouseEvent) => {
 }
 
 .vtt-token__avatar {
-  width: 70%;
-  height: 70%;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: $color-bg-secondary;
-  border-radius: 50%;
   overflow: hidden;
 }
 
@@ -279,6 +251,7 @@ const handleMouseDown = (event: MouseEvent) => {
   height: 100%;
   object-fit: contain;
   image-rendering: pixelated;
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .vtt-token__initial {
