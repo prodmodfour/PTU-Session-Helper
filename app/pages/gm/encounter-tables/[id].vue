@@ -78,6 +78,7 @@
               :table-level-range="table.levelRange"
               @remove="removeEntry"
               @update-weight="updateEntryWeight"
+              @update-level-range="updateEntryLevelRange"
             />
           </div>
         </section>
@@ -375,7 +376,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EncounterTable, EncounterTableEntry, TableModification, RarityPreset } from '~/types'
+import type { EncounterTable, EncounterTableEntry, TableModification, RarityPreset, LevelRange } from '~/types'
 import { RARITY_WEIGHTS } from '~/types'
 
 definePageMeta({
@@ -522,6 +523,16 @@ const updateEntryWeight = async (entry: EncounterTableEntry, newWeight: number) 
     await tablesStore.updateEntry(table.value.id, entry.id, { weight: newWeight })
   } catch (error) {
     console.error('Failed to update weight:', error)
+  }
+}
+
+const updateEntryLevelRange = async (entry: EncounterTableEntry, levelRange: LevelRange | null) => {
+  if (!table.value) return
+  try {
+    await tablesStore.updateEntry(table.value.id, entry.id, { levelRange: levelRange ?? undefined })
+    table.value = await tablesStore.loadTable(tableId.value)
+  } catch (error) {
+    console.error('Failed to update level range:', error)
   }
 }
 

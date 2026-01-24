@@ -13,12 +13,27 @@
     </span>
     <span class="col-chance">{{ chancePercent }}%</span>
     <span class="col-level">
-      <template v-if="entry.levelRange">
-        {{ entry.levelRange.min }} - {{ entry.levelRange.max }}
-      </template>
-      <template v-else>
-        <span class="default-range">({{ tableLevelRange.min }} - {{ tableLevelRange.max }})</span>
-      </template>
+      <div class="level-inputs">
+        <input
+          :value="displayLevelMin"
+          type="number"
+          class="level-input"
+          min="1"
+          max="100"
+          :placeholder="String(tableLevelRange.min)"
+          @change="handleLevelMinChange"
+        />
+        <span class="level-separator">-</span>
+        <input
+          :value="displayLevelMax"
+          type="number"
+          class="level-input"
+          min="1"
+          max="100"
+          :placeholder="String(tableLevelRange.max)"
+          @change="handleLevelMaxChange"
+        />
+      </div>
     </span>
     <span class="col-actions">
       <button
@@ -44,6 +59,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'remove', entry: EncounterTableEntry): void
   (e: 'update-weight', entry: EncounterTableEntry, weight: number): void
+  (e: 'update-level-range', entry: EncounterTableEntry, levelRange: LevelRange | null): void
 }>()
 
 const chancePercent = computed(() => {
@@ -51,12 +67,42 @@ const chancePercent = computed(() => {
   return ((props.entry.weight / props.totalWeight) * 100).toFixed(1)
 })
 
+// Display values for level inputs (empty string if using table default)
+const displayLevelMin = computed(() => props.entry.levelRange?.min ?? '')
+const displayLevelMax = computed(() => props.entry.levelRange?.max ?? '')
+
 const handleWeightChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   const newWeight = parseFloat(target.value)
   if (!isNaN(newWeight) && newWeight > 0) {
     emit('update-weight', props.entry, newWeight)
   }
+}
+
+const handleLevelMinChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const newMin = target.value ? parseInt(target.value) : null
+  updateLevelRange(newMin, props.entry.levelRange?.max ?? null)
+}
+
+const handleLevelMaxChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const newMax = target.value ? parseInt(target.value) : null
+  updateLevelRange(props.entry.levelRange?.min ?? null, newMax)
+}
+
+const updateLevelRange = (min: number | null, max: number | null) => {
+  // If both are null/empty, clear the level range (use table default)
+  if (min === null && max === null) {
+    emit('update-level-range', props.entry, null)
+    return
+  }
+
+  // Use table defaults for any missing values
+  const finalMin = min ?? props.tableLevelRange.min
+  const finalMax = max ?? props.tableLevelRange.max
+
+  emit('update-level-range', props.entry, { min: finalMin, max: finalMax })
 }
 </script>
 
@@ -102,7 +148,7 @@ const handleWeightChange = (event: Event) => {
 }
 
 .col-chance {
-  color: $color-primary;
+  color: #64b5f6;
   font-weight: 500;
 }
 
@@ -111,9 +157,35 @@ const handleWeightChange = (event: Event) => {
   font-size: 0.875rem;
 }
 
-.default-range {
-  opacity: 0.6;
-  font-style: italic;
+.level-inputs {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.level-input {
+  width: 50px;
+  padding: $spacing-xs;
+  background: $glass-bg;
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: 0.875rem;
+  text-align: center;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+
+  &::placeholder {
+    color: $color-text-muted;
+    opacity: 0.5;
+  }
+}
+
+.level-separator {
+  color: $color-text-muted;
 }
 
 .col-actions {
