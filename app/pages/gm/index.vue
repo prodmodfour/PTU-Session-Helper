@@ -773,7 +773,6 @@ const handleOpenActions = (combatantId: string) => {
 }
 
 const handleExecuteMove = async (combatantId: string, moveId: string, targetIds: string[], damage?: number) => {
-  console.log('[GM Index] handleExecuteMove called with damage:', damage, 'moveId:', moveId, 'targets:', targetIds)
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
   if (!combatant) return
 
@@ -782,7 +781,6 @@ const handleExecuteMove = async (combatantId: string, moveId: string, targetIds:
     ? ((combatant.entity as any).moves?.find((m: any) => m.id === moveId || m.name === moveId)?.name || moveId)
     : moveId)
 
-  console.log('[GM Index] Executing move:', moveName, 'with damage:', damage)
   encounterStore.captureSnapshot(`${getCombatantName(combatant)} used ${moveName}`)
   await encounterStore.executeMove(combatantId, moveId, targetIds, damage)
   refreshUndoRedoState()

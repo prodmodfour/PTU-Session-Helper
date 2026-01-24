@@ -121,12 +121,7 @@ const hasRolled = ref(false)
 
 // Parse move effect for fixed damage (e.g., Dragon Rage = 15 HP, Sonic Boom = 20)
 const fixedDamage = computed((): number | null => {
-  if (!props.move.effect) {
-    console.log('[MoveTargetModal] No effect text for move:', props.move.name)
-    return null
-  }
-
-  console.log('[MoveTargetModal] Checking effect for fixed damage:', props.move.name, props.move.effect)
+  if (!props.move.effect) return null
 
   // Common patterns for fixed damage moves
   const patterns = [
@@ -141,12 +136,10 @@ const fixedDamage = computed((): number | null => {
   for (const pattern of patterns) {
     const match = props.move.effect.match(pattern)
     if (match) {
-      console.log('[MoveTargetModal] Fixed damage found:', match[1])
       return parseInt(match[1], 10)
     }
   }
 
-  console.log('[MoveTargetModal] No fixed damage pattern matched')
   return null
 })
 
@@ -183,7 +176,6 @@ const getTargetName = (target: Combatant): string => {
 const confirm = () => {
   // Priority: fixed damage > rolled damage > no damage
   const damage = fixedDamage.value ?? damageRollResult.value?.total ?? undefined
-  console.log('[MoveTargetModal] Confirming move with damage:', damage, 'fixedDamage:', fixedDamage.value, 'rolledDamage:', damageRollResult.value?.total)
   emit('confirm', selectedTargets.value, damage, damageRollResult.value ?? undefined)
 }
 </script>
