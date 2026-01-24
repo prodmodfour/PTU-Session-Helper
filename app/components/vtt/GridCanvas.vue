@@ -848,6 +848,54 @@ const drawExternalMovementPreview = (ctx: CanvasRenderingContext2D, preview: Mov
   const token = props.tokens.find(t => t.combatantId === preview.combatantId)
   const tokenSize = token?.size || 1
 
+  // Draw movement range grid if token exists
+  if (token) {
+    const speed = getSpeed(token.combatantId)
+    const blocked = getBlockedCells(token.combatantId)
+    const terrainCostGetter = terrainStore.terrainCount > 0 ? getTerrainCostAt : undefined
+    const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
+
+    // Draw reachable cells with cyan tint
+    ctx.fillStyle = 'rgba(34, 211, 238, 0.2)'
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)'
+    ctx.lineWidth = 1
+
+    rangeCells.forEach(cell => {
+      if (cell.x >= 0 && cell.x < props.config.width &&
+          cell.y >= 0 && cell.y < props.config.height) {
+        ctx.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize)
+        ctx.strokeRect(cell.x * cellSize + 0.5, cell.y * cellSize + 0.5, cellSize - 1, cellSize - 1)
+      }
+    })
+
+    // Draw origin marker ring around token
+    const originX = token.position.x * cellSize + (tokenSize * cellSize) / 2
+    const originY = token.position.y * cellSize + (tokenSize * cellSize) / 2
+
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.8)'
+    ctx.lineWidth = 2
+    ctx.setLineDash([4, 4])
+    ctx.beginPath()
+    ctx.arc(originX, originY, (tokenSize * cellSize) / 2 + 4, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    // Draw speed indicator
+    ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
+    ctx.font = 'bold 12px system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    const speedText = `${speed}m`
+    const textX = token.position.x * cellSize + tokenSize * cellSize - 10
+    const textY = token.position.y * cellSize + tokenSize * cellSize - 10
+
+    const textMetrics = ctx.measureText(speedText)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+    ctx.fillRect(textX - textMetrics.width / 2 - 3, textY - 8, textMetrics.width + 6, 16)
+    ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
+    ctx.fillText(speedText, textX, textY)
+  }
+
   // Token center
   const startX = preview.fromPosition.x * cellSize + (tokenSize * cellSize) / 2
   const startY = preview.fromPosition.y * cellSize + (tokenSize * cellSize) / 2
