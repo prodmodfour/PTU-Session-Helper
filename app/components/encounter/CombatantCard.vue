@@ -153,6 +153,15 @@
         </button>
       </div>
 
+      <!-- Actions Button -->
+      <button
+        class="btn btn--sm btn--primary"
+        title="Take Action"
+        @click="$emit('openActions', combatant.id)"
+      >
+        Act
+      </button>
+
       <button class="btn btn--sm btn--ghost" @click="$emit('remove', combatant.id)">
         Remove
       </button>
@@ -276,6 +285,7 @@ const emit = defineEmits<{
   remove: [combatantId: string]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]
   status: [combatantId: string, add: StatusCondition[], remove: StatusCondition[]]
+  openActions: [combatantId: string]
 }>()
 
 const { getSpriteUrl } = usePokemonSprite()

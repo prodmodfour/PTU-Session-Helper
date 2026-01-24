@@ -220,6 +220,7 @@
               @heal="handleHeal"
               @stages="handleStages"
               @status="handleStatus"
+              @open-actions="handleOpenActions"
             />
           </div>
 
@@ -246,6 +247,7 @@
                   @remove="removeCombatant"
                   @stages="handleStages"
                   @status="handleStatus"
+                  @open-actions="handleOpenActions"
                 />
                 <p v-if="playerCombatants.length === 0" class="side__empty">
                   No players added
@@ -274,6 +276,7 @@
                   @remove="removeCombatant"
                   @stages="handleStages"
                   @status="handleStatus"
+                  @open-actions="handleOpenActions"
                 />
                 <p v-if="allyCombatants.length === 0" class="side__empty">
                   No allies
@@ -302,6 +305,7 @@
                   @remove="removeCombatant"
                   @stages="handleStages"
                   @status="handleStatus"
+                  @open-actions="handleOpenActions"
                 />
                 <p v-if="enemyCombatants.length === 0" class="side__empty">
                   No enemies
@@ -365,6 +369,18 @@
       <div v-if="showShortcutsHelp" class="modal-backdrop" @click.self="showShortcutsHelp = false">
         <KeyboardShortcutsHelp @close="showShortcutsHelp = false" />
       </div>
+    </Teleport>
+
+    <!-- GM Action Modal -->
+    <Teleport to="body">
+      <GMActionModal
+        v-if="actionModalCombatant && encounter"
+        :combatant="actionModalCombatant"
+        :all-combatants="encounter.combatants"
+        @close="actionModalCombatant = null"
+        @execute-move="handleExecuteMove"
+        @execute-action="handleExecuteAction"
+      />
     </Teleport>
   </div>
 </template>
@@ -509,6 +525,9 @@ const showLoadTemplateModal = ref(false)
 
 // Keyboard shortcuts help
 const showShortcutsHelp = ref(false)
+
+// GM Action Modal state
+const actionModalCombatant = ref<Combatant | null>(null)
 
 // Computed from store
 const encounter = computed(() => encounterStore.encounter)
@@ -740,6 +759,62 @@ const handleStatus = async (combatantId: string, add: StatusCondition[], remove:
       type: 'encounter_update',
       data: encounterStore.encounter
     })
+  }
+}
+
+// GM Action Modal handlers
+const handleOpenActions = (combatantId: string) => {
+  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
+  if (combatant) {
+    actionModalCombatant.value = combatant
+  }
+}
+
+const handleExecuteMove = async (combatantId: string, moveId: string, targetIds: string[], damage?: number) => {
+  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
+  if (!combatant) return
+
+  const moveName = moveId === 'struggle' ? 'Struggle' : (combatant.type === 'pokemon'
+    ? ((combatant.entity as any).moves?.find((m: any) => m.id === moveId)?.name || moveId)
+    : moveId)
+
+  encounterStore.captureSnapshot(`${getCombatantName(combatant)} used ${moveName}`)
+  await encounterStore.executeMove(combatantId, moveId, targetIds, damage)
+  refreshUndoRedoState()
+  await nextTick()
+
+  if (encounterStore.encounter) {
+    send({ type: 'encounter_update', data: encounterStore.encounter })
+  }
+
+  actionModalCombatant.value = null
+}
+
+const handleExecuteAction = async (combatantId: string, actionType: 'shift' | 'struggle' | 'pass') => {
+  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
+  if (!combatant) return
+
+  const name = getCombatantName(combatant)
+
+  switch (actionType) {
+    case 'shift':
+      encounterStore.captureSnapshot(`${name} used Shift action`)
+      await encounterStore.useShiftAction(combatantId)
+      break
+    case 'pass':
+      encounterStore.captureSnapshot(`${name} passed their turn`)
+      // Mark turn as complete - both standard and shift actions used
+      combatant.turnState.hasActed = true
+      combatant.turnState.standardActionUsed = true
+      combatant.turnState.shiftActionUsed = true
+      break
+  }
+
+  refreshUndoRedoState()
+  await nextTick()
+
+  if (encounterStore.encounter) {
+    send({ type: 'encounter_update', data: encounterStore.encounter })
   }
 }
 
