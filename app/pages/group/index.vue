@@ -1,11 +1,89 @@
 <template>
   <div class="group-view">
-    <!-- No Served Encounter -->
-    <div v-if="!encounter || !encounter.isServed" class="group-view__waiting">
-      <div class="waiting-content">
+    <!-- No Served Encounter - Show Players and Teams -->
+    <div v-if="!encounter || !encounter.isServed" class="group-view__lobby">
+      <header class="lobby-header">
         <h1>PTU Session Helper</h1>
-        <p>Waiting for GM to serve an encounter...</p>
-        <div class="waiting-spinner"></div>
+        <div class="lobby-status">
+          <div class="waiting-spinner waiting-spinner--small"></div>
+          <span>Waiting for encounter...</span>
+        </div>
+      </header>
+
+      <div class="players-grid" v-if="players.length > 0">
+        <div
+          v-for="player in players"
+          :key="player.id"
+          class="player-card"
+        >
+          <div class="player-card__header">
+            <div class="player-card__avatar">
+              <img
+                v-if="player.avatarUrl"
+                :src="player.avatarUrl"
+                :alt="player.name"
+              />
+              <span v-else class="player-card__initials">{{ player.name.charAt(0) }}</span>
+            </div>
+            <div class="player-card__info">
+              <h2 class="player-card__name">{{ player.name }}</h2>
+              <span v-if="player.playedBy" class="player-card__played-by">{{ player.playedBy }}</span>
+              <div class="player-card__classes" v-if="player.trainerClasses?.length">
+                <span
+                  v-for="tc in player.trainerClasses"
+                  :key="tc.name"
+                  class="class-badge"
+                >
+                  {{ tc.name }}
+                </span>
+              </div>
+            </div>
+            <span class="player-card__level">Lv {{ player.level }}</span>
+          </div>
+
+          <div class="player-card__team">
+            <div
+              v-for="pokemon in player.pokemon"
+              :key="pokemon.id"
+              class="team-pokemon"
+              :class="{ 'team-pokemon--fainted': pokemon.currentHp <= 0 }"
+            >
+              <img
+                :src="getSpriteUrl(pokemon.species)"
+                :alt="pokemon.nickname || pokemon.species"
+                class="team-pokemon__sprite"
+                @error="handleSpriteError($event)"
+              />
+              <div class="team-pokemon__info">
+                <span class="team-pokemon__name">{{ pokemon.nickname || pokemon.species }}</span>
+                <span class="team-pokemon__level">Lv {{ pokemon.level }}</span>
+              </div>
+              <div class="team-pokemon__types">
+                <span
+                  v-for="pType in pokemon.types"
+                  :key="pType"
+                  class="type-pip"
+                  :class="'type-pip--' + pType.toLowerCase()"
+                  :title="pType"
+                ></span>
+              </div>
+              <div class="team-pokemon__hp-bar">
+                <div
+                  class="team-pokemon__hp-fill"
+                  :style="{ width: Math.max(0, (pokemon.currentHp / pokemon.maxHp) * 100) + '%' }"
+                  :class="getHpClassFromPercent(Math.round((pokemon.currentHp / pokemon.maxHp) * 100))"
+                ></div>
+              </div>
+            </div>
+            <div v-if="!player.pokemon?.length" class="team-pokemon team-pokemon--empty">
+              No Pokemon
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="no-players">
+        <p>No player characters in library</p>
       </div>
     </div>
 
@@ -193,10 +271,29 @@
                 <div
                   v-for="move in (currentCombatant.entity as Pokemon).moves"
                   :key="move.name"
-                  class="move-tag"
-                  :class="'move-tag--' + move.type.toLowerCase()"
+                  class="move-card"
+                  :class="'move-card--' + move.type.toLowerCase()"
                 >
-                  {{ move.name }}
+                  <div class="move-card__header">
+                    <span class="move-card__name">{{ move.name }}</span>
+                    <span class="move-card__class" :class="'move-card__class--' + move.damageClass.toLowerCase()">
+                      {{ move.damageClass }}
+                    </span>
+                  </div>
+                  <div class="move-card__stats">
+                    <span v-if="move.damageBase" class="move-card__stat">
+                      <span class="move-card__stat-label">DB</span>
+                      <span class="move-card__stat-value">{{ move.damageBase }}</span>
+                    </span>
+                    <span v-if="move.ac" class="move-card__stat">
+                      <span class="move-card__stat-label">AC</span>
+                      <span class="move-card__stat-value">{{ move.ac }}</span>
+                    </span>
+                    <span class="move-card__stat">
+                      <span class="move-card__stat-label">Freq</span>
+                      <span class="move-card__stat-value move-card__stat-value--freq">{{ formatFrequency(move.frequency) }}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -240,6 +337,30 @@ import type { Combatant, Pokemon, HumanCharacter, GridConfig } from '~/types'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
 import { useTerrainStore } from '~/stores/terrain'
 
+interface PlayerPokemon {
+  id: string
+  species: string
+  nickname: string | null
+  level: number
+  types: string[]
+  currentHp: number
+  maxHp: number
+  shiny: boolean
+  spriteUrl: string | null
+}
+
+interface Player {
+  id: string
+  name: string
+  playedBy: string | null
+  level: number
+  currentHp: number
+  maxHp: number
+  avatarUrl: string | null
+  trainerClasses: { name: string }[]
+  pokemon: PlayerPokemon[]
+}
+
 definePageMeta({
   layout: 'group'
 })
@@ -252,6 +373,21 @@ const encounterStore = useEncounterStore()
 const fogOfWarStore = useFogOfWarStore()
 const terrainStore = useTerrainStore()
 const { isConnected, identify, joinEncounter, movementPreview } = useWebSocket()
+
+// Players data for lobby view
+const players = ref<Player[]>([])
+
+// Fetch players on mount
+const fetchPlayers = async () => {
+  try {
+    const response = await $fetch<{ success: boolean; data: Player[] }>('/api/characters/players')
+    if (response.success) {
+      players.value = response.data
+    }
+  } catch (error) {
+    console.error('Failed to fetch players:', error)
+  }
+}
 
 // Persistence composables (read-only for group view)
 const { loadFogState } = useFogPersistence()
@@ -297,6 +433,9 @@ const checkForServedEncounter = async () => {
 
 // Fetch served encounter on mount
 onMounted(async () => {
+  // Fetch players for lobby view
+  await fetchPlayers()
+
   await checkForServedEncounter()
 
   // If no served encounter found, poll every 2 seconds
@@ -389,6 +528,13 @@ const getHpClass = (combatant: Combatant): string => {
   return 'health--good'
 }
 
+const getHpClassFromPercent = (percentage: number): string => {
+  if (percentage <= 0) return 'health--fainted'
+  if (percentage <= 25) return 'health--critical'
+  if (percentage <= 50) return 'health--low'
+  return 'health--good'
+}
+
 const isPlayerSide = (combatant: Combatant): boolean => {
   return combatant.side === 'players' || combatant.side === 'allies'
 }
@@ -421,6 +567,21 @@ const formatStageName = (key: string): string => {
   }
   return names[key] || key.toUpperCase()
 }
+
+const formatFrequency = (freq: string): string => {
+  const abbrevs: Record<string, string> = {
+    'At-Will': 'At Will',
+    'EOT': 'EOT',
+    'Scene': 'Scene',
+    'Scene x2': 'Scene ×2',
+    'Scene x3': 'Scene ×3',
+    'Daily': 'Daily',
+    'Daily x2': 'Daily ×2',
+    'Daily x3': 'Daily ×3',
+    'Static': 'Static'
+  }
+  return abbrevs[freq] || freq
+}
 </script>
 
 <style lang="scss" scoped>
@@ -442,33 +603,305 @@ const formatStageName = (key: string): string => {
   }
 }
 
-.waiting-content {
-  text-align: center;
+// Lobby view styles
+.group-view__lobby {
+  min-height: 100vh;
+  padding: $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+
+  @media (min-width: 3000px) {
+    padding: $spacing-xxl;
+    gap: $spacing-xxl;
+  }
+}
+
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: $spacing-lg;
+  border-bottom: 1px solid $glass-border;
 
   h1 {
-    font-size: 4rem;
-    margin-bottom: $spacing-md;
+    font-size: $font-size-xxxl;
+    margin: 0;
     background: $gradient-sv-primary;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-weight: 700;
 
-    // 4K optimization
     @media (min-width: 3000px) {
-      font-size: 6rem;
+      font-size: 4rem;
     }
   }
+}
+
+.lobby-status {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  color: $color-text-muted;
+  font-size: $font-size-lg;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: $spacing-xl;
+
+  @media (min-width: 3000px) {
+    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+    gap: $spacing-xxl;
+  }
+}
+
+.player-card {
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-xl;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-lg;
+    background: linear-gradient(135deg, rgba($color-side-player, 0.15) 0%, transparent 100%);
+    border-bottom: 1px solid $glass-border;
+  }
+
+  &__avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    background: $gradient-sv-cool;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    @media (min-width: 3000px) {
+      width: 96px;
+      height: 96px;
+    }
+  }
+
+  &__initials {
+    font-size: $font-size-xxl;
+    font-weight: 700;
+    color: $color-text;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: $font-size-xl;
+    font-weight: 600;
+    margin: 0 0 $spacing-xs 0;
+    color: $color-text;
+
+    @media (min-width: 3000px) {
+      font-size: $font-size-xxl;
+    }
+  }
+
+  &__played-by {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    display: block;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__classes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+  }
+
+  &__level {
+    font-size: $font-size-lg;
+    font-weight: 700;
+    color: $color-accent-violet;
+    background: rgba($color-accent-violet, 0.15);
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $border-radius-md;
+  }
+
+  &__team {
+    padding: $spacing-md;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+}
+
+.class-badge {
+  font-size: $font-size-xs;
+  font-weight: 600;
+  padding: 2px $spacing-sm;
+  background: rgba($color-accent-teal, 0.2);
+  color: $color-accent-teal;
+  border-radius: $border-radius-sm;
+}
+
+.team-pokemon {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-bg-tertiary, 0.5);
+  border-radius: $border-radius-md;
+  transition: all $transition-fast;
+
+  &--fainted {
+    opacity: 0.5;
+    filter: grayscale(0.5);
+  }
+
+  &--empty {
+    justify-content: center;
+    color: $color-text-muted;
+    font-style: italic;
+    padding: $spacing-lg;
+  }
+
+  &__sprite {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+
+    @media (min-width: 3000px) {
+      width: 64px;
+      height: 64px;
+    }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__name {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $color-text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @media (min-width: 3000px) {
+      font-size: $font-size-md;
+    }
+  }
+
+  &__level {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+  }
+
+  &__types {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  &__hp-bar {
+    width: 60px;
+    height: 6px;
+    background: rgba($color-bg-tertiary, 0.8);
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    @media (min-width: 3000px) {
+      width: 80px;
+      height: 8px;
+    }
+  }
+
+  &__hp-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+
+    &.health--good {
+      background: linear-gradient(90deg, $color-success 0%, lighten($color-success, 10%) 100%);
+    }
+
+    &.health--low {
+      background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+    }
+
+    &.health--critical {
+      background: linear-gradient(90deg, $color-danger 0%, lighten($color-danger, 10%) 100%);
+    }
+
+    &.health--fainted {
+      background: linear-gradient(90deg, #4a4a4a 0%, #2a2a2a 100%);
+      width: 0% !important;
+    }
+  }
+}
+
+.type-pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  @media (min-width: 3000px) {
+    width: 16px;
+    height: 16px;
+  }
+
+  &--normal { background: #A8A878; }
+  &--fire { background: #F08030; }
+  &--water { background: #6890F0; }
+  &--electric { background: #F8D030; }
+  &--grass { background: #78C850; }
+  &--ice { background: #98D8D8; }
+  &--fighting { background: #C03028; }
+  &--poison { background: #A040A0; }
+  &--ground { background: #E0C068; }
+  &--flying { background: #A890F0; }
+  &--psychic { background: #F85888; }
+  &--bug { background: #A8B820; }
+  &--rock { background: #B8A038; }
+  &--ghost { background: #705898; }
+  &--dragon { background: #7038F8; }
+  &--dark { background: #705848; }
+  &--steel { background: #B8B8D0; }
+  &--fairy { background: #EE99AC; }
+}
+
+.no-players {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
 
   p {
     font-size: $font-size-xl;
     color: $color-text-muted;
-    margin-bottom: $spacing-xl;
-
-    // 4K optimization
-    @media (min-width: 3000px) {
-      font-size: $font-size-xxl;
-    }
   }
 }
 
@@ -482,11 +915,24 @@ const formatStageName = (key: string): string => {
   animation: spin 1s linear infinite;
   box-shadow: $shadow-glow-scarlet;
 
+  &--small {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+    margin: 0;
+  }
+
   // 4K optimization
   @media (min-width: 3000px) {
     width: 90px;
     height: 90px;
     border-width: 6px;
+
+    &--small {
+      width: 32px;
+      height: 32px;
+      border-width: 4px;
+    }
   }
 }
 
@@ -1090,34 +1536,103 @@ const formatStageName = (key: string): string => {
 .move-list {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: $spacing-sm;
 }
 
-.move-tag {
-  font-size: $font-size-sm;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-  color: #fff;
+.move-card {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-sm;
+  border-radius: $border-radius-md;
+  border-left: 4px solid;
 
-  // Inherit from type-badge colors
-  &--normal { background: #A8A878; }
-  &--fire { background: #F08030; }
-  &--water { background: #6890F0; }
-  &--electric { background: #F8D030; color: #000; }
-  &--grass { background: #78C850; }
-  &--ice { background: #98D8D8; color: #000; }
-  &--fighting { background: #C03028; }
-  &--poison { background: #A040A0; }
-  &--ground { background: #E0C068; color: #000; }
-  &--flying { background: #A890F0; }
-  &--psychic { background: #F85888; }
-  &--bug { background: #A8B820; }
-  &--rock { background: #B8A038; }
-  &--ghost { background: #705898; }
-  &--dragon { background: #7038F8; }
-  &--dark { background: #705848; }
-  &--steel { background: #B8B8D0; color: #000; }
-  &--fairy { background: #EE99AC; color: #000; }
+  // Type-based border colors
+  &--normal { border-left-color: #A8A878; background: rgba(#A8A878, 0.1); }
+  &--fire { border-left-color: #F08030; background: rgba(#F08030, 0.1); }
+  &--water { border-left-color: #6890F0; background: rgba(#6890F0, 0.1); }
+  &--electric { border-left-color: #F8D030; background: rgba(#F8D030, 0.1); }
+  &--grass { border-left-color: #78C850; background: rgba(#78C850, 0.1); }
+  &--ice { border-left-color: #98D8D8; background: rgba(#98D8D8, 0.1); }
+  &--fighting { border-left-color: #C03028; background: rgba(#C03028, 0.1); }
+  &--poison { border-left-color: #A040A0; background: rgba(#A040A0, 0.1); }
+  &--ground { border-left-color: #E0C068; background: rgba(#E0C068, 0.1); }
+  &--flying { border-left-color: #A890F0; background: rgba(#A890F0, 0.1); }
+  &--psychic { border-left-color: #F85888; background: rgba(#F85888, 0.1); }
+  &--bug { border-left-color: #A8B820; background: rgba(#A8B820, 0.1); }
+  &--rock { border-left-color: #B8A038; background: rgba(#B8A038, 0.1); }
+  &--ghost { border-left-color: #705898; background: rgba(#705898, 0.1); }
+  &--dragon { border-left-color: #7038F8; background: rgba(#7038F8, 0.1); }
+  &--dark { border-left-color: #705848; background: rgba(#705848, 0.1); }
+  &--steel { border-left-color: #B8B8D0; background: rgba(#B8B8D0, 0.1); }
+  &--fairy { border-left-color: #EE99AC; background: rgba(#EE99AC, 0.1); }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__name {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $color-text;
+
+    @media (min-width: 3000px) {
+      font-size: $font-size-md;
+    }
+  }
+
+  &__class {
+    font-size: $font-size-xs;
+    font-weight: 700;
+    padding: 2px $spacing-xs;
+    border-radius: $border-radius-sm;
+    text-transform: uppercase;
+
+    &--physical {
+      background: rgba(#C03028, 0.2);
+      color: #C03028;
+    }
+
+    &--special {
+      background: rgba(#6890F0, 0.2);
+      color: #6890F0;
+    }
+
+    &--status {
+      background: rgba($color-text-muted, 0.2);
+      color: $color-text-muted;
+    }
+  }
+
+  &__stats {
+    display: flex;
+    gap: $spacing-md;
+  }
+
+  &__stat {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+  }
+
+  &__stat-label {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-weight: 500;
+  }
+
+  &__stat-value {
+    font-size: $font-size-sm;
+    font-weight: 700;
+    color: $color-text;
+
+    &--freq {
+      font-size: $font-size-xs;
+      color: $color-accent-violet;
+    }
+  }
 }
 
 .status-list {

@@ -1,6 +1,23 @@
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
 
+// Map PTU size to grid token size
+const sizeToTokenSize = (size: string | undefined): number => {
+  switch (size) {
+    case 'Small':
+    case 'Medium':
+      return 1
+    case 'Large':
+      return 2
+    case 'Huge':
+      return 3
+    case 'Gigantic':
+      return 4
+    default:
+      return 1
+  }
+}
+
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
@@ -26,12 +43,16 @@ export default defineEventHandler(async (event) => {
 
     // Get the entity data
     let entity: any
+    let tokenSize = 1
     if (body.entityType === 'pokemon') {
       entity = await prisma.pokemon.findUnique({ where: { id: body.entityId } })
       if (!entity) {
         throw createError({ statusCode: 404, message: 'Pokemon not found' })
       }
       // Parse JSON fields
+      const capabilities = entity.capabilities ? JSON.parse(entity.capabilities) : {}
+      tokenSize = sizeToTokenSize(capabilities.size)
+
       entity = {
         id: entity.id,
         species: entity.species,
@@ -52,6 +73,7 @@ export default defineEventHandler(async (event) => {
         abilities: JSON.parse(entity.abilities),
         moves: JSON.parse(entity.moves),
         statusConditions: JSON.parse(entity.statusConditions),
+        capabilities,
         spriteUrl: entity.spriteUrl,
         shiny: entity.shiny
       }
@@ -91,36 +113,65 @@ export default defineEventHandler(async (event) => {
     const gridWidth = encounter.gridWidth || 20
     const gridHeight = encounter.gridHeight || 15
 
+    // Build a set of all occupied cells (accounting for multi-cell tokens)
+    const occupiedCells = new Set<string>()
+    for (const c of combatants) {
+      if (!c.position) continue
+      const size = c.tokenSize || 1
+      for (let dx = 0; dx < size; dx++) {
+        for (let dy = 0; dy < size; dy++) {
+          occupiedCells.add(`${c.position.x + dx},${c.position.y + dy}`)
+        }
+      }
+    }
+
+    // Check if a position can fit a token of given size
+    const canFit = (x: number, y: number, size: number): boolean => {
+      // Check bounds
+      if (x + size > gridWidth || y + size > gridHeight) return false
+      // Check all cells the token would occupy
+      for (let dx = 0; dx < size; dx++) {
+        for (let dy = 0; dy < size; dy++) {
+          if (occupiedCells.has(`${x + dx},${y + dy}`)) return false
+        }
+      }
+      return true
+    }
+
     // Auto-place based on side
     // Players: left side (x=1-3), Enemies: right side (x=width-4 to width-2), Allies: left-center (x=4-6)
     const sidePositions = {
-      players: { startX: 1, endX: 3 },
-      allies: { startX: 4, endX: 6 },
-      enemies: { startX: gridWidth - 4, endX: gridWidth - 2 }
+      players: { startX: 1, endX: 4 },
+      allies: { startX: 5, endX: 8 },
+      enemies: { startX: gridWidth - 5, endX: gridWidth - 1 }
     }
 
     const sideConfig = sidePositions[body.side as keyof typeof sidePositions] || sidePositions.enemies
-    const sameSideCombatants = combatants.filter((c: any) => c.side === body.side)
 
-    // Find next available position
+    // Find next available position that can fit the token
     let position = { x: sideConfig.startX, y: 1 }
-    const usedPositions = new Set(
-      combatants
-        .filter((c: any) => c.position)
-        .map((c: any) => `${c.position.x},${c.position.y}`)
-    )
+    let found = false
 
     // Place in a column pattern within the side's area
-    const colWidth = sideConfig.endX - sideConfig.startX + 1
-    for (let y = 1; y < gridHeight; y++) {
-      for (let xOffset = 0; xOffset < colWidth; xOffset++) {
-        const x = sideConfig.startX + xOffset
-        if (!usedPositions.has(`${x},${y}`)) {
+    for (let y = 1; y < gridHeight - tokenSize + 1 && !found; y++) {
+      for (let x = sideConfig.startX; x <= sideConfig.endX - tokenSize + 1 && !found; x++) {
+        if (canFit(x, y, tokenSize)) {
           position = { x, y }
-          break
+          found = true
         }
       }
-      if (!usedPositions.has(`${position.x},${position.y}`)) break
+    }
+
+    // If no position found in designated area, try anywhere on the grid
+    if (!found) {
+      for (let y = 1; y < gridHeight - tokenSize + 1 && !found; y++) {
+        for (let x = 1; x < gridWidth - tokenSize + 1 && !found; x++) {
+          if (canFit(x, y, tokenSize)) {
+            position = { x, y }
+            found = true
+          }
+        }
+      }
     }
 
     // Create combatant with position
@@ -136,7 +187,7 @@ export default defineEventHandler(async (event) => {
       shiftActionsRemaining: 1,
       readyAction: null,
       position,
-      tokenSize: 1,
+      tokenSize,
       entity
     }
 
