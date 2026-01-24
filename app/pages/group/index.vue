@@ -4,10 +4,6 @@
     <div v-if="!encounter || !encounter.isServed" class="group-view__lobby">
       <header class="lobby-header">
         <h1>PTU Session Helper</h1>
-        <div class="lobby-status">
-          <div class="waiting-spinner waiting-spinner--small"></div>
-          <span>Waiting for encounter...</span>
-        </div>
       </header>
 
       <div class="players-grid" v-if="players.length > 0">
@@ -28,15 +24,6 @@
             <div class="player-card__info">
               <h2 class="player-card__name">{{ player.name }}</h2>
               <span v-if="player.playedBy" class="player-card__played-by">{{ player.playedBy }}</span>
-              <div class="player-card__classes" v-if="player.trainerClasses?.length">
-                <span
-                  v-for="tc in player.trainerClasses"
-                  :key="tc.name"
-                  class="class-badge"
-                >
-                  {{ tc.name }}
-                </span>
-              </div>
             </div>
             <span class="player-card__level">Lv {{ player.level }}</span>
           </div>
