@@ -54,16 +54,10 @@
           </div>
         </div>
 
-        <!-- Damage Input -->
-        <div v-if="move.damageBase" class="damage-input">
-          <label>Damage to Apply</label>
-          <input
-            v-model.number="damageAmount"
-            type="number"
-            class="form-input"
-            min="0"
-            placeholder="Calculated damage"
-          />
+        <!-- Fixed Damage Notice (for moves like Dragon Rage) -->
+        <div v-if="fixedDamage" class="fixed-damage-notice">
+          <span class="label">Fixed Damage:</span>
+          <span class="value">{{ fixedDamage }}</span>
         </div>
       </div>
 
@@ -96,7 +90,29 @@ const emit = defineEmits<{
 }>()
 
 const selectedTargets = ref<string[]>([])
-const damageAmount = ref<number>(0)
+
+// Parse move effect for fixed damage (e.g., Dragon Rage = 40, Sonic Boom = 20)
+const fixedDamage = computed((): number | null => {
+  if (!props.move.effect) return null
+
+  // Common patterns for fixed damage moves
+  // "deals 40 damage", "40 damage", "always deals 40"
+  const patterns = [
+    /deals?\s+(\d+)\s+damage/i,
+    /always\s+deals?\s+(\d+)/i,
+    /(\d+)\s+damage\s+flat/i,
+    /flat\s+(\d+)\s+damage/i
+  ]
+
+  for (const pattern of patterns) {
+    const match = props.move.effect.match(pattern)
+    if (match) {
+      return parseInt(match[1], 10)
+    }
+  }
+
+  return null
+})
 
 const toggleTarget = (targetId: string) => {
   const index = selectedTargets.value.indexOf(targetId)
@@ -116,7 +132,8 @@ const getTargetName = (target: Combatant): string => {
 }
 
 const confirm = () => {
-  emit('confirm', selectedTargets.value, damageAmount.value || undefined)
+  // Pass fixed damage if the move has it, otherwise no damage (rolled separately)
+  emit('confirm', selectedTargets.value, fixedDamage.value || undefined)
 }
 </script>
 
@@ -269,23 +286,25 @@ const confirm = () => {
   }
 }
 
-.damage-input {
-  margin-bottom: $spacing-md;
+.fixed-damage-notice {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
   padding: $spacing-md;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
+  background: linear-gradient(135deg, rgba($color-accent-scarlet, 0.15) 0%, rgba($color-accent-violet, 0.1) 100%);
+  border: 1px solid rgba($color-accent-scarlet, 0.3);
   border-radius: $border-radius-md;
 
-  label {
-    display: block;
-    margin-bottom: $spacing-xs;
+  .label {
     font-size: $font-size-sm;
     color: $color-text-muted;
     font-weight: 500;
   }
 
-  input {
-    width: 150px;
+  .value {
+    font-size: $font-size-lg;
+    font-weight: 700;
+    color: $color-accent-scarlet;
   }
 }
 
