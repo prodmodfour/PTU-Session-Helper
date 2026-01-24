@@ -31,8 +31,6 @@
         :is-multi-selected="selectionStore.isSelected(token.combatantId)"
         :is-gm="isGm"
         @select="(id, evt) => handleTokenSelect(id, evt)"
-        @drag-start="handleTokenDragStart"
-        @drag-end="handleTokenDragEnd"
       />
     </div>
 
@@ -155,8 +153,11 @@ const isPanning = ref(false)
 const panStart = ref({ x: 0, y: 0 })
 const selectedTokenId = ref<string | null>(null)
 const hoveredCell = ref<GridPosition | null>(null)
-const draggingTokenId = ref<string | null>(null)
 const movementRangeEnabled = ref(false)
+
+// Click-to-move state
+const movingTokenId = ref<string | null>(null)
+const moveTargetCell = ref<GridPosition | null>(null)
 
 // Marquee selection state
 const isMarqueeSelecting = ref(false)
@@ -223,11 +224,23 @@ const tokenPositions = computed(() => {
 
 // Selected token for movement range display
 const selectedTokenForMovement = computed(() => {
-  // Show movement range if prop is true OR local toggle is on
-  const shouldShow = props.showMovementRange || movementRangeEnabled.value
-  if (!shouldShow || !selectedTokenId.value) return null
-  return props.tokens.find(t => t.combatantId === selectedTokenId.value)
+  // Show movement range if prop is true OR local toggle is on OR in move mode
+  const shouldShow = props.showMovementRange || movementRangeEnabled.value || movingTokenId.value
+  const tokenId = movingTokenId.value || selectedTokenId.value
+  if (!shouldShow || !tokenId) return null
+  return props.tokens.find(t => t.combatantId === tokenId)
 })
+
+// Moving token data for preview
+const movingToken = computed(() => {
+  if (!movingTokenId.value) return null
+  return props.tokens.find(t => t.combatantId === movingTokenId.value)
+})
+
+// Calculate distance between two grid positions (Manhattan distance for PTU)
+const calculateMoveDistance = (from: GridPosition, to: GridPosition): number => {
+  return Math.abs(to.x - from.x) + Math.abs(to.y - from.y)
+}
 
 // Get movement speed for a combatant
 const getSpeed = (combatantId: string): number => {
@@ -318,8 +331,13 @@ const render = () => {
   drawGrid(ctx)
 
   // Draw movement range overlay (before measurement and fog)
-  if (props.showMovementRange && selectedTokenForMovement.value) {
+  if (selectedTokenForMovement.value) {
     drawMovementRange(ctx)
+  }
+
+  // Draw movement preview arrow when in move mode
+  if (movingToken.value && hoveredCell.value) {
+    drawMovementPreview(ctx)
   }
 
   // Draw measurement overlay
@@ -692,6 +710,122 @@ const drawMovementRange = (ctx: CanvasRenderingContext2D) => {
   ctx.fillText(speedText, textX, textY)
 }
 
+// Draw movement preview arrow when in click-to-move mode
+const drawMovementPreview = (ctx: CanvasRenderingContext2D) => {
+  const token = movingToken.value
+  const target = hoveredCell.value
+  if (!token || !target) return
+
+  const { cellSize } = props.config
+  const speed = getSpeed(token.combatantId)
+  const distance = calculateMoveDistance(token.position, target)
+  const isValidMove = distance <= speed && distance > 0
+
+  // Token center
+  const startX = token.position.x * cellSize + (token.size * cellSize) / 2
+  const startY = token.position.y * cellSize + (token.size * cellSize) / 2
+
+  // Target center
+  const endX = target.x * cellSize + cellSize / 2
+  const endY = target.y * cellSize + cellSize / 2
+
+  // Check if target is blocked
+  const blocked = getBlockedCells(token.combatantId)
+  const isBlocked = blocked.some(b => b.x === target.x && b.y === target.y)
+
+  // Choose color based on validity
+  let arrowColor = 'rgba(34, 211, 238, 0.8)' // Cyan for valid
+  let bgColor = 'rgba(34, 211, 238, 0.2)'
+  if (!isValidMove || isBlocked) {
+    arrowColor = 'rgba(239, 68, 68, 0.8)' // Red for invalid
+    bgColor = 'rgba(239, 68, 68, 0.2)'
+  }
+
+  // Highlight target cell
+  if (distance > 0) {
+    ctx.fillStyle = bgColor
+    ctx.fillRect(target.x * cellSize, target.y * cellSize, cellSize, cellSize)
+    ctx.strokeStyle = arrowColor
+    ctx.lineWidth = 2
+    ctx.strokeRect(target.x * cellSize + 1, target.y * cellSize + 1, cellSize - 2, cellSize - 2)
+  }
+
+  // Draw arrow line
+  if (distance > 0) {
+    ctx.strokeStyle = arrowColor
+    ctx.lineWidth = 3
+    ctx.setLineDash([8, 4])
+    ctx.beginPath()
+    ctx.moveTo(startX, startY)
+    ctx.lineTo(endX, endY)
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    // Draw arrowhead
+    const angle = Math.atan2(endY - startY, endX - startX)
+    const arrowSize = 12
+    ctx.fillStyle = arrowColor
+    ctx.beginPath()
+    ctx.moveTo(endX, endY)
+    ctx.lineTo(
+      endX - arrowSize * Math.cos(angle - Math.PI / 6),
+      endY - arrowSize * Math.sin(angle - Math.PI / 6)
+    )
+    ctx.lineTo(
+      endX - arrowSize * Math.cos(angle + Math.PI / 6),
+      endY - arrowSize * Math.sin(angle + Math.PI / 6)
+    )
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  // Draw distance indicator near target
+  if (distance > 0) {
+    const distText = `${distance}m`
+    ctx.font = 'bold 14px system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+
+    const labelX = endX
+    const labelY = target.y * cellSize - 12
+
+    // Background
+    const metrics = ctx.measureText(distText)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+    ctx.fillRect(
+      labelX - metrics.width / 2 - 4,
+      labelY - 10,
+      metrics.width + 8,
+      20
+    )
+
+    // Text
+    ctx.fillStyle = isValidMove && !isBlocked ? 'rgba(34, 211, 238, 1)' : 'rgba(239, 68, 68, 1)'
+    ctx.fillText(distText, labelX, labelY)
+
+    // Show "Out of range" or "Blocked" message if invalid
+    if (!isValidMove && !isBlocked) {
+      const msgY = labelY - 20
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+      const msg = 'Out of range'
+      const msgMetrics = ctx.measureText(msg)
+      ctx.fillRect(labelX - msgMetrics.width / 2 - 4, msgY - 8, msgMetrics.width + 8, 16)
+      ctx.fillStyle = 'rgba(239, 68, 68, 1)'
+      ctx.font = 'bold 10px system-ui, sans-serif'
+      ctx.fillText(msg, labelX, msgY)
+    } else if (isBlocked) {
+      const msgY = labelY - 20
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+      const msg = 'Blocked'
+      const msgMetrics = ctx.measureText(msg)
+      ctx.fillRect(labelX - msgMetrics.width / 2 - 4, msgY - 8, msgMetrics.width + 8, 16)
+      ctx.fillStyle = 'rgba(239, 68, 68, 1)'
+      ctx.font = 'bold 10px system-ui, sans-serif'
+      ctx.fillText(msg, labelX, msgY)
+    }
+  }
+}
+
 const screenToGrid = (screenX: number, screenY: number): GridPosition => {
   const container = containerRef.value
   if (!container) return { x: -1, y: -1 }
@@ -742,7 +876,7 @@ const handleMouseDown = (event: MouseEvent) => {
   }
 
   // Left click
-  if (event.button === 0 && !draggingTokenId.value) {
+  if (event.button === 0) {
     const gridPos = screenToGrid(event.clientX, event.clientY)
 
     // If in measurement mode, start measuring
@@ -786,8 +920,47 @@ const handleMouseDown = (event: MouseEvent) => {
       return
     }
 
+    // If in move mode and clicking on empty cell, try to move
+    if (movingTokenId.value && props.isGm) {
+      const token = movingToken.value
+      if (token) {
+        const speed = getSpeed(token.combatantId)
+        const distance = calculateMoveDistance(token.position, gridPos)
+        const blocked = getBlockedCells(token.combatantId)
+        const isBlocked = blocked.some(b => b.x === gridPos.x && b.y === gridPos.y)
+
+        // Check if move is valid
+        if (distance > 0 && distance <= speed && !isBlocked &&
+            gridPos.x >= 0 && gridPos.x < props.config.width &&
+            gridPos.y >= 0 && gridPos.y < props.config.height) {
+          // Emit the move
+          emit('tokenMove', movingTokenId.value, gridPos)
+          // Exit move mode
+          movingTokenId.value = null
+          moveTargetCell.value = null
+          render()
+          return
+        } else if (distance === 0) {
+          // Clicked on same cell, cancel move mode
+          movingTokenId.value = null
+          moveTargetCell.value = null
+          render()
+          return
+        }
+        // Invalid move - stay in move mode but don't move
+      }
+    }
+
+    // If clicking on empty space without move mode, cancel selection
+    if (!clickedToken) {
+      movingTokenId.value = null
+      moveTargetCell.value = null
+      selectedTokenId.value = null
+      emit('tokenSelect', null)
+    }
+
     // If GM and not clicking on token, start marquee selection
-    if (props.isGm) {
+    if (props.isGm && !movingTokenId.value) {
       isMarqueeSelecting.value = true
       marqueeStartScreen.value = { x: event.clientX, y: event.clientY }
       selectionStore.startMarquee(gridPos)
@@ -818,7 +991,15 @@ const getTokenAtPosition = (gridPos: GridPosition): TokenData | undefined => {
 const handleMouseMove = (event: MouseEvent) => {
   // Update hovered cell
   const gridPos = screenToGrid(event.clientX, event.clientY)
+  const cellChanged = !hoveredCell.value ||
+    hoveredCell.value.x !== gridPos.x ||
+    hoveredCell.value.y !== gridPos.y
   hoveredCell.value = gridPos
+
+  // Re-render for movement preview when in move mode
+  if (movingTokenId.value && cellChanged) {
+    render()
+  }
 
   // Handle measurement mode
   if (measurementStore.isActive) {
@@ -909,40 +1090,42 @@ const handleMouseUp = (event: MouseEvent) => {
 }
 
 const handleTokenSelect = (combatantId: string, event?: MouseEvent) => {
+  // If clicking the same token that's already in move mode, cancel move mode
+  if (movingTokenId.value === combatantId) {
+    movingTokenId.value = null
+    moveTargetCell.value = null
+    render()
+    return
+  }
+
+  // If in move mode and clicking a different token, switch to that token
+  if (movingTokenId.value && movingTokenId.value !== combatantId) {
+    movingTokenId.value = combatantId
+    selectedTokenId.value = combatantId
+    emit('tokenSelect', combatantId)
+    render()
+    return
+  }
+
+  // Enter move mode for this token
   selectedTokenId.value = combatantId
+  movingTokenId.value = combatantId
   emit('tokenSelect', combatantId)
 
   // Handle multi-selection with modifier keys
   if (props.isGm) {
-    // Check if we have a keyboard event from the token click
     const shiftKey = event?.shiftKey ?? false
     const ctrlKey = event?.ctrlKey ?? event?.metaKey ?? false
 
     if (shiftKey || ctrlKey) {
       selectionStore.toggleSelection(combatantId)
     } else {
-      // Single click without modifier - clear and select
       selectionStore.select(combatantId)
     }
     emit('multiSelect', selectionStore.selectedArray)
   }
-}
 
-const handleTokenDragStart = (combatantId: string) => {
-  draggingTokenId.value = combatantId
-  selectedTokenId.value = combatantId
-}
-
-const handleTokenDragEnd = (combatantId: string, event: MouseEvent) => {
-  draggingTokenId.value = null
-
-  const newPos = screenToGrid(event.clientX, event.clientY)
-
-  // Validate position is within grid
-  if (newPos.x >= 0 && newPos.x < props.config.width &&
-      newPos.y >= 0 && newPos.y < props.config.height) {
-    emit('tokenMove', combatantId, newPos)
-  }
+  render()
 }
 
 // Zoom controls
@@ -975,11 +1158,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
     return
   }
 
-  // Escape - Clear selection and measurement
+  // Escape - Clear selection, measurement, and move mode
   if (event.key === 'Escape') {
     selectionStore.clearSelection()
     measurementStore.clearMeasurement()
     measurementStore.setMode('none')
+    movingTokenId.value = null
+    moveTargetCell.value = null
     selectedTokenId.value = null
     emit('tokenSelect', null)
     emit('multiSelect', [])

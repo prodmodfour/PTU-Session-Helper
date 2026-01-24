@@ -5,7 +5,6 @@
       'vtt-token--selected': isSelected,
       'vtt-token--multi-selected': isMultiSelected,
       'vtt-token--current': isCurrentTurn,
-      'vtt-token--dragging': isDragging,
       'vtt-token--player': side === 'players',
       'vtt-token--ally': side === 'allies',
       'vtt-token--enemy': side === 'enemies',
@@ -13,7 +12,6 @@
     }"
     :style="tokenStyle"
     :data-testid="`vtt-token-${token.combatantId}`"
-    @mousedown.stop="handleMouseDown"
     @click.stop="handleClick"
   >
     <!-- Pokemon Sprite or Character Avatar -->
@@ -74,13 +72,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   select: [combatantId: string, event: MouseEvent]
-  dragStart: [combatantId: string]
-  dragEnd: [combatantId: string, event: MouseEvent]
 }>()
 
-// State
-const isDragging = ref(false)
-const dragOffset = ref({ x: 0, y: 0 })
 
 // Computed
 const tokenStyle = computed(() => {
@@ -153,29 +146,8 @@ const handleSpriteError = (event: Event) => {
 }
 
 const handleClick = (event: MouseEvent) => {
+  event.stopPropagation()
   emit('select', props.token.combatantId, event)
-}
-
-const handleMouseDown = (event: MouseEvent) => {
-  if (!props.isGm) return
-  if (event.button !== 0) return
-
-  isDragging.value = true
-  emit('dragStart', props.token.combatantId)
-
-  const handleMouseMove = (e: MouseEvent) => {
-    // Could update visual position here for smooth dragging
-  }
-
-  const handleMouseUp = (e: MouseEvent) => {
-    isDragging.value = false
-    emit('dragEnd', props.token.combatantId, e)
-    window.removeEventListener('mousemove', handleMouseMove)
-    window.removeEventListener('mouseup', handleMouseUp)
-  }
-
-  window.addEventListener('mousemove', handleMouseMove)
-  window.addEventListener('mouseup', handleMouseUp)
 }
 </script>
 
@@ -211,12 +183,6 @@ const handleMouseDown = (event: MouseEvent) => {
 
   &--current {
     filter: drop-shadow(0 0 8px $color-accent-scarlet) drop-shadow(0 0 16px $color-accent-scarlet);
-  }
-
-  &--dragging {
-    opacity: 0.7;
-    cursor: grabbing;
-    z-index: 100;
   }
 
   &--fainted {
