@@ -14,6 +14,12 @@
         <span class="meta-value">{{ table.levelRange.min }} - {{ table.levelRange.max }}</span>
       </span>
       <span class="meta-item">
+        <span class="meta-label">Density:</span>
+        <span class="density-badge" :class="`density--${table.density}`">
+          {{ getDensityLabel(table.density) }}
+        </span>
+      </span>
+      <span class="meta-item">
         <span class="meta-label">Entries:</span>
         <span class="meta-value">{{ table.entries.length }}</span>
       </span>
@@ -60,7 +66,8 @@
 </template>
 
 <script setup lang="ts">
-import type { EncounterTable } from '~/types'
+import type { EncounterTable, DensityTier } from '~/types'
+import { DENSITY_RANGES } from '~/types'
 
 const props = defineProps<{
   table: EncounterTable
@@ -72,6 +79,12 @@ const topEntries = computed(() => {
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 5)
 })
+
+// Get density label for display
+const getDensityLabel = (density: DensityTier): string => {
+  const range = DENSITY_RANGES[density]
+  return `${density.charAt(0).toUpperCase() + density.slice(1)} (${range.min}-${range.max})`
+}
 
 // Get rarity label based on weight
 const getRarityLabel = (weight: number): string => {
@@ -164,6 +177,33 @@ const getRarityClass = (weight: number): string => {
 .meta-value {
   color: $color-text;
   font-weight: 500;
+}
+
+.density-badge {
+  padding: 2px 8px;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 500;
+
+  &.density--sparse {
+    background: rgba(158, 158, 158, 0.2);
+    color: #bdbdbd;
+  }
+
+  &.density--moderate {
+    background: rgba(33, 150, 243, 0.2);
+    color: #64b5f6;
+  }
+
+  &.density--dense {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ffb74d;
+  }
+
+  &.density--abundant {
+    background: rgba(244, 67, 54, 0.2);
+    color: #ef5350;
+  }
 }
 
 .preview-header {

@@ -63,6 +63,22 @@
           </div>
 
           <div class="form-group">
+            <label for="table-density">Population Density</label>
+            <select
+              id="table-density"
+              v-model="form.density"
+              class="form-select"
+              data-testid="table-density-select"
+            >
+              <option value="sparse">Sparse (1-2 Pokemon)</option>
+              <option value="moderate">Moderate (2-4 Pokemon)</option>
+              <option value="dense">Dense (4-6 Pokemon)</option>
+              <option value="abundant">Abundant (6-8 Pokemon)</option>
+            </select>
+            <p class="form-hint">Controls how many Pokemon spawn when generating encounters</p>
+          </div>
+
+          <div class="form-group">
             <label for="table-image">Image URL</label>
             <input
               id="table-image"
@@ -205,7 +221,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EncounterTable, EncounterTableEntry } from '~/types'
+import type { EncounterTable, EncounterTableEntry, DensityTier } from '~/types'
 
 const props = defineProps<{
   table?: EncounterTable | null
@@ -224,6 +240,7 @@ const form = reactive({
   description: '',
   levelMin: 1,
   levelMax: 10,
+  density: 'moderate' as DensityTier,
   imageUrl: ''
 })
 
@@ -246,6 +263,7 @@ watch(() => props.table, (table) => {
     form.description = table.description || ''
     form.levelMin = table.levelRange.min
     form.levelMax = table.levelRange.max
+    form.density = table.density
     form.imageUrl = table.imageUrl || ''
     tableEntries.value = [...table.entries]
   } else {
@@ -253,6 +271,7 @@ watch(() => props.table, (table) => {
     form.description = ''
     form.levelMin = 1
     form.levelMax = 10
+    form.density = 'moderate'
     form.imageUrl = ''
     tableEntries.value = []
   }
@@ -271,7 +290,8 @@ const save = async () => {
       levelRange: {
         min: form.levelMin,
         max: form.levelMax
-      }
+      },
+      density: form.density
     }
 
     if (isEditing.value && props.table) {

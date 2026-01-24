@@ -1,4 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
+import type { DensityTier } from '~/types'
+import { DENSITY_RANGES } from '~/types'
 
 interface GeneratedPokemon {
   speciesId: string
@@ -19,9 +21,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const count = Math.min(Math.max(body.count ?? 1, 1), 10) // 1-10 Pokemon
   const modificationId = body.modificationId as string | undefined
   const levelOverride = body.levelRange as { min: number; max: number } | undefined
+  const countOverride = body.count as number | undefined // Optional manual override
 
   try {
     // Fetch table with entries and species data
@@ -64,6 +66,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Apply modification if specified
+    let densityMultiplier = 1.0
     if (modificationId) {
       const modification = table.modifications.find(m => m.id === modificationId)
       if (!modification) {
@@ -72,6 +75,9 @@ export default defineEventHandler(async (event) => {
           message: 'Modification not found'
         })
       }
+
+      // Get density multiplier from modification
+      densityMultiplier = modification.densityMultiplier
 
       for (const modEntry of modification.entries) {
         if (modEntry.remove) {
@@ -90,6 +96,24 @@ export default defineEventHandler(async (event) => {
           })
         }
       }
+    }
+
+    // Calculate spawn count from density
+    let count: number
+    if (countOverride !== undefined) {
+      // Manual override provided
+      count = Math.min(Math.max(countOverride, 1), 10)
+    } else {
+      // Use density-based calculation
+      const baseDensity = (table.density as DensityTier) || 'moderate'
+      const densityRange = DENSITY_RANGES[baseDensity] || DENSITY_RANGES.moderate
+
+      // Apply modification multiplier
+      const scaledMin = Math.max(1, Math.round(densityRange.min * densityMultiplier))
+      const scaledMax = Math.min(10, Math.round(densityRange.max * densityMultiplier))
+
+      // Random count within scaled range
+      count = Math.floor(Math.random() * (scaledMax - scaledMin + 1)) + scaledMin
     }
 
     // Convert to array and calculate total weight
@@ -146,6 +170,9 @@ export default defineEventHandler(async (event) => {
           tableName: table.name,
           modificationId: modificationId ?? null,
           levelRange: { min: levelMin, max: levelMax },
+          density: table.density as DensityTier,
+          densityMultiplier,
+          spawnCount: count,
           totalPoolSize: entries.length,
           totalWeight
         }

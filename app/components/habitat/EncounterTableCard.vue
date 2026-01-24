@@ -12,6 +12,9 @@
         <h3 class="table-card__name">{{ table.name }}</h3>
         <p class="table-card__meta">
           <span class="table-card__level">Lv. {{ table.levelRange.min }}-{{ table.levelRange.max }}</span>
+          <span class="table-card__density" :class="`density--${table.density}`">
+            {{ getDensityLabel(table.density) }}
+          </span>
           <span class="table-card__count">{{ table.entries.length }} species</span>
         </p>
       </div>
@@ -57,7 +60,8 @@
 </template>
 
 <script setup lang="ts">
-import type { EncounterTable } from '~/types'
+import type { EncounterTable, DensityTier } from '~/types'
+import { DENSITY_RANGES } from '~/types'
 
 const props = defineProps<{
   table: EncounterTable
@@ -73,6 +77,12 @@ const previewEntries = computed(() => {
     .sort((a, b) => b.weight - a.weight)
     .slice(0, maxPreview)
 })
+
+// Get density label for display
+const getDensityLabel = (density: DensityTier): string => {
+  const range = DENSITY_RANGES[density]
+  return `${range.min}-${range.max}`
+}
 
 const handleSpriteError = (event: Event) => {
   const img = event.target as HTMLImageElement
@@ -163,6 +173,33 @@ const handleSpriteError = (event: Event) => {
     border-radius: $border-radius-sm;
     font-weight: 600;
     font-size: $font-size-xs;
+  }
+
+  &__density {
+    padding: 2px $spacing-sm;
+    border-radius: $border-radius-sm;
+    font-weight: 500;
+    font-size: $font-size-xs;
+
+    &.density--sparse {
+      background: rgba(158, 158, 158, 0.2);
+      color: #bdbdbd;
+    }
+
+    &.density--moderate {
+      background: rgba(33, 150, 243, 0.2);
+      color: #64b5f6;
+    }
+
+    &.density--dense {
+      background: rgba(255, 152, 0, 0.2);
+      color: #ffb74d;
+    }
+
+    &.density--abundant {
+      background: rgba(244, 67, 54, 0.2);
+      color: #ef5350;
+    }
   }
 
   &__description {

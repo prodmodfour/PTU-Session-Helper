@@ -44,6 +44,15 @@
           <span class="info-value">{{ table.levelRange.min }} - {{ table.levelRange.max }}</span>
         </div>
         <div class="info-row">
+          <span class="info-label">Population Density:</span>
+          <span class="info-value">
+            <span class="density-badge" :class="`density--${table.density}`">
+              {{ getDensityLabel(table.density) }}
+            </span>
+            <span class="spawn-preview">Spawns {{ getSpawnRange(table.density) }} Pokemon</span>
+          </span>
+        </div>
+        <div class="info-row">
           <span class="info-label">Total Weight:</span>
           <span class="info-value">{{ totalWeight }}</span>
         </div>
@@ -110,6 +119,7 @@
               :modification="mod"
               :parent-entries="table.entries"
               :table-id="table.id"
+              :parent-density="table.density"
               @edit="editModification"
               @delete="deleteModification"
             />
@@ -364,6 +374,18 @@
                 />
               </div>
             </div>
+            <div class="form-group">
+              <label class="form-label">Population Density</label>
+              <select v-model="editSettings.density" class="form-select">
+                <option value="sparse">Sparse (1-2 Pokemon)</option>
+                <option value="moderate">Moderate (2-4 Pokemon)</option>
+                <option value="dense">Dense (4-6 Pokemon)</option>
+                <option value="abundant">Abundant (6-8 Pokemon)</option>
+              </select>
+              <p class="form-hint">
+                Controls how many Pokemon spawn when generating encounters
+              </p>
+            </div>
           </div>
           <div class="modal__footer">
             <button type="button" class="btn btn--secondary" @click="showSettingsModal = false">
@@ -402,8 +424,8 @@
 </template>
 
 <script setup lang="ts">
-import type { EncounterTable, EncounterTableEntry, TableModification, RarityPreset, LevelRange } from '~/types'
-import { RARITY_WEIGHTS } from '~/types'
+import type { EncounterTable, EncounterTableEntry, TableModification, RarityPreset, LevelRange, DensityTier } from '~/types'
+import { RARITY_WEIGHTS, DENSITY_RANGES } from '~/types'
 
 definePageMeta({
   layout: 'gm'
@@ -462,7 +484,8 @@ const editSettings = ref({
   name: '',
   description: '',
   levelMin: 1,
-  levelMax: 10
+  levelMax: 10,
+  density: 'moderate' as DensityTier
 })
 
 // Load table
@@ -491,6 +514,16 @@ const sortedEntries = computed(() => {
   return [...table.value.entries].sort((a, b) => b.weight - a.weight)
 })
 
+// Helper functions for density display
+const getDensityLabel = (density: DensityTier): string => {
+  return density.charAt(0).toUpperCase() + density.slice(1)
+}
+
+const getSpawnRange = (density: DensityTier): string => {
+  const range = DENSITY_RANGES[density]
+  return `${range.min}-${range.max}`
+}
+
 // Methods
 const updateEditSettings = () => {
   if (table.value) {
@@ -498,7 +531,8 @@ const updateEditSettings = () => {
       name: table.value.name,
       description: table.value.description || '',
       levelMin: table.value.levelRange.min,
-      levelMax: table.value.levelRange.max
+      levelMax: table.value.levelRange.max,
+      density: table.value.density
     }
   }
 }
@@ -636,7 +670,8 @@ const saveSettings = async () => {
       levelRange: {
         min: editSettings.value.levelMin,
         max: editSettings.value.levelMax
-      }
+      },
+      density: editSettings.value.density
     })
     table.value = await tablesStore.loadTable(tableId.value)
     showSettingsModal.value = false
@@ -756,6 +791,41 @@ const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesN
 
 .info-value {
   color: $color-text;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.density-badge {
+  padding: 2px 8px;
+  border-radius: $border-radius-sm;
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.density--sparse {
+    background: rgba(158, 158, 158, 0.2);
+    color: #bdbdbd;
+  }
+
+  &.density--moderate {
+    background: rgba(33, 150, 243, 0.2);
+    color: #64b5f6;
+  }
+
+  &.density--dense {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ffb74d;
+  }
+
+  &.density--abundant {
+    background: rgba(244, 67, 54, 0.2);
+    color: #ef5350;
+  }
+}
+
+.spawn-preview {
+  font-size: 0.75rem;
+  color: $color-text-muted;
 }
 
 .editor-section {

@@ -12,6 +12,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    // Validate density if provided
+    const validDensities = ['sparse', 'moderate', 'dense', 'abundant']
+    const density = body.density && validDensities.includes(body.density)
+      ? body.density
+      : undefined // Don't update if not valid
+
     const table = await prisma.encounterTable.update({
       where: { id },
       data: {
@@ -19,7 +25,8 @@ export default defineEventHandler(async (event) => {
         description: body.description ?? null,
         imageUrl: body.imageUrl ?? null,
         levelMin: body.levelRange?.min ?? 1,
-        levelMax: body.levelRange?.max ?? 10
+        levelMax: body.levelRange?.max ?? 10,
+        ...(density && { density })
       },
       include: {
         entries: {
@@ -44,6 +51,7 @@ export default defineEventHandler(async (event) => {
         min: table.levelMin,
         max: table.levelMax
       },
+      density: table.density,
       entries: table.entries.map(entry => ({
         id: entry.id,
         speciesId: entry.speciesId,
@@ -62,6 +70,7 @@ export default defineEventHandler(async (event) => {
           min: mod.levelMin,
           max: mod.levelMax
         } : undefined,
+        densityMultiplier: mod.densityMultiplier,
         entries: mod.entries.map(e => ({
           id: e.id,
           speciesName: e.speciesName,

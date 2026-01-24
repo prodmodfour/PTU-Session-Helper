@@ -31,9 +31,32 @@
         <span class="meta-value">{{ modification.levelRange.min }} - {{ modification.levelRange.max }}</span>
       </span>
       <span class="meta-item">
+        <span class="meta-label">Density Multiplier:</span>
+        <span class="meta-value multiplier-display">{{ modification.densityMultiplier }}x</span>
+      </span>
+      <span class="meta-item">
         <span class="meta-label">Changes:</span>
         <span class="meta-value">{{ modification.entries.length }}</span>
       </span>
+    </div>
+
+    <!-- Density Multiplier Controls -->
+    <div class="modification-card__density">
+      <div class="density-label">Density Scale:</div>
+      <div class="density-presets">
+        <button
+          v-for="preset in densityPresets"
+          :key="preset.value"
+          class="preset-btn"
+          :class="{ 'preset-btn--active': modification.densityMultiplier === preset.value }"
+          @click="updateDensityMultiplier(preset.value)"
+        >
+          {{ preset.label }}
+        </button>
+      </div>
+      <p class="density-hint">
+        Effective spawn range: {{ getEffectiveSpawnRange() }}
+      </p>
     </div>
 
     <div v-if="modification.entries.length > 0" class="modification-card__changes">
@@ -125,12 +148,14 @@
 </template>
 
 <script setup lang="ts">
-import type { TableModification, EncounterTableEntry, ModificationEntry } from '~/types'
+import type { TableModification, EncounterTableEntry, ModificationEntry, DensityTier } from '~/types'
+import { DENSITY_RANGES } from '~/types'
 
 const props = defineProps<{
   modification: TableModification
   parentEntries: EncounterTableEntry[]
   tableId: string
+  parentDensity?: DensityTier
 }>()
 
 defineEmits<{
@@ -146,6 +171,39 @@ const newChange = ref({
   action: 'override' as 'override' | 'remove',
   weight: 10
 })
+
+// Density multiplier presets
+const densityPresets = [
+  { label: '0.5x', value: 0.5 },
+  { label: '1x', value: 1.0 },
+  { label: '1.5x', value: 1.5 },
+  { label: '2x', value: 2.0 }
+]
+
+// Calculate effective spawn range after multiplier
+const getEffectiveSpawnRange = (): string => {
+  const baseDensity = props.parentDensity || 'moderate'
+  const range = DENSITY_RANGES[baseDensity]
+  const multiplier = props.modification.densityMultiplier
+
+  const scaledMin = Math.max(1, Math.round(range.min * multiplier))
+  const scaledMax = Math.min(10, Math.round(range.max * multiplier))
+
+  return `${scaledMin}-${scaledMax} Pokemon`
+}
+
+// Update density multiplier
+const updateDensityMultiplier = async (value: number) => {
+  try {
+    await tablesStore.updateModification(props.tableId, props.modification.id, {
+      name: props.modification.name,
+      description: props.modification.description,
+      densityMultiplier: value
+    })
+  } catch (error) {
+    console.error('Failed to update density multiplier:', error)
+  }
+}
 
 // Check if entry is new (not in parent)
 const isNewEntry = (entry: ModificationEntry): boolean => {
@@ -211,6 +269,13 @@ const addChange = async () => {
   &__add {
     display: flex;
     justify-content: center;
+  }
+
+  &__density {
+    margin-bottom: $spacing-md;
+    padding: $spacing-sm;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: $border-radius-sm;
   }
 }
 
@@ -300,6 +365,54 @@ const addChange = async () => {
 .change-weight {
   color: $color-text-muted;
   font-size: 0.75rem;
+}
+
+.multiplier-display {
+  font-weight: 600;
+  color: $color-primary;
+}
+
+.density-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $color-text-muted;
+  margin-bottom: $spacing-xs;
+}
+
+.density-presets {
+  display: flex;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-xs;
+}
+
+.preset-btn {
+  padding: $spacing-xs $spacing-sm;
+  background: rgba($glass-border, 0.3);
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-sm;
+  color: $color-text-muted;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba($color-primary, 0.2);
+    border-color: $color-primary;
+    color: $color-text;
+  }
+
+  &--active {
+    background: rgba($color-primary, 0.3);
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+}
+
+.density-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: $color-text-muted;
 }
 
 .btn--icon {

@@ -13,6 +13,9 @@
           <p v-if="table.description">{{ table.description }}</p>
           <div class="table-info__meta">
             <span class="badge">Lv. {{ table.levelRange.min }}-{{ table.levelRange.max }}</span>
+            <span class="badge badge--density" :class="`density--${table.density}`">
+              {{ getDensityLabel(table.density) }} ({{ getSpawnRange() }})
+            </span>
             <span class="badge">{{ table.entries.length }} species</span>
           </div>
         </div>
@@ -20,8 +23,21 @@
         <!-- Generation Options -->
         <div class="form-section">
           <div class="form-group">
-            <label for="gen-count">Number of Pokemon</label>
+            <label>Spawn Count</label>
+            <div class="spawn-info">
+              <span class="spawn-range">{{ getSpawnRange() }} Pokemon</span>
+              <span class="spawn-hint">(based on {{ getDensityLabel(effectiveDensity) }} density{{ selectedModification ? ` × ${getMultiplierLabel()}` : '' }})</span>
+            </div>
+            <label class="override-label">
+              <input
+                type="checkbox"
+                v-model="overrideCount"
+                class="form-checkbox"
+              />
+              Override spawn count
+            </label>
             <input
+              v-if="overrideCount"
               id="gen-count"
               v-model.number="count"
               type="number"
@@ -163,7 +179,8 @@
 </template>
 
 <script setup lang="ts">
-import type { EncounterTable, ResolvedTableEntry } from '~/types'
+import type { EncounterTable, ResolvedTableEntry, DensityTier } from '~/types'
+import { DENSITY_RANGES } from '~/types'
 
 const props = defineProps<{
   table: EncounterTable
@@ -180,7 +197,8 @@ const emit = defineEmits<{
 const encounterTablesStore = useEncounterTablesStore()
 
 // State
-const count = ref(1)
+const count = ref(2)
+const overrideCount = ref(false)
 const selectedModification = ref('')
 const overrideLevel = ref(false)
 const levelMin = ref(props.table.levelRange.min)
@@ -206,7 +224,42 @@ const totalWeight = computed(() => {
   return resolvedEntries.value.reduce((sum, e) => sum + e.weight, 0)
 })
 
+// Get the selected modification object
+const selectedMod = computed(() => {
+  if (!selectedModification.value) return null
+  return props.table.modifications.find(m => m.id === selectedModification.value) || null
+})
+
+// Effective density tier
+const effectiveDensity = computed((): DensityTier => {
+  return props.table.density
+})
+
+// Get density multiplier for selected modification
+const getMultiplier = (): number => {
+  return selectedMod.value?.densityMultiplier ?? 1.0
+}
+
 // Methods
+const getDensityLabel = (density: DensityTier): string => {
+  return density.charAt(0).toUpperCase() + density.slice(1)
+}
+
+const getMultiplierLabel = (): string => {
+  const mult = getMultiplier()
+  return `${mult}x`
+}
+
+const getSpawnRange = (): string => {
+  const range = DENSITY_RANGES[effectiveDensity.value]
+  const multiplier = getMultiplier()
+
+  const scaledMin = Math.max(1, Math.round(range.min * multiplier))
+  const scaledMax = Math.min(10, Math.round(range.max * multiplier))
+
+  return `${scaledMin}-${scaledMax}`
+}
+
 const formatPercent = (weight: number): string => {
   const percent = (weight / totalWeight.value) * 100
   return `${percent.toFixed(1)}%`
@@ -216,11 +269,14 @@ const generate = async () => {
   generating.value = true
   try {
     const options: {
-      count: number
+      count?: number
       modificationId?: string
       levelRange?: { min: number; max: number }
-    } = {
-      count: count.value
+    } = {}
+
+    // Only pass count if override is enabled
+    if (overrideCount.value) {
+      options.count = count.value
     }
 
     if (selectedModification.value) {
@@ -300,7 +356,60 @@ watch(() => props.table, (newTable) => {
     background: $color-bg-secondary;
     border-radius: $border-radius-sm;
     font-size: $font-size-xs;
+
+    &--density {
+      &.density--sparse {
+        background: rgba(158, 158, 158, 0.2);
+        color: #bdbdbd;
+      }
+
+      &.density--moderate {
+        background: rgba(33, 150, 243, 0.2);
+        color: #64b5f6;
+      }
+
+      &.density--dense {
+        background: rgba(255, 152, 0, 0.2);
+        color: #ffb74d;
+      }
+
+      &.density--abundant {
+        background: rgba(244, 67, 54, 0.2);
+        color: #ef5350;
+      }
+    }
   }
+}
+
+.spawn-info {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-sm;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.spawn-range {
+  font-weight: 600;
+  font-size: $font-size-lg;
+  color: $color-text;
+}
+
+.spawn-hint {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+}
+
+.override-label {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  cursor: pointer;
+  margin-bottom: $spacing-sm;
 }
 
 .form-section {

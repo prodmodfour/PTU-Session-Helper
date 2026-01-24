@@ -5,7 +5,8 @@ import type {
   TableModification,
   ModificationEntry,
   LevelRange,
-  ResolvedTableEntry
+  ResolvedTableEntry,
+  DensityTier
 } from '~/types'
 
 interface EncounterTablesState {
@@ -166,6 +167,7 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
       description?: string
       imageUrl?: string
       levelRange?: LevelRange
+      density?: DensityTier
     }): Promise<EncounterTable> {
       try {
         const response = await $fetch<{ data: EncounterTable }>('/api/encounter-tables', {
@@ -186,6 +188,7 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
       description?: string
       imageUrl?: string
       levelRange?: LevelRange
+      density?: DensityTier
     }): Promise<EncounterTable> {
       try {
         const response = await $fetch<{ data: EncounterTable }>(`/api/encounter-tables/${id}`, {
@@ -298,6 +301,7 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
       name: string
       description?: string
       levelRange?: LevelRange
+      densityMultiplier?: number
     }): Promise<TableModification> {
       try {
         const response = await $fetch<{ data: TableModification }>(`/api/encounter-tables/${tableId}/modifications`, {
@@ -321,6 +325,7 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
       name?: string
       description?: string
       levelRange?: LevelRange
+      densityMultiplier?: number
     }): Promise<TableModification> {
       try {
         const response = await $fetch<{ data: TableModification }>(`/api/encounter-tables/${tableId}/modifications/${modId}`, {
@@ -418,6 +423,9 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
         tableName: string
         modificationId: string | null
         levelRange: LevelRange
+        density: DensityTier
+        densityMultiplier: number
+        spawnCount: number
         totalPoolSize: number
         totalWeight: number
       }
@@ -437,6 +445,9 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
               tableName: string
               modificationId: string | null
               levelRange: LevelRange
+              density: DensityTier
+              densityMultiplier: number
+              spawnCount: number
               totalPoolSize: number
               totalWeight: number
             }
@@ -444,7 +455,7 @@ export const useEncounterTablesStore = defineStore('encounterTables', {
         }>(`/api/encounter-tables/${tableId}/generate`, {
           method: 'POST',
           body: {
-            count: options?.count ?? 1,
+            count: options?.count,
             modificationId: options?.modificationId,
             levelRange: options?.levelRange
           }

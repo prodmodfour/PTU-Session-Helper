@@ -48,6 +48,7 @@ export default defineEventHandler(async (event) => {
         min: modification.levelMin,
         max: modification.levelMax
       } : undefined,
+      densityMultiplier: modification.densityMultiplier,
       entries: modification.entries.map(e => ({
         id: e.id,
         speciesName: e.speciesName,

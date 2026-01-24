@@ -43,6 +43,7 @@ export default defineEventHandler(async (event) => {
         min: table.levelMin,
         max: table.levelMax
       },
+      density: table.density,
       entries: table.entries.map(entry => ({
         id: entry.id,
         speciesId: entry.speciesId,
@@ -61,6 +62,7 @@ export default defineEventHandler(async (event) => {
           min: mod.levelMin,
           max: mod.levelMax
         } : undefined,
+        densityMultiplier: mod.densityMultiplier,
         entries: mod.entries.map(e => ({
           id: e.id,
           speciesName: e.speciesName,

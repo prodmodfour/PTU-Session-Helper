@@ -501,6 +501,16 @@ export const RARITY_WEIGHTS: Record<RarityPreset, number> = {
   'legendary': 0.1,
 };
 
+// Population density tiers for encounter tables
+export type DensityTier = 'sparse' | 'moderate' | 'dense' | 'abundant';
+
+export const DENSITY_RANGES: Record<DensityTier, { min: number; max: number }> = {
+  sparse: { min: 1, max: 2 },
+  moderate: { min: 2, max: 4 },
+  dense: { min: 4, max: 6 },
+  abundant: { min: 6, max: 8 },
+};
+
 // Level range for encounter generation
 export interface LevelRange {
   min: number;
@@ -523,6 +533,7 @@ export interface EncounterTable {
   description?: string;
   imageUrl?: string;
   levelRange: LevelRange;
+  density: DensityTier;
   entries: EncounterTableEntry[];
   modifications: TableModification[];
   createdAt: Date;
@@ -545,6 +556,7 @@ export interface TableModification {
   description?: string;
   parentTableId: string;
   levelRange?: LevelRange; // Override parent if set
+  densityMultiplier: number; // Scales parent density (0.5 = half, 2.0 = double)
   entries: ModificationEntry[];
   createdAt: Date;
   updatedAt: Date;
@@ -618,7 +630,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 export interface WildEncounterOptions {
   tableId: string;
   modificationId?: string;  // Optional sub-habitat
-  count: number;            // Number of Pokemon to generate
+  count?: number;           // Optional override - if not set, uses density-based calculation
   levelRange?: LevelRange;  // Override table default
   allowDuplicates: boolean;
 }

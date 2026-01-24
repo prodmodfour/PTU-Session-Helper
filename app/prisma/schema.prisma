@@ -257,6 +257,9 @@ model EncounterTable {
   levelMin      Int      @default(1)
   levelMax      Int      @default(10)
 
+  // Population density tier (sparse, moderate, dense, abundant)
+  density       String   @default("moderate")
+
   // Entries (Pokemon in this table)
   entries       EncounterTableEntry[]
 
@@ -303,6 +306,9 @@ model TableModification {
   // Optional level range override
   levelMin      Int?
   levelMax      Int?
+
+  // Density multiplier - scales parent table's density (0.5 = half, 2.0 = double)
+  densityMultiplier Float @default(1.0)
 
   // Modification entries
   entries       ModificationEntry[]
