@@ -23,6 +23,7 @@
         :src="avatarUrl"
         :alt="displayName"
         class="vtt-token__sprite"
+        @error="handleSpriteError($event)"
       />
       <span v-else class="vtt-token__initial">{{ initial }}</span>
     </div>
@@ -62,6 +63,8 @@ interface TokenData {
   position: { x: number; y: number }
   size: number
 }
+
+const { getSpriteUrl } = usePokemonSprite()
 
 const props = defineProps<{
   token: TokenData
@@ -117,7 +120,9 @@ const level = computed(() => {
 const avatarUrl = computed(() => {
   if (!entity.value) return null
   if (isPokemon.value) {
-    return (entity.value as Pokemon).spriteUrl
+    const pokemon = entity.value as Pokemon
+    // Use usePokemonSprite to get the sprite URL based on species
+    return getSpriteUrl(pokemon.species, pokemon.shiny)
   }
   return (entity.value as HumanCharacter).avatarUrl
 })
@@ -146,6 +151,11 @@ const hpColorClass = computed(() => {
 })
 
 // Methods
+const handleSpriteError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/images/pokemon-placeholder.svg'
+}
+
 const handleClick = (event: MouseEvent) => {
   emit('select', props.token.combatantId, event)
 }
