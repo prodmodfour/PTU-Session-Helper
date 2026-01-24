@@ -3,7 +3,10 @@
     class="combatant-card"
     :class="{
       'combatant-card--current': isCurrent,
-      'combatant-card--fainted': isFainted
+      'combatant-card--fainted': isFainted,
+      'combatant-card--player': combatant.side === 'players',
+      'combatant-card--ally': combatant.side === 'allies',
+      'combatant-card--enemy': combatant.side === 'enemies'
     }"
   >
     <!-- Sprite/Avatar -->
@@ -500,10 +503,23 @@ const handleActClick = () => {
   border-radius: $border-radius-lg;
   transition: all $transition-normal;
 
-  &--current {
-    border-color: $color-accent-scarlet;
-    background: linear-gradient(135deg, rgba($color-accent-scarlet, 0.15) 0%, rgba($color-accent-violet, 0.1) 100%);
-    box-shadow: $shadow-glow-scarlet;
+  // Current turn highlight - color based on side
+  &--current.combatant-card--player {
+    border-color: $color-side-player;
+    background: linear-gradient(135deg, rgba($color-side-player, 0.15) 0%, rgba($color-side-player, 0.05) 100%);
+    box-shadow: 0 0 20px rgba($color-side-player, 0.3);
+  }
+
+  &--current.combatant-card--ally {
+    border-color: $color-side-ally;
+    background: linear-gradient(135deg, rgba($color-side-ally, 0.15) 0%, rgba($color-side-ally, 0.05) 100%);
+    box-shadow: 0 0 20px rgba($color-side-ally, 0.3);
+  }
+
+  &--current.combatant-card--enemy {
+    border-color: $color-side-enemy;
+    background: linear-gradient(135deg, rgba($color-side-enemy, 0.15) 0%, rgba($color-side-enemy, 0.05) 100%);
+    box-shadow: 0 0 20px rgba($color-side-enemy, 0.3);
   }
 
   &--fainted {
