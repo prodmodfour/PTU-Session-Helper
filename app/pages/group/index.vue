@@ -1,10 +1,13 @@
 <template>
   <div class="group-view">
-    <!-- Wild Spawn Overlay -->
-    <WildSpawnOverlay :wild-spawn="wildSpawnPreview" />
+    <!-- Map Overlay (takes priority over everything) -->
+    <MapOverlay v-if="servedMap" :map="servedMap" :fullscreen="true" />
 
-    <!-- No Served Encounter - Show Players and Teams -->
-    <div v-if="!encounter || !encounter.isServed" class="group-view__lobby">
+    <!-- Wild Spawn Overlay -->
+    <WildSpawnOverlay v-else :wild-spawn="wildSpawnPreview" />
+
+    <!-- No Served Encounter - Show Players and Teams (hide when map is served) -->
+    <div v-if="!servedMap && (!encounter || !encounter.isServed)" class="group-view__lobby">
       <header class="lobby-header">
         <h1>PTU Session Helper</h1>
       </header>
@@ -391,11 +394,20 @@ const { loadTerrainState } = useTerrainPersistence()
 // Poll for served encounters and wild spawn
 let pollInterval: ReturnType<typeof setInterval> | null = null
 let wildSpawnPollInterval: ReturnType<typeof setInterval> | null = null
+let mapPollInterval: ReturnType<typeof setInterval> | null = null
 
 // Poll for wild spawn preview
 const checkForWildSpawn = async () => {
   await groupViewStore.fetchWildSpawnPreview()
 }
+
+// Poll for served map
+const checkForServedMap = async () => {
+  await groupViewStore.fetchServedMap()
+}
+
+// Served map computed
+const servedMap = computed(() => groupViewStore.servedMap)
 
 // Load VTT state (fog, terrain) for a specific encounter
 const loadVttState = async (encounterId: string) => {
@@ -449,6 +461,10 @@ onMounted(async () => {
   // Start polling for wild spawn preview (every 1 second for responsive TV display)
   await checkForWildSpawn()
   wildSpawnPollInterval = setInterval(checkForWildSpawn, 1000)
+
+  // Start polling for served map
+  await checkForServedMap()
+  mapPollInterval = setInterval(checkForServedMap, 1000)
 })
 
 // Cleanup on unmount
@@ -460,6 +476,10 @@ onUnmounted(() => {
   if (wildSpawnPollInterval) {
     clearInterval(wildSpawnPollInterval)
     wildSpawnPollInterval = null
+  }
+  if (mapPollInterval) {
+    clearInterval(mapPollInterval)
+    mapPollInterval = null
   }
 })
 

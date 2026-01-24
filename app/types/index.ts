@@ -439,8 +439,11 @@ export type WebSocketEvent =
   | { type: 'sync_request'; data: null }
   | { type: 'serve_encounter'; data: { encounterId: string; encounter?: Encounter } }
   | { type: 'encounter_served'; data: { encounterId: string; encounter: Encounter } }
-  | { type: 'encounter_unserved'; data: { encounterId: string } }
-  | { type: 'movement_preview'; data: MovementPreview | null };
+  | { type: 'encounter_unserved'; data: { encounterId?: string } }
+  | { type: 'movement_preview'; data: MovementPreview | null }
+  | { type: 'serve_map'; data: { id: string; name: string; locations: any[]; connections: any[]; timestamp: number } }
+  | { type: 'clear_map'; data: null }
+  | { type: 'clear_wild_spawn'; data: null };
 
 // Movement preview for broadcasting to group view
 export interface MovementPreview {

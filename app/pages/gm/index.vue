@@ -2,41 +2,43 @@
   <div class="gm-encounter">
     <!-- No Active Encounter -->
     <div v-if="!encounter" class="gm-encounter__empty">
-      <h2>No Active Encounter</h2>
-      <p>Start a new encounter or load an existing one.</p>
+      <div class="gm-encounter__new-section">
+        <h2>No Active Encounter</h2>
+        <p>Start a new encounter or load an existing one.</p>
 
-      <div class="gm-encounter__new">
-        <div class="form-group">
-          <label>Encounter Name</label>
-          <input
-            v-model="newEncounterName"
-            type="text"
-            class="form-input"
-            placeholder="Route 1 Wild Battle"
-          />
-        </div>
+        <div class="gm-encounter__new">
+          <div class="form-group">
+            <label>Encounter Name</label>
+            <input
+              v-model="newEncounterName"
+              type="text"
+              class="form-input"
+              placeholder="Route 1 Wild Battle"
+            />
+          </div>
 
-        <div class="form-group">
-          <label>Battle Type</label>
-          <select v-model="newBattleType" class="form-select">
-            <option value="trainer">Trainer Battle</option>
-            <option value="full_contact">Full Contact</option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label>Battle Type</label>
+            <select v-model="newBattleType" class="form-select">
+              <option value="trainer">Trainer Battle</option>
+              <option value="full_contact">Full Contact</option>
+            </select>
+          </div>
 
-        <button class="btn btn--primary" @click="createNewEncounter">
-          Start New Encounter
-        </button>
-
-        <div class="template-options">
-          <span class="template-divider">or</span>
-          <button class="btn btn--secondary btn--with-icon" @click="showLoadTemplateModal = true">
-            <img src="/icons/phosphor/folder-open.svg" alt="" class="btn-svg" />
-            Load from Template
+          <button class="btn btn--primary" @click="createNewEncounter">
+            Start New Encounter
           </button>
-          <NuxtLink to="/gm/encounters" class="btn btn--ghost">
-            Browse Library
-          </NuxtLink>
+
+          <div class="template-options">
+            <span class="template-divider">or</span>
+            <button class="btn btn--secondary btn--with-icon" @click="showLoadTemplateModal = true">
+              <img src="/icons/phosphor/folder-open.svg" alt="" class="btn-svg" />
+              Load from Template
+            </button>
+            <NuxtLink to="/gm/encounters" class="btn btn--ghost">
+              Browse Library
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </div>
@@ -207,7 +209,7 @@
         </div>
 
         <!-- Combatants Panel (List View) -->
-        <div v-else class="combatants-panel">
+        <div v-if="activeView === 'list'" class="combatants-panel">
           <!-- Current Turn Indicator -->
           <div
             v-if="currentCombatant && encounter.isActive"
@@ -1402,6 +1404,26 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
 
 .grid-view-panel {
   grid-column: 1 / -1;
+}
+
+.map-view-panel {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.gm-encounter__new-section {
+  text-align: center;
+
+  h2 {
+    margin-bottom: $spacing-sm;
+  }
+
+  p {
+    color: $color-text-muted;
+    margin-bottom: $spacing-xl;
+  }
 }
 
 .modal-backdrop {

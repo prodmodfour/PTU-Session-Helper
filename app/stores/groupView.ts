@@ -11,15 +11,38 @@ export interface WildSpawnPreview {
   timestamp: number
 }
 
+export interface ServedMap {
+  id: string
+  name: string
+  locations: Array<{
+    id: string
+    name: string
+    type: 'town' | 'forest' | 'castle' | 'path' | 'river' | 'landmark'
+    description?: string
+    x: number
+    y: number
+    highlighted?: boolean
+  }>
+  connections: Array<{
+    from: string
+    to: string
+    label?: string
+    type: 'road' | 'path' | 'river' | 'aqueduct'
+  }>
+  timestamp: number
+}
+
 export const useGroupViewStore = defineStore('groupView', {
   state: () => ({
     wildSpawnPreview: null as WildSpawnPreview | null,
+    servedMap: null as ServedMap | null,
     loading: false,
     error: null as string | null
   }),
 
   getters: {
-    hasWildSpawn: (state) => state.wildSpawnPreview !== null
+    hasWildSpawn: (state) => state.wildSpawnPreview !== null,
+    hasMap: (state) => state.servedMap !== null
   },
 
   actions: {
@@ -78,6 +101,56 @@ export const useGroupViewStore = defineStore('groupView', {
 
     setWildSpawnPreview(preview: WildSpawnPreview | null) {
       this.wildSpawnPreview = preview
+    },
+
+    // Map actions
+    async fetchServedMap() {
+      try {
+        const response = await $fetch<{ success: boolean; data: ServedMap | null }>(
+          '/api/group/map'
+        )
+        if (response.success) {
+          this.servedMap = response.data
+        }
+        return response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to fetch served map'
+        return null
+      }
+    },
+
+    async serveMap(map: Omit<ServedMap, 'timestamp'>) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await $fetch<{ success: boolean }>('/api/group/map', {
+          method: 'POST',
+          body: map
+        })
+        if (response.success) {
+          this.servedMap = { ...map, timestamp: Date.now() }
+        }
+        return response.success
+      } catch (e: any) {
+        this.error = e.message || 'Failed to serve map'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async clearServedMap() {
+      try {
+        await $fetch('/api/group/map', { method: 'DELETE' })
+        this.servedMap = null
+      } catch (e: any) {
+        this.error = e.message || 'Failed to clear map'
+        throw e
+      }
+    },
+
+    setServedMap(map: ServedMap | null) {
+      this.servedMap = map
     }
   }
 })

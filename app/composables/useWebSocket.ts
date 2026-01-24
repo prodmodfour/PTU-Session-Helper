@@ -1,8 +1,11 @@
 import type { WebSocketEvent, Encounter, Pokemon, HumanCharacter, MoveLogEntry, MovementPreview } from '~/types'
 
+// Lazy getters for stores to avoid initialization issues
+const getEncounterStore = () => useEncounterStore()
+const getLibraryStore = () => useLibraryStore()
+const getGroupViewStore = () => useGroupViewStore()
+
 export function useWebSocket() {
-  const encounterStore = useEncounterStore()
-  const libraryStore = useLibraryStore()
 
   let ws: WebSocket | null = null
   const isConnected = ref(false)
@@ -73,23 +76,25 @@ export function useWebSocket() {
     switch (message.type) {
       case 'encounter_update':
         console.log('[WebSocket] Updating encounter from WebSocket')
-        encounterStore.updateFromWebSocket(message.data)
+        getEncounterStore().updateFromWebSocket(message.data)
         break
 
       case 'character_update':
         if ('species' in message.data) {
           // It's a Pokemon
           const pokemon = message.data as Pokemon
-          const index = libraryStore.pokemon.findIndex(p => p.id === pokemon.id)
+          const store = getLibraryStore()
+          const index = store.pokemon.findIndex(p => p.id === pokemon.id)
           if (index !== -1) {
-            libraryStore.pokemon[index] = pokemon
+            store.pokemon[index] = pokemon
           }
         } else {
           // It's a Human
           const human = message.data as HumanCharacter
-          const index = libraryStore.humans.findIndex(h => h.id === human.id)
+          const store = getLibraryStore()
+          const index = store.humans.findIndex(h => h.id === human.id)
           if (index !== -1) {
-            libraryStore.humans[index] = human
+            store.humans[index] = human
           }
         }
         break
@@ -109,17 +114,35 @@ export function useWebSocket() {
 
       case 'encounter_served':
         // An encounter was served by the GM
-        encounterStore.updateFromWebSocket(message.data.encounter)
+        getEncounterStore().updateFromWebSocket(message.data.encounter)
         break
 
       case 'encounter_unserved':
         // An encounter was unserved by the GM
-        encounterStore.clearEncounter()
+        getEncounterStore().clearEncounter()
         break
 
       case 'movement_preview':
         // GM is previewing a move, show it on group view
         movementPreview.value = message.data
+        break
+
+      case 'serve_map':
+        // GM served a map to the group view
+        console.log('[WebSocket] Map served:', message.data)
+        getGroupViewStore().setServedMap(message.data)
+        break
+
+      case 'clear_map':
+        // GM cleared the map from group view
+        console.log('[WebSocket] Map cleared')
+        getGroupViewStore().setServedMap(null)
+        break
+
+      case 'clear_wild_spawn':
+        // Clear wild spawn preview
+        console.log('[WebSocket] Wild spawn cleared')
+        getGroupViewStore().setWildSpawnPreview(null)
         break
     }
   }

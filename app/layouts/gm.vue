@@ -32,6 +32,10 @@
           <img src="/icons/ui/create.svg" alt="" class="gm-nav-link__icon" />
           <span>Create</span>
         </NuxtLink>
+        <NuxtLink to="/gm/map" class="gm-nav-link" active-class="gm-nav-link--active">
+          <img src="/icons/phosphor/target.svg" alt="" class="gm-nav-link__icon" />
+          <span>Map</span>
+        </NuxtLink>
       </nav>
 
       <div class="gm-header__actions">
