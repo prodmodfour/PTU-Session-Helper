@@ -1,5 +1,8 @@
 <template>
   <div class="group-view">
+    <!-- Wild Spawn Overlay -->
+    <WildSpawnOverlay :wild-spawn="wildSpawnPreview" />
+
     <!-- No Served Encounter - Show Players and Teams -->
     <div v-if="!encounter || !encounter.isServed" class="group-view__lobby">
       <header class="lobby-header">
@@ -359,7 +362,11 @@ useHead({
 const encounterStore = useEncounterStore()
 const fogOfWarStore = useFogOfWarStore()
 const terrainStore = useTerrainStore()
+const groupViewStore = useGroupViewStore()
 const { isConnected, identify, joinEncounter, movementPreview } = useWebSocket()
+
+// Wild spawn preview from store
+const wildSpawnPreview = computed(() => groupViewStore.wildSpawnPreview)
 
 // Players data for lobby view
 const players = ref<Player[]>([])
@@ -381,8 +388,14 @@ const { loadFogState } = useFogPersistence()
 const { loadTerrainState } = useTerrainPersistence()
 
 
-// Poll for served encounters
+// Poll for served encounters and wild spawn
 let pollInterval: ReturnType<typeof setInterval> | null = null
+let wildSpawnPollInterval: ReturnType<typeof setInterval> | null = null
+
+// Poll for wild spawn preview
+const checkForWildSpawn = async () => {
+  await groupViewStore.fetchWildSpawnPreview()
+}
 
 // Load VTT state (fog, terrain) for a specific encounter
 const loadVttState = async (encounterId: string) => {
@@ -429,6 +442,10 @@ onMounted(async () => {
   if (!encounterStore.encounter?.isServed) {
     pollInterval = setInterval(checkForServedEncounter, 2000)
   }
+
+  // Start polling for wild spawn preview (every 1 second for responsive TV display)
+  await checkForWildSpawn()
+  wildSpawnPollInterval = setInterval(checkForWildSpawn, 1000)
 })
 
 // Cleanup on unmount
@@ -436,6 +453,10 @@ onUnmounted(() => {
   if (pollInterval) {
     clearInterval(pollInterval)
     pollInterval = null
+  }
+  if (wildSpawnPollInterval) {
+    clearInterval(wildSpawnPollInterval)
+    wildSpawnPollInterval = null
   }
 })
 

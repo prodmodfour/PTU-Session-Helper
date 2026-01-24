@@ -165,6 +165,15 @@
         </button>
         <button
           v-if="generatedPokemon.length > 0"
+          class="btn btn--accent"
+          :disabled="servingToTv"
+          @click="serveToGroup"
+          data-testid="show-on-tv-btn"
+        >
+          {{ servingToTv ? 'Sending...' : 'Show on TV' }}
+        </button>
+        <button
+          v-if="generatedPokemon.length > 0"
           class="btn btn--success"
           :disabled="addingToEncounter || !hasActiveEncounter"
           :title="!hasActiveEncounter ? 'No active encounter' : ''"
@@ -195,8 +204,10 @@ const emit = defineEmits<{
 }>()
 
 const encounterTablesStore = useEncounterTablesStore()
+const groupViewStore = useGroupViewStore()
 
 // State
+const servingToTv = ref(false)
 const count = ref(2)
 const overrideCount = ref(false)
 const selectedModification = ref('')
@@ -300,11 +311,33 @@ const generate = async () => {
 }
 
 const addToEncounter = () => {
+  // Clear TV display when adding to encounter
+  groupViewStore.clearWildSpawnPreview()
   emit('addToEncounter', generatedPokemon.value.map(p => ({
     speciesId: p.speciesId,
     speciesName: p.speciesName,
     level: p.level
   })))
+}
+
+const serveToGroup = async () => {
+  if (generatedPokemon.value.length === 0) return
+
+  servingToTv.value = true
+  try {
+    await groupViewStore.serveWildSpawn(
+      generatedPokemon.value.map(p => ({
+        speciesId: p.speciesId,
+        speciesName: p.speciesName,
+        level: p.level
+      })),
+      props.table.name
+    )
+  } catch (error) {
+    console.error('Failed to serve to TV:', error)
+  } finally {
+    servingToTv.value = false
+  }
 }
 
 // Update level range when table changes

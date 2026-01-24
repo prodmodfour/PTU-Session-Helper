@@ -147,6 +147,18 @@ a {
     }
   }
 
+  // Accent button (violet/teal for TV display actions)
+  &--accent {
+    background: linear-gradient(135deg, $color-accent-violet 0%, $color-accent-teal 100%);
+    color: $color-text;
+    box-shadow: $shadow-md;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg, 0 0 20px rgba($color-accent-violet, 0.4);
+    }
+  }
+
   // Size variants
   &--sm {
     padding: $spacing-xs $spacing-md;
