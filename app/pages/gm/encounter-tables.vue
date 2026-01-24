@@ -224,10 +224,6 @@
             {{ addToEncounterError }}
           </div>
 
-          <!-- No active encounter hint -->
-          <div v-if="generateModal.results.length > 0 && !encounterStore.encounter" class="no-encounter-hint">
-            <img src="/icons/phosphor/lightbulb.svg" alt="" class="hint-icon" /> No active encounter. <NuxtLink to="/gm" class="hint-link">Go to GM page</NuxtLink> to create one first.
-          </div>
         </div>
         <div class="modal__footer">
           <button type="button" class="btn btn--secondary" @click="generateModal.show = false">
@@ -244,10 +240,10 @@
             v-if="generateModal.results.length > 0"
             type="button"
             class="btn btn--success"
-            :disabled="addingToEncounter || !encounterStore.encounter"
-            @click="addToEncounter"
+            :disabled="addingToEncounter"
+            @click="addToEncounter()"
           >
-            {{ addingToEncounter ? 'Adding...' : 'Add to Encounter' }}
+            {{ addingToEncounter ? 'Adding...' : encounterStore.encounter ? 'Add to Encounter' : 'New Encounter' }}
           </button>
         </div>
       </div>
@@ -471,14 +467,16 @@ const rerollPokemon = async (index: number) => {
 const addingToEncounter = ref(false)
 const addToEncounterError = ref<string | null>(null)
 
-const addToEncounter = async () => {
-  if (generateModal.value.results.length === 0) {
-    addToEncounterError.value = 'No Pokemon generated'
-    return
-  }
+const addToEncounter = async (pokemon?: Array<{ speciesId: string; speciesName: string; level: number }>) => {
+  // Use passed pokemon or fall back to modal results
+  const pokemonToAdd = pokemon || generateModal.value.results.map(p => ({
+    speciesId: p.speciesId || '',
+    speciesName: p.speciesName,
+    level: p.level
+  }))
 
-  if (!encounterStore.encounter) {
-    addToEncounterError.value = 'No active encounter. Please create or load an encounter first from the GM page.'
+  if (pokemonToAdd.length === 0) {
+    addToEncounterError.value = 'No Pokemon to add'
     return
   }
 
@@ -486,13 +484,13 @@ const addToEncounter = async () => {
   addToEncounterError.value = null
 
   try {
-    const pokemonToAdd = generateModal.value.results.map(p => ({
-      speciesId: p.speciesId || '',
-      speciesName: p.speciesName,
-      level: p.level
-    }))
+    // Create a new encounter if none exists
+    if (!encounterStore.encounter) {
+      const tableName = generateModal.value.table?.name || 'Wild Encounter'
+      await encounterStore.createEncounter(tableName, 'trainer')
+    }
 
-    const created = await encounterStore.addWildPokemon(pokemonToAdd, 'enemies')
+    await encounterStore.addWildPokemon(pokemonToAdd, 'enemies')
 
     // Success - close modal and show confirmation
     generateModal.value.show = false

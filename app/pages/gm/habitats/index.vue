@@ -183,18 +183,18 @@ const generateFromTable = (table: EncounterTable) => {
 }
 
 const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesName: string; level: number }>) => {
-  if (!encounterStore.encounter) {
-    addError.value = 'No active encounter. Create or load an encounter first.'
-    return
-  }
-
   addingToEncounter.value = true
   addError.value = null
 
   try {
+    // Create a new encounter if none exists
+    if (!encounterStore.encounter) {
+      const tableName = generatingFromTable.value?.name || 'Wild Encounter'
+      await encounterStore.createEncounter(tableName, 'trainer')
+    }
+
     const added = await encounterStore.addWildPokemon(pokemon, 'enemies')
     generatingFromTable.value = null
-    // Show success message (could add a toast notification)
     console.log(`Added ${added.length} wild Pokemon to encounter`)
   } catch (e: any) {
     addError.value = e.message || 'Failed to add Pokemon to encounter'

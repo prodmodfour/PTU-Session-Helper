@@ -205,12 +205,11 @@
         <button
           v-if="generatedPokemon.length > 0"
           class="btn btn--success"
-          :disabled="addingToEncounter || !hasActiveEncounter"
-          :title="!hasActiveEncounter ? 'No active encounter' : ''"
+          :disabled="addingToEncounter"
           @click="addToEncounter"
           data-testid="add-to-encounter-btn"
         >
-          {{ addingToEncounter ? 'Adding...' : hasActiveEncounter ? `Add to Encounter${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` : 'No Active Encounter' }}
+          {{ addingToEncounter ? 'Adding...' : `${hasActiveEncounter ? 'Add to' : 'New'} Encounter${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` }}
         </button>
       </div>
     </div>
