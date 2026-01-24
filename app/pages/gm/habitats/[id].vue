@@ -695,11 +695,9 @@ const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesN
   addError.value = null
 
   try {
-    // Create a new encounter if none exists
-    if (!encounterStore.encounter) {
-      const tableName = table.value?.name || 'Wild Encounter'
-      await encounterStore.createEncounter(tableName, 'trainer')
-    }
+    // Always create a fresh encounter
+    const tableName = table.value?.name || 'Wild Encounter'
+    await encounterStore.createEncounter(tableName, 'trainer')
 
     await encounterStore.addWildPokemon(pokemon, 'enemies')
     showGenerateModal.value = false

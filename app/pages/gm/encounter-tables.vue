@@ -243,7 +243,7 @@
             :disabled="addingToEncounter"
             @click="addToEncounter()"
           >
-            {{ addingToEncounter ? 'Adding...' : encounterStore.encounter ? 'Add to Encounter' : 'New Encounter' }}
+            {{ addingToEncounter ? 'Creating...' : 'New Encounter' }}
           </button>
         </div>
       </div>
@@ -484,11 +484,9 @@ const addToEncounter = async (pokemon?: Array<{ speciesId: string; speciesName: 
   addToEncounterError.value = null
 
   try {
-    // Create a new encounter if none exists
-    if (!encounterStore.encounter) {
-      const tableName = generateModal.value.table?.name || 'Wild Encounter'
-      await encounterStore.createEncounter(tableName, 'trainer')
-    }
+    // Always create a fresh encounter
+    const tableName = generateModal.value.table?.name || 'Wild Encounter'
+    await encounterStore.createEncounter(tableName, 'trainer')
 
     await encounterStore.addWildPokemon(pokemonToAdd, 'enemies')
 

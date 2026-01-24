@@ -209,7 +209,7 @@
           @click="addToEncounter"
           data-testid="add-to-encounter-btn"
         >
-          {{ addingToEncounter ? 'Adding...' : `${hasActiveEncounter ? 'Add to' : 'New'} Encounter${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` }}
+          {{ addingToEncounter ? 'Creating...' : `New Encounter${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` }}
         </button>
       </div>
     </div>
