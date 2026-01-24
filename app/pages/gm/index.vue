@@ -377,7 +377,7 @@
         v-if="actionModalCombatant && encounter"
         :combatant="actionModalCombatant"
         :all-combatants="encounter.combatants"
-        @close="actionModalCombatant = null"
+        @close="actionModalCombatantId = null"
         @execute-move="handleExecuteMove"
         @execute-action="handleExecuteAction"
         @update-status="handleStatus"
@@ -527,8 +527,12 @@ const showLoadTemplateModal = ref(false)
 // Keyboard shortcuts help
 const showShortcutsHelp = ref(false)
 
-// GM Action Modal state
-const actionModalCombatant = ref<Combatant | null>(null)
+// GM Action Modal state - store ID only, compute fresh combatant from store
+const actionModalCombatantId = ref<string | null>(null)
+const actionModalCombatant = computed(() => {
+  if (!actionModalCombatantId.value || !encounter.value) return null
+  return encounter.value.combatants.find(c => c.id === actionModalCombatantId.value) || null
+})
 
 // Computed from store
 const encounter = computed(() => encounterStore.encounter)
@@ -765,10 +769,7 @@ const handleStatus = async (combatantId: string, add: StatusCondition[], remove:
 
 // GM Action Modal handlers
 const handleOpenActions = (combatantId: string) => {
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  if (combatant) {
-    actionModalCombatant.value = combatant
-  }
+  actionModalCombatantId.value = combatantId
 }
 
 const handleExecuteMove = async (combatantId: string, moveId: string, targetIds: string[], damage?: number) => {
@@ -788,7 +789,7 @@ const handleExecuteMove = async (combatantId: string, moveId: string, targetIds:
     send({ type: 'encounter_update', data: encounterStore.encounter })
   }
 
-  actionModalCombatant.value = null
+  actionModalCombatantId.value = null
 }
 
 // Maneuver name mapping
