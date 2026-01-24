@@ -616,7 +616,7 @@ export interface AppSettings {
 
 // Default settings
 export const DEFAULT_SETTINGS: AppSettings = {
-  damageMode: 'set',
+  damageMode: 'rolled',
   defaultGridWidth: 20,
   defaultGridHeight: 15,
   defaultCellSize: 40,
