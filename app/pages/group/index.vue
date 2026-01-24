@@ -51,7 +51,16 @@
               <div v-else class="initiative-entry__avatar">
                 {{ getCombatantName(combatant).charAt(0) }}
               </div>
-              <span class="initiative-entry__name">{{ getCombatantName(combatant) }}</span>
+              <div class="initiative-entry__info">
+                <span class="initiative-entry__name">{{ getCombatantName(combatant) }}</span>
+                <div class="initiative-entry__health-bar">
+                  <div
+                    class="initiative-entry__health-fill"
+                    :style="{ width: getHpPercentage(combatant) + '%' }"
+                    :class="getHpClass(combatant)"
+                  ></div>
+                </div>
+              </div>
               <span class="initiative-entry__init">{{ combatant.initiative }}</span>
             </div>
           </div>
@@ -189,6 +198,19 @@ const getCombatantName = (combatant: Combatant): string => {
     const human = combatant.entity as HumanCharacter
     return human.name
   }
+}
+
+const getHpPercentage = (combatant: Combatant): number => {
+  const { currentHp, maxHp } = combatant.entity
+  if (!maxHp || maxHp <= 0) return 100
+  return Math.max(0, Math.min(100, (currentHp / maxHp) * 100))
+}
+
+const getHpClass = (combatant: Combatant): string => {
+  const percentage = getHpPercentage(combatant)
+  if (percentage <= 25) return 'health--critical'
+  if (percentage <= 50) return 'health--low'
+  return 'health--good'
 }
 </script>
 
@@ -491,8 +513,15 @@ const getCombatantName = (combatant: Combatant): string => {
     }
   }
 
-  &__name {
+  &__info {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0; // Allow text truncation
+  }
+
+  &__name {
     font-size: $font-size-sm;
     font-weight: 500;
     color: $color-text;
@@ -503,6 +532,43 @@ const getCombatantName = (combatant: Combatant): string => {
     // 4K optimization
     @media (min-width: 3000px) {
       font-size: $font-size-md;
+    }
+  }
+
+  &__health-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba($color-bg-tertiary, 0.8);
+    border-radius: 2px;
+    overflow: hidden;
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      height: 6px;
+      border-radius: 3px;
+    }
+  }
+
+  &__health-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+
+    &.health--good {
+      background: linear-gradient(90deg, $color-success 0%, lighten($color-success, 10%) 100%);
+    }
+
+    &.health--low {
+      background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+    }
+
+    &.health--critical {
+      background: linear-gradient(90deg, $color-danger 0%, lighten($color-danger, 10%) 100%);
+    }
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      border-radius: 3px;
     }
   }
 
