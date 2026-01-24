@@ -439,7 +439,17 @@ export type WebSocketEvent =
   | { type: 'sync_request'; data: null }
   | { type: 'serve_encounter'; data: { encounterId: string; encounter?: Encounter } }
   | { type: 'encounter_served'; data: { encounterId: string; encounter: Encounter } }
-  | { type: 'encounter_unserved'; data: { encounterId: string } };
+  | { type: 'encounter_unserved'; data: { encounterId: string } }
+  | { type: 'movement_preview'; data: MovementPreview | null };
+
+// Movement preview for broadcasting to group view
+export interface MovementPreview {
+  combatantId: string;
+  fromPosition: GridPosition;
+  toPosition: GridPosition;
+  distance: number;
+  isValid: boolean;
+}
 
 // Encounter history snapshot for undo/redo
 export interface EncounterSnapshot {

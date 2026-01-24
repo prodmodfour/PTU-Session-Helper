@@ -202,6 +202,7 @@
             @token-move="handleTokenMove"
             @background-upload="handleBackgroundUpload"
             @background-remove="handleBackgroundRemove"
+            @movement-preview-change="handleMovementPreviewChange"
           />
         </div>
 
@@ -369,7 +370,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition, HumanCharacter, Pokemon } from '~/types'
+import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition, HumanCharacter, Pokemon, MovementPreview } from '~/types'
 
 definePageMeta({
   layout: 'gm'
@@ -724,6 +725,14 @@ const handleBackgroundRemove = async () => {
   } catch (error) {
     console.error('Failed to remove background:', error)
   }
+}
+
+// Broadcast movement preview to group view via WebSocket
+const handleMovementPreviewChange = (preview: MovementPreview | null) => {
+  send({
+    type: 'movement_preview',
+    data: preview
+  })
 }
 </script>
 

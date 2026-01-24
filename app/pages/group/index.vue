@@ -63,6 +63,7 @@
             :config="gridConfig"
             :combatants="encounter.combatants"
             :current-turn-id="currentCombatant?.id"
+            :movement-preview="movementPreview"
           />
         </div>
       </main>
@@ -86,7 +87,7 @@ useHead({
 const encounterStore = useEncounterStore()
 const fogOfWarStore = useFogOfWarStore()
 const terrainStore = useTerrainStore()
-const { isConnected, identify, joinEncounter } = useWebSocket()
+const { isConnected, identify, joinEncounter, movementPreview } = useWebSocket()
 
 // Persistence composables (read-only for group view)
 const { loadFogState } = useFogPersistence()

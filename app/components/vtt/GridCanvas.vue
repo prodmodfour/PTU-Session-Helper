@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GridConfig, GridPosition, Combatant, TerrainType } from '~/types'
+import type { GridConfig, GridPosition, Combatant, TerrainType, MovementPreview } from '~/types'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore } from '~/stores/measurement'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
@@ -107,6 +107,7 @@ const props = defineProps<{
   showCoordinates?: boolean
   showMovementRange?: boolean
   getMovementSpeed?: (combatantId: string) => number
+  externalMovementPreview?: MovementPreview | null
 }>()
 
 const emit = defineEmits<{
@@ -114,6 +115,7 @@ const emit = defineEmits<{
   tokenSelect: [combatantId: string | null]
   cellClick: [position: GridPosition]
   multiSelect: [combatantIds: string[]]
+  movementPreviewChange: [preview: MovementPreview | null]
 }>()
 
 // Selection Store
@@ -345,6 +347,11 @@ const render = () => {
   // Draw movement preview arrow when in move mode
   if (movingToken.value && hoveredCell.value) {
     drawMovementPreview(ctx)
+  }
+
+  // Draw external movement preview (from WebSocket, for group view)
+  if (props.externalMovementPreview && !props.isGm) {
+    drawExternalMovementPreview(ctx, props.externalMovementPreview)
   }
 
   // Draw measurement overlay
@@ -833,6 +840,78 @@ const drawMovementPreview = (ctx: CanvasRenderingContext2D) => {
   }
 }
 
+// Draw external movement preview received from WebSocket (for group view)
+const drawExternalMovementPreview = (ctx: CanvasRenderingContext2D, preview: MovementPreview) => {
+  const { cellSize } = props.config
+
+  // Find the token for sizing
+  const token = props.tokens.find(t => t.combatantId === preview.combatantId)
+  const tokenSize = token?.size || 1
+
+  // Token center
+  const startX = preview.fromPosition.x * cellSize + (tokenSize * cellSize) / 2
+  const startY = preview.fromPosition.y * cellSize + (tokenSize * cellSize) / 2
+
+  // Target center
+  const endX = preview.toPosition.x * cellSize + cellSize / 2
+  const endY = preview.toPosition.y * cellSize + cellSize / 2
+
+  // Choose color based on validity
+  const arrowColor = preview.isValid ? 'rgba(34, 211, 238, 0.8)' : 'rgba(239, 68, 68, 0.8)'
+  const bgColor = preview.isValid ? 'rgba(34, 211, 238, 0.2)' : 'rgba(239, 68, 68, 0.2)'
+
+  // Highlight target cell
+  if (preview.distance > 0) {
+    ctx.fillStyle = bgColor
+    ctx.fillRect(preview.toPosition.x * cellSize, preview.toPosition.y * cellSize, cellSize, cellSize)
+    ctx.strokeStyle = arrowColor
+    ctx.lineWidth = 2
+    ctx.strokeRect(preview.toPosition.x * cellSize + 1, preview.toPosition.y * cellSize + 1, cellSize - 2, cellSize - 2)
+
+    // Draw arrow line
+    ctx.strokeStyle = arrowColor
+    ctx.lineWidth = 3
+    ctx.setLineDash([8, 4])
+    ctx.beginPath()
+    ctx.moveTo(startX, startY)
+    ctx.lineTo(endX, endY)
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    // Draw arrowhead
+    const angle = Math.atan2(endY - startY, endX - startX)
+    const arrowSize = 12
+    ctx.fillStyle = arrowColor
+    ctx.beginPath()
+    ctx.moveTo(endX, endY)
+    ctx.lineTo(
+      endX - arrowSize * Math.cos(angle - Math.PI / 6),
+      endY - arrowSize * Math.sin(angle - Math.PI / 6)
+    )
+    ctx.lineTo(
+      endX - arrowSize * Math.cos(angle + Math.PI / 6),
+      endY - arrowSize * Math.sin(angle + Math.PI / 6)
+    )
+    ctx.closePath()
+    ctx.fill()
+
+    // Draw distance indicator
+    const distText = `${preview.distance}m`
+    ctx.font = 'bold 14px system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+
+    const labelX = endX
+    const labelY = preview.toPosition.y * cellSize - 12
+
+    const metrics = ctx.measureText(distText)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+    ctx.fillRect(labelX - metrics.width / 2 - 4, labelY - 10, metrics.width + 8, 20)
+    ctx.fillStyle = preview.isValid ? 'rgba(34, 211, 238, 1)' : 'rgba(239, 68, 68, 1)'
+    ctx.fillText(distText, labelX, labelY)
+  }
+}
+
 const screenToGrid = (screenX: number, screenY: number): GridPosition => {
   const container = containerRef.value
   if (!container) return { x: -1, y: -1 }
@@ -942,13 +1021,15 @@ const handleMouseDown = (event: MouseEvent) => {
             gridPos.y >= 0 && gridPos.y < props.config.height) {
           // Emit the move
           emit('tokenMove', movingTokenId.value, gridPos)
-          // Exit move mode
+          // Exit move mode and clear preview
+          emit('movementPreviewChange', null)
           movingTokenId.value = null
           moveTargetCell.value = null
           render()
           return
         } else if (distance === 0) {
           // Clicked on same cell, cancel move mode
+          emit('movementPreviewChange', null)
           movingTokenId.value = null
           moveTargetCell.value = null
           render()
@@ -960,6 +1041,9 @@ const handleMouseDown = (event: MouseEvent) => {
 
     // If clicking on empty space without move mode, cancel selection
     if (!clickedToken) {
+      if (movingTokenId.value && props.isGm) {
+        emit('movementPreviewChange', null)
+      }
       movingTokenId.value = null
       moveTargetCell.value = null
       selectedTokenId.value = null
@@ -1003,9 +1087,29 @@ const handleMouseMove = (event: MouseEvent) => {
     hoveredCell.value.y !== gridPos.y
   hoveredCell.value = gridPos
 
-  // Re-render for movement preview when in move mode
+  // Re-render for movement preview when in move mode and emit preview
   if (movingTokenId.value && cellChanged) {
     render()
+
+    // Emit movement preview for WebSocket broadcast (GM only)
+    if (props.isGm) {
+      const token = movingToken.value
+      if (token && gridPos.x >= 0 && gridPos.y >= 0) {
+        const distance = calculateMoveDistance(token.position, gridPos)
+        const speed = getSpeed(token.combatantId)
+        const blocked = getBlockedCells(token.combatantId)
+        const isBlocked = blocked.some(b => b.x === gridPos.x && b.y === gridPos.y)
+        const isValid = distance > 0 && distance <= speed && !isBlocked
+
+        emit('movementPreviewChange', {
+          combatantId: token.combatantId,
+          fromPosition: token.position,
+          toPosition: gridPos,
+          distance,
+          isValid
+        })
+      }
+    }
   }
 
   // Handle measurement mode
@@ -1101,12 +1205,14 @@ const handleTokenSelect = (combatantId: string, event?: MouseEvent) => {
   if (movingTokenId.value === combatantId) {
     movingTokenId.value = null
     moveTargetCell.value = null
+    if (props.isGm) emit('movementPreviewChange', null)
     render()
     return
   }
 
   // If in move mode and clicking a different token, switch to that token
   if (movingTokenId.value && movingTokenId.value !== combatantId) {
+    if (props.isGm) emit('movementPreviewChange', null)
     movingTokenId.value = combatantId
     selectedTokenId.value = combatantId
     emit('tokenSelect', combatantId)
@@ -1170,6 +1276,9 @@ const handleKeyDown = (event: KeyboardEvent) => {
     selectionStore.clearSelection()
     measurementStore.clearMeasurement()
     measurementStore.setMode('none')
+    if (movingTokenId.value) {
+      emit('movementPreviewChange', null)
+    }
     movingTokenId.value = null
     moveTargetCell.value = null
     selectedTokenId.value = null
@@ -1320,6 +1429,11 @@ watch(() => props.tokens, () => {
 watch(selectedTokenId, () => {
   render()
 })
+
+// Re-render when external movement preview changes (for group view)
+watch(() => props.externalMovementPreview, () => {
+  render()
+}, { deep: true })
 
 // Expose methods for parent
 defineExpose({

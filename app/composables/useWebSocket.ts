@@ -1,4 +1,4 @@
-import type { WebSocketEvent, Encounter, Pokemon, HumanCharacter, MoveLogEntry } from '~/types'
+import type { WebSocketEvent, Encounter, Pokemon, HumanCharacter, MoveLogEntry, MovementPreview } from '~/types'
 
 export function useWebSocket() {
   const encounterStore = useEncounterStore()
@@ -8,6 +8,7 @@ export function useWebSocket() {
   const isConnected = ref(false)
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 5
+  const movementPreview = ref<MovementPreview | null>(null)
 
   const connect = () => {
     if (ws?.readyState === WebSocket.OPEN) return
@@ -108,6 +109,11 @@ export function useWebSocket() {
         // An encounter was unserved by the GM
         encounterStore.clearEncounter()
         break
+
+      case 'movement_preview':
+        // GM is previewing a move, show it on group view
+        movementPreview.value = message.data
+        break
     }
   }
 
@@ -152,6 +158,7 @@ export function useWebSocket() {
 
   return {
     isConnected: readonly(isConnected),
+    movementPreview: readonly(movementPreview),
     connect,
     disconnect,
     send,

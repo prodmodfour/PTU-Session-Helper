@@ -14,13 +14,14 @@
         :is-gm="false"
         :show-zoom-controls="true"
         :show-coordinates="true"
+        :external-movement-preview="movementPreview"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { GridConfig, GridPosition, Combatant } from '~/types'
+import type { GridConfig, GridPosition, Combatant, MovementPreview } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
 
 interface TokenData {
@@ -33,6 +34,7 @@ const props = defineProps<{
   config: GridConfig
   combatants: Combatant[]
   currentTurnId?: string
+  movementPreview?: MovementPreview | null
 }>()
 
 // Refs

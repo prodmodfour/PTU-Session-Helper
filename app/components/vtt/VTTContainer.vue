@@ -323,6 +323,7 @@
         @token-select="handleTokenSelect"
         @cell-click="handleCellClick"
         @multi-select="handleMultiSelect"
+        @movement-preview-change="handleMovementPreviewChange"
       />
     </div>
 
@@ -353,7 +354,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GridConfig, GridPosition, Combatant, Pokemon, HumanCharacter } from '~/types'
+import type { GridConfig, GridPosition, Combatant, Pokemon, HumanCharacter, MovementPreview } from '~/types'
 import { DEFAULT_SETTINGS } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
 import { useSelectionStore } from '~/stores/selection'
@@ -381,6 +382,7 @@ const emit = defineEmits<{
   backgroundUpload: [file: File]
   backgroundRemove: []
   multiSelect: [combatantIds: string[]]
+  movementPreviewChange: [preview: MovementPreview | null]
 }>()
 
 // Stores
@@ -524,6 +526,10 @@ const handleCellClick = (position: GridPosition) => {
 
 const handleMultiSelect = (combatantIds: string[]) => {
   emit('multiSelect', combatantIds)
+}
+
+const handleMovementPreviewChange = (preview: MovementPreview | null) => {
+  emit('movementPreviewChange', preview)
 }
 
 // Measurement methods
