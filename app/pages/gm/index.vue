@@ -550,10 +550,31 @@ const createNewEncounter = async () => {
 
 const startEncounter = async () => {
   await encounterStore.startEncounter()
+  // Wait for Vue reactivity to process the store update
+  await nextTick()
+  // Broadcast the encounter start via WebSocket
+  if (encounterStore.encounter) {
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  }
 }
 
 const nextTurn = async () => {
   await encounterStore.nextTurn()
+  // Wait for Vue reactivity to process the store update
+  await nextTick()
+  // Broadcast the turn change via WebSocket
+  if (encounterStore.encounter) {
+    console.log('[GM] Sending encounter_update after nextTurn')
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  } else {
+    console.log('[GM] No encounter to send after nextTurn')
+  }
 }
 
 const endEncounter = async () => {
@@ -657,6 +678,14 @@ const handleDamage = async (combatantId: string, damage: number) => {
   encounterStore.captureSnapshot(`Applied ${damage} damage to ${name}`)
   await encounterStore.applyDamage(combatantId, damage)
   refreshUndoRedoState()
+  await nextTick()
+  // Broadcast damage update via WebSocket
+  if (encounterStore.encounter) {
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  }
 }
 
 const handleHeal = async (combatantId: string, amount: number, tempHp?: number, healInjuries?: number) => {
@@ -669,6 +698,14 @@ const handleHeal = async (combatantId: string, amount: number, tempHp?: number, 
   encounterStore.captureSnapshot(`Healed ${name} (${parts.join(', ')})`)
   await encounterStore.healCombatant(combatantId, amount, tempHp ?? 0, healInjuries ?? 0)
   refreshUndoRedoState()
+  await nextTick()
+  // Broadcast heal update via WebSocket
+  if (encounterStore.encounter) {
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  }
 }
 
 const handleStages = async (combatantId: string, changes: Partial<StageModifiers>, absolute: boolean) => {
@@ -677,6 +714,14 @@ const handleStages = async (combatantId: string, changes: Partial<StageModifiers
   encounterStore.captureSnapshot(`Changed ${name}'s combat stages`)
   await encounterStore.setCombatStages(combatantId, changes as Record<string, number>, absolute)
   refreshUndoRedoState()
+  await nextTick()
+  // Broadcast stage changes via WebSocket
+  if (encounterStore.encounter) {
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  }
 }
 
 const handleStatus = async (combatantId: string, add: StatusCondition[], remove: StatusCondition[]) => {
@@ -688,6 +733,14 @@ const handleStatus = async (combatantId: string, add: StatusCondition[], remove:
   encounterStore.captureSnapshot(`${name}: ${parts.join('; ')}`)
   await encounterStore.updateStatusConditions(combatantId, add, remove)
   refreshUndoRedoState()
+  await nextTick()
+  // Broadcast status changes via WebSocket
+  if (encounterStore.encounter) {
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  }
 }
 
 // VTT Grid handlers
@@ -701,12 +754,12 @@ const handleTokenMove = async (combatantId: string, position: GridPosition) => {
   encounterStore.captureSnapshot(`Moved ${name} to (${position.x}, ${position.y})`)
   await encounterStore.updateCombatantPosition(combatantId, position)
   refreshUndoRedoState()
-
+  await nextTick()
   // Broadcast the updated encounter state via WebSocket
-  if (encounter.value) {
+  if (encounterStore.encounter) {
     send({
       type: 'encounter_update',
-      data: encounter.value
+      data: encounterStore.encounter
     })
   }
 }

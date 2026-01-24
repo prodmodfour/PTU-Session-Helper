@@ -11,10 +11,15 @@ export function useWebSocket() {
   const movementPreview = ref<MovementPreview | null>(null)
 
   const connect = () => {
-    if (ws?.readyState === WebSocket.OPEN) return
+    console.log('[WebSocket] connect() called, current state:', ws?.readyState)
+    if (ws?.readyState === WebSocket.OPEN) {
+      console.log('[WebSocket] Already connected, skipping')
+      return
+    }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/ws`
+    console.log('[WebSocket] Connecting to:', wsUrl)
 
     try {
       ws = new WebSocket(wsUrl)
@@ -22,7 +27,7 @@ export function useWebSocket() {
       ws.onopen = () => {
         isConnected.value = true
         reconnectAttempts.value = 0
-        console.log('WebSocket connected')
+        console.log('[WebSocket] Connected successfully')
       }
 
       ws.onmessage = (event) => {
@@ -64,8 +69,10 @@ export function useWebSocket() {
   }
 
   const handleMessage = (message: WebSocketEvent) => {
+    console.log('[WebSocket] Received message:', message.type)
     switch (message.type) {
       case 'encounter_update':
+        console.log('[WebSocket] Updating encounter from WebSocket')
         encounterStore.updateFromWebSocket(message.data)
         break
 
@@ -119,7 +126,10 @@ export function useWebSocket() {
 
   const send = (event: WebSocketEvent) => {
     if (ws?.readyState === WebSocket.OPEN) {
+      console.log('[WebSocket] Sending message:', event.type)
       ws.send(JSON.stringify(event))
+    } else {
+      console.log('[WebSocket] Cannot send - not connected, readyState:', ws?.readyState)
     }
   }
 

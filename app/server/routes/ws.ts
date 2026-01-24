@@ -37,11 +37,15 @@ function broadcast(event: WebSocketEvent, excludePeer?: Peer) {
 // Broadcast to peers watching a specific encounter
 function broadcastToEncounter(encounterId: string, event: WebSocketEvent, excludePeer?: Peer) {
   const message = JSON.stringify(event)
+  let sentCount = 0
   for (const [peer, info] of peers) {
     if (peer !== excludePeer && info.encounterId === encounterId) {
+      console.log(`[WS] Sending ${event.type} to peer ${peer.id} (role: ${info.role})`)
       safeSend(peer, message)
+      sentCount++
     }
   }
+  console.log(`[WS] Broadcast ${event.type} to ${sentCount} peers for encounter ${encounterId}`)
 }
 
 // Send full encounter state
@@ -131,8 +135,12 @@ export default defineWebSocketHandler({
 
         case 'encounter_update':
           // GM updates encounter state, broadcast to all viewers
+          console.log(`[WS] encounter_update from peer ${peer.id}, role: ${clientInfo?.role}, encounterId: ${clientInfo?.encounterId}`)
           if (clientInfo?.role === 'gm' && clientInfo.encounterId) {
+            console.log(`[WS] Broadcasting encounter_update to encounter ${clientInfo.encounterId}`)
             broadcastToEncounter(clientInfo.encounterId, event, peer)
+          } else {
+            console.log(`[WS] Not broadcasting - role: ${clientInfo?.role}, encounterId: ${clientInfo?.encounterId}`)
           }
           break
 
