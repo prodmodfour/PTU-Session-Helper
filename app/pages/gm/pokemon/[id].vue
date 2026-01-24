@@ -163,13 +163,27 @@
           <div v-if="lastMoveRoll" class="roll-result roll-result--move">
             <div class="roll-result__header">
               <span class="roll-result__skill">{{ lastMoveRoll.moveName }}</span>
-              <span class="roll-result__type">{{ lastMoveRoll.type }}</span>
             </div>
-            <div class="roll-result__total" :class="lastMoveRoll.resultClass">
-              {{ lastMoveRoll.result.total }}
-              <span v-if="lastMoveRoll.extra" class="roll-result__extra">{{ lastMoveRoll.extra }}</span>
+
+            <!-- Attack Roll -->
+            <div v-if="lastMoveRoll.attack" class="roll-result__row">
+              <span class="roll-result__type">Attack</span>
+              <span class="roll-result__total" :class="lastMoveRoll.attack.resultClass">
+                {{ lastMoveRoll.attack.result.total }}
+              </span>
+              <span v-if="lastMoveRoll.attack.extra" class="roll-result__extra">{{ lastMoveRoll.attack.extra }}</span>
+              <div class="roll-result__breakdown">{{ lastMoveRoll.attack.result.breakdown }}</div>
             </div>
-            <div class="roll-result__breakdown">{{ lastMoveRoll.result.breakdown }}</div>
+
+            <!-- Damage Roll -->
+            <div v-if="lastMoveRoll.damage" class="roll-result__row">
+              <span class="roll-result__type">{{ lastMoveRoll.damage.isCrit ? 'Crit Damage' : 'Damage' }}</span>
+              <span class="roll-result__total" :class="lastMoveRoll.damage.resultClass">
+                {{ lastMoveRoll.damage.result.total }}
+              </span>
+              <span v-if="lastMoveRoll.damage.extra" class="roll-result__extra">{{ lastMoveRoll.damage.extra }}</span>
+              <div class="roll-result__breakdown">{{ lastMoveRoll.damage.result.breakdown }}</div>
+            </div>
           </div>
 
           <div class="moves-list">
@@ -362,10 +376,17 @@ const activeTab = ref('stats')
 const lastSkillRoll = ref<{ skill: string; result: DiceRollResult } | null>(null)
 const lastMoveRoll = ref<{
   moveName: string
-  type: 'Attack' | 'Damage' | 'Crit Damage'
-  result: DiceRollResult
-  resultClass?: string
-  extra?: string
+  attack?: {
+    result: DiceRollResult
+    resultClass?: string
+    extra?: string
+  }
+  damage?: {
+    result: DiceRollResult
+    resultClass?: string
+    extra?: string
+    isCrit: boolean
+  }
 } | null>(null)
 
 // Check for edit mode from query param
@@ -477,12 +498,14 @@ const rollAttack = (move: Move) => {
     resultClass = 'roll-result__total--miss'
   }
 
+  // New attack clears previous rolls
   lastMoveRoll.value = {
     moveName: move.name,
-    type: 'Attack',
-    result,
-    resultClass,
-    extra
+    attack: {
+      result,
+      resultClass,
+      extra
+    }
   }
 }
 
@@ -506,12 +529,24 @@ const rollDamage = (move: Move, isCrit: boolean) => {
     breakdown
   }
 
-  lastMoveRoll.value = {
-    moveName: move.name,
-    type: isCrit ? 'Crit Damage' : 'Damage',
+  const damageRoll = {
     result,
     resultClass: isCrit ? 'roll-result__total--crit' : undefined,
-    extra: isCrit ? 'Critical Hit!' : undefined
+    extra: isCrit ? 'Critical Hit!' : undefined,
+    isCrit
+  }
+
+  // If same move, keep the attack roll; otherwise start fresh
+  if (lastMoveRoll.value?.moveName === move.name) {
+    lastMoveRoll.value = {
+      ...lastMoveRoll.value,
+      damage: damageRoll
+    }
+  } else {
+    lastMoveRoll.value = {
+      moveName: move.name,
+      damage: damageRoll
+    }
   }
 }
 
@@ -997,12 +1032,31 @@ const saveChanges = async () => {
   }
 
   &__extra {
-    display: block;
     font-size: $font-size-sm;
-    margin-top: $spacing-xs;
+    margin-left: $spacing-sm;
+    color: $color-text-muted;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm 0;
+    border-bottom: 1px solid rgba($glass-border, 0.5);
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    &:first-of-type {
+      padding-top: 0;
+    }
   }
 
   &__breakdown {
+    width: 100%;
     font-size: $font-size-sm;
     color: $color-text-muted;
     font-family: 'Fira Code', 'Consolas', monospace;
