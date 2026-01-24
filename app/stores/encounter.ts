@@ -323,16 +323,23 @@ export const useEncounterStore = defineStore('encounter', {
         return
       }
 
-      // Update top-level properties
-      this.encounter.name = data.name
-      this.encounter.battleType = data.battleType
-      this.encounter.currentRound = data.currentRound
-      this.encounter.currentTurnIndex = data.currentTurnIndex
-      this.encounter.isPaused = data.isPaused
-      this.encounter.isServed = data.isServed
-      this.encounter.moveLog = data.moveLog
-      this.encounter.gridConfig = data.gridConfig
-      this.encounter.updatedAt = data.updatedAt
+      // Update top-level properties (preserve existing if incoming is undefined)
+      this.encounter.name = data.name ?? this.encounter.name
+      this.encounter.battleType = data.battleType ?? this.encounter.battleType
+      this.encounter.currentRound = data.currentRound ?? this.encounter.currentRound
+      this.encounter.currentTurnIndex = data.currentTurnIndex ?? this.encounter.currentTurnIndex
+      this.encounter.isPaused = data.isPaused ?? this.encounter.isPaused
+      // Critical: preserve isServed if not in incoming data
+      if (data.isServed !== undefined) {
+        this.encounter.isServed = data.isServed
+      }
+      this.encounter.moveLog = data.moveLog ?? this.encounter.moveLog
+      if (data.gridConfig !== undefined) {
+        this.encounter.gridConfig = data.gridConfig
+      }
+      if (data.updatedAt !== undefined) {
+        this.encounter.updatedAt = data.updatedAt
+      }
 
       // Surgically update combatants to preserve reactivity
       for (const incomingCombatant of data.combatants) {

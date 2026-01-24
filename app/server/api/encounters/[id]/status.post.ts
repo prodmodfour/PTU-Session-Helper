@@ -118,8 +118,12 @@ export default defineEventHandler(async (event) => {
       turnOrder,
       isActive: encounter.isActive,
       isPaused: encounter.isPaused,
+      isServed: encounter.isServed,
       moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
+      defeatedEnemies: JSON.parse(encounter.defeatedEnemies),
+      gridConfig: encounter.gridConfig ? JSON.parse(encounter.gridConfig) : null,
+      createdAt: encounter.createdAt,
+      updatedAt: encounter.updatedAt
     }
 
     return {
