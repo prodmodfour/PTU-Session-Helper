@@ -21,6 +21,22 @@
         <span>HP: {{ human.currentHp }}/{{ human.maxHp }}</span>
         <span>SPD: {{ human.stats?.speed || 0 }}</span>
       </div>
+
+      <!-- Pokemon Team -->
+      <div v-if="human.pokemon && human.pokemon.length > 0" class="human-card__pokemon">
+        <div
+          v-for="mon in human.pokemon"
+          :key="mon.id"
+          class="pokemon-sprite"
+          :title="mon.nickname || mon.species"
+        >
+          <img
+            :src="getSpriteUrl(mon.species)"
+            :alt="mon.species"
+            @error="handleSpriteError($event)"
+          />
+        </div>
+      </div>
     </div>
 
   </NuxtLink>
@@ -32,6 +48,13 @@ import type { HumanCharacter } from '~/types'
 defineProps<{
   human: HumanCharacter
 }>()
+
+const { getSpriteUrl } = usePokemonSprite()
+
+const handleSpriteError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/images/pokemon-placeholder.svg'
+}
 </script>
 
 <style lang="scss" scoped>
@@ -133,6 +156,31 @@ defineProps<{
     gap: $spacing-md;
     font-size: $font-size-xs;
     color: $color-text-muted;
+  }
+
+  &__pokemon {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+    margin-top: $spacing-sm;
+    padding: $spacing-xs;
+    background: rgba($color-bg-tertiary, 0.5);
+    border-radius: $border-radius-sm;
+  }
+}
+
+.pokemon-sprite {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    image-rendering: pixelated;
   }
 }
 </style>
