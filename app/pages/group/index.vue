@@ -117,7 +117,10 @@
             <div class="hp-label">
               <span>HP</span>
               <span v-if="isPlayerSide(currentCombatant)">
-                {{ currentCombatant.entity.currentHp }} / {{ currentCombatant.entity.maxHp }}
+                {{ currentCombatant.entity.currentHp }} / {{ getEffectiveMaxHp(currentCombatant) }}
+                <span v-if="currentCombatant.entity.injuries > 0" class="hp-base-max">
+                  ({{ currentCombatant.entity.maxHp }})
+                </span>
               </span>
               <span v-else>{{ Math.round(getHpPercentage(currentCombatant)) }}%</span>
             </div>
@@ -352,10 +355,19 @@ const getCombatantName = (combatant: Combatant): string => {
   }
 }
 
+const getEffectiveMaxHp = (combatant: Combatant): number => {
+  const { maxHp, injuries } = combatant.entity
+  if (!maxHp || maxHp <= 0) return 0
+  // Each injury reduces max HP by 10%
+  const injuryReduction = (injuries || 0) * 0.1
+  return Math.floor(maxHp * (1 - injuryReduction))
+}
+
 const getHpPercentage = (combatant: Combatant): number => {
-  const { currentHp, maxHp } = combatant.entity
-  if (!maxHp || maxHp <= 0) return 100
-  return Math.max(0, Math.min(100, (currentHp / maxHp) * 100))
+  const { currentHp } = combatant.entity
+  const effectiveMax = getEffectiveMaxHp(combatant)
+  if (effectiveMax <= 0) return 100
+  return Math.max(0, Math.min(100, (currentHp / effectiveMax) * 100))
 }
 
 const getHpClass = (combatant: Combatant): string => {
@@ -935,6 +947,13 @@ const formatStageName = (key: string): string => {
   justify-content: space-between;
   font-size: $font-size-sm;
   color: $color-text-muted;
+}
+
+.hp-base-max {
+  color: $color-text-muted;
+  opacity: 0.6;
+  text-decoration: line-through;
+  font-size: $font-size-xs;
 }
 
 .hp-bar {
