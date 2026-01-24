@@ -130,6 +130,19 @@
             </div>
           </div>
 
+          <!-- Injuries -->
+          <div v-if="currentCombatant.entity.injuries > 0" class="combatant-details__injuries">
+            <span class="injuries-label">Injuries:</span>
+            <span class="injuries-value">{{ currentCombatant.entity.injuries }}</span>
+            <div class="injuries-pips">
+              <span
+                v-for="i in currentCombatant.entity.injuries"
+                :key="i"
+                class="injury-pip"
+              ></span>
+            </div>
+          </div>
+
           <!-- Player-only details -->
           <template v-if="isPlayerSide(currentCombatant)">
             <!-- Stats -->
@@ -886,6 +899,16 @@ const formatStageName = (key: string): string => {
     gap: $spacing-xs;
   }
 
+  &__injuries {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm;
+    background: rgba($color-danger, 0.1);
+    border: 1px solid rgba($color-danger, 0.3);
+    border-radius: $border-radius-md;
+  }
+
   &__stats {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -1095,5 +1118,36 @@ const formatStageName = (key: string): string => {
 
 .stage-value {
   font-weight: 700;
+}
+
+.injuries-label {
+  font-size: $font-size-sm;
+  color: $color-danger;
+  font-weight: 500;
+}
+
+.injuries-value {
+  font-size: $font-size-md;
+  color: $color-danger;
+  font-weight: 700;
+}
+
+.injuries-pips {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.injury-pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: $color-danger;
+  box-shadow: 0 0 4px rgba($color-danger, 0.5);
+
+  @media (min-width: 3000px) {
+    width: 16px;
+    height: 16px;
+  }
 }
 </style>
