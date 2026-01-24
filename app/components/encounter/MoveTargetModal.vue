@@ -119,16 +119,18 @@ const selectedTargets = ref<string[]>([])
 const damageRollResult = ref<DiceRollResult | null>(null)
 const hasRolled = ref(false)
 
-// Parse move effect for fixed damage (e.g., Dragon Rage = 40, Sonic Boom = 20)
+// Parse move effect for fixed damage (e.g., Dragon Rage = 15 HP, Sonic Boom = 20)
 const fixedDamage = computed((): number | null => {
   if (!props.move.effect) return null
 
   // Common patterns for fixed damage moves
   const patterns = [
-    /deals?\s+(\d+)\s+damage/i,
-    /always\s+deals?\s+(\d+)/i,
-    /(\d+)\s+damage\s+flat/i,
-    /flat\s+(\d+)\s+damage/i
+    /lose\s+(\d+)\s+(?:HP|Hit\s*Points?)/i,  // "lose 15 HP", "lose 15 Hit Points"
+    /deals?\s+(\d+)\s+damage/i,               // "deals 40 damage"
+    /always\s+deals?\s+(\d+)/i,               // "always deals 40"
+    /(\d+)\s+damage\s+flat/i,                 // "40 damage flat"
+    /flat\s+(\d+)\s+damage/i,                 // "flat 40 damage"
+    /(\d+)\s+Damage/                          // "15 Damage" (from moves.csv range field)
   ]
 
   for (const pattern of patterns) {
