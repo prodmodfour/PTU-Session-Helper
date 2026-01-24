@@ -312,11 +312,11 @@ const confirm = () => {
   }
 
   &--ally {
-    border-left: 4px solid $color-accent-scarlet;
+    border-left: 4px solid $color-side-player;
   }
 
   &--enemy {
-    border-left: 4px solid $color-accent-scarlet;
+    border-left: 4px solid $color-side-enemy;
   }
 
   &__name {

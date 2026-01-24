@@ -658,15 +658,15 @@ const formatStageName = (key: string): string => {
   }
 
   &--player {
-    border-left: 3px solid $color-accent-scarlet;
+    border-left: 3px solid $color-side-player;
   }
 
   &--ally {
-    border-left: 3px solid $color-success;
+    border-left: 3px solid $color-side-ally;
   }
 
   &--enemy {
-    border-left: 3px solid $color-accent-violet;
+    border-left: 3px solid $color-side-enemy;
   }
 
   &__order {
@@ -902,18 +902,18 @@ const formatStageName = (key: string): string => {
     width: fit-content;
 
     &.side--players {
-      background: rgba($color-accent-scarlet, 0.2);
-      color: $color-accent-scarlet;
+      background: rgba($color-side-player, 0.2);
+      color: $color-side-player;
     }
 
     &.side--allies {
-      background: rgba($color-success, 0.2);
-      color: $color-success;
+      background: rgba($color-side-ally, 0.2);
+      color: $color-side-ally;
     }
 
     &.side--enemies {
-      background: rgba($color-accent-violet, 0.2);
-      color: $color-accent-violet;
+      background: rgba($color-side-enemy, 0.2);
+      color: $color-side-enemy;
     }
   }
 

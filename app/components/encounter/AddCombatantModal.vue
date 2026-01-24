@@ -367,13 +367,13 @@ const confirmAdd = () => {
     font-weight: 700;
 
     &--player {
-      background: $gradient-scarlet;
-      box-shadow: 0 0 8px rgba($color-accent-scarlet, 0.3);
+      background: linear-gradient(135deg, $color-side-player 0%, darken($color-side-player, 10%) 100%);
+      box-shadow: 0 0 8px rgba($color-side-player, 0.3);
     }
 
     &--npc {
-      background: $gradient-violet;
-      box-shadow: 0 0 8px rgba($color-accent-violet, 0.3);
+      background: linear-gradient(135deg, $color-side-enemy 0%, darken($color-side-enemy, 10%) 100%);
+      box-shadow: 0 0 8px rgba($color-side-enemy, 0.3);
     }
   }
 }

@@ -190,6 +190,19 @@ const handleClick = (event: MouseEvent) => {
     filter: grayscale(0.8);
   }
 
+  // Side colors - ring around token
+  &--player {
+    box-shadow: 0 0 0 2px $color-side-player, 0 0 8px rgba($color-side-player, 0.5);
+  }
+
+  &--ally {
+    box-shadow: 0 0 0 2px $color-side-ally, 0 0 8px rgba($color-side-ally, 0.5);
+  }
+
+  &--enemy {
+    box-shadow: 0 0 0 2px $color-side-enemy, 0 0 8px rgba($color-side-enemy, 0.5);
+  }
+
   &:hover {
     transform: scale(1.05);
     z-index: 5;

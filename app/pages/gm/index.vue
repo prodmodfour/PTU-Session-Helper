@@ -1135,15 +1135,15 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
   padding: $spacing-md;
 
   &--players {
-    border-top: 3px solid $color-accent-scarlet;
+    border-top: 3px solid $color-side-player;
   }
 
   &--allies {
-    border-top: 3px solid $color-success;
+    border-top: 3px solid $color-side-ally;
   }
 
   &--enemies {
-    border-top: 3px solid $color-accent-scarlet;
+    border-top: 3px solid $color-side-enemy;
   }
 
   &__header {
