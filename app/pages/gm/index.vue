@@ -405,10 +405,21 @@ onMounted(async () => {
   // Load settings from localStorage
   settingsStore.loadSettings()
 
+  // If no current encounter, try to load the served encounter
+  if (!encounterStore.encounter) {
+    await encounterStore.loadServedEncounter()
+  }
+
   // Initialize history if encounter exists
   if (encounterStore.encounter) {
     encounterStore.initializeHistory()
     refreshUndoRedoState()
+
+    // Identify as GM and join the encounter via WebSocket
+    if (isConnected.value) {
+      identify('gm', encounterStore.encounter.id)
+      joinEncounter(encounterStore.encounter.id)
+    }
   }
 
   // Add keyboard shortcuts
