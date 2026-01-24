@@ -490,6 +490,9 @@ const addToEncounter = async (pokemon?: Array<{ speciesId: string; speciesName: 
 
     await encounterStore.addWildPokemon(pokemonToAdd, 'enemies')
 
+    // Serve to group view automatically
+    await encounterStore.serveEncounter()
+
     // Success - close modal and show confirmation
     generateModal.value.show = false
     generateModal.value.results = []

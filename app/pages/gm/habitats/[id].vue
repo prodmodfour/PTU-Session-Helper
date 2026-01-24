@@ -700,6 +700,10 @@ const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesN
     await encounterStore.createEncounter(tableName, 'full_contact')
 
     await encounterStore.addWildPokemon(pokemon, 'enemies')
+
+    // Serve to group view automatically
+    await encounterStore.serveEncounter()
+
     showGenerateModal.value = false
     router.push('/gm')
   } catch (e: unknown) {

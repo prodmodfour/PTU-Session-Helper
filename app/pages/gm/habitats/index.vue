@@ -192,6 +192,10 @@ const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesN
     await encounterStore.createEncounter(tableName, 'full_contact')
 
     const added = await encounterStore.addWildPokemon(pokemon, 'enemies')
+
+    // Serve to group view automatically
+    await encounterStore.serveEncounter()
+
     generatingFromTable.value = null
     console.log(`Added ${added.length} wild Pokemon to encounter`)
   } catch (e: any) {
