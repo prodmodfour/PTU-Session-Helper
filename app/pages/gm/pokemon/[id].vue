@@ -1,8 +1,8 @@
 <template>
   <div class="pokemon-sheet-page">
     <div class="sheet-header">
-      <NuxtLink to="/gm/library" class="back-link">
-        ← Back to Library
+      <NuxtLink to="/gm/sheets" class="back-link">
+        ← Back to Sheets
       </NuxtLink>
       <div class="sheet-header__actions">
         <template v-if="!isEditing">
@@ -27,8 +27,8 @@
 
     <div v-else-if="error" class="sheet-error">
       <p>{{ error }}</p>
-      <NuxtLink to="/gm/library" class="btn btn--primary">
-        Return to Library
+      <NuxtLink to="/gm/sheets" class="btn btn--primary">
+        Return to Sheets
       </NuxtLink>
     </div>
 

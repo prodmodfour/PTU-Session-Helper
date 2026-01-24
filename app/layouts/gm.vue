@@ -24,9 +24,9 @@
           <img src="/icons/phosphor/tree.svg" alt="" class="gm-nav-link__icon" />
           <span>Habitats</span>
         </NuxtLink>
-        <NuxtLink to="/gm/library" class="gm-nav-link" active-class="gm-nav-link--active">
+        <NuxtLink to="/gm/sheets" class="gm-nav-link" active-class="gm-nav-link--active">
           <img src="/icons/ui/library.svg" alt="" class="gm-nav-link__icon" />
-          <span>Library</span>
+          <span>Sheets</span>
         </NuxtLink>
         <NuxtLink to="/gm/create" class="gm-nav-link" active-class="gm-nav-link--active">
           <img src="/icons/ui/create.svg" alt="" class="gm-nav-link__icon" />

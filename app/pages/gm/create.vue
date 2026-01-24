@@ -1,8 +1,8 @@
 <template>
   <div class="create-page">
     <div class="create-page__header">
-      <NuxtLink to="/gm/library" class="btn btn--secondary btn--sm">
-        ← Back to Library
+      <NuxtLink to="/gm/sheets" class="btn btn--secondary btn--sm">
+        ← Back to Sheets
       </NuxtLink>
       <h2>Create Character</h2>
     </div>
@@ -284,7 +284,7 @@ const createHuman = async () => {
     }
 
     await libraryStore.createHuman(data)
-    router.push('/gm/library')
+    router.push('/gm/sheets')
   } catch (e) {
     console.error('Failed to create human:', e)
   } finally {
@@ -329,7 +329,7 @@ const createPokemon = async () => {
     }
 
     await libraryStore.createPokemon(data)
-    router.push('/gm/library')
+    router.push('/gm/sheets')
   } catch (e) {
     console.error('Failed to create pokemon:', e)
   } finally {
