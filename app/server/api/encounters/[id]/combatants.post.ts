@@ -86,7 +86,44 @@ export default defineEventHandler(async (event) => {
       : entity.stats.speed
     const initiative = speed + (body.initiativeBonus || 0)
 
-    // Create combatant
+    // Get existing combatants to calculate position
+    const combatants = JSON.parse(encounter.combatants)
+    const gridWidth = encounter.gridWidth || 20
+    const gridHeight = encounter.gridHeight || 15
+
+    // Auto-place based on side
+    // Players: left side (x=1-3), Enemies: right side (x=width-4 to width-2), Allies: left-center (x=4-6)
+    const sidePositions = {
+      players: { startX: 1, endX: 3 },
+      allies: { startX: 4, endX: 6 },
+      enemies: { startX: gridWidth - 4, endX: gridWidth - 2 }
+    }
+
+    const sideConfig = sidePositions[body.side as keyof typeof sidePositions] || sidePositions.enemies
+    const sameSideCombatants = combatants.filter((c: any) => c.side === body.side)
+
+    // Find next available position
+    let position = { x: sideConfig.startX, y: 1 }
+    const usedPositions = new Set(
+      combatants
+        .filter((c: any) => c.position)
+        .map((c: any) => `${c.position.x},${c.position.y}`)
+    )
+
+    // Place in a column pattern within the side's area
+    const colWidth = sideConfig.endX - sideConfig.startX + 1
+    for (let y = 1; y < gridHeight; y++) {
+      for (let xOffset = 0; xOffset < colWidth; xOffset++) {
+        const x = sideConfig.startX + xOffset
+        if (!usedPositions.has(`${x},${y}`)) {
+          position = { x, y }
+          break
+        }
+      }
+      if (!usedPositions.has(`${position.x},${position.y}`)) break
+    }
+
+    // Create combatant with position
     const newCombatant = {
       id: uuidv4(),
       type: body.entityType,
@@ -98,10 +135,11 @@ export default defineEventHandler(async (event) => {
       actionsRemaining: 2,
       shiftActionsRemaining: 1,
       readyAction: null,
+      position,
+      tokenSize: 1,
       entity
     }
 
-    const combatants = JSON.parse(encounter.combatants)
     combatants.push(newCombatant)
 
     await prisma.encounter.update({
@@ -117,8 +155,20 @@ export default defineEventHandler(async (event) => {
       currentRound: encounter.currentRound,
       currentTurnIndex: encounter.currentTurnIndex,
       turnOrder: JSON.parse(encounter.turnOrder),
+      currentPhase: 'pokemon' as const,
+      trainerTurnOrder: [],
+      pokemonTurnOrder: [],
       isActive: encounter.isActive,
       isPaused: encounter.isPaused,
+      isServed: encounter.isServed,
+      gridConfig: {
+        enabled: encounter.gridEnabled,
+        width: encounter.gridWidth,
+        height: encounter.gridHeight,
+        cellSize: encounter.gridCellSize,
+        background: encounter.gridBackground ?? undefined
+      },
+      sceneNumber: 1,
       moveLog: JSON.parse(encounter.moveLog),
       defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
     }
