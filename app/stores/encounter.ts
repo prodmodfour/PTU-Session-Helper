@@ -784,6 +784,7 @@ export const useEncounterStore = defineStore('encounter', {
         if (combatant) {
           combatant.position = position
         }
+
       } catch (e: any) {
         this.error = e.message || 'Failed to update position'
         throw e

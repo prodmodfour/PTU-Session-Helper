@@ -689,6 +689,14 @@ const handleTokenMove = async (combatantId: string, position: GridPosition) => {
   encounterStore.captureSnapshot(`Moved ${name} to (${position.x}, ${position.y})`)
   await encounterStore.updateCombatantPosition(combatantId, position)
   refreshUndoRedoState()
+
+  // Broadcast the updated encounter state via WebSocket
+  if (encounter.value) {
+    send({
+      type: 'encounter_update',
+      data: encounter.value
+    })
+  }
 }
 
 const handleBackgroundUpload = async (file: File) => {
