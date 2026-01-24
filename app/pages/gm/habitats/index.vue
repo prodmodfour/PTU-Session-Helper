@@ -51,9 +51,6 @@
           v-for="table in filteredTables"
           :key="table.id"
           :table="table"
-          @edit="editTable"
-          @delete="confirmDelete"
-          @generate="generateFromTable"
         />
       </div>
     </div>

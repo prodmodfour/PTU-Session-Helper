@@ -61,9 +61,6 @@
           v-for="table in filteredTables"
           :key="table.id"
           :table="table"
-          @delete="deleteTable"
-          @generate="generateFromTable"
-          @export="exportTable"
         />
       </div>
     </div>

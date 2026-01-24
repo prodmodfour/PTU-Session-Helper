@@ -1,12 +1,12 @@
 <template>
-  <div class="table-card" data-testid="encounter-table-card">
+  <NuxtLink :to="`/gm/habitats/${table.id}`" class="table-card" data-testid="encounter-table-card">
     <!-- Header -->
     <div class="table-card__header">
       <div class="table-card__image" v-if="table.imageUrl">
         <img :src="table.imageUrl" :alt="table.name" />
       </div>
       <div class="table-card__placeholder" v-else>
-        <span>🌿</span>
+        <img src="/icons/phosphor/tree.svg" alt="" class="placeholder-icon" />
       </div>
       <div class="table-card__info">
         <h3 class="table-card__name">{{ table.name }}</h3>
@@ -40,7 +40,7 @@
 
     <!-- Modifications -->
     <div v-if="table.modifications.length > 0" class="table-card__mods">
-      <span class="table-card__mods-label">Modifications:</span>
+      <span class="table-card__mods-label">Sub-habitats:</span>
       <span
         v-for="mod in table.modifications"
         :key="mod.id"
@@ -49,32 +49,7 @@
         {{ mod.name }}
       </span>
     </div>
-
-    <!-- Actions -->
-    <div class="table-card__actions">
-      <button
-        class="btn btn--sm btn--secondary"
-        @click="$emit('edit', table)"
-        data-testid="edit-table-btn"
-      >
-        Edit
-      </button>
-      <button
-        class="btn btn--sm btn--primary"
-        @click="$emit('generate', table)"
-        data-testid="generate-btn"
-      >
-        Generate
-      </button>
-      <button
-        class="btn btn--sm btn--danger"
-        @click="$emit('delete', table)"
-        data-testid="delete-table-btn"
-      >
-        Delete
-      </button>
-    </div>
-  </div>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
@@ -84,28 +59,27 @@ const props = defineProps<{
   table: EncounterTable
 }>()
 
-defineEmits<{
-  edit: [table: EncounterTable]
-  delete: [table: EncounterTable]
-  generate: [table: EncounterTable]
-}>()
-
 // Show first 5 entries as preview
 const previewEntries = computed(() => props.table.entries.slice(0, 5))
 </script>
 
 <style lang="scss" scoped>
 .table-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
   background: $glass-bg;
   backdrop-filter: $glass-blur;
   border: 1px solid $glass-border;
-  border-radius: $border-radius-lg;
+  border-radius: $border-radius-xl;
   padding: $spacing-lg;
-  transition: all $transition-fast;
+  transition: all $transition-normal;
+  cursor: pointer;
 
   &:hover {
-    border-color: $color-accent-scarlet;
-    box-shadow: $shadow-glow-scarlet;
+    transform: translateY(-4px);
+    border-color: rgba($color-accent, 0.3);
+    box-shadow: $shadow-lg, $shadow-glow-scarlet;
   }
 
   &__header {
@@ -134,7 +108,13 @@ const previewEntries = computed(() => props.table.entries.slice(0, 5))
     align-items: center;
     justify-content: center;
     background: $color-bg-tertiary;
-    font-size: 1.5rem;
+    border: 2px solid $border-color-default;
+
+    .placeholder-icon {
+      width: 32px;
+      height: 32px;
+      filter: brightness(0) invert(0.5);
+    }
   }
 
   &__info {
@@ -197,7 +177,6 @@ const previewEntries = computed(() => props.table.entries.slice(0, 5))
     align-items: center;
     flex-wrap: wrap;
     gap: $spacing-xs;
-    margin-bottom: $spacing-md;
     padding-top: $spacing-sm;
     border-top: 1px solid $border-color-default;
   }
@@ -207,13 +186,6 @@ const previewEntries = computed(() => props.table.entries.slice(0, 5))
     font-size: $font-size-xs;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-
-  &__actions {
-    display: flex;
-    gap: $spacing-sm;
-    padding-top: $spacing-md;
-    border-top: 1px solid $border-color-default;
   }
 }
 

@@ -2,29 +2,6 @@
   <NuxtLink :to="`/gm/encounter-tables/${table.id}`" class="table-card">
     <div class="table-card__header">
       <h3 class="table-card__name">{{ table.name }}</h3>
-      <div class="table-card__actions">
-        <button
-          class="btn btn--icon btn--ghost"
-          @click.stop.prevent="$emit('generate', table)"
-          title="Generate Encounter"
-        >
-          <img src="/icons/phosphor/dice-five.svg" alt="Generate" class="action-icon" />
-        </button>
-        <button
-          class="btn btn--icon btn--ghost"
-          @click.stop.prevent="$emit('export', table)"
-          title="Export Table"
-        >
-          <img src="/icons/phosphor/download-simple.svg" alt="Export" class="action-icon" />
-        </button>
-        <button
-          class="btn btn--icon btn--ghost btn--danger"
-          @click.stop.prevent="$emit('delete', table)"
-          title="Delete Table"
-        >
-          <img src="/icons/phosphor/trash.svg" alt="Delete" class="action-icon" />
-        </button>
-      </div>
     </div>
 
     <p v-if="table.description" class="table-card__description">
@@ -89,12 +66,6 @@ const props = defineProps<{
   table: EncounterTable
 }>()
 
-defineEmits<{
-  (e: 'delete', table: EncounterTable): void
-  (e: 'generate', table: EncounterTable): void
-  (e: 'export', table: EncounterTable): void
-}>()
-
 // Get top 5 entries by weight
 const topEntries = computed(() => {
   return [...props.table.entries]
@@ -129,40 +100,32 @@ const getRarityClass = (weight: number): string => {
   background: $glass-bg;
   backdrop-filter: $glass-blur;
   border: 1px solid $glass-border;
-  border-radius: $border-radius-lg;
+  border-radius: $border-radius-xl;
   padding: $spacing-md;
   transition: all $transition-normal;
   cursor: pointer;
 
   &:hover {
-    border-color: $color-primary;
-    transform: translateY(-2px);
-    box-shadow: $shadow-lg;
+    transform: translateY(-4px);
+    border-color: rgba($color-accent, 0.3);
+    box-shadow: $shadow-lg, $shadow-glow-scarlet;
   }
 
   &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: $spacing-sm;
   }
 
   &__name {
     margin: 0;
-    font-size: 1.125rem;
+    font-size: $font-size-lg;
     color: $color-text;
     font-weight: 600;
-  }
-
-  &__actions {
-    display: flex;
-    gap: $spacing-xs;
   }
 
   &__description {
     margin: 0 0 $spacing-md;
     color: $color-text-muted;
-    font-size: 0.875rem;
+    font-size: $font-size-sm;
     line-height: 1.4;
   }
 
@@ -191,7 +154,7 @@ const getRarityClass = (weight: number): string => {
   display: flex;
   align-items: center;
   gap: $spacing-xs;
-  font-size: 0.875rem;
+  font-size: $font-size-sm;
 }
 
 .meta-label {
@@ -204,7 +167,7 @@ const getRarityClass = (weight: number): string => {
 }
 
 .preview-header {
-  font-size: 0.75rem;
+  font-size: $font-size-xs;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: $color-text-muted;
@@ -221,7 +184,7 @@ const getRarityClass = (weight: number): string => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: $font-size-sm;
 }
 
 .entry-name {
@@ -231,7 +194,7 @@ const getRarityClass = (weight: number): string => {
 .entry-weight {
   padding: 2px 8px;
   border-radius: $border-radius-sm;
-  font-size: 0.75rem;
+  font-size: $font-size-xs;
   font-weight: 500;
 
   &.rarity--common {
@@ -261,14 +224,14 @@ const getRarityClass = (weight: number): string => {
 }
 
 .preview-more {
-  font-size: 0.75rem;
+  font-size: $font-size-xs;
   color: $color-text-muted;
   text-align: center;
   padding-top: $spacing-xs;
 }
 
 .mods-label {
-  font-size: 0.75rem;
+  font-size: $font-size-xs;
   color: $color-text-muted;
 }
 
@@ -282,47 +245,7 @@ const getRarityClass = (weight: number): string => {
   padding: 2px 8px;
   background: rgba($color-primary, 0.2);
   border-radius: $border-radius-sm;
-  font-size: 0.75rem;
+  font-size: $font-size-xs;
   color: $color-primary;
-}
-
-.btn--icon {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-}
-
-.btn--ghost {
-  background: transparent;
-  border: 1px solid transparent;
-
-  &:hover {
-    background: $glass-bg;
-    border-color: $glass-border;
-  }
-}
-
-.btn--danger:hover {
-  background: rgba($color-danger, 0.2);
-  border-color: $color-danger;
-}
-
-.action-icon {
-  width: 16px;
-  height: 16px;
-  filter: brightness(0) invert(0.7);
-  transition: filter 0.15s ease;
-}
-
-.btn--ghost:hover .action-icon {
-  filter: brightness(0) invert(1);
-}
-
-.btn--danger:hover .action-icon {
-  filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(2000%) hue-rotate(340deg);
 }
 </style>
