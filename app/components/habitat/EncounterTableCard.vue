@@ -22,19 +22,23 @@
       {{ table.description }}
     </p>
 
-    <!-- Species Preview -->
+    <!-- Species Sprites -->
     <div class="table-card__species" v-if="table.entries.length > 0">
-      <span
+      <div
         v-for="entry in previewEntries"
         :key="entry.id"
-        class="species-tag"
-        :title="`Weight: ${entry.weight}`"
+        class="species-sprite"
+        :title="entry.speciesName"
       >
-        {{ entry.speciesName }}
-      </span>
-      <span v-if="table.entries.length > 5" class="species-tag species-tag--more">
-        +{{ table.entries.length - 5 }} more
-      </span>
+        <img
+          :src="getSpriteUrl(entry.speciesName)"
+          :alt="entry.speciesName"
+          @error="handleSpriteError($event)"
+        />
+      </div>
+      <div v-if="table.entries.length > maxPreview" class="species-more">
+        +{{ table.entries.length - maxPreview }}
+      </div>
     </div>
     <p v-else class="table-card__empty-species">No species added yet</p>
 
@@ -59,8 +63,21 @@ const props = defineProps<{
   table: EncounterTable
 }>()
 
-// Show first 5 entries as preview
-const previewEntries = computed(() => props.table.entries.slice(0, 5))
+const { getSpriteUrl } = usePokemonSprite()
+
+const maxPreview = 8
+
+// Show first entries as preview, sorted by weight (most common first)
+const previewEntries = computed(() => {
+  return [...props.table.entries]
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, maxPreview)
+})
+
+const handleSpriteError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/images/pokemon-placeholder.svg'
+}
 </script>
 
 <style lang="scss" scoped>
@@ -161,8 +178,12 @@ const previewEntries = computed(() => props.table.entries.slice(0, 5))
   &__species {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: $spacing-xs;
     margin-bottom: $spacing-md;
+    padding: $spacing-sm;
+    background: rgba($color-bg-tertiary, 0.5);
+    border-radius: $border-radius-md;
   }
 
   &__empty-species {
@@ -189,19 +210,36 @@ const previewEntries = computed(() => props.table.entries.slice(0, 5))
   }
 }
 
-.species-tag {
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  padding: 2px $spacing-sm;
+.species-sprite {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($color-bg-secondary, 0.5);
   border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  color: $color-text;
+  overflow: hidden;
 
-  &--more {
-    background: transparent;
-    border-style: dashed;
-    color: $color-text-muted;
+  img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    image-rendering: pixelated;
   }
+}
+
+.species-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba($color-bg-secondary, 0.3);
+  border: 1px dashed $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  font-weight: 500;
 }
 
 .mod-tag {
