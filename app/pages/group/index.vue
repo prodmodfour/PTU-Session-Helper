@@ -25,6 +25,38 @@
 
       <!-- Main Content -->
       <main class="group-main">
+        <!-- Initiative Tracker -->
+        <aside class="initiative-tracker" v-if="sortedCombatants.length > 0">
+          <h3 class="initiative-tracker__title">Initiative</h3>
+          <div class="initiative-tracker__list">
+            <div
+              v-for="(combatant, index) in sortedCombatants"
+              :key="combatant.id"
+              class="initiative-entry"
+              :class="{
+                'initiative-entry--current': combatant.id === currentCombatant?.id,
+                'initiative-entry--player': combatant.side === 'players',
+                'initiative-entry--ally': combatant.side === 'allies',
+                'initiative-entry--enemy': combatant.side === 'enemies'
+              }"
+            >
+              <span class="initiative-entry__order">{{ index + 1 }}</span>
+              <img
+                v-if="combatant.type === 'pokemon'"
+                :src="getSpriteUrl((combatant.entity as Pokemon).species)"
+                :alt="getCombatantName(combatant)"
+                class="initiative-entry__sprite"
+                @error="handleSpriteError($event)"
+              />
+              <div v-else class="initiative-entry__avatar">
+                {{ getCombatantName(combatant).charAt(0) }}
+              </div>
+              <span class="initiative-entry__name">{{ getCombatantName(combatant) }}</span>
+              <span class="initiative-entry__init">{{ combatant.initiative }}</span>
+            </div>
+          </div>
+        </aside>
+
         <!-- Grid View -->
         <div class="grid-view-panel" data-testid="group-grid-panel">
           <GroupGridCanvas
@@ -124,9 +156,18 @@ watch(isConnected, (connected) => {
   }
 })
 
+// Sprites
+const { getSpriteUrl } = usePokemonSprite()
+
+const handleSpriteError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/images/pokemon-placeholder.svg'
+}
+
 // Computed
 const encounter = computed(() => encounterStore.encounter)
 const currentCombatant = computed(() => encounterStore.currentCombatant)
+const sortedCombatants = computed(() => encounterStore.combatantsByInitiative)
 
 // Grid config with fallback defaults
 const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
@@ -314,12 +355,169 @@ const getCombatantName = (combatant: Combatant): string => {
 .group-main {
   flex: 1;
   display: flex;
-  padding: $spacing-xl;
+  gap: $spacing-lg;
+  padding: $spacing-lg;
 
   // 4K optimization
   @media (min-width: 3000px) {
-    padding: $spacing-xxl;
+    padding: $spacing-xl;
+    gap: $spacing-xl;
   }
 }
 
+.initiative-tracker {
+  width: 280px;
+  flex-shrink: 0;
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-lg;
+  padding: $spacing-md;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+
+  // 4K optimization
+  @media (min-width: 3000px) {
+    width: 400px;
+    padding: $spacing-lg;
+  }
+
+  &__title {
+    font-size: $font-size-md;
+    font-weight: 600;
+    color: $color-text;
+    margin: 0 0 $spacing-md 0;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $glass-border;
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      font-size: $font-size-lg;
+      margin-bottom: $spacing-lg;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+}
+
+.initiative-entry {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border-radius: $border-radius-md;
+  background: rgba($color-bg-secondary, 0.5);
+  transition: all $transition-fast;
+
+  // 4K optimization
+  @media (min-width: 3000px) {
+    padding: $spacing-md;
+    gap: $spacing-md;
+  }
+
+  &--current {
+    background: rgba($color-accent-scarlet, 0.2);
+    border: 1px solid $color-accent-scarlet;
+    box-shadow: $shadow-glow-scarlet;
+  }
+
+  &--player {
+    border-left: 3px solid $color-accent-scarlet;
+  }
+
+  &--ally {
+    border-left: 3px solid $color-success;
+  }
+
+  &--enemy {
+    border-left: 3px solid $color-accent-violet;
+  }
+
+  &__order {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $color-bg-tertiary;
+    border-radius: 50%;
+    font-size: $font-size-xs;
+    font-weight: 700;
+    color: $color-text-muted;
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      width: 32px;
+      height: 32px;
+      font-size: $font-size-sm;
+    }
+  }
+
+  &__sprite {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    image-rendering: pixelated;
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      width: 48px;
+      height: 48px;
+    }
+  }
+
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $gradient-sv-cool;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-sm;
+    font-weight: 700;
+    color: $color-text;
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      width: 48px;
+      height: 48px;
+      font-size: $font-size-md;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $color-text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      font-size: $font-size-md;
+    }
+  }
+
+  &__init {
+    font-size: $font-size-xs;
+    font-weight: 600;
+    color: $color-text-muted;
+    background: $color-bg-tertiary;
+    padding: 2px $spacing-xs;
+    border-radius: $border-radius-sm;
+
+    // 4K optimization
+    @media (min-width: 3000px) {
+      font-size: $font-size-sm;
+      padding: $spacing-xs $spacing-sm;
+    }
+  }
+}
 </style>
