@@ -23,7 +23,8 @@ async function main() {
       specialAttack: 5,
       specialDefense: 7,
       speed: 11,
-      currentHp: 45, // Max HP from sheet
+      currentHp: 45, // Current HP
+      maxHp: 45, // Max HP from sheet (derived from HP stat)
       // Trainer Classes
       trainerClasses: JSON.stringify(['Ace Trainer', 'Elite Trainer']),
       // Skills (from sheet - Pathetic=1, Untrained=2, Novice=3, Adept=4)

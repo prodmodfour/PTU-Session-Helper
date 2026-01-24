@@ -84,7 +84,7 @@ export default defineEventHandler(async (event) => {
         speed: character.speed
       },
       currentHp: character.currentHp,
-      maxHp: character.hp,
+      maxHp: character.maxHp,
       // Classes, skills, features, edges
       trainerClasses: JSON.parse(character.trainerClasses),
       skills: JSON.parse(character.skills),

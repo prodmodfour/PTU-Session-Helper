@@ -29,6 +29,7 @@ model HumanCharacter {
   specialDefense Int     @default(5)
   speed         Int      @default(5)
   currentHp     Int      @default(10)
+  maxHp         Int      @default(10) // Derived max HP (different from hp stat)
 
   // Classes, skills, features, edges stored as JSON
   trainerClasses String  @default("[]") // JSON array of class names

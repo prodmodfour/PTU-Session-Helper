@@ -22,7 +22,8 @@ export default defineEventHandler(async (event) => {
         specialAttack: body.stats?.specialAttack || body.specialAttack || 5,
         specialDefense: body.stats?.specialDefense || body.specialDefense || 5,
         speed: body.stats?.speed || body.speed || 5,
-        currentHp: body.currentHp || body.stats?.hp || body.hp || 10,
+        currentHp: body.currentHp || body.maxHp || 10,
+        maxHp: body.maxHp || body.currentHp || 10,
         // Classes, skills, features, edges
         trainerClasses: JSON.stringify(body.trainerClasses || []),
         skills: JSON.stringify(body.skills || {}),
@@ -70,7 +71,7 @@ export default defineEventHandler(async (event) => {
         speed: character.speed
       },
       currentHp: character.currentHp,
-      maxHp: character.hp,
+      maxHp: character.maxHp,
       // Classes, skills, features, edges
       trainerClasses: JSON.parse(character.trainerClasses),
       skills: JSON.parse(character.skills),
