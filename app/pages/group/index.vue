@@ -21,81 +21,17 @@
           <span class="turn-label">Current Turn:</span>
           <span class="turn-name">{{ getCombatantName(currentCombatant) }}</span>
         </div>
-        <!-- View Toggle (only if grid is enabled) -->
-        <div v-if="gridConfig.enabled" class="group-header__view-toggle">
-          <button
-            class="view-btn"
-            :class="{ 'view-btn--active': activeView === 'list' }"
-            @click="activeView = 'list'"
-            data-testid="group-list-view-btn"
-          >
-            List
-          </button>
-          <button
-            class="view-btn"
-            :class="{ 'view-btn--active': activeView === 'grid' }"
-            @click="activeView = 'grid'"
-            data-testid="group-grid-view-btn"
-          >
-            Grid
-          </button>
-        </div>
       </header>
 
       <!-- Main Content -->
       <main class="group-main">
         <!-- Grid View -->
-        <div v-if="activeView === 'grid' && gridConfig.enabled" class="grid-view-panel" data-testid="group-grid-panel">
+        <div class="grid-view-panel" data-testid="group-grid-panel">
           <GroupGridCanvas
             :config="gridConfig"
             :combatants="encounter.combatants"
             :current-turn-id="currentCombatant?.id"
           />
-        </div>
-
-        <!-- List View - All Combatants -->
-        <div v-else class="combatants-display">
-          <!-- Players Section -->
-          <section class="combatant-section combatant-section--players">
-            <h2>Players</h2>
-            <div class="combatant-grid">
-              <GroupCombatantCard
-                v-for="combatant in playerCombatants"
-                :key="combatant.id"
-                :combatant="combatant"
-                :is-current-turn="combatant.id === currentCombatant?.id"
-                :show-details="combatant.side === 'players'"
-              />
-            </div>
-          </section>
-
-          <!-- Allies Section (if any) -->
-          <section v-if="allyCombatants.length > 0" class="combatant-section combatant-section--allies">
-            <h2>Allies</h2>
-            <div class="combatant-grid">
-              <GroupCombatantCard
-                v-for="combatant in allyCombatants"
-                :key="combatant.id"
-                :combatant="combatant"
-                :is-current-turn="combatant.id === currentCombatant?.id"
-                :show-details="false"
-              />
-            </div>
-          </section>
-
-          <!-- Enemies Section -->
-          <section class="combatant-section combatant-section--enemies">
-            <h2>Enemies</h2>
-            <div class="combatant-grid">
-              <GroupCombatantCard
-                v-for="combatant in enemyCombatants"
-                :key="combatant.id"
-                :combatant="combatant"
-                :is-current-turn="combatant.id === currentCombatant?.id"
-                :show-details="false"
-              />
-            </div>
-          </section>
         </div>
       </main>
     </div>
@@ -124,8 +60,6 @@ const { isConnected, identify, joinEncounter } = useWebSocket()
 const { loadFogState } = useFogPersistence()
 const { loadTerrainState } = useTerrainPersistence()
 
-// View state
-const activeView = ref<'list' | 'grid'>('list')
 
 // Poll for served encounters
 let pollInterval: ReturnType<typeof setInterval> | null = null
@@ -193,9 +127,6 @@ watch(isConnected, (connected) => {
 // Computed
 const encounter = computed(() => encounterStore.encounter)
 const currentCombatant = computed(() => encounterStore.currentCombatant)
-const playerCombatants = computed(() => encounterStore.playerCombatants)
-const allyCombatants = computed(() => encounterStore.allyCombatants)
-const enemyCombatants = computed(() => encounterStore.enemyCombatants)
 
 // Grid config with fallback defaults
 const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
@@ -206,14 +137,6 @@ const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
   background: undefined
 })
 
-// Auto-switch to grid view when GM enables grid
-watch(() => gridConfig.value.enabled, (enabled) => {
-  if (enabled) {
-    activeView.value = 'grid'
-  } else {
-    activeView.value = 'list'
-  }
-})
 
 // Helpers
 const getCombatantName = (combatant: Combatant): string => {
@@ -347,41 +270,6 @@ const getCombatantName = (combatant: Combatant): string => {
     }
   }
 
-  &__view-toggle {
-    display: flex;
-    gap: $spacing-xs;
-    background: $color-bg-tertiary;
-    padding: $spacing-xs;
-    border-radius: $border-radius-md;
-  }
-}
-
-.view-btn {
-  padding: $spacing-sm $spacing-md;
-  background: transparent;
-  border: none;
-  color: $color-text-muted;
-  font-size: $font-size-md;
-  border-radius: $border-radius-sm;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    color: $color-text;
-    background: rgba($color-text, 0.1);
-  }
-
-  &--active {
-    color: $color-text;
-    background: $color-bg-secondary;
-    box-shadow: $shadow-sm;
-  }
-
-  // 4K optimization
-  @media (min-width: 3000px) {
-    font-size: $font-size-lg;
-    padding: $spacing-md $spacing-lg;
-  }
 }
 
 .grid-view-panel {
@@ -434,59 +322,4 @@ const getCombatantName = (combatant: Combatant): string => {
   }
 }
 
-.combatants-display {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xl;
-
-  // 4K optimization
-  @media (min-width: 3000px) {
-    gap: $spacing-xxl;
-  }
-}
-
-.combatant-section {
-  h2 {
-    font-size: $font-size-xl;
-    margin-bottom: $spacing-md;
-    padding-left: $spacing-md;
-    border-left: 4px solid;
-    font-weight: 600;
-
-    // 4K optimization
-    @media (min-width: 3000px) {
-      font-size: $font-size-xxl;
-      margin-bottom: $spacing-lg;
-      border-left-width: 6px;
-    }
-  }
-
-  &--players h2 {
-    border-color: $color-accent-scarlet;
-    color: $color-accent-scarlet;
-  }
-
-  &--allies h2 {
-    border-color: $color-success;
-    color: $color-success;
-  }
-
-  &--enemies h2 {
-    border-color: $color-accent-scarlet;
-    color: $color-accent-scarlet;
-  }
-}
-
-.combatant-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: $spacing-lg;
-
-  // 4K optimization
-  @media (min-width: 3000px) {
-    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
-    gap: $spacing-xl;
-  }
-}
 </style>
