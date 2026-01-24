@@ -241,6 +241,13 @@ export default defineWebSocketHandler({
           broadcast(event, peer)
           break
 
+        case 'movement_preview':
+          // GM previewing a move, broadcast to group views
+          if (clientInfo?.role === 'gm' && clientInfo.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
         default:
           console.log(`Unknown WebSocket event type: ${event.type}`)
       }
