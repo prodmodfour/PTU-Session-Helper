@@ -189,6 +189,8 @@ const handleMouseDown = (event: MouseEvent) => {
   cursor: pointer;
   transition: transform 0.15s ease, filter 0.15s ease;
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
 
   // States
   &--selected {

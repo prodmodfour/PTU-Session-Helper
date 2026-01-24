@@ -1148,6 +1148,8 @@ defineExpose({
   background: $color-bg-primary;
   border-radius: $border-radius-md;
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 
   &:active {
     cursor: grabbing;
