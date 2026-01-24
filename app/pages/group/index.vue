@@ -122,7 +122,7 @@
                   ({{ currentCombatant.entity.maxHp }})
                 </span>
               </span>
-              <span v-else>{{ Math.round(getHpPercentage(currentCombatant)) }}%</span>
+              <span v-else>{{ getHpPercentageDisplay(currentCombatant) }}%</span>
             </div>
             <div class="hp-bar">
               <div
@@ -367,10 +367,22 @@ const getHpPercentage = (combatant: Combatant): number => {
   const { currentHp } = combatant.entity
   const effectiveMax = getEffectiveMaxHp(combatant)
   if (effectiveMax <= 0) return 100
+  // HP can go negative in PTU, but bar shows 0-100%
   return Math.max(0, Math.min(100, (currentHp / effectiveMax) * 100))
 }
 
+// Get HP percentage for display (can be negative)
+const getHpPercentageDisplay = (combatant: Combatant): number => {
+  const { currentHp } = combatant.entity
+  const effectiveMax = getEffectiveMaxHp(combatant)
+  if (effectiveMax <= 0) return 100
+  return Math.round((currentHp / effectiveMax) * 100)
+}
+
 const getHpClass = (combatant: Combatant): string => {
+  const { currentHp } = combatant.entity
+  // Check for fainted/negative HP first
+  if (currentHp <= 0) return 'health--fainted'
   const percentage = getHpPercentage(combatant)
   if (percentage <= 25) return 'health--critical'
   if (percentage <= 50) return 'health--low'
@@ -763,6 +775,11 @@ const formatStageName = (key: string): string => {
       background: linear-gradient(90deg, $color-danger 0%, lighten($color-danger, 10%) 100%);
     }
 
+    &.health--fainted {
+      background: linear-gradient(90deg, #4a4a4a 0%, #2a2a2a 100%);
+      width: 0% !important;
+    }
+
     // 4K optimization
     @media (min-width: 3000px) {
       border-radius: 3px;
@@ -983,6 +1000,11 @@ const formatStageName = (key: string): string => {
 
     &.health--critical {
       background: linear-gradient(90deg, $color-danger 0%, lighten($color-danger, 10%) 100%);
+    }
+
+    &.health--fainted {
+      background: linear-gradient(90deg, #4a4a4a 0%, #2a2a2a 100%);
+      width: 0% !important;
     }
   }
 }
