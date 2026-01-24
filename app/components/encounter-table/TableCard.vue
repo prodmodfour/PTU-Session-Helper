@@ -2,24 +2,24 @@
   <NuxtLink :to="`/gm/encounter-tables/${table.id}`" class="table-card">
     <div class="table-card__header">
       <h3 class="table-card__name">{{ table.name }}</h3>
-      <div class="table-card__actions" @click.stop.prevent>
+      <div class="table-card__actions">
         <button
           class="btn btn--icon btn--ghost"
-          @click="$emit('generate', table)"
+          @click.stop.prevent="$emit('generate', table)"
           title="Generate Encounter"
         >
           <img src="/icons/phosphor/dice-five.svg" alt="Generate" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost"
-          @click="$emit('export', table)"
+          @click.stop.prevent="$emit('export', table)"
           title="Export Table"
         >
           <img src="/icons/phosphor/download-simple.svg" alt="Export" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost btn--danger"
-          @click="$emit('delete', table)"
+          @click.stop.prevent="$emit('delete', table)"
           title="Delete Table"
         >
           <img src="/icons/phosphor/trash.svg" alt="Delete" class="action-icon" />
