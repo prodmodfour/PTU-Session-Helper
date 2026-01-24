@@ -65,6 +65,15 @@ books/markdown/   # PTU rulebooks and reference material
 - **No AI-generated mentions** - Do not mention that code was AI-generated in commits, comments, or documentation
 - Commits should appear as if written by the human developer
 
+## Commit Guidelines
+
+- **Commit when features are complete** - After implementing a feature or fix that works correctly, commit the changes
+- **Don't wait to be asked** - Proactively commit after completing meaningful work (new features, bug fixes, refactors)
+- **Atomic commits** - Each commit should represent a single logical change
+- **Conventional commits** - Use prefixes: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
+- **Descriptive messages** - Include what changed and why in commit messages
+- **Only commit relevant files** - Don't include unrelated changes, test artifacts, or logs
+
 ## PTU Rules Reference
 
 The `books/markdown/` directory contains the complete PTU 1.05 ruleset. When implementing game logic, reference:
