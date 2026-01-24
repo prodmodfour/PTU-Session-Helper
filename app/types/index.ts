@@ -505,10 +505,10 @@ export const RARITY_WEIGHTS: Record<RarityPreset, number> = {
 export type DensityTier = 'sparse' | 'moderate' | 'dense' | 'abundant';
 
 export const DENSITY_RANGES: Record<DensityTier, { min: number; max: number }> = {
-  sparse: { min: 1, max: 2 },
-  moderate: { min: 2, max: 4 },
-  dense: { min: 4, max: 6 },
-  abundant: { min: 6, max: 8 },
+  sparse: { min: 2, max: 4 },
+  moderate: { min: 4, max: 8 },
+  dense: { min: 8, max: 12 },
+  abundant: { min: 12, max: 16 },
 };
 
 // Level range for encounter generation
