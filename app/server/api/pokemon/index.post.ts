@@ -10,7 +10,8 @@ export default defineEventHandler(async (event) => {
     // Calculate current stats (simplified)
     const level = body.level || 1
     const baseHp = baseStats.hp || body.baseHp || 50
-    const maxHp = baseHp + level * 2
+    // PTU HP formula: Level + (HP Base × 3) + 10
+    const maxHp = body.maxHp || (level + (baseHp * 3) + 10)
 
     const pokemon = await prisma.pokemon.create({
       data: {
@@ -21,31 +22,46 @@ export default defineEventHandler(async (event) => {
         nature: JSON.stringify(body.nature || { name: 'Hardy', raisedStat: null, loweredStat: null }),
         type1: types[0],
         type2: types[1] || null,
+        // Base stats
         baseHp: baseHp,
         baseAttack: baseStats.attack || body.baseAttack || 50,
         baseDefense: baseStats.defense || body.baseDefense || 50,
         baseSpAtk: baseStats.specialAttack || body.baseSpAtk || 50,
         baseSpDef: baseStats.specialDefense || body.baseSpDef || 50,
         baseSpeed: baseStats.speed || body.baseSpeed || 50,
+        // Current stats
         currentHp: body.currentHp || maxHp,
         maxHp: maxHp,
-        currentAttack: baseStats.attack || body.baseAttack || 50,
-        currentDefense: baseStats.defense || body.baseDefense || 50,
-        currentSpAtk: baseStats.specialAttack || body.baseSpAtk || 50,
-        currentSpDef: baseStats.specialDefense || body.baseSpDef || 50,
-        currentSpeed: baseStats.speed || body.baseSpeed || 50,
+        currentAttack: body.currentStats?.attack || baseStats.attack || body.baseAttack || 50,
+        currentDefense: body.currentStats?.defense || baseStats.defense || body.baseDefense || 50,
+        currentSpAtk: body.currentStats?.specialAttack || baseStats.specialAttack || body.baseSpAtk || 50,
+        currentSpDef: body.currentStats?.specialDefense || baseStats.specialDefense || body.baseSpDef || 50,
+        currentSpeed: body.currentStats?.speed || baseStats.speed || body.baseSpeed || 50,
+        // Stage modifiers
         stageModifiers: JSON.stringify(body.stageModifiers || {
           attack: 0, defense: 0, specialAttack: 0,
           specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
         }),
+        // Combat
         abilities: JSON.stringify(body.abilities || []),
         moves: JSON.stringify(body.moves || []),
         heldItem: body.heldItem,
+        // Capabilities (movement, size, etc.)
+        capabilities: JSON.stringify(body.capabilities || {}),
+        // Skills
+        skills: JSON.stringify(body.skills || {}),
+        // Status
         statusConditions: JSON.stringify(body.statusConditions || []),
+        // Training
+        tutorPoints: body.tutorPoints || 0,
+        trainingExp: body.trainingExp || 0,
+        eggGroups: JSON.stringify(body.eggGroups || []),
+        // Display
         ownerId: body.ownerId,
         spriteUrl: body.spriteUrl,
         shiny: body.shiny || false,
         gender: body.gender || 'Genderless',
+        // Library
         isInLibrary: body.isInLibrary !== false,
         notes: body.notes
       }
@@ -81,7 +97,12 @@ export default defineEventHandler(async (event) => {
       abilities: JSON.parse(pokemon.abilities),
       moves: JSON.parse(pokemon.moves),
       heldItem: pokemon.heldItem,
+      capabilities: JSON.parse(pokemon.capabilities),
+      skills: JSON.parse(pokemon.skills),
       statusConditions: JSON.parse(pokemon.statusConditions),
+      tutorPoints: pokemon.tutorPoints,
+      trainingExp: pokemon.trainingExp,
+      eggGroups: JSON.parse(pokemon.eggGroups),
       ownerId: pokemon.ownerId,
       spriteUrl: pokemon.spriteUrl,
       shiny: pokemon.shiny,

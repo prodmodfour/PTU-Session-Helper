@@ -32,7 +32,33 @@ export type CombatSide = 'players' | 'allies' | 'enemies';
 export type BattleType = 'trainer' | 'full_contact';
 
 // Character type
-export type CharacterType = 'player' | 'npc';
+export type CharacterType = 'player' | 'npc' | 'trainer';
+
+// Skill rank (PTU)
+export type SkillRank = 'Pathetic' | 'Untrained' | 'Novice' | 'Adept' | 'Expert' | 'Master';
+
+// PTU Skill names
+export type SkillName =
+  | 'Acrobatics' | 'Athletics' | 'Charm' | 'Combat' | 'Command'
+  | 'General Ed' | 'Medicine Ed' | 'Occult Ed' | 'Pokémon Ed' | 'Technology Ed'
+  | 'Focus' | 'Guile' | 'Intimidate' | 'Intuition' | 'Perception'
+  | 'Stealth' | 'Survival';
+
+// Pokemon capabilities (PTU)
+export interface PokemonCapabilities {
+  overland: number;
+  swim: number;
+  sky: number;
+  burrow: number;
+  levitate: number;
+  teleport?: number;
+  jump: { high: number; long: number };
+  power: number;
+  weightClass: number;
+  size: 'Small' | 'Medium' | 'Large' | 'Huge' | 'Gigantic';
+  naturewalk?: string[];
+  otherCapabilities?: string[];
+}
 
 // Base stats structure
 export interface Stats {
@@ -124,10 +150,21 @@ export interface Pokemon {
   moves: Move[];
   heldItem?: string;
 
+  // Capabilities (movement, size, etc.)
+  capabilities: PokemonCapabilities;
+
+  // Skills (Pokemon can have skills)
+  skills: Record<string, string>; // { skillName: diceFormula like "2d6+2" }
+
   // Status
   statusConditions: StatusCondition[];
   injuries: number;
   temporaryHp: number;
+
+  // Training
+  tutorPoints: number;
+  trainingExp: number;
+  eggGroups: string[];
 
   // Ownership
   ownerId?: string;
@@ -155,18 +192,28 @@ export interface HumanCharacter {
   name: string;
   characterType: CharacterType;
 
+  // Player info (for player characters)
+  playedBy?: string;  // Player's real name
+  age?: number;
+  gender?: string;    // 'Male', 'Female', 'Other'
+  height?: number;    // in cm
+  weight?: number;    // in kg
+
   // Stats
   level: number;
   stats: Stats;
   currentHp: number;
   maxHp: number;
 
-  // Classes & Skills
-  trainerClasses: TrainerClass[];
-  skills: Record<string, number>;
+  // Classes, Skills, Features, Edges
+  trainerClasses: string[];  // Class names
+  skills: Record<string, SkillRank>;  // { skillName: rank }
+  features: string[];  // Feature names
+  edges: string[];     // Edge names
 
   // Pokemon team
   pokemonIds: string[];
+  pokemon?: Pokemon[];  // Linked Pokemon (when fetched with relation)
   activePokemonId?: string;
 
   // Combat
@@ -181,6 +228,11 @@ export interface HumanCharacter {
 
   // Display
   avatarUrl?: string;
+
+  // Background info
+  background?: string;
+  personality?: string;
+  goals?: string;
 
   // Library
   isInLibrary: boolean;

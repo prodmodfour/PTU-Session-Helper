@@ -11,7 +11,14 @@ datasource db {
 model HumanCharacter {
   id            String   @id @default(uuid())
   name          String
-  characterType String   @default("npc") // 'player' or 'npc'
+  characterType String   @default("npc") // 'player', 'npc', or 'trainer'
+
+  // Player info (for player characters)
+  playedBy      String?  // Player's real name
+  age           Int?
+  gender        String?  // 'Male', 'Female', 'Other'
+  height        Int?     // in cm
+  weight        Int?     // in kg
 
   // Stats
   level         Int      @default(1)
@@ -23,9 +30,11 @@ model HumanCharacter {
   speed         Int      @default(5)
   currentHp     Int      @default(10)
 
-  // Classes and skills stored as JSON
-  trainerClasses String  @default("[]") // JSON array
-  skills         String  @default("{}") // JSON object
+  // Classes, skills, features, edges stored as JSON
+  trainerClasses String  @default("[]") // JSON array of class names
+  skills         String  @default("{}") // JSON object { skillName: rank }
+  features       String  @default("[]") // JSON array of feature names
+  edges          String  @default("[]") // JSON array of edge names
 
   // Inventory
   inventory     String   @default("[]") // JSON array
@@ -39,6 +48,11 @@ model HumanCharacter {
 
   // Display
   avatarUrl     String?
+
+  // Background info
+  background    String?  // Character background/history
+  personality   String?
+  goals         String?
 
   // Library
   isInLibrary   Boolean  @default(true)
@@ -60,14 +74,14 @@ model Pokemon {
   level         Int      @default(1)
   experience    Int      @default(0)
 
-  // Nature stored as JSON
+  // Nature stored as JSON { name, raisedStat, loweredStat }
   nature        String   @default("{}") // JSON object
 
   // Types
   type1         String
   type2         String?
 
-  // Base stats
+  // Base stats (species base + added points)
   baseHp        Int
   baseAttack    Int
   baseDefense   Int
@@ -75,7 +89,7 @@ model Pokemon {
   baseSpDef     Int
   baseSpeed     Int
 
-  // Current stats (calculated)
+  // Current stats (calculated with nature/stage mods)
   currentHp     Int
   maxHp         Int
   currentAttack Int
@@ -89,20 +103,34 @@ model Pokemon {
 
   // Abilities and moves stored as JSON
   abilities     String   @default("[]") // JSON array
-  moves         String   @default("[]") // JSON array
+  moves         String   @default("[]") // JSON array with full move data
 
   // Item
   heldItem      String?
+
+  // Capabilities (PTU movement/abilities) stored as JSON
+  // { overland, swim, sky, burrow, levitate, jump: {high, long}, power, weightClass, size, naturewalk, otherCapabilities }
+  capabilities  String   @default("{}") // JSON object
+
+  // Skills (Pokemon can have skills too)
+  skills        String   @default("{}") // JSON object { skillName: diceFormula }
 
   // Status
   statusConditions String @default("[]") // JSON array
   injuries         Int    @default(0)
   temporaryHp      Int    @default(0)
 
+  // Tutor points and training
+  tutorPoints   Int      @default(0)
+  trainingExp   Int      @default(0)
+
   // Display
   spriteUrl     String?
   shiny         Boolean  @default(false)
   gender        String   @default("Genderless")
+
+  // Egg groups (for breeding)
+  eggGroups     String   @default("[]") // JSON array
 
   // Library
   isInLibrary   Boolean  @default(true)

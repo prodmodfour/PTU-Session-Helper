@@ -8,6 +8,13 @@ export default defineEventHandler(async (event) => {
       data: {
         name: body.name,
         characterType: body.characterType || 'npc',
+        // Player info
+        playedBy: body.playedBy,
+        age: body.age,
+        gender: body.gender,
+        height: body.height,
+        weight: body.weight,
+        // Stats
         level: body.level || 1,
         hp: body.stats?.hp || body.hp || 10,
         attack: body.stats?.attack || body.attack || 5,
@@ -16,16 +23,27 @@ export default defineEventHandler(async (event) => {
         specialDefense: body.stats?.specialDefense || body.specialDefense || 5,
         speed: body.stats?.speed || body.speed || 5,
         currentHp: body.currentHp || body.stats?.hp || body.hp || 10,
+        // Classes, skills, features, edges
         trainerClasses: JSON.stringify(body.trainerClasses || []),
         skills: JSON.stringify(body.skills || {}),
+        features: JSON.stringify(body.features || []),
+        edges: JSON.stringify(body.edges || []),
+        // Inventory
         inventory: JSON.stringify(body.inventory || []),
         money: body.money || 0,
+        // Status
         statusConditions: JSON.stringify(body.statusConditions || []),
         stageModifiers: JSON.stringify(body.stageModifiers || {
           attack: 0, defense: 0, specialAttack: 0,
           specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
         }),
+        // Display
         avatarUrl: body.avatarUrl,
+        // Background
+        background: body.background,
+        personality: body.personality,
+        goals: body.goals,
+        // Library
         isInLibrary: body.isInLibrary !== false,
         notes: body.notes
       }
@@ -35,6 +53,13 @@ export default defineEventHandler(async (event) => {
       id: character.id,
       name: character.name,
       characterType: character.characterType,
+      // Player info
+      playedBy: character.playedBy,
+      age: character.age,
+      gender: character.gender,
+      height: character.height,
+      weight: character.weight,
+      // Stats
       level: character.level,
       stats: {
         hp: character.hp,
@@ -46,13 +71,24 @@ export default defineEventHandler(async (event) => {
       },
       currentHp: character.currentHp,
       maxHp: character.hp,
+      // Classes, skills, features, edges
       trainerClasses: JSON.parse(character.trainerClasses),
       skills: JSON.parse(character.skills),
+      features: JSON.parse(character.features),
+      edges: JSON.parse(character.edges),
+      // Inventory
       inventory: JSON.parse(character.inventory),
       money: character.money,
+      // Status
       statusConditions: JSON.parse(character.statusConditions),
       stageModifiers: JSON.parse(character.stageModifiers),
+      // Display
       avatarUrl: character.avatarUrl,
+      // Background
+      background: character.background,
+      personality: character.personality,
+      goals: character.goals,
+      // Library
       isInLibrary: character.isInLibrary,
       notes: character.notes,
       pokemonIds: []
