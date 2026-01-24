@@ -128,20 +128,50 @@
 
         <!-- Generated Results -->
         <div v-if="generatedPokemon.length > 0" class="generated-results">
-          <h4>Generated Pokemon</h4>
+          <div class="generated-results__header">
+            <h4>Generated Pokemon</h4>
+            <div class="generated-results__actions">
+              <button
+                type="button"
+                class="btn btn--sm btn--secondary"
+                @click="selectAll"
+              >
+                Select All
+              </button>
+              <button
+                type="button"
+                class="btn btn--sm btn--secondary"
+                @click="selectNone"
+              >
+                Select None
+              </button>
+            </div>
+          </div>
           <div class="generated-list">
             <div
               v-for="(pokemon, index) in generatedPokemon"
               :key="index"
               class="generated-item"
+              :class="{ 'generated-item--selected': selectedIndices.has(index) }"
               data-testid="generated-pokemon"
+              @click="toggleSelection(index)"
             >
+              <input
+                type="checkbox"
+                class="generated-item__checkbox"
+                :checked="selectedIndices.has(index)"
+                @click.stop
+                @change="toggleSelection(index)"
+              />
               <span class="generated-item__name">{{ pokemon.speciesName }}</span>
               <span class="generated-item__level">Lv. {{ pokemon.level }}</span>
               <span class="generated-item__source" :class="`generated-item__source--${pokemon.source}`">
                 {{ pokemon.source }}
               </span>
             </div>
+          </div>
+          <div v-if="selectedIndices.size > 0" class="generated-results__selection-info">
+            {{ selectedIndices.size }} of {{ generatedPokemon.length }} selected
           </div>
         </div>
       </div>
@@ -170,7 +200,7 @@
           @click="serveToGroup"
           data-testid="show-on-tv-btn"
         >
-          {{ servingToTv ? 'Sending...' : 'Show on TV' }}
+          {{ servingToTv ? 'Sending...' : `Show on TV${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` }}
         </button>
         <button
           v-if="generatedPokemon.length > 0"
@@ -180,7 +210,7 @@
           @click="addToEncounter"
           data-testid="add-to-encounter-btn"
         >
-          {{ addingToEncounter ? 'Adding...' : hasActiveEncounter ? 'Add to Encounter' : 'No Active Encounter' }}
+          {{ addingToEncounter ? 'Adding...' : hasActiveEncounter ? `Add to Encounter${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` : 'No Active Encounter' }}
         </button>
       </div>
     </div>
@@ -222,6 +252,15 @@ const generatedPokemon = ref<Array<{
   weight: number
   source: 'parent' | 'modification'
 }>>([])
+const selectedIndices = ref<Set<number>>(new Set())
+
+// Computed: get the Pokemon to use for actions (selected ones, or all if none selected)
+const pokemonForAction = computed(() => {
+  if (selectedIndices.value.size === 0) {
+    return generatedPokemon.value
+  }
+  return generatedPokemon.value.filter((_, index) => selectedIndices.value.has(index))
+})
 
 // Computed
 const resolvedEntries = computed((): ResolvedTableEntry[] => {
@@ -276,6 +315,25 @@ const formatPercent = (weight: number): string => {
   return `${percent.toFixed(1)}%`
 }
 
+// Selection functions
+const toggleSelection = (index: number) => {
+  const newSet = new Set(selectedIndices.value)
+  if (newSet.has(index)) {
+    newSet.delete(index)
+  } else {
+    newSet.add(index)
+  }
+  selectedIndices.value = newSet
+}
+
+const selectAll = () => {
+  selectedIndices.value = new Set(generatedPokemon.value.map((_, i) => i))
+}
+
+const selectNone = () => {
+  selectedIndices.value = new Set()
+}
+
 const generate = async () => {
   generating.value = true
   try {
@@ -303,6 +361,8 @@ const generate = async () => {
 
     const result = await encounterTablesStore.generateFromTable(props.table.id, options)
     generatedPokemon.value = result.generated
+    // Clear selection when generating new Pokemon
+    selectedIndices.value = new Set()
   } catch (error) {
     console.error('Failed to generate:', error)
   } finally {
@@ -313,7 +373,8 @@ const generate = async () => {
 const addToEncounter = () => {
   // Clear TV display when adding to encounter
   groupViewStore.clearWildSpawnPreview()
-  emit('addToEncounter', generatedPokemon.value.map(p => ({
+  // Use selected Pokemon, or all if none selected
+  emit('addToEncounter', pokemonForAction.value.map(p => ({
     speciesId: p.speciesId,
     speciesName: p.speciesName,
     level: p.level
@@ -321,12 +382,13 @@ const addToEncounter = () => {
 }
 
 const serveToGroup = async () => {
-  if (generatedPokemon.value.length === 0) return
+  if (pokemonForAction.value.length === 0) return
 
   servingToTv.value = true
   try {
+    // Use selected Pokemon, or all if none selected
     await groupViewStore.serveWildSpawn(
-      generatedPokemon.value.map(p => ({
+      pokemonForAction.value.map(p => ({
         speciesId: p.speciesId,
         speciesName: p.speciesName,
         level: p.level
@@ -509,9 +571,30 @@ watch(() => props.table, (newTable) => {
   padding: $spacing-md;
 
   h4 {
-    margin: 0 0 $spacing-sm 0;
+    margin: 0;
     font-size: $font-size-sm;
     color: $color-success;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-xs;
+  }
+
+  &__selection-info {
+    margin-top: $spacing-sm;
+    padding-top: $spacing-sm;
+    border-top: 1px solid rgba($color-success, 0.2);
+    font-size: $font-size-xs;
+    color: $color-accent-teal;
+    text-align: center;
   }
 }
 
@@ -523,11 +606,35 @@ watch(() => props.table, (newTable) => {
 .generated-item {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
+  gap: $spacing-sm;
   padding: $spacing-sm;
   background: $color-bg-tertiary;
   border-radius: $border-radius-sm;
   margin-bottom: $spacing-xs;
+  cursor: pointer;
+  transition: all $transition-fast;
+  border: 2px solid transparent;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+
+  &--selected {
+    background: rgba($color-accent-teal, 0.15);
+    border-color: $color-accent-teal;
+
+    &:hover {
+      background: rgba($color-accent-teal, 0.2);
+    }
+  }
+
+  &__checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: $color-accent-teal;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
 
   &__name {
     flex: 1;
