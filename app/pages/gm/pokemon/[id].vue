@@ -159,6 +159,19 @@
 
         <!-- Moves Tab -->
         <div v-if="activeTab === 'moves'" class="tab-content">
+          <!-- Last Move Roll Result -->
+          <div v-if="lastMoveRoll" class="roll-result roll-result--move">
+            <div class="roll-result__header">
+              <span class="roll-result__skill">{{ lastMoveRoll.moveName }}</span>
+              <span class="roll-result__type">{{ lastMoveRoll.type }}</span>
+            </div>
+            <div class="roll-result__total" :class="lastMoveRoll.resultClass">
+              {{ lastMoveRoll.result.total }}
+              <span v-if="lastMoveRoll.extra" class="roll-result__extra">{{ lastMoveRoll.extra }}</span>
+            </div>
+            <div class="roll-result__breakdown">{{ lastMoveRoll.result.breakdown }}</div>
+          </div>
+
           <div class="moves-list">
             <div v-for="(move, idx) in pokemon.moves" :key="idx" class="move-card">
               <div class="move-card__header">
@@ -178,6 +191,29 @@
               </div>
               <div v-if="move.effect" class="move-card__effect">
                 {{ move.effect }}
+              </div>
+              <div class="move-card__rolls">
+                <button
+                  v-if="move.ac !== null"
+                  class="btn btn--sm btn--secondary"
+                  @click="rollAttack(move)"
+                >
+                  Attack (AC {{ move.ac }})
+                </button>
+                <button
+                  v-if="move.damageBase"
+                  class="btn btn--sm btn--secondary"
+                  @click="rollDamage(move, false)"
+                >
+                  Damage
+                </button>
+                <button
+                  v-if="move.damageBase"
+                  class="btn btn--sm btn--accent"
+                  @click="rollDamage(move, true)"
+                >
+                  Crit!
+                </button>
               </div>
             </div>
             <p v-if="!pokemon.moves?.length" class="empty-state">No moves recorded</p>
@@ -300,8 +336,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Pokemon } from '~/types'
-import { roll, type DiceRollResult } from '~/utils/diceRoller'
+import type { Pokemon, Move } from '~/types'
+import { roll, rollCritical, type DiceRollResult } from '~/utils/diceRoller'
 
 definePageMeta({
   layout: 'gm'
@@ -313,6 +349,7 @@ const libraryStore = useLibraryStore()
 const { getSpriteUrl } = usePokemonSprite()
 
 const pokemonId = computed(() => route.params.id as string)
+const { getDamageRoll } = useCombat()
 
 // State
 const pokemon = ref<Pokemon | null>(null)
@@ -323,6 +360,13 @@ const saving = ref(false)
 const editData = ref<Partial<Pokemon>>({})
 const activeTab = ref('stats')
 const lastSkillRoll = ref<{ skill: string; result: DiceRollResult } | null>(null)
+const lastMoveRoll = ref<{
+  moveName: string
+  type: 'Attack' | 'Damage' | 'Crit Damage'
+  result: DiceRollResult
+  resultClass?: string
+  extra?: string
+} | null>(null)
 
 // Check for edit mode from query param
 onMounted(async () => {
@@ -388,6 +432,52 @@ const formatStatName = (stat: string) => {
 const rollSkill = (skill: string, notation: string) => {
   const result = roll(notation)
   lastSkillRoll.value = { skill, result }
+}
+
+// Move rolling
+const rollAttack = (move: Move) => {
+  const result = roll('1d20')
+  const naturalRoll = result.dice[0]
+
+  let extra = ''
+  let resultClass = ''
+
+  if (naturalRoll === 20) {
+    extra = 'Natural 20! CRIT!'
+    resultClass = 'roll-result__total--crit'
+  } else if (naturalRoll === 1) {
+    extra = 'Natural 1! Miss!'
+    resultClass = 'roll-result__total--miss'
+  } else if (move.ac && result.total >= move.ac) {
+    extra = `vs AC ${move.ac} - Hit!`
+    resultClass = 'roll-result__total--hit'
+  } else if (move.ac) {
+    extra = `vs AC ${move.ac} - Miss`
+    resultClass = 'roll-result__total--miss'
+  }
+
+  lastMoveRoll.value = {
+    moveName: move.name,
+    type: 'Attack',
+    result,
+    resultClass,
+    extra
+  }
+}
+
+const rollDamage = (move: Move, isCrit: boolean) => {
+  if (!move.damageBase) return
+
+  const notation = getDamageRoll(move.damageBase)
+  const result = isCrit ? rollCritical(notation) : roll(notation)
+
+  lastMoveRoll.value = {
+    moveName: move.name,
+    type: isCrit ? 'Crit Damage' : 'Damage',
+    result,
+    resultClass: isCrit ? 'roll-result__total--crit' : undefined,
+    extra: isCrit ? 'Critical Hit!' : undefined
+  }
 }
 
 // Edit mode
@@ -706,6 +796,14 @@ const saveChanges = async () => {
     line-height: 1.5;
     color: $color-text;
   }
+
+  &__rolls {
+    display: flex;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1px solid $glass-border;
+  }
 }
 
 .abilities-list {
@@ -840,6 +938,33 @@ const saveChanges = async () => {
     font-size: $font-size-xxl;
     font-weight: 700;
     color: $color-accent-violet;
+
+    &--crit {
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    &--hit {
+      color: $color-success;
+    }
+
+    &--miss {
+      color: $color-danger;
+    }
+  }
+
+  &__type {
+    font-size: $font-size-sm;
+    padding: $spacing-xs $spacing-sm;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-sm;
+    color: $color-text-muted;
+  }
+
+  &__extra {
+    display: block;
+    font-size: $font-size-sm;
+    margin-top: $spacing-xs;
   }
 
   &__breakdown {
