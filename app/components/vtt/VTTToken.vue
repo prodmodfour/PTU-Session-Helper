@@ -43,10 +43,6 @@
       <span class="vtt-token__level">Lv.{{ level }}</span>
     </div>
 
-    <!-- Initiative Badge -->
-    <div v-if="isCurrentTurn" class="vtt-token__turn-indicator">
-      ▶
-    </div>
 
     <!-- Size Indicator for Large Tokens -->
     <div v-if="token.size > 1" class="vtt-token__size-badge">
@@ -317,23 +313,6 @@ const handleMouseDown = (event: MouseEvent) => {
   color: $color-text-muted;
 }
 
-.vtt-token__turn-indicator {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 16px;
-  height: 16px;
-  background: $gradient-scarlet;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8px;
-  color: white;
-  box-shadow: 0 0 8px rgba($color-accent-scarlet, 0.6);
-  animation: pulse 1s ease-in-out infinite;
-}
-
 .vtt-token__size-badge {
   position: absolute;
   top: 2px;
@@ -345,12 +324,4 @@ const handleMouseDown = (event: MouseEvent) => {
   color: $color-text-muted;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba($color-accent-scarlet, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 16px rgba($color-accent-scarlet, 0.8);
-  }
-}
 </style>
