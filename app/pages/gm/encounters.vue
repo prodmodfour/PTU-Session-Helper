@@ -216,6 +216,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: 'gm'
+})
+
 import { useEncounterLibraryStore, type EncounterTemplate } from '~/stores/encounterLibrary'
 import TemplateCard from '~/components/encounter-library/TemplateCard.vue'
 

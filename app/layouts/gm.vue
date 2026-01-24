@@ -12,9 +12,17 @@
       </div>
 
       <nav class="gm-header__nav">
-        <NuxtLink to="/gm" class="gm-nav-link" active-class="gm-nav-link--active">
+        <NuxtLink to="/gm" class="gm-nav-link" active-class="gm-nav-link--active" :class="{ 'gm-nav-link--active': $route.path === '/gm' }">
           <img src="/icons/ui/encounter.svg" alt="" class="gm-nav-link__icon" />
           <span>Encounter</span>
+        </NuxtLink>
+        <NuxtLink to="/gm/encounters" class="gm-nav-link" active-class="gm-nav-link--active">
+          <span class="gm-nav-link__emoji">📚</span>
+          <span>Encounters</span>
+        </NuxtLink>
+        <NuxtLink to="/gm/habitats" class="gm-nav-link" active-class="gm-nav-link--active">
+          <span class="gm-nav-link__emoji">🌲</span>
+          <span>Habitats</span>
         </NuxtLink>
         <NuxtLink to="/gm/library" class="gm-nav-link" active-class="gm-nav-link--active">
           <img src="/icons/ui/library.svg" alt="" class="gm-nav-link__icon" />
@@ -155,6 +163,11 @@
     height: 20px;
     filter: brightness(0) invert(0.7);
     transition: filter $transition-fast;
+  }
+
+  &__emoji {
+    font-size: 18px;
+    line-height: 1;
   }
 
   &:hover {
