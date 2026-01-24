@@ -290,7 +290,9 @@ export function useRangeParser() {
    * Get movement range visualization cells with terrain cost support
    *
    * Uses flood-fill algorithm to find all reachable cells within movement budget,
-   * accounting for terrain movement costs.
+   * accounting for terrain movement costs and PTU diagonal rules.
+   *
+   * PTU Diagonal Rules: First diagonal costs 1m, second costs 2m, alternating.
    *
    * @param origin - Starting position
    * @param speed - Movement speed (movement points available)
@@ -307,34 +309,37 @@ export function useRangeParser() {
     const blockedSet = new Set(blockedCells.map(c => `${c.x},${c.y}`))
 
     // Cost map: stores the minimum cost to reach each cell
-    const costMap = new Map<string, number>()
+    // We track both cost and diagonal parity (0 = next diagonal costs 1, 1 = next costs 2)
+    const costMap = new Map<string, { cost: number; diagonalParity: number }>()
     const startKey = `${origin.x},${origin.y}`
-    costMap.set(startKey, 0)
+    costMap.set(startKey, { cost: 0, diagonalParity: 0 })
 
     // Priority queue for Dijkstra-like exploration
-    // Each entry: [x, y, costToReach]
-    const queue: Array<[number, number, number]> = [[origin.x, origin.y, 0]]
+    // Each entry: [x, y, costToReach, diagonalParity]
+    const queue: Array<[number, number, number, number]> = [[origin.x, origin.y, 0, 0]]
 
     // 8 directions for movement (including diagonals)
-    const directions = [
-      [-1, -1], [-1, 0], [-1, 1],
-      [0, -1], /* origin */ [0, 1],
-      [1, -1], [1, 0], [1, 1],
+    // Mark which are diagonal moves
+    const directions: Array<[number, number, boolean]> = [
+      [-1, -1, true], [-1, 0, false], [-1, 1, true],
+      [0, -1, false], /* origin */ [0, 1, false],
+      [1, -1, true], [1, 0, false], [1, 1, true],
     ]
 
     while (queue.length > 0) {
       // Sort by cost (lowest first) - simple priority queue
       queue.sort((a, b) => a[2] - b[2])
-      const [x, y, currentCost] = queue.shift()!
+      const [x, y, currentCost, currentParity] = queue.shift()!
 
       // Skip if we've already found a cheaper path to this cell
       const cellKey = `${x},${y}`
-      if (costMap.has(cellKey) && costMap.get(cellKey)! < currentCost) {
+      const existing = costMap.get(cellKey)
+      if (existing && existing.cost < currentCost) {
         continue
       }
 
       // Explore neighbors
-      for (const [dx, dy] of directions) {
+      for (const [dx, dy, isDiagonal] of directions) {
         const nx = x + dx
         const ny = y + dy
         const neighborKey = `${nx},${ny}`
@@ -344,17 +349,28 @@ export function useRangeParser() {
           continue
         }
 
-        // Get terrain cost for the destination cell
-        const terrainCost = getTerrainCost ? getTerrainCost(nx, ny) : 1
+        // Get terrain cost multiplier for the destination cell
+        const terrainMultiplier = getTerrainCost ? getTerrainCost(nx, ny) : 1
 
         // Skip impassable terrain (Infinity cost)
-        if (!isFinite(terrainCost)) {
+        if (!isFinite(terrainMultiplier)) {
           continue
         }
 
-        // Calculate total cost to reach neighbor
-        // Diagonal movement costs same as straight in PTU (Chebyshev)
-        const moveCost = terrainCost
+        // Calculate movement cost based on PTU diagonal rules
+        let baseCost: number
+        let newParity: number
+        if (isDiagonal) {
+          // Diagonal: alternates 1, 2, 1, 2...
+          baseCost = currentParity === 0 ? 1 : 2
+          newParity = 1 - currentParity // Toggle parity
+        } else {
+          // Straight: always costs 1
+          baseCost = 1
+          newParity = currentParity // Parity unchanged for straight moves
+        }
+
+        const moveCost = baseCost * terrainMultiplier
         const totalCost = currentCost + moveCost
 
         // Skip if exceeds movement budget
@@ -362,13 +378,14 @@ export function useRangeParser() {
           continue
         }
 
-        // Skip if we've already found a cheaper path
-        if (costMap.has(neighborKey) && costMap.get(neighborKey)! <= totalCost) {
+        // Check if we've found a better path
+        const existingNeighbor = costMap.get(neighborKey)
+        if (existingNeighbor && existingNeighbor.cost <= totalCost) {
           continue
         }
 
         // Record this path
-        costMap.set(neighborKey, totalCost)
+        costMap.set(neighborKey, { cost: totalCost, diagonalParity: newParity })
 
         // Add to reachable if not the origin
         if (nx !== origin.x || ny !== origin.y) {
@@ -379,11 +396,25 @@ export function useRangeParser() {
         }
 
         // Add to queue for further exploration
-        queue.push([nx, ny, totalCost])
+        queue.push([nx, ny, totalCost, newParity])
       }
     }
 
     return reachable
+  }
+
+  /**
+   * Calculate the minimum movement cost between two positions using PTU diagonal rules
+   * Diagonals alternate: 1m, 2m, 1m, 2m...
+   */
+  function calculateMoveCost(from: GridPosition, to: GridPosition): number {
+    const dx = Math.abs(to.x - from.x)
+    const dy = Math.abs(to.y - from.y)
+    const diagonals = Math.min(dx, dy)
+    const straights = Math.abs(dx - dy)
+    // Diagonal cost: 1 + 2 + 1 + 2... = diagonals + floor(diagonals / 2)
+    const diagonalCost = diagonals + Math.floor(diagonals / 2)
+    return diagonalCost + straights
   }
 
   /**
@@ -396,10 +427,7 @@ export function useRangeParser() {
     blockedCells: GridPosition[] = [],
     getTerrainCost?: TerrainCostGetter
   ): { valid: boolean; distance: number; cost: number; reason?: string } {
-    const distance = Math.max(
-      Math.abs(to.x - from.x),
-      Math.abs(to.y - from.y)
-    )
+    const distance = calculateMoveCost(from, to)
 
     // Check blocked
     const isBlocked = blockedCells.some(c => c.x === to.x && c.y === to.y)
@@ -433,7 +461,7 @@ export function useRangeParser() {
 
   /**
    * Calculate the actual path cost between two points through terrain
-   * Uses A* pathfinding
+   * Uses A* pathfinding with PTU diagonal rules
    */
   function calculatePathCost(
     from: GridPosition,
@@ -457,30 +485,39 @@ export function useRangeParser() {
       }
     }
 
-    // A* pathfinding
-    const openSet = new Map<string, { x: number; y: number; g: number; f: number; parent: string | null }>()
+    // A* pathfinding with diagonal parity tracking
+    // State includes position and diagonal parity
+    const openSet = new Map<string, { x: number; y: number; g: number; f: number; parity: number; parent: string | null }>()
     const closedSet = new Set<string>()
 
     const startKey = `${from.x},${from.y}`
-    const heuristic = (x: number, y: number) => Math.max(Math.abs(to.x - x), Math.abs(to.y - y))
+    // Heuristic: use minimum possible cost (all diagonals at 1.5 average)
+    const heuristic = (x: number, y: number) => {
+      const dx = Math.abs(to.x - x)
+      const dy = Math.abs(to.y - y)
+      const diagonals = Math.min(dx, dy)
+      const straights = Math.abs(dx - dy)
+      return diagonals + Math.floor(diagonals / 2) + straights
+    }
 
     openSet.set(startKey, {
       x: from.x,
       y: from.y,
       g: 0,
       f: heuristic(from.x, from.y),
+      parity: 0,
       parent: null,
     })
 
-    const directions = [
-      [-1, -1], [-1, 0], [-1, 1],
-      [0, -1], [0, 1],
-      [1, -1], [1, 0], [1, 1],
+    const directions: Array<[number, number, boolean]> = [
+      [-1, -1, true], [-1, 0, false], [-1, 1, true],
+      [0, -1, false], [0, 1, false],
+      [1, -1, true], [1, 0, false], [1, 1, true],
     ]
 
     while (openSet.size > 0) {
       // Find node with lowest f score
-      let current: { key: string; node: { x: number; y: number; g: number; f: number; parent: string | null } } | null = null
+      let current: { key: string; node: { x: number; y: number; g: number; f: number; parity: number; parent: string | null } } | null = null
       for (const [key, node] of openSet) {
         if (!current || node.f < current.node.f) {
           current = { key, node }
@@ -491,16 +528,10 @@ export function useRangeParser() {
 
       // Check if we reached the destination
       if (current.node.x === to.x && current.node.y === to.y) {
-        // Reconstruct path by walking back through parents
-        // We need to store parent info in closedSet as well for reconstruction
         const path: GridPosition[] = [{ x: to.x, y: to.y }]
-
-        // Simple path: just start and end for now
-        // Full path reconstruction would require storing parent info
         if (from.x !== to.x || from.y !== to.y) {
           path.unshift({ x: from.x, y: from.y })
         }
-
         return { cost: current.node.g, path }
       }
 
@@ -509,7 +540,7 @@ export function useRangeParser() {
       closedSet.add(current.key)
 
       // Explore neighbors
-      for (const [dx, dy] of directions) {
+      for (const [dx, dy, isDiagonal] of directions) {
         const nx = current.node.x + dx
         const ny = current.node.y + dy
         const neighborKey = `${nx},${ny}`
@@ -517,10 +548,21 @@ export function useRangeParser() {
         if (closedSet.has(neighborKey)) continue
         if (blockedSet.has(neighborKey)) continue
 
-        const terrainCost = getTerrainCost ? getTerrainCost(nx, ny) : 1
-        if (!isFinite(terrainCost)) continue
+        const terrainMultiplier = getTerrainCost ? getTerrainCost(nx, ny) : 1
+        if (!isFinite(terrainMultiplier)) continue
 
-        const g = current.node.g + terrainCost
+        // Calculate move cost with PTU diagonal rules
+        let baseCost: number
+        let newParity: number
+        if (isDiagonal) {
+          baseCost = current.node.parity === 0 ? 1 : 2
+          newParity = 1 - current.node.parity
+        } else {
+          baseCost = 1
+          newParity = current.node.parity
+        }
+
+        const g = current.node.g + baseCost * terrainMultiplier
         const f = g + heuristic(nx, ny)
 
         const existing = openSet.get(neighborKey)
@@ -530,6 +572,7 @@ export function useRangeParser() {
             y: ny,
             g,
             f,
+            parity: newParity,
             parent: current.key,
           })
         }
@@ -544,6 +587,7 @@ export function useRangeParser() {
     isInRange,
     getAffectedCells,
     getMovementRangeCells,
+    calculateMoveCost,
     validateMovement,
     calculatePathCost,
   }

@@ -154,11 +154,11 @@ describe('useRangeParser', () => {
       expect(result.reason).toBe('Destination is blocked')
     })
 
-    it('should use Chebyshev distance (diagonal = 1)', () => {
-      // Diagonal movement should cost same as orthogonal
+    it('should use PTU diagonal rules (1, 2, 1, 2...)', () => {
+      // 3 diagonal moves costs 1+2+1 = 4m
       const result = validateMovement(origin, { x: 8, y: 8 }, 5)
       expect(result.valid).toBe(true)
-      expect(result.distance).toBe(3) // Not 4.24 (Euclidean) or 6 (Manhattan)
+      expect(result.distance).toBe(4) // PTU: 1+2+1 = 4 (not Chebyshev 3 or Manhattan 6)
     })
   })
 
@@ -177,8 +177,9 @@ describe('useRangeParser', () => {
 
     it('should return correct cells for speed 2', () => {
       const cells = getMovementRangeCells(origin, 2)
-      // 5x5 square minus center = 24 cells
-      expect(cells).toHaveLength(24)
+      // PTU diagonal rules: corners cost 3m (1+2), so they're excluded
+      // 8 adjacent + 12 at distance 2 (excluding 4 diagonal corners) = 20 cells
+      expect(cells).toHaveLength(20)
     })
 
     it('should exclude blocked cells', () => {

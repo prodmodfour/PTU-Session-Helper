@@ -237,9 +237,16 @@ const movingToken = computed(() => {
   return props.tokens.find(t => t.combatantId === movingTokenId.value)
 })
 
-// Calculate distance between two grid positions (Chebyshev distance for PTU - diagonals count as 1)
+// Calculate distance between two grid positions using PTU diagonal rules
+// Diagonals alternate: 1m, 2m, 1m, 2m...
 const calculateMoveDistance = (from: GridPosition, to: GridPosition): number => {
-  return Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y))
+  const dx = Math.abs(to.x - from.x)
+  const dy = Math.abs(to.y - from.y)
+  const diagonals = Math.min(dx, dy)
+  const straights = Math.abs(dx - dy)
+  // Diagonal cost: 1 + 2 + 1 + 2... = diagonals + floor(diagonals / 2)
+  const diagonalCost = diagonals + Math.floor(diagonals / 2)
+  return diagonalCost + straights
 }
 
 // Get movement speed for a combatant
