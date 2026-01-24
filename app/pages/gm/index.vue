@@ -380,6 +380,7 @@
         @close="actionModalCombatant = null"
         @execute-move="handleExecuteMove"
         @execute-action="handleExecuteAction"
+        @update-status="handleStatus"
       />
     </Teleport>
   </div>

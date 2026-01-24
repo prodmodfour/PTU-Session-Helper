@@ -150,6 +150,81 @@
             </button>
           </div>
         </div>
+
+        <!-- Status Conditions Section -->
+        <div class="action-section">
+          <button class="section-toggle" @click="showConditions = !showConditions">
+            <h3>Status Conditions</h3>
+            <span class="section-toggle__icon" :class="{ 'section-toggle__icon--open': showConditions }">
+              ▼
+            </span>
+          </button>
+          <div v-if="showConditions" class="conditions-section">
+            <!-- Current Conditions -->
+            <div v-if="currentConditions.length > 0" class="current-conditions">
+              <p class="conditions-label">Active:</p>
+              <div class="condition-tags">
+                <button
+                  v-for="condition in currentConditions"
+                  :key="condition"
+                  class="condition-tag condition-tag--active"
+                  :class="getConditionClass(condition)"
+                  @click="removeCondition(condition)"
+                  :title="'Click to remove ' + condition"
+                >
+                  {{ condition }}
+                  <span class="condition-tag__remove">&times;</span>
+                </button>
+              </div>
+            </div>
+            <p v-else class="no-conditions">No active conditions</p>
+
+            <!-- Add Conditions -->
+            <div class="add-conditions">
+              <p class="conditions-label">Persistent:</p>
+              <div class="condition-tags">
+                <button
+                  v-for="condition in persistentConditions"
+                  :key="condition"
+                  class="condition-tag"
+                  :class="[getConditionClass(condition), { 'condition-tag--has': hasCondition(condition) }]"
+                  :disabled="hasCondition(condition)"
+                  @click="addCondition(condition)"
+                >
+                  {{ condition }}
+                </button>
+              </div>
+
+              <p class="conditions-label">Volatile:</p>
+              <div class="condition-tags">
+                <button
+                  v-for="condition in volatileConditions"
+                  :key="condition"
+                  class="condition-tag"
+                  :class="[getConditionClass(condition), { 'condition-tag--has': hasCondition(condition) }]"
+                  :disabled="hasCondition(condition)"
+                  @click="addCondition(condition)"
+                >
+                  {{ condition }}
+                </button>
+              </div>
+
+              <p class="conditions-label">Other:</p>
+              <div class="condition-tags">
+                <button
+                  v-for="condition in otherConditions"
+                  :key="condition"
+                  class="condition-tag"
+                  :class="[getConditionClass(condition), { 'condition-tag--has': hasCondition(condition) }]"
+                  :disabled="hasCondition(condition)"
+                  @click="addCondition(condition)"
+                >
+                  {{ condition }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Move Target Modal -->
@@ -166,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Move, Pokemon, HumanCharacter } from '~/types'
+import type { Combatant, Move, Pokemon, HumanCharacter, StatusCondition } from '~/types'
 
 const props = defineProps<{
   combatant: Combatant
@@ -177,6 +252,7 @@ const emit = defineEmits<{
   close: []
   executeMove: [combatantId: string, moveId: string, targetIds: string[], damage?: number]
   executeAction: [combatantId: string, actionType: string]
+  updateStatus: [combatantId: string, add: StatusCondition[], remove: StatusCondition[]]
 }>()
 
 // Maneuver type definition
@@ -269,6 +345,20 @@ const { getSpriteUrl } = usePokemonSprite()
 
 const selectedMove = ref<Move | null>(null)
 const showManeuvers = ref(false)
+const showConditions = ref(false)
+
+// Status condition categories
+const persistentConditions: StatusCondition[] = [
+  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned', 'Asleep'
+]
+
+const volatileConditions: StatusCondition[] = [
+  'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented'
+]
+
+const otherConditions: StatusCondition[] = [
+  'Fainted', 'Stuck', 'Slowed', 'Trapped', 'Tripped', 'Vulnerable', 'Suppressed'
+]
 
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
 
@@ -304,6 +394,39 @@ const moves = computed(() => {
   }
   return []
 })
+
+// Get current status conditions from the entity
+const currentConditions = computed((): StatusCondition[] => {
+  return props.combatant.entity.statusConditions || []
+})
+
+const hasCondition = (condition: StatusCondition): boolean => {
+  return currentConditions.value.includes(condition)
+}
+
+const getConditionClass = (condition: StatusCondition): string => {
+  const classMap: Record<string, string> = {
+    'Burned': 'condition--burn',
+    'Frozen': 'condition--freeze',
+    'Paralyzed': 'condition--paralysis',
+    'Poisoned': 'condition--poison',
+    'Badly Poisoned': 'condition--poison',
+    'Asleep': 'condition--sleep',
+    'Confused': 'condition--confusion',
+    'Fainted': 'condition--fainted',
+    'Flinched': 'condition--flinch',
+    'Infatuated': 'condition--infatuation'
+  }
+  return classMap[condition] || 'condition--default'
+}
+
+const addCondition = (condition: StatusCondition) => {
+  emit('updateStatus', props.combatant.id, [condition], [])
+}
+
+const removeCondition = (condition: StatusCondition) => {
+  emit('updateStatus', props.combatant.id, [], [condition])
+}
 
 // Create a Struggle move for Pokemon
 const struggleMove: Move = {
@@ -859,6 +982,146 @@ const selectManeuver = (maneuver: Maneuver) => {
       color: $color-accent-violet;
     }
   }
+}
+
+// Status Conditions Section
+.conditions-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.current-conditions {
+  padding: $spacing-md;
+  background: rgba($color-danger, 0.1);
+  border: 1px solid rgba($color-danger, 0.3);
+  border-radius: $border-radius-md;
+}
+
+.no-conditions {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  font-style: italic;
+  margin: 0;
+}
+
+.conditions-label {
+  margin: 0 0 $spacing-xs;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.condition-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.condition-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  background: $color-bg-tertiary;
+  color: $color-text;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    background: $color-bg-hover;
+    border-color: $border-color-emphasis;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &--active {
+    background: rgba($color-danger, 0.2);
+    border-color: $color-danger;
+
+    &:hover {
+      background: rgba($color-danger, 0.3);
+    }
+  }
+
+  &--has {
+    opacity: 0.4;
+  }
+
+  &__remove {
+    font-size: $font-size-sm;
+    font-weight: 700;
+    opacity: 0.7;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  // Condition type colors
+  &.condition--burn {
+    border-color: $type-fire;
+    &.condition-tag--active { background: rgba($type-fire, 0.2); }
+  }
+
+  &.condition--freeze {
+    border-color: $type-ice;
+    &.condition-tag--active { background: rgba($type-ice, 0.2); }
+  }
+
+  &.condition--paralysis {
+    border-color: $type-electric;
+    &.condition-tag--active { background: rgba($type-electric, 0.2); }
+  }
+
+  &.condition--poison {
+    border-color: $type-poison;
+    &.condition-tag--active { background: rgba($type-poison, 0.2); }
+  }
+
+  &.condition--sleep {
+    border-color: $type-psychic;
+    &.condition-tag--active { background: rgba($type-psychic, 0.2); }
+  }
+
+  &.condition--confusion {
+    border-color: $type-psychic;
+    &.condition-tag--active { background: rgba($type-psychic, 0.2); }
+  }
+
+  &.condition--fainted {
+    border-color: $color-danger;
+    &.condition-tag--active { background: rgba($color-danger, 0.3); }
+  }
+
+  &.condition--flinch {
+    border-color: $type-normal;
+    &.condition-tag--active { background: rgba($type-normal, 0.2); }
+  }
+
+  &.condition--infatuation {
+    border-color: $type-fairy;
+    &.condition-tag--active { background: rgba($type-fairy, 0.2); }
+  }
+}
+
+.add-conditions {
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-md;
 }
 
 @keyframes fadeIn {
