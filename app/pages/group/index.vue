@@ -199,7 +199,7 @@ const enemyCombatants = computed(() => encounterStore.enemyCombatants)
 
 // Grid config with fallback defaults
 const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
-  enabled: false,
+  enabled: true,
   width: 20,
   height: 15,
   cellSize: 40,

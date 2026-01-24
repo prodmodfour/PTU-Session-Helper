@@ -3,7 +3,7 @@ import type { GridConfig } from '~/types'
 
 // Default grid configuration
 const DEFAULT_GRID_CONFIG: GridConfig = {
-  enabled: false,
+  enabled: true,
   width: 20,
   height: 15,
   cellSize: 40,
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
         isActive: false,
         isPaused: false,
         isServed: false,
-        gridEnabled: body.gridEnabled ?? false,
+        gridEnabled: body.gridEnabled ?? true,
         gridWidth: body.gridWidth ?? 20,
         gridHeight: body.gridHeight ?? 15,
         gridCellSize: body.gridCellSize ?? 40,

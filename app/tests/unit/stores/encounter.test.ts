@@ -73,7 +73,7 @@ const createMockEncounter = (overrides = {}) => ({
   isPaused: false,
   isServed: false,
   gridConfig: {
-    enabled: false,
+    enabled: true,
     width: 20,
     height: 15,
     cellSize: 40,

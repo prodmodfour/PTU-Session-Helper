@@ -347,7 +347,7 @@
       v-if="showSaveTemplateModal && encounter"
       :encounter-id="encounter.id"
       :combatant-count="encounter.combatants.length"
-      :has-grid="encounter.gridConfig?.enabled ?? false"
+      :has-grid="encounter.gridConfig?.enabled ?? true"
       @close="showSaveTemplateModal = false"
       @saved="handleTemplateSaved"
     />
@@ -519,7 +519,7 @@ const getCombatantName = (combatant?: Combatant): string => {
 
 // Grid config with fallback defaults
 const gridConfig = computed(() => encounter.value?.gridConfig ?? {
-  enabled: false,
+  enabled: true,
   width: 20,
   height: 15,
   cellSize: 40,
