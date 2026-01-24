@@ -42,14 +42,6 @@
       </div>
     </div>
 
-    <div class="pokemon-card__actions" @click.stop.prevent>
-      <NuxtLink :to="`/gm/pokemon/${pokemon.id}?edit=true`" class="btn btn--sm btn--secondary">
-        Edit
-      </NuxtLink>
-      <button class="btn btn--sm btn--danger" @click="$emit('delete', pokemon)">
-        Delete
-      </button>
-    </div>
   </NuxtLink>
 </template>
 
@@ -60,9 +52,6 @@ const props = defineProps<{
   pokemon: Pokemon
 }>()
 
-defineEmits<{
-  delete: [pokemon: Pokemon]
-}>()
 
 const { getSpriteUrl, getSpriteByDexNumber } = usePokemonSprite()
 const { getHealthPercentage, getHealthStatus } = useCombat()
@@ -186,20 +175,6 @@ const healthBarClass = computed(() => {
 
   &__hp {
     width: 100%;
-  }
-
-  &__actions {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xs;
-    opacity: 0;
-    transform: translateX(8px);
-    transition: all $transition-fast;
-  }
-
-  &:hover &__actions {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 

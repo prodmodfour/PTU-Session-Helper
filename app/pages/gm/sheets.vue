@@ -70,7 +70,6 @@
               v-for="human in filteredHumans"
               :key="human.id"
               :human="human"
-              @delete="deleteHuman"
             />
           </div>
         </section>
@@ -83,7 +82,6 @@
               v-for="pokemon in filteredPokemon"
               :key="pokemon.id"
               :pokemon="pokemon"
-              @delete="deletePokemon"
             />
           </div>
         </section>

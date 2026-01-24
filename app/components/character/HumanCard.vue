@@ -23,14 +23,6 @@
       </div>
     </div>
 
-    <div class="human-card__actions" @click.stop.prevent>
-      <NuxtLink :to="`/gm/characters/${human.id}?edit=true`" class="btn btn--sm btn--secondary">
-        Edit
-      </NuxtLink>
-      <button class="btn btn--sm btn--danger" @click="$emit('delete', human)">
-        Delete
-      </button>
-    </div>
   </NuxtLink>
 </template>
 
@@ -39,10 +31,6 @@ import type { HumanCharacter } from '~/types'
 
 defineProps<{
   human: HumanCharacter
-}>()
-
-defineEmits<{
-  delete: [human: HumanCharacter]
 }>()
 </script>
 
@@ -145,20 +133,6 @@ defineEmits<{
     gap: $spacing-md;
     font-size: $font-size-xs;
     color: $color-text-muted;
-  }
-
-  &__actions {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xs;
-    opacity: 0;
-    transform: translateX(8px);
-    transition: all $transition-fast;
-  }
-
-  &:hover &__actions {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 </style>
