@@ -26,7 +26,7 @@
         @click="$emit('remove', entry)"
         title="Remove"
       >
-        🗑️
+        <img src="/icons/phosphor/trash.svg" alt="Remove" class="action-icon" />
       </button>
     </span>
   </div>
@@ -144,5 +144,16 @@ const handleWeightChange = (event: Event) => {
 .btn--danger:hover {
   background: rgba($color-danger, 0.2);
   border-color: $color-danger;
+}
+
+.action-icon {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) invert(0.7);
+  transition: filter 0.15s ease;
+}
+
+.btn--danger:hover .action-icon {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(2000%) hue-rotate(340deg);
 }
 </style>

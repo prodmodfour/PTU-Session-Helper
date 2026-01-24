@@ -65,7 +65,9 @@
 
     <!-- Empty State -->
     <div v-else-if="libraryStore.filteredTemplates.length === 0" class="empty-state">
-      <div class="empty-icon">📁</div>
+      <div class="empty-icon">
+        <img src="/icons/phosphor/folder.svg" alt="" class="empty-icon__svg" />
+      </div>
       <h3>No Templates Found</h3>
       <p v-if="searchQuery || selectedCategory">
         No templates match your search criteria.
@@ -457,8 +459,13 @@ const confirmDelete = async () => {
 }
 
 .empty-icon {
-  font-size: 4rem;
   margin-bottom: $spacing-md;
+
+  &__svg {
+    width: 64px;
+    height: 64px;
+    filter: brightness(0) invert(0.5);
+  }
 }
 
 .empty-state h3 {

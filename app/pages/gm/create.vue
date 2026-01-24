@@ -14,7 +14,9 @@
         :class="{ 'type-btn--active': createType === 'human' }"
         @click="createType = 'human'"
       >
-        <span class="type-btn__icon">👤</span>
+        <span class="type-btn__icon">
+          <img src="/icons/phosphor/user.svg" alt="" class="type-btn__svg" />
+        </span>
         <span>Human Character</span>
       </button>
       <button
@@ -22,7 +24,9 @@
         :class="{ 'type-btn--active': createType === 'pokemon' }"
         @click="createType = 'pokemon'"
       >
-        <span class="type-btn__icon">🔴</span>
+        <span class="type-btn__icon">
+          <img src="/icons/phosphor/circle.svg" alt="" class="type-btn__svg type-btn__svg--pokemon" />
+        </span>
         <span>Pokemon</span>
       </button>
     </div>
@@ -393,7 +397,16 @@ const createPokemon = async () => {
     justify-content: center;
     background: $gradient-sv-cool;
     border-radius: $border-radius-md;
-    font-size: 1.5rem;
+  }
+
+  &__svg {
+    width: 28px;
+    height: 28px;
+    filter: brightness(0) invert(1);
+
+    &--pokemon {
+      filter: brightness(0) saturate(100%) invert(33%) sepia(98%) saturate(7407%) hue-rotate(355deg) brightness(91%) contrast(118%);
+    }
   }
 }
 

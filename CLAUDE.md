@@ -53,6 +53,11 @@ books/markdown/   # PTU rulebooks and reference material
 - Gen 5 and below: Pokemon Black 2/White 2 sprites
 - Gen 6+: Latest 3D game sprites
 
+### Icons
+- **Use Phosphor Icons** instead of emojis for UI elements
+- Phosphor Icons are installed at the project root level
+- Import and use icon components rather than emoji characters
+
 ## Git & Attribution Rules
 
 - **Never push commits as Claude** - Do not use Claude or any AI identity as the commit author

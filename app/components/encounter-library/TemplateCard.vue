@@ -8,28 +8,28 @@
           @click="$emit('load', template)"
           title="Load Template"
         >
-          📂
+          <img src="/icons/phosphor/folder-open.svg" alt="Load" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost"
           @click="$emit('duplicate', template)"
           title="Duplicate Template"
         >
-          📋
+          <img src="/icons/phosphor/clipboard.svg" alt="Duplicate" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost"
           @click="$emit('edit', template)"
           title="Edit Template"
         >
-          ✏️
+          <img src="/icons/phosphor/pencil-simple.svg" alt="Edit" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost btn--danger"
           @click="$emit('delete', template)"
           title="Delete Template"
         >
-          🗑️
+          <img src="/icons/phosphor/trash.svg" alt="Delete" class="action-icon" />
         </button>
       </div>
     </div>
@@ -64,9 +64,7 @@
           :key="idx"
           class="preview-combatant"
         >
-          <span class="combatant-side" :class="`side--${combatant.side}`">
-            {{ getSideIcon(combatant.side) }}
-          </span>
+          <span class="side-dot" :class="getSideClass(combatant.side)"></span>
           <span class="combatant-name">{{ getCombatantName(combatant) }}</span>
           <span class="combatant-type">{{ combatant.type }}</span>
         </div>
@@ -124,14 +122,9 @@ const formatBattleType = (type: string): string => {
   return types[type] || type
 }
 
-// Get side icon
-const getSideIcon = (side: string): string => {
-  const icons: Record<string, string> = {
-    player: '🟢',
-    ally: '🔵',
-    enemy: '🔴'
-  }
-  return icons[side] || '⚪'
+// Get side class
+const getSideClass = (side: string): string => {
+  return `side-dot--${side}`
 }
 
 // Get combatant name for display
@@ -281,9 +274,27 @@ const getCombatantName = (combatant: TemplateCombatant): string => {
   font-size: 0.875rem;
 }
 
-.combatant-side {
-  width: 20px;
-  text-align: center;
+.side-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #888;
+
+  &--player {
+    background: #22c55e;
+    box-shadow: 0 0 4px rgba(#22c55e, 0.5);
+  }
+
+  &--ally {
+    background: #3b82f6;
+    box-shadow: 0 0 4px rgba(#3b82f6, 0.5);
+  }
+
+  &--enemy {
+    background: #ef4444;
+    box-shadow: 0 0 4px rgba(#ef4444, 0.5);
+  }
 }
 
 .combatant-name {
@@ -319,7 +330,21 @@ const getCombatantName = (combatant: TemplateCombatant): string => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(0.7);
+  transition: filter 0.15s ease;
+}
+
+.btn--ghost:hover .action-icon {
+  filter: brightness(0) invert(1);
+}
+
+.btn--danger:hover .action-icon {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(2000%) hue-rotate(340deg);
 }
 
 .btn--ghost {

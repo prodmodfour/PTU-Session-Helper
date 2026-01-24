@@ -8,28 +8,28 @@
           @click="$emit('generate', table)"
           title="Generate Encounter"
         >
-          🎲
+          <img src="/icons/phosphor/dice-five.svg" alt="Generate" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost"
           @click="$emit('export', table)"
           title="Export Table"
         >
-          📥
+          <img src="/icons/phosphor/download-simple.svg" alt="Export" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost"
           @click="$emit('edit', table)"
           title="Edit Table"
         >
-          ✏️
+          <img src="/icons/phosphor/pencil-simple.svg" alt="Edit" class="action-icon" />
         </button>
         <button
           class="btn btn--icon btn--ghost btn--danger"
           @click="$emit('delete', table)"
           title="Delete Table"
         >
-          🗑️
+          <img src="/icons/phosphor/trash.svg" alt="Delete" class="action-icon" />
         </button>
       </div>
     </div>
@@ -311,5 +311,20 @@ const getRarityClass = (weight: number): string => {
 .btn--danger:hover {
   background: rgba($color-danger, 0.2);
   border-color: $color-danger;
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(0.7);
+  transition: filter 0.15s ease;
+}
+
+.btn--ghost:hover .action-icon {
+  filter: brightness(0) invert(1);
+}
+
+.btn--danger:hover .action-icon {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(2000%) hue-rotate(340deg);
 }
 </style>

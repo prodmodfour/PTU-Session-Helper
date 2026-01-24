@@ -6,11 +6,13 @@
       </NuxtLink>
       <h2 v-if="table">{{ table.name }}</h2>
       <div class="table-editor__actions" v-if="table">
-        <button class="btn btn--secondary" @click="showSettingsModal = true">
-          ⚙️ Settings
+        <button class="btn btn--secondary btn--with-icon" @click="showSettingsModal = true">
+          <img src="/icons/phosphor/gear.svg" alt="" class="btn-icon" />
+          Settings
         </button>
-        <button class="btn btn--primary" @click="generateEncounter">
-          🎲 Generate
+        <button class="btn btn--primary btn--with-icon" @click="generateEncounter">
+          <img src="/icons/phosphor/dice-five.svg" alt="" class="btn-icon" />
+          Generate
         </button>
       </div>
     </div>
@@ -623,26 +625,39 @@ const generateEncounter = () => {
     display: flex;
     gap: $spacing-sm;
   }
+}
 
-  &__loading,
-  &__not-found {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 300px;
-    color: $color-text-muted;
+.btn--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
 
-    p {
-      margin-bottom: $spacing-md;
-    }
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.table-editor__loading,
+.table-editor__not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: $color-text-muted;
+
+  p {
+    margin-bottom: $spacing-md;
   }
+}
 
-  &__content {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xl;
-  }
+.table-editor__content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
 }
 
 .table-info {

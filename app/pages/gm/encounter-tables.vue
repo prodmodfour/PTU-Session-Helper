@@ -213,11 +213,11 @@
                 <span class="result-level">Lv. {{ pokemon.level }}</span>
                 <span class="result-weight">(Weight: {{ pokemon.weight }})</span>
                 <button
-                  class="btn btn--ghost btn--sm"
+                  class="btn btn--ghost btn--sm btn--icon-only"
                   @click="rerollPokemon(index)"
                   title="Reroll this Pokemon"
                 >
-                  🎲
+                  <img src="/icons/phosphor/dice-five.svg" alt="Reroll" class="icon-sm" />
                 </button>
               </div>
             </div>
@@ -230,7 +230,7 @@
 
           <!-- No active encounter hint -->
           <div v-if="generateModal.results.length > 0 && !encounterStore.encounter" class="no-encounter-hint">
-            💡 No active encounter. <NuxtLink to="/gm" class="hint-link">Go to GM page</NuxtLink> to create one first.
+            <img src="/icons/phosphor/lightbulb.svg" alt="" class="hint-icon" /> No active encounter. <NuxtLink to="/gm" class="hint-link">Go to GM page</NuxtLink> to create one first.
           </div>
         </div>
         <div class="modal__footer">
@@ -280,7 +280,9 @@
               @drop.prevent="handleFileDrop"
               @click="fileInputRef?.click()"
             >
-              <span class="import-zone__icon">📁</span>
+              <span class="import-zone__icon">
+                <img src="/icons/phosphor/folder.svg" alt="" class="import-icon" />
+              </span>
               <p class="import-zone__text">
                 {{ selectedFile ? selectedFile.name : 'Click or drag JSON file here' }}
               </p>
@@ -839,10 +841,37 @@ const doImport = async () => {
   }
 
   &__icon {
-    font-size: 2.5rem;
     display: block;
     margin-bottom: $spacing-md;
   }
+}
+
+.import-icon {
+  width: 48px;
+  height: 48px;
+  filter: brightness(0) invert(0.5);
+}
+
+.icon-sm {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(0.7);
+}
+
+.hint-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 4px;
+  filter: brightness(0) saturate(100%) invert(70%) sepia(50%) saturate(500%) hue-rotate(10deg);
+}
+
+.btn--icon-only:hover .icon-sm {
+  filter: brightness(0) invert(1);
+}
+
+// Reopen import-zone for remaining nested styles
+.import-zone {
 
   &__text {
     color: $color-text;

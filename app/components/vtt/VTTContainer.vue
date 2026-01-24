@@ -14,22 +14,24 @@
         <!-- Toggle Grid Settings -->
         <button
           v-if="isGm"
-          class="btn btn--sm btn--secondary"
+          class="btn btn--sm btn--secondary btn--with-icon"
           @click="showSettings = !showSettings"
           data-testid="grid-settings-btn"
         >
-          ⚙ Settings
+          <img src="/icons/phosphor/gear.svg" alt="" class="btn-svg" />
+          Settings
         </button>
 
         <!-- Toggle Grid Visibility -->
         <button
           v-if="isGm"
-          class="btn btn--sm"
+          class="btn btn--sm btn--with-icon"
           :class="config.enabled ? 'btn--primary' : 'btn--secondary'"
           @click="toggleGrid"
           data-testid="toggle-grid-btn"
         >
-          {{ config.enabled ? '🗺 Grid On' : '🗺 Grid Off' }}
+          <img src="/icons/phosphor/map-trifold.svg" alt="" class="btn-svg" />
+          {{ config.enabled ? 'Grid On' : 'Grid Off' }}
         </button>
       </div>
     </div>
@@ -44,7 +46,8 @@
           title="Distance (M)"
           data-testid="measure-distance-btn"
         >
-          📏 Distance
+          <img src="/icons/phosphor/ruler.svg" alt="" class="toolbar-icon" />
+          Distance
         </button>
         <button
           class="measurement-btn"
@@ -53,7 +56,8 @@
           title="Burst AoE (B)"
           data-testid="measure-burst-btn"
         >
-          💥 Burst
+          <img src="/icons/phosphor/target.svg" alt="" class="toolbar-icon" />
+          Burst
         </button>
         <button
           class="measurement-btn"
@@ -62,7 +66,8 @@
           title="Cone AoE (C)"
           data-testid="measure-cone-btn"
         >
-          🔺 Cone
+          <img src="/icons/phosphor/triangle.svg" alt="" class="toolbar-icon" />
+          Cone
         </button>
         <button
           class="measurement-btn"
@@ -71,7 +76,8 @@
           title="Line AoE (L)"
           data-testid="measure-line-btn"
         >
-          ➖ Line
+          <img src="/icons/phosphor/minus.svg" alt="" class="toolbar-icon" />
+          Line
         </button>
         <button
           class="measurement-btn"
@@ -80,7 +86,8 @@
           title="Close Blast"
           data-testid="measure-close-blast-btn"
         >
-          ⬛ Close Blast
+          <img src="/icons/phosphor/square.svg" alt="" class="toolbar-icon" />
+          Close Blast
         </button>
       </div>
 
@@ -113,7 +120,8 @@
           @click="clearMeasurement"
           title="Clear (Escape)"
         >
-          ✕ Clear
+          <img src="/icons/phosphor/x-circle.svg" alt="" class="toolbar-icon" />
+          Clear
         </button>
       </div>
     </div>
@@ -127,7 +135,8 @@
           @click="toggleFogOfWar"
           data-testid="toggle-fow-btn"
         >
-          {{ fogOfWarStore.enabled ? '🌫 Fog On' : '☀ Fog Off' }}
+          <img :src="fogOfWarStore.enabled ? '/icons/phosphor/cloud.svg' : '/icons/phosphor/sun.svg'" alt="" class="toolbar-icon" />
+          {{ fogOfWarStore.enabled ? 'Fog On' : 'Fog Off' }}
         </button>
 
         <template v-if="fogOfWarStore.enabled">
@@ -141,7 +150,8 @@
               title="Reveal (V)"
               data-testid="fow-reveal-btn"
             >
-              👁 Reveal
+              <img src="/icons/phosphor/eye.svg" alt="" class="toolbar-icon" />
+              Reveal
             </button>
             <button
               class="fow-btn"
@@ -150,7 +160,8 @@
               title="Hide (H)"
               data-testid="fow-hide-btn"
             >
-              🙈 Hide
+              <img src="/icons/phosphor/eye-slash.svg" alt="" class="toolbar-icon" />
+              Hide
             </button>
             <button
               class="fow-btn"
@@ -159,7 +170,8 @@
               title="Explore (E)"
               data-testid="fow-explore-btn"
             >
-              🔍 Explore
+              <img src="/icons/phosphor/magnifying-glass.svg" alt="" class="toolbar-icon" />
+              Explore
             </button>
           </div>
 
@@ -812,7 +824,31 @@ defineExpose({
   }
 }
 
+// Toolbar icon styles
+.toolbar-icon {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) invert(0.7);
+  transition: filter 0.15s ease;
+}
+
+.btn-svg {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.btn--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
 .measurement-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
   padding: $spacing-xs $spacing-sm;
   font-size: $font-size-xs;
   background: $color-bg-secondary;
@@ -825,18 +861,30 @@ defineExpose({
   &:hover {
     background: $color-bg-primary;
     border-color: $color-accent-teal;
+
+    .toolbar-icon {
+      filter: brightness(0) invert(1);
+    }
   }
 
   &--active {
     background: rgba($color-accent-teal, 0.2);
     border-color: $color-accent-teal;
     color: $color-accent-teal;
+
+    .toolbar-icon {
+      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
+    }
   }
 
   &--clear {
     background: rgba($color-danger, 0.1);
     border-color: $color-danger;
     color: $color-danger;
+
+    .toolbar-icon {
+      filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(2000%) hue-rotate(340deg);
+    }
 
     &:hover {
       background: rgba($color-danger, 0.2);
@@ -921,6 +969,9 @@ defineExpose({
 }
 
 .fow-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
   padding: $spacing-xs $spacing-sm;
   font-size: $font-size-xs;
   background: $color-bg-secondary;
@@ -933,16 +984,27 @@ defineExpose({
   &:hover {
     background: $color-bg-primary;
     border-color: $color-accent-teal;
+
+    .toolbar-icon {
+      filter: brightness(0) invert(1);
+    }
   }
 
   &--active {
     background: rgba($color-accent-teal, 0.2);
     border-color: $color-accent-teal;
     color: $color-accent-teal;
+
+    .toolbar-icon {
+      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
+    }
   }
 }
 
 .fow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
   padding: $spacing-xs $spacing-sm;
   font-size: $font-size-xs;
   background: $color-bg-secondary;
@@ -955,12 +1017,20 @@ defineExpose({
   &:hover {
     background: $color-bg-primary;
     border-color: $color-accent-teal;
+
+    .toolbar-icon {
+      filter: brightness(0) invert(1);
+    }
   }
 
   &--active {
     background: rgba($color-accent-teal, 0.2);
     border-color: $color-accent-teal;
     color: $color-accent-teal;
+
+    .toolbar-icon {
+      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
+    }
   }
 
   &--small {

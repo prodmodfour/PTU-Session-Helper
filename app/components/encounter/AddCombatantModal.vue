@@ -3,7 +3,9 @@
     <div class="modal">
       <div class="modal__header">
         <h2>Add {{ sideLabel }}</h2>
-        <button class="btn btn--icon btn--secondary" @click="$emit('close')">✕</button>
+        <button class="btn btn--icon btn--secondary" @click="$emit('close')">
+          <img src="/icons/phosphor/x.svg" alt="Close" class="close-icon" />
+        </button>
       </div>
 
       <div class="modal__body">
@@ -177,6 +179,12 @@ const confirmAdd = () => {
 </script>
 
 <style lang="scss" scoped>
+.close-icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

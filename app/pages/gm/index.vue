@@ -30,8 +30,9 @@
 
         <div class="template-options">
           <span class="template-divider">or</span>
-          <button class="btn btn--secondary" @click="showLoadTemplateModal = true">
-            📂 Load from Template
+          <button class="btn btn--secondary btn--with-icon" @click="showLoadTemplateModal = true">
+            <img src="/icons/phosphor/folder-open.svg" alt="" class="btn-svg" />
+            Load from Template
           </button>
           <NuxtLink to="/gm/encounters" class="btn btn--ghost">
             Browse Library
@@ -52,7 +53,9 @@
             </span>
             <span class="badge badge--gray">Round {{ encounter.currentRound }}</span>
             <span v-if="encounter.isPaused" class="badge badge--yellow">Paused</span>
-            <span v-if="encounter.isServed" class="badge badge--green">📺 Served to Group</span>
+            <span v-if="encounter.isServed" class="badge badge--green">
+              <img src="/icons/phosphor/monitor.svg" alt="" class="badge-icon" /> Served to Group
+            </span>
           </div>
         </div>
 
@@ -60,41 +63,41 @@
           <!-- Serve/Unserve Buttons -->
           <button
             v-if="!encounter.isServed"
-            class="btn btn--secondary"
+            class="btn btn--secondary btn--with-icon"
             @click="serveEncounter"
             title="Display this encounter on Group View"
           >
-            <span class="btn-icon">📺</span>
+            <img src="/icons/phosphor/monitor.svg" alt="" class="btn-svg" />
             Serve to Group
           </button>
           <button
             v-else
-            class="btn btn--warning"
+            class="btn btn--warning btn--with-icon"
             @click="unserveEncounter"
             title="Stop displaying this encounter on Group View"
           >
-            <span class="btn-icon">📺</span>
+            <img src="/icons/phosphor/monitor.svg" alt="" class="btn-svg" />
             Unserve
           </button>
 
           <!-- Undo/Redo Buttons -->
           <div class="undo-redo-group">
             <button
-              class="btn btn--secondary btn--icon"
+              class="btn btn--secondary btn--icon btn--with-icon"
               :disabled="!undoRedoState.canUndo"
               :title="undoRedoState.canUndo ? `Undo: ${undoRedoState.lastActionName}` : 'Nothing to undo'"
               @click="handleUndo"
             >
-              <span class="btn-icon">↶</span>
+              <img src="/icons/phosphor/arrow-counter-clockwise.svg" alt="" class="btn-svg" />
               Undo
             </button>
             <button
-              class="btn btn--secondary btn--icon"
+              class="btn btn--secondary btn--icon btn--with-icon"
               :disabled="!undoRedoState.canRedo"
               :title="undoRedoState.canRedo ? `Redo: ${undoRedoState.nextActionName}` : 'Nothing to redo'"
               @click="handleRedo"
             >
-              <span class="btn-icon">↷</span>
+              <img src="/icons/phosphor/arrow-clockwise.svg" alt="" class="btn-svg" />
               Redo
             </button>
           </div>
@@ -118,11 +121,12 @@
             End Encounter
           </button>
           <button
-            class="btn btn--ghost"
+            class="btn btn--ghost btn--with-icon"
             @click="showSaveTemplateModal = true"
             title="Save current setup as a reusable template"
           >
-            💾 Save Template
+            <img src="/icons/phosphor/floppy-disk.svg" alt="" class="btn-svg" />
+            Save Template
           </button>
           <button
             class="btn btn--ghost btn--icon-only"
@@ -130,7 +134,7 @@
             title="Keyboard shortcuts (?)"
             data-testid="help-btn"
           >
-            ❓
+            <img src="/icons/phosphor/question.svg" alt="" class="btn-svg btn-svg--icon-only" />
           </button>
         </div>
       </div>
@@ -144,7 +148,8 @@
             @click="activeView = 'list'"
             data-testid="list-view-tab"
           >
-            📋 List View
+            <img src="/icons/phosphor/list.svg" alt="" class="view-tab__icon" />
+            List View
           </button>
           <button
             class="view-tab"
@@ -152,7 +157,8 @@
             @click="activeView = 'grid'"
             data-testid="grid-view-tab"
           >
-            🗺 Grid View
+            <img src="/icons/phosphor/map-trifold.svg" alt="" class="view-tab__icon" />
+            Grid View
           </button>
         </div>
 
@@ -166,7 +172,8 @@
             title="Use fixed average damage values"
             data-testid="set-damage-btn"
           >
-            📊 Set
+            <img src="/icons/phosphor/chart-bar.svg" alt="" class="damage-mode-btn__icon" />
+            Set
           </button>
           <button
             class="damage-mode-btn"
@@ -175,7 +182,8 @@
             title="Roll dice for damage"
             data-testid="rolled-damage-btn"
           >
-            🎲 Rolled
+            <img src="/icons/phosphor/dice-five.svg" alt="" class="damage-mode-btn__icon" />
+            Rolled
           </button>
         </div>
       </div>
@@ -824,7 +832,29 @@ const handleBackgroundRemove = async () => {
   }
 }
 
+// Button with icon styles
+.btn-svg {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+
+  &--icon-only {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.btn--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
 .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
   padding: $spacing-xs $spacing-sm;
   border-radius: $border-radius-sm;
   font-size: $font-size-xs;
@@ -852,6 +882,12 @@ const handleBackgroundRemove = async () => {
     background: linear-gradient(135deg, $color-success 0%, #34d399 100%);
     box-shadow: 0 0 8px rgba($color-success, 0.4);
   }
+}
+
+.badge-icon {
+  width: 12px;
+  height: 12px;
+  filter: brightness(0) invert(1);
 }
 
 .encounter-content {
@@ -1019,6 +1055,9 @@ const handleBackgroundRemove = async () => {
 }
 
 .view-tab {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
   padding: $spacing-sm $spacing-lg;
   background: $color-bg-tertiary;
   border: 1px solid $border-color-default;
@@ -1028,9 +1067,20 @@ const handleBackgroundRemove = async () => {
   cursor: pointer;
   transition: all 0.2s ease;
 
+  &__icon {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) invert(0.5);
+    transition: filter 0.2s ease;
+  }
+
   &:hover {
     background: $color-bg-secondary;
     color: $color-text;
+
+    .view-tab__icon {
+      filter: brightness(0) invert(1);
+    }
   }
 
   &--active {
@@ -1038,6 +1088,10 @@ const handleBackgroundRemove = async () => {
     border-color: transparent;
     color: $color-text;
     box-shadow: $shadow-glow-scarlet;
+
+    .view-tab__icon {
+      filter: brightness(0) invert(1);
+    }
   }
 }
 
@@ -1059,6 +1113,9 @@ const handleBackgroundRemove = async () => {
 }
 
 .damage-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
   padding: $spacing-xs $spacing-sm;
   background: transparent;
   border: 1px solid transparent;
@@ -1069,15 +1126,30 @@ const handleBackgroundRemove = async () => {
   cursor: pointer;
   transition: all 0.2s ease;
 
+  &__icon {
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) invert(0.5);
+    transition: filter 0.2s ease;
+  }
+
   &:hover {
     background: $color-bg-tertiary;
     color: $color-text;
+
+    .damage-mode-btn__icon {
+      filter: brightness(0) invert(1);
+    }
   }
 
   &--active {
     background: rgba($color-accent-teal, 0.2);
     border-color: $color-accent-teal;
     color: $color-accent-teal;
+
+    .damage-mode-btn__icon {
+      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
+    }
   }
 }
 

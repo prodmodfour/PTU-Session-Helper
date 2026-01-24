@@ -81,9 +81,7 @@
               :key="idx"
               class="combatant-preview"
             >
-              <span class="side-indicator" :class="`side--${combatant.side}`">
-                {{ getSideIcon(combatant.side) }}
-              </span>
+              <span class="side-dot" :class="getSideClass(combatant.side)"></span>
               <span class="combatant-name">{{ getCombatantName(combatant) }}</span>
               <span class="combatant-type">{{ combatant.type }}</span>
             </div>
@@ -197,13 +195,8 @@ const formatBattleType = (type: string): string => {
   return types[type] || type
 }
 
-const getSideIcon = (side: string): string => {
-  const icons: Record<string, string> = {
-    player: '🟢',
-    ally: '🔵',
-    enemy: '🔴'
-  }
-  return icons[side] || '⚪'
+const getSideClass = (side: string): string => {
+  return `side-dot--${side}`
 }
 
 const getCombatantName = (combatant: TemplateCombatant): string => {
@@ -451,9 +444,27 @@ onMounted(() => {
   border-radius: $border-radius-sm;
 }
 
-.side-indicator {
-  width: 20px;
-  text-align: center;
+.side-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #888;
+
+  &--player {
+    background: #22c55e;
+    box-shadow: 0 0 4px rgba(#22c55e, 0.5);
+  }
+
+  &--ally {
+    background: #3b82f6;
+    box-shadow: 0 0 4px rgba(#3b82f6, 0.5);
+  }
+
+  &--enemy {
+    background: #ef4444;
+    box-shadow: 0 0 4px rgba(#ef4444, 0.5);
+  }
 }
 
 .combatant-name {

@@ -17,11 +17,11 @@
           <span>Encounter</span>
         </NuxtLink>
         <NuxtLink to="/gm/encounters" class="gm-nav-link" active-class="gm-nav-link--active">
-          <span class="gm-nav-link__emoji">📚</span>
+          <img src="/icons/phosphor/books.svg" alt="" class="gm-nav-link__icon" />
           <span>Encounters</span>
         </NuxtLink>
         <NuxtLink to="/gm/habitats" class="gm-nav-link" active-class="gm-nav-link--active">
-          <span class="gm-nav-link__emoji">🌲</span>
+          <img src="/icons/phosphor/tree.svg" alt="" class="gm-nav-link__icon" />
           <span>Habitats</span>
         </NuxtLink>
         <NuxtLink to="/gm/library" class="gm-nav-link" active-class="gm-nav-link--active">
@@ -165,10 +165,6 @@
     transition: filter $transition-fast;
   }
 
-  &__emoji {
-    font-size: 18px;
-    line-height: 1;
-  }
 
   &:hover {
     color: $color-text;
