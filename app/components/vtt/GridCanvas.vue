@@ -237,9 +237,9 @@ const movingToken = computed(() => {
   return props.tokens.find(t => t.combatantId === movingTokenId.value)
 })
 
-// Calculate distance between two grid positions (Manhattan distance for PTU)
+// Calculate distance between two grid positions (Chebyshev distance for PTU - diagonals count as 1)
 const calculateMoveDistance = (from: GridPosition, to: GridPosition): number => {
-  return Math.abs(to.x - from.x) + Math.abs(to.y - from.y)
+  return Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y))
 }
 
 // Get movement speed for a combatant
