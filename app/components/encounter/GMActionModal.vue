@@ -451,7 +451,9 @@ const selectStruggle = () => {
 
 const handleMoveConfirm = (targetIds: string[], damage?: number) => {
   if (selectedMove.value) {
-    emit('executeMove', props.combatant.id, selectedMove.value.id, targetIds, damage)
+    // Use move name as identifier since id might be undefined
+    const moveIdentifier = selectedMove.value.id || selectedMove.value.name
+    emit('executeMove', props.combatant.id, moveIdentifier, targetIds, damage)
     selectedMove.value = null
     emit('close')
   }

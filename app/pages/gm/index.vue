@@ -776,8 +776,9 @@ const handleExecuteMove = async (combatantId: string, moveId: string, targetIds:
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
   if (!combatant) return
 
+  // moveId could be either the move's id or name - check both
   const moveName = moveId === 'struggle' ? 'Struggle' : (combatant.type === 'pokemon'
-    ? ((combatant.entity as any).moves?.find((m: any) => m.id === moveId)?.name || moveId)
+    ? ((combatant.entity as any).moves?.find((m: any) => m.id === moveId || m.name === moveId)?.name || moveId)
     : moveId)
 
   encounterStore.captureSnapshot(`${getCombatantName(combatant)} used ${moveName}`)
