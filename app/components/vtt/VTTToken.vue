@@ -181,26 +181,22 @@ const handleClick = (event: MouseEvent) => {
     z-index: 9;
   }
 
-  &--current {
-    filter: drop-shadow(0 0 8px $color-accent-scarlet) drop-shadow(0 0 16px $color-accent-scarlet);
-  }
-
   &--fainted {
     opacity: 0.5;
     filter: grayscale(0.8);
   }
 
-  // Side colors - ring around token
-  &--player {
-    box-shadow: 0 0 0 2px $color-side-player, 0 0 8px rgba($color-side-player, 0.5);
+  // Current turn glow - color based on side
+  &--current.vtt-token--player {
+    filter: drop-shadow(0 0 8px $color-side-player) drop-shadow(0 0 16px $color-side-player);
   }
 
-  &--ally {
-    box-shadow: 0 0 0 2px $color-side-ally, 0 0 8px rgba($color-side-ally, 0.5);
+  &--current.vtt-token--ally {
+    filter: drop-shadow(0 0 8px $color-side-ally) drop-shadow(0 0 16px $color-side-ally);
   }
 
-  &--enemy {
-    box-shadow: 0 0 0 2px $color-side-enemy, 0 0 8px rgba($color-side-enemy, 0.5);
+  &--current.vtt-token--enemy {
+    filter: drop-shadow(0 0 8px $color-side-enemy) drop-shadow(0 0 16px $color-side-enemy);
   }
 
   &:hover {
