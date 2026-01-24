@@ -316,8 +316,45 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // Update encounter from websocket
+    // Uses surgical updates to prevent full reactivity cascade
     updateFromWebSocket(data: Encounter) {
-      this.encounter = data
+      if (!this.encounter) {
+        this.encounter = data
+        return
+      }
+
+      // Update top-level properties
+      this.encounter.name = data.name
+      this.encounter.battleType = data.battleType
+      this.encounter.currentRound = data.currentRound
+      this.encounter.currentTurnIndex = data.currentTurnIndex
+      this.encounter.isPaused = data.isPaused
+      this.encounter.isServed = data.isServed
+      this.encounter.moveLog = data.moveLog
+      this.encounter.gridConfig = data.gridConfig
+      this.encounter.updatedAt = data.updatedAt
+
+      // Surgically update combatants to preserve reactivity
+      for (const incomingCombatant of data.combatants) {
+        const existingIndex = this.encounter.combatants.findIndex(c => c.id === incomingCombatant.id)
+        if (existingIndex !== -1) {
+          // Update existing combatant in place
+          const existing = this.encounter.combatants[existingIndex]
+          existing.initiative = incomingCombatant.initiative
+          existing.side = incomingCombatant.side
+          existing.gridPosition = incomingCombatant.gridPosition
+          existing.turnState = incomingCombatant.turnState
+          // Update entity properties
+          Object.assign(existing.entity, incomingCombatant.entity)
+        } else {
+          // New combatant - add it
+          this.encounter.combatants.push(incomingCombatant)
+        }
+      }
+
+      // Remove combatants that no longer exist
+      const incomingIds = new Set(data.combatants.map(c => c.id))
+      this.encounter.combatants = this.encounter.combatants.filter(c => incomingIds.has(c.id))
     },
 
     // Clear encounter
