@@ -1,5 +1,41 @@
 # Progress Log: Session Helper Implementation
 
+## Session: 2026-01-24 (Character Sheets as Pages)
+
+### Completed This Session
+- [x] Converted character sheets from modal to dedicated pages
+  - Created `/gm/pokemon/[id].vue` - Pokemon character sheet page
+  - Created `/gm/characters/[id].vue` - Human/Trainer character sheet page
+- [x] Updated card components to navigate to pages
+  - `HumanCard.vue` - Now uses NuxtLink to `/gm/characters/[id]`
+  - `PokemonCard.vue` - Now uses NuxtLink to `/gm/pokemon/[id]`
+- [x] Edit mode via query param (`?edit=true`)
+  - Clicking Edit button opens page in edit mode
+  - Edit button on page toggles edit mode and updates URL
+- [x] Cleaned up library.vue
+  - Removed CharacterModal usage
+  - Removed modal-related state and handlers
+  - Delete functionality preserved
+
+### Benefits
+- Multiple character sheets can be open in different tabs
+- Direct URLs to characters (shareable, bookmarkable)
+- Edit mode state preserved in URL
+
+### Files Created
+- `app/pages/gm/pokemon/[id].vue`
+- `app/pages/gm/characters/[id].vue`
+
+### Files Modified
+- `app/components/character/HumanCard.vue` - NuxtLink instead of modal
+- `app/components/character/PokemonCard.vue` - NuxtLink instead of modal
+- `app/pages/gm/library.vue` - Removed modal, simplified handlers
+
+### Test Status
+- 447 unit tests passing
+
+---
+
 ## Session: 2026-01-24 (E2E Test Suite Fixes)
 
 ### Completed This Session

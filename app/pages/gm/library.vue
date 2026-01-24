@@ -70,9 +70,7 @@
               v-for="human in filteredHumans"
               :key="human.id"
               :human="human"
-              @edit="editHuman"
               @delete="deleteHuman"
-              @view="viewHuman"
             />
           </div>
         </section>
@@ -85,23 +83,12 @@
               v-for="pokemon in filteredPokemon"
               :key="pokemon.id"
               :pokemon="pokemon"
-              @edit="editPokemon"
               @delete="deletePokemon"
-              @view="viewPokemon"
             />
           </div>
         </section>
       </template>
     </div>
-
-    <!-- View/Edit Modal -->
-    <CharacterModal
-      v-if="selectedCharacter"
-      :character="selectedCharacter"
-      :mode="modalMode"
-      @close="selectedCharacter = null"
-      @save="handleSave"
-    />
   </div>
 </template>
 
@@ -143,10 +130,6 @@ const loading = computed(() => libraryStore.loading)
 const filteredHumans = computed(() => libraryStore.filteredHumans)
 const filteredPokemon = computed(() => libraryStore.filteredPokemon)
 
-// Modal state
-const selectedCharacter = ref<HumanCharacter | Pokemon | null>(null)
-const modalMode = ref<'view' | 'edit'>('view')
-
 // Actions
 const resetFilters = () => {
   filters.value = {
@@ -159,30 +142,10 @@ const resetFilters = () => {
   }
 }
 
-const viewHuman = (human: HumanCharacter) => {
-  selectedCharacter.value = human
-  modalMode.value = 'view'
-}
-
-const editHuman = (human: HumanCharacter) => {
-  selectedCharacter.value = human
-  modalMode.value = 'edit'
-}
-
 const deleteHuman = async (human: HumanCharacter) => {
   if (confirm(`Delete ${human.name}? This cannot be undone.`)) {
     await libraryStore.deleteHuman(human.id)
   }
-}
-
-const viewPokemon = (pokemon: Pokemon) => {
-  selectedCharacter.value = pokemon
-  modalMode.value = 'view'
-}
-
-const editPokemon = (pokemon: Pokemon) => {
-  selectedCharacter.value = pokemon
-  modalMode.value = 'edit'
 }
 
 const deletePokemon = async (pokemon: Pokemon) => {
@@ -190,18 +153,6 @@ const deletePokemon = async (pokemon: Pokemon) => {
   if (confirm(`Delete ${name}? This cannot be undone.`)) {
     await libraryStore.deletePokemon(pokemon.id)
   }
-}
-
-const handleSave = async (data: Partial<HumanCharacter> | Partial<Pokemon>) => {
-  if (!selectedCharacter.value) return
-
-  if ('species' in selectedCharacter.value) {
-    await libraryStore.updatePokemon(selectedCharacter.value.id, data as Partial<Pokemon>)
-  } else {
-    await libraryStore.updateHuman(selectedCharacter.value.id, data as Partial<HumanCharacter>)
-  }
-
-  selectedCharacter.value = null
 }
 </script>
 

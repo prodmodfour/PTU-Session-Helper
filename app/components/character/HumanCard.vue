@@ -1,5 +1,5 @@
 <template>
-  <div class="human-card" @click="$emit('view', human)">
+  <NuxtLink :to="`/gm/characters/${human.id}`" class="human-card">
     <div class="human-card__avatar">
       <img v-if="human.avatarUrl" :src="human.avatarUrl" :alt="human.name" />
       <div v-else class="human-card__avatar-placeholder">
@@ -23,15 +23,15 @@
       </div>
     </div>
 
-    <div class="human-card__actions" @click.stop>
-      <button class="btn btn--sm btn--secondary" @click="$emit('edit', human)">
+    <div class="human-card__actions" @click.stop.prevent>
+      <NuxtLink :to="`/gm/characters/${human.id}?edit=true`" class="btn btn--sm btn--secondary">
         Edit
-      </button>
+      </NuxtLink>
       <button class="btn btn--sm btn--danger" @click="$emit('delete', human)">
         Delete
       </button>
     </div>
-  </div>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
@@ -42,8 +42,6 @@ defineProps<{
 }>()
 
 defineEmits<{
-  view: [human: HumanCharacter]
-  edit: [human: HumanCharacter]
   delete: [human: HumanCharacter]
 }>()
 </script>
@@ -60,6 +58,8 @@ defineEmits<{
   border-radius: $border-radius-xl;
   cursor: pointer;
   transition: all $transition-normal;
+  text-decoration: none;
+  color: inherit;
 
   &:hover {
     transform: translateY(-4px);

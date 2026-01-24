@@ -1,5 +1,5 @@
 <template>
-  <div class="pokemon-card" @click="$emit('view', pokemon)">
+  <NuxtLink :to="`/gm/pokemon/${pokemon.id}`" class="pokemon-card">
     <div class="pokemon-card__sprite">
       <img :src="spriteUrl" :alt="displayName" @error="handleSpriteError" />
       <div v-if="pokemon.shiny" class="pokemon-card__shiny-indicator">
@@ -42,15 +42,15 @@
       </div>
     </div>
 
-    <div class="pokemon-card__actions" @click.stop>
-      <button class="btn btn--sm btn--secondary" @click="$emit('edit', pokemon)">
+    <div class="pokemon-card__actions" @click.stop.prevent>
+      <NuxtLink :to="`/gm/pokemon/${pokemon.id}?edit=true`" class="btn btn--sm btn--secondary">
         Edit
-      </button>
+      </NuxtLink>
       <button class="btn btn--sm btn--danger" @click="$emit('delete', pokemon)">
         Delete
       </button>
     </div>
-  </div>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
@@ -61,8 +61,6 @@ const props = defineProps<{
 }>()
 
 defineEmits<{
-  view: [pokemon: Pokemon]
-  edit: [pokemon: Pokemon]
   delete: [pokemon: Pokemon]
 }>()
 
@@ -100,6 +98,8 @@ const healthBarClass = computed(() => {
   border-radius: $border-radius-xl;
   cursor: pointer;
   transition: all $transition-normal;
+  text-decoration: none;
+  color: inherit;
 
   &:hover {
     transform: translateY(-4px);
