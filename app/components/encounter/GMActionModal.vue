@@ -120,6 +120,36 @@
             </button>
           </div>
         </div>
+
+        <!-- Combat Maneuvers Section -->
+        <div class="action-section">
+          <button class="section-toggle" @click="showManeuvers = !showManeuvers">
+            <h3>Combat Maneuvers</h3>
+            <span class="section-toggle__icon" :class="{ 'section-toggle__icon--open': showManeuvers }">
+              ▼
+            </span>
+          </button>
+          <div v-if="showManeuvers" class="maneuvers-grid">
+            <button
+              v-for="maneuver in maneuvers"
+              :key="maneuver.id"
+              class="maneuver-btn"
+              :class="`maneuver-btn--${maneuver.actionType}`"
+              :disabled="isManeuverDisabled(maneuver)"
+              @click="selectManeuver(maneuver)"
+            >
+              <div class="maneuver-btn__header">
+                <img :src="maneuver.icon" alt="" class="maneuver-btn__icon" />
+                <span class="maneuver-btn__name">{{ maneuver.name }}</span>
+              </div>
+              <div class="maneuver-btn__meta">
+                <span class="maneuver-btn__action">{{ maneuver.actionLabel }}</span>
+                <span v-if="maneuver.ac" class="maneuver-btn__ac">AC {{ maneuver.ac }}</span>
+              </div>
+              <p class="maneuver-btn__desc">{{ maneuver.shortDesc }}</p>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Move Target Modal -->
@@ -146,12 +176,99 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   executeMove: [combatantId: string, moveId: string, targetIds: string[], damage?: number]
-  executeAction: [combatantId: string, actionType: 'shift' | 'struggle' | 'pass']
+  executeAction: [combatantId: string, actionType: string]
 }>()
+
+// Maneuver type definition
+interface Maneuver {
+  id: string
+  name: string
+  actionType: 'standard' | 'full' | 'interrupt'
+  actionLabel: string
+  ac: number | null
+  icon: string
+  shortDesc: string
+  requiresTarget: boolean
+}
+
+// Combat Maneuvers from PTU 1.05
+const maneuvers: Maneuver[] = [
+  {
+    id: 'push',
+    name: 'Push',
+    actionType: 'standard',
+    actionLabel: 'Standard',
+    ac: 4,
+    icon: '/icons/phosphor/arrow-fat-right.svg',
+    shortDesc: 'Push target 1m away (opposed Combat/Athletics)',
+    requiresTarget: true
+  },
+  {
+    id: 'sprint',
+    name: 'Sprint',
+    actionType: 'standard',
+    actionLabel: 'Standard',
+    ac: null,
+    icon: '/icons/phosphor/person-simple-run.svg',
+    shortDesc: '+50% Movement Speed this turn',
+    requiresTarget: false
+  },
+  {
+    id: 'trip',
+    name: 'Trip',
+    actionType: 'standard',
+    actionLabel: 'Standard',
+    ac: 6,
+    icon: '/icons/phosphor/sneaker-move.svg',
+    shortDesc: 'Trip target (opposed Combat/Acrobatics)',
+    requiresTarget: true
+  },
+  {
+    id: 'grapple',
+    name: 'Grapple',
+    actionType: 'standard',
+    actionLabel: 'Standard',
+    ac: 4,
+    icon: '/icons/phosphor/hand-grabbing.svg',
+    shortDesc: 'Initiate grapple (opposed Combat/Athletics)',
+    requiresTarget: true
+  },
+  {
+    id: 'intercept-melee',
+    name: 'Intercept Melee',
+    actionType: 'interrupt',
+    actionLabel: 'Full + Interrupt',
+    ac: null,
+    icon: '/icons/phosphor/shield.svg',
+    shortDesc: 'Take melee hit meant for adjacent ally',
+    requiresTarget: false
+  },
+  {
+    id: 'intercept-ranged',
+    name: 'Intercept Ranged',
+    actionType: 'interrupt',
+    actionLabel: 'Full + Interrupt',
+    ac: null,
+    icon: '/icons/phosphor/shield.svg',
+    shortDesc: 'Intercept ranged attack for ally',
+    requiresTarget: false
+  },
+  {
+    id: 'take-a-breather',
+    name: 'Take a Breather',
+    actionType: 'full',
+    actionLabel: 'Full Action',
+    ac: null,
+    icon: '/icons/phosphor/wind.svg',
+    shortDesc: 'Reset stages, cure volatile status, become Tripped',
+    requiresTarget: false
+  }
+]
 
 const { getSpriteUrl } = usePokemonSprite()
 
 const selectedMove = ref<Move | null>(null)
+const showManeuvers = ref(false)
 
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
 
@@ -222,6 +339,26 @@ const executeStandardAction = (actionType: 'shift' | 'struggle' | 'pass') => {
   if (actionType === 'pass') {
     emit('close')
   }
+}
+
+// Check if a maneuver is disabled based on action economy
+const isManeuverDisabled = (maneuver: Maneuver): boolean => {
+  if (maneuver.actionType === 'standard') {
+    return turnState.value.standardActionUsed
+  }
+  if (maneuver.actionType === 'full') {
+    // Full action requires both standard and shift
+    return turnState.value.standardActionUsed || turnState.value.shiftActionUsed
+  }
+  // Interrupts are always available (they're reactions)
+  return false
+}
+
+// Select and execute a maneuver
+const selectManeuver = (maneuver: Maneuver) => {
+  // For now, just emit the action - the GM page will handle logging
+  emit('executeAction', props.combatant.id, `maneuver:${maneuver.id}`)
+  emit('close')
 }
 </script>
 
@@ -584,6 +721,144 @@ const executeStandardAction = (actionType: 'shift' | 'struggle' | 'pass') => {
   &--dark { background-color: $type-dark; }
   &--steel { background-color: $type-steel; color: $color-text-dark; }
   &--fairy { background-color: $type-fairy; }
+}
+
+// Section toggle for collapsible sections
+.section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  margin-bottom: $spacing-md;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $color-text;
+
+  h3 {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__icon {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    transition: transform $transition-fast;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:hover h3 {
+    color: $color-text;
+  }
+}
+
+// Maneuvers grid
+.maneuvers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: $spacing-md;
+}
+
+.maneuver-btn {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-md;
+  color: $color-text;
+  cursor: pointer;
+  transition: all $transition-fast;
+  text-align: left;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    background: $color-bg-hover;
+    border-color: $border-color-emphasis;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: $font-size-md;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    font-size: $font-size-xs;
+  }
+
+  &__action {
+    padding: 2px $spacing-xs;
+    background: $color-bg-secondary;
+    border-radius: $border-radius-sm;
+    color: $color-text-muted;
+  }
+
+  &__ac {
+    color: $color-text-muted;
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    line-height: 1.4;
+  }
+
+  // Action type colors
+  &--standard {
+    &:not(:disabled):hover {
+      border-color: $color-accent-teal;
+    }
+  }
+
+  &--full {
+    &:not(:disabled):hover {
+      border-color: $color-warning;
+    }
+    .maneuver-btn__action {
+      background: rgba($color-warning, 0.2);
+      color: $color-warning;
+    }
+  }
+
+  &--interrupt {
+    &:not(:disabled):hover {
+      border-color: $color-accent-violet;
+    }
+    .maneuver-btn__action {
+      background: rgba($color-accent-violet, 0.2);
+      color: $color-accent-violet;
+    }
+  }
 }
 
 @keyframes fadeIn {

@@ -485,7 +485,6 @@ const applyStatuses = () => {
 }
 
 const handleActClick = () => {
-  console.log('[CombatantCard] Act button clicked for:', props.combatant.id)
   emit('openActions', props.combatant.id)
 }
 </script>

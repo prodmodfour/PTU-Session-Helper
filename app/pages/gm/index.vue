@@ -764,12 +764,9 @@ const handleStatus = async (combatantId: string, add: StatusCondition[], remove:
 
 // GM Action Modal handlers
 const handleOpenActions = (combatantId: string) => {
-  console.log('[GM] handleOpenActions called with:', combatantId)
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  console.log('[GM] Found combatant:', combatant?.id, combatant?.type)
   if (combatant) {
     actionModalCombatant.value = combatant
-    console.log('[GM] actionModalCombatant set to:', actionModalCombatant.value?.id)
   }
 }
 
@@ -793,24 +790,59 @@ const handleExecuteMove = async (combatantId: string, moveId: string, targetIds:
   actionModalCombatant.value = null
 }
 
-const handleExecuteAction = async (combatantId: string, actionType: 'shift' | 'struggle' | 'pass') => {
+// Maneuver name mapping
+const maneuverNames: Record<string, string> = {
+  'push': 'Push',
+  'sprint': 'Sprint',
+  'trip': 'Trip',
+  'grapple': 'Grapple',
+  'intercept-melee': 'Intercept Melee',
+  'intercept-ranged': 'Intercept Ranged',
+  'take-a-breather': 'Take a Breather'
+}
+
+const handleExecuteAction = async (combatantId: string, actionType: string) => {
   const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
   if (!combatant) return
 
   const name = getCombatantName(combatant)
 
-  switch (actionType) {
-    case 'shift':
-      encounterStore.captureSnapshot(`${name} used Shift action`)
+  // Handle maneuvers (prefixed with 'maneuver:')
+  if (actionType.startsWith('maneuver:')) {
+    const maneuverId = actionType.replace('maneuver:', '')
+    const maneuverName = maneuverNames[maneuverId] || maneuverId
+    encounterStore.captureSnapshot(`${name} used ${maneuverName}`)
+
+    // Use standard action for most maneuvers
+    if (['push', 'sprint', 'trip', 'grapple'].includes(maneuverId)) {
+      await encounterStore.useStandardAction(combatantId)
+    }
+    // Full actions use both standard and shift
+    if (['take-a-breather', 'intercept-melee', 'intercept-ranged'].includes(maneuverId)) {
+      await encounterStore.useStandardAction(combatantId)
       await encounterStore.useShiftAction(combatantId)
-      break
-    case 'pass':
-      encounterStore.captureSnapshot(`${name} passed their turn`)
-      // Mark turn as complete - both standard and shift actions used
-      combatant.turnState.hasActed = true
-      combatant.turnState.standardActionUsed = true
-      combatant.turnState.shiftActionUsed = true
-      break
+    }
+    // Special handling for Take a Breather
+    if (maneuverId === 'take-a-breather') {
+      await encounterStore.takeABreather(combatantId)
+    }
+  } else {
+    // Handle standard actions
+    switch (actionType) {
+      case 'shift':
+        encounterStore.captureSnapshot(`${name} used Shift action`)
+        await encounterStore.useShiftAction(combatantId)
+        break
+      case 'pass':
+        encounterStore.captureSnapshot(`${name} passed their turn`)
+        // Mark turn as complete - both standard and shift actions used
+        if (combatant.turnState) {
+          combatant.turnState.hasActed = true
+          combatant.turnState.standardActionUsed = true
+          combatant.turnState.shiftActionUsed = true
+        }
+        break
+    }
   }
 
   refreshUndoRedoState()
