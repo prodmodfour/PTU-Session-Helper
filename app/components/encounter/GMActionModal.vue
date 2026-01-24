@@ -450,9 +450,11 @@ const selectStruggle = () => {
 }
 
 const handleMoveConfirm = (targetIds: string[], damage?: number) => {
+  console.log('[GMActionModal] handleMoveConfirm called with damage:', damage, 'targets:', targetIds)
   if (selectedMove.value) {
     // Use move name as identifier since id might be undefined
     const moveIdentifier = selectedMove.value.id || selectedMove.value.name
+    console.log('[GMActionModal] Emitting executeMove with damage:', damage)
     emit('executeMove', props.combatant.id, moveIdentifier, targetIds, damage)
     selectedMove.value = null
     emit('close')
