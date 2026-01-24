@@ -96,6 +96,14 @@ export default defineEventHandler(async (event) => {
       // Status
       statusConditions: JSON.parse(character.statusConditions),
       stageModifiers: JSON.parse(character.stageModifiers),
+      injuries: character.injuries,
+      temporaryHp: character.temporaryHp,
+      // Rest/Healing tracking
+      lastInjuryTime: character.lastInjuryTime,
+      restMinutesToday: character.restMinutesToday,
+      injuriesHealedToday: character.injuriesHealedToday,
+      lastRestReset: character.lastRestReset,
+      drainedAp: character.drainedAp,
       // Display
       avatarUrl: character.avatarUrl,
       // Background

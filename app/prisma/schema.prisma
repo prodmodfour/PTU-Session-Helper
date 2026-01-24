@@ -47,6 +47,13 @@ model HumanCharacter {
   injuries         Int    @default(0)
   temporaryHp      Int    @default(0)
 
+  // Rest & Healing Tracking
+  lastInjuryTime     DateTime? // When the last injury was received (for 24h natural healing)
+  restMinutesToday   Int       @default(0) // Rest minutes used today (max 480 for HP regen)
+  injuriesHealedToday Int      @default(0) // Injuries healed today (max 3 from Pokemon Center)
+  lastRestReset      DateTime? // When daily rest counters were last reset
+  drainedAp          Int       @default(0) // Drained AP (restored by extended rest)
+
   // Display
   avatarUrl     String?
 
@@ -120,6 +127,12 @@ model Pokemon {
   statusConditions String @default("[]") // JSON array
   injuries         Int    @default(0)
   temporaryHp      Int    @default(0)
+
+  // Rest & Healing Tracking
+  lastInjuryTime     DateTime? // When the last injury was received (for 24h natural healing)
+  restMinutesToday   Int       @default(0) // Rest minutes used today (max 480 for HP regen)
+  injuriesHealedToday Int      @default(0) // Injuries healed today (max 3 from Pokemon Center)
+  lastRestReset      DateTime? // When daily rest counters were last reset
 
   // Tutor points and training
   tutorPoints   Int      @default(0)
@@ -237,6 +250,15 @@ model SpeciesData {
   burrow        Int      @default(0)
   levitate      Int      @default(0)
   teleport      Int      @default(0)
+
+  // Level-up move learnset (JSON array: [{ level: number, move: string }])
+  learnset      String   @default("[]")
+
+  // Skills (JSON object: { skillName: diceFormula })
+  skills        String   @default("{}")
+
+  // Other capabilities (JSON array: ["Naturewalk (Forest)", "Underdog", etc.])
+  capabilities  String   @default("[]")
 
   // Relation to encounter table entries
   encounterTableEntries EncounterTableEntry[]

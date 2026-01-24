@@ -143,6 +143,68 @@
             </div>
           </div>
 
+          <!-- Combat State Section -->
+          <div class="combat-state">
+            <!-- Status Conditions -->
+            <div v-if="statusConditions.length > 0" class="combat-state__section">
+              <h4>Status Conditions</h4>
+              <div class="status-list">
+                <span
+                  v-for="status in statusConditions"
+                  :key="status"
+                  class="status-badge"
+                  :class="`status-badge--${status.toLowerCase().replace(' ', '-')}`"
+                >
+                  {{ status }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Injuries -->
+            <div v-if="pokemon.injuries > 0" class="combat-state__section">
+              <h4>Injuries</h4>
+              <div class="injury-display">
+                <span class="injury-count">{{ pokemon.injuries }}</span>
+                <span class="injury-label">Injur{{ pokemon.injuries === 1 ? 'y' : 'ies' }}</span>
+              </div>
+            </div>
+
+            <!-- Stage Modifiers -->
+            <div v-if="hasStageModifiers" class="combat-state__section">
+              <h4>Combat Stages</h4>
+              <div class="stage-grid">
+                <div v-if="pokemon.stageModifiers?.attack !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.attack)">
+                  <span class="stage-stat">ATK</span>
+                  <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.attack) }}</span>
+                </div>
+                <div v-if="pokemon.stageModifiers?.defense !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.defense)">
+                  <span class="stage-stat">DEF</span>
+                  <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.defense) }}</span>
+                </div>
+                <div v-if="pokemon.stageModifiers?.specialAttack !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.specialAttack)">
+                  <span class="stage-stat">SP.ATK</span>
+                  <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.specialAttack) }}</span>
+                </div>
+                <div v-if="pokemon.stageModifiers?.specialDefense !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.specialDefense)">
+                  <span class="stage-stat">SP.DEF</span>
+                  <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.specialDefense) }}</span>
+                </div>
+                <div v-if="pokemon.stageModifiers?.speed !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.speed)">
+                  <span class="stage-stat">SPD</span>
+                  <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.speed) }}</span>
+                </div>
+                <div v-if="pokemon.stageModifiers?.accuracy !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.accuracy)">
+                  <span class="stage-stat">ACC</span>
+                  <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.accuracy) }}</span>
+                </div>
+                <div v-if="pokemon.stageModifiers?.evasion !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.evasion)">
+                  <span class="stage-stat">EVA</span>
+                  <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.evasion) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="info-section">
             <h4>Nature</h4>
             <p v-if="pokemon.nature">
@@ -333,6 +395,116 @@
           </div>
         </div>
 
+        <!-- Healing Tab -->
+        <div v-if="activeTab === 'healing'" class="tab-content">
+          <!-- Last Healing Result -->
+          <div v-if="lastHealingResult" class="healing-result" :class="lastHealingResult.success ? 'healing-result--success' : 'healing-result--error'">
+            {{ lastHealingResult.message }}
+          </div>
+
+          <!-- Current Status -->
+          <div class="healing-status">
+            <div class="healing-status__item">
+              <span class="healing-status__label">Current HP</span>
+              <span class="healing-status__value">{{ pokemon.currentHp }} / {{ pokemon.maxHp }}</span>
+            </div>
+            <div class="healing-status__item">
+              <span class="healing-status__label">Injuries</span>
+              <span class="healing-status__value" :class="{ 'text-danger': pokemon.injuries >= 5 }">
+                {{ pokemon.injuries || 0 }}
+                <span v-if="pokemon.injuries >= 5" class="healing-status__warning">(Cannot rest-heal)</span>
+              </span>
+            </div>
+            <div v-if="healingInfo" class="healing-status__item">
+              <span class="healing-status__label">Rest Today</span>
+              <span class="healing-status__value">
+                {{ formatRestTime(480 - healingInfo.restMinutesRemaining) }} / 8h
+              </span>
+            </div>
+            <div v-if="healingInfo" class="healing-status__item">
+              <span class="healing-status__label">HP per Rest</span>
+              <span class="healing-status__value">{{ healingInfo.hpPerRest }} HP</span>
+            </div>
+            <div v-if="healingInfo" class="healing-status__item">
+              <span class="healing-status__label">Injuries Healed Today</span>
+              <span class="healing-status__value">{{ healingInfo.injuriesHealedToday }} / 3</span>
+            </div>
+            <div v-if="healingInfo && healingInfo.hoursSinceLastInjury !== null" class="healing-status__item">
+              <span class="healing-status__label">Time Since Last Injury</span>
+              <span class="healing-status__value">
+                {{ Math.floor(healingInfo.hoursSinceLastInjury) }}h
+                <span v-if="healingInfo.canHealInjuryNaturally" class="text-success">(Can heal naturally)</span>
+                <span v-else-if="healingInfo.hoursUntilNaturalHeal" class="text-muted">
+                  ({{ Math.ceil(healingInfo.hoursUntilNaturalHeal) }}h until natural heal)
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Healing Actions -->
+          <div class="healing-actions">
+            <div class="healing-action">
+              <h4>Rest (30 min)</h4>
+              <p>Heal {{ healingInfo?.hpPerRest || 0 }} HP. Requires less than 5 injuries and under 8 hours rest today.</p>
+              <button
+                class="btn btn--primary"
+                :disabled="healingLoading || !healingInfo?.canRestHeal || pokemon.currentHp >= pokemon.maxHp"
+                @click="handleRest"
+              >
+                {{ healingLoading ? 'Resting...' : 'Rest 30 min' }}
+              </button>
+            </div>
+
+            <div class="healing-action">
+              <h4>Extended Rest (4+ hours)</h4>
+              <p>Heal HP for 4 hours, clear persistent status conditions (Burned, Frozen, Paralyzed, Poisoned, Asleep), restore daily moves.</p>
+              <button
+                class="btn btn--primary"
+                :disabled="healingLoading"
+                @click="handleExtendedRest"
+              >
+                {{ healingLoading ? 'Resting...' : 'Extended Rest' }}
+              </button>
+            </div>
+
+            <div class="healing-action">
+              <h4>Pokemon Center</h4>
+              <p>Full HP, all status cleared, daily moves restored. Heals up to 3 injuries/day. Time: 1 hour + 30min per injury.</p>
+              <button
+                class="btn btn--accent"
+                :disabled="healingLoading"
+                @click="handlePokemonCenter"
+              >
+                {{ healingLoading ? 'Healing...' : 'Pokemon Center' }}
+              </button>
+            </div>
+
+            <div v-if="pokemon.injuries > 0" class="healing-action">
+              <h4>Natural Injury Healing</h4>
+              <p>Heal 1 injury after 24 hours without gaining new injuries. Max 3 injuries healed per day from all sources.</p>
+              <button
+                class="btn btn--secondary"
+                :disabled="healingLoading || !healingInfo?.canHealInjuryNaturally || healingInfo?.injuriesRemainingToday <= 0"
+                @click="handleHealInjury"
+              >
+                {{ healingLoading ? 'Healing...' : 'Heal Injury Naturally' }}
+              </button>
+            </div>
+
+            <div class="healing-action healing-action--new-day">
+              <h4>New Day</h4>
+              <p>Reset daily healing limits: rest time, injuries healed counter.</p>
+              <button
+                class="btn btn--ghost"
+                :disabled="healingLoading"
+                @click="handleNewDay"
+              >
+                {{ healingLoading ? 'Resetting...' : 'New Day' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Notes Tab -->
         <div v-if="activeTab === 'notes'" class="tab-content">
           <div class="form-group">
@@ -427,6 +599,66 @@ const spriteUrl = computed(() => {
   return getSpriteUrl(pokemon.value.species, pokemon.value.shiny)
 })
 
+// Rest/Healing
+const { rest, extendedRest, pokemonCenter, healInjury, newDay, getHealingInfo, formatRestTime, loading: healingLoading } = useRestHealing()
+const lastHealingResult = ref<{ success: boolean; message: string } | null>(null)
+
+const healingInfo = computed(() => {
+  if (!pokemon.value) return null
+  return getHealingInfo({
+    maxHp: pokemon.value.maxHp,
+    injuries: pokemon.value.injuries || 0,
+    restMinutesToday: (pokemon.value as any).restMinutesToday || 0,
+    lastInjuryTime: (pokemon.value as any).lastInjuryTime || null,
+    injuriesHealedToday: (pokemon.value as any).injuriesHealedToday || 0
+  })
+})
+
+const handleRest = async () => {
+  if (!pokemon.value) return
+  const result = await rest('pokemon', pokemon.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadPokemon()
+  }
+}
+
+const handleExtendedRest = async () => {
+  if (!pokemon.value) return
+  const result = await extendedRest('pokemon', pokemon.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadPokemon()
+  }
+}
+
+const handlePokemonCenter = async () => {
+  if (!pokemon.value) return
+  const result = await pokemonCenter('pokemon', pokemon.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadPokemon()
+  }
+}
+
+const handleHealInjury = async () => {
+  if (!pokemon.value) return
+  const result = await healInjury('pokemon', pokemon.value.id, 'natural')
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadPokemon()
+  }
+}
+
+const handleNewDay = async () => {
+  if (!pokemon.value) return
+  const result = await newDay('pokemon', pokemon.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadPokemon()
+  }
+}
+
 // Tabs
 const pokemonTabs = [
   { id: 'stats', label: 'Stats' },
@@ -434,6 +666,7 @@ const pokemonTabs = [
   { id: 'abilities', label: 'Abilities' },
   { id: 'capabilities', label: 'Capabilities' },
   { id: 'skills', label: 'Skills' },
+  { id: 'healing', label: 'Healing' },
   { id: 'notes', label: 'Notes' }
 ]
 
@@ -447,6 +680,32 @@ const formatStatName = (stat: string) => {
     'speed': 'Spd'
   }
   return names[stat] || stat
+}
+
+// Combat state computed properties
+const statusConditions = computed(() => {
+  if (!pokemon.value?.statusConditions) return []
+  return Array.isArray(pokemon.value.statusConditions)
+    ? pokemon.value.statusConditions
+    : []
+})
+
+const hasStageModifiers = computed(() => {
+  if (!pokemon.value?.stageModifiers) return false
+  const mods = pokemon.value.stageModifiers
+  return mods.attack !== 0 || mods.defense !== 0 ||
+         mods.specialAttack !== 0 || mods.specialDefense !== 0 ||
+         mods.speed !== 0 || mods.accuracy !== 0 || mods.evasion !== 0
+})
+
+const formatStageValue = (value: number | undefined): string => {
+  if (value === undefined || value === 0) return '0'
+  return value > 0 ? `+${value}` : `${value}`
+}
+
+const getStageClass = (value: number | undefined): string => {
+  if (value === undefined || value === 0) return ''
+  return value > 0 ? 'stage-item--positive' : 'stage-item--negative'
 }
 
 // Skill rolling
@@ -746,6 +1005,131 @@ const saveChanges = async () => {
   &--dark { background: #705848; color: #fff; }
   &--steel { background: #B8B8D0; color: #000; }
   &--fairy { background: #EE99AC; color: #000; }
+}
+
+// Combat state styles
+.combat-state {
+  margin-bottom: $spacing-lg;
+
+  &__section {
+    margin-bottom: $spacing-md;
+    padding: $spacing-md;
+    background: $color-bg-secondary;
+    border-radius: $border-radius-md;
+
+    h4 {
+      margin: 0 0 $spacing-sm 0;
+      font-size: $font-size-sm;
+      color: $color-text-muted;
+      text-transform: uppercase;
+    }
+  }
+}
+
+.status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  // Persistent conditions
+  &--burned { background: #ff6b35; color: #fff; }
+  &--frozen { background: #7dd3fc; color: #000; }
+  &--paralyzed { background: #facc15; color: #000; }
+  &--poisoned { background: #a855f7; color: #fff; }
+  &--badly-poisoned { background: #7c3aed; color: #fff; }
+  &--asleep { background: #6b7280; color: #fff; }
+  &--fainted { background: #1f2937; color: #9ca3af; }
+
+  // Volatile conditions
+  &--confused { background: #f472b6; color: #000; }
+  &--flinched { background: #fbbf24; color: #000; }
+  &--infatuated { background: #ec4899; color: #fff; }
+  &--cursed { background: #581c87; color: #fff; }
+  &--disabled { background: #64748b; color: #fff; }
+  &--encored { background: #22d3ee; color: #000; }
+  &--taunted { background: #ef4444; color: #fff; }
+  &--tormented { background: #991b1b; color: #fff; }
+  &--enraged { background: #dc2626; color: #fff; }
+  &--suppressed { background: #475569; color: #fff; }
+
+  // Movement conditions
+  &--stuck { background: #92400e; color: #fff; }
+  &--trapped { background: #78350f; color: #fff; }
+  &--slowed { background: #0369a1; color: #fff; }
+
+  // Default
+  background: $color-bg-tertiary;
+  color: $color-text;
+}
+
+.injury-display {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  .injury-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: $color-danger;
+    color: #fff;
+    border-radius: 50%;
+    font-size: $font-size-lg;
+    font-weight: 700;
+  }
+
+  .injury-label {
+    color: $color-danger;
+    font-weight: 500;
+  }
+}
+
+.stage-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.stage-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-sm;
+  min-width: 50px;
+
+  .stage-stat {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    text-transform: uppercase;
+  }
+
+  .stage-value {
+    font-size: $font-size-md;
+    font-weight: 700;
+  }
+
+  &--positive {
+    border: 1px solid $color-success;
+    .stage-value { color: $color-success; }
+  }
+
+  &--negative {
+    border: 1px solid $color-danger;
+    .stage-value { color: $color-danger; }
+  }
 }
 
 .stats-grid {
@@ -1123,5 +1507,102 @@ const saveChanges = async () => {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+// Healing tab styles
+.healing-result {
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+  font-weight: 500;
+
+  &--success {
+    background: rgba($color-success, 0.15);
+    border: 1px solid $color-success;
+    color: $color-success;
+  }
+
+  &--error {
+    background: rgba($color-danger, 0.15);
+    border: 1px solid $color-danger;
+    color: $color-danger;
+  }
+}
+
+.healing-status {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  padding: $spacing-lg;
+  background: $color-bg-secondary;
+  border-radius: $border-radius-lg;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__value {
+    font-size: $font-size-md;
+    font-weight: 600;
+  }
+
+  &__warning {
+    font-size: $font-size-xs;
+    color: $color-danger;
+    font-weight: normal;
+  }
+}
+
+.healing-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+}
+
+.healing-action {
+  padding: $spacing-lg;
+  background: $color-bg-secondary;
+  border-radius: $border-radius-lg;
+  border: 1px solid $glass-border;
+
+  h4 {
+    margin: 0 0 $spacing-sm 0;
+    font-size: $font-size-md;
+    color: $color-text;
+  }
+
+  p {
+    margin: 0 0 $spacing-md 0;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    line-height: 1.5;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+.text-danger {
+  color: $color-danger;
+}
+
+.text-success {
+  color: $color-success;
+}
+
+.text-muted {
+  color: $color-text-muted;
 }
 </style>

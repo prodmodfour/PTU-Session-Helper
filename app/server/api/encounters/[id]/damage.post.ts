@@ -120,6 +120,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Update the actual entity in database
+    // Track lastInjuryTime if an injury was gained
+    const injuryUpdateData = result.injuryGained ? { lastInjuryTime: new Date() } : {}
+
     if (combatant.type === 'pokemon') {
       await prisma.pokemon.update({
         where: { id: combatant.entityId },
@@ -127,7 +130,8 @@ export default defineEventHandler(async (event) => {
           currentHp: result.newHp,
           temporaryHp: result.newTempHp,
           injuries: result.newInjuries,
-          statusConditions: JSON.stringify(entity.statusConditions || [])
+          statusConditions: JSON.stringify(entity.statusConditions || []),
+          ...injuryUpdateData
         }
       })
     } else {
@@ -137,7 +141,8 @@ export default defineEventHandler(async (event) => {
           currentHp: result.newHp,
           temporaryHp: result.newTempHp,
           injuries: result.newInjuries,
-          statusConditions: JSON.stringify(entity.statusConditions || [])
+          statusConditions: JSON.stringify(entity.statusConditions || []),
+          ...injuryUpdateData
         }
       })
     }

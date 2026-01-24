@@ -40,6 +40,23 @@
           </div>
         </div>
       </div>
+
+      <!-- Status Conditions -->
+      <div v-if="statusConditions.length > 0" class="pokemon-card__status">
+        <span
+          v-for="status in statusConditions"
+          :key="status"
+          class="status-badge"
+          :class="`status-badge--${status.toLowerCase().replace(' ', '-')}`"
+        >
+          {{ status }}
+        </span>
+      </div>
+
+      <!-- Injuries -->
+      <div v-if="pokemon.injuries > 0" class="pokemon-card__injuries">
+        <span class="injury-badge">{{ pokemon.injuries }} Injur{{ pokemon.injuries === 1 ? 'y' : 'ies' }}</span>
+      </div>
     </div>
 
   </NuxtLink>
@@ -72,6 +89,13 @@ const healthPercentage = computed(() =>
 const healthBarClass = computed(() => {
   const status = getHealthStatus(healthPercentage.value)
   return `health-bar--${status}`
+})
+
+const statusConditions = computed(() => {
+  if (!props.pokemon.statusConditions) return []
+  return Array.isArray(props.pokemon.statusConditions)
+    ? props.pokemon.statusConditions
+    : []
 })
 </script>
 
@@ -176,6 +200,65 @@ const healthBarClass = computed(() => {
   &__hp {
     width: 100%;
   }
+
+  &__status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: $spacing-xs;
+  }
+
+  &__injuries {
+    margin-top: $spacing-xs;
+  }
+}
+
+.status-badge {
+  padding: 2px 6px;
+  border-radius: $border-radius-sm;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  // Persistent conditions (more severe)
+  &--burned { background: #ff6b35; color: #fff; }
+  &--frozen { background: #7dd3fc; color: #000; }
+  &--paralyzed { background: #facc15; color: #000; }
+  &--poisoned { background: #a855f7; color: #fff; }
+  &--badly-poisoned { background: #7c3aed; color: #fff; }
+  &--asleep { background: #6b7280; color: #fff; }
+  &--fainted { background: #1f2937; color: #9ca3af; }
+
+  // Volatile conditions
+  &--confused { background: #f472b6; color: #000; }
+  &--flinched { background: #fbbf24; color: #000; }
+  &--infatuated { background: #ec4899; color: #fff; }
+  &--cursed { background: #581c87; color: #fff; }
+  &--disabled { background: #64748b; color: #fff; }
+  &--encored { background: #22d3ee; color: #000; }
+  &--taunted { background: #ef4444; color: #fff; }
+  &--tormented { background: #991b1b; color: #fff; }
+
+  // Movement conditions
+  &--stuck { background: #92400e; color: #fff; }
+  &--trapped { background: #78350f; color: #fff; }
+  &--slowed { background: #0369a1; color: #fff; }
+
+  // Default
+  background: $color-bg-tertiary;
+  color: $color-text;
+}
+
+.injury-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: $border-radius-sm;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: $color-danger;
+  color: #fff;
 }
 
 @keyframes sparkle {

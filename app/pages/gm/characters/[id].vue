@@ -198,6 +198,132 @@
           <p v-else class="empty-state">No Pokemon linked to this trainer</p>
         </div>
 
+        <!-- Healing Tab -->
+        <div v-if="activeTab === 'healing'" class="tab-content">
+          <!-- Last Healing Result -->
+          <div v-if="lastHealingResult" class="healing-result" :class="lastHealingResult.success ? 'healing-result--success' : 'healing-result--error'">
+            {{ lastHealingResult.message }}
+          </div>
+
+          <!-- Current Status -->
+          <div class="healing-status">
+            <div class="healing-status__item">
+              <span class="healing-status__label">Current HP</span>
+              <span class="healing-status__value">{{ character.currentHp }} / {{ character.maxHp }}</span>
+            </div>
+            <div class="healing-status__item">
+              <span class="healing-status__label">Injuries</span>
+              <span class="healing-status__value" :class="{ 'text-danger': (character as any).injuries >= 5 }">
+                {{ (character as any).injuries || 0 }}
+                <span v-if="(character as any).injuries >= 5" class="healing-status__warning">(Cannot rest-heal)</span>
+              </span>
+            </div>
+            <div v-if="healingInfo" class="healing-status__item">
+              <span class="healing-status__label">Rest Today</span>
+              <span class="healing-status__value">
+                {{ formatRestTime(480 - healingInfo.restMinutesRemaining) }} / 8h
+              </span>
+            </div>
+            <div v-if="healingInfo" class="healing-status__item">
+              <span class="healing-status__label">HP per Rest</span>
+              <span class="healing-status__value">{{ healingInfo.hpPerRest }} HP</span>
+            </div>
+            <div v-if="healingInfo" class="healing-status__item">
+              <span class="healing-status__label">Injuries Healed Today</span>
+              <span class="healing-status__value">{{ healingInfo.injuriesHealedToday }} / 3</span>
+            </div>
+            <div class="healing-status__item">
+              <span class="healing-status__label">Drained AP</span>
+              <span class="healing-status__value">{{ (character as any).drainedAp || 0 }}</span>
+            </div>
+            <div v-if="healingInfo && healingInfo.hoursSinceLastInjury !== null" class="healing-status__item">
+              <span class="healing-status__label">Time Since Last Injury</span>
+              <span class="healing-status__value">
+                {{ Math.floor(healingInfo.hoursSinceLastInjury) }}h
+                <span v-if="healingInfo.canHealInjuryNaturally" class="text-success">(Can heal naturally)</span>
+                <span v-else-if="healingInfo.hoursUntilNaturalHeal" class="text-muted">
+                  ({{ Math.ceil(healingInfo.hoursUntilNaturalHeal) }}h until natural heal)
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Healing Actions -->
+          <div class="healing-actions">
+            <div class="healing-action">
+              <h4>Rest (30 min)</h4>
+              <p>Heal {{ healingInfo?.hpPerRest || 0 }} HP. Requires less than 5 injuries and under 8 hours rest today.</p>
+              <button
+                class="btn btn--primary"
+                :disabled="healingLoading || !healingInfo?.canRestHeal || character.currentHp >= character.maxHp"
+                @click="handleRest"
+              >
+                {{ healingLoading ? 'Resting...' : 'Rest 30 min' }}
+              </button>
+            </div>
+
+            <div class="healing-action">
+              <h4>Extended Rest (4+ hours)</h4>
+              <p>Heal HP for 4 hours, clear persistent status conditions, restore drained AP.</p>
+              <button
+                class="btn btn--primary"
+                :disabled="healingLoading"
+                @click="handleExtendedRest"
+              >
+                {{ healingLoading ? 'Resting...' : 'Extended Rest' }}
+              </button>
+            </div>
+
+            <div class="healing-action">
+              <h4>Pokemon Center</h4>
+              <p>Full HP, all status cleared, AP restored. Heals up to 3 injuries/day. Time: 1 hour + 30min per injury.</p>
+              <button
+                class="btn btn--accent"
+                :disabled="healingLoading"
+                @click="handlePokemonCenter"
+              >
+                {{ healingLoading ? 'Healing...' : 'Pokemon Center' }}
+              </button>
+            </div>
+
+            <div v-if="(character as any).injuries > 0" class="healing-action">
+              <h4>Natural Injury Healing</h4>
+              <p>Heal 1 injury after 24 hours without gaining new injuries. Max 3 injuries healed per day from all sources.</p>
+              <button
+                class="btn btn--secondary"
+                :disabled="healingLoading || !healingInfo?.canHealInjuryNaturally || healingInfo?.injuriesRemainingToday <= 0"
+                @click="handleHealInjury('natural')"
+              >
+                {{ healingLoading ? 'Healing...' : 'Heal Injury Naturally' }}
+              </button>
+            </div>
+
+            <div v-if="(character as any).injuries > 0" class="healing-action">
+              <h4>Drain AP to Heal Injury</h4>
+              <p>Drain 2 AP to heal 1 injury as an Extended Action. Subject to daily injury limit.</p>
+              <button
+                class="btn btn--secondary"
+                :disabled="healingLoading || healingInfo?.injuriesRemainingToday <= 0"
+                @click="handleHealInjury('drain_ap')"
+              >
+                {{ healingLoading ? 'Healing...' : 'Drain 2 AP' }}
+              </button>
+            </div>
+
+            <div class="healing-action healing-action--new-day">
+              <h4>New Day</h4>
+              <p>Reset daily healing limits: rest time, injuries healed counter, drained AP.</p>
+              <button
+                class="btn btn--ghost"
+                :disabled="healingLoading"
+                @click="handleNewDay"
+              >
+                {{ healingLoading ? 'Resetting...' : 'New Day' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Notes Tab -->
         <div v-if="activeTab === 'notes'" class="tab-content">
           <div class="form-group">
@@ -278,12 +404,73 @@ const loadCharacter = async () => {
   }
 }
 
+// Rest/Healing
+const { rest, extendedRest, pokemonCenter, healInjury, newDay, getHealingInfo, formatRestTime, loading: healingLoading } = useRestHealing()
+const lastHealingResult = ref<{ success: boolean; message: string } | null>(null)
+
+const healingInfo = computed(() => {
+  if (!character.value) return null
+  return getHealingInfo({
+    maxHp: character.value.maxHp,
+    injuries: (character.value as any).injuries || 0,
+    restMinutesToday: (character.value as any).restMinutesToday || 0,
+    lastInjuryTime: (character.value as any).lastInjuryTime || null,
+    injuriesHealedToday: (character.value as any).injuriesHealedToday || 0
+  })
+})
+
+const handleRest = async () => {
+  if (!character.value) return
+  const result = await rest('character', character.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadCharacter()
+  }
+}
+
+const handleExtendedRest = async () => {
+  if (!character.value) return
+  const result = await extendedRest('character', character.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadCharacter()
+  }
+}
+
+const handlePokemonCenter = async () => {
+  if (!character.value) return
+  const result = await pokemonCenter('character', character.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadCharacter()
+  }
+}
+
+const handleHealInjury = async (method: 'natural' | 'drain_ap' = 'natural') => {
+  if (!character.value) return
+  const result = await healInjury('character', character.value.id, method)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadCharacter()
+  }
+}
+
+const handleNewDay = async () => {
+  if (!character.value) return
+  const result = await newDay('character', character.value.id)
+  if (result) {
+    lastHealingResult.value = { success: result.success, message: result.message }
+    await loadCharacter()
+  }
+}
+
 // Tabs
 const humanTabs = [
   { id: 'stats', label: 'Stats' },
   { id: 'classes', label: 'Classes' },
   { id: 'skills', label: 'Skills' },
   { id: 'pokemon', label: 'Pokemon' },
+  { id: 'healing', label: 'Healing' },
   { id: 'notes', label: 'Notes' }
 ]
 
@@ -659,5 +846,102 @@ const saveChanges = async () => {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+// Healing tab styles
+.healing-result {
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+  font-weight: 500;
+
+  &--success {
+    background: rgba($color-success, 0.15);
+    border: 1px solid $color-success;
+    color: $color-success;
+  }
+
+  &--error {
+    background: rgba($color-danger, 0.15);
+    border: 1px solid $color-danger;
+    color: $color-danger;
+  }
+}
+
+.healing-status {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  padding: $spacing-lg;
+  background: $color-bg-secondary;
+  border-radius: $border-radius-lg;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__value {
+    font-size: $font-size-md;
+    font-weight: 600;
+  }
+
+  &__warning {
+    font-size: $font-size-xs;
+    color: $color-danger;
+    font-weight: normal;
+  }
+}
+
+.healing-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+}
+
+.healing-action {
+  padding: $spacing-lg;
+  background: $color-bg-secondary;
+  border-radius: $border-radius-lg;
+  border: 1px solid $glass-border;
+
+  h4 {
+    margin: 0 0 $spacing-sm 0;
+    font-size: $font-size-md;
+    color: $color-text;
+  }
+
+  p {
+    margin: 0 0 $spacing-md 0;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    line-height: 1.5;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+.text-danger {
+  color: $color-danger;
+}
+
+.text-success {
+  color: $color-success;
+}
+
+.text-muted {
+  color: $color-text-muted;
 }
 </style>

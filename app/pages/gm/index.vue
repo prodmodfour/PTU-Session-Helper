@@ -424,12 +424,31 @@ const refreshUndoRedoState = () => {
   undoRedoState.value = state
 }
 
+// Get route for query params
+const route = useRoute()
+const router = useRouter()
+
 // Load library on mount, initialize history, and set up keyboard shortcuts
 onMounted(async () => {
   await libraryStore.loadLibrary()
 
   // Load settings from localStorage
   settingsStore.loadSettings()
+
+  // Check for loadTemplate query parameter (coming from encounters library)
+  const loadTemplateId = route.query.loadTemplate as string | undefined
+  if (loadTemplateId) {
+    // Clear the query param from URL
+    router.replace({ query: {} })
+    // Load the template
+    try {
+      await encounterStore.loadFromTemplate(loadTemplateId)
+      encounterStore.initializeHistory()
+      refreshUndoRedoState()
+    } catch (error) {
+      console.error('Failed to load template from URL:', error)
+    }
+  }
 
   // If no current encounter, try to load the served encounter
   if (!encounterStore.encounter) {

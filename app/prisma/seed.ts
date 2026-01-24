@@ -199,6 +199,11 @@ async function seedTypeEffectiveness() {
   // No need to store in database
 }
 
+interface LearnsetEntry {
+  level: number
+  move: string
+}
+
 interface SpeciesRow {
   name: string
   type1: string
@@ -216,6 +221,9 @@ interface SpeciesRow {
   sky: number
   burrow: number
   levitate: number
+  learnset: LearnsetEntry[]
+  skills: Record<string, string>
+  capabilities: string[]
 }
 
 function parsePokedexMarkdown(mdPath: string): SpeciesRow[] {
@@ -305,6 +313,70 @@ function parsePokedexMarkdown(mdPath: string): SpeciesRow[] {
     const burrowMatch = capText.match(/Burrow\s+(\d+)/i)
     const levitateMatch = capText.match(/Levitate\s+(\d+)/i)
 
+    // Parse other capabilities (Naturewalk, Underdog, etc.)
+    const capabilities: string[] = []
+    // Clean and normalize capability text - handle soft hyphens and line breaks
+    let capClean = capText.replace(/Capability List/i, '')
+    // Fix split words like "Nature­\nwalk" -> "Naturewalk"
+    capClean = capClean.replace(/[\u00AD][\s\n]*/g, '')
+    capClean = capClean.replace(/\s+/g, ' ').trim()
+
+    // First extract Naturewalk with parentheses
+    const naturewalkMatches = capClean.match(/Naturewalk\s*\([^)]+\)/gi) || []
+    for (const nw of naturewalkMatches) {
+      capabilities.push(nw.trim())
+    }
+    // Extract other capabilities - words that start with capital letters
+    // Skip movement capabilities and common words
+    const skipWords = new Set(['overland', 'swim', 'sky', 'burrow', 'levitate', 'jump', 'power', 'naturewalk'])
+    const otherCaps = capClean.match(/\b[A-Z][a-z]+(?:\s*\([^)]+\))?/g) || []
+    for (const cap of otherCaps) {
+      const trimmed = cap.trim()
+      const lowerFirst = trimmed.split(/[\s(]/)[0].toLowerCase()
+      if (skipWords.has(lowerFirst)) continue
+      if (trimmed && !capabilities.includes(trimmed)) {
+        capabilities.push(trimmed)
+      }
+    }
+
+    // Parse skills (e.g., "Athl 3d6+2, Acro 2d6, Combat 2d6")
+    const skills: Record<string, string> = {}
+    const skillText = pageText.match(/Skill List[\s\S]*?(?=Move List|Level Up|$)/i)?.[0] || ''
+    const skillMatches = skillText.matchAll(/(\w+)\s+(\d+d\d+(?:\+\d+)?)/gi)
+    for (const match of skillMatches) {
+      const skillName = match[1].toLowerCase()
+      const skillValue = match[2]
+      // Map abbreviations to full names
+      const skillMap: Record<string, string> = {
+        'athl': 'athletics',
+        'acro': 'acrobatics',
+        'combat': 'combat',
+        'stealth': 'stealth',
+        'percep': 'perception',
+        'focus': 'focus'
+      }
+      const fullName = skillMap[skillName] || skillName
+      skills[fullName] = skillValue
+    }
+
+    // Parse level-up move list
+    const learnset: LearnsetEntry[] = []
+    // Normalize the text by replacing soft hyphens and various dash characters
+    const moveListRaw = pageText.match(/Level Up Move List[\s\S]*?(?=TM\/HM|Tutor Move|Egg Move|$)/i)?.[0] || ''
+    const moveListMatch = moveListRaw.replace(/[\u00AD]/g, '-').replace(/\s+/g, ' ')
+    // Match patterns like "1 Tackle - Normal" or "13 Sleep Powder - Grass" or "27 Double-Edge - Normal"
+    // The move name can contain letters, spaces, hyphens, and apostrophes
+    const moveMatches = moveListMatch.matchAll(/(\d+)\s+([A-Za-z][A-Za-z\s\-']+?)\s+-\s+[A-Za-z]+/gi)
+    for (const match of moveMatches) {
+      const level = parseInt(match[1], 10)
+      const moveName = match[2].trim()
+      if (level > 0 && moveName && !learnset.some(l => l.level === level && l.move === moveName)) {
+        learnset.push({ level, move: moveName })
+      }
+    }
+    // Sort by level
+    learnset.sort((a, b) => a.level - b.level)
+
     // Validate we have the essential data
     if (!hpMatch || !typeMatch) continue
 
@@ -324,7 +396,10 @@ function parsePokedexMarkdown(mdPath: string): SpeciesRow[] {
       swim: parseInt(swimMatch?.[1] || '0', 10),
       sky: parseInt(skyMatch?.[1] || '0', 10),
       burrow: parseInt(burrowMatch?.[1] || '0', 10),
-      levitate: parseInt(levitateMatch?.[1] || '0', 10)
+      levitate: parseInt(levitateMatch?.[1] || '0', 10),
+      learnset,
+      skills,
+      capabilities
     })
   }
 
@@ -370,7 +445,10 @@ async function seedSpecies() {
           sky: s.sky,
           burrow: s.burrow,
           levitate: s.levitate,
-          teleport: 0
+          teleport: 0,
+          learnset: JSON.stringify(s.learnset),
+          skills: JSON.stringify(s.skills),
+          capabilities: JSON.stringify(s.capabilities)
         }
       })
       inserted++

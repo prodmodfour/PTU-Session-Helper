@@ -18,13 +18,6 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    if (!body.name) {
-      throw createError({
-        statusCode: 400,
-        message: 'Encounter name is required'
-      })
-    }
-
     // Fetch the template
     const template = await prisma.encounterTemplate.findUnique({
       where: { id: templateId }
@@ -51,58 +44,97 @@ export default defineEventHandler(async (event) => {
 
     // Convert template combatants to encounter combatants format
     // Each combatant needs a unique ID and default combat state
-    const combatants = templateCombatants.map(tc => ({
-      id: uuidv4(),
-      type: tc.type,
-      side: tc.side,
-      position: tc.position,
-      tokenSize: tc.tokenSize || 1,
-      entity: tc.entityData ? {
+    const combatants = await Promise.all(templateCombatants.map(async (tc) => {
+      let baseSpeed = 5 // Default speed
+      let baseStats = { hp: 5, attack: 5, defense: 5, specialAttack: 5, specialDefense: 5, speed: 5 }
+
+      // Look up species data for Pokemon to get proper stats
+      if (tc.type === 'pokemon' && tc.entityData?.species) {
+        const speciesData = await prisma.speciesData.findUnique({
+          where: { name: tc.entityData.species }
+        })
+        if (speciesData) {
+          baseSpeed = speciesData.baseSpeed
+          baseStats = {
+            hp: speciesData.baseHp,
+            attack: speciesData.baseAttack,
+            defense: speciesData.baseDefense,
+            specialAttack: speciesData.baseSpAtk,
+            specialDefense: speciesData.baseSpDef,
+            speed: speciesData.baseSpeed
+          }
+        }
+      }
+
+      // Calculate HP using PTU formula: Level + (HP stat × 3) + 10
+      const level = tc.entityData?.level ?? 1
+      const maxHp = tc.type === 'pokemon'
+        ? level + (baseStats.hp * 3) + 10
+        : 10 + level * 2
+
+      return {
         id: uuidv4(),
-        ...tc.entityData,
-        // Add defaults for Pokemon
-        ...(tc.type === 'pokemon' ? {
-          currentHp: tc.entityData.level ? 10 + tc.entityData.level * 3 : 30,
-          maxHp: tc.entityData.level ? 10 + tc.entityData.level * 3 : 30,
-          tempHp: 0,
-          injuries: { count: 0, max: 5 }
-        } : {}),
-        // Add defaults for Human
-        ...(tc.type === 'human' ? {
-          currentHp: tc.entityData.level ? 10 + tc.entityData.level * 2 : 20,
-          maxHp: tc.entityData.level ? 10 + tc.entityData.level * 2 : 20,
-          tempHp: 0,
-          injuries: { count: 0, max: 5 }
-        } : {})
-      } : null,
-      // Default combat state
-      initiative: 0,
-      initiativeBonus: 0,
-      hasActed: false,
-      turnState: {
+        type: tc.type,
+        side: tc.side,
+        position: tc.position,
+        tokenSize: tc.tokenSize || 1,
+        entity: tc.entityData ? {
+          id: uuidv4(),
+          ...tc.entityData,
+          // Add Pokemon stats
+          ...(tc.type === 'pokemon' ? {
+            currentStats: baseStats,
+            currentHp: maxHp,
+            maxHp: maxHp,
+            tempHp: 0,
+            injuries: { count: 0, max: 5 },
+            stageModifiers: {
+              attack: 0, defense: 0, specialAttack: 0,
+              specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
+            },
+            statusConditions: []
+          } : {}),
+          // Add defaults for Human
+          ...(tc.type === 'human' ? {
+            currentHp: maxHp,
+            maxHp: maxHp,
+            tempHp: 0,
+            injuries: { count: 0, max: 5 }
+          } : {})
+        } : null,
+        // Combat state - use speed for initiative
+        initiative: baseSpeed,
+        initiativeBonus: 0,
         hasActed: false,
-        standardActionUsed: false,
-        shiftActionUsed: false,
-        swiftActionUsed: false
-      },
-      combatStages: {
-        attack: 0,
-        defense: 0,
-        specialAttack: 0,
-        specialDefense: 0,
-        speed: 0,
-        accuracy: 0,
-        evasion: 0
-      },
-      statusConditions: [],
-      injuries: { count: 0, max: 5 }
+        turnState: {
+          hasActed: false,
+          standardActionUsed: false,
+          shiftActionUsed: false,
+          swiftActionUsed: false
+        },
+        combatStages: {
+          attack: 0,
+          defense: 0,
+          specialAttack: 0,
+          specialDefense: 0,
+          speed: 0,
+          accuracy: 0,
+          evasion: 0
+        },
+        statusConditions: [],
+        injuries: { count: 0, max: 5 },
+        // Evasions based on stats
+        physicalEvasion: Math.floor(baseStats.defense / 5),
+        specialEvasion: Math.floor(baseStats.specialDefense / 5),
+        speedEvasion: Math.floor(baseStats.speed / 5)
+      }
     }))
 
     // Create the encounter
     const encounter = await prisma.encounter.create({
       data: {
-        name: body.name,
-        battleType: template.battleType === 'trainer' || template.battleType === 'full_contact'
+        name: body.name || template.name,
+        battleType: ['trainer', 'full_contact', 'wild'].includes(template.battleType)
           ? template.battleType
           : 'trainer',
         combatants: JSON.stringify(combatants),

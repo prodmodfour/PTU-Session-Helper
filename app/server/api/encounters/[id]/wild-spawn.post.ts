@@ -96,15 +96,19 @@ export default defineEventHandler(async (event) => {
 
       // Calculate stats based on level
       let baseStats = {
-        hp: 50,
-        attack: 50,
-        defense: 50,
-        specialAttack: 50,
-        specialDefense: 50,
-        speed: 50
+        hp: 5,
+        attack: 5,
+        defense: 5,
+        specialAttack: 5,
+        specialDefense: 5,
+        speed: 5
       }
       let types: string[] = ['Normal']
       let abilities: string[] = []
+      let learnset: Array<{ level: number; move: string }> = []
+      let skills: Record<string, string> = {}
+      let capabilities: string[] = []
+      let movementCaps = { overland: 5, swim: 0, sky: 0, burrow: 0, levitate: 0 }
 
       if (speciesData) {
         baseStats = {
@@ -117,10 +121,76 @@ export default defineEventHandler(async (event) => {
         }
         types = speciesData.type2 ? [speciesData.type1, speciesData.type2] : [speciesData.type1]
         abilities = JSON.parse(speciesData.abilities)
+        learnset = JSON.parse(speciesData.learnset || '[]')
+        skills = JSON.parse(speciesData.skills || '{}')
+        capabilities = JSON.parse(speciesData.capabilities || '[]')
+        movementCaps = {
+          overland: speciesData.overland,
+          swim: speciesData.swim,
+          sky: speciesData.sky,
+          burrow: speciesData.burrow,
+          levitate: speciesData.levitate
+        }
       }
 
-      // Calculate HP based on PTU formula: Base + (Level * 2)
-      const maxHp = baseStats.hp + (wild.level * 2)
+      // Calculate HP based on PTU formula: Level + (HP stat × 3) + 10
+      const maxHp = wild.level + (baseStats.hp * 3) + 10
+
+      // Get moves the Pokemon would know at its level (up to 6 most recent)
+      const knownMoves = learnset
+        .filter(entry => entry.level <= wild.level)
+        .slice(-6) // Take the 6 most recent moves by level
+
+      // Fetch full move data for each known move
+      const moveDetails: Array<{
+        name: string
+        type: string
+        damageClass: string
+        frequency: string
+        ac: number | null
+        damageBase: number | null
+        range: string
+        effect: string
+      }> = []
+
+      for (const moveEntry of knownMoves) {
+        const moveData = await prisma.moveData.findUnique({
+          where: { name: moveEntry.move }
+        })
+        if (moveData) {
+          moveDetails.push({
+            name: moveData.name,
+            type: moveData.type,
+            damageClass: moveData.damageClass,
+            frequency: moveData.frequency,
+            ac: moveData.ac,
+            damageBase: moveData.damageBase,
+            range: moveData.range,
+            effect: moveData.effect
+          })
+        } else {
+          // Move not found in database, create basic entry
+          moveDetails.push({
+            name: moveEntry.move,
+            type: 'Normal',
+            damageClass: 'Status',
+            frequency: 'At-Will',
+            ac: null,
+            damageBase: null,
+            range: 'Melee',
+            effect: ''
+          })
+        }
+      }
+
+      // Pick a random ability (or first if only one)
+      const selectedAbility = abilities.length > 0
+        ? abilities[Math.floor(Math.random() * Math.min(2, abilities.length))] // Only pick from basic abilities
+        : null
+
+      // Randomly select gender (50/50 for simplicity, could use species ratio)
+      const genders = ['Male', 'Female', 'Genderless']
+      const gender = genders[Math.floor(Math.random() * 2)] // Only Male or Female for wild
 
       // Create the wild Pokemon record (not in library)
       const pokemon = await prisma.pokemon.create({
@@ -148,10 +218,15 @@ export default defineEventHandler(async (event) => {
             attack: 0, defense: 0, specialAttack: 0,
             specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
           }),
-          abilities: JSON.stringify(abilities.length > 0 ? [{ name: abilities[0], effect: '' }] : []),
-          moves: JSON.stringify([]),
+          abilities: JSON.stringify(selectedAbility ? [{ name: selectedAbility, effect: '' }] : []),
+          moves: JSON.stringify(moveDetails),
+          capabilities: JSON.stringify({
+            ...movementCaps,
+            other: capabilities
+          }),
+          skills: JSON.stringify(skills),
           statusConditions: JSON.stringify([]),
-          gender: 'Genderless',
+          gender,
           isInLibrary: false, // Wild Pokemon not added to library
           notes: 'Wild Pokemon - generated from encounter table'
         }
@@ -226,6 +301,7 @@ export default defineEventHandler(async (event) => {
           nickname: null,
           level: pokemon.level,
           types,
+          gender,
           currentStats: {
             hp: maxHp,
             attack: baseStats.attack,
@@ -240,8 +316,13 @@ export default defineEventHandler(async (event) => {
             attack: 0, defense: 0, specialAttack: 0,
             specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
           },
-          abilities: abilities.length > 0 ? [{ name: abilities[0], effect: '' }] : [],
-          moves: [],
+          abilities: selectedAbility ? [{ name: selectedAbility, effect: '' }] : [],
+          moves: moveDetails,
+          capabilities: {
+            ...movementCaps,
+            other: capabilities
+          },
+          skills,
           statusConditions: [],
           spriteUrl: null,
           shiny: false

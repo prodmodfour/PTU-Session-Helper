@@ -58,12 +58,19 @@ export default defineEventHandler(async (event) => {
       trainingExp: pokemon.trainingExp,
       eggGroups: JSON.parse(pokemon.eggGroups),
       statusConditions: JSON.parse(pokemon.statusConditions),
+      injuries: pokemon.injuries,
+      temporaryHp: pokemon.temporaryHp,
       ownerId: pokemon.ownerId,
       spriteUrl: pokemon.spriteUrl,
       shiny: pokemon.shiny,
       gender: pokemon.gender,
       isInLibrary: pokemon.isInLibrary,
-      notes: pokemon.notes
+      notes: pokemon.notes,
+      // Rest/Healing tracking
+      lastInjuryTime: pokemon.lastInjuryTime,
+      restMinutesToday: pokemon.restMinutesToday,
+      injuriesHealedToday: pokemon.injuriesHealedToday,
+      lastRestReset: pokemon.lastRestReset
     }
 
     return { success: true, data: parsed }

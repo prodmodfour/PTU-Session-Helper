@@ -35,6 +35,14 @@
       </nav>
 
       <div class="gm-header__actions">
+        <button
+          class="btn btn--ghost btn--sm gm-header__day-btn"
+          :disabled="advancingDay"
+          @click="handleAdvanceDay"
+        >
+          <img src="/icons/phosphor/sun.svg" alt="" class="btn-icon" />
+          <span>{{ advancingDay ? 'Advancing...' : 'Advance Day' }}</span>
+        </button>
         <NuxtLink to="/group" target="_blank" class="btn btn--secondary btn--sm gm-header__group-btn">
           <img src="/icons/ui/player-view.svg" alt="" class="btn-icon" />
           <span>Group View</span>
@@ -46,6 +54,19 @@
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+const { newDayGlobal, loading: advancingDay } = useRestHealing()
+
+const handleAdvanceDay = async () => {
+  if (confirm('Advance to a new day? This will reset daily healing limits for all characters and Pokemon.')) {
+    const result = await newDayGlobal()
+    if (result?.success) {
+      alert(result.message)
+    }
+  }
+}
+</script>
 
 <style lang="scss" scoped>
 .gm-layout {
@@ -136,6 +157,15 @@
   }
 
   &__group-btn {
+    .btn-icon {
+      width: 18px;
+      height: 18px;
+      filter: brightness(0) invert(1);
+      opacity: 0.9;
+    }
+  }
+
+  &__day-btn {
     .btn-icon {
       width: 18px;
       height: 18px;

@@ -100,7 +100,18 @@
       <!-- Initiative (GM only) -->
       <div v-if="isGm" class="combatant-card__initiative">
         Init: {{ combatant.initiative }}
+        <span v-if="combatant.initiativeRollOff" class="combatant-card__rolloff">
+          ({{ combatant.initiativeRollOff }})
+        </span>
       </div>
+
+      <!-- Capture Rate (GM only, wild Pokemon) -->
+      <CaptureRateDisplay
+        v-if="isGm && isWildPokemon && captureRate"
+        :capture-rate="captureRate"
+        :show-breakdown="true"
+        class="combatant-card__capture-rate"
+      />
     </div>
 
     <!-- GM Actions -->
@@ -293,6 +304,7 @@ const emit = defineEmits<{
 
 const { getSpriteUrl } = usePokemonSprite()
 const { getHealthPercentage, getHealthStatus } = useCombat()
+const { calculateCaptureRateLocal } = useCapture()
 
 // Input states
 const damageInput = ref(0)
@@ -369,6 +381,30 @@ const healthBarClass = computed(() => {
 const isFainted = computed(() => entity.value.currentHp <= 0)
 
 const statusConditions = computed(() => entity.value.statusConditions || [])
+
+// Wild Pokemon check (enemy Pokemon without owner)
+const isWildPokemon = computed(() => {
+  if (!isPokemon.value) return false
+  if (props.combatant.side !== 'enemies') return false
+  const pokemon = entity.value as Pokemon
+  return !pokemon.ownerId
+})
+
+// Capture rate for wild Pokemon
+const captureRate = computed(() => {
+  if (!isWildPokemon.value) return null
+  const pokemon = entity.value as Pokemon
+  return calculateCaptureRateLocal({
+    level: pokemon.level,
+    currentHp: pokemon.currentHp,
+    maxHp: pokemon.maxHp,
+    evolutionStage: 1, // Could be looked up from species data
+    maxEvolutionStage: 3,
+    statusConditions: pokemon.statusConditions || [],
+    injuries: pokemon.injuries || 0,
+    isShiny: pokemon.shiny || false
+  })
+})
 
 // Stage modifiers
 const stages = computed(() => entity.value.stageModifiers || {
@@ -631,6 +667,16 @@ const handleActClick = () => {
     font-size: $font-size-xs;
     color: $color-accent-scarlet;
     font-weight: 500;
+  }
+
+  &__rolloff {
+    color: $color-accent-violet;
+    font-weight: normal;
+    margin-left: 2px;
+  }
+
+  &__capture-rate {
+    margin-top: $spacing-sm;
   }
 
   &__actions {
