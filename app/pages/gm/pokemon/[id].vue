@@ -837,7 +837,7 @@ const saveChanges = async () => {
   }
 
   &__total {
-    font-size: $font-size-2xl;
+    font-size: $font-size-xxl;
     font-weight: 700;
     color: $color-accent-violet;
   }
