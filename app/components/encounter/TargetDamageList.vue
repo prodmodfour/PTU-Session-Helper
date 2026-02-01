@@ -101,40 +101,5 @@ const props = defineProps<{
   }
 }
 
-.effectiveness-badge {
-  font-size: $font-size-xs;
-  font-weight: 600;
-  padding: 2px $spacing-sm;
-  border-radius: $border-radius-sm;
-
-  &--immune {
-    background: rgba(128, 128, 128, 0.3);
-    color: #888;
-  }
-
-  &--double-resist {
-    background: rgba($color-side-ally, 0.2);
-    color: $color-side-ally;
-  }
-
-  &--resist {
-    background: rgba($color-side-ally, 0.15);
-    color: lighten($color-side-ally, 10%);
-  }
-
-  &--neutral {
-    background: rgba(255, 255, 255, 0.1);
-    color: $color-text-muted;
-  }
-
-  &--super {
-    background: rgba($color-side-enemy, 0.15);
-    color: lighten($color-side-enemy, 10%);
-  }
-
-  &--double-super {
-    background: rgba($color-side-enemy, 0.25);
-    color: $color-side-enemy;
-  }
-}
+// effectiveness-badge styles now in global main.scss
 </style>

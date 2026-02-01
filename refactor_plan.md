@@ -8,7 +8,7 @@ This plan identifies files requiring refactoring based on size, mixed concerns, 
 
 | File | Lines | Status |
 |------|-------|--------|
-| `app/components/encounter/MoveTargetModal.vue` | 1,214 | Pending Phase 4.1 |
+| ~~`app/components/encounter/MoveTargetModal.vue`~~ | ~~1,214~~ → 826 | ✅ Complete (32% reduction) |
 | `app/stores/encounter.ts` | 924 | Facade pattern - correct architecture |
 | `app/components/encounter/GMActionModal.vue` | 916 | Pending Phase 4.2 |
 | `app/composables/useGridRendering.ts` | 747 | Optional Phase 5 |
@@ -114,15 +114,18 @@ Removing wrappers would leak state management into components, which violates se
 
 ---
 
-## Phase 4: Refactor Large Modals (PENDING)
+## Phase 4: Refactor Large Modals (IN PROGRESS)
 
-### 4.1 Refactor MoveTargetModal (1,214 lines)
+### 4.1 Refactor MoveTargetModal ✅
 
 **Action:**
-- Move effectiveness badge styles to shared SCSS
-- Extract combat calculation logic to `useMoveCalculation.ts`
+- Moved effectiveness badge styles to `main.scss` (global)
+- Extracted combat calculation logic to `useMoveCalculation.ts`
+- Centralized shared styles in `_effectiveness.scss` partial
 
-**Expected benefit:** Reduces modal to ~600 lines
+**Benefit achieved:** Modal reduced from 1,214 → 826 lines (32% reduction)
+- Script section: ~410 → ~65 lines
+- New composable: 445 lines (reusable for other move UIs)
 
 ---
 
@@ -176,6 +179,7 @@ Removing wrappers would leak state management into components, which violates se
 | 3.2 | CombatantSides component | ~205 |
 | 3.3 | ViewTabsRow component | ~80 |
 | 3.4 | useEncounterActions composable | ~189 |
+| 4.1 | useMoveCalculation composable | ~388 (script: ~345) |
 
 ### Prior Session Work
 - Split GridCanvas.vue into composables (1,518 → 307 lines)
@@ -195,6 +199,6 @@ Removing wrappers would leak state management into components, which violates se
 ```
 
 ### Remaining Work
-- [ ] Phase 4.1: MoveTargetModal refactoring (optional)
+- [x] Phase 4.1: MoveTargetModal refactoring ✅
 - [ ] Phase 4.2: GMActionModal refactoring (optional)
 - [ ] Phase 5.1: Grid composable splits (optional)

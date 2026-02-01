@@ -221,29 +221,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Move, Combatant, PokemonType } from '~/types'
+import type { Move, Combatant } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
-import { roll } from '~/utils/diceRoller'
 
-const { getCombatantName, getCombatantNameById } = useCombatantDisplay()
-
-interface TargetDamageCalc {
-  targetId: string
-  defenseStat: number
-  effectiveness: number
-  effectivenessText: string
-  effectivenessClass: string
-  finalDamage: number
-}
-
-interface AccuracyResult {
-  targetId: string
-  roll: number
-  threshold: number
-  hit: boolean
-  isNat1: boolean
-  isNat20: boolean
-}
+const { getCombatantName } = useCombatantDisplay()
 
 const props = defineProps<{
   move: Move
@@ -256,379 +237,55 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
+// Convert props to refs for the composable
+const moveRef = toRef(props, 'move')
+const actorRef = toRef(props, 'actor')
+const targetsRef = toRef(props, 'targets')
+
+// Use the extracted composable for all calculations
 const {
-  rollDamageBase,
-  getDamageRoll,
-  hasSTAB: checkSTAB,
-  getTypeEffectiveness,
-  getEffectivenessDescription,
-  applyStageModifier,
-  calculatePhysicalEvasion,
-  calculateSpecialEvasion,
-  calculateSpeedEvasion
-} = useCombat()
-
-// Use extracted composable for safe stat access
-const {
-  getStageModifiers,
-  getPokemonAttackStat,
-  getPokemonSpAtkStat,
-  getPokemonDefenseStat,
-  getPokemonSpDefStat,
-  getPokemonSpeedStat,
-  getHumanStat
-} = useEntityStats()
-
-const selectedTargets = ref<string[]>([])
-const damageRollResult = ref<DiceRollResult | null>(null)
-const hasRolledDamage = ref(false)
-const hasRolledAccuracy = ref(false)
-const accuracyResults = ref<Record<string, AccuracyResult>>({})
-
-// Get actor's types
-const actorTypes = computed((): string[] => {
-  if (props.actor.type === 'pokemon') {
-    return (props.actor.entity as Pokemon).types
-  }
-  // Humans don't have types, so no STAB
-  return []
-})
-
-// Check if move gets STAB
-const hasSTAB = computed(() => {
-  if (!props.move.type) return false
-  return checkSTAB(props.move.type, actorTypes.value)
-})
-
-// Effective damage base (with STAB +2)
-const effectiveDB = computed(() => {
-  if (!props.move.damageBase) return 0
-  return hasSTAB.value ? props.move.damageBase + 2 : props.move.damageBase
-})
-
-// Get attacker's accuracy combat stage
-const attackerAccuracyStage = computed((): number => {
-  const stages = getStageModifiers(props.actor.entity)
-  return stages.accuracy || 0
-})
-
-// Evasion type label based on move damage class
-const evasionTypeLabel = computed((): string => {
-  return props.move.damageClass === 'Physical' ? 'Phys Evasion' : 'Spec Evasion'
-})
-
-// Get a target's evasion value based on move type
-const getTargetEvasion = (targetId: string): number => {
-  const target = props.targets.find(t => t.id === targetId)
-  if (!target || !target.entity) return 0
-
-  const entity = target.entity
-  const stages = getStageModifiers(entity)
-
-  if (props.move.damageClass === 'Physical') {
-    // Physical evasion from Defense
-    const defStat = target.type === 'pokemon'
-      ? getPokemonDefenseStat(entity)
-      : getHumanStat(entity, 'defense')
-    return calculatePhysicalEvasion(defStat, stages.defense)
-  } else {
-    // Special evasion from Sp. Defense
-    const spDefStat = target.type === 'pokemon'
-      ? getPokemonSpDefStat(entity)
-      : getHumanStat(entity, 'specialDefense')
-    return calculateSpecialEvasion(spDefStat, stages.specialDefense)
-  }
-}
-
-// Calculate accuracy threshold needed to hit a target
-const getAccuracyThreshold = (targetId: string): number => {
-  if (!props.move.ac) return 0
-
-  const evasion = getTargetEvasion(targetId)
-  // Threshold = Move AC + Evasion - Accuracy stages
-  // But evasion is capped at +9 total
-  const effectiveEvasion = Math.min(9, evasion)
-  return Math.max(1, props.move.ac + effectiveEvasion - attackerAccuracyStage.value)
-}
-
-// Roll accuracy for all selected targets
-const rollAccuracy = () => {
-  if (!props.move.ac) return
-
-  const results: Record<string, AccuracyResult> = {}
-
-  for (const targetId of selectedTargets.value) {
-    const d20Result = roll('1d20')
-    const naturalRoll = d20Result.dice[0] // dice array, not rolls
-    const threshold = getAccuracyThreshold(targetId)
-
-    const isNat1 = naturalRoll === 1
-    const isNat20 = naturalRoll === 20
-
-    // Natural 1 always misses, Natural 20 always hits
-    let hit: boolean
-    if (isNat1) {
-      hit = false
-    } else if (isNat20) {
-      hit = true
-    } else {
-      hit = naturalRoll >= threshold
-    }
-
-    results[targetId] = {
-      targetId,
-      roll: naturalRoll,
-      threshold,
-      hit,
-      isNat1,
-      isNat20
-    }
-  }
-
-  accuracyResults.value = results
-  hasRolledAccuracy.value = true
-
-  // Reset damage roll when accuracy is rerolled
-  hasRolledDamage.value = false
-  damageRollResult.value = null
-}
-
-// Count hits and misses
-const hitCount = computed(() => {
-  return Object.values(accuracyResults.value).filter(r => r.hit).length
-})
-
-const missCount = computed(() => {
-  return Object.values(accuracyResults.value).filter(r => !r.hit).length
-})
-
-// Get list of targets that were hit (for damage calculation)
-const hitTargets = computed((): string[] => {
-  if (!props.move.ac) {
-    // No AC = auto-hit (status moves, etc.)
-    return selectedTargets.value
-  }
-  return selectedTargets.value.filter(id => accuracyResults.value[id]?.hit)
-})
-
-// Can show damage section? Only if there are hits (or no AC check needed)
-const canShowDamageSection = computed((): boolean => {
-  if (!props.move.ac) return true // No accuracy check needed
-  return hasRolledAccuracy.value && hitCount.value > 0
-})
-
-// Get actor's attack stat (Attack or Special Attack based on move class)
-const attackStatValue = computed((): number => {
-  if (!props.move.damageBase) return 0
-
-  const entity = props.actor.entity
-  if (!entity) return 0
-
-  const stages = getStageModifiers(entity)
-
-  if (props.move.damageClass === 'Physical') {
-    const baseStat = props.actor.type === 'pokemon'
-      ? getPokemonAttackStat(entity)
-      : getHumanStat(entity, 'attack')
-    return applyStageModifier(baseStat, stages.attack)
-  } else if (props.move.damageClass === 'Special') {
-    const baseStat = props.actor.type === 'pokemon'
-      ? getPokemonSpAtkStat(entity)
-      : getHumanStat(entity, 'specialAttack')
-    return applyStageModifier(baseStat, stages.specialAttack)
-  }
-  return 0
-})
-
-const attackStatLabel = computed(() => {
-  return props.move.damageClass === 'Physical' ? 'ATK' : 'SP.ATK'
-})
-
-const defenseStatLabel = computed(() => {
-  return props.move.damageClass === 'Physical' ? 'DEF' : 'SP.DEF'
-})
-
-// Pre-defense total (base roll + attack stat)
-const preDefenseTotal = computed(() => {
-  if (!damageRollResult.value) return 0
-  return damageRollResult.value.total + attackStatValue.value
-})
-
-// Parse move effect for fixed damage (e.g., Dragon Rage = 15 HP)
-const fixedDamage = computed((): number | null => {
-  if (!props.move.effect) return null
-
-  const patterns = [
-    /lose\s+(\d+)\s+(?:HP|Hit\s*Points?)/i,
-    /deals?\s+(\d+)\s+damage/i,
-    /always\s+deals?\s+(\d+)/i,
-    /(\d+)\s+damage\s+flat/i,
-    /flat\s+(\d+)\s+damage/i,
-    /(\d+)\s+Damage/
-  ]
-
-  for (const pattern of patterns) {
-    const match = props.move.effect.match(pattern)
-    if (match) {
-      return parseInt(match[1], 10)
-    }
-  }
-
-  return null
-})
-
-// Get the dice notation for this move's damage (using effective DB)
-const damageNotation = computed(() => {
-  if (!effectiveDB.value) return null
-  return getDamageRoll(effectiveDB.value)
-})
-
-// Calculate damage for each selected target (only for hits)
-const targetDamageCalcs = computed((): Record<string, TargetDamageCalc> => {
-  if (!hasRolledDamage.value || !damageRollResult.value) return {}
-
-  const calcs: Record<string, TargetDamageCalc> = {}
-
-  // Only calculate for targets that were hit
-  for (const targetId of hitTargets.value) {
-    const target = props.targets.find(t => t.id === targetId)
-    if (!target || !target.entity) continue
-
-    // Get target's defense stat
-    const entity = target.entity
-    const stages = getStageModifiers(entity)
-
-    let defenseStat: number
-    if (props.move.damageClass === 'Physical') {
-      const baseStat = target.type === 'pokemon'
-        ? getPokemonDefenseStat(entity)
-        : getHumanStat(entity, 'defense')
-      defenseStat = applyStageModifier(baseStat, stages.defense)
-    } else {
-      const baseStat = target.type === 'pokemon'
-        ? getPokemonSpDefStat(entity)
-        : getHumanStat(entity, 'specialDefense')
-      defenseStat = applyStageModifier(baseStat, stages.specialDefense)
-    }
-
-    // Get target's types for effectiveness
-    let targetTypes: string[]
-    if (target.type === 'pokemon') {
-      targetTypes = (entity as Pokemon).types || []
-    } else {
-      // Humans are typeless (neutral effectiveness)
-      targetTypes = []
-    }
-
-    // Calculate type effectiveness
-    const effectiveness = props.move.type
-      ? getTypeEffectiveness(props.move.type, targetTypes)
-      : 1
-
-    // Calculate final damage
-    // (Pre-defense total - Defense) × Effectiveness, minimum 1
-    let damage = preDefenseTotal.value - defenseStat
-    damage = Math.max(1, damage) // Minimum 1 before effectiveness
-    damage = Math.floor(damage * effectiveness)
-    damage = Math.max(1, damage) // Final minimum 1
-
-    // Immunity check
-    if (effectiveness === 0) {
-      damage = 0
-    }
-
-    const effectivenessText = getEffectivenessDescription(effectiveness)
-
-    calcs[targetId] = {
-      targetId,
-      defenseStat,
-      effectiveness,
-      effectivenessText,
-      effectivenessClass: getEffectivenessClass(effectiveness),
-      finalDamage: damage
-    }
-  }
-
-  return calcs
-})
-
-const getEffectivenessClass = (effectiveness: number): string => {
-  if (effectiveness === 0) return 'immune'
-  if (effectiveness <= 0.25) return 'double-resist'
-  if (effectiveness < 1) return 'resist'
-  if (effectiveness >= 2) return 'double-super'
-  if (effectiveness > 1) return 'super'
-  return 'neutral'
-}
-
-// Roll damage for the move (using effective DB with STAB)
-const rollDamage = () => {
-  if (!effectiveDB.value) return
-  damageRollResult.value = rollDamageBase(effectiveDB.value, false)
-  hasRolledDamage.value = true
-}
-
-const toggleTarget = (targetId: string) => {
-  const index = selectedTargets.value.indexOf(targetId)
-  if (index === -1) {
-    selectedTargets.value.push(targetId)
-  } else {
-    selectedTargets.value.splice(index, 1)
-  }
-
-  // Reset accuracy and damage rolls when targets change
-  hasRolledAccuracy.value = false
-  hasRolledDamage.value = false
-  accuracyResults.value = {}
-  damageRollResult.value = null
-}
+  // State
+  selectedTargets,
+  damageRollResult,
+  hasRolledDamage,
+  hasRolledAccuracy,
+  accuracyResults,
+  // STAB
+  hasSTAB,
+  effectiveDB,
+  // Accuracy
+  attackerAccuracyStage,
+  evasionTypeLabel,
+  getTargetEvasion,
+  getAccuracyThreshold,
+  rollAccuracy,
+  hitCount,
+  missCount,
+  hitTargets,
+  canShowDamageSection,
+  // Damage
+  attackStatValue,
+  attackStatLabel,
+  defenseStatLabel,
+  preDefenseTotal,
+  fixedDamage,
+  damageNotation,
+  targetDamageCalcs,
+  rollDamage,
+  // Target selection
+  toggleTarget,
+  getTargetNameById,
+  // Confirmation
+  canConfirm,
+  getConfirmData
+} = useMoveCalculation(moveRef, actorRef, targetsRef)
 
 // Use shared composable for name resolution
 const getTargetName = getCombatantName
-const getTargetNameById = (targetId: string): string => getCombatantNameById(props.targets, targetId)
-
-// Can confirm the action?
-const canConfirm = computed((): boolean => {
-  if (selectedTargets.value.length === 0) return false
-
-  // If move has AC, accuracy must be rolled
-  if (props.move.ac && !hasRolledAccuracy.value) return false
-
-  // If move has damage and there are hits, damage must be rolled
-  if (props.move.damageBase && !fixedDamage.value && hitTargets.value.length > 0 && !hasRolledDamage.value) {
-    return false
-  }
-
-  // All checks passed (even if all misses, we can confirm to log the miss)
-  return true
-})
 
 const confirm = () => {
-  // For fixed damage moves, apply flat damage to hit targets only
-  if (fixedDamage.value) {
-    const targetDamages: Record<string, number> = {}
-    for (const targetId of hitTargets.value) {
-      targetDamages[targetId] = fixedDamage.value
-    }
-    emit('confirm', selectedTargets.value, fixedDamage.value, undefined, targetDamages)
-    return
-  }
-
-  // For normal moves, send per-target calculated damages (only for hits)
-  if (hasRolledDamage.value && Object.keys(targetDamageCalcs.value).length > 0) {
-    const targetDamages: Record<string, number> = {}
-    for (const [targetId, calc] of Object.entries(targetDamageCalcs.value)) {
-      targetDamages[targetId] = calc.finalDamage
-    }
-    // Use first hit target's damage as "main" damage for backward compatibility
-    const firstHitTarget = hitTargets.value[0]
-    const firstTargetDamage = firstHitTarget ? targetDamages[firstHitTarget] : undefined
-    emit('confirm', selectedTargets.value, firstTargetDamage, damageRollResult.value ?? undefined, targetDamages)
-    return
-  }
-
-  // Status moves, all misses, or no damage
-  emit('confirm', selectedTargets.value, undefined, undefined, undefined)
+  const data = getConfirmData()
+  emit('confirm', data.targetIds, data.damage, data.rollResult, data.targetDamages)
 }
 </script>
 
@@ -911,43 +568,6 @@ const confirm = () => {
   padding: 1px $spacing-xs;
   border-radius: $border-radius-sm;
   text-transform: uppercase;
-}
-
-.effectiveness-badge {
-  font-size: $font-size-xs;
-  font-weight: 600;
-  padding: 2px $spacing-sm;
-  border-radius: $border-radius-sm;
-
-  &--immune {
-    background: rgba(128, 128, 128, 0.3);
-    color: #888;
-  }
-
-  &--double-resist {
-    background: rgba($color-side-ally, 0.2);
-    color: $color-side-ally;
-  }
-
-  &--resist {
-    background: rgba($color-side-ally, 0.15);
-    color: lighten($color-side-ally, 10%);
-  }
-
-  &--neutral {
-    background: rgba(255, 255, 255, 0.1);
-    color: $color-text-muted;
-  }
-
-  &--super {
-    background: rgba($color-side-enemy, 0.15);
-    color: lighten($color-side-enemy, 10%);
-  }
-
-  &--double-super {
-    background: rgba($color-side-enemy, 0.25);
-    color: $color-side-enemy;
-  }
 }
 
 .damage-section {
