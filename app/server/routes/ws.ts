@@ -1,51 +1,19 @@
-import type { Peer } from 'crossws'
 import { prisma } from '~/server/utils/prisma'
+import {
+  peers,
+  safeSend,
+  broadcast,
+  broadcastToEncounter,
+  broadcastToGroup
+} from '~/server/utils/websocket'
 
 interface WebSocketEvent {
   type: string
   data: unknown
 }
 
-interface ClientInfo {
-  role: 'gm' | 'group'
-  encounterId?: string
-}
-
-// Store connected peers with their info
-const peers = new Map<Peer, ClientInfo>()
-
-// Safely send message to a peer
-function safeSend(peer: Peer, message: string) {
-  try {
-    peer.send(message)
-  } catch {
-    // Peer may have disconnected, remove from map
-    peers.delete(peer)
-  }
-}
-
-// Broadcast to all connected peers
-function broadcast(event: WebSocketEvent, excludePeer?: Peer) {
-  const message = JSON.stringify(event)
-  for (const [peer] of peers) {
-    if (peer !== excludePeer) {
-      safeSend(peer, message)
-    }
-  }
-}
-
-// Broadcast to peers watching a specific encounter
-function broadcastToEncounter(encounterId: string, event: WebSocketEvent, excludePeer?: Peer) {
-  const message = JSON.stringify(event)
-  for (const [peer, info] of peers) {
-    if (peer !== excludePeer && info.encounterId === encounterId) {
-      safeSend(peer, message)
-    }
-  }
-}
-
 // Send full encounter state
-async function sendEncounterState(peer: Peer, encounterId: string) {
+async function sendEncounterState(peer: Parameters<typeof safeSend>[0], encounterId: string) {
   try {
     const encounter = await prisma.encounter.findUnique({
       where: { id: encounterId }
@@ -77,6 +45,27 @@ async function sendEncounterState(peer: Peer, encounterId: string) {
   }
 }
 
+// Send current tab state to a peer
+async function sendTabState(peer: Parameters<typeof safeSend>[0]) {
+  try {
+    const state = await prisma.groupViewState.findUnique({
+      where: { id: 'singleton' }
+    })
+
+    if (state) {
+      peer.send(JSON.stringify({
+        type: 'tab_state',
+        data: {
+          activeTab: state.activeTab,
+          activeSceneId: state.activeSceneId
+        }
+      }))
+    }
+  } catch {
+    // Failed to send tab state
+  }
+}
+
 export default defineWebSocketHandler({
   open(peer) {
     // Default to group role until identified
@@ -101,6 +90,11 @@ export default defineWebSocketHandler({
             const data = event.data as { role?: 'gm' | 'group'; encounterId?: string }
             clientInfo.role = data.role || 'group'
             clientInfo.encounterId = data.encounterId
+
+            // If group client, send current tab state
+            if (clientInfo.role === 'group') {
+              sendTabState(peer)
+            }
           }
           break
 
@@ -125,6 +119,13 @@ export default defineWebSocketHandler({
           // Client requesting full state sync
           if (clientInfo?.encounterId) {
             sendEncounterState(peer, clientInfo.encounterId)
+          }
+          break
+
+        case 'tab_sync_request':
+          // Client requesting tab state
+          if (clientInfo?.role === 'group') {
+            sendTabState(peer)
           }
           break
 
@@ -252,6 +253,13 @@ export default defineWebSocketHandler({
             broadcastToEncounter(clientInfo.encounterId, event, peer)
           }
           break
+
+        case 'scene_update':
+          // Scene data changed, broadcast to group views
+          if (clientInfo?.role === 'gm') {
+            broadcastToGroup(event.type, event.data)
+          }
+          break
       }
     } catch {
       // Failed to handle WebSocket message
@@ -266,25 +274,3 @@ export default defineWebSocketHandler({
     peers.delete(peer)
   }
 })
-
-// Export helper for use in API routes to notify WebSocket clients
-export function notifyEncounterUpdate(encounterId: string, encounter: unknown) {
-  broadcastToEncounter(encounterId, {
-    type: 'encounter_update',
-    data: encounter
-  })
-}
-
-export function notifyTurnChange(encounterId: string, turnData: unknown) {
-  broadcastToEncounter(encounterId, {
-    type: 'turn_change',
-    data: turnData
-  })
-}
-
-export function notifyMoveExecuted(encounterId: string, moveData: unknown) {
-  broadcastToEncounter(encounterId, {
-    type: 'move_executed',
-    data: moveData
-  })
-}
