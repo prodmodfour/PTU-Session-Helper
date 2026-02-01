@@ -2,34 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
 
-Pokemon Tabletop United (PTU) 1.05 Session Helper - a Game Master aid application for in-person tabletop RPG sessions. Designed for dual-display use: GM laptop (1080p) and player TV (4K via Google TV Streamer).
-
-**Current Status**: Design phase complete, implementation not yet started.
-
-## Technology Stack (Planned)
-
-- **Frontend**: Nuxt (Vue 3)
-- **Backend**: TBD (flexible)
-- **Game System**: Pokemon Tabletop United 1.05
-
-## Repository Structure
-
-```
-design/           # Feature specifications and architecture decisions
-  character_sheet.md   # Character/Pokemon sheet automation specs
-  encounter_helper.md  # Combat system and initiative tracking specs
-  library.md           # Character collection system specs
-  system.md            # Tech stack definition
-  usage.md             # Deployment context (GM laptop + player TV)
-  visual.md            # Theme (black/red/white), sprite sources
-
-books/markdown/   # PTU rulebooks and reference material
-  Pokemon Tabletop United 1.05 Core.md  # Complete system rules
-  Combined_Pokedex.md                    # All Pokemon data
-  pokedexes/                             # Regional references
-```
 
 ## Core Architecture Concepts
 
