@@ -338,9 +338,6 @@ export const useEncounterStore = defineStore('encounter', {
       if (data.gridConfig !== undefined) {
         this.encounter.gridConfig = data.gridConfig
       }
-      if (data.updatedAt !== undefined) {
-        this.encounter.updatedAt = data.updatedAt
-      }
 
       // Surgically update combatants to preserve reactivity
       for (const incomingCombatant of data.combatants) {
@@ -350,7 +347,7 @@ export const useEncounterStore = defineStore('encounter', {
           const existing = this.encounter.combatants[existingIndex]
           existing.initiative = incomingCombatant.initiative
           existing.side = incomingCombatant.side
-          existing.gridPosition = incomingCombatant.gridPosition
+          existing.position = incomingCombatant.position
           existing.turnState = incomingCombatant.turnState
           // Update entity properties
           Object.assign(existing.entity, incomingCombatant.entity)

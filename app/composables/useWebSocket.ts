@@ -1,4 +1,10 @@
 import type { WebSocketEvent, Encounter, Pokemon, HumanCharacter, MoveLogEntry, MovementPreview } from '~/types'
+import { isPokemon } from '~/types'
+
+// WebSocket configuration constants
+const MAX_RECONNECT_ATTEMPTS = 5
+const BASE_RECONNECT_DELAY_MS = 1000
+const MAX_RECONNECT_DELAY_MS = 30000
 
 // Lazy getters for stores to avoid initialization issues
 const getEncounterStore = () => useEncounterStore()
@@ -10,19 +16,16 @@ export function useWebSocket() {
   let ws: WebSocket | null = null
   const isConnected = ref(false)
   const reconnectAttempts = ref(0)
-  const maxReconnectAttempts = 5
+  const lastError = ref<string | null>(null)
   const movementPreview = ref<MovementPreview | null>(null)
 
   const connect = () => {
-    console.log('[WebSocket] connect() called, current state:', ws?.readyState)
     if (ws?.readyState === WebSocket.OPEN) {
-      console.log('[WebSocket] Already connected, skipping')
       return
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/ws`
-    console.log('[WebSocket] Connecting to:', wsUrl)
 
     try {
       ws = new WebSocket(wsUrl)
@@ -30,7 +33,7 @@ export function useWebSocket() {
       ws.onopen = () => {
         isConnected.value = true
         reconnectAttempts.value = 0
-        console.log('[WebSocket] Connected successfully')
+        lastError.value = null
       }
 
       ws.onmessage = (event) => {
@@ -38,50 +41,48 @@ export function useWebSocket() {
           const message: WebSocketEvent = JSON.parse(event.data)
           handleMessage(message)
         } catch (e) {
-          console.error('Failed to parse WebSocket message:', e)
+          lastError.value = 'Failed to parse WebSocket message'
         }
       }
 
       ws.onclose = () => {
         isConnected.value = false
-        console.log('WebSocket disconnected')
         attemptReconnect()
       }
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
+      ws.onerror = () => {
+        lastError.value = 'WebSocket connection error'
       }
     } catch (e) {
-      console.error('Failed to create WebSocket:', e)
+      lastError.value = 'Failed to create WebSocket connection'
     }
   }
 
   const attemptReconnect = () => {
-    if (reconnectAttempts.value >= maxReconnectAttempts) {
-      console.log('Max reconnect attempts reached')
+    if (reconnectAttempts.value >= MAX_RECONNECT_ATTEMPTS) {
+      lastError.value = 'Max reconnect attempts reached'
       return
     }
 
-    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.value), 30000)
+    const delay = Math.min(
+      BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempts.value),
+      MAX_RECONNECT_DELAY_MS
+    )
     reconnectAttempts.value++
 
     setTimeout(() => {
-      console.log(`Reconnect attempt ${reconnectAttempts.value}`)
       connect()
     }, delay)
   }
 
   const handleMessage = (message: WebSocketEvent) => {
-    console.log('[WebSocket] Received message:', message.type)
     switch (message.type) {
       case 'encounter_update':
-        console.log('[WebSocket] Updating encounter from WebSocket')
         getEncounterStore().updateFromWebSocket(message.data)
         break
 
       case 'character_update':
-        if ('species' in message.data) {
-          // It's a Pokemon
+        if (isPokemon(message.data)) {
           const pokemon = message.data as Pokemon
           const store = getLibraryStore()
           const index = store.pokemon.findIndex(p => p.id === pokemon.id)
@@ -89,7 +90,6 @@ export function useWebSocket() {
             store.pokemon[index] = pokemon
           }
         } else {
-          // It's a Human
           const human = message.data as HumanCharacter
           const store = getLibraryStore()
           const index = store.humans.findIndex(h => h.id === human.id)
@@ -108,40 +108,30 @@ export function useWebSocket() {
         break
 
       case 'sync_request':
-        // Request full state sync
         requestSync()
         break
 
       case 'encounter_served':
-        // An encounter was served by the GM
         getEncounterStore().updateFromWebSocket(message.data.encounter)
         break
 
       case 'encounter_unserved':
-        // An encounter was unserved by the GM
         getEncounterStore().clearEncounter()
         break
 
       case 'movement_preview':
-        // GM is previewing a move, show it on group view
         movementPreview.value = message.data
         break
 
       case 'serve_map':
-        // GM served a map to the group view
-        console.log('[WebSocket] Map served:', message.data)
         getGroupViewStore().setServedMap(message.data)
         break
 
       case 'clear_map':
-        // GM cleared the map from group view
-        console.log('[WebSocket] Map cleared')
         getGroupViewStore().setServedMap(null)
         break
 
       case 'clear_wild_spawn':
-        // Clear wild spawn preview
-        console.log('[WebSocket] Wild spawn cleared')
         getGroupViewStore().setWildSpawnPreview(null)
         break
     }
@@ -149,10 +139,9 @@ export function useWebSocket() {
 
   const send = (event: WebSocketEvent) => {
     if (ws?.readyState === WebSocket.OPEN) {
-      console.log('[WebSocket] Sending message:', event.type)
       ws.send(JSON.stringify(event))
     } else {
-      console.log('[WebSocket] Cannot send - not connected, readyState:', ws?.readyState)
+      lastError.value = 'Cannot send - WebSocket not connected'
     }
   }
 
@@ -191,6 +180,7 @@ export function useWebSocket() {
 
   return {
     isConnected: readonly(isConnected),
+    lastError: readonly(lastError),
     movementPreview: readonly(movementPreview),
     connect,
     disconnect,
