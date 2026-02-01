@@ -42,6 +42,24 @@ A Game Master aid application for Pokemon Tabletop United (PTU) 1.05 in-person t
 - **Real-time**: WebSocket via CrossWS
 - **Styling**: SCSS with Pokemon Scarlet/Violet dark theme
 
+## Screenshots
+
+### GM View - Encounter Management
+![GM View](docs/screenshots/gm-view.png)
+*Main encounter interface where the GM manages combat*
+
+### GM View - Character Library
+![GM Sheets](docs/screenshots/gm-sheets.png)
+*Character and Pokemon library management*
+
+### GM View - Encounter Tables
+![Encounter Tables](docs/screenshots/gm-encounter-tables.png)
+*Random encounter table configuration*
+
+### Group View - Player Display
+![Group View](docs/screenshots/group-view.png)
+*TV/projector display shown to players*
+
 ## Setup
 
 ### Prerequisites
