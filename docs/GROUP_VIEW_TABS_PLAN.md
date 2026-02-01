@@ -400,6 +400,6 @@ app/
 
 - [x] Phase 1: Database Schema & Infrastructure (5 commits)
 - [x] Phase 2: Group View Tab System (4 commits)
-- [x] Phase 3: Scene System - GM Side (2 commits)
-- [x] Phase 4: Scene System - Group View (included in Phase 2)
+- [ ] Phase 3: Scene System - GM Side (partial: missing group resize, sprite-to-group assignment, modifiers UI, habitat selector)
+- [ ] Phase 4: Scene System - Group View (partial: basic view exists, needs weather effects polish)
 - [ ] Phase 5: Integration
