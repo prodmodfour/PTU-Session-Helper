@@ -50,121 +50,22 @@
         </div>
 
         <!-- Combatants Panel (List View) -->
-        <div v-if="activeView === 'list'" class="combatants-panel">
-          <!-- Current Turn Indicator -->
-          <div
-            v-if="currentCombatant && encounter.isActive"
-            class="current-turn"
-            :class="{
-              'current-turn--player': currentCombatant.side === 'players',
-              'current-turn--ally': currentCombatant.side === 'allies',
-              'current-turn--enemy': currentCombatant.side === 'enemies'
-            }"
-          >
-            <h3>Current Turn</h3>
-            <CombatantCard
-              :combatant="currentCombatant"
-              :is-current="true"
-              :is-gm="true"
-              @action="handleAction"
-              @damage="handleDamage"
-              @heal="handleHeal"
-              @stages="handleStages"
-              @status="handleStatus"
-              @openActions="handleOpenActions"
-            />
-          </div>
-
-          <!-- Sides -->
-          <div class="sides-grid">
-            <!-- Players -->
-            <div class="side side--players">
-              <div class="side__header">
-                <h3>Players</h3>
-                <button class="btn btn--sm btn--secondary" @click="showAddCombatant('players')">
-                  + Add
-                </button>
-              </div>
-              <div class="side__combatants">
-                <CombatantCard
-                  v-for="combatant in playerCombatants"
-                  :key="combatant.id"
-                  :combatant="combatant"
-                  :is-current="combatant.id === currentCombatant?.id"
-                  :is-gm="true"
-                  @action="handleAction"
-                  @damage="handleDamage"
-                  @heal="handleHeal"
-                  @remove="removeCombatant"
-                  @stages="handleStages"
-                  @status="handleStatus"
-                  @openActions="handleOpenActions"
-                />
-                <p v-if="playerCombatants.length === 0" class="side__empty">
-                  No players added
-                </p>
-              </div>
-            </div>
-
-            <!-- Allies -->
-            <div class="side side--allies">
-              <div class="side__header">
-                <h3>Allies</h3>
-                <button class="btn btn--sm btn--secondary" @click="showAddCombatant('allies')">
-                  + Add
-                </button>
-              </div>
-              <div class="side__combatants">
-                <CombatantCard
-                  v-for="combatant in allyCombatants"
-                  :key="combatant.id"
-                  :combatant="combatant"
-                  :is-current="combatant.id === currentCombatant?.id"
-                  :is-gm="true"
-                  @action="handleAction"
-                  @damage="handleDamage"
-                  @heal="handleHeal"
-                  @remove="removeCombatant"
-                  @stages="handleStages"
-                  @status="handleStatus"
-                  @openActions="handleOpenActions"
-                />
-                <p v-if="allyCombatants.length === 0" class="side__empty">
-                  No allies
-                </p>
-              </div>
-            </div>
-
-            <!-- Enemies -->
-            <div class="side side--enemies">
-              <div class="side__header">
-                <h3>Enemies</h3>
-                <button class="btn btn--sm btn--secondary" @click="showAddCombatant('enemies')">
-                  + Add
-                </button>
-              </div>
-              <div class="side__combatants">
-                <CombatantCard
-                  v-for="combatant in enemyCombatants"
-                  :key="combatant.id"
-                  :combatant="combatant"
-                  :is-current="combatant.id === currentCombatant?.id"
-                  :is-gm="true"
-                  @action="handleAction"
-                  @damage="handleDamage"
-                  @heal="handleHeal"
-                  @remove="removeCombatant"
-                  @stages="handleStages"
-                  @status="handleStatus"
-                  @openActions="handleOpenActions"
-                />
-                <p v-if="enemyCombatants.length === 0" class="side__empty">
-                  No enemies
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CombatantSides
+          v-if="activeView === 'list'"
+          :player-combatants="playerCombatants"
+          :ally-combatants="allyCombatants"
+          :enemy-combatants="enemyCombatants"
+          :current-combatant="currentCombatant"
+          :is-active="encounter.isActive"
+          @action="handleAction"
+          @damage="handleDamage"
+          @heal="handleHeal"
+          @remove="removeCombatant"
+          @stages="handleStages"
+          @status="handleStatus"
+          @openActions="handleOpenActions"
+          @addCombatant="showAddCombatant"
+        />
 
         <!-- Move Log -->
         <CombatLogPanel :move-log="moveLog" />
@@ -755,112 +656,6 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
 
   @media (max-width: 1200px) {
     grid-template-columns: 1fr;
-  }
-}
-
-.combatants-panel {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-lg;
-}
-
-.current-turn {
-  border-radius: $border-radius-lg;
-  padding: $spacing-lg;
-
-  h3 {
-    margin-bottom: $spacing-md;
-    font-weight: 600;
-  }
-
-  // Player turn - green
-  &--player {
-    background: linear-gradient(135deg, rgba($color-side-player, 0.15) 0%, rgba($color-side-player, 0.05) 100%);
-    border: 2px solid $color-side-player;
-    box-shadow: 0 0 20px rgba($color-side-player, 0.3);
-
-    h3 {
-      color: $color-side-player;
-    }
-  }
-
-  // Ally turn - blue
-  &--ally {
-    background: linear-gradient(135deg, rgba($color-side-ally, 0.15) 0%, rgba($color-side-ally, 0.05) 100%);
-    border: 2px solid $color-side-ally;
-    box-shadow: 0 0 20px rgba($color-side-ally, 0.3);
-
-    h3 {
-      color: $color-side-ally;
-    }
-  }
-
-  // Enemy turn - red
-  &--enemy {
-    background: linear-gradient(135deg, rgba($color-side-enemy, 0.15) 0%, rgba($color-side-enemy, 0.05) 100%);
-    border: 2px solid $color-side-enemy;
-    box-shadow: 0 0 20px rgba($color-side-enemy, 0.3);
-
-    h3 {
-      color: $color-side-enemy;
-    }
-  }
-}
-
-.sides-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-lg;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.side {
-  background: $glass-bg;
-  backdrop-filter: $glass-blur;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-lg;
-  padding: $spacing-md;
-
-  &--players {
-    border-top: 3px solid $color-side-player;
-  }
-
-  &--allies {
-    border-top: 3px solid $color-side-ally;
-  }
-
-  &--enemies {
-    border-top: 3px solid $color-side-enemy;
-  }
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-md;
-
-    h3 {
-      margin: 0;
-      font-size: $font-size-md;
-      font-weight: 600;
-    }
-  }
-
-  &__combatants {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-sm;
-  }
-
-  &__empty {
-    color: $color-text-muted;
-    font-size: $font-size-sm;
-    text-align: center;
-    padding: $spacing-lg;
-    font-style: italic;
   }
 }
 

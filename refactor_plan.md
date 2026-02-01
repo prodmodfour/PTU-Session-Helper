@@ -193,7 +193,7 @@ Removing wrappers would leak state management into components, which violates se
 ### Next Up
 - [x] Phase 3.1: Extract EncounterHeader from gm/index.vue
 - [x] Phase 3.3: Extract ViewTabsRow from gm/index.vue
-- [ ] Phase 3.2: Extract CombatantSides (low impact - template already uses CombatantCard)
+- [x] Phase 3.2: Extract CombatantSides from gm/index.vue
 - [ ] Phase 3.4: Extract useEncounterActions (handlers tightly coupled to stores/WebSocket)
 
-**gm/index.vue Progress:** 1,245 → 891 lines (28% reduction)
+**gm/index.vue Progress:** 1,245 → 891 → 686 lines (45% reduction)
