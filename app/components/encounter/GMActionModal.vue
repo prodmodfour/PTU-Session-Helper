@@ -691,34 +691,7 @@ const selectManeuver = (maneuver: Maneuver) => {
   }
 }
 
-.type-badge {
-  display: inline-block;
-  padding: 2px $spacing-sm;
-  font-size: $font-size-xs;
-  font-weight: 600;
-  text-transform: uppercase;
-  border-radius: $border-radius-sm;
-  color: white;
-
-  &--normal { background-color: $type-normal; }
-  &--fire { background-color: $type-fire; }
-  &--water { background-color: $type-water; }
-  &--electric { background-color: $type-electric; color: $color-text-dark; }
-  &--grass { background-color: $type-grass; }
-  &--ice { background-color: $type-ice; color: $color-text-dark; }
-  &--fighting { background-color: $type-fighting; }
-  &--poison { background-color: $type-poison; }
-  &--ground { background-color: $type-ground; color: $color-text-dark; }
-  &--flying { background-color: $type-flying; }
-  &--psychic { background-color: $type-psychic; }
-  &--bug { background-color: $type-bug; }
-  &--rock { background-color: $type-rock; }
-  &--ghost { background-color: $type-ghost; }
-  &--dragon { background-color: $type-dragon; }
-  &--dark { background-color: $type-dark; }
-  &--steel { background-color: $type-steel; color: $color-text-dark; }
-  &--fairy { background-color: $type-fairy; }
-}
+// type-badge styles now in global main.scss
 
 // Section toggle for collapsible sections
 .section-toggle {
@@ -797,99 +770,7 @@ const selectManeuver = (maneuver: Maneuver) => {
   }
 }
 
-.condition-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  font-size: $font-size-xs;
-  font-weight: 500;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  background: $color-bg-tertiary;
-  color: $color-text;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover:not(:disabled) {
-    background: $color-bg-hover;
-    border-color: $border-color-emphasis;
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  &--active {
-    background: rgba($color-danger, 0.2);
-    border-color: $color-danger;
-
-    &:hover {
-      background: rgba($color-danger, 0.3);
-    }
-  }
-
-  &--has {
-    opacity: 0.4;
-  }
-
-  &__remove {
-    font-size: $font-size-sm;
-    font-weight: 700;
-    opacity: 0.7;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-
-  // Condition type colors
-  &.condition--burn {
-    border-color: $type-fire;
-    &.condition-tag--active { background: rgba($type-fire, 0.2); }
-  }
-
-  &.condition--freeze {
-    border-color: $type-ice;
-    &.condition-tag--active { background: rgba($type-ice, 0.2); }
-  }
-
-  &.condition--paralysis {
-    border-color: $type-electric;
-    &.condition-tag--active { background: rgba($type-electric, 0.2); }
-  }
-
-  &.condition--poison {
-    border-color: $type-poison;
-    &.condition-tag--active { background: rgba($type-poison, 0.2); }
-  }
-
-  &.condition--sleep {
-    border-color: $type-psychic;
-    &.condition-tag--active { background: rgba($type-psychic, 0.2); }
-  }
-
-  &.condition--confusion {
-    border-color: $type-psychic;
-    &.condition-tag--active { background: rgba($type-psychic, 0.2); }
-  }
-
-  &.condition--fainted {
-    border-color: $color-danger;
-    &.condition-tag--active { background: rgba($color-danger, 0.3); }
-  }
-
-  &.condition--flinch {
-    border-color: $type-normal;
-    &.condition-tag--active { background: rgba($type-normal, 0.2); }
-  }
-
-  &.condition--infatuation {
-    border-color: $type-fairy;
-    &.condition-tag--active { background: rgba($type-fairy, 0.2); }
-  }
-}
+// condition-tag styles now in global main.scss
 
 .add-conditions {
   padding: $spacing-md;

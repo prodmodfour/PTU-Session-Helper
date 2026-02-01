@@ -10,7 +10,7 @@ This plan identifies files requiring refactoring based on size, mixed concerns, 
 |------|-------|--------|
 | ~~`app/components/encounter/MoveTargetModal.vue`~~ | ~~1,214~~ → 826 | ✅ Complete (32% reduction) |
 | `app/stores/encounter.ts` | 924 | Facade pattern - correct architecture |
-| `app/components/encounter/GMActionModal.vue` | 916 | Pending Phase 4.2 |
+| ~~`app/components/encounter/GMActionModal.vue`~~ | ~~916~~ → 796 | ✅ Complete (13% reduction) |
 | `app/composables/useGridRendering.ts` | 747 | Optional Phase 5 |
 | `app/composables/useGridInteraction.ts` | 589 | Optional Phase 5 |
 | `app/components/encounter/CombatantCard.vue` | 574 | Acceptable |
@@ -114,7 +114,7 @@ Removing wrappers would leak state management into components, which violates se
 
 ---
 
-## Phase 4: Refactor Large Modals (IN PROGRESS)
+## Phase 4: Refactor Large Modals ✅ COMPLETE
 
 ### 4.1 Refactor MoveTargetModal ✅
 
@@ -129,12 +129,14 @@ Removing wrappers would leak state management into components, which violates se
 
 ---
 
-### 4.2 Refactor GMActionModal (916 lines)
+### 4.2 Refactor GMActionModal ✅
 
 **Action:**
-- Move type badge and condition styling to shared SCSS
+- Removed duplicate type-badge styles (use global)
+- Extracted condition-tag styles to `main.scss` (global)
+- Created `_conditions.scss` partial for reuse
 
-**Expected benefit:** Reduces modal to ~500 lines
+**Benefit achieved:** Modal reduced from 916 → 796 lines (13% reduction)
 
 ---
 
@@ -180,6 +182,7 @@ Removing wrappers would leak state management into components, which violates se
 | 3.3 | ViewTabsRow component | ~80 |
 | 3.4 | useEncounterActions composable | ~189 |
 | 4.1 | useMoveCalculation composable | ~388 (script: ~345) |
+| 4.2 | Global condition-tag styles | ~120 |
 
 ### Prior Session Work
 - Split GridCanvas.vue into composables (1,518 → 307 lines)
@@ -200,5 +203,5 @@ Removing wrappers would leak state management into components, which violates se
 
 ### Remaining Work
 - [x] Phase 4.1: MoveTargetModal refactoring ✅
-- [ ] Phase 4.2: GMActionModal refactoring (optional)
+- [x] Phase 4.2: GMActionModal refactoring ✅
 - [ ] Phase 5.1: Grid composable splits (optional)
