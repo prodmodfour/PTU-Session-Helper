@@ -97,7 +97,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Move, Pokemon, HumanCharacter } from '~/types'
+import type { Combatant, Move } from '~/types'
+
+const { getCombatantName } = useCombatantDisplay()
 
 definePageMeta({
   layout: 'player'
@@ -182,17 +184,6 @@ const availableTargets = computed(() => {
 
 // Move selection
 const selectedMove = ref<Move | null>(null)
-
-// Helpers
-const getCombatantName = (combatant: Combatant): string => {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.nickname || pokemon.species
-  } else {
-    const human = combatant.entity as HumanCharacter
-    return human.name
-  }
-}
 
 // Actions
 const handleUseMove = (move: Move) => {

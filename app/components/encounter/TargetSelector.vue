@@ -25,7 +25,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Pokemon, HumanCharacter } from '~/types'
+import type { Combatant } from '~/types'
+
+const { getCombatantName: getTargetName } = useCombatantDisplay()
 
 const props = withDefaults(defineProps<{
   targets: Combatant[]
@@ -62,14 +64,6 @@ const toggleTarget = (targetId: string) => {
     emit('update:selectedIds', newIds)
     emit('deselect', targetId)
   }
-}
-
-const getTargetName = (target: Combatant): string => {
-  if (target.type === 'pokemon') {
-    const pokemon = target.entity as Pokemon
-    return pokemon.nickname || pokemon.species
-  }
-  return (target.entity as HumanCharacter).name
 }
 </script>
 

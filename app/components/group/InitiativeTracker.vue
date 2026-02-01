@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Pokemon, HumanCharacter } from '~/types'
+import type { Combatant } from '~/types'
 
 defineProps<{
   combatants: Combatant[]
@@ -49,20 +49,11 @@ defineProps<{
 }>()
 
 const { getSpriteUrl } = usePokemonSprite()
+const { getCombatantName } = useCombatantDisplay()
 
 const handleSpriteError = (event: Event) => {
   const img = event.target as HTMLImageElement
   img.src = '/images/pokemon-placeholder.svg'
-}
-
-const getCombatantName = (combatant: Combatant): string => {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.nickname || pokemon.species
-  } else {
-    const human = combatant.entity as HumanCharacter
-    return human.name
-  }
 }
 
 const getEffectiveMaxHp = (combatant: Combatant): number => {

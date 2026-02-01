@@ -110,7 +110,7 @@
     <!-- Selected Token Info -->
     <div v-if="selectedCombatant" class="vtt-selection" data-testid="vtt-selection">
       <div class="vtt-selection__header">
-        <span class="vtt-selection__name">{{ getDisplayName(selectedCombatant) }}</span>
+        <span class="vtt-selection__name">{{ getCombatantName(selectedCombatant) }}</span>
         <button class="vtt-selection__close" @click="selectedTokenId = null">&times;</button>
       </div>
       <div class="vtt-selection__info">
@@ -122,13 +122,15 @@
 </template>
 
 <script setup lang="ts">
-import type { GridConfig, GridPosition, Combatant, Pokemon, HumanCharacter, MovementPreview } from '~/types'
+import type { GridConfig, GridPosition, Combatant, MovementPreview } from '~/types'
 import { DEFAULT_SETTINGS } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore, type MeasurementMode } from '~/stores/measurement'
 import { useFogOfWarStore, type FogOfWarState } from '~/stores/fogOfWar'
 import { useTerrainStore } from '~/stores/terrain'
+
+const { getCombatantName } = useCombatantDisplay()
 
 interface TokenData {
   combatantId: string
@@ -233,14 +235,6 @@ const selectedCombatant = computed(() => {
 })
 
 // Methods
-const getDisplayName = (combatant: Combatant): string => {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.nickname || pokemon.species
-  }
-  return (combatant.entity as HumanCharacter).name
-}
-
 const toggleGrid = () => {
   emit('configUpdate', {
     ...props.config,

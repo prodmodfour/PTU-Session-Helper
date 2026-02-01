@@ -221,9 +221,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Move, Combatant, Pokemon, HumanCharacter, PokemonType } from '~/types'
+import type { Move, Combatant, PokemonType } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
+
+const { getCombatantName, getCombatantNameById } = useCombatantDisplay()
 
 interface TargetDamageCalc {
   targetId: string
@@ -581,18 +583,9 @@ const toggleTarget = (targetId: string) => {
   damageRollResult.value = null
 }
 
-const getTargetName = (target: Combatant): string => {
-  if (target.type === 'pokemon') {
-    const pokemon = target.entity as Pokemon
-    return pokemon.nickname || pokemon.species
-  }
-  return (target.entity as HumanCharacter).name
-}
-
-const getTargetNameById = (targetId: string): string => {
-  const target = props.targets.find(t => t.id === targetId)
-  return target ? getTargetName(target) : '???'
-}
+// Use shared composable for name resolution
+const getTargetName = getCombatantName
+const getTargetNameById = (targetId: string): string => getCombatantNameById(props.targets, targetId)
 
 // Can confirm the action?
 const canConfirm = computed((): boolean => {

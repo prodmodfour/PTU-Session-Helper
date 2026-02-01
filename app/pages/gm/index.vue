@@ -342,7 +342,9 @@
 </template>
 
 <script setup lang="ts">
-import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition, HumanCharacter, Pokemon, MovementPreview } from '~/types'
+import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition, MovementPreview } from '~/types'
+
+const { getCombatantName } = useCombatantDisplay()
 
 definePageMeta({
   layout: 'gm'
@@ -512,17 +514,6 @@ const playerCombatants = computed(() => encounterStore.playerCombatants)
 const allyCombatants = computed(() => encounterStore.allyCombatants)
 const enemyCombatants = computed(() => encounterStore.enemyCombatants)
 const moveLog = computed(() => encounterStore.moveLog.slice().reverse())
-
-// Helper to get combatant display name with proper type narrowing
-const getCombatantName = (combatant?: Combatant): string => {
-  if (!combatant?.entity) return 'Unknown'
-  if (combatant.type === 'human') {
-    return (combatant.entity as HumanCharacter).name
-  } else {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.nickname ?? pokemon.species
-  }
-}
 
 // Grid config with fallback defaults
 const gridConfig = computed(() => encounter.value?.gridConfig ?? {

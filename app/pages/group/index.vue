@@ -52,9 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Pokemon, HumanCharacter, GridConfig } from '~/types'
+import type { Combatant, GridConfig } from '~/types'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
 import { useTerrainStore } from '~/stores/terrain'
+
+const { getCombatantName } = useCombatantDisplay()
 
 interface PlayerPokemon {
   id: string
@@ -217,16 +219,6 @@ const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
   background: undefined
 })
 
-// Helpers
-const getCombatantName = (combatant: Combatant): string => {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.nickname || pokemon.species
-  } else {
-    const human = combatant.entity as HumanCharacter
-    return human.name
-  }
-}
 </script>
 
 <style lang="scss" scoped>
