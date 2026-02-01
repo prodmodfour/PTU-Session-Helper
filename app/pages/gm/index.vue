@@ -10,149 +10,26 @@
     <!-- Active Encounter -->
     <div v-else class="gm-encounter__active">
       <!-- Header -->
-      <div class="encounter-header">
-        <div class="encounter-header__info">
-          <h2>{{ encounter.name }}</h2>
-          <div class="encounter-header__meta">
-            <span class="badge" :class="encounter.battleType === 'trainer' ? 'badge--blue' : 'badge--red'">
-              {{ encounter.battleType === 'trainer' ? 'Trainer Battle' : 'Full Contact' }}
-            </span>
-            <span class="badge badge--gray">Round {{ encounter.currentRound }}</span>
-            <span v-if="encounter.isPaused" class="badge badge--yellow">Paused</span>
-            <span v-if="encounter.isServed" class="badge badge--green">
-              <img src="/icons/phosphor/monitor.svg" alt="" class="badge-icon" /> Served to Group
-            </span>
-          </div>
-        </div>
-
-        <div class="encounter-header__actions">
-          <!-- Serve/Unserve Buttons -->
-          <button
-            v-if="!encounter.isServed"
-            class="btn btn--secondary btn--with-icon"
-            @click="serveEncounter"
-            title="Display this encounter on Group View"
-          >
-            <img src="/icons/phosphor/monitor.svg" alt="" class="btn-svg" />
-            Serve to Group
-          </button>
-          <button
-            v-else
-            class="btn btn--warning btn--with-icon"
-            @click="unserveEncounter"
-            title="Stop displaying this encounter on Group View"
-          >
-            <img src="/icons/phosphor/monitor.svg" alt="" class="btn-svg" />
-            Unserve
-          </button>
-
-          <!-- Undo/Redo Buttons -->
-          <div class="undo-redo-group">
-            <button
-              class="btn btn--secondary btn--icon btn--with-icon"
-              :disabled="!undoRedoState.canUndo"
-              :title="undoRedoState.canUndo ? `Undo: ${undoRedoState.lastActionName}` : 'Nothing to undo'"
-              @click="handleUndo"
-            >
-              <img src="/icons/phosphor/arrow-counter-clockwise.svg" alt="" class="btn-svg" />
-              Undo
-            </button>
-            <button
-              class="btn btn--secondary btn--icon btn--with-icon"
-              :disabled="!undoRedoState.canRedo"
-              :title="undoRedoState.canRedo ? `Redo: ${undoRedoState.nextActionName}` : 'Nothing to redo'"
-              @click="handleRedo"
-            >
-              <img src="/icons/phosphor/arrow-clockwise.svg" alt="" class="btn-svg" />
-              Redo
-            </button>
-          </div>
-
-          <button
-            v-if="!encounter.isActive"
-            class="btn btn--success"
-            @click="startEncounter"
-            :disabled="encounter.combatants.length === 0"
-          >
-            Start Combat
-          </button>
-          <button
-            v-else
-            class="btn btn--primary"
-            @click="nextTurn"
-          >
-            Next Turn
-          </button>
-          <button class="btn btn--danger" @click="endEncounter">
-            End Encounter
-          </button>
-          <button
-            class="btn btn--ghost btn--with-icon"
-            @click="showSaveTemplateModal = true"
-            title="Save current setup as a reusable template"
-          >
-            <img src="/icons/phosphor/floppy-disk.svg" alt="" class="btn-svg" />
-            Save Template
-          </button>
-          <button
-            class="btn btn--ghost btn--icon-only"
-            @click="showShortcutsHelp = true"
-            title="Keyboard shortcuts (?)"
-            data-testid="help-btn"
-          >
-            <img src="/icons/phosphor/question.svg" alt="" class="btn-svg btn-svg--icon-only" />
-          </button>
-        </div>
-      </div>
+      <EncounterHeader
+        :encounter="encounter"
+        :undo-redo-state="undoRedoState"
+        @serve="serveEncounter"
+        @unserve="unserveEncounter"
+        @undo="handleUndo"
+        @redo="handleRedo"
+        @start="startEncounter"
+        @next-turn="nextTurn"
+        @end="endEncounter"
+        @save-template="showSaveTemplateModal = true"
+        @show-help="showShortcutsHelp = true"
+      />
 
       <!-- View Tabs & Settings Row -->
-      <div class="view-tabs-row">
-        <div class="view-tabs">
-          <button
-            class="view-tab"
-            :class="{ 'view-tab--active': activeView === 'list' }"
-            @click="activeView = 'list'"
-            data-testid="list-view-tab"
-          >
-            <img src="/icons/phosphor/list.svg" alt="" class="view-tab__icon" />
-            List View
-          </button>
-          <button
-            class="view-tab"
-            :class="{ 'view-tab--active': activeView === 'grid' }"
-            @click="activeView = 'grid'"
-            data-testid="grid-view-tab"
-          >
-            <img src="/icons/phosphor/map-trifold.svg" alt="" class="view-tab__icon" />
-            Grid View
-          </button>
-        </div>
-
-        <!-- Damage Mode Toggle -->
-        <div class="damage-mode-toggle">
-          <span class="damage-mode-label">Damage Mode:</span>
-          <button
-            class="damage-mode-btn"
-            :class="{ 'damage-mode-btn--active': settingsStore.damageMode === 'set' }"
-            @click="settingsStore.setDamageMode('set')"
-            title="Use fixed average damage values"
-            data-testid="set-damage-btn"
-          >
-            <img src="/icons/phosphor/chart-bar.svg" alt="" class="damage-mode-btn__icon" />
-            Set
-          </button>
-          <button
-            class="damage-mode-btn"
-            :class="{ 'damage-mode-btn--active': settingsStore.damageMode === 'rolled' }"
-            @click="settingsStore.setDamageMode('rolled')"
-            title="Roll dice for damage"
-            data-testid="rolled-damage-btn"
-          >
-            <img src="/icons/phosphor/dice-five.svg" alt="" class="damage-mode-btn__icon" />
-            Rolled
-          </button>
-        </div>
-      </div>
+      <ViewTabsRow
+        v-model:active-view="activeView"
+        :damage-mode="settingsStore.damageMode"
+        @update:damage-mode="settingsStore.setDamageMode($event)"
+      />
 
       <!-- Main Content -->
       <div class="encounter-content">
@@ -871,114 +748,6 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
   }
 }
 
-.encounter-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-  padding-bottom: $spacing-lg;
-  border-bottom: 1px solid $glass-border;
-
-  &__info {
-    h2 {
-      margin-bottom: $spacing-sm;
-      color: $color-text;
-    }
-  }
-
-  &__meta {
-    display: flex;
-    gap: $spacing-sm;
-  }
-
-  &__actions {
-    display: flex;
-    gap: $spacing-sm;
-    align-items: center;
-  }
-}
-
-.undo-redo-group {
-  display: flex;
-  gap: $spacing-xs;
-  padding: 0 $spacing-sm;
-  border-left: 1px solid $glass-border;
-  border-right: 1px solid $glass-border;
-  margin: 0 $spacing-xs;
-
-  .btn {
-    min-width: auto;
-    padding: $spacing-xs $spacing-sm;
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .btn-icon {
-      font-size: 1.1em;
-    }
-  }
-}
-
-// Button with icon styles
-.btn-svg {
-  width: 16px;
-  height: 16px;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
-
-  &--icon-only {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.btn--with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-
-  &--blue {
-    background: $gradient-scarlet;
-    box-shadow: 0 0 8px rgba($color-accent-scarlet, 0.3);
-  }
-  &--red {
-    background: $gradient-scarlet;
-    box-shadow: 0 0 8px rgba($color-accent-scarlet, 0.3);
-  }
-  &--gray {
-    background: $color-bg-tertiary;
-    border: 1px solid $border-color-default;
-  }
-  &--yellow {
-    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-    color: $color-text-dark;
-  }
-  &--green {
-    background: linear-gradient(135deg, $color-success 0%, #34d399 100%);
-    box-shadow: 0 0 8px rgba($color-success, 0.4);
-  }
-}
-
-.badge-icon {
-  width: 12px;
-  height: 12px;
-  filter: brightness(0) invert(1);
-}
-
 .encounter-content {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -1092,119 +861,6 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
     text-align: center;
     padding: $spacing-lg;
     font-style: italic;
-  }
-}
-
-.view-tabs-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: $spacing-lg;
-  margin-bottom: $spacing-lg;
-  flex-wrap: wrap;
-}
-
-.view-tabs {
-  display: flex;
-  gap: $spacing-sm;
-}
-
-.view-tab {
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-sm $spacing-lg;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-md;
-  color: $color-text-muted;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &__icon {
-    width: 16px;
-    height: 16px;
-    filter: brightness(0) invert(0.5);
-    transition: filter 0.2s ease;
-  }
-
-  &:hover {
-    background: $color-bg-secondary;
-    color: $color-text;
-
-    .view-tab__icon {
-      filter: brightness(0) invert(1);
-    }
-  }
-
-  &--active {
-    background: $gradient-scarlet;
-    border-color: transparent;
-    color: $color-text;
-    box-shadow: $shadow-glow-scarlet;
-
-    .view-tab__icon {
-      filter: brightness(0) invert(1);
-    }
-  }
-}
-
-.damage-mode-toggle {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  background: $glass-bg;
-  backdrop-filter: $glass-blur;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-md;
-  padding: $spacing-xs $spacing-sm;
-}
-
-.damage-mode-label {
-  font-size: $font-size-sm;
-  color: $color-text-muted;
-  font-weight: 500;
-}
-
-.damage-mode-btn {
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: $border-radius-sm;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &__icon {
-    width: 14px;
-    height: 14px;
-    filter: brightness(0) invert(0.5);
-    transition: filter 0.2s ease;
-  }
-
-  &:hover {
-    background: $color-bg-tertiary;
-    color: $color-text;
-
-    .damage-mode-btn__icon {
-      filter: brightness(0) invert(1);
-    }
-  }
-
-  &--active {
-    background: rgba($color-accent-teal, 0.2);
-    border-color: $color-accent-teal;
-    color: $color-accent-teal;
-
-    .damage-mode-btn__icon {
-      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
-    }
   }
 }
 
