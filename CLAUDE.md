@@ -40,12 +40,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commit Guidelines
 
-- **Commit when features are complete** - After implementing a feature or fix that works correctly, commit the changes
-- **Don't wait to be asked** - Proactively commit after completing meaningful work (new features, bug fixes, refactors)
-- **Atomic commits** - Each commit should represent a single logical change
+### CRITICAL: Small, Frequent Commits
+
+**Commit early and often. Do NOT batch multiple changes into one commit.**
+
+- After completing ANY single logical change, commit immediately
+- One file changed? Commit it
+- One function added? Commit it
+- One bug fixed? Commit it
+- Do NOT wait until "everything is done" to commit
+- Do NOT combine unrelated changes in one commit
+
+**Examples of correct granularity:**
+- `fix: correct damage calculation for steel types` (1 file)
+- `refactor: extract useGridMovement composable` (2-3 files)
+- `feat: add fog of war toggle button` (1 component)
+
+**Examples of commits that are TOO LARGE:**
+- "feat: add fog of war system" (10+ files - should be 3-5 commits)
+- "refactor: improve encounter system" (vague, too broad)
+
+### Other Guidelines
+
 - **Conventional commits** - Use prefixes: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
-- **Descriptive messages** - Include what changed and why in commit messages
+- **Descriptive messages** - Include what changed and why
 - **Only commit relevant files** - Don't include unrelated changes, test artifacts, or logs
+- **Don't wait to be asked** - Proactively commit after completing meaningful work
 
 ## PTU Rules Reference
 
