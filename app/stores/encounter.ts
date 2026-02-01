@@ -568,7 +568,7 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // ===========================================
-    // PTU Injury Actions
+    // PTU Combat Actions (delegates to encounterCombat store)
     // ===========================================
 
     // Add injury to a combatant
@@ -576,11 +576,8 @@ export const useEncounterStore = defineStore('encounter', {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/injury`, {
-          method: 'POST',
-          body: { combatantId, source }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.addInjury(this.encounter.id, combatantId, source)
       } catch (e: any) {
         this.error = e.message || 'Failed to add injury'
         throw e
@@ -592,50 +589,34 @@ export const useEncounterStore = defineStore('encounter', {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/injury`, {
-          method: 'DELETE',
-          body: { combatantId }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.removeInjury(this.encounter.id, combatantId)
       } catch (e: any) {
         this.error = e.message || 'Failed to remove injury'
         throw e
       }
     },
 
-    // ===========================================
-    // PTU Scene Management
-    // ===========================================
-
     // Advance to next scene (reset scene-frequency moves)
     async nextScene() {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/next-scene`, {
-          method: 'POST'
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.nextScene(this.encounter.id)
       } catch (e: any) {
         this.error = e.message || 'Failed to advance scene'
         throw e
       }
     },
 
-    // ===========================================
-    // PTU League Battle Phase Actions
-    // ===========================================
-
     // Switch to trainer phase (for League battles)
     async setTrainerPhase() {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/phase`, {
-          method: 'POST',
-          body: { phase: 'trainer' }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.setPhase(this.encounter.id, 'trainer')
       } catch (e: any) {
         this.error = e.message || 'Failed to set trainer phase'
         throw e
@@ -647,31 +628,21 @@ export const useEncounterStore = defineStore('encounter', {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/phase`, {
-          method: 'POST',
-          body: { phase: 'pokemon' }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.setPhase(this.encounter.id, 'pokemon')
       } catch (e: any) {
         this.error = e.message || 'Failed to set pokemon phase'
         throw e
       }
     },
 
-    // ===========================================
-    // PTU Status Condition Management
-    // ===========================================
-
     // Add status condition to a combatant
     async addStatusCondition(combatantId: string, condition: string) {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/status`, {
-          method: 'POST',
-          body: { combatantId, add: [condition] }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.addStatusCondition(this.encounter.id, combatantId, condition as any)
       } catch (e: any) {
         this.error = e.message || 'Failed to add status condition'
         throw e
@@ -683,11 +654,8 @@ export const useEncounterStore = defineStore('encounter', {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/status`, {
-          method: 'POST',
-          body: { combatantId, remove: [condition] }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.removeStatusCondition(this.encounter.id, combatantId, condition as any)
       } catch (e: any) {
         this.error = e.message || 'Failed to remove status condition'
         throw e
@@ -703,31 +671,21 @@ export const useEncounterStore = defineStore('encounter', {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/status`, {
-          method: 'POST',
-          body: { combatantId, add, remove }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.updateStatusConditions(this.encounter.id, combatantId, add as any, remove as any)
       } catch (e: any) {
         this.error = e.message || 'Failed to update status conditions'
         throw e
       }
     },
 
-    // ===========================================
-    // PTU Combat Stage Management
-    // ===========================================
-
     // Modify combat stage for a combatant (delta change)
     async modifyStage(combatantId: string, stat: string, amount: number) {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/stages`, {
-          method: 'POST',
-          body: { combatantId, changes: { [stat]: amount } }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.modifyStage(this.encounter.id, combatantId, stat, amount)
       } catch (e: any) {
         this.error = e.message || 'Failed to modify combat stage'
         throw e
@@ -743,31 +701,21 @@ export const useEncounterStore = defineStore('encounter', {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/stages`, {
-          method: 'POST',
-          body: { combatantId, changes: stages, absolute }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.setCombatStages(this.encounter.id, combatantId, stages, absolute)
       } catch (e: any) {
         this.error = e.message || 'Failed to set combat stages'
         throw e
       }
     },
 
-    // ===========================================
-    // PTU Special Actions
-    // ===========================================
-
     // Take a Breather - Full Action that resets stages, removes temp HP, cures volatile status
     async takeABreather(combatantId: string) {
       if (!this.encounter) return
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/breather`, {
-          method: 'POST',
-          body: { combatantId }
-        })
-        this.encounter = response.data
+        const combatStore = useEncounterCombatStore()
+        this.encounter = await combatStore.takeABreather(this.encounter.id, combatantId)
       } catch (e: any) {
         this.error = e.message || 'Failed to take a breather'
         throw e
@@ -806,7 +754,7 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // ===========================================
-    // VTT Grid Actions
+    // VTT Grid Actions (delegates to encounterGrid store)
     // ===========================================
 
     // Update combatant position on the grid
@@ -816,17 +764,14 @@ export const useEncounterStore = defineStore('encounter', {
       }
 
       try {
-        await $fetch(`/api/encounters/${this.encounter.id}/position`, {
-          method: 'POST',
-          body: { combatantId, position }
-        })
+        const gridStore = useEncounterGridStore()
+        await gridStore.updateCombatantPosition(this.encounter.id, combatantId, position)
 
         // Update local state
         const combatant = this.encounter.combatants.find(c => c.id === combatantId)
         if (combatant) {
           combatant.position = position
         }
-
       } catch (e: any) {
         this.error = e.message || 'Failed to update position'
         throw e
@@ -846,15 +791,13 @@ export const useEncounterStore = defineStore('encounter', {
       }
 
       try {
-        const response = await $fetch<{ data: typeof config }>(`/api/encounters/${this.encounter.id}/grid-config` as string, {
-          method: 'PUT',
-          body: config
-        } as any)
+        const gridStore = useEncounterGridStore()
+        const updatedConfig = await gridStore.updateGridConfig(this.encounter.id, config)
 
         // Update local state
         this.encounter.gridConfig = {
           ...this.encounter.gridConfig,
-          ...response.data
+          ...updatedConfig
         }
       } catch (e: any) {
         this.error = e.message || 'Failed to update grid config'
@@ -887,10 +830,8 @@ export const useEncounterStore = defineStore('encounter', {
 
       // Sync to server
       try {
-        await $fetch(`/api/encounters/${this.encounter.id}` as string, {
-          method: 'PUT',
-          body: this.encounter
-        } as any)
+        const gridStore = useEncounterGridStore()
+        await gridStore.setTokenSize(this.encounter.id, this.encounter, combatantId, size)
       } catch (e: any) {
         this.error = e.message || 'Failed to update token size'
         throw e
@@ -903,25 +844,17 @@ export const useEncounterStore = defineStore('encounter', {
         throw new Error('No active encounter')
       }
 
-      const formData = new FormData()
-      formData.append('file', file)
-
       try {
-        const response = await $fetch<{ data: { background: string } }>(
-          `/api/encounters/${this.encounter.id}/background`,
-          {
-            method: 'POST',
-            body: formData
-          }
-        )
+        const gridStore = useEncounterGridStore()
+        const background = await gridStore.uploadBackgroundImage(this.encounter.id, file)
 
         // Update local state
         this.encounter.gridConfig = {
           ...this.encounter.gridConfig,
-          background: response.data.background
+          background
         }
 
-        return response.data.background
+        return background
       } catch (e: any) {
         this.error = e.message || 'Failed to upload background image'
         throw e
@@ -935,9 +868,8 @@ export const useEncounterStore = defineStore('encounter', {
       }
 
       try {
-        await $fetch(`/api/encounters/${this.encounter.id}/background`, {
-          method: 'DELETE'
-        })
+        const gridStore = useEncounterGridStore()
+        await gridStore.removeBackgroundImage(this.encounter.id)
 
         // Update local state
         this.encounter.gridConfig = {
@@ -951,7 +883,7 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // ===========================================
-    // Fog of War Actions
+    // Fog of War Actions (delegates to encounterGrid store)
     // ===========================================
 
     // Load fog state from server
@@ -961,16 +893,8 @@ export const useEncounterStore = defineStore('encounter', {
       }
 
       try {
-        const response = await $fetch<{
-          success: boolean
-          data: {
-            enabled: boolean
-            cells: [string, string][]
-            defaultState: string
-          }
-        }>(`/api/encounters/${this.encounter.id}/fog`)
-
-        return response.data
+        const gridStore = useEncounterGridStore()
+        return await gridStore.loadFogState(this.encounter.id)
       } catch (e: any) {
         this.error = e.message || 'Failed to load fog state'
         throw e
@@ -988,10 +912,8 @@ export const useEncounterStore = defineStore('encounter', {
       }
 
       try {
-        await $fetch(`/api/encounters/${this.encounter.id}/fog` as string, {
-          method: 'PUT',
-          body: fogState
-        } as any)
+        const gridStore = useEncounterGridStore()
+        await gridStore.saveFogState(this.encounter.id, fogState)
       } catch (e: any) {
         this.error = e.message || 'Failed to save fog state'
         throw e
