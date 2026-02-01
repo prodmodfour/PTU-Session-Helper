@@ -184,6 +184,8 @@ This plan identifies files requiring refactoring based on size, mixed concerns, 
 - [x] Phase 1 (prior session): Create encounterGrid.ts and encounterCombat.ts stores
 - [x] Phase 1.1: Create useCombatantDisplay composable (removes ~100 lines duplicated across 7 files)
 - [x] Phase 1.2: Add shared type-badge SCSS partial (global styles already exist in main.scss)
+- [x] Phase 1.3: Add shared modal SCSS mixins (11 components have duplicated modal styles)
 
-### In Progress
-- [ ] Phase 1.3: Shared modal styles
+### Next Up
+- [ ] Phase 3.1: Extract EncounterHeader from gm/index.vue
+- [ ] Phase 3.4: Extract useEncounterActions composable
