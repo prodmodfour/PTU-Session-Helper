@@ -194,13 +194,21 @@
           {{ generating ? 'Generating...' : 'Generate' }}
         </button>
         <button
-          v-if="generatedPokemon.length > 0"
+          v-if="generatedPokemon.length > 0 && !isOnTv"
           class="btn btn--accent"
           :disabled="servingToTv"
           @click="serveToGroup"
           data-testid="show-on-tv-btn"
         >
           {{ servingToTv ? 'Sending...' : `Show on TV${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` }}
+        </button>
+        <button
+          v-if="isOnTv"
+          class="btn btn--warning"
+          @click="unserveFromTv"
+          data-testid="unserve-tv-btn"
+        >
+          Clear TV
         </button>
         <button
           v-if="generatedPokemon.length > 0"
@@ -235,6 +243,11 @@ const emit = defineEmits<{
 const encounterTablesStore = useEncounterTablesStore()
 const groupViewStore = useGroupViewStore()
 
+// Fetch current TV state on mount
+onMounted(() => {
+  groupViewStore.fetchWildSpawnPreview()
+})
+
 // State
 const servingToTv = ref(false)
 const count = ref(2)
@@ -260,6 +273,9 @@ const pokemonForAction = computed(() => {
   }
   return generatedPokemon.value.filter((_, index) => selectedIndices.value.has(index))
 })
+
+// Computed: check if wild spawn is currently on TV
+const isOnTv = computed(() => groupViewStore.hasWildSpawn)
 
 // Computed
 const resolvedEntries = computed((): ResolvedTableEntry[] => {
@@ -398,6 +414,14 @@ const serveToGroup = async () => {
     console.error('Failed to serve to TV:', error)
   } finally {
     servingToTv.value = false
+  }
+}
+
+const unserveFromTv = async () => {
+  try {
+    await groupViewStore.clearWildSpawnPreview()
+  } catch (error) {
+    console.error('Failed to clear TV:', error)
   }
 }
 

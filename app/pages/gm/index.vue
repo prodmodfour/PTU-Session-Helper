@@ -620,13 +620,10 @@ const nextTurn = async () => {
   await nextTick()
   // Broadcast the turn change via WebSocket
   if (encounterStore.encounter) {
-    console.log('[GM] Sending encounter_update after nextTurn')
     send({
       type: 'encounter_update',
       data: encounterStore.encounter
     })
-  } else {
-    console.log('[GM] No encounter to send after nextTurn')
   }
 }
 

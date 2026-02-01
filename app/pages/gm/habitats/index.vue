@@ -197,7 +197,6 @@ const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesN
     await encounterStore.serveEncounter()
 
     generatingFromTable.value = null
-    console.log(`Added ${added.length} wild Pokemon to encounter`)
   } catch (e: any) {
     addError.value = e.message || 'Failed to add Pokemon to encounter'
   } finally {

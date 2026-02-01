@@ -50,37 +50,32 @@ const currentMap = {
 }
 
 const serveMapToGroup = async () => {
-  console.log('[Map] Serve button clicked')
   mapServing.value = true
   try {
     // Clear any other served content first
     try {
       if (encounterStore.encounter?.isServed) {
-        console.log('[Map] Unserving encounter...')
         await encounterStore.unserveEncounter()
         send({ type: 'encounter_unserved', data: {} })
       }
-    } catch (e) {
-      console.warn('[Map] Failed to unserve encounter:', e)
+    } catch {
+      // Failed to unserve encounter - continue anyway
     }
 
     try {
-      console.log('[Map] Clearing wild spawn...')
       await groupViewStore.clearWildSpawnPreview()
       send({ type: 'clear_wild_spawn', data: null })
-    } catch (e) {
-      console.warn('[Map] Failed to clear wild spawn:', e)
+    } catch {
+      // Failed to clear wild spawn - continue anyway
     }
 
-    console.log('[Map] Serving map...', currentMap)
     await groupViewStore.serveMap(currentMap)
 
     // Broadcast map via WebSocket to other instances
     const mapWithTimestamp = { ...currentMap, timestamp: Date.now() }
     send({ type: 'serve_map', data: mapWithTimestamp })
-    console.log('[Map] Map served successfully')
-  } catch (error) {
-    console.error('[Map] Failed to serve map:', error)
+  } catch {
+    // Failed to serve map
   } finally {
     mapServing.value = false
   }
@@ -90,8 +85,8 @@ const clearMapFromGroup = async () => {
   try {
     await groupViewStore.clearServedMap()
     send({ type: 'clear_map', data: null })
-  } catch (error) {
-    console.error('Failed to clear map:', error)
+  } catch {
+    // Failed to clear map
   }
 }
 </script>

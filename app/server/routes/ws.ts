@@ -3,7 +3,7 @@ import { prisma } from '~/server/utils/prisma'
 
 interface WebSocketEvent {
   type: string
-  data: any
+  data: unknown
 }
 
 interface ClientInfo {
@@ -37,15 +37,11 @@ function broadcast(event: WebSocketEvent, excludePeer?: Peer) {
 // Broadcast to peers watching a specific encounter
 function broadcastToEncounter(encounterId: string, event: WebSocketEvent, excludePeer?: Peer) {
   const message = JSON.stringify(event)
-  let sentCount = 0
   for (const [peer, info] of peers) {
     if (peer !== excludePeer && info.encounterId === encounterId) {
-      console.log(`[WS] Sending ${event.type} to peer ${peer.id} (role: ${info.role})`)
       safeSend(peer, message)
-      sentCount++
     }
   }
-  console.log(`[WS] Broadcast ${event.type} to ${sentCount} peers for encounter ${encounterId}`)
 }
 
 // Send full encounter state
@@ -76,14 +72,13 @@ async function sendEncounterState(peer: Peer, encounterId: string) {
         data: parsed
       }))
     }
-  } catch (error) {
-    console.error('Failed to send encounter state:', error)
+  } catch {
+    // Failed to send encounter state - peer may have disconnected
   }
 }
 
 export default defineWebSocketHandler({
   open(peer) {
-    console.log(`WebSocket connected: ${peer.id}`)
     // Default to group role until identified
     peers.set(peer, { role: 'group' })
 
@@ -103,19 +98,19 @@ export default defineWebSocketHandler({
         case 'identify':
           // Client identifies as GM or group
           if (clientInfo) {
-            clientInfo.role = event.data.role || 'group'
-            clientInfo.encounterId = event.data.encounterId
-            console.log(`Peer ${peer.id} identified as ${clientInfo.role}`)
+            const data = event.data as { role?: 'gm' | 'group'; encounterId?: string }
+            clientInfo.role = data.role || 'group'
+            clientInfo.encounterId = data.encounterId
           }
           break
 
         case 'join_encounter':
           // Join a specific encounter room
           if (clientInfo) {
-            clientInfo.encounterId = event.data.encounterId
-            console.log(`Peer ${peer.id} joined encounter ${event.data.encounterId}`)
+            const data = event.data as { encounterId: string }
+            clientInfo.encounterId = data.encounterId
             // Send current encounter state
-            sendEncounterState(peer, event.data.encounterId)
+            sendEncounterState(peer, data.encounterId)
           }
           break
 
@@ -135,12 +130,8 @@ export default defineWebSocketHandler({
 
         case 'encounter_update':
           // GM updates encounter state, broadcast to all viewers
-          console.log(`[WS] encounter_update from peer ${peer.id}, role: ${clientInfo?.role}, encounterId: ${clientInfo?.encounterId}`)
           if (clientInfo?.role === 'gm' && clientInfo.encounterId) {
-            console.log(`[WS] Broadcasting encounter_update to encounter ${clientInfo.encounterId}`)
             broadcastToEncounter(clientInfo.encounterId, event, peer)
-          } else {
-            console.log(`[WS] Not broadcasting - role: ${clientInfo?.role}, encounterId: ${clientInfo?.encounterId}`)
           }
           break
 
@@ -212,18 +203,21 @@ export default defineWebSocketHandler({
 
         case 'serve_encounter':
           // GM serves an encounter to group views
-          if (clientInfo?.role === 'gm' && event.data.encounterId) {
-            broadcastToEncounter(event.data.encounterId, {
-              type: 'encounter_served',
-              data: event.data
-            }, peer)
-            // Also broadcast to all group clients not in a specific encounter
-            for (const [otherPeer, otherInfo] of peers) {
-              if (otherPeer !== peer && otherInfo.role === 'group') {
-                safeSend(otherPeer, JSON.stringify({
-                  type: 'encounter_served',
-                  data: event.data
-                }))
+          if (clientInfo?.role === 'gm') {
+            const data = event.data as { encounterId: string }
+            if (data.encounterId) {
+              broadcastToEncounter(data.encounterId, {
+                type: 'encounter_served',
+                data: event.data
+              }, peer)
+              // Also broadcast to all group clients not in a specific encounter
+              for (const [otherPeer, otherInfo] of peers) {
+                if (otherPeer !== peer && otherInfo.role === 'group') {
+                  safeSend(otherPeer, JSON.stringify({
+                    type: 'encounter_served',
+                    data: event.data
+                  }))
+                }
               }
             }
           }
@@ -231,14 +225,17 @@ export default defineWebSocketHandler({
 
         case 'encounter_unserved':
           // GM unserves an encounter
-          if (clientInfo?.role === 'gm' && event.data.encounterId) {
-            // Broadcast to all group clients
-            for (const [otherPeer, otherInfo] of peers) {
-              if (otherPeer !== peer && otherInfo.role === 'group') {
-                safeSend(otherPeer, JSON.stringify({
-                  type: 'encounter_unserved',
-                  data: event.data
-                }))
+          if (clientInfo?.role === 'gm') {
+            const data = event.data as { encounterId?: string }
+            if (data.encounterId) {
+              // Broadcast to all group clients
+              for (const [otherPeer, otherInfo] of peers) {
+                if (otherPeer !== peer && otherInfo.role === 'group') {
+                  safeSend(otherPeer, JSON.stringify({
+                    type: 'encounter_unserved',
+                    data: event.data
+                  }))
+                }
               }
             }
           }
@@ -255,41 +252,37 @@ export default defineWebSocketHandler({
             broadcastToEncounter(clientInfo.encounterId, event, peer)
           }
           break
-
-        default:
-          console.log(`Unknown WebSocket event type: ${event.type}`)
       }
-    } catch (error) {
-      console.error('Failed to handle WebSocket message:', error)
+    } catch {
+      // Failed to handle WebSocket message
     }
   },
 
   close(peer) {
-    console.log(`WebSocket disconnected: ${peer.id}`)
     peers.delete(peer)
   },
 
-  error(peer, error) {
-    console.error(`WebSocket error for peer ${peer.id}:`, error)
+  error(peer) {
+    peers.delete(peer)
   }
 })
 
 // Export helper for use in API routes to notify WebSocket clients
-export function notifyEncounterUpdate(encounterId: string, encounter: any) {
+export function notifyEncounterUpdate(encounterId: string, encounter: unknown) {
   broadcastToEncounter(encounterId, {
     type: 'encounter_update',
     data: encounter
   })
 }
 
-export function notifyTurnChange(encounterId: string, turnData: any) {
+export function notifyTurnChange(encounterId: string, turnData: unknown) {
   broadcastToEncounter(encounterId, {
     type: 'turn_change',
     data: turnData
   })
 }
 
-export function notifyMoveExecuted(encounterId: string, moveData: any) {
+export function notifyMoveExecuted(encounterId: string, moveData: unknown) {
   broadcastToEncounter(encounterId, {
     type: 'move_executed',
     data: moveData
