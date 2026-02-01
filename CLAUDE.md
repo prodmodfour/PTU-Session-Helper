@@ -6,9 +6,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Core Architecture Concepts
 
+### Tech Stack
+- **Framework**: Nuxt 3 (SPA mode, `ssr: false`)
+- **Backend**: Nitro server with 86+ REST API endpoints
+- **Database**: SQLite with Prisma ORM
+- **State**: 12 Pinia stores (auto-registered via `@pinia/nuxt`)
+- **Real-time**: WebSocket for GM-Player synchronization
+- **Styling**: SCSS with global variables
+
+### Project Structure
+```
+app/
+├── pages/           # File-based routing (gm/, group/, player/)
+├── layouts/         # Role-based layouts (gm, group, player, default)
+├── components/      # 66 auto-imported components by domain
+├── composables/     # 18 auto-imported composables for shared logic
+├── stores/          # 12 Pinia stores for state management
+├── server/
+│   ├── api/         # REST endpoints (characters, pokemon, encounters, etc.)
+│   ├── services/    # Business logic (combatant, encounter, entity-update)
+│   ├── routes/      # WebSocket handler (ws.ts)
+│   └── utils/       # Prisma client, shared state
+└── assets/scss/     # Global styles and variables
+```
+
 ### Dual-View System
-- **GM View**: Full control - spawn characters, edit stats, manage NPC turns, all information visible
-- **Player View**: Simplified - health percentages, active turn, clickable actions, Pokemon sprites
+- **GM View** (`/gm`): Full control - spawn characters, edit stats, manage NPC turns, all information visible
+- **Group View** (`/group`): TV/projector display for players - shows map, health percentages, active turn
+- **Player View** (`/player`): Individual player interface - clickable actions, Pokemon sprites
 
 ### Data Model Hierarchy
 - **Human Characters**: Players or NPCs with stats, linked to their Pokemon
@@ -21,6 +46,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Set damage application (no dice rolling in app)
 - Move history and effect logging
 - Trainer vs Full Contact battle modes
+
+### Real-time Sync
+WebSocket (`/ws`) handles GM-to-Group synchronization:
+- Combat events: `turn_change`, `damage_applied`, `heal_applied`, `move_executed`
+- State sync: `encounter_update`, `serve_encounter`, `unserve_encounter`
+- Role-based broadcasting (GM sees everything, Group sees filtered data)
 
 ### Sprite Sources
 - Gen 5 and below: Pokemon Black 2/White 2 sprites
