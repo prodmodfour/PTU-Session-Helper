@@ -4,21 +4,43 @@ A Game Master aid application for Pokemon Tabletop United (PTU) 1.05 in-person t
 
 ## Features
 
-- **Dual-View System**: GM View with full control, Group View for player-facing display
-- **Encounter Management**: Three-sided combat (Players, Allies, Enemies) with initiative tracking
-- **Serve to Group**: GM can serve encounters to the Group View displayed on a TV
-- **Undo/Redo**: Full undo/redo support for combat actions (Ctrl+Z / Ctrl+Shift+Z)
+### Core
+- **Dual-View System**: GM View with full control, Group View for player-facing TV display
 - **Real-time Sync**: WebSocket-based synchronization between GM and Group views
-- **4K TV Support**: Optimized styling for 4K displays
-- **Character Library**: Manage Pokemon and Human characters
-- **Combat Tracking**: HP, status conditions, combat stages, injuries
+- **Undo/Redo**: Full history support for combat actions (Ctrl+Z / Ctrl+Shift+Z)
+- **4K TV Support**: Optimized styling for large displays
+
+### Encounter Management
+- **Three-sided Combat**: Players, Allies, and Enemies with initiative tracking
+- **Encounter Templates**: Save and load encounter setups
+- **Encounter Tables**: Random encounter generation by habitat
+- **Serve to Group**: Push encounters to the Group View TV display
+
+### Combat Tracking
+- HP with temporary HP support
+- Status conditions (all PTU afflictions)
+- Combat stages (+/-6 for each stat)
+- Injuries and massive damage
+- Trainer vs Full Contact battle modes
+
+### Map & Grid
+- **Fog of War**: Hide/reveal areas for players
+- **Terrain System**: Mark terrain types on the grid
+- **Movement Tracking**: Grid-based positioning
+
+### Library Management
+- **Character Library**: Create and manage Human characters and Pokemon
+- **CSV Import**: Bulk import characters
+- **Pokemon Linking**: Link Pokemon to their trainers
 
 ## Tech Stack
 
-- **Frontend**: Nuxt 3 (Vue 3) with TypeScript
-- **Styling**: SCSS with Pokemon Scarlet/Violet dark theme
+- **Framework**: Nuxt 3 (Vue 3) with TypeScript, SPA mode
+- **Backend**: Nitro server with 86+ REST API endpoints
 - **Database**: SQLite with Prisma ORM
-- **Real-time**: WebSocket (CrossWS)
+- **State**: Pinia (12 stores)
+- **Real-time**: WebSocket via CrossWS
+- **Styling**: SCSS with Pokemon Scarlet/Violet dark theme
 
 ## Setup
 
@@ -75,12 +97,17 @@ The GM has full control over encounters:
 
 ### Group View (`/group`)
 
-Read-only display for players:
-- Shows current encounter state
+TV/projector display for players:
+- Shows current encounter served by GM
 - Displays combatant HP (percentages for enemies)
 - Shows current turn indicator
+- Fog of war respected (hidden areas not shown)
 - Optimized for 4K TV display
 - Auto-connects when GM serves an encounter
+
+### Player View (`/player`) - Future Feature
+
+Individual player interface with clickable actions (not yet implemented).
 
 ### Keyboard Shortcuts (GM View)
 
@@ -93,22 +120,30 @@ Read-only display for players:
 
 ```
 app/
-  components/       # Vue components
-  composables/      # Vue composables (useEncounterHistory, useWebSocket, etc.)
-  layouts/          # Page layouts (gm, group)
-  pages/            # Route pages
-  server/           # API routes and WebSocket handler
-  stores/           # Pinia stores
-  types/            # TypeScript type definitions
-  assets/scss/      # Global styles and variables
+├── pages/           # File-based routing (gm/, group/, player/)
+├── layouts/         # Role-based layouts (gm, group, player, default)
+├── components/      # 66 auto-imported Vue components by domain
+├── composables/     # 18 composables (combat, grid, WebSocket, etc.)
+├── stores/          # 12 Pinia stores for state management
+├── server/
+│   ├── api/         # REST endpoints (characters, pokemon, encounters, etc.)
+│   ├── services/    # Business logic (combatant, encounter, entity-update)
+│   ├── routes/      # WebSocket handler
+│   └── utils/       # Prisma client, shared state
+├── types/           # TypeScript type definitions
+└── assets/scss/     # Global styles and variables
 
-design/             # Feature specifications
-books/              # PTU rulebooks (reference material)
+books/markdown/      # PTU 1.05 rulebooks (reference material)
 ```
 
 ## Game System
 
-This app is built for **Pokemon Tabletop United 1.05**. Reference materials in `books/markdown/` include the core rulebook and Pokedex data.
+This app is built for **Pokemon Tabletop United 1.05**. Reference materials in `books/markdown/` include:
+- `Pokemon Tabletop United 1.05 Core.md` - Core rulebook
+- `Combined_Pokedex.md` - Pokemon stats and data
+- `errata_2.md` - Rule corrections
+
+When implementing game mechanics, use `/verify-ptu` to check compliance with PTU 1.05 rules.
 
 ## License
 
