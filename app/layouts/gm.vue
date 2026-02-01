@@ -20,6 +20,10 @@
           <img src="/icons/phosphor/books.svg" alt="" class="gm-nav-link__icon" />
           <span>Encounters</span>
         </NuxtLink>
+        <NuxtLink to="/gm/scenes" class="gm-nav-link" active-class="gm-nav-link--active">
+          <PhFilmSlate class="gm-nav-link__icon-component" :size="20" />
+          <span>Scenes</span>
+        </NuxtLink>
         <NuxtLink to="/gm/habitats" class="gm-nav-link" active-class="gm-nav-link--active">
           <img src="/icons/phosphor/tree.svg" alt="" class="gm-nav-link__icon" />
           <span>Habitats</span>
@@ -39,6 +43,23 @@
       </nav>
 
       <div class="gm-header__actions">
+        <!-- Group View Tab Selector -->
+        <div class="tab-selector">
+          <label class="tab-selector__label">Group View:</label>
+          <div class="tab-selector__buttons">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              class="tab-btn"
+              :class="{ 'tab-btn--active': activeTab === tab.id }"
+              @click="setTab(tab.id)"
+              :title="tab.label"
+            >
+              <component :is="tab.icon" :size="16" />
+            </button>
+          </div>
+        </div>
+
         <button
           class="btn btn--ghost btn--sm gm-header__day-btn"
           :disabled="advancingDay"
@@ -60,7 +81,36 @@
 </template>
 
 <script setup lang="ts">
+import { PhUsers, PhFilmSlate, PhSword, PhMapTrifold } from '@phosphor-icons/vue'
+import type { GroupViewTab } from '~/stores/groupViewTabs'
+
 const { newDayGlobal, loading: advancingDay } = useRestHealing()
+const groupViewTabsStore = useGroupViewTabsStore()
+
+// Tab configuration
+const tabs = [
+  { id: 'lobby' as GroupViewTab, label: 'Lobby', icon: PhUsers },
+  { id: 'scene' as GroupViewTab, label: 'Scene', icon: PhFilmSlate },
+  { id: 'encounter' as GroupViewTab, label: 'Encounter', icon: PhSword },
+  { id: 'map' as GroupViewTab, label: 'Map', icon: PhMapTrifold }
+]
+
+// Active tab from store
+const activeTab = computed(() => groupViewTabsStore.activeTab)
+
+// Set active tab
+const setTab = async (tab: GroupViewTab) => {
+  try {
+    await groupViewTabsStore.setActiveTab(tab)
+  } catch (error) {
+    // Failed to set tab
+  }
+}
+
+// Fetch initial tab state on mount
+onMounted(async () => {
+  await groupViewTabsStore.fetchTabState()
+})
 
 const handleAdvanceDay = async () => {
   if (confirm('Advance to a new day? This will reset daily healing limits for all characters and Pokemon.')) {
@@ -157,7 +207,8 @@ const handleAdvanceDay = async () => {
 
   &__actions {
     display: flex;
-    gap: $spacing-sm;
+    align-items: center;
+    gap: $spacing-md;
   }
 
   &__group-btn {
@@ -199,6 +250,11 @@ const handleAdvanceDay = async () => {
     transition: filter $transition-fast;
   }
 
+  &__icon-component {
+    opacity: 0.7;
+    transition: opacity $transition-fast;
+  }
+
 
   &:hover {
     color: $color-text;
@@ -206,6 +262,10 @@ const handleAdvanceDay = async () => {
 
     .gm-nav-link__icon {
       filter: brightness(0) invert(1);
+    }
+
+    .gm-nav-link__icon-component {
+      opacity: 1;
     }
   }
 
@@ -217,6 +277,62 @@ const handleAdvanceDay = async () => {
     .gm-nav-link__icon {
       filter: brightness(0) invert(1);
     }
+
+    .gm-nav-link__icon-component {
+      opacity: 1;
+    }
+
+    &:hover {
+      background: $gradient-sv-cool;
+    }
+  }
+}
+
+.tab-selector {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-md;
+  border: 1px solid $border-color-default;
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 2px;
+  }
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text;
+  }
+
+  &--active {
+    background: $gradient-sv-cool;
+    color: white;
+    box-shadow: $shadow-glow-scarlet;
 
     &:hover {
       background: $gradient-sv-cool;
