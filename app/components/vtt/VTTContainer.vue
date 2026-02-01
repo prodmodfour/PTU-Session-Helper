@@ -37,276 +37,44 @@
     </div>
 
     <!-- Measurement Toolbar -->
-    <div v-if="config.enabled" class="vtt-measurement-toolbar" data-testid="measurement-toolbar">
-      <div class="vtt-measurement-toolbar__modes">
-        <button
-          class="measurement-btn"
-          :class="{ 'measurement-btn--active': measurementStore.mode === 'distance' }"
-          @click="setMeasurementMode('distance')"
-          title="Distance (M)"
-          data-testid="measure-distance-btn"
-        >
-          <img src="/icons/phosphor/ruler.svg" alt="" class="toolbar-icon" />
-          Distance
-        </button>
-        <button
-          class="measurement-btn"
-          :class="{ 'measurement-btn--active': measurementStore.mode === 'burst' }"
-          @click="setMeasurementMode('burst')"
-          title="Burst AoE (B)"
-          data-testid="measure-burst-btn"
-        >
-          <img src="/icons/phosphor/target.svg" alt="" class="toolbar-icon" />
-          Burst
-        </button>
-        <button
-          class="measurement-btn"
-          :class="{ 'measurement-btn--active': measurementStore.mode === 'cone' }"
-          @click="setMeasurementMode('cone')"
-          title="Cone AoE (C)"
-          data-testid="measure-cone-btn"
-        >
-          <img src="/icons/phosphor/triangle.svg" alt="" class="toolbar-icon" />
-          Cone
-        </button>
-        <button
-          class="measurement-btn"
-          :class="{ 'measurement-btn--active': measurementStore.mode === 'line' }"
-          @click="setMeasurementMode('line')"
-          title="Line AoE (L)"
-          data-testid="measure-line-btn"
-        >
-          <img src="/icons/phosphor/minus.svg" alt="" class="toolbar-icon" />
-          Line
-        </button>
-        <button
-          class="measurement-btn"
-          :class="{ 'measurement-btn--active': measurementStore.mode === 'close-blast' }"
-          @click="setMeasurementMode('close-blast')"
-          title="Close Blast"
-          data-testid="measure-close-blast-btn"
-        >
-          <img src="/icons/phosphor/square.svg" alt="" class="toolbar-icon" />
-          Close Blast
-        </button>
-      </div>
-
-      <div v-if="measurementStore.mode !== 'none'" class="vtt-measurement-toolbar__options">
-        <template v-if="measurementStore.mode !== 'distance'">
-          <label>Size:</label>
-          <button
-            class="size-btn"
-            @click="measurementStore.setAoeSize(measurementStore.aoeSize - 1)"
-            :disabled="measurementStore.aoeSize <= 1"
-          >-</button>
-          <span class="size-display">{{ measurementStore.aoeSize }}</span>
-          <button
-            class="size-btn"
-            @click="measurementStore.setAoeSize(measurementStore.aoeSize + 1)"
-            :disabled="measurementStore.aoeSize >= 10"
-          >+</button>
-        </template>
-
-        <template v-if="['cone', 'close-blast', 'line'].includes(measurementStore.mode)">
-          <span class="separator">|</span>
-          <label>Dir:</label>
-          <button class="dir-btn" @click="measurementStore.cycleDirection">
-            {{ directionArrow }}
-          </button>
-        </template>
-
-        <button
-          class="measurement-btn measurement-btn--clear"
-          @click="clearMeasurement"
-          title="Clear (Escape)"
-        >
-          <img src="/icons/phosphor/x-circle.svg" alt="" class="toolbar-icon" />
-          Clear
-        </button>
-      </div>
-    </div>
+    <MeasurementToolbar
+      v-if="config.enabled"
+      :mode="measurementStore.mode"
+      :aoe-size="measurementStore.aoeSize"
+      :aoe-direction="measurementStore.aoeDirection"
+      @set-mode="setMeasurementMode"
+      @increase-size="measurementStore.setAoeSize(measurementStore.aoeSize + 1)"
+      @decrease-size="measurementStore.setAoeSize(measurementStore.aoeSize - 1)"
+      @cycle-direction="measurementStore.cycleDirection()"
+      @clear="clearMeasurement"
+    />
 
     <!-- Fog of War Toolbar (GM Only) -->
-    <div v-if="config.enabled && isGm" class="vtt-fow-toolbar" data-testid="fow-toolbar">
-      <div class="vtt-fow-toolbar__header">
-        <button
-          class="fow-toggle-btn"
-          :class="{ 'fow-toggle-btn--active': fogOfWarStore.enabled }"
-          @click="toggleFogOfWar"
-          data-testid="toggle-fow-btn"
-        >
-          <img :src="fogOfWarStore.enabled ? '/icons/phosphor/cloud.svg' : '/icons/phosphor/sun.svg'" alt="" class="toolbar-icon" />
-          {{ fogOfWarStore.enabled ? 'Fog On' : 'Fog Off' }}
-        </button>
-
-        <template v-if="fogOfWarStore.enabled">
-          <span class="separator">|</span>
-
-          <div class="vtt-fow-toolbar__tools">
-            <button
-              class="fow-btn"
-              :class="{ 'fow-btn--active': fogOfWarStore.toolMode === 'reveal' }"
-              @click="setFogTool('reveal')"
-              title="Reveal (V)"
-              data-testid="fow-reveal-btn"
-            >
-              <img src="/icons/phosphor/eye.svg" alt="" class="toolbar-icon" />
-              Reveal
-            </button>
-            <button
-              class="fow-btn"
-              :class="{ 'fow-btn--active': fogOfWarStore.toolMode === 'hide' }"
-              @click="setFogTool('hide')"
-              title="Hide (H)"
-              data-testid="fow-hide-btn"
-            >
-              <img src="/icons/phosphor/eye-slash.svg" alt="" class="toolbar-icon" />
-              Hide
-            </button>
-            <button
-              class="fow-btn"
-              :class="{ 'fow-btn--active': fogOfWarStore.toolMode === 'explore' }"
-              @click="setFogTool('explore')"
-              title="Explore (E)"
-              data-testid="fow-explore-btn"
-            >
-              <img src="/icons/phosphor/magnifying-glass.svg" alt="" class="toolbar-icon" />
-              Explore
-            </button>
-          </div>
-
-          <span class="separator">|</span>
-
-          <div class="vtt-fow-toolbar__brush">
-            <label>Brush:</label>
-            <button
-              class="size-btn"
-              @click="fogOfWarStore.setBrushSize(fogOfWarStore.brushSize - 1)"
-              :disabled="fogOfWarStore.brushSize <= 1"
-            >-</button>
-            <span class="size-display">{{ fogOfWarStore.brushSize }}</span>
-            <button
-              class="size-btn"
-              @click="fogOfWarStore.setBrushSize(fogOfWarStore.brushSize + 1)"
-              :disabled="fogOfWarStore.brushSize >= 10"
-            >+</button>
-          </div>
-
-          <span class="separator">|</span>
-
-          <div class="vtt-fow-toolbar__actions">
-            <button
-              class="fow-btn fow-btn--small"
-              @click="revealAllFog"
-              title="Reveal All"
-              data-testid="fow-reveal-all-btn"
-            >
-              Reveal All
-            </button>
-            <button
-              class="fow-btn fow-btn--small fow-btn--danger"
-              @click="hideAllFog"
-              title="Hide All"
-              data-testid="fow-hide-all-btn"
-            >
-              Hide All
-            </button>
-          </div>
-        </template>
-      </div>
-    </div>
+    <FogOfWarToolbar
+      v-if="config.enabled && isGm"
+      :enabled="fogOfWarStore.enabled"
+      :tool-mode="fogOfWarStore.toolMode"
+      :brush-size="fogOfWarStore.brushSize"
+      @toggle="toggleFogOfWar"
+      @set-tool="setFogTool"
+      @increase-brush="fogOfWarStore.setBrushSize(fogOfWarStore.brushSize + 1)"
+      @decrease-brush="fogOfWarStore.setBrushSize(fogOfWarStore.brushSize - 1)"
+      @reveal-all="revealAllFog"
+      @hide-all="hideAllFog"
+    />
 
     <!-- Grid Settings Panel -->
-    <div v-if="showSettings && isGm" class="vtt-settings" data-testid="vtt-settings">
-      <div class="vtt-settings__row">
-        <div class="form-group">
-          <label>Width (cells)</label>
-          <input
-            type="number"
-            v-model.number="localConfig.width"
-            class="form-input form-input--sm"
-            min="5"
-            max="100"
-            data-testid="grid-width-input"
-          />
-        </div>
-        <div class="form-group">
-          <label>Height (cells)</label>
-          <input
-            type="number"
-            v-model.number="localConfig.height"
-            class="form-input form-input--sm"
-            min="5"
-            max="100"
-            data-testid="grid-height-input"
-          />
-        </div>
-        <div class="form-group">
-          <label>Cell Size (px)</label>
-          <input
-            type="number"
-            v-model.number="localConfig.cellSize"
-            class="form-input form-input--sm"
-            min="20"
-            max="100"
-            data-testid="cell-size-input"
-          />
-        </div>
-      </div>
-
-      <div class="vtt-settings__row">
-        <div class="form-group form-group--wide">
-          <label>Background Image</label>
-          <div class="background-upload">
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              class="background-upload__input"
-              @change="handleFileSelect"
-              data-testid="background-file-input"
-            />
-            <button
-              class="btn btn--sm btn--secondary background-upload__btn"
-              @click="triggerFileInput"
-              :disabled="isUploading"
-              data-testid="upload-bg-btn"
-            >
-              {{ isUploading ? 'Uploading...' : 'Upload Image' }}
-            </button>
-            <button
-              v-if="localConfig.background"
-              class="btn btn--sm btn--danger"
-              @click="removeBackground"
-              :disabled="isUploading"
-              data-testid="remove-bg-btn"
-            >
-              Remove
-            </button>
-          </div>
-          <div v-if="localConfig.background" class="background-preview">
-            <img :src="localConfig.background" alt="Background preview" />
-          </div>
-          <div v-if="uploadError" class="upload-error">{{ uploadError }}</div>
-        </div>
-      </div>
-
-      <div class="vtt-settings__actions">
-        <button
-          class="btn btn--sm btn--secondary"
-          @click="resetSettings"
-        >
-          Reset
-        </button>
-        <button
-          class="btn btn--sm btn--primary"
-          @click="applySettings"
-          data-testid="apply-settings-btn"
-        >
-          Apply
-        </button>
-      </div>
-    </div>
+    <GridSettingsPanel
+      v-if="showSettings && isGm"
+      :config="localConfig"
+      :is-uploading="isUploading"
+      :upload-error="uploadError"
+      @update="handleConfigUpdate"
+      @apply="applySettings"
+      @reset="resetSettings"
+      @upload-background="handleBackgroundUpload"
+      @remove-background="removeBackground"
+    />
 
     <!-- Grid Canvas -->
     <div v-if="config.enabled" class="vtt-grid-wrapper">
@@ -434,7 +202,6 @@ onUnmounted(() => {
 
 // Refs
 const gridCanvasRef = ref<InstanceType<typeof GridCanvas> | null>(null)
-const fileInputRef = ref<HTMLInputElement | null>(null)
 const showSettings = ref(false)
 const selectedTokenId = ref<string | null>(null)
 const isUploading = ref(false)
@@ -465,21 +232,6 @@ const selectedCombatant = computed(() => {
   return props.combatants.find(c => c.id === selectedTokenId.value)
 })
 
-// Direction arrow mapping
-const directionArrow = computed(() => {
-  const arrows: Record<string, string> = {
-    north: '↑',
-    south: '↓',
-    east: '→',
-    west: '←',
-    northeast: '↗',
-    northwest: '↖',
-    southeast: '↘',
-    southwest: '↙',
-  }
-  return arrows[measurementStore.aoeDirection] || '↑'
-})
-
 // Methods
 const getDisplayName = (combatant: Combatant): string => {
   if (combatant.type === 'pokemon') {
@@ -494,6 +246,10 @@ const toggleGrid = () => {
     ...props.config,
     enabled: !props.config.enabled,
   })
+}
+
+const handleConfigUpdate = (field: keyof GridConfig, value: number | string | boolean | undefined) => {
+  localConfig.value = { ...localConfig.value, [field]: value }
 }
 
 const applySettings = () => {
@@ -563,17 +319,8 @@ const hideAllFog = () => {
   fogOfWarStore.hideAll()
 }
 
-// File upload methods
-const triggerFileInput = () => {
-  fileInputRef.value?.click()
-}
-
-const handleFileSelect = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-
-  if (!file) return
-
+// Background upload
+const handleBackgroundUpload = async (file: File) => {
   // Validate file type
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   if (!validTypes.includes(file.type)) {
@@ -594,10 +341,6 @@ const handleFileSelect = async (event: Event) => {
     emit('backgroundUpload', file)
   } finally {
     isUploading.value = false
-    // Reset file input
-    if (fileInputRef.value) {
-      fileInputRef.value.value = ''
-    }
   }
 }
 
@@ -665,81 +408,17 @@ defineExpose({
   }
 }
 
-.vtt-settings {
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-md;
-  padding: $spacing-md;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-
-  &__row {
-    display: flex;
-    gap: $spacing-md;
-    flex-wrap: wrap;
-
-    .form-group {
-      flex: 1;
-      min-width: 100px;
-
-      &--wide {
-        flex: 3;
-        min-width: 200px;
-      }
-    }
-  }
-
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: $spacing-sm;
-  }
-
-  label {
-    display: block;
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-    margin-bottom: $spacing-xs;
-  }
-
-  .form-input--sm {
-    padding: $spacing-xs $spacing-sm;
-    font-size: $font-size-sm;
-  }
+.btn-svg {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
 }
 
-.background-upload {
-  display: flex;
-  gap: $spacing-sm;
+.btn--with-icon {
+  display: inline-flex;
   align-items: center;
-
-  &__input {
-    display: none;
-  }
-
-  &__btn {
-    flex-shrink: 0;
-  }
-}
-
-.background-preview {
-  margin-top: $spacing-sm;
-  border-radius: $border-radius-sm;
-  overflow: hidden;
-  max-height: 100px;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    max-height: 100px;
-  }
-}
-
-.upload-error {
-  color: $color-danger;
-  font-size: $font-size-xs;
-  margin-top: $spacing-xs;
+  gap: $spacing-xs;
 }
 
 .vtt-grid-wrapper {
@@ -797,261 +476,6 @@ defineExpose({
     gap: $spacing-md;
     font-size: $font-size-sm;
     color: $color-text-muted;
-  }
-}
-
-.vtt-measurement-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-md;
-
-  &__modes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $spacing-xs;
-  }
-
-  &__options {
-    display: flex;
-    align-items: center;
-    gap: $spacing-xs;
-    margin-left: auto;
-    padding-left: $spacing-sm;
-    border-left: 1px solid $border-color-default;
-
-    label {
-      font-size: $font-size-xs;
-      color: $color-text-muted;
-    }
-  }
-}
-
-// Toolbar icon styles
-.toolbar-icon {
-  width: 14px;
-  height: 14px;
-  filter: brightness(0) invert(0.7);
-  transition: filter 0.15s ease;
-}
-
-.btn-svg {
-  width: 14px;
-  height: 14px;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
-}
-
-.btn--with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-}
-
-.measurement-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  font-size: $font-size-xs;
-  background: $color-bg-secondary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  color: $color-text;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: $color-bg-primary;
-    border-color: $color-accent-teal;
-
-    .toolbar-icon {
-      filter: brightness(0) invert(1);
-    }
-  }
-
-  &--active {
-    background: rgba($color-accent-teal, 0.2);
-    border-color: $color-accent-teal;
-    color: $color-accent-teal;
-
-    .toolbar-icon {
-      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
-    }
-  }
-
-  &--clear {
-    background: rgba($color-danger, 0.1);
-    border-color: $color-danger;
-    color: $color-danger;
-
-    .toolbar-icon {
-      filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(2000%) hue-rotate(340deg);
-    }
-
-    &:hover {
-      background: rgba($color-danger, 0.2);
-    }
-  }
-}
-
-.size-btn,
-.dir-btn {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: $color-bg-secondary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  color: $color-text;
-  font-size: $font-size-sm;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: $color-bg-primary;
-    border-color: $color-accent-teal;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.dir-btn {
-  font-size: $font-size-md;
-  width: 28px;
-}
-
-.size-display {
-  min-width: 20px;
-  text-align: center;
-  font-size: $font-size-sm;
-  color: $color-text;
-}
-
-.separator {
-  color: $border-color-default;
-}
-
-// Fog of War Toolbar
-.vtt-fow-toolbar {
-  padding: $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-md;
-
-  &__header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: $spacing-sm;
-  }
-
-  &__tools {
-    display: flex;
-    gap: $spacing-xs;
-  }
-
-  &__brush {
-    display: flex;
-    align-items: center;
-    gap: $spacing-xs;
-
-    label {
-      font-size: $font-size-xs;
-      color: $color-text-muted;
-    }
-  }
-
-  &__actions {
-    display: flex;
-    gap: $spacing-xs;
-  }
-}
-
-.fow-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  font-size: $font-size-xs;
-  background: $color-bg-secondary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  color: $color-text;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: $color-bg-primary;
-    border-color: $color-accent-teal;
-
-    .toolbar-icon {
-      filter: brightness(0) invert(1);
-    }
-  }
-
-  &--active {
-    background: rgba($color-accent-teal, 0.2);
-    border-color: $color-accent-teal;
-    color: $color-accent-teal;
-
-    .toolbar-icon {
-      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
-    }
-  }
-}
-
-.fow-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  font-size: $font-size-xs;
-  background: $color-bg-secondary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  color: $color-text;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: $color-bg-primary;
-    border-color: $color-accent-teal;
-
-    .toolbar-icon {
-      filter: brightness(0) invert(1);
-    }
-  }
-
-  &--active {
-    background: rgba($color-accent-teal, 0.2);
-    border-color: $color-accent-teal;
-    color: $color-accent-teal;
-
-    .toolbar-icon {
-      filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(700%) hue-rotate(120deg);
-    }
-  }
-
-  &--small {
-    padding: $spacing-xs;
-    font-size: $font-size-xs;
-  }
-
-  &--danger {
-    border-color: rgba($color-danger, 0.5);
-
-    &:hover {
-      background: rgba($color-danger, 0.1);
-      border-color: $color-danger;
-      color: $color-danger;
-    }
   }
 }
 </style>

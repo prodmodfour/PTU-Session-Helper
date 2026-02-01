@@ -42,44 +42,21 @@
     />
 
     <!-- Coordinate Display -->
-    <div v-if="showCoordinates && hoveredCell" class="coordinate-display">
-      {{ hoveredCell.x }}, {{ hoveredCell.y }}
-      <template v-if="measurementStore.mode !== 'none'">
-        <span class="coordinate-display__mode">| {{ measurementStore.mode }}</span>
-        <span v-if="measurementStore.distance > 0" class="coordinate-display__distance">
-          | {{ measurementStore.distance }}m
-        </span>
-      </template>
-    </div>
+    <CoordinateDisplay
+      v-if="showCoordinates"
+      :cell="hoveredCell"
+      :mode="measurementStore.mode"
+      :distance="measurementStore.distance"
+    />
 
     <!-- Zoom Controls -->
-    <div class="zoom-controls" v-if="showZoomControls">
-      <button
-        class="zoom-btn"
-        @click="zoomIn"
-        title="Zoom In"
-        data-testid="zoom-in-btn"
-      >
-        +
-      </button>
-      <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
-      <button
-        class="zoom-btn"
-        @click="zoomOut"
-        title="Zoom Out"
-        data-testid="zoom-out-btn"
-      >
-        -
-      </button>
-      <button
-        class="zoom-btn"
-        @click="resetView"
-        title="Reset View"
-        data-testid="reset-view-btn"
-      >
-        ⌂
-      </button>
-    </div>
+    <ZoomControls
+      v-if="showZoomControls"
+      :zoom="zoom"
+      @zoom-in="zoomIn"
+      @zoom-out="zoomOut"
+      @reset="resetView"
+    />
   </div>
 </template>
 
@@ -1527,74 +1504,6 @@ defineExpose({
   > * {
     pointer-events: auto;
   }
-}
-
-.coordinate-display {
-  position: absolute;
-  bottom: $spacing-sm;
-  left: $spacing-sm;
-  background: rgba(0, 0, 0, 0.7);
-  color: $color-text;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  font-family: monospace;
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-
-  &__mode {
-    color: $color-accent-teal;
-    text-transform: capitalize;
-  }
-
-  &__distance {
-    color: $color-accent-scarlet;
-    font-weight: 600;
-  }
-}
-
-.zoom-controls {
-  position: absolute;
-  bottom: $spacing-sm;
-  right: $spacing-sm;
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-  background: rgba(0, 0, 0, 0.7);
-  padding: $spacing-xs;
-  border-radius: $border-radius-sm;
-}
-
-.zoom-btn {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  color: $color-text;
-  font-size: $font-size-md;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: $color-bg-secondary;
-    border-color: $color-accent-scarlet;
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.zoom-level {
-  color: $color-text-muted;
-  font-size: $font-size-xs;
-  min-width: 40px;
-  text-align: center;
 }
 
 .marquee-selection {
