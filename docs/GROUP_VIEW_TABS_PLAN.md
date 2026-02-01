@@ -400,6 +400,6 @@ app/
 
 - [x] Phase 1: Database Schema & Infrastructure (5 commits)
 - [x] Phase 2: Group View Tab System (4 commits)
-- [ ] Phase 3: Scene System - GM Side
-- [ ] Phase 4: Scene System - Group View
+- [x] Phase 3: Scene System - GM Side (2 commits)
+- [x] Phase 4: Scene System - Group View (included in Phase 2)
 - [ ] Phase 5: Integration
