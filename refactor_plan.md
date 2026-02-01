@@ -60,13 +60,17 @@ This plan identifies files requiring refactoring based on size, mixed concerns, 
 
 ## Phase 2: Split Encounter Store Further
 
-### 2.1 Remove Wrapper Methods
+### 2.1 ~~Remove Wrapper Methods~~ (SKIPPED)
 
-**File:** `app/stores/encounter.ts` (924 lines)
+**Status:** After analysis, this was determined to be the wrong approach.
 
-**Action:** The store already delegates to `encounterGrid` and `encounterCombat` stores. Consider having consumers use domain stores directly for VTT and combat operations.
+**Reason:** The current architecture is correct:
+- Domain stores (`encounterGrid`, `encounterCombat`) handle API calls (stateless)
+- Main store (`encounter`) coordinates state management and uses domain stores
 
-**Expected benefit:** Reduces encounter.ts by ~200 lines
+Removing wrappers would leak state management into components, which violates separation of concerns. The facade pattern is the right design here.
+
+**Actual benefit already achieved:** Domain logic extracted to separate files for better organization and testability.
 
 ---
 
