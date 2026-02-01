@@ -1,47 +1,11 @@
 <template>
   <div class="gm-encounter">
     <!-- No Active Encounter -->
-    <div v-if="!encounter" class="gm-encounter__empty">
-      <div class="gm-encounter__new-section">
-        <h2>No Active Encounter</h2>
-        <p>Start a new encounter or load an existing one.</p>
-
-        <div class="gm-encounter__new">
-          <div class="form-group">
-            <label>Encounter Name</label>
-            <input
-              v-model="newEncounterName"
-              type="text"
-              class="form-input"
-              placeholder="Route 1 Wild Battle"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Battle Type</label>
-            <select v-model="newBattleType" class="form-select">
-              <option value="trainer">Trainer Battle</option>
-              <option value="full_contact">Full Contact</option>
-            </select>
-          </div>
-
-          <button class="btn btn--primary" @click="createNewEncounter">
-            Start New Encounter
-          </button>
-
-          <div class="template-options">
-            <span class="template-divider">or</span>
-            <button class="btn btn--secondary btn--with-icon" @click="showLoadTemplateModal = true">
-              <img src="/icons/phosphor/folder-open.svg" alt="" class="btn-svg" />
-              Load from Template
-            </button>
-            <NuxtLink to="/gm/encounters" class="btn btn--ghost">
-              Browse Library
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </div>
+    <NewEncounterForm
+      v-if="!encounter"
+      @create="createNewEncounter"
+      @loadTemplate="showLoadTemplateModal = true"
+    />
 
     <!-- Active Encounter -->
     <div v-else class="gm-encounter__active">
@@ -326,26 +290,7 @@
         </div>
 
         <!-- Move Log -->
-        <div class="move-log-panel">
-          <h3>Combat Log</h3>
-          <div class="move-log">
-            <div
-              v-for="entry in moveLog"
-              :key="entry.id"
-              class="move-log__entry"
-            >
-              <span class="move-log__round">R{{ entry.round }}</span>
-              <span class="move-log__actor">{{ entry.actorName }}</span>
-              <span class="move-log__move">{{ entry.moveName }}</span>
-              <span class="move-log__targets">
-                → {{ entry.targets.map(t => t.name).join(', ') }}
-              </span>
-            </div>
-            <p v-if="moveLog.length === 0" class="move-log__empty">
-              No actions yet
-            </p>
-          </div>
-        </div>
+        <CombatLogPanel :move-log="moveLog" />
       </div>
     </div>
 
@@ -541,9 +486,6 @@ const handleKeyboardShortcuts = (event: KeyboardEvent) => {
 // View state
 const activeView = ref<'list' | 'grid'>('list')
 
-// New encounter form
-const newEncounterName = ref('')
-const newBattleType = ref<'trainer' | 'full_contact'>('trainer')
 
 // Add combatant modal
 const showAddModal = ref(false)
@@ -592,10 +534,8 @@ const gridConfig = computed(() => encounter.value?.gridConfig ?? {
 })
 
 // Actions
-const createNewEncounter = async () => {
-  const name = newEncounterName.value.trim() || 'New Encounter'
-  await encounterStore.createEncounter(name, newBattleType.value)
-  newEncounterName.value = ''
+const createNewEncounter = async (name: string, battleType: 'trainer' | 'full_contact') => {
+  await encounterStore.createEncounter(name, battleType)
   // Initialize history for new encounter
   encounterStore.initializeHistory()
   refreshUndoRedoState()
@@ -929,68 +869,6 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
 </script>
 
 <style lang="scss" scoped>
-.gm-encounter {
-  &__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    text-align: center;
-
-    h2 {
-      margin-bottom: $spacing-sm;
-      color: $color-text;
-    }
-
-    p {
-      color: $color-text-muted;
-      margin-bottom: $spacing-xl;
-    }
-  }
-
-  &__new {
-    background: $glass-bg;
-    backdrop-filter: $glass-blur;
-    border: 1px solid $glass-border;
-    padding: $spacing-xl;
-    border-radius: $border-radius-lg;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: $shadow-lg;
-
-    .form-group {
-      margin-bottom: $spacing-md;
-    }
-
-    .btn {
-      width: 100%;
-      margin-top: $spacing-md;
-    }
-  }
-}
-
-.template-options {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-top: $spacing-lg;
-  padding-top: $spacing-lg;
-  border-top: 1px solid $glass-border;
-
-  .btn {
-    margin-top: 0;
-  }
-}
-
-.template-divider {
-  color: $color-text-muted;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 .btn--ghost {
   background: transparent;
   border: 1px solid $glass-border;
@@ -1226,66 +1104,6 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
   }
 }
 
-.move-log-panel {
-  background: $glass-bg;
-  backdrop-filter: $glass-blur;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-lg;
-  padding: $spacing-lg;
-  height: fit-content;
-  max-height: 600px;
-  overflow-y: auto;
-
-  h3 {
-    margin-bottom: $spacing-md;
-    font-size: $font-size-md;
-    font-weight: 600;
-  }
-}
-
-.move-log {
-  &__entry {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $spacing-xs;
-    padding: $spacing-sm;
-    border-bottom: 1px solid $border-color-default;
-    font-size: $font-size-sm;
-
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-
-  &__round {
-    background: $color-bg-tertiary;
-    padding: 2px $spacing-xs;
-    border-radius: $border-radius-sm;
-    font-weight: 600;
-    font-size: $font-size-xs;
-  }
-
-  &__actor {
-    font-weight: 600;
-    color: $color-accent-scarlet;
-  }
-
-  &__move {
-    color: $color-text-muted;
-  }
-
-  &__targets {
-    color: $color-text-muted;
-  }
-
-  &__empty {
-    color: $color-text-muted;
-    text-align: center;
-    padding: $spacing-lg;
-    font-style: italic;
-  }
-}
-
 .view-tabs-row {
   display: flex;
   justify-content: space-between;
@@ -1408,19 +1226,6 @@ const handleMovementPreviewChange = (preview: MovementPreview | null) => {
   display: flex;
   flex-direction: column;
   gap: $spacing-lg;
-}
-
-.gm-encounter__new-section {
-  text-align: center;
-
-  h2 {
-    margin-bottom: $spacing-sm;
-  }
-
-  p {
-    color: $color-text-muted;
-    margin-bottom: $spacing-xl;
-  }
 }
 
 .modal-backdrop {
