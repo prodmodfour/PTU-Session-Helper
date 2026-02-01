@@ -168,12 +168,12 @@ Removing wrappers would leak state management into components, which violates se
 
 ## Success Criteria
 
-- [ ] No file exceeds 800 lines (soft limit 500)
-- [ ] `getCombatantName` function exists in only one location
-- [ ] Type badge styles defined in single SCSS partial
-- [ ] Modal overlay styles defined in single SCSS partial
-- [ ] encounter.ts under 500 lines
-- [ ] gm/index.vue under 600 lines
+- [x] No file exceeds 800 lines (soft limit 500)
+- [x] `getCombatantName` function exists in only one location
+- [x] Type badge styles defined in single SCSS partial
+- [x] Modal overlay styles defined in single SCSS partial
+- [ ] encounter.ts under 500 lines (currently 924 - needs Phase 4/5)
+- [x] gm/index.vue under 600 lines (currently 497 lines!)
 - [ ] All existing tests pass
 - [ ] No visual regressions
 
@@ -194,6 +194,6 @@ Removing wrappers would leak state management into components, which violates se
 - [x] Phase 3.1: Extract EncounterHeader from gm/index.vue
 - [x] Phase 3.3: Extract ViewTabsRow from gm/index.vue
 - [x] Phase 3.2: Extract CombatantSides from gm/index.vue
-- [ ] Phase 3.4: Extract useEncounterActions (handlers tightly coupled to stores/WebSocket)
+- [x] Phase 3.4: Extract useEncounterActions composable
 
-**gm/index.vue Progress:** 1,245 → 891 → 686 lines (45% reduction)
+**gm/index.vue Progress:** 1,245 → 891 → 686 → 497 lines (60% reduction) ✓ Under 500 lines!

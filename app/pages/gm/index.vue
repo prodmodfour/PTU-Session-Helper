@@ -111,7 +111,7 @@
         :combatant="actionModalCombatant"
         :all-combatants="encounter.combatants"
         @close="actionModalCombatantId = null"
-        @execute-move="handleExecuteMove"
+        @execute-move="handleExecuteMoveWithClose"
         @execute-action="handleExecuteAction"
         @update-status="handleStatus"
       />
@@ -120,9 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CombatSide, Combatant, StageModifiers, StatusCondition, GridConfig, GridPosition, MovementPreview } from '~/types'
-
-const { getCombatantName } = useCombatantDisplay()
+import type { CombatSide } from '~/types'
 
 definePageMeta({
   layout: 'gm'
@@ -302,6 +300,43 @@ const gridConfig = computed(() => encounter.value?.gridConfig ?? {
   background: undefined
 })
 
+// Encounter actions composable
+const {
+  handleAction,
+  handleDamage,
+  handleHeal,
+  handleStages,
+  handleStatus,
+  handleExecuteMove,
+  handleExecuteAction,
+  handleGridConfigUpdate,
+  handleTokenMove,
+  handleBackgroundUpload,
+  handleBackgroundRemove,
+  handleMovementPreviewChange
+} = useEncounterActions({
+  encounter,
+  send,
+  refreshUndoRedoState
+})
+
+// GM Action Modal handler
+const handleOpenActions = (combatantId: string) => {
+  actionModalCombatantId.value = combatantId
+}
+
+// Wrap handleExecuteMove to close modal after execution
+const handleExecuteMoveWithClose = async (
+  combatantId: string,
+  moveId: string,
+  targetIds: string[],
+  damage?: number,
+  targetDamages?: Record<string, number>
+) => {
+  await handleExecuteMove(combatantId, moveId, targetIds, damage, targetDamages)
+  actionModalCombatantId.value = null
+}
+
 // Actions
 const createNewEncounter = async (name: string, battleType: 'trainer' | 'full_contact') => {
   await encounterStore.createEncounter(name, battleType)
@@ -410,230 +445,6 @@ const removeCombatant = async (combatantId: string) => {
   if (confirm('Remove this combatant?')) {
     await encounterStore.removeCombatant(combatantId)
   }
-}
-
-const handleAction = async (combatantId: string, action: { type: string; data: any }) => {
-  // Handle different action types based on action.type
-  switch (action.type) {
-    case 'standard':
-      await encounterStore.useStandardAction(combatantId)
-      break
-    case 'shift':
-      await encounterStore.useShiftAction(combatantId)
-      break
-    case 'swift':
-      await encounterStore.useSwiftAction(combatantId)
-      break
-    default:
-      // Other actions can be handled here
-      break
-  }
-}
-
-const handleDamage = async (combatantId: string, damage: number) => {
-  // Find combatant name for snapshot
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = getCombatantName(combatant)
-  encounterStore.captureSnapshot(`Applied ${damage} damage to ${name}`)
-  await encounterStore.applyDamage(combatantId, damage)
-  refreshUndoRedoState()
-  await nextTick()
-  // Broadcast damage update via WebSocket
-  if (encounterStore.encounter) {
-    send({
-      type: 'encounter_update',
-      data: encounterStore.encounter
-    })
-  }
-}
-
-const handleHeal = async (combatantId: string, amount: number, tempHp?: number, healInjuries?: number) => {
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = getCombatantName(combatant)
-  const parts: string[] = []
-  if (amount > 0) parts.push(`${amount} HP`)
-  if (tempHp && tempHp > 0) parts.push(`${tempHp} Temp HP`)
-  if (healInjuries && healInjuries > 0) parts.push(`${healInjuries} injury`)
-  encounterStore.captureSnapshot(`Healed ${name} (${parts.join(', ')})`)
-  await encounterStore.healCombatant(combatantId, amount, tempHp ?? 0, healInjuries ?? 0)
-  refreshUndoRedoState()
-  await nextTick()
-  // Broadcast heal update via WebSocket
-  if (encounterStore.encounter) {
-    send({
-      type: 'encounter_update',
-      data: encounterStore.encounter
-    })
-  }
-}
-
-const handleStages = async (combatantId: string, changes: Partial<StageModifiers>, absolute: boolean) => {
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = getCombatantName(combatant)
-  encounterStore.captureSnapshot(`Changed ${name}'s combat stages`)
-  await encounterStore.setCombatStages(combatantId, changes as Record<string, number>, absolute)
-  refreshUndoRedoState()
-  await nextTick()
-  // Broadcast stage changes via WebSocket
-  if (encounterStore.encounter) {
-    send({
-      type: 'encounter_update',
-      data: encounterStore.encounter
-    })
-  }
-}
-
-const handleStatus = async (combatantId: string, add: StatusCondition[], remove: StatusCondition[]) => {
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = getCombatantName(combatant)
-  const parts: string[] = []
-  if (add.length > 0) parts.push(`added ${add.join(', ')}`)
-  if (remove.length > 0) parts.push(`removed ${remove.join(', ')}`)
-  encounterStore.captureSnapshot(`${name}: ${parts.join('; ')}`)
-  await encounterStore.updateStatusConditions(combatantId, add, remove)
-  refreshUndoRedoState()
-  await nextTick()
-  // Broadcast status changes via WebSocket
-  if (encounterStore.encounter) {
-    send({
-      type: 'encounter_update',
-      data: encounterStore.encounter
-    })
-  }
-}
-
-// GM Action Modal handlers
-const handleOpenActions = (combatantId: string) => {
-  actionModalCombatantId.value = combatantId
-}
-
-const handleExecuteMove = async (combatantId: string, moveId: string, targetIds: string[], damage?: number, targetDamages?: Record<string, number>) => {
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  if (!combatant) return
-
-  // moveId could be either the move's id or name - check both
-  const moveName = moveId === 'struggle' ? 'Struggle' : (combatant.type === 'pokemon'
-    ? ((combatant.entity as any).moves?.find((m: any) => m.id === moveId || m.name === moveId)?.name || moveId)
-    : moveId)
-
-  encounterStore.captureSnapshot(`${getCombatantName(combatant)} used ${moveName}`)
-  await encounterStore.executeMove(combatantId, moveId, targetIds, damage, targetDamages)
-  refreshUndoRedoState()
-  await nextTick()
-
-  if (encounterStore.encounter) {
-    send({ type: 'encounter_update', data: encounterStore.encounter })
-  }
-
-  actionModalCombatantId.value = null
-}
-
-// Maneuver name mapping
-const maneuverNames: Record<string, string> = {
-  'push': 'Push',
-  'sprint': 'Sprint',
-  'trip': 'Trip',
-  'grapple': 'Grapple',
-  'intercept-melee': 'Intercept Melee',
-  'intercept-ranged': 'Intercept Ranged',
-  'take-a-breather': 'Take a Breather'
-}
-
-const handleExecuteAction = async (combatantId: string, actionType: string) => {
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  if (!combatant) return
-
-  const name = getCombatantName(combatant)
-
-  // Handle maneuvers (prefixed with 'maneuver:')
-  if (actionType.startsWith('maneuver:')) {
-    const maneuverId = actionType.replace('maneuver:', '')
-    const maneuverName = maneuverNames[maneuverId] || maneuverId
-    encounterStore.captureSnapshot(`${name} used ${maneuverName}`)
-
-    // Use standard action for most maneuvers
-    if (['push', 'sprint', 'trip', 'grapple'].includes(maneuverId)) {
-      await encounterStore.useStandardAction(combatantId)
-    }
-    // Full actions use both standard and shift
-    if (['take-a-breather', 'intercept-melee', 'intercept-ranged'].includes(maneuverId)) {
-      await encounterStore.useStandardAction(combatantId)
-      await encounterStore.useShiftAction(combatantId)
-    }
-    // Special handling for Take a Breather
-    if (maneuverId === 'take-a-breather') {
-      await encounterStore.takeABreather(combatantId)
-    }
-  } else {
-    // Handle standard actions
-    switch (actionType) {
-      case 'shift':
-        encounterStore.captureSnapshot(`${name} used Shift action`)
-        await encounterStore.useShiftAction(combatantId)
-        break
-      case 'pass':
-        encounterStore.captureSnapshot(`${name} passed their turn`)
-        // Mark turn as complete - both standard and shift actions used
-        if (combatant.turnState) {
-          combatant.turnState.hasActed = true
-          combatant.turnState.standardActionUsed = true
-          combatant.turnState.shiftActionUsed = true
-        }
-        break
-    }
-  }
-
-  refreshUndoRedoState()
-  await nextTick()
-
-  if (encounterStore.encounter) {
-    send({ type: 'encounter_update', data: encounterStore.encounter })
-  }
-}
-
-// VTT Grid handlers
-const handleGridConfigUpdate = async (config: GridConfig) => {
-  await encounterStore.updateGridConfig(config)
-}
-
-const handleTokenMove = async (combatantId: string, position: GridPosition) => {
-  const combatant = encounter.value?.combatants.find(c => c.id === combatantId)
-  const name = getCombatantName(combatant)
-  encounterStore.captureSnapshot(`Moved ${name} to (${position.x}, ${position.y})`)
-  await encounterStore.updateCombatantPosition(combatantId, position)
-  refreshUndoRedoState()
-  await nextTick()
-  // Broadcast the updated encounter state via WebSocket
-  if (encounterStore.encounter) {
-    send({
-      type: 'encounter_update',
-      data: encounterStore.encounter
-    })
-  }
-}
-
-const handleBackgroundUpload = async (file: File) => {
-  try {
-    await encounterStore.uploadBackgroundImage(file)
-  } catch (error) {
-    console.error('Failed to upload background:', error)
-  }
-}
-
-const handleBackgroundRemove = async () => {
-  try {
-    await encounterStore.removeBackgroundImage()
-  } catch (error) {
-    console.error('Failed to remove background:', error)
-  }
-}
-
-// Broadcast movement preview to group view via WebSocket
-const handleMovementPreviewChange = (preview: MovementPreview | null) => {
-  send({
-    type: 'movement_preview',
-    data: preview
-  })
 }
 </script>
 
