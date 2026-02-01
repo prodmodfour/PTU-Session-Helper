@@ -266,6 +266,17 @@ const {
   calculateSpeedEvasion
 } = useCombat()
 
+// Use extracted composable for safe stat access
+const {
+  getStageModifiers,
+  getPokemonAttackStat,
+  getPokemonSpAtkStat,
+  getPokemonDefenseStat,
+  getPokemonSpDefStat,
+  getPokemonSpeedStat,
+  getHumanStat
+} = useEntityStats()
+
 const selectedTargets = ref<string[]>([])
 const damageRollResult = ref<DiceRollResult | null>(null)
 const hasRolledDamage = ref(false)
@@ -292,79 +303,6 @@ const effectiveDB = computed(() => {
   if (!props.move.damageBase) return 0
   return hasSTAB.value ? props.move.damageBase + 2 : props.move.damageBase
 })
-
-// Helper to safely get stage modifiers (handles string JSON and missing data)
-const getStageModifiers = (entity: any) => {
-  const defaultStages = { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0, accuracy: 0, evasion: 0 }
-  if (!entity?.stageModifiers) return defaultStages
-
-  // Handle case where stageModifiers is a JSON string
-  if (typeof entity.stageModifiers === 'string') {
-    try {
-      return { ...defaultStages, ...JSON.parse(entity.stageModifiers) }
-    } catch {
-      return defaultStages
-    }
-  }
-
-  return { ...defaultStages, ...entity.stageModifiers }
-}
-
-// Helper to safely get a Pokemon's attack stat
-const getPokemonAttackStat = (entity: any): number => {
-  // Try currentStats.attack first
-  if (entity?.currentStats?.attack !== undefined) return entity.currentStats.attack
-  // Try flat field (database format)
-  if (entity?.currentAttack !== undefined) return entity.currentAttack
-  // Try baseStats.attack
-  if (entity?.baseStats?.attack !== undefined) return entity.baseStats.attack
-  // Try flat base field
-  if (entity?.baseAttack !== undefined) return entity.baseAttack
-  return 0
-}
-
-// Helper to safely get a Pokemon's special attack stat
-const getPokemonSpAtkStat = (entity: any): number => {
-  if (entity?.currentStats?.specialAttack !== undefined) return entity.currentStats.specialAttack
-  if (entity?.currentSpAtk !== undefined) return entity.currentSpAtk
-  if (entity?.baseStats?.specialAttack !== undefined) return entity.baseStats.specialAttack
-  if (entity?.baseSpAtk !== undefined) return entity.baseSpAtk
-  return 0
-}
-
-// Helper to safely get a Pokemon's defense stat
-const getPokemonDefenseStat = (entity: any): number => {
-  if (entity?.currentStats?.defense !== undefined) return entity.currentStats.defense
-  if (entity?.currentDefense !== undefined) return entity.currentDefense
-  if (entity?.baseStats?.defense !== undefined) return entity.baseStats.defense
-  if (entity?.baseDefense !== undefined) return entity.baseDefense
-  return 0
-}
-
-// Helper to safely get a Pokemon's special defense stat
-const getPokemonSpDefStat = (entity: any): number => {
-  if (entity?.currentStats?.specialDefense !== undefined) return entity.currentStats.specialDefense
-  if (entity?.currentSpDef !== undefined) return entity.currentSpDef
-  if (entity?.baseStats?.specialDefense !== undefined) return entity.baseStats.specialDefense
-  if (entity?.baseSpDef !== undefined) return entity.baseSpDef
-  return 0
-}
-
-// Helper to get human character stat
-const getHumanStat = (entity: any, stat: 'attack' | 'specialAttack' | 'defense' | 'specialDefense' | 'speed'): number => {
-  if (entity?.stats?.[stat] !== undefined) return entity.stats[stat]
-  if (entity?.[stat] !== undefined) return entity[stat]
-  return 0
-}
-
-// Helper to safely get a Pokemon's speed stat
-const getPokemonSpeedStat = (entity: any): number => {
-  if (entity?.currentStats?.speed !== undefined) return entity.currentStats.speed
-  if (entity?.currentSpeed !== undefined) return entity.currentSpeed
-  if (entity?.baseStats?.speed !== undefined) return entity.baseStats.speed
-  if (entity?.baseSpeed !== undefined) return entity.baseSpeed
-  return 0
-}
 
 // Get attacker's accuracy combat stage
 const attackerAccuracyStage = computed((): number => {

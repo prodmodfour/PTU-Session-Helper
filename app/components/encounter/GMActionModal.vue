@@ -129,26 +129,12 @@
               ▼
             </span>
           </button>
-          <div v-if="showManeuvers" class="maneuvers-grid">
-            <button
-              v-for="maneuver in maneuvers"
-              :key="maneuver.id"
-              class="maneuver-btn"
-              :class="`maneuver-btn--${maneuver.actionType}`"
-              :disabled="isManeuverDisabled(maneuver)"
-              @click="selectManeuver(maneuver)"
-            >
-              <div class="maneuver-btn__header">
-                <img :src="maneuver.icon" alt="" class="maneuver-btn__icon" />
-                <span class="maneuver-btn__name">{{ maneuver.name }}</span>
-              </div>
-              <div class="maneuver-btn__meta">
-                <span class="maneuver-btn__action">{{ maneuver.actionLabel }}</span>
-                <span v-if="maneuver.ac" class="maneuver-btn__ac">AC {{ maneuver.ac }}</span>
-              </div>
-              <p class="maneuver-btn__desc">{{ maneuver.shortDesc }}</p>
-            </button>
-          </div>
+          <ManeuverGrid
+            v-if="showManeuvers"
+            :standard-action-used="turnState.standardActionUsed"
+            :shift-action-used="turnState.shiftActionUsed"
+            @select="selectManeuver"
+          />
         </div>
 
         <!-- Status Conditions Section -->
@@ -242,6 +228,13 @@
 
 <script setup lang="ts">
 import type { Combatant, Move, Pokemon, HumanCharacter, StatusCondition } from '~/types'
+import type { Maneuver } from '~/constants/combatManeuvers'
+import {
+  PERSISTENT_CONDITIONS,
+  VOLATILE_CONDITIONS,
+  OTHER_CONDITIONS,
+  getConditionClass
+} from '~/constants/statusConditions'
 
 const props = defineProps<{
   combatant: Combatant
@@ -255,110 +248,16 @@ const emit = defineEmits<{
   updateStatus: [combatantId: string, add: StatusCondition[], remove: StatusCondition[]]
 }>()
 
-// Maneuver type definition
-interface Maneuver {
-  id: string
-  name: string
-  actionType: 'standard' | 'full' | 'interrupt'
-  actionLabel: string
-  ac: number | null
-  icon: string
-  shortDesc: string
-  requiresTarget: boolean
-}
-
-// Combat Maneuvers from PTU 1.05
-const maneuvers: Maneuver[] = [
-  {
-    id: 'push',
-    name: 'Push',
-    actionType: 'standard',
-    actionLabel: 'Standard',
-    ac: 4,
-    icon: '/icons/phosphor/arrow-fat-right.svg',
-    shortDesc: 'Push target 1m away (opposed Combat/Athletics)',
-    requiresTarget: true
-  },
-  {
-    id: 'sprint',
-    name: 'Sprint',
-    actionType: 'standard',
-    actionLabel: 'Standard',
-    ac: null,
-    icon: '/icons/phosphor/person-simple-run.svg',
-    shortDesc: '+50% Movement Speed this turn',
-    requiresTarget: false
-  },
-  {
-    id: 'trip',
-    name: 'Trip',
-    actionType: 'standard',
-    actionLabel: 'Standard',
-    ac: 6,
-    icon: '/icons/phosphor/sneaker-move.svg',
-    shortDesc: 'Trip target (opposed Combat/Acrobatics)',
-    requiresTarget: true
-  },
-  {
-    id: 'grapple',
-    name: 'Grapple',
-    actionType: 'standard',
-    actionLabel: 'Standard',
-    ac: 4,
-    icon: '/icons/phosphor/hand-grabbing.svg',
-    shortDesc: 'Initiate grapple (opposed Combat/Athletics)',
-    requiresTarget: true
-  },
-  {
-    id: 'intercept-melee',
-    name: 'Intercept Melee',
-    actionType: 'interrupt',
-    actionLabel: 'Full + Interrupt',
-    ac: null,
-    icon: '/icons/phosphor/shield.svg',
-    shortDesc: 'Take melee hit meant for adjacent ally',
-    requiresTarget: false
-  },
-  {
-    id: 'intercept-ranged',
-    name: 'Intercept Ranged',
-    actionType: 'interrupt',
-    actionLabel: 'Full + Interrupt',
-    ac: null,
-    icon: '/icons/phosphor/shield.svg',
-    shortDesc: 'Intercept ranged attack for ally',
-    requiresTarget: false
-  },
-  {
-    id: 'take-a-breather',
-    name: 'Take a Breather',
-    actionType: 'full',
-    actionLabel: 'Full Action',
-    ac: null,
-    icon: '/icons/phosphor/wind.svg',
-    shortDesc: 'Reset stages, cure volatile status, become Tripped',
-    requiresTarget: false
-  }
-]
-
 const { getSpriteUrl } = usePokemonSprite()
 
 const selectedMove = ref<Move | null>(null)
 const showManeuvers = ref(false)
 const showConditions = ref(false)
 
-// Status condition categories
-const persistentConditions: StatusCondition[] = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned', 'Asleep'
-]
-
-const volatileConditions: StatusCondition[] = [
-  'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented'
-]
-
-const otherConditions: StatusCondition[] = [
-  'Fainted', 'Stuck', 'Slowed', 'Trapped', 'Tripped', 'Vulnerable', 'Suppressed'
-]
+// Use extracted constants
+const persistentConditions = PERSISTENT_CONDITIONS
+const volatileConditions = VOLATILE_CONDITIONS
+const otherConditions = OTHER_CONDITIONS
 
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
 
@@ -404,21 +303,7 @@ const hasCondition = (condition: StatusCondition): boolean => {
   return currentConditions.value.includes(condition)
 }
 
-const getConditionClass = (condition: StatusCondition): string => {
-  const classMap: Record<string, string> = {
-    'Burned': 'condition--burn',
-    'Frozen': 'condition--freeze',
-    'Paralyzed': 'condition--paralysis',
-    'Poisoned': 'condition--poison',
-    'Badly Poisoned': 'condition--poison',
-    'Asleep': 'condition--sleep',
-    'Confused': 'condition--confusion',
-    'Fainted': 'condition--fainted',
-    'Flinched': 'condition--flinch',
-    'Infatuated': 'condition--infatuation'
-  }
-  return classMap[condition] || 'condition--default'
-}
+// Use imported getConditionClass from constants
 
 const addCondition = (condition: StatusCondition) => {
   emit('updateStatus', props.combatant.id, [condition], [])
@@ -464,19 +349,6 @@ const executeStandardAction = (actionType: 'shift' | 'struggle' | 'pass') => {
   if (actionType === 'pass') {
     emit('close')
   }
-}
-
-// Check if a maneuver is disabled based on action economy
-const isManeuverDisabled = (maneuver: Maneuver): boolean => {
-  if (maneuver.actionType === 'standard') {
-    return turnState.value.standardActionUsed
-  }
-  if (maneuver.actionType === 'full') {
-    // Full action requires both standard and shift
-    return turnState.value.standardActionUsed || turnState.value.shiftActionUsed
-  }
-  // Interrupts are always available (they're reactions)
-  return false
 }
 
 // Select and execute a maneuver
@@ -884,107 +756,6 @@ const selectManeuver = (maneuver: Maneuver) => {
   }
 }
 
-// Maneuvers grid
-.maneuvers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: $spacing-md;
-}
-
-.maneuver-btn {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-  padding: $spacing-md;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-md;
-  color: $color-text;
-  cursor: pointer;
-  transition: all $transition-fast;
-  text-align: left;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:not(:disabled):hover {
-    background: $color-bg-hover;
-    border-color: $border-color-emphasis;
-    transform: translateY(-2px);
-    box-shadow: $shadow-md;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-  }
-
-  &__icon {
-    width: 20px;
-    height: 20px;
-    filter: brightness(0) invert(1);
-  }
-
-  &__name {
-    font-weight: 600;
-    font-size: $font-size-md;
-  }
-
-  &__meta {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    font-size: $font-size-xs;
-  }
-
-  &__action {
-    padding: 2px $spacing-xs;
-    background: $color-bg-secondary;
-    border-radius: $border-radius-sm;
-    color: $color-text-muted;
-  }
-
-  &__ac {
-    color: $color-text-muted;
-  }
-
-  &__desc {
-    margin: 0;
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-    line-height: 1.4;
-  }
-
-  // Action type colors
-  &--standard {
-    &:not(:disabled):hover {
-      border-color: $color-accent-teal;
-    }
-  }
-
-  &--full {
-    &:not(:disabled):hover {
-      border-color: $color-warning;
-    }
-    .maneuver-btn__action {
-      background: rgba($color-warning, 0.2);
-      color: $color-warning;
-    }
-  }
-
-  &--interrupt {
-    &:not(:disabled):hover {
-      border-color: $color-accent-violet;
-    }
-    .maneuver-btn__action {
-      background: rgba($color-accent-violet, 0.2);
-      color: $color-accent-violet;
-    }
-  }
-}
 
 // Status Conditions Section
 .conditions-section {

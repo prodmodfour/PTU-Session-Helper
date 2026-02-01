@@ -37,33 +37,14 @@
         </span>
       </div>
 
-      <!-- Health Bar - B2W2 Style with Temp HP -->
+      <!-- Health Bar -->
       <div class="combatant-card__health">
-        <div class="health-bar" :class="healthBarClass">
-          <div class="health-bar__label">HP</div>
-          <div class="health-bar__container">
-            <div class="health-bar__track">
-              <!-- Temp HP layer (cyan) -->
-              <div
-                v-if="tempHp > 0"
-                class="health-bar__temp"
-                :style="{ width: tempHpPercentage + '%' }"
-              ></div>
-              <!-- Regular HP layer -->
-              <div class="health-bar__fill" :style="{ width: healthPercentage + '%' }"></div>
-            </div>
-            <span class="health-bar__text">
-              <template v-if="isGm">
-                {{ entity.currentHp }}/{{ entity.maxHp }}
-                <span v-if="tempHp > 0" class="health-bar__temp-text">(+{{ tempHp }})</span>
-              </template>
-              <template v-else>
-                {{ healthPercentage }}%
-                <span v-if="tempHp > 0" class="health-bar__temp-text">(+T)</span>
-              </template>
-            </span>
-          </div>
-        </div>
+        <HealthBar
+          :current-hp="entity.currentHp"
+          :max-hp="entity.maxHp"
+          :temp-hp="tempHp"
+          :show-exact-values="isGm"
+        />
       </div>
 
       <!-- Injuries indicator -->
@@ -181,105 +162,29 @@
       </button>
     </div>
 
-    <!-- Temp HP Modal -->
-    <Teleport to="body">
-      <div v-if="showTempHpModal" class="modal-overlay" @click.self="showTempHpModal = false">
-        <div class="modal modal--sm">
-          <div class="modal__header">
-            <h3>Add Temporary HP</h3>
-            <button class="modal__close" @click="showTempHpModal = false">&times;</button>
-          </div>
-          <div class="modal__body">
-            <div class="form-group">
-              <label>Temp HP Amount</label>
-              <input v-model.number="tempHpInput" type="number" class="form-input" min="0" />
-            </div>
-          </div>
-          <div class="modal__footer">
-            <button class="btn btn--secondary" @click="showTempHpModal = false">Cancel</button>
-            <button class="btn btn--primary" @click="applyTempHp">Apply</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <!-- Modals -->
+    <TempHpModal
+      v-if="showTempHpModal"
+      :current-temp-hp="tempHp"
+      @close="showTempHpModal = false"
+      @apply="handleTempHpApply"
+    />
 
-    <!-- Stages Modal -->
-    <Teleport to="body">
-      <div v-if="showStagesModal" class="modal-overlay" @click.self="showStagesModal = false">
-        <div class="modal">
-          <div class="modal__header">
-            <h3>Combat Stages</h3>
-            <button class="modal__close" @click="showStagesModal = false">&times;</button>
-          </div>
-          <div class="modal__body">
-            <div class="stages-grid">
-              <div v-for="stat in statsList" :key="stat" class="stage-control">
-                <span class="stage-control__label">{{ formatStatName(stat) }}</span>
-                <div class="stage-control__buttons">
-                  <button
-                    class="btn btn--sm btn--danger"
-                    :disabled="stageInputs[stat] <= -6"
-                    @click="stageInputs[stat]--"
-                  >
-                    -
-                  </button>
-                  <span class="stage-control__value" :class="{
-                    'stage-control__value--positive': stageInputs[stat] > 0,
-                    'stage-control__value--negative': stageInputs[stat] < 0
-                  }">
-                    {{ stageInputs[stat] > 0 ? '+' : '' }}{{ stageInputs[stat] }}
-                  </span>
-                  <button
-                    class="btn btn--sm btn--success"
-                    :disabled="stageInputs[stat] >= 6"
-                    @click="stageInputs[stat]++"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal__footer">
-            <button class="btn btn--secondary" @click="resetStages">Reset All</button>
-            <button class="btn btn--primary" @click="applyStages">Save Changes</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <CombatStagesModal
+      v-if="showStagesModal"
+      :combatant-name="displayName"
+      :current-stages="stages"
+      @close="showStagesModal = false"
+      @save="handleStagesSave"
+    />
 
-    <!-- Status Modal -->
-    <Teleport to="body">
-      <div v-if="showStatusModal" class="modal-overlay" @click.self="showStatusModal = false">
-        <div class="modal">
-          <div class="modal__header">
-            <h3>Status Conditions</h3>
-            <button class="modal__close" @click="showStatusModal = false">&times;</button>
-          </div>
-          <div class="modal__body">
-            <div class="status-grid">
-              <label
-                v-for="status in availableStatuses"
-                :key="status"
-                class="status-checkbox"
-                :class="{ 'status-checkbox--active': statusInputs.includes(status) }"
-              >
-                <input
-                  type="checkbox"
-                  :checked="statusInputs.includes(status)"
-                  @change="toggleStatus(status)"
-                />
-                <span class="status-checkbox__label">{{ status }}</span>
-              </label>
-            </div>
-          </div>
-          <div class="modal__footer">
-            <button class="btn btn--secondary" @click="clearAllStatuses">Clear All</button>
-            <button class="btn btn--primary" @click="applyStatuses">Save Changes</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <StatusConditionsModal
+      v-if="showStatusModal"
+      :combatant-name="displayName"
+      :current-statuses="statusConditions"
+      @close="showStatusModal = false"
+      @save="handleStatusSave"
+    />
   </div>
 </template>
 
@@ -293,7 +198,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  action: [combatantId: string, action: { type: string; data: any }]
+  action: [combatantId: string, action: { type: string; data: unknown }]
   damage: [combatantId: string, damage: number]
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   remove: [combatantId: string]
@@ -303,44 +208,18 @@ const emit = defineEmits<{
 }>()
 
 const { getSpriteUrl } = usePokemonSprite()
-const { getHealthPercentage, getHealthStatus } = useCombat()
 const { calculateCaptureRateLocal } = useCapture()
 
 // Input states
 const damageInput = ref(0)
 const healInput = ref(0)
-const tempHpInput = ref(0)
 
 // Modal states
 const showTempHpModal = ref(false)
 const showStagesModal = ref(false)
 const showStatusModal = ref(false)
 
-// Stats list for stages modal
-const statsList = ['attack', 'defense', 'specialAttack', 'specialDefense', 'speed', 'accuracy', 'evasion'] as const
-
-// Stage inputs (initialized from current values)
-const stageInputs = reactive<Record<string, number>>({
-  attack: 0,
-  defense: 0,
-  specialAttack: 0,
-  specialDefense: 0,
-  speed: 0,
-  accuracy: 0,
-  evasion: 0
-})
-
-// Status inputs
-const statusInputs = ref<StatusCondition[]>([])
-
-// Available statuses
-const availableStatuses: StatusCondition[] = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned',
-  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed',
-  'Disabled', 'Encored', 'Taunted', 'Tormented',
-  'Stuck', 'Slowed', 'Trapped', 'Enraged', 'Suppressed', 'Fainted'
-]
-
+// Computed properties
 const entity = computed(() => props.combatant.entity)
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
 
@@ -360,54 +239,12 @@ const spriteUrl = computed(() => {
   return ''
 })
 
-const healthPercentage = computed(() =>
-  getHealthPercentage(entity.value.currentHp, entity.value.maxHp)
-)
-
 const tempHp = computed(() => entity.value.temporaryHp || 0)
-
-const tempHpPercentage = computed(() => {
-  // Show temp HP as percentage of max HP, capped at 100%
-  return Math.min(100, Math.round((tempHp.value / entity.value.maxHp) * 100))
-})
-
 const injuries = computed(() => entity.value.injuries || 0)
-
-const healthBarClass = computed(() => {
-  const status = getHealthStatus(healthPercentage.value)
-  return `health-bar--${status}`
-})
-
 const isFainted = computed(() => entity.value.currentHp <= 0)
-
 const statusConditions = computed(() => entity.value.statusConditions || [])
 
-// Wild Pokemon check (enemy Pokemon without owner)
-const isWildPokemon = computed(() => {
-  if (!isPokemon.value) return false
-  if (props.combatant.side !== 'enemies') return false
-  const pokemon = entity.value as Pokemon
-  return !pokemon.ownerId
-})
-
-// Capture rate for wild Pokemon
-const captureRate = computed(() => {
-  if (!isWildPokemon.value) return null
-  const pokemon = entity.value as Pokemon
-  return calculateCaptureRateLocal({
-    level: pokemon.level,
-    currentHp: pokemon.currentHp,
-    maxHp: pokemon.maxHp,
-    evolutionStage: 1, // Could be looked up from species data
-    maxEvolutionStage: 3,
-    statusConditions: pokemon.statusConditions || [],
-    injuries: pokemon.injuries || 0,
-    isShiny: pokemon.shiny || false
-  })
-})
-
-// Stage modifiers
-const stages = computed(() => entity.value.stageModifiers || {
+const stages = computed<StageModifiers>(() => entity.value.stageModifiers || {
   attack: 0,
   defense: 0,
   specialAttack: 0,
@@ -429,35 +266,42 @@ const nonZeroStages = computed(() => {
 
 const hasStageChanges = computed(() => Object.keys(nonZeroStages.value).length > 0)
 
+// Wild Pokemon check (enemy Pokemon without owner)
+const isWildPokemon = computed(() => {
+  if (!isPokemon.value) return false
+  if (props.combatant.side !== 'enemies') return false
+  const pokemon = entity.value as Pokemon
+  return !pokemon.ownerId
+})
+
+// Capture rate for wild Pokemon
+const captureRate = computed(() => {
+  if (!isWildPokemon.value) return null
+  const pokemon = entity.value as Pokemon
+  return calculateCaptureRateLocal({
+    level: pokemon.level,
+    currentHp: pokemon.currentHp,
+    maxHp: pokemon.maxHp,
+    evolutionStage: 1,
+    maxEvolutionStage: 3,
+    statusConditions: pokemon.statusConditions || [],
+    injuries: pokemon.injuries || 0,
+    isShiny: pokemon.shiny || false
+  })
+})
+
 // Format stat name for display
-const formatStatName = (stat: string): string => {
-  const names: Record<string, string> = {
-    attack: 'Atk',
-    defense: 'Def',
-    specialAttack: 'SpA',
-    specialDefense: 'SpD',
-    speed: 'Spe',
-    accuracy: 'Acc',
-    evasion: 'Eva'
-  }
-  return names[stat] || stat
+const STAT_NAMES: Record<string, string> = {
+  attack: 'Atk',
+  defense: 'Def',
+  specialAttack: 'SpA',
+  specialDefense: 'SpD',
+  speed: 'Spe',
+  accuracy: 'Acc',
+  evasion: 'Eva'
 }
 
-// Initialize stage inputs when modal opens
-watch(showStagesModal, (open) => {
-  if (open) {
-    for (const stat of statsList) {
-      stageInputs[stat] = stages.value[stat] || 0
-    }
-  }
-})
-
-// Initialize status inputs when modal opens
-watch(showStatusModal, (open) => {
-  if (open) {
-    statusInputs.value = [...statusConditions.value]
-  }
-})
+const formatStatName = (stat: string): string => STAT_NAMES[stat] || stat
 
 // Actions
 const applyDamage = () => {
@@ -474,53 +318,18 @@ const applyHeal = () => {
   }
 }
 
-const applyTempHp = () => {
-  if (tempHpInput.value > 0) {
-    emit('heal', props.combatant.id, 0, tempHpInput.value)
-    tempHpInput.value = 0
-    showTempHpModal.value = false
-  }
+const handleTempHpApply = (amount: number) => {
+  emit('heal', props.combatant.id, 0, amount)
 }
 
-const resetStages = () => {
-  for (const stat of statsList) {
-    stageInputs[stat] = 0
-  }
+const handleStagesSave = (changes: Partial<StageModifiers>, absolute: boolean) => {
+  emit('stages', props.combatant.id, changes, absolute)
 }
 
-const applyStages = () => {
-  const changes: Partial<StageModifiers> = {}
-  for (const stat of statsList) {
-    changes[stat] = stageInputs[stat]
+const handleStatusSave = (add: StatusCondition[], remove: StatusCondition[]) => {
+  if (add.length > 0 || remove.length > 0) {
+    emit('status', props.combatant.id, add, remove)
   }
-  emit('stages', props.combatant.id, changes, true)
-  showStagesModal.value = false
-}
-
-const toggleStatus = (status: StatusCondition) => {
-  const index = statusInputs.value.indexOf(status)
-  if (index === -1) {
-    statusInputs.value.push(status)
-  } else {
-    statusInputs.value.splice(index, 1)
-  }
-}
-
-const clearAllStatuses = () => {
-  statusInputs.value = []
-}
-
-const applyStatuses = () => {
-  const current = statusConditions.value
-  const target = statusInputs.value
-
-  const added = target.filter(s => !current.includes(s))
-  const removed = current.filter(s => !target.includes(s))
-
-  if (added.length > 0 || removed.length > 0) {
-    emit('status', props.combatant.id, added, removed)
-  }
-  showStatusModal.value = false
 }
 
 const handleActClick = () => {
@@ -687,83 +496,6 @@ const handleActClick = () => {
   }
 }
 
-// Health bar styles
-.health-bar {
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-
-  &__label {
-    font-size: $font-size-xs;
-    font-weight: 600;
-    color: $color-text-muted;
-    min-width: 20px;
-  }
-
-  &__container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-  }
-
-  &__track {
-    flex: 1;
-    height: 8px;
-    background: $color-bg-tertiary;
-    border-radius: $border-radius-full;
-    overflow: hidden;
-    position: relative;
-  }
-
-  &__fill {
-    height: 100%;
-    border-radius: $border-radius-full;
-    transition: width $transition-normal, background-color $transition-normal;
-    position: relative;
-    z-index: 1;
-  }
-
-  &__temp {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: $color-accent-cyan;
-    opacity: 0.6;
-    border-radius: $border-radius-full;
-    z-index: 0;
-  }
-
-  &__text {
-    font-size: $font-size-xs;
-    color: $color-text;
-    min-width: 60px;
-    text-align: right;
-  }
-
-  &__temp-text {
-    color: $color-accent-cyan;
-    font-weight: 600;
-  }
-
-  &--healthy .health-bar__fill {
-    background: $color-success;
-  }
-
-  &--warning .health-bar__fill {
-    background: $color-warning;
-  }
-
-  &--critical .health-bar__fill {
-    background: $color-danger;
-  }
-
-  &--fainted .health-bar__fill {
-    background: $color-text-muted;
-  }
-}
-
 // Injury badge
 .injury-badge {
   display: inline-block;
@@ -827,250 +559,6 @@ const handleActClick = () => {
       outline: none;
       box-shadow: 0 0 0 2px rgba($color-accent-scarlet, 0.2);
     }
-  }
-}
-
-// Modal styles
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: $z-index-modal;
-}
-
-.modal {
-  background: $color-bg-secondary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-lg;
-  width: 90%;
-  max-width: 400px;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-
-  &--sm {
-    max-width: 280px;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: $spacing-md;
-    border-bottom: 1px solid $border-color-default;
-
-    h3 {
-      margin: 0;
-      font-size: $font-size-lg;
-      color: $color-text;
-    }
-  }
-
-  &__close {
-    background: none;
-    border: none;
-    color: $color-text-muted;
-    font-size: $font-size-xl;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-
-    &:hover {
-      color: $color-text;
-    }
-  }
-
-  &__body {
-    padding: $spacing-md;
-    overflow-y: auto;
-  }
-
-  &__footer {
-    display: flex;
-    gap: $spacing-sm;
-    justify-content: flex-end;
-    padding: $spacing-md;
-    border-top: 1px solid $border-color-default;
-  }
-}
-
-// Stages grid
-.stages-grid {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-}
-
-.stage-control {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-md;
-
-  &__label {
-    font-weight: 500;
-    min-width: 60px;
-  }
-
-  &__buttons {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-  }
-
-  &__value {
-    min-width: 30px;
-    text-align: center;
-    font-weight: 600;
-
-    &--positive {
-      color: $color-success;
-    }
-
-    &--negative {
-      color: $color-danger;
-    }
-  }
-}
-
-// Status grid
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-sm;
-}
-
-.status-checkbox {
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    background: $color-bg-hover;
-  }
-
-  &--active {
-    border-color: $color-accent-scarlet;
-    background: rgba($color-accent-scarlet, 0.1);
-  }
-
-  input {
-    display: none;
-  }
-
-  &__label {
-    font-size: $font-size-xs;
-  }
-}
-
-// Form styles
-.form-group {
-  margin-bottom: $spacing-md;
-
-  label {
-    display: block;
-    margin-bottom: $spacing-xs;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-  }
-}
-
-.form-input {
-  width: 100%;
-  padding: $spacing-sm;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-md;
-  color: $color-text;
-  font-size: $font-size-md;
-
-  &:focus {
-    border-color: $color-accent-scarlet;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba($color-accent-scarlet, 0.2);
-  }
-}
-
-// Button styles
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-sm $spacing-md;
-  border: none;
-  border-radius: $border-radius-md;
-  font-size: $font-size-sm;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &--sm {
-    padding: $spacing-xs $spacing-sm;
-    font-size: $font-size-xs;
-  }
-
-  &--primary {
-    background: $color-accent-scarlet;
-    color: white;
-
-    &:hover {
-      background: lighten($color-accent-scarlet, 10%);
-    }
-  }
-
-  &--secondary {
-    background: $color-bg-tertiary;
-    color: $color-text;
-    border: 1px solid $border-color-default;
-
-    &:hover {
-      background: $color-bg-hover;
-    }
-  }
-
-  &--danger {
-    background: rgba($color-danger, 0.2);
-    color: $color-danger;
-    border: 1px solid rgba($color-danger, 0.3);
-
-    &:hover {
-      background: rgba($color-danger, 0.3);
-    }
-  }
-
-  &--success {
-    background: rgba($color-success, 0.2);
-    color: $color-success;
-    border: 1px solid rgba($color-success, 0.3);
-
-    &:hover {
-      background: rgba($color-success, 0.3);
-    }
-  }
-
-  &--ghost {
-    background: transparent;
-    color: $color-text-muted;
-
-    &:hover {
-      background: $color-bg-tertiary;
-      color: $color-text;
-    }
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 }
 
