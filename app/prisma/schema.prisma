@@ -411,3 +411,46 @@ model AppSettings {
   // Timestamps
   updatedAt     DateTime @updatedAt
 }
+
+// ============================================
+// SCENE SYSTEM (Group View Tabs)
+// ============================================
+
+// Scene - narrative view with Pokemon, characters, environment
+model Scene {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+
+  // Location
+  locationName  String?
+  locationImage String?  // Background image URL
+
+  // Content (JSON arrays)
+  pokemon       String   @default("[]")  // [{ id, speciesId, species, level, nickname, position: {x,y}, groupId? }]
+  characters    String   @default("[]")  // [{ id, characterId, name, avatarUrl, position: {x,y}, groupId? }]
+  groups        String   @default("[]")  // [{ id, name, position: {x,y}, width, height }]
+
+  // Environment
+  weather       String?  // sunny, rain, sandstorm, hail, snow, fog, harsh_sunlight, heavy_rain, strong_winds
+  terrains      String   @default("[]")  // ["grassy", "electric", "psychic", "misty"]
+  modifiers     String   @default("[]")  // [{ name, description, effect }]
+
+  // Habitat link for wild spawns
+  habitatId     String?
+
+  // State
+  isActive      Boolean  @default(false)
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Group View State - tracks which tab is shown on Group View
+model GroupViewState {
+  id            String   @id @default("singleton")
+  activeTab     String   @default("lobby")  // lobby | scene | encounter | map
+  activeSceneId String?
+  updatedAt     DateTime @updatedAt
+}
