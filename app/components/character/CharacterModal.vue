@@ -66,195 +66,39 @@
 
             <!-- Tab Content -->
             <div class="sheet__content">
-              <!-- Stats Tab -->
-              <div v-if="activeTab === 'stats'" class="tab-content">
-                <div class="stats-grid">
-                  <div class="stat-block">
-                    <label>HP</label>
-                    <div class="stat-values">
-                      <span class="stat-base">{{ pokemonData.baseStats?.hp || 0 }}</span>
-                      <span class="stat-current">{{ editData.currentHp }} / {{ editData.maxHp }}</span>
-                    </div>
-                  </div>
-                  <div class="stat-block">
-                    <label>Attack</label>
-                    <div class="stat-values">
-                      <span class="stat-base">{{ pokemonData.baseStats?.attack || 0 }}</span>
-                      <span class="stat-current">{{ pokemonData.currentStats?.attack || 0 }}</span>
-                    </div>
-                  </div>
-                  <div class="stat-block">
-                    <label>Defense</label>
-                    <div class="stat-values">
-                      <span class="stat-base">{{ pokemonData.baseStats?.defense || 0 }}</span>
-                      <span class="stat-current">{{ pokemonData.currentStats?.defense || 0 }}</span>
-                    </div>
-                  </div>
-                  <div class="stat-block">
-                    <label>Sp. Atk</label>
-                    <div class="stat-values">
-                      <span class="stat-base">{{ pokemonData.baseStats?.specialAttack || 0 }}</span>
-                      <span class="stat-current">{{ pokemonData.currentStats?.specialAttack || 0 }}</span>
-                    </div>
-                  </div>
-                  <div class="stat-block">
-                    <label>Sp. Def</label>
-                    <div class="stat-values">
-                      <span class="stat-base">{{ pokemonData.baseStats?.specialDefense || 0 }}</span>
-                      <span class="stat-current">{{ pokemonData.currentStats?.specialDefense || 0 }}</span>
-                    </div>
-                  </div>
-                  <div class="stat-block">
-                    <label>Speed</label>
-                    <div class="stat-values">
-                      <span class="stat-base">{{ pokemonData.baseStats?.speed || 0 }}</span>
-                      <span class="stat-current">{{ pokemonData.currentStats?.speed || 0 }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="info-section">
-                  <h4>Nature</h4>
-                  <p v-if="pokemonData.nature">
-                    {{ pokemonData.nature.name }}
-                    <span v-if="pokemonData.nature.raisedStat" class="nature-mod nature-mod--up">
-                      +{{ formatStatName(pokemonData.nature.raisedStat) }}
-                    </span>
-                    <span v-if="pokemonData.nature.loweredStat" class="nature-mod nature-mod--down">
-                      -{{ formatStatName(pokemonData.nature.loweredStat) }}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <!-- Moves Tab -->
-              <div v-if="activeTab === 'moves'" class="tab-content">
-                <div class="moves-list">
-                  <div v-for="(move, idx) in pokemonData.moves" :key="idx" class="move-card">
-                    <div class="move-card__header">
-                      <span class="move-name">{{ move.name }}</span>
-                      <span class="move-type type-badge" :class="`type-badge--${(move.type || 'normal').toLowerCase()}`">
-                        {{ move.type }}
-                      </span>
-                    </div>
-                    <div class="move-card__details">
-                      <span><strong>Class:</strong> {{ move.damageClass }}</span>
-                      <span><strong>Freq:</strong> {{ move.frequency }}</span>
-                      <span v-if="move.ac"><strong>AC:</strong> {{ move.ac }}</span>
-                      <span v-if="move.damageBase"><strong>DB:</strong> {{ move.damageBase }}</span>
-                    </div>
-                    <div class="move-card__range">
-                      <strong>Range:</strong> {{ move.range }}
-                    </div>
-                    <div v-if="move.effect" class="move-card__effect">
-                      {{ move.effect }}
-                    </div>
-                  </div>
-                  <p v-if="!pokemonData.moves?.length" class="empty-state">No moves recorded</p>
-                </div>
-              </div>
-
-              <!-- Abilities Tab -->
-              <div v-if="activeTab === 'abilities'" class="tab-content">
-                <div class="abilities-list">
-                  <div v-for="(ability, idx) in pokemonData.abilities" :key="idx" class="ability-card">
-                    <div class="ability-card__header">
-                      <span class="ability-name">{{ ability.name }}</span>
-                      <span v-if="ability.trigger" class="ability-trigger">{{ ability.trigger }}</span>
-                    </div>
-                    <p class="ability-effect">{{ ability.effect }}</p>
-                  </div>
-                  <p v-if="!pokemonData.abilities?.length" class="empty-state">No abilities recorded</p>
-                </div>
-              </div>
-
-              <!-- Capabilities Tab -->
-              <div v-if="activeTab === 'capabilities'" class="tab-content">
-                <div v-if="pokemonData.capabilities" class="capabilities-grid">
-                  <div class="cap-item">
-                    <label>Overland</label>
-                    <span>{{ pokemonData.capabilities.overland || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Swim</label>
-                    <span>{{ pokemonData.capabilities.swim || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Sky</label>
-                    <span>{{ pokemonData.capabilities.sky || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Burrow</label>
-                    <span>{{ pokemonData.capabilities.burrow || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Levitate</label>
-                    <span>{{ pokemonData.capabilities.levitate || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Jump (H/L)</label>
-                    <span>{{ pokemonData.capabilities.jump?.high || 0 }} / {{ pokemonData.capabilities.jump?.long || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Power</label>
-                    <span>{{ pokemonData.capabilities.power || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Weight Class</label>
-                    <span>{{ pokemonData.capabilities.weightClass || 0 }}</span>
-                  </div>
-                  <div class="cap-item">
-                    <label>Size</label>
-                    <span>{{ pokemonData.capabilities.size || 'Medium' }}</span>
-                  </div>
-                </div>
-                <div v-if="pokemonData.capabilities?.otherCapabilities?.length" class="info-section">
-                  <h4>Other Capabilities</h4>
-                  <div class="tag-list">
-                    <span v-for="cap in pokemonData.capabilities.otherCapabilities" :key="cap" class="tag">
-                      {{ cap }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Skills Tab -->
-              <div v-if="activeTab === 'skills'" class="tab-content">
-                <div v-if="pokemonData.skills && Object.keys(pokemonData.skills).length" class="skills-grid">
-                  <div v-for="(value, skill) in pokemonData.skills" :key="skill" class="skill-item">
-                    <label>{{ skill }}</label>
-                    <span>{{ value }}</span>
-                  </div>
-                </div>
-                <p v-else class="empty-state">No skills recorded</p>
-
-                <div class="info-section">
-                  <h4>Training</h4>
-                  <div class="training-info">
-                    <span><strong>Tutor Points:</strong> {{ pokemonData.tutorPoints || 0 }}</span>
-                    <span><strong>Training EXP:</strong> {{ pokemonData.trainingExp || 0 }}</span>
-                  </div>
-                </div>
-
-                <div v-if="pokemonData.eggGroups?.length" class="info-section">
-                  <h4>Egg Groups</h4>
-                  <div class="tag-list">
-                    <span v-for="eg in pokemonData.eggGroups" :key="eg" class="tag">{{ eg }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Notes Tab -->
-              <div v-if="activeTab === 'notes'" class="tab-content">
-                <div class="form-group">
-                  <label>Notes</label>
-                  <textarea v-model="editData.notes" class="form-input" rows="6" :disabled="!isEditing"></textarea>
-                </div>
-                <div v-if="pokemonData.heldItem" class="info-section">
-                  <h4>Held Item</h4>
-                  <p>{{ pokemonData.heldItem }}</p>
-                </div>
-              </div>
+              <PokemonStatsTab
+                v-if="activeTab === 'stats'"
+                :pokemon="pokemonData"
+                :current-hp="editData.currentHp"
+                :max-hp="editData.maxHp"
+              />
+              <PokemonMovesTab
+                v-if="activeTab === 'moves'"
+                :moves="pokemonData.moves || []"
+              />
+              <PokemonAbilitiesTab
+                v-if="activeTab === 'abilities'"
+                :abilities="pokemonData.abilities || []"
+              />
+              <PokemonCapabilitiesTab
+                v-if="activeTab === 'capabilities'"
+                :capabilities="pokemonData.capabilities || null"
+              />
+              <PokemonSkillsTab
+                v-if="activeTab === 'skills'"
+                :skills="pokemonData.skills"
+                :tutor-points="pokemonData.tutorPoints"
+                :training-exp="pokemonData.trainingExp"
+                :egg-groups="pokemonData.eggGroups"
+              />
+              <NotesTab
+                v-if="activeTab === 'notes'"
+                :is-pokemon="true"
+                :is-editing="isEditing"
+                :notes="editData.notes"
+                :held-item="pokemonData.heldItem"
+                @update:notes="editData.notes = $event"
+              />
             </div>
           </div>
         </template>
@@ -318,122 +162,42 @@
 
             <!-- Tab Content -->
             <div class="sheet__content">
-              <!-- Stats Tab -->
-              <div v-if="activeTab === 'stats'" class="tab-content">
-                <div class="stats-grid">
-                  <div class="stat-block">
-                    <label>HP</label>
-                    <div class="stat-values">
-                      <span class="stat-base">{{ humanData.stats?.hp || 0 }}</span>
-                      <span class="stat-current">{{ editData.currentHp }} / {{ humanData.maxHp }}</span>
-                    </div>
-                  </div>
-                  <div class="stat-block">
-                    <label>Attack</label>
-                    <span class="stat-current">{{ humanData.stats?.attack || 0 }}</span>
-                  </div>
-                  <div class="stat-block">
-                    <label>Defense</label>
-                    <span class="stat-current">{{ humanData.stats?.defense || 0 }}</span>
-                  </div>
-                  <div class="stat-block">
-                    <label>Sp. Atk</label>
-                    <span class="stat-current">{{ humanData.stats?.specialAttack || 0 }}</span>
-                  </div>
-                  <div class="stat-block">
-                    <label>Sp. Def</label>
-                    <span class="stat-current">{{ humanData.stats?.specialDefense || 0 }}</span>
-                  </div>
-                  <div class="stat-block">
-                    <label>Speed</label>
-                    <span class="stat-current">{{ humanData.stats?.speed || 0 }}</span>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group form-group--sm">
-                    <label>Height (cm)</label>
-                    <input v-model.number="editData.height" type="number" class="form-input" :disabled="!isEditing" />
-                  </div>
-                  <div class="form-group form-group--sm">
-                    <label>Weight (kg)</label>
-                    <input v-model.number="editData.weight" type="number" class="form-input" :disabled="!isEditing" />
-                  </div>
-                  <div class="form-group form-group--sm">
-                    <label>Money</label>
-                    <input v-model.number="editData.money" type="number" class="form-input" :disabled="!isEditing" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Classes Tab -->
-              <div v-if="activeTab === 'classes'" class="tab-content">
-                <div v-if="humanData.trainerClasses?.length" class="info-section">
-                  <h4>Trainer Classes</h4>
-                  <div class="tag-list">
-                    <span v-for="tc in humanData.trainerClasses" :key="tc" class="tag tag--class">{{ tc }}</span>
-                  </div>
-                </div>
-
-                <div v-if="humanData.features?.length" class="info-section">
-                  <h4>Features</h4>
-                  <div class="tag-list">
-                    <span v-for="feat in humanData.features" :key="feat" class="tag tag--feature">{{ feat }}</span>
-                  </div>
-                </div>
-
-                <div v-if="humanData.edges?.length" class="info-section">
-                  <h4>Edges</h4>
-                  <div class="tag-list">
-                    <span v-for="edge in humanData.edges" :key="edge" class="tag tag--edge">{{ edge }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Skills Tab -->
-              <div v-if="activeTab === 'skills'" class="tab-content">
-                <div v-if="humanData.skills && Object.keys(humanData.skills).length" class="skills-grid skills-grid--human">
-                  <div v-for="(rank, skill) in humanData.skills" :key="skill" class="skill-item" :class="`skill-item--${rank.toLowerCase()}`">
-                    <label>{{ skill }}</label>
-                    <span class="skill-rank">{{ rank }}</span>
-                  </div>
-                </div>
-                <p v-else class="empty-state">No skills recorded</p>
-              </div>
-
-              <!-- Pokemon Tab -->
-              <div v-if="activeTab === 'pokemon'" class="tab-content">
-                <div v-if="humanData.pokemon?.length" class="pokemon-team">
-                  <div v-for="poke in humanData.pokemon" :key="poke.id" class="team-pokemon">
-                    <img :src="getSpriteUrl(poke.species, poke.shiny)" :alt="poke.species" />
-                    <div class="team-pokemon__info">
-                      <span class="team-pokemon__name">{{ poke.nickname || poke.species }}</span>
-                      <span class="team-pokemon__level">Lv. {{ poke.level }}</span>
-                    </div>
-                  </div>
-                </div>
-                <p v-else class="empty-state">No Pokemon linked to this trainer</p>
-              </div>
-
-              <!-- Notes Tab -->
-              <div v-if="activeTab === 'notes'" class="tab-content">
-                <div class="form-group">
-                  <label>Background</label>
-                  <textarea v-model="editData.background" class="form-input" rows="3" :disabled="!isEditing"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>Personality</label>
-                  <textarea v-model="editData.personality" class="form-input" rows="3" :disabled="!isEditing"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>Goals</label>
-                  <textarea v-model="editData.goals" class="form-input" rows="3" :disabled="!isEditing"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>Notes</label>
-                  <textarea v-model="editData.notes" class="form-input" rows="3" :disabled="!isEditing"></textarea>
-                </div>
-              </div>
+              <HumanStatsTab
+                v-if="activeTab === 'stats'"
+                :human="humanData"
+                :current-hp="editData.currentHp"
+                :max-hp="humanData.maxHp"
+                :edit-data="editData"
+                :is-editing="isEditing"
+                @update:edit-data="editData = $event"
+              />
+              <HumanClassesTab
+                v-if="activeTab === 'classes'"
+                :trainer-classes="humanData.trainerClasses"
+                :features="humanData.features"
+                :edges="humanData.edges"
+              />
+              <HumanSkillsTab
+                v-if="activeTab === 'skills'"
+                :skills="humanData.skills"
+              />
+              <HumanPokemonTab
+                v-if="activeTab === 'pokemon'"
+                :pokemon="humanData.pokemon"
+              />
+              <NotesTab
+                v-if="activeTab === 'notes'"
+                :is-pokemon="false"
+                :is-editing="isEditing"
+                :notes="editData.notes"
+                :background="editData.background"
+                :personality="editData.personality"
+                :goals="editData.goals"
+                @update:notes="editData.notes = $event"
+                @update:background="editData.background = $event"
+                @update:personality="editData.personality = $event"
+                @update:goals="editData.goals = $event"
+              />
             </div>
           </div>
         </template>
@@ -519,18 +283,6 @@ watch(() => props.character, () => {
   activeTab.value = 'stats'
   editData.value = { ...props.character }
 })
-
-const formatStatName = (stat: string) => {
-  const names: Record<string, string> = {
-    'hp': 'HP',
-    'attack': 'Atk',
-    'defense': 'Def',
-    'specialAttack': 'SpAtk',
-    'specialDefense': 'SpDef',
-    'speed': 'Spd'
-  }
-  return names[stat] || stat
-}
 
 const save = () => {
   emit('save', editData.value)
@@ -690,10 +442,6 @@ const save = () => {
   }
 }
 
-.tab-content {
-  animation: fadeIn 0.2s ease-out;
-}
-
 .type-badges {
   display: flex;
   gap: $spacing-xs;
@@ -727,287 +475,6 @@ const save = () => {
   &--fairy { background: #EE99AC; color: #000; }
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-}
-
-.stat-block {
-  background: $color-bg-secondary;
-  padding: $spacing-md;
-  border-radius: $border-radius-md;
-  text-align: center;
-
-  label {
-    display: block;
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-    margin-bottom: $spacing-xs;
-    text-transform: uppercase;
-  }
-
-  .stat-values {
-    display: flex;
-    justify-content: center;
-    gap: $spacing-sm;
-    align-items: baseline;
-  }
-
-  .stat-base {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-  }
-
-  .stat-current {
-    font-size: $font-size-lg;
-    font-weight: 700;
-    color: $color-text;
-  }
-}
-
-.info-section {
-  margin-top: $spacing-lg;
-  padding-top: $spacing-md;
-  border-top: 1px solid $glass-border;
-
-  h4 {
-    margin: 0 0 $spacing-sm 0;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    text-transform: uppercase;
-  }
-}
-
-.nature-mod {
-  font-size: $font-size-sm;
-  margin-left: $spacing-sm;
-
-  &--up { color: $color-success; }
-  &--down { color: $color-danger; }
-}
-
-.moves-list {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-}
-
-.move-card {
-  background: $color-bg-secondary;
-  padding: $spacing-md;
-  border-radius: $border-radius-md;
-  border-left: 3px solid $color-accent-violet;
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-sm;
-
-    .move-name {
-      font-weight: 600;
-      font-size: $font-size-md;
-    }
-  }
-
-  &__details {
-    display: flex;
-    gap: $spacing-md;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__range {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin-bottom: $spacing-sm;
-  }
-
-  &__effect {
-    font-size: $font-size-sm;
-    line-height: 1.5;
-    color: $color-text;
-  }
-}
-
-.abilities-list {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-}
-
-.ability-card {
-  background: $color-bg-secondary;
-  padding: $spacing-md;
-  border-radius: $border-radius-md;
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-sm;
-
-    .ability-name {
-      font-weight: 600;
-    }
-
-    .ability-trigger {
-      font-size: $font-size-xs;
-      padding: $spacing-xs $spacing-sm;
-      background: $color-bg-tertiary;
-      border-radius: $border-radius-sm;
-      color: $color-text-muted;
-    }
-  }
-
-  .ability-effect {
-    font-size: $font-size-sm;
-    line-height: 1.5;
-    margin: 0;
-  }
-}
-
-.capabilities-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-md;
-}
-
-.cap-item {
-  background: $color-bg-secondary;
-  padding: $spacing-md;
-  border-radius: $border-radius-md;
-  text-align: center;
-
-  label {
-    display: block;
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-    margin-bottom: $spacing-xs;
-  }
-
-  span {
-    font-size: $font-size-lg;
-    font-weight: 600;
-  }
-}
-
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-sm;
-
-  &--human {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.skill-item {
-  display: flex;
-  justify-content: space-between;
-  padding: $spacing-sm $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $border-radius-sm;
-
-  label {
-    font-size: $font-size-sm;
-  }
-
-  span {
-    font-weight: 500;
-    font-size: $font-size-sm;
-  }
-
-  .skill-rank {
-    text-transform: capitalize;
-  }
-
-  &--pathetic .skill-rank { color: $color-danger; }
-  &--untrained .skill-rank { color: $color-text-muted; }
-  &--novice .skill-rank { color: $color-text; }
-  &--adept .skill-rank { color: $color-success; }
-  &--expert .skill-rank { color: $color-info; }
-  &--master .skill-rank { color: gold; }
-}
-
-.training-info {
-  display: flex;
-  gap: $spacing-lg;
-}
-
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
-}
-
-.tag {
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
-
-  &--class {
-    background: rgba($color-accent-violet, 0.2);
-    color: $color-accent-violet;
-  }
-
-  &--feature {
-    background: rgba($color-accent-scarlet, 0.2);
-    color: $color-accent-scarlet;
-  }
-
-  &--edge {
-    background: rgba($color-info, 0.2);
-    color: $color-info;
-  }
-}
-
-.pokemon-team {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: $spacing-md;
-}
-
-.team-pokemon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $border-radius-md;
-
-  img {
-    width: 64px;
-    height: 64px;
-    image-rendering: pixelated;
-  }
-
-  &__info {
-    text-align: center;
-    margin-top: $spacing-sm;
-  }
-
-  &__name {
-    display: block;
-    font-weight: 600;
-  }
-
-  &__level {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-  }
-}
-
-.empty-state {
-  text-align: center;
-  color: $color-text-muted;
-  padding: $spacing-xl;
-}
-
 .form-row {
   display: flex;
   gap: $spacing-md;
@@ -1020,6 +487,33 @@ const save = () => {
       flex: 0 0 auto;
       min-width: 100px;
     }
+
+    label {
+      display: block;
+      font-size: $font-size-xs;
+      color: $color-text-muted;
+      margin-bottom: $spacing-xs;
+    }
+  }
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: $spacing-sm;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: $font-size-sm;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-accent-teal;
   }
 }
 
