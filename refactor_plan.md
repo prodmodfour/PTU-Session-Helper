@@ -11,7 +11,7 @@ This plan identifies files requiring refactoring based on size, mixed concerns, 
 | ~~`app/components/encounter/MoveTargetModal.vue`~~ | ~~1,214~~ → 826 | ✅ Complete (32% reduction) |
 | `app/stores/encounter.ts` | 924 | Facade pattern - correct architecture |
 | ~~`app/components/encounter/GMActionModal.vue`~~ | ~~916~~ → 796 | ✅ Complete (13% reduction) |
-| `app/composables/useGridRendering.ts` | 747 | Optional Phase 5 |
+| ~~`app/composables/useGridRendering.ts`~~ | ~~747~~ → 511 | ✅ Complete (31% reduction) |
 | `app/composables/useGridInteraction.ts` | 589 | Optional Phase 5 |
 | `app/components/encounter/CombatantCard.vue` | 574 | Acceptable |
 | `app/components/character/CharacterModal.vue` | 536 | Acceptable |
@@ -140,17 +140,21 @@ Removing wrappers would leak state management into components, which violates se
 
 ---
 
-## Phase 5: Optional Grid Composable Splits (PENDING)
+## Phase 5: Grid Composable Splits ✅ COMPLETE
 
-### 5.1 Extract Drawing Functions
+### 5.1 Extract Drawing Functions ✅
 
-**File:** `app/composables/useGridRendering.ts` (747 lines)
+**File:** `app/composables/useGridRendering.ts` (747 → 511 lines)
 
-**Action:** Create `app/composables/useCanvasDrawing.ts`
-- Extract `drawGrid`, `drawTerrain`, `drawTerrainPattern` functions
-- Extract measurement and fog of war drawing functions
+**Action:** Created `app/composables/useCanvasDrawing.ts` (345 lines)
+- Extracted reusable drawing utilities: `drawArrow`, `drawDistanceLabel`, `drawCellHighlight`
+- Extracted terrain pattern drawing
+- Extracted fog of war pattern helpers
+- Extracted speed badge and ring drawing
 
-**Expected benefit:** Smaller files, focused concerns
+**Benefit achieved:**
+- Main file reduced by 31% (747 → 511 lines)
+- New reusable utilities for canvas drawing operations
 
 ---
 
@@ -183,6 +187,7 @@ Removing wrappers would leak state management into components, which violates se
 | 3.4 | useEncounterActions composable | ~189 |
 | 4.1 | useMoveCalculation composable | ~388 (script: ~345) |
 | 4.2 | Global condition-tag styles | ~120 |
+| 5.1 | useCanvasDrawing utilities | ~236 |
 
 ### Prior Session Work
 - Split GridCanvas.vue into composables (1,518 → 307 lines)
@@ -204,4 +209,6 @@ Removing wrappers would leak state management into components, which violates se
 ### Remaining Work
 - [x] Phase 4.1: MoveTargetModal refactoring ✅
 - [x] Phase 4.2: GMActionModal refactoring ✅
-- [ ] Phase 5.1: Grid composable splits (optional)
+- [x] Phase 5.1: Grid composable splits ✅
+
+**All planned phases complete!**

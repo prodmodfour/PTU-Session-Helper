@@ -1,8 +1,9 @@
-import type { GridConfig, GridPosition, TerrainType, MovementPreview } from '~/types'
+import type { GridConfig, GridPosition, MovementPreview } from '~/types'
 import { useMeasurementStore } from '~/stores/measurement'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
 import { useTerrainStore, TERRAIN_COLORS } from '~/stores/terrain'
 import { useRangeParser } from '~/composables/useRangeParser'
+import { useCanvasDrawing } from '~/composables/useCanvasDrawing'
 
 interface TokenData {
   combatantId: string
@@ -33,12 +34,27 @@ interface UseGridRenderingOptions {
 // Constants
 const GRID_LINE_COLOR = 'rgba(255, 255, 255, 0.2)'
 const GRID_LINE_WIDTH = 1
+const MOVEMENT_VALID_COLOR = 'rgba(34, 211, 238, 0.8)'
+const MOVEMENT_VALID_BG = 'rgba(34, 211, 238, 0.2)'
+const MOVEMENT_INVALID_COLOR = 'rgba(239, 68, 68, 0.8)'
+const MOVEMENT_INVALID_BG = 'rgba(239, 68, 68, 0.2)'
 
 export function useGridRendering(options: UseGridRenderingOptions) {
   const measurementStore = useMeasurementStore()
   const fogOfWarStore = useFogOfWarStore()
   const terrainStore = useTerrainStore()
   const { getMovementRangeCells } = useRangeParser()
+  const {
+    drawArrow,
+    drawDistanceLabel,
+    drawMessageLabel,
+    drawCellHighlight,
+    drawDashedRing,
+    drawSpeedBadge,
+    drawTerrainPattern,
+    drawCrossPattern,
+    drawCenterDot
+  } = useCanvasDrawing()
 
   // Background image
   const backgroundImage = ref<HTMLImageElement | null>(null)
@@ -192,115 +208,10 @@ export function useGridRendering(options: UseGridRenderingOptions) {
         ctx.lineWidth = 1
         ctx.strokeRect(x * cellSize + 0.5, y * cellSize + 0.5, cellSize - 1, cellSize - 1)
 
-        // Draw pattern/icon for certain terrain types
+        // Draw pattern/icon using shared utility
         drawTerrainPattern(ctx, x, y, terrain, cellSize)
       }
     }
-  }
-
-  /**
-   * Draw terrain-specific patterns
-   */
-  const drawTerrainPattern = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    terrain: TerrainType,
-    cellSize: number
-  ) => {
-    const centerX = x * cellSize + cellSize / 2
-    const centerY = y * cellSize + cellSize / 2
-
-    ctx.save()
-
-    switch (terrain) {
-      case 'blocking':
-        // Draw X pattern for blocking
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.moveTo(x * cellSize + 4, y * cellSize + 4)
-        ctx.lineTo((x + 1) * cellSize - 4, (y + 1) * cellSize - 4)
-        ctx.moveTo((x + 1) * cellSize - 4, y * cellSize + 4)
-        ctx.lineTo(x * cellSize + 4, (y + 1) * cellSize - 4)
-        ctx.stroke()
-        break
-
-      case 'water':
-        // Draw wave pattern for water
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        for (let i = 0; i < 3; i++) {
-          const waveY = y * cellSize + 8 + i * 10
-          ctx.moveTo(x * cellSize + 4, waveY)
-          ctx.quadraticCurveTo(
-            x * cellSize + cellSize / 4, waveY - 3,
-            x * cellSize + cellSize / 2, waveY
-          )
-          ctx.quadraticCurveTo(
-            x * cellSize + (3 * cellSize) / 4, waveY + 3,
-            (x + 1) * cellSize - 4, waveY
-          )
-        }
-        ctx.stroke()
-        break
-
-      case 'hazard':
-        // Draw warning triangle for hazard
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-        ctx.beginPath()
-        ctx.moveTo(centerX, y * cellSize + 6)
-        ctx.lineTo(x * cellSize + 6, (y + 1) * cellSize - 6)
-        ctx.lineTo((x + 1) * cellSize - 6, (y + 1) * cellSize - 6)
-        ctx.closePath()
-        ctx.fill()
-
-        // Exclamation mark
-        ctx.fillStyle = 'rgba(255, 69, 0, 0.8)'
-        ctx.font = 'bold 10px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText('!', centerX, centerY + 2)
-        break
-
-      case 'elevated':
-        // Draw up arrow for elevated
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.moveTo(centerX, y * cellSize + 8)
-        ctx.lineTo(centerX, (y + 1) * cellSize - 8)
-        ctx.moveTo(centerX - 5, y * cellSize + 14)
-        ctx.lineTo(centerX, y * cellSize + 8)
-        ctx.lineTo(centerX + 5, y * cellSize + 14)
-        ctx.stroke()
-        break
-
-      case 'difficult':
-        // Draw dots pattern for difficult terrain
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
-        const dotSize = 2
-        const spacing = cellSize / 4
-        for (let dx = 1; dx < 4; dx++) {
-          for (let dy = 1; dy < 4; dy++) {
-            if ((dx + dy) % 2 === 0) {
-              ctx.beginPath()
-              ctx.arc(
-                x * cellSize + dx * spacing,
-                y * cellSize + dy * spacing,
-                dotSize,
-                0,
-                Math.PI * 2
-              )
-              ctx.fill()
-            }
-          }
-        }
-        break
-    }
-
-    ctx.restore()
   }
 
   /**
@@ -404,31 +315,11 @@ export function useGridRendering(options: UseGridRenderingOptions) {
         if (fogState === 'hidden') {
           ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'
           ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
-
-          // Draw cross pattern for hidden cells
-          ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.moveTo(x * cellSize + 2, y * cellSize + 2)
-          ctx.lineTo((x + 1) * cellSize - 2, (y + 1) * cellSize - 2)
-          ctx.moveTo((x + 1) * cellSize - 2, y * cellSize + 2)
-          ctx.lineTo(x * cellSize + 2, (y + 1) * cellSize - 2)
-          ctx.stroke()
+          drawCrossPattern(ctx, x, y, cellSize, 'rgba(239, 68, 68, 0.3)')
         } else if (fogState === 'explored') {
           ctx.fillStyle = 'rgba(245, 158, 11, 0.15)'
           ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
-
-          // Draw dots for explored cells
-          ctx.fillStyle = 'rgba(245, 158, 11, 0.4)'
-          ctx.beginPath()
-          ctx.arc(
-            x * cellSize + cellSize / 2,
-            y * cellSize + cellSize / 2,
-            2,
-            0,
-            Math.PI * 2
-          )
-          ctx.fill()
+          drawCenterDot(ctx, x, y, cellSize, 'rgba(245, 158, 11, 0.4)')
         }
       }
     }
@@ -450,7 +341,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
 
     // Draw reachable cells with cyan tint
-    ctx.fillStyle = 'rgba(34, 211, 238, 0.2)'
+    ctx.fillStyle = MOVEMENT_VALID_BG
     ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)'
     ctx.lineWidth = 1
 
@@ -465,35 +356,12 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     // Draw token origin marker with pulsing ring
     const originX = token.position.x * cellSize + (token.size * cellSize) / 2
     const originY = token.position.y * cellSize + (token.size * cellSize) / 2
+    drawDashedRing(ctx, originX, originY, (token.size * cellSize) / 2 + 4, MOVEMENT_VALID_COLOR)
 
-    ctx.strokeStyle = 'rgba(34, 211, 238, 0.8)'
-    ctx.lineWidth = 2
-    ctx.setLineDash([4, 4])
-    ctx.beginPath()
-    ctx.arc(originX, originY, (token.size * cellSize) / 2 + 4, 0, Math.PI * 2)
-    ctx.stroke()
-    ctx.setLineDash([])
-
-    // Draw speed indicator text at bottom-right of token
-    ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
-    ctx.font = 'bold 12px system-ui, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    const speedText = `${speed}m`
-    const textX = token.position.x * cellSize + token.size * cellSize - 10
-    const textY = token.position.y * cellSize + token.size * cellSize - 10
-
-    // Background for text
-    const textMetrics = ctx.measureText(speedText)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-    ctx.fillRect(
-      textX - textMetrics.width / 2 - 3,
-      textY - 8,
-      textMetrics.width + 6,
-      16
-    )
-    ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
-    ctx.fillText(speedText, textX, textY)
+    // Draw speed indicator
+    const badgeX = token.position.x * cellSize + token.size * cellSize - 10
+    const badgeY = token.position.y * cellSize + token.size * cellSize - 10
+    drawSpeedBadge(ctx, badgeX, badgeY, speed)
   }
 
   /**
@@ -507,7 +375,9 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     const { cellSize } = options.config.value
     const speed = options.getSpeed(token.combatantId)
     const distance = options.calculateMoveDistance(token.position, target)
-    const isValidMove = distance <= speed && distance > 0
+    const blocked = options.getBlockedCells(token.combatantId)
+    const isBlocked = blocked.some(b => b.x === target.x && b.y === target.y)
+    const isValidMove = distance <= speed && distance > 0 && !isBlocked
 
     // Token center
     const startX = token.position.x * cellSize + (token.size * cellSize) / 2
@@ -517,99 +387,41 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     const endX = target.x * cellSize + cellSize / 2
     const endY = target.y * cellSize + cellSize / 2
 
-    // Check if target is blocked
-    const blocked = options.getBlockedCells(token.combatantId)
-    const isBlocked = blocked.some(b => b.x === target.x && b.y === target.y)
-
-    // Choose color based on validity
-    let arrowColor = 'rgba(34, 211, 238, 0.8)'
-    let bgColor = 'rgba(34, 211, 238, 0.2)'
-    if (!isValidMove || isBlocked) {
-      arrowColor = 'rgba(239, 68, 68, 0.8)'
-      bgColor = 'rgba(239, 68, 68, 0.2)'
-    }
+    // Choose colors based on validity
+    const arrowColor = isValidMove ? MOVEMENT_VALID_COLOR : MOVEMENT_INVALID_COLOR
+    const bgColor = isValidMove ? MOVEMENT_VALID_BG : MOVEMENT_INVALID_BG
 
     // Highlight target cell
     if (distance > 0) {
-      ctx.fillStyle = bgColor
-      ctx.fillRect(target.x * cellSize, target.y * cellSize, cellSize, cellSize)
-      ctx.strokeStyle = arrowColor
-      ctx.lineWidth = 2
-      ctx.strokeRect(target.x * cellSize + 1, target.y * cellSize + 1, cellSize - 2, cellSize - 2)
-    }
+      drawCellHighlight(ctx, {
+        x: target.x,
+        y: target.y,
+        cellSize,
+        fillColor: bgColor,
+        strokeColor: arrowColor
+      })
 
-    // Draw arrow line
-    if (distance > 0) {
-      ctx.strokeStyle = arrowColor
-      ctx.lineWidth = 3
-      ctx.setLineDash([8, 4])
-      ctx.beginPath()
-      ctx.moveTo(startX, startY)
-      ctx.lineTo(endX, endY)
-      ctx.stroke()
-      ctx.setLineDash([])
+      // Draw arrow
+      drawArrow(ctx, { startX, startY, endX, endY, color: arrowColor })
 
-      // Draw arrowhead
-      const angle = Math.atan2(endY - startY, endX - startX)
-      const arrowSize = 12
-      ctx.fillStyle = arrowColor
-      ctx.beginPath()
-      ctx.moveTo(endX, endY)
-      ctx.lineTo(
-        endX - arrowSize * Math.cos(angle - Math.PI / 6),
-        endY - arrowSize * Math.sin(angle - Math.PI / 6)
-      )
-      ctx.lineTo(
-        endX - arrowSize * Math.cos(angle + Math.PI / 6),
-        endY - arrowSize * Math.sin(angle + Math.PI / 6)
-      )
-      ctx.closePath()
-      ctx.fill()
-    }
-
-    // Draw distance indicator near target
-    if (distance > 0) {
-      const distText = `${distance}m`
-      ctx.font = 'bold 14px system-ui, sans-serif'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-
-      const labelX = endX
+      // Draw distance indicator
       const labelY = target.y * cellSize - 12
-
-      // Background
-      const metrics = ctx.measureText(distText)
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-      ctx.fillRect(
-        labelX - metrics.width / 2 - 4,
-        labelY - 10,
-        metrics.width + 8,
-        20
-      )
-
-      // Text
-      ctx.fillStyle = isValidMove && !isBlocked ? 'rgba(34, 211, 238, 1)' : 'rgba(239, 68, 68, 1)'
-      ctx.fillText(distText, labelX, labelY)
+      drawDistanceLabel(ctx, {
+        x: endX,
+        y: labelY,
+        text: `${distance}m`,
+        color: arrowColor
+      })
 
       // Show "Out of range" or "Blocked" message if invalid
-      if (!isValidMove && !isBlocked) {
-        const msgY = labelY - 20
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-        const msg = 'Out of range'
-        const msgMetrics = ctx.measureText(msg)
-        ctx.fillRect(labelX - msgMetrics.width / 2 - 4, msgY - 8, msgMetrics.width + 8, 16)
-        ctx.fillStyle = 'rgba(239, 68, 68, 1)'
-        ctx.font = 'bold 10px system-ui, sans-serif'
-        ctx.fillText(msg, labelX, msgY)
-      } else if (isBlocked) {
-        const msgY = labelY - 20
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-        const msg = 'Blocked'
-        const msgMetrics = ctx.measureText(msg)
-        ctx.fillRect(labelX - msgMetrics.width / 2 - 4, msgY - 8, msgMetrics.width + 8, 16)
-        ctx.fillStyle = 'rgba(239, 68, 68, 1)'
-        ctx.font = 'bold 10px system-ui, sans-serif'
-        ctx.fillText(msg, labelX, msgY)
+      if (!isValidMove) {
+        const message = isBlocked ? 'Blocked' : 'Out of range'
+        drawMessageLabel(ctx, {
+          x: endX,
+          y: labelY - 20,
+          message,
+          color: MOVEMENT_INVALID_COLOR
+        })
       }
     }
   }
@@ -632,7 +444,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
       const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
 
       // Draw reachable cells with cyan tint
-      ctx.fillStyle = 'rgba(34, 211, 238, 0.2)'
+      ctx.fillStyle = MOVEMENT_VALID_BG
       ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)'
       ctx.lineWidth = 1
 
@@ -647,29 +459,12 @@ export function useGridRendering(options: UseGridRenderingOptions) {
       // Draw origin marker ring around token
       const originX = token.position.x * cellSize + (tokenSize * cellSize) / 2
       const originY = token.position.y * cellSize + (tokenSize * cellSize) / 2
-
-      ctx.strokeStyle = 'rgba(34, 211, 238, 0.8)'
-      ctx.lineWidth = 2
-      ctx.setLineDash([4, 4])
-      ctx.beginPath()
-      ctx.arc(originX, originY, (tokenSize * cellSize) / 2 + 4, 0, Math.PI * 2)
-      ctx.stroke()
-      ctx.setLineDash([])
+      drawDashedRing(ctx, originX, originY, (tokenSize * cellSize) / 2 + 4, MOVEMENT_VALID_COLOR)
 
       // Draw speed indicator
-      ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
-      ctx.font = 'bold 12px system-ui, sans-serif'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      const speedText = `${speed}m`
-      const textX = token.position.x * cellSize + tokenSize * cellSize - 10
-      const textY = token.position.y * cellSize + tokenSize * cellSize - 10
-
-      const textMetrics = ctx.measureText(speedText)
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-      ctx.fillRect(textX - textMetrics.width / 2 - 3, textY - 8, textMetrics.width + 6, 16)
-      ctx.fillStyle = 'rgba(34, 211, 238, 0.9)'
-      ctx.fillText(speedText, textX, textY)
+      const badgeX = token.position.x * cellSize + tokenSize * cellSize - 10
+      const badgeY = token.position.y * cellSize + tokenSize * cellSize - 10
+      drawSpeedBadge(ctx, badgeX, badgeY, speed)
     }
 
     // Token center
@@ -680,59 +475,29 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     const endX = preview.toPosition.x * cellSize + cellSize / 2
     const endY = preview.toPosition.y * cellSize + cellSize / 2
 
-    // Choose color based on validity
-    const arrowColor = preview.isValid ? 'rgba(34, 211, 238, 0.8)' : 'rgba(239, 68, 68, 0.8)'
-    const bgColor = preview.isValid ? 'rgba(34, 211, 238, 0.2)' : 'rgba(239, 68, 68, 0.2)'
+    // Choose colors based on validity
+    const arrowColor = preview.isValid ? MOVEMENT_VALID_COLOR : MOVEMENT_INVALID_COLOR
+    const bgColor = preview.isValid ? MOVEMENT_VALID_BG : MOVEMENT_INVALID_BG
 
-    // Highlight target cell
+    // Highlight target cell and draw arrow
     if (preview.distance > 0) {
-      ctx.fillStyle = bgColor
-      ctx.fillRect(preview.toPosition.x * cellSize, preview.toPosition.y * cellSize, cellSize, cellSize)
-      ctx.strokeStyle = arrowColor
-      ctx.lineWidth = 2
-      ctx.strokeRect(preview.toPosition.x * cellSize + 1, preview.toPosition.y * cellSize + 1, cellSize - 2, cellSize - 2)
+      drawCellHighlight(ctx, {
+        x: preview.toPosition.x,
+        y: preview.toPosition.y,
+        cellSize,
+        fillColor: bgColor,
+        strokeColor: arrowColor
+      })
 
-      // Draw arrow line
-      ctx.strokeStyle = arrowColor
-      ctx.lineWidth = 3
-      ctx.setLineDash([8, 4])
-      ctx.beginPath()
-      ctx.moveTo(startX, startY)
-      ctx.lineTo(endX, endY)
-      ctx.stroke()
-      ctx.setLineDash([])
-
-      // Draw arrowhead
-      const angle = Math.atan2(endY - startY, endX - startX)
-      const arrowSize = 12
-      ctx.fillStyle = arrowColor
-      ctx.beginPath()
-      ctx.moveTo(endX, endY)
-      ctx.lineTo(
-        endX - arrowSize * Math.cos(angle - Math.PI / 6),
-        endY - arrowSize * Math.sin(angle - Math.PI / 6)
-      )
-      ctx.lineTo(
-        endX - arrowSize * Math.cos(angle + Math.PI / 6),
-        endY - arrowSize * Math.sin(angle + Math.PI / 6)
-      )
-      ctx.closePath()
-      ctx.fill()
+      drawArrow(ctx, { startX, startY, endX, endY, color: arrowColor })
 
       // Draw distance indicator
-      const distText = `${preview.distance}m`
-      ctx.font = 'bold 14px system-ui, sans-serif'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-
-      const labelX = endX
-      const labelY = preview.toPosition.y * cellSize - 12
-
-      const metrics = ctx.measureText(distText)
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-      ctx.fillRect(labelX - metrics.width / 2 - 4, labelY - 10, metrics.width + 8, 20)
-      ctx.fillStyle = preview.isValid ? 'rgba(34, 211, 238, 1)' : 'rgba(239, 68, 68, 1)'
-      ctx.fillText(distText, labelX, labelY)
+      drawDistanceLabel(ctx, {
+        x: endX,
+        y: preview.toPosition.y * cellSize - 12,
+        text: `${preview.distance}m`,
+        color: arrowColor
+      })
     }
   }
 
