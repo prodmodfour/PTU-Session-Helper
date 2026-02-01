@@ -1,57 +1,9 @@
-import { prisma } from '~/server/utils/prisma'
-
-interface DamageResult {
-  finalDamage: number
-  tempHpAbsorbed: number
-  hpDamage: number
-  newHp: number
-  newTempHp: number
-  injuryGained: boolean
-  newInjuries: number
-  fainted: boolean
-}
-
-function calculateDamage(
-  damage: number,
-  currentHp: number,
-  maxHp: number,
-  temporaryHp: number,
-  currentInjuries: number
-): DamageResult {
-  let remainingDamage = damage
-  let tempHpAbsorbed = 0
-  let injuryGained = false
-
-  // Temporary HP absorbs damage first
-  if (temporaryHp > 0) {
-    tempHpAbsorbed = Math.min(temporaryHp, remainingDamage)
-    remainingDamage -= tempHpAbsorbed
-  }
-
-  const newTempHp = temporaryHp - tempHpAbsorbed
-  const hpDamage = remainingDamage
-  const newHp = Math.max(0, currentHp - hpDamage)
-
-  // PTU Massive Damage rule: 50%+ of max HP in one hit = injury
-  // Only HP damage counts, not temp HP damage
-  if (hpDamage >= maxHp / 2) {
-    injuryGained = true
-  }
-
-  const newInjuries = injuryGained ? currentInjuries + 1 : currentInjuries
-  const fainted = newHp === 0
-
-  return {
-    finalDamage: damage,
-    tempHpAbsorbed,
-    hpDamage,
-    newHp,
-    newTempHp,
-    injuryGained,
-    newInjuries,
-    fainted
-  }
-}
+/**
+ * Apply damage to a combatant with PTU mechanics
+ */
+import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
+import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
+import { syncDamageToDatabase } from '~/server/services/entity-update.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -72,127 +24,62 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const encounter = await prisma.encounter.findUnique({
-      where: { id }
-    })
-
-    if (!encounter) {
-      throw createError({
-        statusCode: 404,
-        message: 'Encounter not found'
-      })
-    }
-
-    const combatants = JSON.parse(encounter.combatants)
-    const combatant = combatants.find((c: any) => c.id === body.combatantId)
-
-    if (!combatant) {
-      throw createError({
-        statusCode: 404,
-        message: 'Combatant not found'
-      })
-    }
-
+    const { record, combatants } = await loadEncounter(id)
+    const combatant = findCombatant(combatants, body.combatantId)
     const entity = combatant.entity
-    const currentHp = entity.currentHp
-    const maxHp = entity.maxHp
-    const temporaryHp = entity.temporaryHp || 0
-    const currentInjuries = entity.injuries || 0
 
     // Calculate damage with PTU mechanics
-    const result = calculateDamage(
+    const damageResult = calculateDamage(
       body.damage,
-      currentHp,
-      maxHp,
-      temporaryHp,
-      currentInjuries
+      entity.currentHp,
+      entity.maxHp,
+      entity.temporaryHp || 0,
+      entity.injuries || 0
     )
 
-    // Update combatant entity
-    entity.currentHp = result.newHp
-    entity.temporaryHp = result.newTempHp
-    entity.injuries = result.newInjuries
+    // Apply damage to combatant entity
+    applyDamageToEntity(combatant, damageResult)
 
-    // Add Fainted status if HP reached 0
-    if (result.fainted && !entity.statusConditions?.includes('Fainted')) {
-      entity.statusConditions = entity.statusConditions || []
-      entity.statusConditions.push('Fainted')
-    }
-
-    // Update the actual entity in database
-    // Track lastInjuryTime if an injury was gained
-    const injuryUpdateData = result.injuryGained ? { lastInjuryTime: new Date() } : {}
-
-    if (combatant.type === 'pokemon') {
-      await prisma.pokemon.update({
-        where: { id: combatant.entityId },
-        data: {
-          currentHp: result.newHp,
-          temporaryHp: result.newTempHp,
-          injuries: result.newInjuries,
-          statusConditions: JSON.stringify(entity.statusConditions || []),
-          ...injuryUpdateData
-        }
-      })
-    } else {
-      await prisma.humanCharacter.update({
-        where: { id: combatant.entityId },
-        data: {
-          currentHp: result.newHp,
-          temporaryHp: result.newTempHp,
-          injuries: result.newInjuries,
-          statusConditions: JSON.stringify(entity.statusConditions || []),
-          ...injuryUpdateData
-        }
-      })
-    }
+    // Sync to database if entity has a record
+    await syncDamageToDatabase(
+      combatant,
+      damageResult.newHp,
+      damageResult.newTempHp,
+      damageResult.newInjuries,
+      entity.statusConditions || [],
+      damageResult.injuryGained
+    )
 
     // Track defeated enemies for XP
-    let defeatedEnemies = JSON.parse(encounter.defeatedEnemies)
-    if (result.fainted && combatant.side === 'enemies') {
+    let defeatedEnemies = JSON.parse(record.defeatedEnemies)
+    if (damageResult.fainted && combatant.side === 'enemies') {
+      const entityName = combatant.type === 'pokemon'
+        ? (entity as { species: string }).species
+        : (entity as { name: string }).name
       defeatedEnemies.push({
-        species: entity.species || entity.name,
+        species: entityName,
         level: entity.level
       })
     }
 
-    await prisma.encounter.update({
-      where: { id },
-      data: {
-        combatants: JSON.stringify(combatants),
-        defeatedEnemies: JSON.stringify(defeatedEnemies)
-      }
-    })
+    await saveEncounterCombatants(id, combatants, { defeatedEnemies })
 
-    const turnOrder = JSON.parse(encounter.turnOrder)
-
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder,
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies
-    }
+    const response = buildEncounterResponse(record, combatants, { defeatedEnemies })
 
     return {
       success: true,
-      data: parsed,
+      data: response,
       damageResult: {
         combatantId: body.combatantId,
-        ...result
+        ...damageResult
       }
     }
-  } catch (error: any) {
-    if (error.statusCode) throw error
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error) throw error
+    const message = error instanceof Error ? error.message : 'Failed to apply damage'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to apply damage'
+      message
     })
   }
 })

@@ -1,4 +1,9 @@
-import { prisma } from '~/server/utils/prisma'
+/**
+ * Apply healing to a combatant (HP, temp HP, or injuries)
+ */
+import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse } from '~/server/services/encounter.service'
+import { applyHealingToEntity } from '~/server/services/combatant.service'
+import { syncHealingToDatabase } from '~/server/services/entity-update.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -27,136 +32,44 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const encounter = await prisma.encounter.findUnique({
-      where: { id }
-    })
-
-    if (!encounter) {
-      throw createError({
-        statusCode: 404,
-        message: 'Encounter not found'
-      })
-    }
-
-    const combatants = JSON.parse(encounter.combatants)
-    const combatant = combatants.find((c: any) => c.id === body.combatantId)
-
-    if (!combatant) {
-      throw createError({
-        statusCode: 404,
-        message: 'Combatant not found'
-      })
-    }
-
+    const { record, combatants } = await loadEncounter(id)
+    const combatant = findCombatant(combatants, body.combatantId)
     const entity = combatant.entity
-    const healResult: {
-      hpHealed?: number
-      tempHpGained?: number
-      injuriesHealed?: number
-      newHp: number
-      newTempHp: number
-      newInjuries: number
-      faintedRemoved: boolean
-    } = {
-      newHp: entity.currentHp,
-      newTempHp: entity.temporaryHp || 0,
-      newInjuries: entity.injuries || 0,
-      faintedRemoved: false
-    }
 
-    // Heal HP (capped at max HP)
-    if (typeof body.amount === 'number' && body.amount > 0) {
-      const maxHp = entity.maxHp
-      const previousHp = entity.currentHp
-      const newHp = Math.min(maxHp, previousHp + body.amount)
-      entity.currentHp = newHp
-      healResult.hpHealed = newHp - previousHp
-      healResult.newHp = newHp
-
-      // Remove Fainted status if healed from 0 HP
-      if (previousHp === 0 && newHp > 0) {
-        entity.statusConditions = (entity.statusConditions || []).filter(
-          (s: string) => s !== 'Fainted'
-        )
-        healResult.faintedRemoved = true
-      }
-    }
-
-    // Grant Temporary HP (stacks with existing)
-    if (typeof body.tempHp === 'number' && body.tempHp > 0) {
-      const previousTempHp = entity.temporaryHp || 0
-      const newTempHp = previousTempHp + body.tempHp
-      entity.temporaryHp = newTempHp
-      healResult.tempHpGained = body.tempHp
-      healResult.newTempHp = newTempHp
-    }
-
-    // Heal injuries (can't go below 0)
-    if (typeof body.healInjuries === 'number' && body.healInjuries > 0) {
-      const previousInjuries = entity.injuries || 0
-      const newInjuries = Math.max(0, previousInjuries - body.healInjuries)
-      entity.injuries = newInjuries
-      healResult.injuriesHealed = previousInjuries - newInjuries
-      healResult.newInjuries = newInjuries
-    }
-
-    // Update the actual entity in database
-    if (combatant.type === 'pokemon') {
-      await prisma.pokemon.update({
-        where: { id: combatant.entityId },
-        data: {
-          currentHp: entity.currentHp,
-          temporaryHp: entity.temporaryHp,
-          injuries: entity.injuries,
-          statusConditions: JSON.stringify(entity.statusConditions || [])
-        }
-      })
-    } else {
-      await prisma.humanCharacter.update({
-        where: { id: combatant.entityId },
-        data: {
-          currentHp: entity.currentHp,
-          temporaryHp: entity.temporaryHp,
-          injuries: entity.injuries,
-          statusConditions: JSON.stringify(entity.statusConditions || [])
-        }
-      })
-    }
-
-    await prisma.encounter.update({
-      where: { id },
-      data: { combatants: JSON.stringify(combatants) }
+    // Apply healing using service
+    const healResult = applyHealingToEntity(combatant, {
+      amount: body.amount,
+      tempHp: body.tempHp,
+      healInjuries: body.healInjuries
     })
 
-    const turnOrder = JSON.parse(encounter.turnOrder)
+    // Sync to database if entity has a record
+    await syncHealingToDatabase(
+      combatant,
+      entity.currentHp,
+      entity.temporaryHp || 0,
+      entity.injuries || 0,
+      entity.statusConditions || []
+    )
 
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder,
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
-    }
+    await saveEncounterCombatants(id, combatants)
+
+    const response = buildEncounterResponse(record, combatants)
 
     return {
       success: true,
-      data: parsed,
+      data: response,
       healResult: {
         combatantId: body.combatantId,
         ...healResult
       }
     }
-  } catch (error: any) {
-    if (error.statusCode) throw error
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error) throw error
+    const message = error instanceof Error ? error.message : 'Failed to heal combatant'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to heal combatant'
+      message
     })
   }
 })

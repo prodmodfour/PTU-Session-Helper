@@ -66,10 +66,48 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Calculate HP using PTU formula: Level + (HP stat × 3) + 10
+      // Calculate stats based on PTU rules
+      // Each level gives 1 stat point to distribute (level - 1 total points)
+      // For wild/template Pokemon, distribute points weighted by base stats
       const level = tc.entityData?.level ?? 1
+      const statPoints = Math.max(0, level - 1)
+
+      // Calculate weights based on base stats
+      const statKeys = ['hp', 'attack', 'defense', 'specialAttack', 'specialDefense', 'speed'] as const
+      const totalBaseStats = statKeys.reduce((sum, key) => sum + baseStats[key], 0)
+
+      // Distribute stat points weighted by base stats
+      const distributedPoints: Record<string, number> = {
+        hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
+      }
+
+      let remainingPoints = statPoints
+      while (remainingPoints > 0) {
+        const roll = Math.random() * totalBaseStats
+        let cumulative = 0
+        for (const key of statKeys) {
+          cumulative += baseStats[key]
+          if (roll < cumulative) {
+            distributedPoints[key]++
+            remainingPoints--
+            break
+          }
+        }
+      }
+
+      // Calculate final stats: base + distributed points
+      const calculatedStats = {
+        hp: baseStats.hp + distributedPoints.hp,
+        attack: baseStats.attack + distributedPoints.attack,
+        defense: baseStats.defense + distributedPoints.defense,
+        specialAttack: baseStats.specialAttack + distributedPoints.specialAttack,
+        specialDefense: baseStats.specialDefense + distributedPoints.specialDefense,
+        speed: baseStats.speed + distributedPoints.speed
+      }
+
+      // HP formula: Level + (HP stat × 3) + 10
       const maxHp = tc.type === 'pokemon'
-        ? level + (baseStats.hp * 3) + 10
+        ? level + (calculatedStats.hp * 3) + 10
         : 10 + level * 2
 
       return {
@@ -83,7 +121,7 @@ export default defineEventHandler(async (event) => {
           ...tc.entityData,
           // Add Pokemon stats
           ...(tc.type === 'pokemon' ? {
-            currentStats: baseStats,
+            currentStats: calculatedStats,
             currentHp: maxHp,
             maxHp: maxHp,
             tempHp: 0,
@@ -102,8 +140,8 @@ export default defineEventHandler(async (event) => {
             injuries: { count: 0, max: 5 }
           } : {})
         } : null,
-        // Combat state - use speed for initiative
-        initiative: baseSpeed,
+        // Combat state - use calculated speed for initiative
+        initiative: calculatedStats.speed,
         initiativeBonus: 0,
         hasActed: false,
         turnState: {

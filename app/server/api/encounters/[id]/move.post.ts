@@ -1,5 +1,10 @@
+/**
+ * Execute a move in combat and log it
+ */
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
+import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -13,54 +18,32 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const encounter = await prisma.encounter.findUnique({
-      where: { id }
-    })
-
-    if (!encounter) {
-      throw createError({
-        statusCode: 404,
-        message: 'Encounter not found'
-      })
-    }
-
-    const combatants = JSON.parse(encounter.combatants)
-    const moveLog = JSON.parse(encounter.moveLog)
+    const { record, combatants } = await loadEncounter(id)
+    const moveLog = JSON.parse(record.moveLog)
 
     // Find actor
-    const actor = combatants.find((c: any) => c.id === body.actorId)
-    if (!actor) {
-      throw createError({
-        statusCode: 404,
-        message: 'Actor not found'
-      })
-    }
-
-    // Get actor name
-    const actorName = actor.type === 'pokemon'
-      ? (actor.entity.nickname || actor.entity.species)
-      : actor.entity.name
+    const actor = findCombatant(combatants, body.actorId)
+    const actorName = getEntityName(actor)
 
     // Find move
     let move = null
-    if (actor.type === 'pokemon' && actor.entity.moves) {
-      move = actor.entity.moves.find((m: any) => m.id === body.moveId || m.name === body.moveId)
+    if (actor.type === 'pokemon') {
+      const pokemonEntity = actor.entity as { moves?: Array<{ id?: string; name: string; type?: string }> }
+      if (pokemonEntity.moves) {
+        move = pokemonEntity.moves.find(m => m.id === body.moveId || m.name === body.moveId)
+      }
     }
     const moveName = move?.name || body.moveId || 'Unknown Move'
 
     // Process targets and collect database updates
-    // Support per-target damage (body.targetDamages) or single damage (body.damage)
-    const dbUpdates: Promise<any>[] = []
+    const dbUpdates: Promise<unknown>[] = []
     const targets = body.targetIds.map((targetId: string) => {
-      const target = combatants.find((c: any) => c.id === targetId)
+      const target = combatants.find(c => c.id === targetId)
       if (!target) return null
 
-      const targetName = target.type === 'pokemon'
-        ? (target.entity.nickname || target.entity.species)
-        : target.entity.name
+      const targetName = getEntityName(target)
 
       // Get damage for this specific target
-      // Priority: per-target damage > single damage > 0
       const targetDamage = body.targetDamages?.[targetId] ?? body.damage ?? 0
 
       // Apply damage if provided
@@ -68,17 +51,9 @@ export default defineEventHandler(async (event) => {
         const newHp = Math.max(0, target.entity.currentHp - targetDamage)
         target.entity.currentHp = newHp
 
-        // Also update the actual entity in database
-        if (target.type === 'pokemon') {
-          dbUpdates.push(prisma.pokemon.update({
-            where: { id: target.entityId },
-            data: { currentHp: newHp }
-          }))
-        } else {
-          dbUpdates.push(prisma.humanCharacter.update({
-            where: { id: target.entityId },
-            data: { currentHp: newHp }
-          }))
+        // Queue database update if entity has a record
+        if (target.entityId) {
+          dbUpdates.push(syncEntityToDatabase(target, { currentHp: newHp }))
         }
       }
 
@@ -100,7 +75,7 @@ export default defineEventHandler(async (event) => {
     const logEntry = {
       id: uuidv4(),
       timestamp: new Date().toISOString(),
-      round: encounter.currentRound,
+      round: record.currentRound,
       actorId: body.actorId,
       actorName,
       moveName,
@@ -124,32 +99,15 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const turnOrder = JSON.parse(encounter.turnOrder)
+    const response = buildEncounterResponse(record, combatants, { moveLog })
 
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder,
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      isServed: encounter.isServed,
-      moveLog,
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies),
-      gridConfig: encounter.gridConfig ? JSON.parse(encounter.gridConfig) : null,
-      createdAt: encounter.createdAt,
-      updatedAt: encounter.updatedAt
-    }
-
-    return { success: true, data: parsed }
-  } catch (error: any) {
-    if (error.statusCode) throw error
+    return { success: true, data: response }
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error) throw error
+    const message = error instanceof Error ? error.message : 'Failed to execute move'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to execute move'
+      message
     })
   }
 })

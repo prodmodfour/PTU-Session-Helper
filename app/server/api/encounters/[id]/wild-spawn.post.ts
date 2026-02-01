@@ -1,5 +1,9 @@
+/**
+ * Spawn wild Pokemon into an encounter
+ */
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
+import { loadEncounter } from '~/server/services/encounter.service'
 
 interface WildPokemonInput {
   speciesId?: string
@@ -29,25 +33,17 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Find the encounter
-    const encounter = await prisma.encounter.findUnique({
-      where: { id: encounterId }
-    })
-
-    if (!encounter) {
-      throw createError({
-        statusCode: 404,
-        message: 'Encounter not found'
-      })
-    }
-
-    // Parse existing combatants
-    const combatants = JSON.parse(encounter.combatants)
-    const createdPokemon: any[] = []
+    const { record, combatants } = await loadEncounter(encounterId)
+    const createdPokemon: Array<{
+      pokemonId: string
+      combatantId: string
+      species: string
+      level: number
+    }> = []
 
     // Grid dimensions for auto-placement
-    const gridWidth = encounter.gridWidth || 20
-    const gridHeight = encounter.gridHeight || 15
+    const gridWidth = record.gridWidth || 20
+    const gridHeight = record.gridHeight || 15
 
     // Build a set of all occupied cells
     const occupiedCells = new Set<string>()
@@ -133,13 +129,49 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Calculate HP based on PTU formula: Level + (HP stat × 3) + 10
-      const maxHp = wild.level + (baseStats.hp * 3) + 10
+      // Calculate stats based on PTU rules
+      const statPoints = Math.max(0, wild.level - 1)
+
+      // Calculate weights based on base stats
+      const statKeys = ['hp', 'attack', 'defense', 'specialAttack', 'specialDefense', 'speed'] as const
+      const totalBaseStats = statKeys.reduce((sum, key) => sum + baseStats[key], 0)
+
+      // Distribute stat points weighted by base stats
+      const distributedPoints: Record<string, number> = {
+        hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
+      }
+
+      let remainingPoints = statPoints
+      while (remainingPoints > 0) {
+        const roll = Math.random() * totalBaseStats
+        let cumulative = 0
+        for (const key of statKeys) {
+          cumulative += baseStats[key]
+          if (roll < cumulative) {
+            distributedPoints[key]++
+            remainingPoints--
+            break
+          }
+        }
+      }
+
+      // Calculate final stats
+      const calculatedStats = {
+        hp: baseStats.hp + distributedPoints.hp,
+        attack: baseStats.attack + distributedPoints.attack,
+        defense: baseStats.defense + distributedPoints.defense,
+        specialAttack: baseStats.specialAttack + distributedPoints.specialAttack,
+        specialDefense: baseStats.specialDefense + distributedPoints.specialDefense,
+        speed: baseStats.speed + distributedPoints.speed
+      }
+
+      // HP formula: Level + (HP stat × 3) + 10
+      const maxHp = wild.level + (calculatedStats.hp * 3) + 10
 
       // Get moves the Pokemon would know at its level (up to 6 most recent)
       const knownMoves = learnset
         .filter(entry => entry.level <= wild.level)
-        .slice(-6) // Take the 6 most recent moves by level
+        .slice(-6)
 
       // Fetch full move data for each known move
       const moveDetails: Array<{
@@ -169,7 +201,6 @@ export default defineEventHandler(async (event) => {
             effect: moveData.effect
           })
         } else {
-          // Move not found in database, create basic entry
           moveDetails.push({
             name: moveEntry.move,
             type: 'Normal',
@@ -183,16 +214,16 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Pick a random ability (or first if only one)
+      // Pick a random ability
       const selectedAbility = abilities.length > 0
-        ? abilities[Math.floor(Math.random() * Math.min(2, abilities.length))] // Only pick from basic abilities
+        ? abilities[Math.floor(Math.random() * Math.min(2, abilities.length))]
         : null
 
-      // Randomly select gender (50/50 for simplicity, could use species ratio)
-      const genders = ['Male', 'Female', 'Genderless']
-      const gender = genders[Math.floor(Math.random() * 2)] // Only Male or Female for wild
+      // Randomly select gender
+      const genders = ['Male', 'Female']
+      const gender = genders[Math.floor(Math.random() * 2)]
 
-      // Create the wild Pokemon record (not in library)
+      // Create the wild Pokemon record
       const pokemon = await prisma.pokemon.create({
         data: {
           species: wild.speciesName,
@@ -209,11 +240,11 @@ export default defineEventHandler(async (event) => {
           baseSpeed: baseStats.speed,
           currentHp: maxHp,
           maxHp: maxHp,
-          currentAttack: baseStats.attack,
-          currentDefense: baseStats.defense,
-          currentSpAtk: baseStats.specialAttack,
-          currentSpDef: baseStats.specialDefense,
-          currentSpeed: baseStats.speed,
+          currentAttack: calculatedStats.attack,
+          currentDefense: calculatedStats.defense,
+          currentSpAtk: calculatedStats.specialAttack,
+          currentSpDef: calculatedStats.specialDefense,
+          currentSpeed: calculatedStats.speed,
           stageModifiers: JSON.stringify({
             attack: 0, defense: 0, specialAttack: 0,
             specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
@@ -227,13 +258,13 @@ export default defineEventHandler(async (event) => {
           skills: JSON.stringify(skills),
           statusConditions: JSON.stringify([]),
           gender,
-          isInLibrary: false, // Wild Pokemon not added to library
+          isInLibrary: false,
           notes: 'Wild Pokemon - generated from encounter table'
         }
       })
 
-      // Calculate initiative
-      const initiative = baseStats.speed
+      // Calculate initiative from actual speed stat
+      const initiative = calculatedStats.speed
       const tokenSize = 1
 
       // Find position for this combatant
@@ -262,17 +293,17 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Mark this position as occupied for subsequent Pokemon
+      // Mark this position as occupied
       for (let dx = 0; dx < tokenSize; dx++) {
         for (let dy = 0; dy < tokenSize; dy++) {
           occupiedCells.add(`${position.x + dx},${position.y + dy}`)
         }
       }
 
-      // Create combatant entry
+      // Create combatant entry (using inline type for wild Pokemon entity)
       const combatant = {
         id: uuidv4(),
-        type: 'pokemon',
+        type: 'pokemon' as const,
         entityId: pokemon.id,
         side,
         initiative,
@@ -288,27 +319,27 @@ export default defineEventHandler(async (event) => {
           canBeCommanded: true,
           isHolding: false
         },
-        injuries: { count: 0, sources: [] },
-        physicalEvasion: Math.floor(baseStats.defense / 5),
-        specialEvasion: Math.floor(baseStats.specialDefense / 5),
-        speedEvasion: Math.floor(baseStats.speed / 5),
+        injuries: { count: 0, sources: [] as string[] },
+        physicalEvasion: Math.floor(calculatedStats.defense / 5),
+        specialEvasion: Math.floor(calculatedStats.specialDefense / 5),
+        speedEvasion: Math.floor(calculatedStats.speed / 5),
         position,
         tokenSize,
-        readyAction: null,
+        readyAction: undefined as string | undefined,
         entity: {
           id: pokemon.id,
           species: pokemon.species,
-          nickname: null,
+          nickname: undefined as string | undefined,
           level: pokemon.level,
           types,
           gender,
           currentStats: {
             hp: maxHp,
-            attack: baseStats.attack,
-            defense: baseStats.defense,
-            specialAttack: baseStats.specialAttack,
-            specialDefense: baseStats.specialDefense,
-            speed: baseStats.speed
+            attack: calculatedStats.attack,
+            defense: calculatedStats.defense,
+            specialAttack: calculatedStats.specialAttack,
+            specialDefense: calculatedStats.specialDefense,
+            speed: calculatedStats.speed
           },
           currentHp: maxHp,
           maxHp: maxHp,
@@ -323,13 +354,14 @@ export default defineEventHandler(async (event) => {
             other: capabilities
           },
           skills,
-          statusConditions: [],
-          spriteUrl: null,
+          statusConditions: [] as string[],
+          spriteUrl: undefined as string | undefined,
           shiny: false
         }
       }
 
-      combatants.push(combatant)
+      // Cast needed because wild Pokemon entity structure differs slightly from strict Combatant type
+      ;(combatants as unknown[]).push(combatant)
       createdPokemon.push({
         pokemonId: pokemon.id,
         combatantId: combatant.id,
@@ -346,29 +378,29 @@ export default defineEventHandler(async (event) => {
 
     // Parse full encounter for response
     const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
+      id: record.id,
+      name: record.name,
+      battleType: record.battleType,
       combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder: JSON.parse(encounter.turnOrder),
+      currentRound: record.currentRound,
+      currentTurnIndex: record.currentTurnIndex,
+      turnOrder: JSON.parse(record.turnOrder),
       trainerTurnOrder: [],
       pokemonTurnOrder: [],
       currentPhase: 'pokemon',
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      isServed: encounter.isServed,
+      isActive: record.isActive,
+      isPaused: record.isPaused,
+      isServed: record.isServed,
       gridConfig: {
-        enabled: encounter.gridEnabled,
-        width: encounter.gridWidth,
-        height: encounter.gridHeight,
-        cellSize: encounter.gridCellSize,
-        backgroundImage: encounter.gridBackground
+        enabled: record.gridEnabled,
+        width: record.gridWidth,
+        height: record.gridHeight,
+        cellSize: record.gridCellSize,
+        backgroundImage: record.gridBackground
       },
       sceneNumber: 1,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
+      moveLog: JSON.parse(record.moveLog),
+      defeatedEnemies: JSON.parse(record.defeatedEnemies)
     }
 
     return {
@@ -378,11 +410,12 @@ export default defineEventHandler(async (event) => {
         addedPokemon: createdPokemon
       }
     }
-  } catch (error: any) {
-    if (error.statusCode) throw error
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error) throw error
+    const message = error instanceof Error ? error.message : 'Failed to spawn wild Pokemon'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to spawn wild Pokemon'
+      message
     })
   }
 })

@@ -1,12 +1,10 @@
-import { prisma } from '~/server/utils/prisma'
+/**
+ * Update status conditions on a combatant
+ */
+import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse } from '~/server/services/encounter.service'
+import { updateStatusConditions, validateStatusConditions } from '~/server/services/combatant.service'
+import { syncStatusToDatabase } from '~/server/services/entity-update.service'
 import type { StatusCondition } from '~/types'
-
-const VALID_STATUS_CONDITIONS: StatusCondition[] = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned',
-  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed',
-  'Disabled', 'Encored', 'Taunted', 'Tormented',
-  'Stuck', 'Slowed', 'Trapped', 'Enraged', 'Suppressed', 'Fainted'
-]
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -38,109 +36,38 @@ export default defineEventHandler(async (event) => {
   const addStatuses: StatusCondition[] = body.add || []
   const removeStatuses: StatusCondition[] = body.remove || []
 
-  for (const status of [...addStatuses, ...removeStatuses]) {
-    if (!VALID_STATUS_CONDITIONS.includes(status)) {
-      throw createError({
-        statusCode: 400,
-        message: `Invalid status condition: ${status}`
-      })
-    }
-  }
+  validateStatusConditions([...addStatuses, ...removeStatuses])
 
   try {
-    const encounter = await prisma.encounter.findUnique({
-      where: { id }
-    })
+    const { record, combatants } = await loadEncounter(id)
+    const combatant = findCombatant(combatants, body.combatantId)
 
-    if (!encounter) {
-      throw createError({
-        statusCode: 404,
-        message: 'Encounter not found'
-      })
-    }
+    // Update status conditions using service
+    const statusResult = updateStatusConditions(combatant, addStatuses, removeStatuses)
 
-    const combatants = JSON.parse(encounter.combatants)
-    const combatant = combatants.find((c: any) => c.id === body.combatantId)
+    // Sync to database if entity has a record
+    await syncStatusToDatabase(combatant, statusResult.current)
 
-    if (!combatant) {
-      throw createError({
-        statusCode: 404,
-        message: 'Combatant not found'
-      })
-    }
+    await saveEncounterCombatants(id, combatants)
 
-    const entity = combatant.entity
-    let currentStatuses: StatusCondition[] = entity.statusConditions || []
-
-    // Remove statuses first
-    currentStatuses = currentStatuses.filter(s => !removeStatuses.includes(s))
-
-    // Add new statuses (avoid duplicates)
-    for (const status of addStatuses) {
-      if (!currentStatuses.includes(status)) {
-        currentStatuses.push(status)
-      }
-    }
-
-    entity.statusConditions = currentStatuses
-
-    // Update the actual entity in database
-    if (combatant.type === 'pokemon') {
-      await prisma.pokemon.update({
-        where: { id: combatant.entityId },
-        data: {
-          statusConditions: JSON.stringify(currentStatuses)
-        }
-      })
-    } else {
-      await prisma.humanCharacter.update({
-        where: { id: combatant.entityId },
-        data: {
-          statusConditions: JSON.stringify(currentStatuses)
-        }
-      })
-    }
-
-    await prisma.encounter.update({
-      where: { id },
-      data: { combatants: JSON.stringify(combatants) }
-    })
-
-    const turnOrder = JSON.parse(encounter.turnOrder)
-
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder,
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      isServed: encounter.isServed,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies),
-      gridConfig: encounter.gridConfig ? JSON.parse(encounter.gridConfig) : null,
-      createdAt: encounter.createdAt,
-      updatedAt: encounter.updatedAt
-    }
+    const response = buildEncounterResponse(record, combatants)
 
     return {
       success: true,
-      data: parsed,
+      data: response,
       statusChange: {
         combatantId: body.combatantId,
-        added: addStatuses,
-        removed: removeStatuses,
-        current: currentStatuses
+        added: statusResult.added,
+        removed: statusResult.removed,
+        current: statusResult.current
       }
     }
-  } catch (error: any) {
-    if (error.statusCode) throw error
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error) throw error
+    const message = error instanceof Error ? error.message : 'Failed to update status conditions'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to update status conditions'
+      message
     })
   }
 })

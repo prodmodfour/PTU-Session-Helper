@@ -1,5 +1,3 @@
-import { prisma } from '~/server/utils/prisma'
-
 /**
  * Take a Breather - PTU Full Action
  * - Reset all combat stages to 0
@@ -7,14 +5,28 @@ import { prisma } from '~/server/utils/prisma'
  * - Cure volatile status conditions (Confused, Cursed, Rage, Suppressed, Enraged)
  * - Apply Tripped + Vulnerable until next turn (stored as tempConditions)
  */
+import { prisma } from '~/server/utils/prisma'
+import { loadEncounter, findCombatant, getEntityName } from '~/server/services/encounter.service'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import type { StatusCondition, StageModifiers } from '~/types'
 
-const VOLATILE_CONDITIONS = [
+const VOLATILE_CONDITIONS: StatusCondition[] = [
   'Confused',
   'Cursed',
   'Enraged',
   'Suppressed',
   'Flinched'
 ]
+
+const DEFAULT_STAGES: StageModifiers = {
+  attack: 0,
+  defense: 0,
+  specialAttack: 0,
+  specialDefense: 0,
+  speed: 0,
+  accuracy: 0,
+  evasion: 0
+}
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -35,64 +47,23 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const encounter = await prisma.encounter.findUnique({
-      where: { id }
-    })
-
-    if (!encounter) {
-      throw createError({
-        statusCode: 404,
-        message: 'Encounter not found'
-      })
-    }
-
-    const combatants = JSON.parse(encounter.combatants)
-    const combatant = combatants.find((c: any) => c.id === body.combatantId)
-
-    if (!combatant) {
-      throw createError({
-        statusCode: 404,
-        message: 'Combatant not found'
-      })
-    }
-
+    const { record, combatants } = await loadEncounter(id)
+    const combatant = findCombatant(combatants, body.combatantId)
     const entity = combatant.entity
-    const result: {
-      stagesReset: boolean
-      tempHpRemoved: number
-      conditionsCured: string[]
-      trippedApplied: boolean
-      vulnerableApplied: boolean
-    } = {
+
+    const result = {
       stagesReset: false,
       tempHpRemoved: 0,
-      conditionsCured: [],
+      conditionsCured: [] as string[],
       trippedApplied: false,
       vulnerableApplied: false
     }
 
     // Reset combat stages to 0
-    const stages = entity.stageModifiers || {
-      attack: 0,
-      defense: 0,
-      specialAttack: 0,
-      specialDefense: 0,
-      speed: 0,
-      accuracy: 0,
-      evasion: 0
-    }
-
+    const stages = entity.stageModifiers || { ...DEFAULT_STAGES }
     const hadStages = Object.values(stages).some(v => v !== 0)
     if (hadStages) {
-      entity.stageModifiers = {
-        attack: 0,
-        defense: 0,
-        specialAttack: 0,
-        specialDefense: 0,
-        speed: 0,
-        accuracy: 0,
-        evasion: 0
-      }
+      entity.stageModifiers = { ...DEFAULT_STAGES }
       result.stagesReset = true
     }
 
@@ -103,8 +74,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Cure volatile status conditions
-    const currentStatuses: string[] = entity.statusConditions || []
-    const remainingStatuses: string[] = []
+    const currentStatuses: StatusCondition[] = entity.statusConditions || []
+    const remainingStatuses: StatusCondition[] = []
 
     for (const status of currentStatuses) {
       if (VOLATILE_CONDITIONS.includes(status)) {
@@ -117,7 +88,6 @@ export default defineEventHandler(async (event) => {
     entity.statusConditions = remainingStatuses
 
     // Apply Tripped and Vulnerable (temporary until next turn)
-    // These are stored in a separate tempConditions array that gets cleared on their turn
     if (!combatant.tempConditions) {
       combatant.tempConditions = []
     }
@@ -134,34 +104,21 @@ export default defineEventHandler(async (event) => {
     combatant.turnState.standardActionUsed = true
     combatant.turnState.hasActed = true
 
-    // Update the actual entity in database
-    if (combatant.type === 'pokemon') {
-      await prisma.pokemon.update({
-        where: { id: combatant.entityId },
-        data: {
-          temporaryHp: entity.temporaryHp,
-          stageModifiers: JSON.stringify(entity.stageModifiers),
-          statusConditions: JSON.stringify(entity.statusConditions)
-        }
-      })
-    } else {
-      await prisma.humanCharacter.update({
-        where: { id: combatant.entityId },
-        data: {
-          temporaryHp: entity.temporaryHp,
-          stageModifiers: JSON.stringify(entity.stageModifiers),
-          statusConditions: JSON.stringify(entity.statusConditions)
-        }
-      })
-    }
+    // Sync to database if entity has a record
+    await syncEntityToDatabase(combatant, {
+      temporaryHp: entity.temporaryHp,
+      stageModifiers: entity.stageModifiers,
+      statusConditions: entity.statusConditions
+    })
 
     // Add to move log
-    const moveLog = JSON.parse(encounter.moveLog)
+    const moveLog = JSON.parse(record.moveLog)
+    const entityName = getEntityName(combatant)
     moveLog.push({
       id: crypto.randomUUID(),
-      round: encounter.currentRound,
+      round: record.currentRound,
       actorId: body.combatantId,
-      actorName: entity.nickname || entity.species || entity.name,
+      actorName: entityName,
       moveName: 'Take a Breather',
       targets: [],
       notes: `Reset stages, removed ${result.tempHpRemoved} temp HP, cured: ${result.conditionsCured.join(', ') || 'none'}`
@@ -175,20 +132,20 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const turnOrder = JSON.parse(encounter.turnOrder)
+    const turnOrder = JSON.parse(record.turnOrder)
 
     const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
+      id: record.id,
+      name: record.name,
+      battleType: record.battleType,
       combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
+      currentRound: record.currentRound,
+      currentTurnIndex: record.currentTurnIndex,
       turnOrder,
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
+      isActive: record.isActive,
+      isPaused: record.isPaused,
       moveLog,
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
+      defeatedEnemies: JSON.parse(record.defeatedEnemies)
     }
 
     return {
@@ -199,11 +156,12 @@ export default defineEventHandler(async (event) => {
         ...result
       }
     }
-  } catch (error: any) {
-    if (error.statusCode) throw error
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error) throw error
+    const message = error instanceof Error ? error.message : 'Failed to take a breather'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to take a breather'
+      message
     })
   }
 })
