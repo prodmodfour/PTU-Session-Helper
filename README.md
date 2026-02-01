@@ -56,6 +56,10 @@ A Game Master aid application for Pokemon Tabletop United (PTU) 1.05 in-person t
 ![Encounter Tables](docs/screenshots/gm-encounter-tables.png)
 *Random encounter table configuration*
 
+### GM View - Habitats
+![Habitats](docs/screenshots/gm-habitats.png)
+*Habitat-based encounter generation with Pokemon type distributions*
+
 ### Group View - Player Display
 ![Group View](docs/screenshots/group-view.png)
 *TV/projector display shown to players*
