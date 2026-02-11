@@ -127,6 +127,25 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
+    // Create encounter from scene data
+    async createFromScene(sceneId: string, battleType: 'trainer' | 'full_contact') {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await $fetch<{ data: Encounter }>('/api/encounters/from-scene', {
+          method: 'POST',
+          body: { sceneId, battleType }
+        })
+        this.encounter = response.data
+        return response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to create encounter from scene'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
     // Create encounter from template
     async loadFromTemplate(templateId: string, encounterName?: string) {
       this.loading = true
