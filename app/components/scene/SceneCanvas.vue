@@ -1,0 +1,335 @@
+<template>
+  <div class="canvas-panel">
+    <div class="canvas-container" ref="canvasContainer">
+      <!-- Background -->
+      <div
+        class="canvas-background"
+        :style="scene.locationImage ? { backgroundImage: `url(${scene.locationImage})` } : {}"
+      >
+        <!-- Groups -->
+        <div
+          v-for="group in scene.groups"
+          :key="group.id"
+          class="canvas-group"
+          :class="{ 'canvas-group--selected': selectedGroupId === group.id }"
+          :style="{
+            left: `${group.position.x}%`,
+            top: `${group.position.y}%`,
+            width: `${group.width}px`,
+            height: `${group.height}px`
+          }"
+          @click="emit('select-group', group.id)"
+          @mousedown="startDragGroup($event, group)"
+        >
+          <span class="group-label">{{ group.name }}</span>
+          <button class="group-delete" @click.stop="emit('delete-group', group.id)">
+            <PhX :size="12" />
+          </button>
+        </div>
+
+        <!-- Pokemon Sprites -->
+        <div
+          v-for="pokemon in scene.pokemon"
+          :key="pokemon.id"
+          class="canvas-sprite canvas-sprite--pokemon"
+          :style="{
+            left: `${pokemon.position.x}%`,
+            top: `${pokemon.position.y}%`
+          }"
+          @mousedown="startDragSprite($event, 'pokemon', pokemon)"
+        >
+          <img
+            :src="getPokemonSprite(pokemon.species)"
+            :alt="pokemon.nickname || pokemon.species"
+          />
+          <span class="sprite-label">{{ pokemon.nickname || pokemon.species }}</span>
+          <button class="sprite-delete" @click.stop="emit('remove-pokemon', pokemon.id)">
+            <PhX :size="10" />
+          </button>
+        </div>
+
+        <!-- Character Avatars -->
+        <div
+          v-for="character in scene.characters"
+          :key="character.id"
+          class="canvas-sprite canvas-sprite--character"
+          :style="{
+            left: `${character.position.x}%`,
+            top: `${character.position.y}%`
+          }"
+          @mousedown="startDragSprite($event, 'character', character)"
+        >
+          <div class="avatar-circle">
+            <img
+              v-if="character.avatarUrl"
+              :src="character.avatarUrl"
+              :alt="character.name"
+            />
+            <PhUser v-else :size="24" />
+          </div>
+          <span class="sprite-label">{{ character.name }}</span>
+          <button class="sprite-delete" @click.stop="emit('remove-character', character.id)">
+            <PhX :size="10" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { PhX, PhUser } from '@phosphor-icons/vue'
+import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/stores/groupViewTabs'
+
+const props = defineProps<{
+  scene: Scene
+  selectedGroupId: string | null
+}>()
+
+const emit = defineEmits<{
+  'update:positions': [type: 'pokemon' | 'character' | 'group', id: string, position: ScenePosition]
+  'select-group': [id: string]
+  'delete-group': [id: string]
+  'remove-pokemon': [id: string]
+  'remove-character': [id: string]
+}>()
+
+// Canvas drag state
+const canvasContainer = ref<HTMLElement | null>(null)
+const isDragging = ref(false)
+const dragTarget = ref<{ type: 'pokemon' | 'character' | 'group'; id: string } | null>(null)
+
+// Get pokemon sprite URL
+const getPokemonSprite = (species: string): string => {
+  const formattedName = species.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return `https://img.pokemondb.net/sprites/black-white/anim/normal/${formattedName}.gif`
+}
+
+// Drag and drop for sprites
+const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item: ScenePokemon | SceneCharacter) => {
+  if (!canvasContainer.value) return
+  isDragging.value = true
+  dragTarget.value = { type, id: item.id }
+
+  const el = event.currentTarget as HTMLElement
+  const startPos = { x: item.position.x, y: item.position.y }
+  let finalPos = { ...startPos }
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!isDragging.value || !canvasContainer.value) return
+
+    const rect = canvasContainer.value.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+
+    const clampedX = Math.max(0, Math.min(100, x))
+    const clampedY = Math.max(0, Math.min(100, y))
+
+    finalPos = { x: clampedX, y: clampedY }
+
+    // Visual feedback via direct DOM manipulation (bypasses reactivity)
+    const deltaXPx = ((clampedX - startPos.x) / 100) * rect.width
+    const deltaYPx = ((clampedY - startPos.y) / 100) * rect.height
+    el.style.transform = `translate(calc(-50% + ${deltaXPx}px), calc(-50% + ${deltaYPx}px))`
+  }
+
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+    isDragging.value = false
+    dragTarget.value = null
+
+    // Reset inline transform so :style binding takes over
+    el.style.transform = ''
+
+    emit('update:positions', type, item.id, { x: finalPos.x, y: finalPos.y })
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
+
+// Drag and drop for groups
+const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
+  if (!canvasContainer.value) return
+  isDragging.value = true
+  dragTarget.value = { type: 'group', id: group.id }
+
+  const el = event.currentTarget as HTMLElement
+  const startPos = { x: group.position.x, y: group.position.y }
+  let finalPos = { ...startPos }
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!isDragging.value || !canvasContainer.value) return
+
+    const rect = canvasContainer.value.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+
+    const clampedX = Math.max(0, Math.min(100, x))
+    const clampedY = Math.max(0, Math.min(100, y))
+
+    finalPos = { x: clampedX, y: clampedY }
+
+    // Visual feedback via direct DOM manipulation (bypasses reactivity)
+    const deltaXPx = ((clampedX - startPos.x) / 100) * rect.width
+    const deltaYPx = ((clampedY - startPos.y) / 100) * rect.height
+    el.style.transform = `translate(calc(-50% + ${deltaXPx}px), calc(-50% + ${deltaYPx}px))`
+  }
+
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+    isDragging.value = false
+    dragTarget.value = null
+
+    // Reset inline transform so :style binding takes over
+    el.style.transform = ''
+
+    emit('update:positions', 'group', group.id, { x: finalPos.x, y: finalPos.y })
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
+</script>
+
+<style lang="scss" scoped>
+.canvas-panel {
+  flex: 1;
+  padding: $spacing-lg;
+  overflow: hidden;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-lg;
+}
+
+.canvas-background {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: $color-bg-tertiary;
+  background-size: cover;
+  background-position: center;
+}
+
+.canvas-group {
+  position: absolute;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: $border-radius-lg;
+  background: rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  cursor: move;
+
+  &--selected {
+    border-color: $color-primary;
+    background: rgba($color-primary, 0.1);
+  }
+
+  .group-label {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    padding: 2px $spacing-sm;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    color: white;
+  }
+
+  .group-delete {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: $color-error;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+  }
+
+  &:hover .group-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.canvas-sprite {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: move;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+
+  &--pokemon {
+    img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
+    }
+  }
+
+  &--character {
+    .avatar-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: $color-bg-secondary;
+      border: 2px solid $color-primary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+
+  .sprite-label {
+    padding: 2px $spacing-sm;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    color: white;
+    white-space: nowrap;
+  }
+
+  .sprite-delete {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: $color-error;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+  }
+
+  &:hover .sprite-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+</style>
