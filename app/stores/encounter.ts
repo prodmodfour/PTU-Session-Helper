@@ -109,13 +109,13 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // Create new encounter
-    async createEncounter(name: string, battleType: 'trainer' | 'full_contact') {
+    async createEncounter(name: string, battleType: 'trainer' | 'full_contact', weather?: string | null) {
       this.loading = true
       this.error = null
       try {
         const response = await $fetch<{ data: Encounter }>('/api/encounters', {
           method: 'POST',
-          body: { name, battleType }
+          body: { name, battleType, weather }
         })
         this.encounter = response.data
         return response.data
@@ -327,6 +327,9 @@ export const useEncounterStore = defineStore('encounter', {
       // Update top-level properties (preserve existing if incoming is undefined)
       this.encounter.name = data.name ?? this.encounter.name
       this.encounter.battleType = data.battleType ?? this.encounter.battleType
+      if (data.weather !== undefined) {
+        this.encounter.weather = data.weather
+      }
       this.encounter.currentRound = data.currentRound ?? this.encounter.currentRound
       this.encounter.currentTurnIndex = data.currentTurnIndex ?? this.encounter.currentTurnIndex
       this.encounter.isPaused = data.isPaused ?? this.encounter.isPaused
