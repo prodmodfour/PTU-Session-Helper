@@ -110,7 +110,7 @@ const checkForServedEncounter = async () => {
       currentServedEncounterId = null
     }
   } catch (error) {
-    // Failed to fetch served encounter
+    alert('Failed to load encounter')
   }
 }
 

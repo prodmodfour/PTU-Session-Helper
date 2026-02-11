@@ -103,7 +103,7 @@ const setTab = async (tab: GroupViewTab) => {
   try {
     await groupViewTabsStore.setActiveTab(tab)
   } catch (error) {
-    // Failed to set tab
+    alert('Failed to switch group view tab')
   }
 }
 

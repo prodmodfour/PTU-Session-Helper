@@ -56,7 +56,7 @@ const fetchPlayers = async () => {
       players.value = response.data
     }
   } catch (error) {
-    // Failed to fetch players
+    alert('Failed to load players')
   }
 }
 
