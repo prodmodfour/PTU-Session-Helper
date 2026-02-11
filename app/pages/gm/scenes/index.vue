@@ -182,7 +182,7 @@ const createScene = async () => {
       router.push(`/gm/scenes/${scene.id}`)
     }
   } catch (error) {
-    // Failed to create scene
+    alert('Failed to create scene')
   }
 }
 
@@ -194,7 +194,7 @@ const activateScene = async (id: string) => {
     // Also switch tab to scene
     await groupViewTabsStore.setActiveTab('scene', id)
   } catch (error) {
-    // Failed to activate scene
+    alert('Failed to activate scene')
   } finally {
     activating.value = null
   }
@@ -205,7 +205,7 @@ const deactivateScene = async (id: string) => {
   try {
     await groupViewTabsStore.deactivateScene(id)
   } catch (error) {
-    // Failed to deactivate scene
+    alert('Failed to deactivate scene')
   }
 }
 
@@ -223,7 +223,7 @@ const deleteScene = async () => {
     await groupViewTabsStore.deleteScene(sceneToDelete.value.id)
     sceneToDelete.value = null
   } catch (error) {
-    // Failed to delete scene
+    alert('Failed to delete scene')
   } finally {
     deleting.value = false
   }
