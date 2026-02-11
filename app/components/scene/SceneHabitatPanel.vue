@@ -49,7 +49,7 @@
             :disabled="generating"
             @click="handleGenerate"
           >
-            <PhDice :size="16" />
+            <PhDiceFive :size="16" />
             <span>{{ generating ? 'Generating...' : 'Generate Random' }}</span>
           </button>
 
@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhTree, PhCaretRight, PhDice, PhPlus } from '@phosphor-icons/vue'
+import { PhTree, PhCaretRight, PhDiceFive, PhPlus } from '@phosphor-icons/vue'
 
 interface EncounterTableEntry {
   id: string
