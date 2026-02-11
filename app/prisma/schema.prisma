@@ -164,6 +164,7 @@ model Encounter {
   id            String   @id @default(uuid())
   name          String
   battleType    String   @default("trainer") // 'trainer' or 'full_contact'
+  weather       String?  // sunny, rain, sandstorm, hail, snow, fog, harsh_sunlight, heavy_rain, strong_winds
 
   // Combatants stored as JSON (includes all combat state + positions)
   combatants    String   @default("[]") // JSON array
