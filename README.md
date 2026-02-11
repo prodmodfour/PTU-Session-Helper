@@ -10,6 +10,19 @@ A Game Master aid application for Pokemon Tabletop United (PTU) 1.05 in-person t
 - **Undo/Redo**: Full history support for combat actions (Ctrl+Z / Ctrl+Shift+Z)
 - **4K TV Support**: Optimized styling for large displays
 
+### Scene Management
+- **Scene Editor**: Drag-drop canvas for positioning Pokemon sprites and character tokens
+- **5-Zone Layout**: Collapsible panels (Groups | Canvas | Properties | Add to Scene | Habitat)
+- **Scene Manager**: Create, edit, delete, and activate scenes from the GM view
+- **Group Scene Display**: Full-screen scene view with background images and weather effects
+- **Habitat Integration**: Browse encounter tables, generate random Pokemon from habitat data
+- **Scene-to-Encounter**: Convert a scene directly into a combat encounter
+
+### Group View Tab System
+- **Tab Router**: GM-controlled tabs for the group display (Lobby, Map, Encounter, Scene)
+- **WebSocket Sync**: Tab changes and scene updates push to group view in real-time
+- **Cross-Tab Sync**: BroadcastChannel keeps multiple GM tabs in sync
+
 ### Encounter Management
 - **Three-sided Combat**: Players, Allies, and Enemies with initiative tracking
 - **Encounter Templates**: Save and load encounter setups
@@ -36,13 +49,25 @@ A Game Master aid application for Pokemon Tabletop United (PTU) 1.05 in-person t
 ## Tech Stack
 
 - **Framework**: Nuxt 3 (Vue 3) with TypeScript, SPA mode
-- **Backend**: Nitro server with 86+ REST API endpoints
+- **Backend**: Nitro server with 100+ REST API endpoints
 - **Database**: SQLite with Prisma ORM
 - **State**: Pinia (12 stores)
 - **Real-time**: WebSocket via CrossWS
 - **Styling**: SCSS with Pokemon Scarlet/Violet dark theme
 
 ## Screenshots
+
+### GM View - Scene Editor
+![Scene Editor](docs/pr-screenshots/scene-editor-default.png)
+*5-zone scene editor with drag-drop canvas, collapsible panels for groups, properties, add-to-scene, and habitat*
+
+### GM View - Scene Editor (Habitat Panel)
+![Scene Editor Habitat](docs/pr-screenshots/scene-editor-habitat.png)
+*Habitat panel expanded showing encounter table browser*
+
+### GM View - Scene Manager
+![Scene Manager](docs/pr-screenshots/scene-manager.png)
+*Create, edit, and activate scenes for the group display*
 
 ### GM View - Encounter Management
 ![GM View](docs/screenshots/gm-view.png)
@@ -60,9 +85,13 @@ A Game Master aid application for Pokemon Tabletop United (PTU) 1.05 in-person t
 ![Habitats](docs/screenshots/gm-habitats.png)
 *Habitat-based encounter generation with Pokemon type distributions*
 
-### Group View - Player Display
+### Group View - Scene Display
+![Group Scene View](docs/pr-screenshots/group-scene-view.png)
+*Scene displayed on TV/projector with positioned sprites and background*
+
+### Group View - Encounter Display
 ![Group View](docs/screenshots/group-view.png)
-*TV/projector display shown to players*
+*Encounter display shown to players during combat*
 
 ## Setup
 
@@ -119,13 +148,13 @@ The GM has full control over encounters:
 
 ### Group View (`/group`)
 
-TV/projector display for players:
-- Shows current encounter served by GM
-- Displays combatant HP (percentages for enemies)
-- Shows current turn indicator
-- Fog of war respected (hidden areas not shown)
+TV/projector display for players with GM-controlled tabs:
+- **Scene Tab**: Full-screen scene with positioned sprites, background image, and weather effects
+- **Encounter Tab**: Shows current encounter with combatant HP (percentages for enemies), turn indicator
+- **Map Tab**: Grid-based map display with fog of war
+- **Lobby Tab**: Waiting screen between activities
 - Optimized for 4K TV display
-- Auto-connects when GM serves an encounter
+- Real-time sync via WebSocket — GM changes appear instantly
 
 ### Player View (`/player`) - Future Feature
 
@@ -144,9 +173,9 @@ Individual player interface with clickable actions (not yet implemented).
 app/
 ├── pages/           # File-based routing (gm/, group/, player/)
 ├── layouts/         # Role-based layouts (gm, group, player, default)
-├── components/      # 66 auto-imported Vue components by domain
-├── composables/     # 18 composables (combat, grid, WebSocket, etc.)
-├── stores/          # 12 Pinia stores for state management
+├── components/      # 70+ auto-imported Vue components by domain
+├── composables/     # 20 composables (combat, grid, WebSocket, etc.)
+├── stores/          # 13 Pinia stores for state management
 ├── server/
 │   ├── api/         # REST endpoints (characters, pokemon, encounters, etc.)
 │   ├── services/    # Business logic (combatant, encounter, entity-update)
