@@ -71,6 +71,8 @@
           :selected-group-id="selectedGroupId"
           @update:scene="handleSceneFieldUpdate"
           @toggle-terrain="toggleTerrain"
+          @add-modifier="addModifier"
+          @remove-modifier="removeModifier"
           @create-group="createGroup"
           @delete-group="deleteGroup"
           @select-group="selectGroup"
@@ -95,7 +97,7 @@ import {
   PhBroadcast,
   PhStop
 } from '@phosphor-icons/vue'
-import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/stores/groupViewTabs'
+import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition, SceneModifier } from '~/stores/groupViewTabs'
 
 definePageMeta({
   layout: 'gm'
@@ -225,6 +227,23 @@ const toggleTerrain = (terrain: string) => {
     scene.value = { ...scene.value, terrains: [...scene.value.terrains, terrain] }
   } else {
     scene.value = { ...scene.value, terrains: scene.value.terrains.filter(t => t !== terrain) }
+  }
+  saveScene()
+}
+
+// Add modifier
+const addModifier = (modifier: SceneModifier) => {
+  if (!scene.value) return
+  scene.value = { ...scene.value, modifiers: [...scene.value.modifiers, modifier] }
+  saveScene()
+}
+
+// Remove modifier
+const removeModifier = (index: number) => {
+  if (!scene.value) return
+  scene.value = {
+    ...scene.value,
+    modifiers: scene.value.modifiers.filter((_, i) => i !== index)
   }
   saveScene()
 }
