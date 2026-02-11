@@ -26,7 +26,7 @@ export function useGroupViewWebSocket(options: GroupViewWebSocketOptions) {
         groupViewTabsStore.handleSceneUpdate(message.data)
         break
       case 'scene_positions_updated':
-        groupViewTabsStore.handleScenePositionsUpdated(message.data)
+        groupViewTabsStore.handleScenePositionsUpdated(message.data.positions)
         break
     }
   }
