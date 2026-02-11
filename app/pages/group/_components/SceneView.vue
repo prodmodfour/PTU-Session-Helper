@@ -123,34 +123,14 @@ import { PhFilmSlate, PhUser, PhLeaf, PhLightning, PhBrain, PhCloudFog } from '@
 import type { Scene } from '~/stores/groupViewTabs'
 
 const groupViewTabsStore = useGroupViewTabsStore()
-const { handleSceneUpdate, handleSceneActivated, handleSceneDeactivated } = groupViewTabsStore
 
-// Active scene from store
+// Active scene from store (synced via WebSocket in group/index.vue)
 const scene = computed(() => groupViewTabsStore.activeScene)
 
 // Weather class for background effects
 const weatherClass = computed(() => {
   if (!scene.value?.weather) return ''
   return `scene-view--${scene.value.weather}`
-})
-
-// Poll for active scene
-let pollInterval: ReturnType<typeof setInterval> | null = null
-
-const checkForActiveScene = async () => {
-  await groupViewTabsStore.fetchActiveScene()
-}
-
-onMounted(async () => {
-  await checkForActiveScene()
-  pollInterval = setInterval(checkForActiveScene, 2000)
-})
-
-onUnmounted(() => {
-  if (pollInterval) {
-    clearInterval(pollInterval)
-    pollInterval = null
-  }
 })
 
 // Helper functions
