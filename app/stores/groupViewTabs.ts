@@ -504,6 +504,7 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
               isActive: s.id === sceneId
             }))
           }
+          this.activeSceneId = sceneId
           this.fetchActiveScene()
         } else if (type === 'scene_deactivated') {
           if (this.scenes.length > 0) {

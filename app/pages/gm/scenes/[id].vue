@@ -201,10 +201,13 @@ onMounted(async () => {
 
 // Sync local scene ref when cross-tab activation changes
 watch(
-  () => groupViewTabsStore.scenes.find(s => s.id === scene.value?.id)?.isActive,
-  (newIsActive) => {
-    if (scene.value && newIsActive !== undefined && newIsActive !== scene.value.isActive) {
-      scene.value = { ...scene.value, isActive: newIsActive }
+  () => groupViewTabsStore.activeSceneId,
+  (newActiveId) => {
+    if (scene.value) {
+      const shouldBeActive = newActiveId === scene.value.id
+      if (shouldBeActive !== scene.value.isActive) {
+        scene.value = { ...scene.value, isActive: shouldBeActive }
+      }
     }
   }
 )
