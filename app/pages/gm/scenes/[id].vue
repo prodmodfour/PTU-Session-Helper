@@ -79,9 +79,6 @@
           :selected-group-id="selectedGroupId"
           :habitats="availableHabitats"
           @update:scene="handleSceneFieldUpdate"
-          @toggle-terrain="toggleTerrain"
-          @add-modifier="addModifier"
-          @remove-modifier="removeModifier"
           @create-group="createGroup"
           @delete-group="deleteGroup"
           @select-group="selectGroup"
@@ -117,7 +114,7 @@ import {
   PhStop,
   PhSword
 } from '@phosphor-icons/vue'
-import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition, SceneModifier } from '~/stores/groupViewTabs'
+import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/stores/groupViewTabs'
 
 definePageMeta({
   layout: 'gm'
@@ -269,35 +266,6 @@ const deactivateScene = async () => {
 const handleSceneFieldUpdate = (field: string, value: any) => {
   if (!scene.value) return
   scene.value = { ...scene.value, [field]: value }
-  saveScene()
-}
-
-// Handle terrain toggle from properties panel
-const toggleTerrain = (terrain: string) => {
-  if (!scene.value) return
-  const index = scene.value.terrains.indexOf(terrain)
-  if (index === -1) {
-    scene.value = { ...scene.value, terrains: [...scene.value.terrains, terrain] }
-  } else {
-    scene.value = { ...scene.value, terrains: scene.value.terrains.filter(t => t !== terrain) }
-  }
-  saveScene()
-}
-
-// Add modifier
-const addModifier = (modifier: SceneModifier) => {
-  if (!scene.value) return
-  scene.value = { ...scene.value, modifiers: [...scene.value.modifiers, modifier] }
-  saveScene()
-}
-
-// Remove modifier
-const removeModifier = (index: number) => {
-  if (!scene.value) return
-  scene.value = {
-    ...scene.value,
-    modifiers: scene.value.modifiers.filter((_, i) => i !== index)
-  }
   saveScene()
 }
 
