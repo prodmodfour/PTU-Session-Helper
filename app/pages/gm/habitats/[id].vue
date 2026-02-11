@@ -406,8 +406,10 @@
       :has-active-encounter="!!encounterStore.encounter"
       :add-error="addError"
       :adding-to-encounter="addingToEncounter"
+      :scenes="availableScenes"
       @close="showGenerateModal = false; addError = null"
       @add-to-encounter="handleAddToEncounter"
+      @add-to-scene="handleAddToScene"
     />
 
     <!-- Delete Confirmation -->
@@ -435,6 +437,7 @@ const route = useRoute()
 const router = useRouter()
 const tablesStore = useEncounterTablesStore()
 const encounterStore = useEncounterStore()
+const groupViewTabsStore = useGroupViewTabsStore()
 
 const tableId = computed(() => route.params.id as string)
 const table = ref<EncounterTable | null>(null)
@@ -451,6 +454,9 @@ const showDeleteModal = ref(false)
 // Add to encounter state
 const addingToEncounter = ref(false)
 const addError = ref<string | null>(null)
+
+// Scene integration
+const availableScenes = computed(() => groupViewTabsStore.scenes)
 
 // New entry form
 const newEntry = ref({
@@ -497,6 +503,9 @@ onMounted(async () => {
     updateEditSettings()
   }
   loading.value = false
+
+  // Fetch scenes for the "Add to Scene" feature (non-blocking)
+  groupViewTabsStore.fetchScenes()
 })
 
 useHead({
@@ -688,6 +697,21 @@ const handleDelete = async () => {
   if (!table.value) return
   await tablesStore.deleteTable(table.value.id)
   router.push('/gm/habitats')
+}
+
+const handleAddToScene = async (sceneId: string, pokemon: Array<{ speciesId: string; speciesName: string; level: number }>) => {
+  addError.value = null
+  try {
+    for (const p of pokemon) {
+      await $fetch(`/api/scenes/${sceneId}/pokemon`, {
+        method: 'POST',
+        body: { species: p.speciesName, level: p.level, speciesId: p.speciesId }
+      })
+    }
+    showGenerateModal.value = false
+  } catch (e: unknown) {
+    addError.value = e instanceof Error ? e.message : 'Failed to add Pokemon to scene'
+  }
 }
 
 const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesName: string; level: number }>) => {
