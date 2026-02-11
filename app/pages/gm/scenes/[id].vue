@@ -108,6 +108,7 @@
           :encounter-tables="encounterTables"
           :scene-habitat-id="scene.habitatId"
           :collapsed="habitatPanelCollapsed"
+          :generating="generatingEncounter"
           @select-habitat="handleSelectHabitat"
           @add-pokemon="addWildPokemon"
           @generate-encounter="handleGenerateEncounter"
@@ -183,6 +184,7 @@ const allPokemon = ref<Array<{
 
 // Full encounter tables with entries (for Habitat panel)
 const encounterTables = ref<Array<any>>([])
+const generatingEncounter = ref(false)
 
 const availableCharacters = computed(() => {
   if (!scene.value) return []
@@ -347,7 +349,8 @@ const handleSelectHabitat = (habitatId: string | null) => {
 
 // Handle encounter generation from habitat panel
 const handleGenerateEncounter = async (tableId: string) => {
-  if (!scene.value) return
+  if (!scene.value || generatingEncounter.value) return
+  generatingEncounter.value = true
   try {
     const response = await $fetch<{ success: boolean; data: { generated: Array<{ speciesName: string; level: number }> } }>(
       `/api/encounter-tables/${tableId}/generate`,
@@ -360,6 +363,8 @@ const handleGenerateEncounter = async (tableId: string) => {
     }
   } catch (error) {
     alert('Failed to generate encounter')
+  } finally {
+    generatingEncounter.value = false
   }
 }
 

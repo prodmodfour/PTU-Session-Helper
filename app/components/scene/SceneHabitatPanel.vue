@@ -119,6 +119,7 @@ const props = defineProps<{
   encounterTables: EncounterTable[]
   sceneHabitatId: string | null
   collapsed: boolean
+  generating: boolean
 }>()
 
 const emit = defineEmits<{
@@ -130,22 +131,14 @@ const emit = defineEmits<{
 
 const { getSpriteUrl } = usePokemonSprite()
 
-const generating = ref(false)
-
 const selectedTable = computed(() => {
   if (!props.sceneHabitatId) return null
   return props.encounterTables.find(t => t.id === props.sceneHabitatId) ?? null
 })
 
-const handleGenerate = async () => {
-  if (!selectedTable.value || generating.value) return
-  generating.value = true
-  try {
-    emit('generate-encounter', selectedTable.value.id)
-  } finally {
-    // Reset after a short delay to let the parent finish the async operation
-    setTimeout(() => { generating.value = false }, 2000)
-  }
+const handleGenerate = () => {
+  if (!selectedTable.value || props.generating) return
+  emit('generate-encounter', selectedTable.value.id)
 }
 
 const handleAddEntry = (entry: EncounterTableEntry) => {
