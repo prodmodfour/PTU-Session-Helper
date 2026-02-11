@@ -40,6 +40,7 @@
           v-for="pokemon in scene.pokemon"
           :key="pokemon.id"
           class="canvas-sprite canvas-sprite--pokemon"
+          :data-group-id="pokemon.groupId || undefined"
           :style="{
             left: `${pokemon.position.x}%`,
             top: `${pokemon.position.y}%`
@@ -61,6 +62,7 @@
           v-for="character in scene.characters"
           :key="character.id"
           class="canvas-sprite canvas-sprite--character"
+          :data-group-id="character.groupId || undefined"
           :style="{
             left: `${character.position.x}%`,
             top: `${character.position.y}%`
@@ -187,7 +189,7 @@ const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item:
   document.addEventListener('mouseup', onMouseUp)
 }
 
-// Drag and drop for groups
+// Drag and drop for groups (moves member sprites along with the group)
 const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
   if (!canvasContainer.value) return
   isDragging.value = true
@@ -196,6 +198,11 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
   const el = event.currentTarget as HTMLElement
   const startPos = { x: group.position.x, y: group.position.y }
   let finalPos = { ...startPos }
+
+  // Collect member sprite DOM elements for visual dragging
+  const memberEls = canvasContainer.value.querySelectorAll<HTMLElement>(
+    `[data-group-id="${group.id}"]`
+  )
 
   const onMouseMove = (e: MouseEvent) => {
     if (!isDragging.value || !canvasContainer.value) return
@@ -213,6 +220,11 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
     const deltaXPx = ((clampedX - startPos.x) / 100) * rect.width
     const deltaYPx = ((clampedY - startPos.y) / 100) * rect.height
     el.style.transform = `translate(calc(-50% + ${deltaXPx}px), calc(-50% + ${deltaYPx}px))`
+
+    // Move member sprites visually by the same pixel delta
+    memberEls.forEach(memberEl => {
+      memberEl.style.transform = `translate(calc(-50% + ${deltaXPx}px), calc(-50% + ${deltaYPx}px))`
+    })
   }
 
   const onMouseUp = () => {
@@ -221,8 +233,11 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
     isDragging.value = false
     dragTarget.value = null
 
-    // Reset inline transform so :style binding takes over
+    // Reset inline transforms so :style bindings take over
     el.style.transform = ''
+    memberEls.forEach(memberEl => {
+      memberEl.style.transform = ''
+    })
 
     emit('update:positions', 'group', group.id, { x: finalPos.x, y: finalPos.y })
   }

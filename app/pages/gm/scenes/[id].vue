@@ -444,15 +444,57 @@ const handlePositionUpdate = async (type: 'pokemon' | 'character' | 'group', id:
       characters: [{ id, position, ...(groupId !== undefined && { groupId }) }]
     })
   } else {
+    const oldGroup = scene.value.groups.find(g => g.id === id)
+    if (!oldGroup) return
+
+    const deltaX = position.x - oldGroup.position.x
+    const deltaY = position.y - oldGroup.position.y
+
+    // Move all sprites assigned to this group by the same delta
+    const movedPokemon = scene.value.pokemon
+      .filter(p => p.groupId === id)
+      .map(p => ({
+        ...p,
+        position: {
+          x: Math.max(0, Math.min(100, p.position.x + deltaX)),
+          y: Math.max(0, Math.min(100, p.position.y + deltaY))
+        }
+      }))
+    const movedCharacters = scene.value.characters
+      .filter(c => c.groupId === id)
+      .map(c => ({
+        ...c,
+        position: {
+          x: Math.max(0, Math.min(100, c.position.x + deltaX)),
+          y: Math.max(0, Math.min(100, c.position.y + deltaY))
+        }
+      }))
+
     scene.value = {
       ...scene.value,
       groups: scene.value.groups.map(g =>
         g.id === id ? { ...g, position } : g
-      )
+      ),
+      pokemon: scene.value.pokemon.map(p => {
+        const moved = movedPokemon.find(m => m.id === p.id)
+        return moved ?? p
+      }),
+      characters: scene.value.characters.map(c => {
+        const moved = movedCharacters.find(m => m.id === c.id)
+        return moved ?? c
+      })
     }
-    await groupViewTabsStore.updatePositions(scene.value.id, {
+
+    const positionUpdates: Parameters<typeof groupViewTabsStore.updatePositions>[1] = {
       groups: [{ id, position }]
-    })
+    }
+    if (movedPokemon.length > 0) {
+      positionUpdates.pokemon = movedPokemon.map(p => ({ id: p.id, position: p.position }))
+    }
+    if (movedCharacters.length > 0) {
+      positionUpdates.characters = movedCharacters.map(c => ({ id: c.id, position: c.position }))
+    }
+    await groupViewTabsStore.updatePositions(scene.value.id, positionUpdates)
   }
 }
 
