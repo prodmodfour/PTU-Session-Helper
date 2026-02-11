@@ -430,6 +430,8 @@ const addToEncounter = () => {
 const handleAddToScene = () => {
   if (!selectedSceneId.value) return
   addingToScene.value = true
+  // Note: addingToScene is not reset here because the parent closes the modal on success.
+  // If the parent keeps the modal open on error, the button will stay in "Adding..." state.
   emit('addToScene', selectedSceneId.value, pokemonForAction.value.map(p => ({
     speciesId: p.speciesId,
     speciesName: p.speciesName,
