@@ -283,10 +283,12 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
         )
         if (response.success) {
           // Update all scenes to mark only this one as active
-          this.scenes = this.scenes.map(s => ({
-            ...s,
-            isActive: s.id === id
-          }))
+          if (this.scenes.length > 0) {
+            this.scenes = this.scenes.map(s => ({
+              ...s,
+              isActive: s.id === id
+            }))
+          }
           this.activeScene = response.data
           this.activeSceneId = id
         }
@@ -306,9 +308,11 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
       try {
         await $fetch(`/api/scenes/${id}/deactivate`, { method: 'POST' })
         // Update scene in list
-        this.scenes = this.scenes.map(s =>
-          s.id === id ? { ...s, isActive: false } : s
-        )
+        if (this.scenes.length > 0) {
+          this.scenes = this.scenes.map(s =>
+            s.id === id ? { ...s, isActive: false } : s
+          )
+        }
         if (this.activeScene?.id === id) {
           this.activeScene = null
         }
