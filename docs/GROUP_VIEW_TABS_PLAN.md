@@ -402,4 +402,7 @@ app/
 - [x] Phase 2: Group View Tab System (4 commits)
 - [x] Phase 3: Scene System - GM Side (editor decomposed, group resize handles, sprite-to-group drag-drop, modifiers UI, habitat selector — all complete)
 - [x] Phase 4: Scene System - Group View (SceneView with WS sync, all 9 weather effects, terrain indicators, modifiers panel)
-- [ ] Phase 5: Integration
+- [x] Phase 5: Integration (habitat→scene, weather→encounter, scene→encounter flow)
+  - Weather on Encounter is informational only (no auto-applied combat modifiers)
+  - Terrain not added to Encounter model (visual context only)
+  - Wild Pokemon creation logic duplicated in from-scene.post.ts (TODO: extract shared service)
