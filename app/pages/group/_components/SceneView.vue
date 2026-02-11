@@ -29,19 +29,6 @@
         <p v-if="scene.description" class="location-description">{{ scene.description }}</p>
       </header>
 
-      <!-- Terrain Indicators -->
-      <div v-if="scene.terrains.length > 0" class="terrain-indicators">
-        <div
-          v-for="terrain in scene.terrains"
-          :key="terrain"
-          class="terrain-badge"
-          :class="`terrain-badge--${terrain}`"
-        >
-          <component :is="getTerrainIcon(terrain)" :size="20" />
-          <span>{{ formatTerrain(terrain) }}</span>
-        </div>
-      </div>
-
       <!-- Scene Canvas - Groups and Sprites -->
       <div class="scene-canvas">
         <!-- Groups -->
@@ -104,22 +91,12 @@
         </div>
       </div>
 
-      <!-- Modifiers Panel -->
-      <div v-if="scene.modifiers.length > 0" class="modifiers-panel">
-        <h3>Active Modifiers</h3>
-        <div class="modifiers-list">
-          <div v-for="modifier in scene.modifiers" :key="modifier.name" class="modifier-item">
-            <strong>{{ modifier.name }}</strong>
-            <span v-if="modifier.description">{{ modifier.description }}</span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { PhFilmSlate, PhUser, PhLeaf, PhLightning, PhBrain, PhCloudFog } from '@phosphor-icons/vue'
+import { PhFilmSlate, PhUser } from '@phosphor-icons/vue'
 import type { Scene } from '~/stores/groupViewTabs'
 
 const groupViewTabsStore = useGroupViewTabsStore()
@@ -137,20 +114,6 @@ const weatherClass = computed(() => {
 function getPokemonSprite(species: string): string {
   const formattedName = species.toLowerCase().replace(/[^a-z0-9]/g, '')
   return `https://img.pokemondb.net/sprites/black-white/anim/normal/${formattedName}.gif`
-}
-
-function getTerrainIcon(terrain: string) {
-  switch (terrain) {
-    case 'grassy': return PhLeaf
-    case 'electric': return PhLightning
-    case 'psychic': return PhBrain
-    case 'misty': return PhCloudFog
-    default: return PhLeaf
-  }
-}
-
-function formatTerrain(terrain: string): string {
-  return terrain.charAt(0).toUpperCase() + terrain.slice(1) + ' Terrain'
 }
 
 function getGroupMemberCount(groupId: string): number {
@@ -387,47 +350,6 @@ function getGroupMemberCount(groupId: string): number {
   }
 }
 
-.terrain-indicators {
-  position: absolute;
-  top: $spacing-lg;
-  right: $spacing-lg;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-}
-
-.terrain-badge {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
-  border-radius: $border-radius-md;
-  font-size: $font-size-sm;
-  font-weight: 600;
-  backdrop-filter: blur(8px);
-
-  &--grassy {
-    background: rgba(76, 175, 80, 0.8);
-    color: white;
-  }
-
-  &--electric {
-    background: rgba(255, 235, 59, 0.9);
-    color: #333;
-  }
-
-  &--psychic {
-    background: rgba(156, 39, 176, 0.8);
-    color: white;
-  }
-
-  &--misty {
-    background: rgba(236, 64, 122, 0.8);
-    color: white;
-  }
-}
-
 .scene-canvas {
   position: relative;
   z-index: 2;
@@ -529,41 +451,4 @@ function getGroupMemberCount(groupId: string): number {
   }
 }
 
-.modifiers-panel {
-  position: absolute;
-  bottom: $spacing-lg;
-  left: $spacing-lg;
-  z-index: 3;
-  padding: $spacing-md;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: $border-radius-lg;
-  backdrop-filter: blur(8px);
-  max-width: 300px;
-
-  h3 {
-    margin: 0 0 $spacing-sm;
-    font-size: $font-size-md;
-    color: $color-primary;
-  }
-
-  .modifiers-list {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xs;
-  }
-
-  .modifier-item {
-    font-size: $font-size-sm;
-    color: white;
-
-    strong {
-      display: block;
-      color: $color-text;
-    }
-
-    span {
-      opacity: 0.8;
-    }
-  }
-}
 </style>
