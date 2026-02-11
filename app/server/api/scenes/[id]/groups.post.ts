@@ -36,11 +36,12 @@ export default defineEventHandler(async (event) => {
       height: number
     }>
 
-    // Create new group
+    // Offset position so new groups don't stack on top of each other
+    const offset = existingGroups.length * 8
     const newGroup = {
       id: randomUUID(),
       name: body.name ?? 'New Group',
-      position: body.position ?? { x: 50, y: 50 },
+      position: body.position ?? { x: Math.min(50 + offset, 85), y: Math.min(50 + offset, 85) },
       width: body.width ?? 150,
       height: body.height ?? 100
     }
