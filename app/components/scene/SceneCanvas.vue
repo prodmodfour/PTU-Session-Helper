@@ -333,6 +333,7 @@ const startResize = (event: MouseEvent, group: SceneGroup, signX: number, signY:
   background: $color-bg-tertiary;
   background-size: cover;
   background-position: center;
+  user-select: none;
 }
 
 .canvas-group {
