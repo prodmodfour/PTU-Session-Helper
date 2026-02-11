@@ -32,6 +32,14 @@
         </div>
         <div class="header-actions">
           <button
+            v-if="scene.pokemon.length > 0 || scene.characters.length > 0"
+            class="btn btn--warning"
+            @click="showStartEncounterModal = true"
+          >
+            <PhSword :size="18" />
+            <span>Start Encounter</span>
+          </button>
+          <button
             v-if="!scene.isActive"
             class="btn btn--primary"
             @click="activateScene"
@@ -86,6 +94,16 @@
           />
         </ScenePropertiesPanel>
       </div>
+
+      <!-- Start Encounter Modal -->
+      <StartEncounterModal
+        v-if="showStartEncounterModal"
+        :scene-name="scene.name"
+        :pokemon-count="scene.pokemon.length"
+        :character-count="scene.characters.length"
+        @close="showStartEncounterModal = false"
+        @confirm="handleStartEncounter"
+      />
     </template>
   </div>
 </template>
@@ -96,7 +114,8 @@ import {
   PhWarning,
   PhArrowLeft,
   PhBroadcast,
-  PhStop
+  PhStop,
+  PhSword
 } from '@phosphor-icons/vue'
 import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition, SceneModifier } from '~/stores/groupViewTabs'
 
@@ -105,7 +124,9 @@ definePageMeta({
 })
 
 const route = useRoute()
+const router = useRouter()
 const groupViewTabsStore = useGroupViewTabsStore()
+const encounterStore = useEncounterStore()
 
 // State
 const loading = ref(true)
@@ -113,6 +134,8 @@ const activating = ref(false)
 const scene = ref<Scene | null>(null)
 const sceneName = ref('')
 const selectedGroupId = ref<string | null>(null)
+const showStartEncounterModal = ref(false)
+const startingEncounter = ref(false)
 
 // Available characters (not already in scene)
 const allCharacters = ref<Array<{
@@ -430,6 +453,21 @@ const handlePositionUpdate = async (type: 'pokemon' | 'character' | 'group', id:
     await groupViewTabsStore.updatePositions(scene.value.id, {
       groups: [{ id, position }]
     })
+  }
+}
+
+// Start encounter from scene
+const handleStartEncounter = async (options: { battleType: 'trainer' | 'full_contact' }) => {
+  if (!scene.value) return
+  startingEncounter.value = true
+  try {
+    await encounterStore.createFromScene(scene.value.id, options.battleType)
+    showStartEncounterModal.value = false
+    router.push('/gm')
+  } catch (error) {
+    alert('Failed to create encounter from scene')
+  } finally {
+    startingEncounter.value = false
   }
 }
 </script>
