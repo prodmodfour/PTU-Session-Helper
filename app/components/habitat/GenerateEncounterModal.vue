@@ -219,6 +219,30 @@
         >
           {{ addingToEncounter ? 'Creating...' : `New Encounter${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` }}
         </button>
+        <button
+          v-if="generatedPokemon.length > 0 && props.scenes && props.scenes.length > 0"
+          class="btn btn--secondary"
+          :disabled="addingToScene"
+          @click="showSceneSelector = !showSceneSelector"
+          data-testid="add-to-scene-btn"
+        >
+          {{ addingToScene ? 'Adding...' : `Add to Scene${selectedIndices.size > 0 ? ` (${selectedIndices.size})` : ''}` }}
+        </button>
+      </div>
+
+      <!-- Scene Selector -->
+      <div v-if="showSceneSelector && props.scenes && props.scenes.length > 0" class="scene-selector">
+        <select v-model="selectedSceneId" class="form-select">
+          <option value="" disabled>Choose a scene...</option>
+          <option v-for="s in props.scenes" :key="s.id" :value="s.id">{{ s.name }}</option>
+        </select>
+        <button
+          class="btn btn--primary btn--sm"
+          :disabled="!selectedSceneId || addingToScene"
+          @click="handleAddToScene"
+        >
+          Confirm
+        </button>
       </div>
     </div>
   </div>
@@ -233,11 +257,13 @@ const props = defineProps<{
   hasActiveEncounter?: boolean
   addError?: string | null
   addingToEncounter?: boolean
+  scenes?: Array<{ id: string; name: string }>
 }>()
 
 const emit = defineEmits<{
   close: []
   addToEncounter: [pokemon: Array<{ speciesId: string; speciesName: string; level: number }>]
+  addToScene: [sceneId: string, pokemon: Array<{ speciesId: string; speciesName: string; level: number }>]
 }>()
 
 const encounterTablesStore = useEncounterTablesStore()
@@ -265,6 +291,11 @@ const generatedPokemon = ref<Array<{
   source: 'parent' | 'modification'
 }>>([])
 const selectedIndices = ref<Set<number>>(new Set())
+
+// Scene selector state
+const showSceneSelector = ref(false)
+const selectedSceneId = ref('')
+const addingToScene = ref(false)
 
 // Computed: get the Pokemon to use for actions (selected ones, or all if none selected)
 const pokemonForAction = computed(() => {
@@ -390,6 +421,18 @@ const addToEncounter = () => {
   groupViewStore.clearWildSpawnPreview()
   // Use selected Pokemon, or all if none selected
   emit('addToEncounter', pokemonForAction.value.map(p => ({
+    speciesId: p.speciesId,
+    speciesName: p.speciesName,
+    level: p.level
+  })))
+}
+
+const handleAddToScene = () => {
+  if (!selectedSceneId.value) return
+  addingToScene.value = true
+  // Note: addingToScene is not reset here because the parent closes the modal on success.
+  // If the parent keeps the modal open on error, the button will stay in "Adding..." state.
+  emit('addToScene', selectedSceneId.value, pokemonForAction.value.map(p => ({
     speciesId: p.speciesId,
     speciesName: p.speciesName,
     level: p.level
@@ -686,6 +729,19 @@ watch(() => props.table, (newTable) => {
       background: rgba($color-accent-violet, 0.2);
       color: $color-accent-violet;
     }
+  }
+}
+
+.scene-selector {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-lg;
+  border-top: 1px solid $glass-border;
+  background: $color-bg-tertiary;
+
+  .form-select {
+    flex: 1;
   }
 }
 </style>

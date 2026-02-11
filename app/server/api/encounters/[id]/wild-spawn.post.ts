@@ -381,6 +381,7 @@ export default defineEventHandler(async (event) => {
       id: record.id,
       name: record.name,
       battleType: record.battleType,
+      weather: record.weather ?? null,
       combatants,
       currentRound: record.currentRound,
       currentTurnIndex: record.currentTurnIndex,

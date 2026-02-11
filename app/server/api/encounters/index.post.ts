@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
       data: {
         name: body.name || 'New Encounter',
         battleType: body.battleType || 'trainer',
+        weather: body.weather ?? null,
         combatants: '[]',
         currentRound: 1,
         currentTurnIndex: 0,
@@ -38,6 +39,7 @@ export default defineEventHandler(async (event) => {
       id: encounter.id,
       name: encounter.name,
       battleType: encounter.battleType,
+      weather: encounter.weather ?? null,
       combatants: [],
       currentRound: encounter.currentRound,
       currentTurnIndex: encounter.currentTurnIndex,
