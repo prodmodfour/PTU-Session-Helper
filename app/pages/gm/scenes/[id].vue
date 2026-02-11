@@ -61,7 +61,19 @@
 
       <!-- Main Content -->
       <div class="scene-editor__content">
-        <!-- Left Panel: Canvas Preview -->
+        <!-- Left Panel: Groups -->
+        <SceneGroupsPanel
+          :scene="scene"
+          :selected-group-id="selectedGroupId"
+          :collapsed="groupsPanelCollapsed"
+          @create-group="createGroup"
+          @delete-group="deleteGroup"
+          @select-group="selectGroup"
+          @rename-group="handleRenameGroup"
+          @toggle-collapse="groupsPanelCollapsed = !groupsPanelCollapsed"
+        />
+
+        <!-- Center: Canvas -->
         <SceneCanvas
           :scene="scene"
           :selected-group-id="selectedGroupId"
@@ -73,23 +85,34 @@
           @remove-character="removeCharacter"
         />
 
-        <!-- Right Panel: Properties -->
+        <!-- Right Panel: Scene Properties -->
         <ScenePropertiesPanel
           :scene="scene"
-          :selected-group-id="selectedGroupId"
-          :habitats="availableHabitats"
+          :collapsed="propsPanelCollapsed"
           @update:scene="handleSceneFieldUpdate"
-          @create-group="createGroup"
-          @delete-group="deleteGroup"
-          @select-group="selectGroup"
-          @rename-group="handleRenameGroup"
-        >
-          <SceneAddPanel
-            :available-characters="availableCharacters"
-            @add-character="addCharacter"
-            @add-pokemon="addWildPokemon"
-          />
-        </ScenePropertiesPanel>
+          @toggle-collapse="propsPanelCollapsed = !propsPanelCollapsed"
+        />
+
+        <!-- Right Panel: Add to Scene -->
+        <SceneAddPanel
+          :available-characters="availableCharacters"
+          :characters-with-pokemon="charactersWithPokemon"
+          :collapsed="addPanelCollapsed"
+          @add-character="addCharacter"
+          @add-pokemon="addWildPokemon"
+          @toggle-collapse="addPanelCollapsed = !addPanelCollapsed"
+        />
+
+        <!-- Right Panel: Habitat -->
+        <SceneHabitatPanel
+          :encounter-tables="encounterTables"
+          :scene-habitat-id="scene.habitatId"
+          :collapsed="habitatPanelCollapsed"
+          @select-habitat="handleSelectHabitat"
+          @add-pokemon="addWildPokemon"
+          @generate-encounter="handleGenerateEncounter"
+          @toggle-collapse="habitatPanelCollapsed = !habitatPanelCollapsed"
+        />
       </div>
 
       <!-- Start Encounter Modal -->
@@ -134,6 +157,12 @@ const selectedGroupId = ref<string | null>(null)
 const showStartEncounterModal = ref(false)
 const startingEncounter = ref(false)
 
+// Panel collapse states
+const groupsPanelCollapsed = ref(false)
+const propsPanelCollapsed = ref(false)
+const addPanelCollapsed = ref(true)
+const habitatPanelCollapsed = ref(true)
+
 // Available characters (not already in scene)
 const allCharacters = ref<Array<{
   id: string
@@ -142,12 +171,41 @@ const allCharacters = ref<Array<{
   characterType: string
 }>>([])
 
-const availableHabitats = ref<Array<{ id: string; name: string }>>([])
+// All library Pokemon (for Add to Scene panel)
+const allPokemon = ref<Array<{
+  id: string
+  species: string
+  nickname: string | null
+  level: number
+  ownerId: string | null
+  shiny: boolean
+}>>([])
+
+// Full encounter tables with entries (for Habitat panel)
+const encounterTables = ref<Array<any>>([])
 
 const availableCharacters = computed(() => {
   if (!scene.value) return []
   const sceneCharIds = scene.value.characters.map(c => c.characterId)
   return allCharacters.value.filter(c => !sceneCharIds.includes(c.id))
+})
+
+// Pokemon grouped by owner character (for ScenePokemonList)
+const charactersWithPokemon = computed(() => {
+  return allCharacters.value
+    .map(char => ({
+      ...char,
+      pokemon: allPokemon.value
+        .filter(p => p.ownerId === char.id)
+        .map(p => ({
+          id: p.id,
+          species: p.species,
+          nickname: p.nickname,
+          level: p.level,
+          shiny: p.shiny
+        }))
+    }))
+    .filter(char => char.pokemon.length > 0)
 })
 
 // Fetch scene on mount
@@ -178,17 +236,30 @@ onMounted(async () => {
     loading.value = false
   }
 
-  // Fetch habitats separately — failure here shouldn't block the editor
+  // Fetch encounter tables and Pokemon separately — non-critical
   try {
     const tablesResponse = await $fetch<{ success: boolean; data: any[] }>('/api/encounter-tables')
     if (tablesResponse.success) {
-      availableHabitats.value = tablesResponse.data.map(t => ({
-        id: t.id,
-        name: t.name
+      encounterTables.value = tablesResponse.data
+    }
+  } catch {
+    // Encounter tables are non-critical
+  }
+
+  try {
+    const pokemonResponse = await $fetch<{ success: boolean; data: any[] }>('/api/pokemon')
+    if (pokemonResponse.success) {
+      allPokemon.value = pokemonResponse.data.map(p => ({
+        id: p.id,
+        species: p.species,
+        nickname: p.nickname,
+        level: p.level,
+        ownerId: p.ownerId,
+        shiny: p.shiny ?? false
       }))
     }
   } catch {
-    // Habitat list is non-critical; selector will just show "None"
+    // Pokemon list is non-critical
   }
 
   useHead({
@@ -267,6 +338,29 @@ const handleSceneFieldUpdate = (field: string, value: any) => {
   if (!scene.value) return
   scene.value = { ...scene.value, [field]: value }
   saveScene()
+}
+
+// Handle habitat selection from habitat panel
+const handleSelectHabitat = (habitatId: string | null) => {
+  handleSceneFieldUpdate('habitatId', habitatId)
+}
+
+// Handle encounter generation from habitat panel
+const handleGenerateEncounter = async (tableId: string) => {
+  if (!scene.value) return
+  try {
+    const response = await $fetch<{ success: boolean; data: { generated: Array<{ speciesName: string; level: number }> } }>(
+      `/api/encounter-tables/${tableId}/generate`,
+      { method: 'POST', body: {} }
+    )
+    if (response.success) {
+      for (const pokemon of response.data.generated) {
+        await addWildPokemon(pokemon.speciesName, pokemon.level)
+      }
+    }
+  } catch (error) {
+    alert('Failed to generate encounter')
+  }
 }
 
 // Handle group rename from properties panel
