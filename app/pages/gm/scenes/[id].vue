@@ -155,6 +155,7 @@ const availableCharacters = computed(() => {
 
 // Fetch scene on mount
 onMounted(async () => {
+  groupViewTabsStore.setupCrossTabSync()
   const id = route.params.id as string
 
   try {
@@ -197,6 +198,16 @@ onMounted(async () => {
     title: scene.value ? `${scene.value.name} - Scene Editor` : 'Scene Editor'
   })
 })
+
+// Sync local scene ref when cross-tab activation changes
+watch(
+  () => groupViewTabsStore.scenes.find(s => s.id === scene.value?.id)?.isActive,
+  (newIsActive) => {
+    if (scene.value && newIsActive !== undefined && newIsActive !== scene.value.isActive) {
+      scene.value = { ...scene.value, isActive: newIsActive }
+    }
+  }
+)
 
 // Save scene name
 const saveSceneName = async () => {

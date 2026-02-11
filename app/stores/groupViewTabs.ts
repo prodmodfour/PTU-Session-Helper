@@ -70,7 +70,8 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
     activeScene: null as Scene | null,
     scenes: [] as Scene[],
     loading: false,
-    error: null as string | null
+    error: null as string | null,
+    _channel: null as BroadcastChannel | null
   }),
 
   getters: {
@@ -291,6 +292,7 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
           }
           this.activeScene = response.data
           this.activeSceneId = id
+          this._channel?.postMessage({ type: 'scene_activated', sceneId: id })
         }
         return response.data
       } catch (e: unknown) {
@@ -319,6 +321,7 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
         if (this.activeSceneId === id) {
           this.activeSceneId = null
         }
+        this._channel?.postMessage({ type: 'scene_deactivated', sceneId: id })
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : 'Failed to deactivate scene'
         this.error = message
@@ -483,6 +486,38 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
       this.activeScene = {
         ...this.activeScene,
         groups: this.activeScene.groups.filter(g => g.id !== data.groupId)
+      }
+    },
+
+    // Cross-tab sync via BroadcastChannel
+    setupCrossTabSync() {
+      if (this._channel) return // Already initialized
+      const channel = new BroadcastChannel('ptu-scene-sync')
+      this._channel = channel
+
+      channel.onmessage = (event: MessageEvent) => {
+        const { type, sceneId } = event.data
+        if (type === 'scene_activated') {
+          if (this.scenes.length > 0) {
+            this.scenes = this.scenes.map(s => ({
+              ...s,
+              isActive: s.id === sceneId
+            }))
+          }
+          this.fetchActiveScene()
+        } else if (type === 'scene_deactivated') {
+          if (this.scenes.length > 0) {
+            this.scenes = this.scenes.map(s =>
+              s.id === sceneId ? { ...s, isActive: false } : s
+            )
+          }
+          if (this.activeScene?.id === sceneId) {
+            this.activeScene = null
+          }
+          if (this.activeSceneId === sceneId) {
+            this.activeSceneId = null
+          }
+        }
       }
     },
 

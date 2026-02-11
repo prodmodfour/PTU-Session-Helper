@@ -168,6 +168,7 @@ const scenes = computed(() => groupViewTabsStore.scenes)
 
 // Fetch scenes on mount
 onMounted(async () => {
+  groupViewTabsStore.setupCrossTabSync()
   await groupViewTabsStore.fetchScenes()
   loading.value = false
 })
