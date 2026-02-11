@@ -416,6 +416,14 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
     },
 
     // Handle individual scene entity events
+    // Data shapes must match server/utils/websocket.ts broadcast payloads:
+    //   notifySceneCharacterAdded  -> { sceneId, character }
+    //   notifySceneCharacterRemoved -> { sceneId, characterId }
+    //   notifyScenePokemonAdded    -> { sceneId, pokemon }
+    //   notifyScenePokemonRemoved  -> { sceneId, pokemonId }
+    //   notifySceneGroupCreated    -> { sceneId, group }
+    //   notifySceneGroupUpdated    -> { sceneId, group }
+    //   notifySceneGroupDeleted    -> { sceneId, groupId }
     handleSceneCharacterAdded(data: { sceneId: string; character: SceneCharacter }) {
       if (!this.activeScene || this.activeScene.id !== data.sceneId) return
       this.activeScene = {
