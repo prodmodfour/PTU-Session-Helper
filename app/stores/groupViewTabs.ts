@@ -415,6 +415,65 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
       this.activeScene = updated
     },
 
+    // Handle individual scene entity events
+    handleSceneCharacterAdded(data: { sceneId: string; character: SceneCharacter }) {
+      if (!this.activeScene || this.activeScene.id !== data.sceneId) return
+      this.activeScene = {
+        ...this.activeScene,
+        characters: [...this.activeScene.characters, data.character]
+      }
+    },
+
+    handleSceneCharacterRemoved(data: { sceneId: string; characterId: string }) {
+      if (!this.activeScene || this.activeScene.id !== data.sceneId) return
+      this.activeScene = {
+        ...this.activeScene,
+        characters: this.activeScene.characters.filter(c => c.id !== data.characterId)
+      }
+    },
+
+    handleScenePokemonAdded(data: { sceneId: string; pokemon: ScenePokemon }) {
+      if (!this.activeScene || this.activeScene.id !== data.sceneId) return
+      this.activeScene = {
+        ...this.activeScene,
+        pokemon: [...this.activeScene.pokemon, data.pokemon]
+      }
+    },
+
+    handleScenePokemonRemoved(data: { sceneId: string; pokemonId: string }) {
+      if (!this.activeScene || this.activeScene.id !== data.sceneId) return
+      this.activeScene = {
+        ...this.activeScene,
+        pokemon: this.activeScene.pokemon.filter(p => p.id !== data.pokemonId)
+      }
+    },
+
+    handleSceneGroupCreated(data: { sceneId: string; group: SceneGroup }) {
+      if (!this.activeScene || this.activeScene.id !== data.sceneId) return
+      this.activeScene = {
+        ...this.activeScene,
+        groups: [...this.activeScene.groups, data.group]
+      }
+    },
+
+    handleSceneGroupUpdated(data: { sceneId: string; group: SceneGroup }) {
+      if (!this.activeScene || this.activeScene.id !== data.sceneId) return
+      this.activeScene = {
+        ...this.activeScene,
+        groups: this.activeScene.groups.map(g =>
+          g.id === data.group.id ? data.group : g
+        )
+      }
+    },
+
+    handleSceneGroupDeleted(data: { sceneId: string; groupId: string }) {
+      if (!this.activeScene || this.activeScene.id !== data.sceneId) return
+      this.activeScene = {
+        ...this.activeScene,
+        groups: this.activeScene.groups.filter(g => g.id !== data.groupId)
+      }
+    },
+
     // Clear error
     clearError() {
       this.error = null

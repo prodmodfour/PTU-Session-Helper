@@ -28,6 +28,27 @@ export function useGroupViewWebSocket(options: GroupViewWebSocketOptions) {
       case 'scene_positions_updated':
         groupViewTabsStore.handleScenePositionsUpdated(message.data.positions)
         break
+      case 'scene_character_added':
+        groupViewTabsStore.handleSceneCharacterAdded(message.data)
+        break
+      case 'scene_character_removed':
+        groupViewTabsStore.handleSceneCharacterRemoved(message.data)
+        break
+      case 'scene_pokemon_added':
+        groupViewTabsStore.handleScenePokemonAdded(message.data)
+        break
+      case 'scene_pokemon_removed':
+        groupViewTabsStore.handleScenePokemonRemoved(message.data)
+        break
+      case 'scene_group_created':
+        groupViewTabsStore.handleSceneGroupCreated(message.data)
+        break
+      case 'scene_group_updated':
+        groupViewTabsStore.handleSceneGroupUpdated(message.data)
+        break
+      case 'scene_group_deleted':
+        groupViewTabsStore.handleSceneGroupDeleted(message.data)
+        break
     }
   }
 
