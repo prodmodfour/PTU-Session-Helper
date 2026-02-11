@@ -65,7 +65,7 @@
           <!-- Stats -->
           <div class="scene-card__stats">
             <span v-if="scene.pokemon.length > 0" class="stat">
-              <PhPaw :size="14" />
+              <PhPawPrint :size="14" />
               {{ scene.pokemon.length }}
             </span>
             <span v-if="scene.characters.length > 0" class="stat">
@@ -137,7 +137,7 @@ import {
   PhFilmSlate,
   PhBroadcast,
   PhMapPin,
-  PhPaw,
+  PhPawPrint,
   PhUsers,
   PhCloud,
   PhPencil,
