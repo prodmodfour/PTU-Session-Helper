@@ -25,6 +25,11 @@
           <button class="group-delete" @click.stop="emit('delete-group', group.id)">
             <PhX :size="12" />
           </button>
+          <!-- Resize handles -->
+          <div class="resize-handle resize-handle--tl" @mousedown.stop="startResize($event, group, -1, -1)" />
+          <div class="resize-handle resize-handle--tr" @mousedown.stop="startResize($event, group, 1, -1)" />
+          <div class="resize-handle resize-handle--bl" @mousedown.stop="startResize($event, group, -1, 1)" />
+          <div class="resize-handle resize-handle--br" @mousedown.stop="startResize($event, group, 1, 1)" />
         </div>
 
         <!-- Pokemon Sprites -->
@@ -88,6 +93,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:positions': [type: 'pokemon' | 'character' | 'group', id: string, position: ScenePosition]
+  'resize-group': [id: string, position: ScenePosition, width: number, height: number]
   'select-group': [id: string]
   'delete-group': [id: string]
   'remove-pokemon': [id: string]
@@ -192,6 +198,70 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
   document.addEventListener('mousemove', onMouseMove)
   document.addEventListener('mouseup', onMouseUp)
 }
+
+// Resize group from corner handle
+const startResize = (event: MouseEvent, group: SceneGroup, signX: number, signY: number) => {
+  if (!canvasContainer.value) return
+
+  const groupEl = (event.currentTarget as HTMLElement).parentElement as HTMLElement
+  const startMouseX = event.clientX
+  const startMouseY = event.clientY
+  const startWidth = group.width
+  const startHeight = group.height
+  const startPos = { x: group.position.x, y: group.position.y }
+
+  const MIN_WIDTH = 60
+  const MIN_HEIGHT = 40
+
+  let finalWidth = startWidth
+  let finalHeight = startHeight
+  let finalPosOffsetX = 0
+  let finalPosOffsetY = 0
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!canvasContainer.value) return
+    const rect = canvasContainer.value.getBoundingClientRect()
+
+    const deltaX = e.clientX - startMouseX
+    const deltaY = e.clientY - startMouseY
+
+    // Dimensions use sign multipliers, position tracks half raw delta
+    finalWidth = Math.max(MIN_WIDTH, startWidth + signX * deltaX)
+    finalHeight = Math.max(MIN_HEIGHT, startHeight + signY * deltaY)
+
+    // Clamp deltas based on actual size change (accounts for min size clamping)
+    const actualDeltaX = (finalWidth - startWidth) / signX || 0
+    const actualDeltaY = (finalHeight - startHeight) / signY || 0
+
+    finalPosOffsetX = (actualDeltaX / 2 / rect.width) * 100
+    finalPosOffsetY = (actualDeltaY / 2 / rect.height) * 100
+
+    // Visual feedback via direct DOM manipulation
+    const posOffsetPx = (actualDeltaX / 2)
+    const posOffsetPyPx = (actualDeltaY / 2)
+    groupEl.style.width = `${finalWidth}px`
+    groupEl.style.height = `${finalHeight}px`
+    groupEl.style.transform = `translate(calc(-50% + ${posOffsetPx}px), calc(-50% + ${posOffsetPyPx}px))`
+  }
+
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+
+    // Reset inline styles so :style binding takes over
+    groupEl.style.width = ''
+    groupEl.style.height = ''
+    groupEl.style.transform = ''
+
+    emit('resize-group', group.id, {
+      x: startPos.x + finalPosOffsetX,
+      y: startPos.y + finalPosOffsetY
+    }, finalWidth, finalHeight)
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -261,6 +331,26 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .resize-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity $transition-fast;
+
+    &--tl { top: -4px; left: -4px; cursor: nwse-resize; }
+    &--tr { top: -4px; right: -4px; cursor: nesw-resize; }
+    &--bl { bottom: -4px; left: -4px; cursor: nesw-resize; }
+    &--br { bottom: -4px; right: -4px; cursor: nwse-resize; }
+  }
+
+  &:hover .resize-handle {
+    opacity: 1;
   }
 }
 

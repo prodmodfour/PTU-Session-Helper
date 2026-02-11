@@ -58,6 +58,7 @@
           :scene="scene"
           :selected-group-id="selectedGroupId"
           @update:positions="handlePositionUpdate"
+          @resize-group="handleGroupResize"
           @select-group="selectGroup"
           @delete-group="deleteGroup"
           @remove-pokemon="removePokemon"
@@ -339,6 +340,25 @@ const removePokemon = async (pokemonSceneId: string) => {
     scene.value.pokemon = scene.value.pokemon.filter(p => p.id !== pokemonSceneId)
   } catch (error) {
     alert('Failed to remove Pokemon from scene')
+  }
+}
+
+// Handle group resize from canvas
+const handleGroupResize = async (groupId: string, position: ScenePosition, width: number, height: number) => {
+  if (!scene.value) return
+  scene.value = {
+    ...scene.value,
+    groups: scene.value.groups.map(g =>
+      g.id === groupId ? { ...g, position, width, height } : g
+    )
+  }
+  try {
+    await $fetch(`/api/scenes/${scene.value.id}/groups/${groupId}`, {
+      method: 'PUT',
+      body: { position, width, height }
+    })
+  } catch (error) {
+    alert('Failed to resize group')
   }
 }
 
