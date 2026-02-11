@@ -400,6 +400,6 @@ app/
 
 - [x] Phase 1: Database Schema & Infrastructure (5 commits)
 - [x] Phase 2: Group View Tab System (4 commits)
-- [ ] Phase 3: Scene System - GM Side (partial: missing group resize, sprite-to-group assignment, modifiers UI, habitat selector)
-- [ ] Phase 4: Scene System - Group View (partial: basic view exists, needs weather effects polish)
+- [ ] Phase 3: Scene System - GM Side (code quality fixes complete — editor decomposed into SceneCanvas/ScenePropertiesPanel/SceneAddPanel, immutable drag, positions endpoint wired. Remaining: group resize, sprite-to-group assignment, modifiers UI, habitat selector)
+- [ ] Phase 4: Scene System - Group View (basic view exists, SceneView polling removed in favor of WS sync. Remaining: weather effects polish)
 - [ ] Phase 5: Integration
