@@ -120,7 +120,8 @@ import {
 import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition, SceneModifier } from '~/stores/groupViewTabs'
 
 definePageMeta({
-  layout: 'gm'
+  layout: 'gm',
+  key: route => route.fullPath
 })
 
 const route = useRoute()
@@ -196,6 +197,29 @@ onMounted(async () => {
   useHead({
     title: scene.value ? `${scene.value.name} - Scene Editor` : 'Scene Editor'
   })
+})
+
+// Re-check active status when page becomes visible (covers browser tab switches)
+const refreshActiveStatus = async () => {
+  if (!scene.value || document.visibilityState !== 'visible') return
+  try {
+    const response = await $fetch<{ success: boolean; data: Scene }>(
+      `/api/scenes/${scene.value.id}`
+    )
+    if (response.success && response.data.isActive !== scene.value.isActive) {
+      scene.value = { ...scene.value, isActive: response.data.isActive }
+    }
+  } catch {
+    // Non-critical — button state will be stale until next manual action
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', refreshActiveStatus)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', refreshActiveStatus)
 })
 
 // Save scene name
