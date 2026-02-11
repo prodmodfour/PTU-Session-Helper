@@ -360,6 +360,61 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
       )
     },
 
+    // Position updates (lightweight alternative to full scene PUT)
+    async updatePositions(sceneId: string, positions: {
+      pokemon?: Array<{ id: string; position: ScenePosition }>
+      characters?: Array<{ id: string; position: ScenePosition }>
+      groups?: Array<{ id: string; position: ScenePosition }>
+    }) {
+      await $fetch(`/api/scenes/${sceneId}/positions`, {
+        method: 'PUT',
+        body: positions
+      })
+    },
+
+    // Handle WebSocket position updates (selective merge)
+    handleScenePositionsUpdated(data: {
+      pokemon?: Array<{ id: string; position: ScenePosition }>
+      characters?: Array<{ id: string; position: ScenePosition }>
+      groups?: Array<{ id: string; position: ScenePosition }>
+    }) {
+      if (!this.activeScene) return
+
+      let updated = { ...this.activeScene }
+
+      if (data.pokemon) {
+        updated = {
+          ...updated,
+          pokemon: updated.pokemon.map(p => {
+            const match = data.pokemon!.find(u => u.id === p.id)
+            return match ? { ...p, position: match.position } : p
+          })
+        }
+      }
+
+      if (data.characters) {
+        updated = {
+          ...updated,
+          characters: updated.characters.map(c => {
+            const match = data.characters!.find(u => u.id === c.id)
+            return match ? { ...c, position: match.position } : c
+          })
+        }
+      }
+
+      if (data.groups) {
+        updated = {
+          ...updated,
+          groups: updated.groups.map(g => {
+            const match = data.groups!.find(u => u.id === g.id)
+            return match ? { ...g, position: match.position } : g
+          })
+        }
+      }
+
+      this.activeScene = updated
+    },
+
     // Clear error
     clearError() {
       this.error = null
