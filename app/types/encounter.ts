@@ -96,6 +96,7 @@ export interface Encounter {
   id: string;
   name: string;
   battleType: BattleType;
+  weather?: string | null;
 
   // Combatants
   combatants: Combatant[];
