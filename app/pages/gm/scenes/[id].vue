@@ -607,22 +607,28 @@ const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item:
 
     // Commit position immutably
     if (scene.value) {
+      const pos = { x: finalPos.x, y: finalPos.y }
       if (type === 'pokemon') {
         scene.value = {
           ...scene.value,
           pokemon: scene.value.pokemon.map(p =>
-            p.id === item.id ? { ...p, position: { x: finalPos.x, y: finalPos.y } } : p
+            p.id === item.id ? { ...p, position: pos } : p
           )
         }
+        await groupViewTabsStore.updatePositions(scene.value.id, {
+          pokemon: [{ id: item.id, position: pos }]
+        })
       } else {
         scene.value = {
           ...scene.value,
           characters: scene.value.characters.map(c =>
-            c.id === item.id ? { ...c, position: { x: finalPos.x, y: finalPos.y } } : c
+            c.id === item.id ? { ...c, position: pos } : c
           )
         }
+        await groupViewTabsStore.updatePositions(scene.value.id, {
+          characters: [{ id: item.id, position: pos }]
+        })
       }
-      await saveScene()
     }
   }
 
@@ -669,13 +675,16 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
 
     // Commit position immutably
     if (scene.value) {
+      const pos = { x: finalPos.x, y: finalPos.y }
       scene.value = {
         ...scene.value,
         groups: scene.value.groups.map(g =>
-          g.id === group.id ? { ...g, position: { x: finalPos.x, y: finalPos.y } } : g
+          g.id === group.id ? { ...g, position: pos } : g
         )
       }
-      await saveScene()
+      await groupViewTabsStore.updatePositions(scene.value.id, {
+        groups: [{ id: group.id, position: pos }]
+      })
     }
   }
 
