@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     const newGroup = {
       id: randomUUID(),
       name: body.name ?? 'New Group',
-      position: body.position ?? { x: 100, y: 100 },
+      position: body.position ?? { x: 50, y: 50 },
       width: body.width ?? 150,
       height: body.height ?? 100
     }
