@@ -574,28 +574,26 @@ const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item:
   isDragging.value = true
   dragTarget.value = { type, id: item.id }
 
+  const el = event.currentTarget as HTMLElement
+  const startPos = { x: item.position.x, y: item.position.y }
+  let finalPos = { ...startPos }
+
   const onMouseMove = (e: MouseEvent) => {
-    if (!isDragging.value || !dragTarget.value || !canvasContainer.value || !scene.value) return
+    if (!isDragging.value || !canvasContainer.value) return
 
     const rect = canvasContainer.value.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
 
-    // Clamp to 0-100
     const clampedX = Math.max(0, Math.min(100, x))
     const clampedY = Math.max(0, Math.min(100, y))
 
-    if (dragTarget.value.type === 'pokemon') {
-      const pokemon = scene.value.pokemon.find(p => p.id === dragTarget.value!.id)
-      if (pokemon) {
-        pokemon.position = { x: clampedX, y: clampedY }
-      }
-    } else {
-      const character = scene.value.characters.find(c => c.id === dragTarget.value!.id)
-      if (character) {
-        character.position = { x: clampedX, y: clampedY }
-      }
-    }
+    finalPos = { x: clampedX, y: clampedY }
+
+    // Visual feedback via direct DOM manipulation (bypasses reactivity)
+    const deltaXPx = ((clampedX - startPos.x) / 100) * rect.width
+    const deltaYPx = ((clampedY - startPos.y) / 100) * rect.height
+    el.style.transform = `translate(calc(-50% + ${deltaXPx}px), calc(-50% + ${deltaYPx}px))`
   }
 
   const onMouseUp = async () => {
@@ -603,7 +601,29 @@ const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item:
     document.removeEventListener('mouseup', onMouseUp)
     isDragging.value = false
     dragTarget.value = null
-    await saveScene()
+
+    // Reset inline transform so :style binding takes over
+    el.style.transform = ''
+
+    // Commit position immutably
+    if (scene.value) {
+      if (type === 'pokemon') {
+        scene.value = {
+          ...scene.value,
+          pokemon: scene.value.pokemon.map(p =>
+            p.id === item.id ? { ...p, position: { x: finalPos.x, y: finalPos.y } } : p
+          )
+        }
+      } else {
+        scene.value = {
+          ...scene.value,
+          characters: scene.value.characters.map(c =>
+            c.id === item.id ? { ...c, position: { x: finalPos.x, y: finalPos.y } } : c
+          )
+        }
+      }
+      await saveScene()
+    }
   }
 
   document.addEventListener('mousemove', onMouseMove)
@@ -616,8 +636,12 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
   isDragging.value = true
   dragTarget.value = { type: 'group', id: group.id }
 
+  const el = event.currentTarget as HTMLElement
+  const startPos = { x: group.position.x, y: group.position.y }
+  let finalPos = { ...startPos }
+
   const onMouseMove = (e: MouseEvent) => {
-    if (!isDragging.value || !dragTarget.value || !canvasContainer.value || !scene.value) return
+    if (!isDragging.value || !canvasContainer.value) return
 
     const rect = canvasContainer.value.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
@@ -626,10 +650,12 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
     const clampedX = Math.max(0, Math.min(100, x))
     const clampedY = Math.max(0, Math.min(100, y))
 
-    const groupItem = scene.value.groups.find(g => g.id === dragTarget.value!.id)
-    if (groupItem) {
-      groupItem.position = { x: clampedX, y: clampedY }
-    }
+    finalPos = { x: clampedX, y: clampedY }
+
+    // Visual feedback via direct DOM manipulation (bypasses reactivity)
+    const deltaXPx = ((clampedX - startPos.x) / 100) * rect.width
+    const deltaYPx = ((clampedY - startPos.y) / 100) * rect.height
+    el.style.transform = `translate(calc(-50% + ${deltaXPx}px), calc(-50% + ${deltaYPx}px))`
   }
 
   const onMouseUp = async () => {
@@ -637,7 +663,20 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
     document.removeEventListener('mouseup', onMouseUp)
     isDragging.value = false
     dragTarget.value = null
-    await saveScene()
+
+    // Reset inline transform so :style binding takes over
+    el.style.transform = ''
+
+    // Commit position immutably
+    if (scene.value) {
+      scene.value = {
+        ...scene.value,
+        groups: scene.value.groups.map(g =>
+          g.id === group.id ? { ...g, position: { x: finalPos.x, y: finalPos.y } } : g
+        )
+      }
+      await saveScene()
+    }
   }
 
   document.addEventListener('mousemove', onMouseMove)
