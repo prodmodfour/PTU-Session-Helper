@@ -138,8 +138,7 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
     async fetchScenes() {
       try {
         const response = await $fetch<{ success: boolean; data: Scene[] }>(
-          '/api/scenes',
-          { cache: 'no-store' }
+          `/api/scenes?_t=${Date.now()}`
         )
         if (response.success) {
           this.scenes = response.data
@@ -155,8 +154,7 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
     async fetchActiveScene() {
       try {
         const response = await $fetch<{ success: boolean; data: Scene | null }>(
-          '/api/scenes/active',
-          { cache: 'no-store' }
+          `/api/scenes/active?_t=${Date.now()}`
         )
         if (response.success) {
           this.activeScene = response.data
@@ -172,8 +170,7 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
     async fetchScene(id: string) {
       try {
         const response = await $fetch<{ success: boolean; data: Scene }>(
-          `/api/scenes/${id}`,
-          { cache: 'no-store' }
+          `/api/scenes/${id}?_t=${Date.now()}`
         )
         if (response.success) {
           return response.data
