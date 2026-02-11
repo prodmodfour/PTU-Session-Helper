@@ -69,6 +69,7 @@
         <ScenePropertiesPanel
           :scene="scene"
           :selected-group-id="selectedGroupId"
+          :habitats="availableHabitats"
           @update:scene="handleSceneFieldUpdate"
           @toggle-terrain="toggleTerrain"
           @add-modifier="addModifier"
@@ -121,6 +122,8 @@ const allCharacters = ref<Array<{
   characterType: string
 }>>([])
 
+const availableHabitats = ref<Array<{ id: string; name: string }>>([])
+
 const availableCharacters = computed(() => {
   if (!scene.value) return []
   const sceneCharIds = scene.value.characters.map(c => c.characterId)
@@ -146,6 +149,15 @@ onMounted(async () => {
         name: c.name,
         avatarUrl: c.avatarUrl,
         characterType: c.characterType
+      }))
+    }
+
+    // Fetch encounter tables (habitats) for the habitat selector
+    const tablesResponse = await $fetch<{ success: boolean; data: any[] }>('/api/encounter-tables')
+    if (tablesResponse.success) {
+      availableHabitats.value = tablesResponse.data.map(t => ({
+        id: t.id,
+        name: t.name
       }))
     }
   } catch (error) {

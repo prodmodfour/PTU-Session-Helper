@@ -66,6 +66,19 @@
           </label>
         </div>
       </div>
+
+      <div class="form-group">
+        <label>Habitat</label>
+        <select
+          :value="scene.habitatId"
+          @change="emit('update:scene', 'habitatId', ($event.target as HTMLSelectElement).value || null)"
+        >
+          <option :value="null">None</option>
+          <option v-for="habitat in habitats" :key="habitat.id" :value="habitat.id">
+            {{ habitat.name }}
+          </option>
+        </select>
+      </div>
     </section>
 
     <!-- Modifiers Section -->
@@ -165,6 +178,7 @@ import type { Scene, SceneModifier } from '~/stores/groupViewTabs'
 const props = defineProps<{
   scene: Scene
   selectedGroupId: string | null
+  habitats: Array<{ id: string; name: string }>
 }>()
 
 const emit = defineEmits<{
