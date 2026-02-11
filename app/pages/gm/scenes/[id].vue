@@ -120,8 +120,7 @@ import {
 import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition, SceneModifier } from '~/stores/groupViewTabs'
 
 definePageMeta({
-  layout: 'gm',
-  key: route => route.fullPath
+  layout: 'gm'
 })
 
 const route = useRoute()
@@ -199,29 +198,6 @@ onMounted(async () => {
   })
 })
 
-// Re-check active status when page becomes visible (covers browser tab switches)
-const refreshActiveStatus = async () => {
-  if (!scene.value || document.visibilityState !== 'visible') return
-  try {
-    const response = await $fetch<{ success: boolean; data: Scene }>(
-      `/api/scenes/${scene.value.id}`
-    )
-    if (response.success && response.data.isActive !== scene.value.isActive) {
-      scene.value = { ...scene.value, isActive: response.data.isActive }
-    }
-  } catch {
-    // Non-critical — button state will be stale until next manual action
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('visibilitychange', refreshActiveStatus)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('visibilitychange', refreshActiveStatus)
-})
-
 // Save scene name
 const saveSceneName = async () => {
   if (!scene.value || sceneName.value === scene.value.name) return
@@ -256,7 +232,7 @@ const activateScene = async () => {
   try {
     await groupViewTabsStore.activateScene(scene.value.id)
     await groupViewTabsStore.setActiveTab('scene', scene.value.id)
-    scene.value.isActive = true
+    scene.value = { ...scene.value, isActive: true }
   } catch (error) {
     alert('Failed to activate scene')
   } finally {
@@ -269,7 +245,7 @@ const deactivateScene = async () => {
   if (!scene.value) return
   try {
     await groupViewTabsStore.deactivateScene(scene.value.id)
-    scene.value.isActive = false
+    scene.value = { ...scene.value, isActive: false }
   } catch (error) {
     alert('Failed to deactivate scene')
   }
