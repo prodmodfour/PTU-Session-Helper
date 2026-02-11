@@ -200,6 +200,18 @@ function getGroupMemberCount(groupId: string): number {
   &--fog {
     background: linear-gradient(135deg, #cfd8dc 0%, #90a4ae 100%);
   }
+
+  &--harsh_sunlight {
+    background: linear-gradient(135deg, #ff8f00 0%, #ff6f00 50%, #e65100 100%);
+  }
+
+  &--heavy_rain {
+    background: linear-gradient(135deg, #1a237e 0%, #0d1b2a 100%);
+  }
+
+  &--strong_winds {
+    background: linear-gradient(135deg, #78909c 0%, #546e7a 50%, #37474f 100%);
+  }
 }
 
 .waiting-card {
@@ -243,6 +255,15 @@ function getGroupMemberCount(groupId: string): number {
   pointer-events: none;
   z-index: 1;
 
+  &--sunny {
+    background: radial-gradient(ellipse at 20% 0%, rgba(255, 235, 59, 0.3) 0%, transparent 60%);
+
+    .weather-particles {
+      background: radial-gradient(ellipse at 20% 0%, rgba(255, 235, 59, 0.15) 0%, transparent 50%);
+      animation: sun-pulse 4s ease-in-out infinite;
+    }
+  }
+
   &--rain {
     background: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.3) 100%);
 
@@ -252,11 +273,21 @@ function getGroupMemberCount(groupId: string): number {
     }
   }
 
-  &--snow, &--hail {
+  &--snow {
+    box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.2);
+
     .weather-particles {
       background-image: radial-gradient(circle, white 2px, transparent 2px);
       background-size: 20px 20px;
       animation: snow 3s linear infinite;
+    }
+  }
+
+  &--hail {
+    .weather-particles {
+      background-image: radial-gradient(circle, rgba(200, 230, 255, 0.9) 3px, transparent 3px);
+      background-size: 30px 30px;
+      animation: hail 0.8s linear infinite;
     }
   }
 
@@ -271,6 +302,32 @@ function getGroupMemberCount(groupId: string): number {
   &--fog {
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(4px);
+  }
+
+  &--harsh_sunlight {
+    background: rgba(255, 111, 0, 0.2);
+
+    .weather-particles {
+      background: radial-gradient(ellipse at 20% 0%, rgba(255, 200, 0, 0.3) 0%, transparent 50%);
+      animation: sun-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  &--heavy_rain {
+    background: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.5) 100%);
+
+    .weather-particles {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 80'%3E%3Cline x1='7' y1='0' x2='7' y2='40' stroke='%2364b5f6' stroke-width='3'/%3E%3C/svg%3E");
+      animation: rain 0.2s linear infinite;
+    }
+  }
+
+  &--strong_winds {
+    .weather-particles {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20'%3E%3Cline x1='0' y1='10' x2='80' y2='10' stroke='rgba(255,255,255,0.3)' stroke-width='2'/%3E%3C/svg%3E");
+      background-size: 200px 20px;
+      animation: wind 0.8s linear infinite;
+    }
   }
 }
 
@@ -287,6 +344,21 @@ function getGroupMemberCount(groupId: string): number {
 @keyframes snow {
   from { background-position: 0 0; }
   to { background-position: 20px 100vh; }
+}
+
+@keyframes hail {
+  from { background-position: 0 0; }
+  to { background-position: 15px 100vh; }
+}
+
+@keyframes sun-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes wind {
+  from { background-position: 0 0; }
+  to { background-position: 200px 0; }
 }
 
 @keyframes sandstorm {
