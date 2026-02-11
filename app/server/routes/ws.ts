@@ -24,6 +24,7 @@ async function sendEncounterState(peer: Parameters<typeof safeSend>[0], encounte
         id: encounter.id,
         name: encounter.name,
         battleType: encounter.battleType,
+        weather: encounter.weather ?? null,
         combatants: JSON.parse(encounter.combatants),
         currentRound: encounter.currentRound,
         currentTurnIndex: encounter.currentTurnIndex,
