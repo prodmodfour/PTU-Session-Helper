@@ -18,6 +18,7 @@ export function useWebSocket() {
   const reconnectAttempts = ref(0)
   const lastError = ref<string | null>(null)
   const movementPreview = ref<MovementPreview | null>(null)
+  const messageListeners = new Set<(message: WebSocketEvent) => void>()
 
   const connect = () => {
     if (ws?.readyState === WebSocket.OPEN) {
@@ -40,6 +41,7 @@ export function useWebSocket() {
         try {
           const message: WebSocketEvent = JSON.parse(event.data)
           handleMessage(message)
+          messageListeners.forEach(l => l(message))
         } catch (e) {
           lastError.value = 'Failed to parse WebSocket message'
         }
@@ -161,6 +163,11 @@ export function useWebSocket() {
     send({ type: 'sync_request', data: null })
   }
 
+  const onMessage = (listener: (message: WebSocketEvent) => void) => {
+    messageListeners.add(listener)
+    return () => { messageListeners.delete(listener) }
+  }
+
   const disconnect = () => {
     if (ws) {
       ws.close()
@@ -185,6 +192,7 @@ export function useWebSocket() {
     connect,
     disconnect,
     send,
+    onMessage,
     identify,
     joinEncounter,
     leaveEncounter,

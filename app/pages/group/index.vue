@@ -22,7 +22,10 @@ useHead({
 })
 
 const groupViewTabsStore = useGroupViewTabsStore()
-const { isConnected } = useWebSocket()
+const { isConnected, send, onMessage } = useWebSocket()
+
+// WebSocket event handling for group view
+useGroupViewWebSocket({ send, isConnected, onMessage })
 
 // Active tab from store
 const activeTab = computed(() => groupViewTabsStore.activeTab)
@@ -39,80 +42,18 @@ const activeTabComponent = computed(() => {
   return tabComponents[activeTab.value] || LobbyView
 })
 
-// Poll for tab state and handle WebSocket events
+// Poll for tab state as fallback
 let pollInterval: ReturnType<typeof setInterval> | null = null
 
-const checkTabState = async () => {
-  await groupViewTabsStore.fetchTabState()
-}
-
-// Setup WebSocket listener for tab changes
-const setupWebSocketListener = () => {
-  if (typeof window === 'undefined') return
-
-  const ws = (window as any).__ptuWebSocket as WebSocket | undefined
-  if (!ws) return
-
-  const handleMessage = (event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data)
-
-      switch (data.type) {
-        case 'tab_change':
-          groupViewTabsStore.handleTabChange(data.data)
-          break
-        case 'tab_state':
-          groupViewTabsStore.handleTabChange(data.data)
-          break
-        case 'scene_activated':
-          groupViewTabsStore.handleSceneActivated(data.data)
-          break
-        case 'scene_deactivated':
-          groupViewTabsStore.handleSceneDeactivated(data.data)
-          break
-        case 'scene_update':
-          groupViewTabsStore.handleSceneUpdate(data.data)
-          break
-      }
-    } catch {
-      // Failed to parse WebSocket message
-    }
-  }
-
-  ws.addEventListener('message', handleMessage)
-
-  // Cleanup on unmount
-  onUnmounted(() => {
-    ws.removeEventListener('message', handleMessage)
-  })
-}
-
 onMounted(async () => {
-  // Fetch initial tab state
-  await checkTabState()
-
-  // Poll as fallback (slower interval since we have WebSocket)
-  pollInterval = setInterval(checkTabState, 5000)
-
-  // Setup WebSocket listener
-  setupWebSocketListener()
+  await groupViewTabsStore.fetchTabState()
+  pollInterval = setInterval(() => groupViewTabsStore.fetchTabState(), 5000)
 })
 
 onUnmounted(() => {
   if (pollInterval) {
     clearInterval(pollInterval)
     pollInterval = null
-  }
-})
-
-// Watch for WebSocket connection to request tab state
-watch(isConnected, (connected) => {
-  if (connected) {
-    // Request current tab state via WebSocket
-    const ws = (window as any).__ptuWebSocket as WebSocket | undefined
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'tab_sync_request' }))
-    }
   }
 })
 </script>
