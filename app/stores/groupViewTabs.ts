@@ -362,8 +362,8 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
 
     // Position updates (lightweight alternative to full scene PUT)
     async updatePositions(sceneId: string, positions: {
-      pokemon?: Array<{ id: string; position: ScenePosition }>
-      characters?: Array<{ id: string; position: ScenePosition }>
+      pokemon?: Array<{ id: string; position: ScenePosition; groupId?: string | null }>
+      characters?: Array<{ id: string; position: ScenePosition; groupId?: string | null }>
       groups?: Array<{ id: string; position: ScenePosition }>
     }) {
       await $fetch(`/api/scenes/${sceneId}/positions`, {

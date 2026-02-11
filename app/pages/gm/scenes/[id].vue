@@ -151,8 +151,14 @@ onMounted(async () => {
         characterType: c.characterType
       }))
     }
+  } catch (error) {
+    alert('Failed to load scene data')
+  } finally {
+    loading.value = false
+  }
 
-    // Fetch encounter tables (habitats) for the habitat selector
+  // Fetch habitats separately — failure here shouldn't block the editor
+  try {
     const tablesResponse = await $fetch<{ success: boolean; data: any[] }>('/api/encounter-tables')
     if (tablesResponse.success) {
       availableHabitats.value = tablesResponse.data.map(t => ({
@@ -160,10 +166,8 @@ onMounted(async () => {
         name: t.name
       }))
     }
-  } catch (error) {
-    alert('Failed to load scene data')
-  } finally {
-    loading.value = false
+  } catch {
+    // Habitat list is non-critical; selector will just show "None"
   }
 
   useHead({
