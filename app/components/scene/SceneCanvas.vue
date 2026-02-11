@@ -140,6 +140,7 @@ const getPokemonSprite = (species: string): string => {
 
 // Drag and drop for sprites
 const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item: ScenePokemon | SceneCharacter) => {
+  event.preventDefault()
   if (!canvasContainer.value) return
   isDragging.value = true
   dragTarget.value = { type, id: item.id }
@@ -191,6 +192,7 @@ const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item:
 
 // Drag and drop for groups (moves member sprites along with the group)
 const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
+  event.preventDefault()
   if (!canvasContainer.value) return
   isDragging.value = true
   dragTarget.value = { type: 'group', id: group.id }
@@ -248,6 +250,7 @@ const startDragGroup = (event: MouseEvent, group: SceneGroup) => {
 
 // Resize group from corner handle
 const startResize = (event: MouseEvent, group: SceneGroup, signX: number, signY: number) => {
+  event.preventDefault()
   if (!canvasContainer.value) return
 
   const groupEl = (event.currentTarget as HTMLElement).parentElement as HTMLElement
