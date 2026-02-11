@@ -11,7 +11,10 @@
           v-for="group in scene.groups"
           :key="group.id"
           class="canvas-group"
-          :class="{ 'canvas-group--selected': selectedGroupId === group.id }"
+          :class="{
+            'canvas-group--selected': selectedGroupId === group.id,
+            'canvas-group--drop-target': hoveredGroupId === group.id
+          }"
           :style="{
             left: `${group.position.x}%`,
             top: `${group.position.y}%`,
@@ -92,7 +95,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:positions': [type: 'pokemon' | 'character' | 'group', id: string, position: ScenePosition]
+  'update:positions': [type: 'pokemon' | 'character' | 'group', id: string, position: ScenePosition, groupId?: string | null]
   'resize-group': [id: string, position: ScenePosition, width: number, height: number]
   'select-group': [id: string]
   'delete-group': [id: string]
@@ -104,6 +107,28 @@ const emit = defineEmits<{
 const canvasContainer = ref<HTMLElement | null>(null)
 const isDragging = ref(false)
 const dragTarget = ref<{ type: 'pokemon' | 'character' | 'group'; id: string } | null>(null)
+const hoveredGroupId = ref<string | null>(null)
+
+// Hit-test: find group at a given position (in %)
+const findGroupAtPosition = (x: number, y: number): string | null => {
+  if (!canvasContainer.value) return null
+  const rect = canvasContainer.value.getBoundingClientRect()
+
+  for (const group of props.scene.groups) {
+    const halfWidthPct = (group.width / 2 / rect.width) * 100
+    const halfHeightPct = (group.height / 2 / rect.height) * 100
+
+    if (
+      x >= group.position.x - halfWidthPct &&
+      x <= group.position.x + halfWidthPct &&
+      y >= group.position.y - halfHeightPct &&
+      y <= group.position.y + halfHeightPct
+    ) {
+      return group.id
+    }
+  }
+  return null
+}
 
 // Get pokemon sprite URL
 const getPokemonSprite = (species: string): string => {
@@ -133,6 +158,9 @@ const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item:
 
     finalPos = { x: clampedX, y: clampedY }
 
+    // Hit-test for group drop target
+    hoveredGroupId.value = findGroupAtPosition(clampedX, clampedY)
+
     // Visual feedback via direct DOM manipulation (bypasses reactivity)
     const deltaXPx = ((clampedX - startPos.x) / 100) * rect.width
     const deltaYPx = ((clampedY - startPos.y) / 100) * rect.height
@@ -145,10 +173,14 @@ const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item:
     isDragging.value = false
     dragTarget.value = null
 
+    // Determine group assignment
+    const droppedGroupId = findGroupAtPosition(finalPos.x, finalPos.y)
+    hoveredGroupId.value = null
+
     // Reset inline transform so :style binding takes over
     el.style.transform = ''
 
-    emit('update:positions', type, item.id, { x: finalPos.x, y: finalPos.y })
+    emit('update:positions', type, item.id, { x: finalPos.x, y: finalPos.y }, droppedGroupId)
   }
 
   document.addEventListener('mousemove', onMouseMove)
@@ -299,6 +331,13 @@ const startResize = (event: MouseEvent, group: SceneGroup, signX: number, signY:
   &--selected {
     border-color: $color-primary;
     background: rgba($color-primary, 0.1);
+  }
+
+  &--drop-target {
+    border-color: $color-success;
+    border-style: solid;
+    background: rgba($color-success, 0.15);
+    box-shadow: 0 0 12px rgba($color-success, 0.3);
   }
 
   .group-label {

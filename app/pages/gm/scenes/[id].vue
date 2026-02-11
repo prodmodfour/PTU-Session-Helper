@@ -362,28 +362,28 @@ const handleGroupResize = async (groupId: string, position: ScenePosition, width
   }
 }
 
-// Handle position update from canvas
-const handlePositionUpdate = async (type: 'pokemon' | 'character' | 'group', id: string, position: ScenePosition) => {
+// Handle position update from canvas (with optional group assignment)
+const handlePositionUpdate = async (type: 'pokemon' | 'character' | 'group', id: string, position: ScenePosition, groupId?: string | null) => {
   if (!scene.value) return
   if (type === 'pokemon') {
     scene.value = {
       ...scene.value,
       pokemon: scene.value.pokemon.map(p =>
-        p.id === id ? { ...p, position } : p
+        p.id === id ? { ...p, position, groupId: groupId !== undefined ? groupId : p.groupId } : p
       )
     }
     await groupViewTabsStore.updatePositions(scene.value.id, {
-      pokemon: [{ id, position }]
+      pokemon: [{ id, position, ...(groupId !== undefined && { groupId }) }]
     })
   } else if (type === 'character') {
     scene.value = {
       ...scene.value,
       characters: scene.value.characters.map(c =>
-        c.id === id ? { ...c, position } : c
+        c.id === id ? { ...c, position, groupId: groupId !== undefined ? groupId : c.groupId } : c
       )
     }
     await groupViewTabsStore.updatePositions(scene.value.id, {
-      characters: [{ id, position }]
+      characters: [{ id, position, ...(groupId !== undefined && { groupId }) }]
     })
   } else {
     scene.value = {
