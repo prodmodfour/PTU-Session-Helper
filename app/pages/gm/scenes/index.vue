@@ -267,7 +267,7 @@ const formatWeather = (weather: string): string => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: $spacing-xxxl;
+  padding: $spacing-xxl;
   text-align: center;
   background: $color-bg-secondary;
   border-radius: $border-radius-lg;
@@ -406,10 +406,10 @@ const formatWeather = (weather: string): string => {
 }
 
 .btn--danger {
-  color: $color-error;
+  color: $color-danger;
 
   &:hover {
-    background: rgba($color-error, 0.1);
+    background: rgba($color-danger, 0.1);
   }
 }
 

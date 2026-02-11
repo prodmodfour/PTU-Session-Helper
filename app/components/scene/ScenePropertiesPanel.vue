@@ -348,8 +348,8 @@ const getGroupMemberCount = (groupId: string): number => {
     color: $color-text-muted;
 
     &:hover {
-      color: $color-error;
-      background: rgba($color-error, 0.1);
+      color: $color-danger;
+      background: rgba($color-danger, 0.1);
     }
   }
 }

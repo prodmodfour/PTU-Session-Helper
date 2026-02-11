@@ -359,7 +359,7 @@ const startResize = (event: MouseEvent, group: SceneGroup, signX: number, signY:
     height: 20px;
     padding: 0;
     border: none;
-    background: $color-error;
+    background: $color-danger;
     color: white;
     border-radius: 50%;
     cursor: pointer;
@@ -448,7 +448,7 @@ const startResize = (event: MouseEvent, group: SceneGroup, signX: number, signY:
     height: 16px;
     padding: 0;
     border: none;
-    background: $color-error;
+    background: $color-danger;
     color: white;
     border-radius: 50%;
     cursor: pointer;
