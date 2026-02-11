@@ -375,7 +375,7 @@ onMounted(async () => {
       }))
     }
   } catch (error) {
-    // Failed to fetch scene
+    alert('Failed to load scene data')
   } finally {
     loading.value = false
   }
@@ -408,7 +408,7 @@ const saveScene = async () => {
       groups: scene.value.groups
     })
   } catch (error) {
-    // Failed to save scene
+    alert('Failed to save scene')
   }
 }
 
@@ -421,7 +421,7 @@ const activateScene = async () => {
     await groupViewTabsStore.setActiveTab('scene', scene.value.id)
     scene.value.isActive = true
   } catch (error) {
-    // Failed to activate
+    alert('Failed to activate scene')
   } finally {
     activating.value = false
   }
@@ -434,7 +434,7 @@ const deactivateScene = async () => {
     await groupViewTabsStore.deactivateScene(scene.value.id)
     scene.value.isActive = false
   } catch (error) {
-    // Failed to deactivate
+    alert('Failed to deactivate scene')
   }
 }
 
@@ -462,7 +462,7 @@ const createGroup = async () => {
       scene.value.groups = [...scene.value.groups, response.data]
     }
   } catch (error) {
-    // Failed to create group
+    alert('Failed to create group')
   }
 }
 
@@ -476,7 +476,7 @@ const deleteGroup = async (groupId: string) => {
       selectedGroupId.value = null
     }
   } catch (error) {
-    // Failed to delete group
+    alert('Failed to delete group')
   }
 }
 
@@ -512,7 +512,7 @@ const addCharacter = async (char: { id: string; name: string; avatarUrl: string 
       scene.value.characters = [...scene.value.characters, response.data]
     }
   } catch (error) {
-    // Failed to add character
+    alert('Failed to add character to scene')
   }
 }
 
@@ -523,7 +523,7 @@ const removeCharacter = async (charSceneId: string) => {
     await $fetch(`/api/scenes/${scene.value.id}/characters/${charSceneId}`, { method: 'DELETE' })
     scene.value.characters = scene.value.characters.filter(c => c.id !== charSceneId)
   } catch (error) {
-    // Failed to remove character
+    alert('Failed to remove character from scene')
   }
 }
 
@@ -547,7 +547,7 @@ const addWildPokemon = async () => {
       newPokemonLevel.value = 5
     }
   } catch (error) {
-    // Failed to add pokemon
+    alert('Failed to add Pokemon to scene')
   }
 }
 
@@ -558,7 +558,7 @@ const removePokemon = async (pokemonSceneId: string) => {
     await $fetch(`/api/scenes/${scene.value.id}/pokemon/${pokemonSceneId}`, { method: 'DELETE' })
     scene.value.pokemon = scene.value.pokemon.filter(p => p.id !== pokemonSceneId)
   } catch (error) {
-    // Failed to remove pokemon
+    alert('Failed to remove Pokemon from scene')
   }
 }
 
