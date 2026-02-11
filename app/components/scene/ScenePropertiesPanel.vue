@@ -54,20 +54,6 @@
       </div>
 
       <div class="form-group">
-        <label>Terrain</label>
-        <div class="checkbox-group">
-          <label v-for="terrain in terrainOptions" :key="terrain">
-            <input
-              type="checkbox"
-              :checked="scene.terrains.includes(terrain)"
-              @change="emit('toggle-terrain', terrain)"
-            />
-            {{ terrain.charAt(0).toUpperCase() + terrain.slice(1) }}
-          </label>
-        </div>
-      </div>
-
-      <div class="form-group">
         <label>Habitat</label>
         <select
           :value="scene.habitatId"
@@ -78,62 +64,6 @@
             {{ habitat.name }}
           </option>
         </select>
-      </div>
-    </section>
-
-    <!-- Modifiers Section -->
-    <section class="properties-section">
-      <div class="section-header">
-        <h3>Modifiers</h3>
-        <button class="btn btn--sm btn--ghost" @click="showModifierForm = true" v-if="!showModifierForm">
-          <PhPlus :size="16" />
-        </button>
-      </div>
-
-      <div v-if="scene.modifiers.length === 0 && !showModifierForm" class="empty-list">
-        No modifiers. Click + to add one.
-      </div>
-
-      <div v-if="scene.modifiers.length > 0" class="modifiers-list">
-        <div v-for="(modifier, index) in scene.modifiers" :key="index" class="modifier-item">
-          <div class="modifier-info">
-            <span class="modifier-name">{{ modifier.name }}</span>
-            <span v-if="modifier.description" class="modifier-desc">{{ modifier.description }}</span>
-            <span v-if="modifier.effect" class="modifier-effect">{{ modifier.effect }}</span>
-          </div>
-          <button class="btn-icon btn-icon--danger" @click="emit('remove-modifier', index)">
-            <PhTrash :size="14" />
-          </button>
-        </div>
-      </div>
-
-      <div v-if="showModifierForm" class="modifier-form">
-        <input
-          v-model="newModifier.name"
-          type="text"
-          placeholder="Modifier name..."
-          class="modifier-form__input"
-        />
-        <textarea
-          v-model="newModifier.description"
-          placeholder="Description (optional)"
-          rows="2"
-          class="modifier-form__input"
-        ></textarea>
-        <input
-          v-model="newModifier.effect"
-          type="text"
-          placeholder="Effect (optional, e.g. +2 Atk to Fire types)"
-          class="modifier-form__input"
-        />
-        <div class="modifier-form__actions">
-          <button class="btn btn--sm btn--primary" @click="submitModifier" :disabled="!newModifier.name">
-            Add
-          </button>
-          <button class="btn btn--sm btn--ghost" @click="cancelModifierForm">
-            Cancel
-          </button>
-        </div>
       </div>
     </section>
 
@@ -172,8 +102,8 @@
 </template>
 
 <script setup lang="ts">
-import { PhPlus, PhTrash } from '@phosphor-icons/vue'
-import type { Scene, SceneModifier } from '~/stores/groupViewTabs'
+import { PhPlus } from '@phosphor-icons/vue'
+import type { Scene } from '~/stores/groupViewTabs'
 
 const props = defineProps<{
   scene: Scene
@@ -183,32 +113,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:scene': [field: string, value: any]
-  'toggle-terrain': [terrain: string]
-  'add-modifier': [modifier: SceneModifier]
-  'remove-modifier': [index: number]
   'create-group': []
   'delete-group': [id: string]
   'select-group': [id: string]
   'rename-group': [groupId: string, name: string]
 }>()
-
-const terrainOptions = ['grassy', 'electric', 'psychic', 'misty']
-
-// Modifier form state
-const showModifierForm = ref(false)
-const newModifier = ref<SceneModifier>({ name: '', description: '', effect: '' })
-
-const submitModifier = () => {
-  if (!newModifier.value.name) return
-  emit('add-modifier', { ...newModifier.value })
-  newModifier.value = { name: '', description: '', effect: '' }
-  showModifierForm.value = false
-}
-
-const cancelModifierForm = () => {
-  newModifier.value = { name: '', description: '', effect: '' }
-  showModifierForm.value = false
-}
 
 const getGroupMemberCount = (groupId: string): number => {
   const pokemonCount = props.scene.pokemon.filter(p => p.groupId === groupId).length
@@ -274,113 +183,6 @@ const getGroupMemberCount = (groupId: string): number => {
 
   textarea {
     resize: vertical;
-  }
-}
-
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-sm;
-
-  label {
-    display: flex;
-    align-items: center;
-    gap: $spacing-xs;
-    cursor: pointer;
-    font-size: $font-size-sm;
-    color: $color-text;
-  }
-}
-
-.modifiers-list {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-  margin-bottom: $spacing-sm;
-}
-
-.modifier-item {
-  display: flex;
-  align-items: flex-start;
-  gap: $spacing-sm;
-  padding: $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-
-  .modifier-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .modifier-name {
-    font-size: $font-size-sm;
-    font-weight: 600;
-    color: $color-text;
-  }
-
-  .modifier-desc {
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-  }
-
-  .modifier-effect {
-    font-size: $font-size-xs;
-    color: $color-primary;
-    font-style: italic;
-  }
-}
-
-.btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: $border-radius-sm;
-  background: transparent;
-  cursor: pointer;
-
-  &--danger {
-    color: $color-text-muted;
-
-    &:hover {
-      color: $color-danger;
-      background: rgba($color-danger, 0.1);
-    }
-  }
-}
-
-.modifier-form {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-
-  &__input {
-    width: 100%;
-    padding: $spacing-sm;
-    background: $color-bg-tertiary;
-    border: 1px solid $border-color-default;
-    border-radius: $border-radius-sm;
-    color: $color-text;
-    font-size: $font-size-sm;
-
-    &:focus {
-      outline: none;
-      border-color: $color-primary;
-    }
-  }
-
-  textarea {
-    resize: vertical;
-  }
-
-  &__actions {
-    display: flex;
-    gap: $spacing-sm;
   }
 }
 
