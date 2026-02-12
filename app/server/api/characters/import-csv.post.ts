@@ -461,7 +461,7 @@ export default defineEventHandler(async (event) => {
       const created = await prisma.pokemon.create({
         data: {
           species: pokemon.species,
-          nickname: pokemon.nickname,
+          nickname: await resolveNickname(pokemon.species, pokemon.nickname),
           level: pokemon.level,
           experience: 0,
           nature: JSON.stringify(pokemon.nature),
