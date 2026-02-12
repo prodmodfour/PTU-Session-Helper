@@ -1,6 +1,7 @@
 // Encounter and combatant types
 
 import type { GridPosition, GridConfig } from './spatial';
+import type { PokemonOrigin } from './character';
 import type {
   StatusCondition,
   ActionType,
@@ -153,6 +154,7 @@ export interface LibraryFilters {
   type: 'all' | 'human' | 'pokemon';
   characterType: 'all' | 'player' | 'npc';
   pokemonType: PokemonType | 'all';
+  pokemonOrigin: PokemonOrigin | 'all';
   sortBy: 'name' | 'level' | 'dateAdded';
   sortOrder: 'asc' | 'desc';
 }

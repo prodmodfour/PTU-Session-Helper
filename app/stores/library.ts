@@ -12,6 +12,7 @@ export const useLibraryStore = defineStore('library', {
       type: 'all',
       characterType: 'all',
       pokemonType: 'all',
+      pokemonOrigin: 'all',
       sortBy: 'name',
       sortOrder: 'asc'
     } as LibraryFilters
@@ -61,9 +62,14 @@ export const useLibraryStore = defineStore('library', {
         )
       }
 
-      // Filter by type
+      // Filter by Pokemon type
       if (state.filters.pokemonType !== 'all') {
         result = result.filter(p => p.types.includes(state.filters.pokemonType as any))
+      }
+
+      // Filter by origin
+      if (state.filters.pokemonOrigin !== 'all') {
+        result = result.filter(p => p.origin === state.filters.pokemonOrigin)
       }
 
       // Sort
@@ -254,6 +260,7 @@ export const useLibraryStore = defineStore('library', {
         type: 'all',
         characterType: 'all',
         pokemonType: 'all',
+        pokemonOrigin: 'all',
         sortBy: 'name',
         sortOrder: 'asc'
       }
