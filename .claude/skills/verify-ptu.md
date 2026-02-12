@@ -29,16 +29,16 @@ Or if checking specific files, read them directly.
 
 | Mechanic | Rulebook Section |
 |----------|------------------|
-| Damage calculation | `Pokemon Tabletop United 1.05 Core.md` - search "Damage Roll" |
-| Type effectiveness | `Pokemon Tabletop United 1.05 Core.md` - search "Type Chart" |
-| Status conditions | `Pokemon Tabletop United 1.05 Core.md` - search "Status Afflictions" |
-| Capture rate | `Pokemon Tabletop United 1.05 Core.md` - search "Capture Rate" |
-| Rest/healing | `Pokemon Tabletop United 1.05 Core.md` - search "Resting" |
-| Combat stages | `Pokemon Tabletop United 1.05 Core.md` - search "Combat Stages" |
-| Initiative/speed | `Pokemon Tabletop United 1.05 Core.md` - search "Initiative" |
-| Injuries | `Pokemon Tabletop United 1.05 Core.md` - search "Injuries" |
-| Pokemon stats | `Combined_Pokedex.md` - species-specific data |
-| Errata/corrections | `errata_2.md` - rule corrections |
+| Damage calculation | `core/07-combat.md` - search "Damage Roll" |
+| Type effectiveness | `core/10-indices-and-reference.md` - search "Type Chart" |
+| Status conditions | `core/07-combat.md` - search "Status Afflictions" |
+| Capture rate | `core/05-pokemon.md` - search "Capture Rate" |
+| Rest/healing | `core/07-combat.md` - search "Resting" |
+| Combat stages | `core/07-combat.md` - search "Combat Stages" |
+| Initiative/speed | `core/07-combat.md` - search "Initiative" |
+| Injuries | `core/07-combat.md` - search "Injuries" |
+| Pokemon stats | `pokedexes/gen*/` or `pokedexes/hisui/` - species-specific data |
+| Errata/corrections | `errata-2.md` - rule corrections |
 
 ### Step 3: Cross-Reference Implementation
 
@@ -47,7 +47,11 @@ For each changed mechanic:
 1. **Read the code** - Understand what the implementation does
 2. **Read the rulebook** - Find the corresponding PTU rule using Grep:
    ```
-   Grep pattern="<mechanic keyword>" path="/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/"
+   Grep pattern="<mechanic keyword>" path="/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/core/"
+   ```
+   For species data:
+   ```
+   Grep pattern="<pokemon name>" path="/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/pokedexes/"
    ```
 3. **Compare** - Check if the code matches the rules
 
@@ -80,10 +84,10 @@ Output a structured report:
 
 ## Rulebook Paths
 
-- Core Rules: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/Pokemon Tabletop United 1.05 Core.md`
-- Pokedex: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/Combined_Pokedex.md`
-- Errata: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/errata_2.md`
-- Charts: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/Useful Charts.md`
+- Core Rules: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/core/` (12 chapter files)
+- Pokedex: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/pokedexes/` (gen1-gen8 + hisui dirs)
+- Errata: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/errata-2.md`
+- Charts: `/home/ashraf/pokemon_ttrpg/session_helper/books/markdown/useful-charts.md`
 
 ## Key Files Containing Game Mechanics
 

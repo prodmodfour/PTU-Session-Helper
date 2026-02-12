@@ -19,7 +19,7 @@ You just edited a file containing **PTU game mechanics**.
 2. If yes, cross-reference with the rulebooks in `/books/markdown/`
 
 **Run `/verify-ptu`** to do a full verification, or manually check:
-- Core rules: `books/markdown/Pokemon Tabletop United 1.05 Core.md`
-- Errata: `books/markdown/errata_2.md`
+- Core rules: `books/markdown/core/` (12 chapter files, e.g. `07-combat.md`)
+- Errata: `books/markdown/errata-2.md`
 
 This app must accurately replicate PTU 1.05 mechanics.

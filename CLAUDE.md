@@ -33,7 +33,7 @@ app/
 ### Dual-View System
 - **GM View** (`/gm`): Full control - spawn characters, edit stats, manage NPC turns, all information visible
 - **Group View** (`/group`): TV/projector display for players - shows map, health percentages, active turn
-- **Player View** (`/player`): Individual player interface - clickable actions, Pokemon sprites
+- **Player View** (`/player`): Individual player interface - clickable actions, Pokemon sprites ( A future feature)
 
 ### Data Model Hierarchy
 - **Human Characters**: Players or NPCs with stats, linked to their Pokemon
@@ -101,6 +101,6 @@ WebSocket (`/ws`) handles GM-to-Group synchronization:
 ## PTU Rules Reference
 
 The `books/markdown/` directory contains the complete PTU 1.05 ruleset. When implementing game logic, reference:
-- `Pokemon Tabletop United 1.05 Core.md` for mechanics and rules
-- `Combined_Pokedex.md` for Pokemon stats and data
-- `errata_2.md` for rule corrections
+- `core/` for mechanics and rules (12 chapter files: `01-introduction.md` through `11-running-the-game.md`)
+- `pokedexes/` for Pokemon stats and data (per-Pokemon files in `gen1/` through `gen8/` + `hisui/`)
+- `errata-2.md` for rule corrections

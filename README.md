@@ -190,9 +190,9 @@ books/markdown/      # PTU 1.05 rulebooks (reference material)
 ## Game System
 
 This app is built for **Pokemon Tabletop United 1.05**. Reference materials in `books/markdown/` include:
-- `Pokemon Tabletop United 1.05 Core.md` - Core rulebook
-- `Combined_Pokedex.md` - Pokemon stats and data
-- `errata_2.md` - Rule corrections
+- `core/` - Core rulebook split into 12 chapter files
+- `pokedexes/` - Pokemon stats and data (per-Pokemon files in `gen1/`-`gen8/` + `hisui/`)
+- `errata-2.md` - Rule corrections
 
 When implementing game mechanics, use `/verify-ptu` to check compliance with PTU 1.05 rules.
 
