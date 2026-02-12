@@ -226,8 +226,7 @@ interface SpeciesRow {
   capabilities: string[]
 }
 
-function parsePokedexMarkdown(mdPath: string): SpeciesRow[] {
-  const content = fs.readFileSync(mdPath, 'utf-8')
+function parsePokedexContent(content: string): SpeciesRow[] {
   const species: SpeciesRow[] = []
   const seenNames = new Set<string>()
 
@@ -409,14 +408,28 @@ function parsePokedexMarkdown(mdPath: string): SpeciesRow[] {
 async function seedSpecies() {
   console.log('Seeding species data...')
 
-  const mdPath = path.resolve(__dirname, '../../books/markdown/Combined_Pokedex.md')
+  const pokedexDir = path.resolve(__dirname, '../../books/markdown/pokedexes')
 
-  if (!fs.existsSync(mdPath)) {
-    console.error(`Pokedex file not found at: ${mdPath}`)
+  if (!fs.existsSync(pokedexDir)) {
+    console.error(`Pokedex directory not found at: ${pokedexDir}`)
     return
   }
 
-  const species = parsePokedexMarkdown(mdPath)
+  // Read all split pokedex files from generation directories
+  const genDirs = fs.readdirSync(pokedexDir)
+    .filter(d => fs.statSync(path.join(pokedexDir, d)).isDirectory())
+    .sort()
+
+  let allContent = ''
+  for (const dir of genDirs) {
+    const dirPath = path.join(pokedexDir, dir)
+    const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md')).sort()
+    for (const file of files) {
+      allContent += fs.readFileSync(path.join(dirPath, file), 'utf-8') + '\n'
+    }
+  }
+
+  const species = parsePokedexContent(allContent)
   console.log(`Parsed ${species.length} unique Pokemon species`)
 
   // Clear existing species
