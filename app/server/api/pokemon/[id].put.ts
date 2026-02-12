@@ -15,7 +15,11 @@ export default defineEventHandler(async (event) => {
     const updateData: any = {}
 
     if (body.species !== undefined) updateData.species = body.species
-    if (body.nickname !== undefined) updateData.nickname = body.nickname
+    if (body.nickname !== undefined) {
+      const existing = await prisma.pokemon.findUnique({ where: { id }, select: { species: true } })
+      if (!existing) throw createError({ statusCode: 404, message: 'Pokemon not found' })
+      updateData.nickname = await resolveNickname(existing.species, body.nickname)
+    }
     if (body.level !== undefined) updateData.level = body.level
     if (body.experience !== undefined) updateData.experience = body.experience
     if (body.currentHp !== undefined) updateData.currentHp = body.currentHp
