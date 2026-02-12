@@ -37,6 +37,17 @@
       </div>
 
       <div class="filter-group">
+        <select v-model="filters.pokemonOrigin" class="form-select">
+          <option value="all">All Origins</option>
+          <option value="manual">Manual</option>
+          <option value="wild">Wild</option>
+          <option value="captured">Captured</option>
+          <option value="template">Template</option>
+          <option value="import">Imported</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
         <select v-model="filters.sortBy" class="form-select">
           <option value="name">Sort by Name</option>
           <option value="level">Sort by Level</option>
@@ -114,6 +125,7 @@ const filters = ref<LibraryFilters>({
   type: 'all',
   characterType: 'all',
   pokemonType: 'all',
+  pokemonOrigin: 'all',
   sortBy: 'name',
   sortOrder: 'asc'
 })
@@ -135,6 +147,7 @@ const resetFilters = () => {
     type: 'all',
     characterType: 'all',
     pokemonType: 'all',
+    pokemonOrigin: 'all',
     sortBy: 'name',
     sortOrder: 'asc'
   }

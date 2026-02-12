@@ -10,6 +10,13 @@
     <div class="pokemon-card__info">
       <div class="pokemon-card__header">
         <h3 class="pokemon-card__name">{{ displayName }}</h3>
+        <span
+          v-if="originLabel"
+          class="pokemon-card__origin"
+          :class="`pokemon-card__origin--${pokemon.origin}`"
+        >
+          {{ originLabel }}
+        </span>
       </div>
 
       <div class="pokemon-card__species" v-if="pokemon.nickname">
@@ -74,6 +81,14 @@ const { getSpriteUrl, getSpriteByDexNumber } = usePokemonSprite()
 const { getHealthPercentage, getHealthStatus } = useCombat()
 
 const displayName = computed(() => props.pokemon.nickname || props.pokemon.species)
+
+const originLabels: Record<string, string> = {
+  wild: 'Wild',
+  captured: 'Captured',
+  template: 'Template',
+  import: 'Imported'
+}
+const originLabel = computed(() => originLabels[props.pokemon.origin] ?? '')
 
 const spriteUrl = ref(getSpriteUrl(props.pokemon.species, props.pokemon.shiny))
 
@@ -177,6 +192,21 @@ const statusConditions = computed(() => {
     font-weight: 600;
     margin: 0;
     color: $color-text;
+  }
+
+  &__origin {
+    padding: 1px 6px;
+    border-radius: $border-radius-sm;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+
+    &--wild { background: #166534; color: #bbf7d0; }
+    &--captured { background: #1e40af; color: #bfdbfe; }
+    &--template { background: #6b21a8; color: #e9d5ff; }
+    &--import { background: #92400e; color: #fde68a; }
   }
 
   &__species {
