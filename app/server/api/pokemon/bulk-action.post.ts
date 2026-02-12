@@ -49,34 +49,32 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Safety: check for Pokemon in active encounters before deleting
-    if (body.action === 'delete') {
-      const activeEncounters = await prisma.encounter.findMany({
-        where: { isActive: true },
-        select: { combatants: true }
-      })
+    // Safety: block both archive and delete for Pokemon in active encounters
+    const activeEncounters = await prisma.encounter.findMany({
+      where: { isActive: true },
+      select: { combatants: true }
+    })
 
-      const activeEntityIds = new Set<string>()
-      for (const encounter of activeEncounters) {
-        const combatants = JSON.parse(encounter.combatants) as Array<{ entityId?: string }>
-        for (const c of combatants) {
-          if (c.entityId) activeEntityIds.add(c.entityId)
-        }
+    const activeEntityIds = new Set<string>()
+    for (const encounter of activeEncounters) {
+      const combatants = JSON.parse(encounter.combatants) as Array<{ entityId?: string }>
+      for (const c of combatants) {
+        if (c.entityId) activeEntityIds.add(c.entityId)
       }
+    }
 
-      // Find Pokemon that match the where clause
-      const candidates = await prisma.pokemon.findMany({
-        where,
-        select: { id: true }
+    // Find Pokemon that match the where clause
+    const candidates = await prisma.pokemon.findMany({
+      where,
+      select: { id: true }
+    })
+
+    const inActiveEncounter = candidates.filter(p => activeEntityIds.has(p.id))
+    if (inActiveEncounter.length > 0) {
+      throw createError({
+        statusCode: 409,
+        message: `Cannot ${body.action} ${inActiveEncounter.length} Pokemon that are in active encounters`
       })
-
-      const inActiveEncounter = candidates.filter(p => activeEntityIds.has(p.id))
-      if (inActiveEncounter.length > 0) {
-        throw createError({
-          statusCode: 409,
-          message: `Cannot delete ${inActiveEncounter.length} Pokemon that are in active encounters`
-        })
-      }
     }
 
     let count = 0
