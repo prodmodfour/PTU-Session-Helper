@@ -3,6 +3,9 @@
     <div class="library__header">
       <h2>Character Library</h2>
       <div class="library__actions">
+        <button class="btn btn--secondary btn--sm" @click="showManagePanel = !showManagePanel">
+          Manage
+        </button>
         <NuxtLink to="/gm/create" class="btn btn--primary">
           + New Character
         </NuxtLink>
@@ -57,6 +60,34 @@
       <button class="btn btn--secondary btn--sm" @click="resetFilters">
         Reset
       </button>
+    </div>
+
+    <!-- Manage Panel -->
+    <div v-if="showManagePanel" class="library__manage">
+      <div class="manage-panel">
+        <h4>Pokemon by Origin</h4>
+        <div class="manage-panel__counts">
+          <span v-for="(count, origin) in originCounts" :key="origin" class="manage-panel__count">
+            {{ origin }}: {{ count }}
+          </span>
+        </div>
+        <div class="manage-panel__actions">
+          <button
+            class="btn btn--secondary btn--sm"
+            :disabled="unownedWildCount === 0"
+            @click="archiveUnownedWild"
+          >
+            Archive Unowned Wild ({{ unownedWildCount }})
+          </button>
+          <button
+            class="btn btn--danger btn--sm"
+            :disabled="unownedWildCount === 0"
+            @click="deleteUnownedWild"
+          >
+            Delete Unowned Wild ({{ unownedWildCount }})
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Results -->
@@ -135,12 +166,57 @@ watch(filters, (newFilters) => {
   libraryStore.setFilters(newFilters)
 }, { deep: true })
 
+// Manage panel
+const showManagePanel = ref(false)
+
 // Computed
 const loading = computed(() => libraryStore.loading)
 const filteredHumans = computed(() => libraryStore.filteredHumans)
 const filteredPokemon = computed(() => libraryStore.filteredPokemon)
 
+const originCounts = computed(() => {
+  const counts: Record<string, number> = {}
+  for (const p of libraryStore.pokemon) {
+    const origin = p.origin || 'manual'
+    counts[origin] = (counts[origin] || 0) + 1
+  }
+  return counts
+})
+
+const unownedWildCount = computed(() =>
+  libraryStore.pokemon.filter(p => p.origin === 'wild' && !p.ownerId).length
+)
+
 // Actions
+const archiveUnownedWild = async () => {
+  const count = unownedWildCount.value
+  if (count === 0) return
+  if (!confirm(`Archive ${count} unowned wild Pokemon? They will be hidden from the library.`)) return
+  try {
+    await $fetch('/api/pokemon/bulk-action', {
+      method: 'POST',
+      body: { action: 'archive', filter: { origin: 'wild', hasOwner: false } }
+    })
+    await libraryStore.loadLibrary()
+  } catch (e: any) {
+    alert(`Archive failed: ${e.message || 'Unknown error'}`)
+  }
+}
+
+const deleteUnownedWild = async () => {
+  const count = unownedWildCount.value
+  if (count === 0) return
+  if (!confirm(`Permanently delete ${count} unowned wild Pokemon? This cannot be undone.`)) return
+  try {
+    await $fetch('/api/pokemon/bulk-action', {
+      method: 'POST',
+      body: { action: 'delete', filter: { origin: 'wild', hasOwner: false } }
+    })
+    await libraryStore.loadLibrary()
+  } catch (e: any) {
+    alert(`Delete failed: ${e.message || 'Unknown error'}`)
+  }
+}
 const resetFilters = () => {
   filters.value = {
     search: '',
@@ -199,6 +275,10 @@ const deletePokemon = async (pokemon: Pokemon) => {
     }
   }
 
+  &__manage {
+    margin-bottom: $spacing-lg;
+  }
+
   &__content {
     min-height: 400px;
   }
@@ -233,6 +313,41 @@ const deletePokemon = async (pokemon: Pokemon) => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: $spacing-md;
+  }
+}
+
+.manage-panel {
+  padding: $spacing-md;
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-lg;
+
+  h4 {
+    margin: 0 0 $spacing-sm 0;
+    font-weight: 600;
+    color: $color-text;
+  }
+
+  &__counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+
+    span {
+      padding: 2px 8px;
+      background: $color-bg-tertiary;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-sm;
+      color: $color-text-muted;
+      text-transform: capitalize;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-sm;
   }
 }
 </style>
