@@ -48,7 +48,7 @@
           @mousedown="startDragSprite($event, 'pokemon', pokemon)"
         >
           <img
-            :src="getPokemonSprite(pokemon.species)"
+            :src="getSpriteUrl(pokemon.species)"
             :alt="pokemon.nickname || pokemon.species"
           />
           <span class="sprite-label">{{ pokemon.nickname || pokemon.species }}</span>
@@ -132,11 +132,7 @@ const findGroupAtPosition = (x: number, y: number): string | null => {
   return null
 }
 
-// Get pokemon sprite URL
-const getPokemonSprite = (species: string): string => {
-  const formattedName = species.toLowerCase().replace(/[^a-z0-9]/g, '')
-  return `https://img.pokemondb.net/sprites/black-white/anim/normal/${formattedName}.gif`
-}
+const { getSpriteUrl } = usePokemonSprite()
 
 // Drag and drop for sprites
 const startDragSprite = (event: MouseEvent, type: 'pokemon' | 'character', item: ScenePokemon | SceneCharacter) => {
