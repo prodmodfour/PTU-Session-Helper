@@ -58,7 +58,7 @@
           }"
         >
           <img
-            :src="getPokemonSprite(pokemon.species)"
+            :src="getSpriteUrl(pokemon.species)"
             :alt="pokemon.nickname || pokemon.species"
             class="sprite-image"
           />
@@ -110,12 +110,9 @@ const weatherClass = computed(() => {
   return `scene-view--${scene.value.weather}`
 })
 
-// Helper functions
-function getPokemonSprite(species: string): string {
-  const formattedName = species.toLowerCase().replace(/[^a-z0-9]/g, '')
-  return `https://img.pokemondb.net/sprites/black-white/anim/normal/${formattedName}.gif`
-}
+const { getSpriteUrl } = usePokemonSprite()
 
+// Helper functions
 function getGroupMemberCount(groupId: string): number {
   if (!scene.value) return 0
   const pokemonCount = scene.value.pokemon.filter(p => p.groupId === groupId).length
