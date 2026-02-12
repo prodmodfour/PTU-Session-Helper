@@ -1,11 +1,13 @@
-import { prisma } from '~/server/utils/prisma'
-import type { GridConfig } from '~/types'
-import { v4 as uuidv4 } from 'uuid'
-
 /**
- * Create a new encounter from a template
- * This is used for the "Load Template" feature
+ * Create a new encounter from a template.
+ * Pokemon combatants get real DB records (origin: 'template').
+ * Human combatants remain inline-only (no entityId, no DB sync).
  */
+import { prisma } from '~/server/utils/prisma'
+import { v4 as uuidv4 } from 'uuid'
+import type { GridConfig } from '~/types'
+import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
+
 export default defineEventHandler(async (event) => {
   try {
     const templateId = getRouterParam(event, 'id')
@@ -42,131 +44,81 @@ export default defineEventHandler(async (event) => {
     // Determine if grid should be enabled
     const gridEnabled = template.gridWidth !== null && template.gridHeight !== null
 
-    // Convert template combatants to encounter combatants format
-    // Each combatant needs a unique ID and default combat state
-    const combatants = await Promise.all(templateCombatants.map(async (tc) => {
-      let baseSpeed = 5 // Default speed
-      let baseStats = { hp: 5, attack: 5, defense: 5, specialAttack: 5, specialDefense: 5, speed: 5 }
+    // Convert template combatants to encounter combatants
+    const combatants: unknown[] = []
 
-      // Look up species data for Pokemon to get proper stats
+    for (const tc of templateCombatants) {
       if (tc.type === 'pokemon' && tc.entityData?.species) {
-        const speciesData = await prisma.speciesData.findUnique({
-          where: { name: tc.entityData.species }
+        // Pokemon combatants: create real DB records via the generator service
+        // Pass stored moves/abilities as overrides to preserve template's saved data
+        const overrideMoves = tc.entityData.moves
+          ? (Array.isArray(tc.entityData.moves) ? tc.entityData.moves : JSON.parse(tc.entityData.moves))
+          : undefined
+        const overrideAbilities = tc.entityData.abilities
+          ? (Array.isArray(tc.entityData.abilities) ? tc.entityData.abilities : JSON.parse(tc.entityData.abilities))
+          : undefined
+
+        const created = await generateAndCreatePokemon({
+          speciesName: tc.entityData.species,
+          level: tc.entityData.level ?? 1,
+          nickname: tc.entityData.nickname ?? null,
+          origin: 'template',
+          originLabel: `Template: ${template.name}`,
+          overrideMoves: overrideMoves?.length > 0 ? overrideMoves : undefined,
+          overrideAbilities: overrideAbilities?.length > 0 ? overrideAbilities : undefined
         })
-        if (speciesData) {
-          baseSpeed = speciesData.baseSpeed
-          baseStats = {
-            hp: speciesData.baseHp,
-            attack: speciesData.baseAttack,
-            defense: speciesData.baseDefense,
-            specialAttack: speciesData.baseSpAtk,
-            specialDefense: speciesData.baseSpDef,
-            speed: speciesData.baseSpeed
-          }
-        }
-      }
 
-      // Calculate stats based on PTU rules
-      // Each level gives 1 stat point to distribute (level - 1 total points)
-      // For wild/template Pokemon, distribute points weighted by base stats
-      const level = tc.entityData?.level ?? 1
-      const statPoints = Math.max(0, level - 1)
+        const combatant = buildPokemonCombatant(
+          created,
+          tc.side,
+          tc.position ?? undefined,
+          tc.tokenSize || 1
+        )
+        combatants.push(combatant)
+      } else {
+        // Human combatants: keep inline-only (no entityId, no DB sync)
+        // These remain as-is per Design Decision #2
+        const level = tc.entityData?.level ?? 1
+        const baseSpeed = tc.entityData?.stats?.speed ?? 5
+        const baseDefense = tc.entityData?.stats?.defense ?? 5
+        const baseSpDef = tc.entityData?.stats?.specialDefense ?? 5
+        const maxHp = 10 + level * 2
 
-      // Calculate weights based on base stats
-      const statKeys = ['hp', 'attack', 'defense', 'specialAttack', 'specialDefense', 'speed'] as const
-      const totalBaseStats = statKeys.reduce((sum, key) => sum + baseStats[key], 0)
-
-      // Distribute stat points weighted by base stats
-      const distributedPoints: Record<string, number> = {
-        hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
-      }
-
-      let remainingPoints = statPoints
-      while (remainingPoints > 0) {
-        const roll = Math.random() * totalBaseStats
-        let cumulative = 0
-        for (const key of statKeys) {
-          cumulative += baseStats[key]
-          if (roll < cumulative) {
-            distributedPoints[key]++
-            remainingPoints--
-            break
-          }
-        }
-      }
-
-      // Calculate final stats: base + distributed points
-      const calculatedStats = {
-        hp: baseStats.hp + distributedPoints.hp,
-        attack: baseStats.attack + distributedPoints.attack,
-        defense: baseStats.defense + distributedPoints.defense,
-        specialAttack: baseStats.specialAttack + distributedPoints.specialAttack,
-        specialDefense: baseStats.specialDefense + distributedPoints.specialDefense,
-        speed: baseStats.speed + distributedPoints.speed
-      }
-
-      // HP formula: Level + (HP stat × 3) + 10
-      const maxHp = tc.type === 'pokemon'
-        ? level + (calculatedStats.hp * 3) + 10
-        : 10 + level * 2
-
-      return {
-        id: uuidv4(),
-        type: tc.type,
-        side: tc.side,
-        position: tc.position,
-        tokenSize: tc.tokenSize || 1,
-        entity: tc.entityData ? {
+        combatants.push({
           id: uuidv4(),
-          ...tc.entityData,
-          // Add Pokemon stats
-          ...(tc.type === 'pokemon' ? {
-            currentStats: calculatedStats,
-            currentHp: maxHp,
-            maxHp: maxHp,
-            tempHp: 0,
-            injuries: { count: 0, max: 5 },
-            stageModifiers: {
-              attack: 0, defense: 0, specialAttack: 0,
-              specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
-            },
-            statusConditions: []
-          } : {}),
-          // Add defaults for Human
-          ...(tc.type === 'human' ? {
+          type: tc.type,
+          side: tc.side,
+          position: tc.position,
+          tokenSize: tc.tokenSize || 1,
+          entity: tc.entityData ? {
+            id: uuidv4(),
+            ...tc.entityData,
             currentHp: maxHp,
             maxHp: maxHp,
             tempHp: 0,
             injuries: { count: 0, max: 5 }
-          } : {})
-        } : null,
-        // Combat state - use calculated speed for initiative
-        initiative: calculatedStats.speed,
-        initiativeBonus: 0,
-        hasActed: false,
-        turnState: {
+          } : null,
+          initiative: baseSpeed,
+          initiativeBonus: 0,
           hasActed: false,
-          standardActionUsed: false,
-          shiftActionUsed: false,
-          swiftActionUsed: false
-        },
-        combatStages: {
-          attack: 0,
-          defense: 0,
-          specialAttack: 0,
-          specialDefense: 0,
-          speed: 0,
-          accuracy: 0,
-          evasion: 0
-        },
-        statusConditions: [],
-        injuries: { count: 0, max: 5 },
-        // Evasions based on stats
-        physicalEvasion: Math.floor(baseStats.defense / 5),
-        specialEvasion: Math.floor(baseStats.specialDefense / 5),
-        speedEvasion: Math.floor(baseStats.speed / 5)
+          turnState: {
+            hasActed: false,
+            standardActionUsed: false,
+            shiftActionUsed: false,
+            swiftActionUsed: false
+          },
+          combatStages: {
+            attack: 0, defense: 0, specialAttack: 0,
+            specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
+          },
+          statusConditions: [],
+          injuries: { count: 0, max: 5 },
+          physicalEvasion: Math.floor(baseDefense / 5),
+          specialEvasion: Math.floor(baseSpDef / 5),
+          speedEvasion: Math.floor(baseSpeed / 5)
+        })
       }
-    }))
+    }
 
     // Create the encounter
     const encounter = await prisma.encounter.create({
