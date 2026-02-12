@@ -71,6 +71,12 @@
               </select>
             </div>
           </div>
+          <div v-if="editData.characterType !== 'player'" class="form-row">
+            <div class="form-group">
+              <label>Location</label>
+              <input v-model="editData.location" type="text" class="form-input" :disabled="!isEditing" placeholder="e.g., Mesagoza" />
+            </div>
+          </div>
         </div>
       </div>
 

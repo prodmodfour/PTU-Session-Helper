@@ -51,9 +51,15 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Level</label>
-          <input v-model.number="humanForm.level" type="number" class="form-input" min="1" max="100" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Level</label>
+            <input v-model.number="humanForm.level" type="number" class="form-input" min="1" max="100" />
+          </div>
+          <div v-if="humanForm.characterType === 'npc'" class="form-group">
+            <label>Location</label>
+            <input v-model="humanForm.location" type="text" class="form-input" placeholder="e.g., Mesagoza" />
+          </div>
         </div>
       </div>
 
@@ -236,6 +242,7 @@ const humanForm = ref({
   name: '',
   characterType: 'npc' as 'player' | 'npc',
   level: 1,
+  location: '',
   hp: 10,
   attack: 5,
   defense: 5,
@@ -270,6 +277,7 @@ const createHuman = async () => {
       name: humanForm.value.name,
       characterType: humanForm.value.characterType,
       level: humanForm.value.level,
+      location: humanForm.value.location || null,
       stats: {
         hp: humanForm.value.hp,
         attack: humanForm.value.attack,
