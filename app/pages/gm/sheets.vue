@@ -217,6 +217,7 @@ const deleteUnownedWild = async () => {
     alert(`Delete failed: ${e.message || 'Unknown error'}`)
   }
 }
+
 const resetFilters = () => {
   filters.value = {
     search: '',

@@ -79,6 +79,7 @@ const createMockPokemon = (overrides = {}) => ({
   shiny: false,
   gender: 'Male' as const,
   isInLibrary: true,
+  origin: 'manual' as const,
   notes: undefined,
   ...overrides
 })
