@@ -96,7 +96,7 @@ export interface InventoryItem {
 export interface Pokemon {
   id: string;
   species: string;
-  nickname?: string;
+  nickname: string | null;
   level: number;
   experience: number;
   nature: Nature;
