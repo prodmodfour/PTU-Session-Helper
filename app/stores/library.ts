@@ -25,7 +25,10 @@ export const useLibraryStore = defineStore('library', {
       // Filter by search
       if (state.filters.search) {
         const search = state.filters.search.toLowerCase()
-        result = result.filter(h => h.name.toLowerCase().includes(search))
+        result = result.filter(h =>
+          h.name.toLowerCase().includes(search) ||
+          (h.location?.toLowerCase().includes(search) ?? false)
+        )
       }
 
       // Filter by character type
@@ -105,6 +108,33 @@ export const useLibraryStore = defineStore('library', {
 
     getPokemonByOwner: (state) => (ownerId: string): Pokemon[] => {
       return state.pokemon.filter(p => p.ownerId === ownerId)
+    },
+
+    filteredPlayers(): HumanCharacter[] {
+      return this.filteredHumans.filter(h => h.characterType === 'player')
+    },
+
+    groupedNpcsByLocation(): { location: string; humans: HumanCharacter[] }[] {
+      const npcs = this.filteredHumans.filter(h => h.characterType !== 'player')
+
+      const locationMap = new Map<string, HumanCharacter[]>()
+      for (const npc of npcs) {
+        const loc = npc.location || ''
+        const existing = locationMap.get(loc) || []
+        locationMap.set(loc, [...existing, npc])
+      }
+
+      const entries = Array.from(locationMap.entries())
+      entries.sort((a, b) => {
+        if (a[0] === '' && b[0] !== '') return 1
+        if (a[0] !== '' && b[0] === '') return -1
+        return a[0].localeCompare(b[0])
+      })
+
+      return entries.map(([location, humans]) => ({
+        location: location || 'No Location',
+        humans
+      }))
     }
   },
 
