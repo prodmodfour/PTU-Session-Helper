@@ -5,6 +5,7 @@
  */
 
 import { prisma } from '~/server/utils/prisma'
+import { resolveNickname } from '~/server/utils/pokemon-nickname'
 import { v4 as uuidv4 } from 'uuid'
 import type { PokemonOrigin } from '~/types/character'
 
@@ -156,7 +157,7 @@ export async function createPokemonRecord(
   const pokemon = await prisma.pokemon.create({
     data: {
       species: data.species,
-      nickname: data.nickname,
+      nickname: await resolveNickname(data.species, data.nickname),
       level: data.level,
       experience: 0,
       nature: JSON.stringify({ name: 'Hardy', raisedStat: null, loweredStat: null }),
