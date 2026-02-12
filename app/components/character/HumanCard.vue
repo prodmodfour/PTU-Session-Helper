@@ -16,6 +16,10 @@
       </div>
 
       <div class="human-card__level">Level {{ human.level }}</div>
+      <div v-if="human.location" class="human-card__location">
+        <PhMapPin :size="12" />
+        {{ human.location }}
+      </div>
 
       <div class="human-card__stats">
         <span>HP: {{ human.currentHp }}/{{ human.maxHp }}</span>
@@ -43,6 +47,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhMapPin } from '@phosphor-icons/vue'
 import type { HumanCharacter } from '~/types'
 
 defineProps<{
@@ -148,6 +153,15 @@ const handleSpriteError = (event: Event) => {
   &__level {
     font-size: $font-size-sm;
     color: $color-text-muted;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__location {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    font-size: $font-size-xs;
+    color: $color-accent-violet;
     margin-bottom: $spacing-xs;
   }
 
