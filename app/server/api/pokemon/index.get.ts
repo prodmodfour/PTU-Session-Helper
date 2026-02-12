@@ -1,9 +1,22 @@
 import { prisma } from '~/server/utils/prisma'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   try {
+    const query = getQuery(event)
+    const origin = query.origin as string | undefined
+    const includeArchived = query.includeArchived === 'true'
+
+    // Build where clause: isInLibrary acts as archive flag
+    const where: Record<string, unknown> = {}
+    if (!includeArchived) {
+      where.isInLibrary = true
+    }
+    if (origin && origin !== 'all') {
+      where.origin = origin
+    }
+
     const pokemon = await prisma.pokemon.findMany({
-      where: { isInLibrary: true },
+      where,
       orderBy: { species: 'asc' }
     })
 
@@ -43,6 +56,7 @@ export default defineEventHandler(async () => {
       shiny: p.shiny,
       gender: p.gender,
       isInLibrary: p.isInLibrary,
+      origin: p.origin,
       notes: p.notes
     }))
 
