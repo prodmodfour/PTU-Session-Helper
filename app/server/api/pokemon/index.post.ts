@@ -61,8 +61,9 @@ export default defineEventHandler(async (event) => {
         spriteUrl: body.spriteUrl,
         shiny: body.shiny || false,
         gender: body.gender || 'Genderless',
-        // Library
+        // Library & categorization
         isInLibrary: body.isInLibrary !== false,
+        origin: body.origin || 'manual',
         notes: body.notes
       }
     })
@@ -108,6 +109,7 @@ export default defineEventHandler(async (event) => {
       shiny: pokemon.shiny,
       gender: pokemon.gender,
       isInLibrary: pokemon.isInLibrary,
+      origin: pokemon.origin,
       notes: pokemon.notes
     }
 

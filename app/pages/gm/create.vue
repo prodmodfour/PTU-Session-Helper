@@ -295,8 +295,8 @@ const createHuman = async () => {
 const createPokemon = async () => {
   creating.value = true
   try {
-    // Calculate current stats (simplified - just use base stats for now)
-    const maxHp = pokemonForm.value.baseHp + pokemonForm.value.level * 2
+    // PTU HP formula: Level + (HP Base × 3) + 10
+    const maxHp = pokemonForm.value.level + (pokemonForm.value.baseHp * 3) + 10
 
     const data = {
       species: pokemonForm.value.species,

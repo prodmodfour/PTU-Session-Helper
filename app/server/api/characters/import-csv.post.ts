@@ -492,6 +492,7 @@ export default defineEventHandler(async (event) => {
           statusConditions: JSON.stringify([]),
           gender: pokemon.gender,
           isInLibrary: true,
+          origin: 'import',
           notes: `Imported from PTU sheet`
         }
       })
