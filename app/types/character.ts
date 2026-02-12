@@ -191,6 +191,7 @@ export interface HumanCharacter {
   background?: string;
   personality?: string;
   goals?: string;
+  location?: string;
 
   // Library
   isInLibrary: boolean;

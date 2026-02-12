@@ -61,6 +61,7 @@ model HumanCharacter {
   background    String?  // Character background/history
   personality   String?
   goals         String?
+  location      String?  // Location/area where this NPC is found
 
   // Library
   isInLibrary   Boolean  @default(true)
