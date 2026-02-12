@@ -89,8 +89,16 @@ export default defineEventHandler(async (event) => {
     criticalHit
   )
 
-  // If captured, could update ownership here
-  // For now, just return the result
+  // If captured, auto-link Pokemon to trainer and update origin
+  if (captureResult.success) {
+    await prisma.pokemon.update({
+      where: { id: body.pokemonId },
+      data: {
+        ownerId: body.trainerId,
+        origin: 'captured'
+      }
+    })
+  }
 
   return {
     success: true,
@@ -112,7 +120,9 @@ export default defineEventHandler(async (event) => {
         level: pokemon.level,
         currentHp: pokemon.currentHp,
         maxHp: pokemon.maxHp,
-        hpPercentage: Math.round(rateResult.hpPercentage)
+        hpPercentage: Math.round(rateResult.hpPercentage),
+        ownerId: captureResult.success ? body.trainerId : pokemon.ownerId,
+        origin: captureResult.success ? 'captured' : pokemon.origin
       },
       trainer: {
         id: trainer.id,
