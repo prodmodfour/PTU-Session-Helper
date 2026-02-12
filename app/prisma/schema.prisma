@@ -146,8 +146,9 @@ model Pokemon {
   // Egg groups (for breeding)
   eggGroups     String   @default("[]") // JSON array
 
-  // Library
-  isInLibrary   Boolean  @default(true)
+  // Library & categorization
+  isInLibrary   Boolean  @default(true) // Repurposed as archive flag: false = archived
+  origin        String   @default("manual") // 'manual', 'wild', 'template', 'import', 'captured'
   notes         String?
 
   // Ownership

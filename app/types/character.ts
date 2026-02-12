@@ -11,6 +11,9 @@ export type PokemonType =
 // Character type
 export type CharacterType = 'player' | 'npc' | 'trainer';
 
+// Pokemon origin - how the Pokemon was created
+export type PokemonOrigin = 'manual' | 'wild' | 'template' | 'import' | 'captured';
+
 // Skill rank (PTU)
 export type SkillRank = 'Pathetic' | 'Untrained' | 'Novice' | 'Adept' | 'Expert' | 'Master';
 
@@ -135,8 +138,9 @@ export interface Pokemon {
   shiny: boolean;
   gender: 'Male' | 'Female' | 'Genderless';
 
-  // Library
+  // Library & categorization
   isInLibrary: boolean;
+  origin: PokemonOrigin;
   notes?: string;
 }
 
