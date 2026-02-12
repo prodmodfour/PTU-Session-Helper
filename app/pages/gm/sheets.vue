@@ -96,7 +96,7 @@
         Loading...
       </div>
 
-      <div v-else-if="filteredHumans.length === 0 && filteredPokemon.length === 0" class="library__empty">
+      <div v-else-if="filteredPlayers.length === 0 && npcCount === 0 && filteredPokemon.length === 0" class="library__empty">
         <p>No characters found</p>
         <NuxtLink to="/gm/create" class="btn btn--primary">
           Create your first character
@@ -104,15 +104,48 @@
       </div>
 
       <template v-else>
-        <!-- Humans Section -->
-        <section v-if="filters.type !== 'pokemon' && filteredHumans.length > 0" class="library__section">
-          <h3>Trainers & NPCs ({{ filteredHumans.length }})</h3>
+        <!-- Players Section -->
+        <section v-if="filters.type !== 'pokemon' && filters.characterType !== 'npc' && filteredPlayers.length > 0" class="library__section">
+          <h3>Players ({{ filteredPlayers.length }})</h3>
           <div class="library__grid">
             <HumanCard
-              v-for="human in filteredHumans"
+              v-for="human in filteredPlayers"
               :key="human.id"
               :human="human"
             />
+          </div>
+        </section>
+
+        <!-- NPCs by Location Section -->
+        <section v-if="filters.type !== 'pokemon' && filters.characterType !== 'player' && groupedNpcs.length > 0" class="library__section">
+          <h3>NPCs ({{ npcCount }})</h3>
+          <div class="location-groups">
+            <div
+              v-for="group in groupedNpcs"
+              :key="group.location"
+              class="location-group"
+            >
+              <button
+                class="location-group__header"
+                @click="toggleLocation(group.location)"
+              >
+                <PhMapPin :size="16" class="location-group__icon" />
+                <span class="location-group__name">{{ group.location }}</span>
+                <span class="location-group__count">{{ group.humans.length }}</span>
+                <PhCaretDown
+                  :size="14"
+                  class="location-group__caret"
+                  :class="{ 'location-group__caret--open': expandedLocations.has(group.location) }"
+                />
+              </button>
+              <div v-if="expandedLocations.has(group.location)" class="library__grid">
+                <HumanCard
+                  v-for="human in group.humans"
+                  :key="human.id"
+                  :human="human"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -133,6 +166,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhMapPin, PhCaretDown } from '@phosphor-icons/vue'
 import type { HumanCharacter, Pokemon, LibraryFilters } from '~/types'
 
 definePageMeta({
@@ -171,8 +205,27 @@ const showManagePanel = ref(false)
 
 // Computed
 const loading = computed(() => libraryStore.loading)
-const filteredHumans = computed(() => libraryStore.filteredHumans)
+const filteredPlayers = computed(() => libraryStore.filteredPlayers)
+const groupedNpcs = computed(() => libraryStore.groupedNpcsByLocation)
+const npcCount = computed(() => groupedNpcs.value.reduce((sum, g) => sum + g.humans.length, 0))
 const filteredPokemon = computed(() => libraryStore.filteredPokemon)
+
+// Location group collapse state — all expanded by default
+const expandedLocations = ref(new Set<string>())
+
+watch(groupedNpcs, (groups) => {
+  expandedLocations.value = new Set(groups.map(g => g.location))
+}, { immediate: true })
+
+const toggleLocation = (location: string) => {
+  const next = new Set(expandedLocations.value)
+  if (next.has(location)) {
+    next.delete(location)
+  } else {
+    next.add(location)
+  }
+  expandedLocations.value = next
+}
 
 const originCounts = computed(() => {
   const counts: Record<string, number> = {}
@@ -314,6 +367,66 @@ const deletePokemon = async (pokemon: Pokemon) => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: $spacing-md;
+  }
+}
+
+.location-groups {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.location-group {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-tertiary;
+    border: 1px solid $glass-border;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+    color: $color-text;
+    font-size: $font-size-sm;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $color-bg-hover;
+      border-color: rgba($color-accent-violet, 0.3);
+    }
+  }
+
+  &__icon {
+    color: $color-accent-violet;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    flex: 1;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  &__count {
+    padding: 2px $spacing-sm;
+    background: $color-bg-secondary;
+    border-radius: $border-radius-full;
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+  }
+
+  &__caret {
+    transition: transform 0.15s ease;
+    color: $color-text-muted;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  .library__grid {
+    margin-top: $spacing-sm;
   }
 }
 
