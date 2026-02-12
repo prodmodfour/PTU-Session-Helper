@@ -110,6 +110,7 @@ export default defineEventHandler(async (event) => {
       background: character.background,
       personality: character.personality,
       goals: character.goals,
+      location: character.location,
       // Library
       isInLibrary: character.isInLibrary,
       notes: character.notes,

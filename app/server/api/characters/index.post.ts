@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
         background: body.background,
         personality: body.personality,
         goals: body.goals,
+        location: body.location || null,
         // Library
         isInLibrary: body.isInLibrary !== false,
         notes: body.notes
@@ -89,6 +90,7 @@ export default defineEventHandler(async (event) => {
       background: character.background,
       personality: character.personality,
       goals: character.goals,
+      location: character.location,
       // Library
       isInLibrary: character.isInLibrary,
       notes: character.notes,

@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
     if (body.avatarUrl !== undefined) updateData.avatarUrl = body.avatarUrl
     if (body.isInLibrary !== undefined) updateData.isInLibrary = body.isInLibrary
     if (body.notes !== undefined) updateData.notes = body.notes
+    if (body.location !== undefined) updateData.location = body.location
 
     if (body.stats) {
       if (body.stats.hp !== undefined) updateData.hp = body.stats.hp
@@ -65,6 +66,7 @@ export default defineEventHandler(async (event) => {
       statusConditions: JSON.parse(character.statusConditions),
       stageModifiers: JSON.parse(character.stageModifiers),
       avatarUrl: character.avatarUrl,
+      location: character.location,
       isInLibrary: character.isInLibrary,
       notes: character.notes,
       pokemonIds: []
