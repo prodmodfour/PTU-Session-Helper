@@ -66,6 +66,7 @@ export default defineEventHandler(async (event) => {
       gender: pokemon.gender,
       isInLibrary: pokemon.isInLibrary,
       origin: pokemon.origin,
+      location: pokemon.location,
       notes: pokemon.notes,
       // Rest/Healing tracking
       lastInjuryTime: pokemon.lastInjuryTime,

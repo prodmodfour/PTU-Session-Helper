@@ -32,6 +32,7 @@ export default defineEventHandler(async (event) => {
     if (body.isInLibrary !== undefined) updateData.isInLibrary = body.isInLibrary
     if (body.origin !== undefined) updateData.origin = body.origin
     if (body.notes !== undefined) updateData.notes = body.notes
+    if (body.location !== undefined) updateData.location = body.location
 
     if (body.types) {
       updateData.type1 = body.types[0]
@@ -103,6 +104,7 @@ export default defineEventHandler(async (event) => {
       gender: pokemon.gender,
       isInLibrary: pokemon.isInLibrary,
       origin: pokemon.origin,
+      location: pokemon.location,
       notes: pokemon.notes
     }
 

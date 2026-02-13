@@ -64,6 +64,7 @@ export default defineEventHandler(async (event) => {
         // Library & categorization
         isInLibrary: body.isInLibrary !== false,
         origin: body.origin || 'manual',
+        location: body.location || null,
         notes: body.notes
       }
     })
@@ -110,6 +111,7 @@ export default defineEventHandler(async (event) => {
       gender: pokemon.gender,
       isInLibrary: pokemon.isInLibrary,
       origin: pokemon.origin,
+      location: pokemon.location,
       notes: pokemon.notes
     }
 

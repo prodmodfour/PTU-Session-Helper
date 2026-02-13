@@ -57,6 +57,7 @@ export default defineEventHandler(async (event) => {
       gender: p.gender,
       isInLibrary: p.isInLibrary,
       origin: p.origin,
+      location: p.location,
       notes: p.notes
     }))
 
