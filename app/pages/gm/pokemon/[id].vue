@@ -68,6 +68,12 @@
               <input v-model="editData.shiny" type="checkbox" class="form-checkbox" :disabled="!isEditing" />
             </div>
           </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Location</label>
+              <input v-model="editData.location" type="text" class="form-input" :disabled="!isEditing" placeholder="e.g., Route 1" />
+            </div>
+          </div>
           <div class="type-badges">
             <span v-for="t in pokemon.types" :key="t" class="type-badge" :class="`type-badge--${t.toLowerCase()}`">
               {{ t }}
