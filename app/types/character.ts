@@ -141,6 +141,7 @@ export interface Pokemon {
   // Library & categorization
   isInLibrary: boolean;
   origin: PokemonOrigin;
+  location?: string;
   notes?: string;
 }
 
