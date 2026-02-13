@@ -35,6 +35,10 @@
       </div>
 
       <div class="pokemon-card__level">Level {{ pokemon.level }}</div>
+      <div v-if="pokemon.location" class="pokemon-card__location">
+        <PhMapPin :size="12" />
+        {{ pokemon.location }}
+      </div>
 
       <div class="pokemon-card__hp">
         <div class="health-bar health-bar--compact" :class="healthBarClass">
@@ -70,6 +74,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhMapPin } from '@phosphor-icons/vue'
 import type { Pokemon } from '~/types'
 
 const props = defineProps<{
@@ -224,6 +229,15 @@ const statusConditions = computed(() => {
   &__level {
     font-size: $font-size-sm;
     color: $color-text-muted;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__location {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    font-size: $font-size-xs;
+    color: $color-accent-violet;
     margin-bottom: $spacing-sm;
   }
 
