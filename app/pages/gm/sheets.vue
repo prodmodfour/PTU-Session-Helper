@@ -96,7 +96,7 @@
         Loading...
       </div>
 
-      <div v-else-if="filteredPlayers.length === 0 && npcCount === 0 && filteredPokemon.length === 0" class="library__empty">
+      <div v-else-if="filteredPlayers.length === 0 && npcCount === 0 && pokemonCount === 0" class="library__empty">
         <p>No characters found</p>
         <NuxtLink to="/gm/create" class="btn btn--primary">
           Create your first character
@@ -149,15 +149,36 @@
           </div>
         </section>
 
-        <!-- Pokemon Section -->
-        <section v-if="filters.type !== 'human' && filteredPokemon.length > 0" class="library__section">
-          <h3>Pokemon ({{ filteredPokemon.length }})</h3>
-          <div class="library__grid">
-            <PokemonCard
-              v-for="pokemon in filteredPokemon"
-              :key="pokemon.id"
-              :pokemon="pokemon"
-            />
+        <!-- Pokemon by Location Section -->
+        <section v-if="filters.type !== 'human' && groupedPokemon.length > 0" class="library__section">
+          <h3>Pokemon ({{ pokemonCount }})</h3>
+          <div class="location-groups">
+            <div
+              v-for="group in groupedPokemon"
+              :key="group.location"
+              class="location-group"
+            >
+              <button
+                class="location-group__header"
+                @click="togglePokemonLocation(group.location)"
+              >
+                <PhMapPin :size="16" class="location-group__icon" />
+                <span class="location-group__name">{{ group.location }}</span>
+                <span class="location-group__count">{{ group.pokemon.length }}</span>
+                <PhCaretDown
+                  :size="14"
+                  class="location-group__caret"
+                  :class="{ 'location-group__caret--open': expandedPokemonLocations.has(group.location) }"
+                />
+              </button>
+              <div v-if="expandedPokemonLocations.has(group.location)" class="library__grid">
+                <PokemonCard
+                  v-for="pokemon in group.pokemon"
+                  :key="pokemon.id"
+                  :pokemon="pokemon"
+                />
+              </div>
+            </div>
           </div>
         </section>
       </template>
@@ -208,7 +229,8 @@ const loading = computed(() => libraryStore.loading)
 const filteredPlayers = computed(() => libraryStore.filteredPlayers)
 const groupedNpcs = computed(() => libraryStore.groupedNpcsByLocation)
 const npcCount = computed(() => groupedNpcs.value.reduce((sum, g) => sum + g.humans.length, 0))
-const filteredPokemon = computed(() => libraryStore.filteredPokemon)
+const groupedPokemon = computed(() => libraryStore.groupedPokemonByLocation)
+const pokemonCount = computed(() => groupedPokemon.value.reduce((sum, g) => sum + g.pokemon.length, 0))
 
 // Location group collapse state — all expanded by default
 const expandedLocations = ref(new Set<string>())
@@ -225,6 +247,23 @@ const toggleLocation = (location: string) => {
     next.add(location)
   }
   expandedLocations.value = next
+}
+
+// Pokemon location group collapse state — all expanded by default
+const expandedPokemonLocations = ref(new Set<string>())
+
+watch(groupedPokemon, (groups) => {
+  expandedPokemonLocations.value = new Set(groups.map(g => g.location))
+}, { immediate: true })
+
+const togglePokemonLocation = (location: string) => {
+  const next = new Set(expandedPokemonLocations.value)
+  if (next.has(location)) {
+    next.delete(location)
+  } else {
+    next.add(location)
+  }
+  expandedPokemonLocations.value = next
 }
 
 const originCounts = computed(() => {
