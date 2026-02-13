@@ -146,6 +146,11 @@
             </select>
           </div>
         </div>
+
+        <div class="form-group">
+          <label>Location</label>
+          <input v-model="pokemonForm.location" type="text" class="form-input" placeholder="e.g., Route 1" />
+        </div>
       </div>
 
       <div class="create-form__section">
@@ -257,6 +262,7 @@ const pokemonForm = ref({
   species: '',
   nickname: '',
   level: 1,
+  location: '',
   gender: 'Genderless' as 'Male' | 'Female' | 'Genderless',
   shiny: false,
   type1: 'Normal' as PokemonType,
@@ -310,6 +316,7 @@ const createPokemon = async () => {
       species: pokemonForm.value.species,
       nickname: pokemonForm.value.nickname || undefined,
       level: pokemonForm.value.level,
+      location: pokemonForm.value.location || null,
       gender: pokemonForm.value.gender,
       shiny: pokemonForm.value.shiny,
       types: (pokemonForm.value.type2
