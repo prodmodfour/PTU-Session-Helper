@@ -61,7 +61,8 @@ export const useLibraryStore = defineStore('library', {
         const search = state.filters.search.toLowerCase()
         result = result.filter(p =>
           p.species.toLowerCase().includes(search) ||
-          (p.nickname?.toLowerCase().includes(search) ?? false)
+          (p.nickname?.toLowerCase().includes(search) ?? false) ||
+          (p.location?.toLowerCase().includes(search) ?? false)
         )
       }
 
@@ -134,6 +135,29 @@ export const useLibraryStore = defineStore('library', {
       return entries.map(([location, humans]) => ({
         location: location || 'No Location',
         humans
+      }))
+    },
+
+    groupedPokemonByLocation(): { location: string; pokemon: Pokemon[] }[] {
+      const filtered = this.filteredPokemon
+
+      const locationMap = new Map<string, Pokemon[]>()
+      for (const mon of filtered) {
+        const loc = mon.location || ''
+        const existing = locationMap.get(loc) || []
+        locationMap.set(loc, [...existing, mon])
+      }
+
+      const entries = Array.from(locationMap.entries())
+      entries.sort((a, b) => {
+        if (a[0] === '' && b[0] !== '') return 1
+        if (a[0] !== '' && b[0] === '') return -1
+        return a[0].localeCompare(b[0])
+      })
+
+      return entries.map(([location, pokemon]) => ({
+        location: location || 'No Location',
+        pokemon
       }))
     }
   },
