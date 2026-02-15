@@ -13,6 +13,7 @@ app/tests/e2e/artifacts/
 ├── reports/            # Result Verifier writes
 ├── designs/            # Feature Designer writes
 ├── refactoring/        # Code Health Auditor writes
+├── reviews/            # Senior Reviewer + Game Logic Reviewer write
 └── pipeline-state.md   # Every skill updates after writing artifacts
 ```
 
@@ -27,6 +28,8 @@ Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 - Results: `<scenario-id>.result.md` (e.g., `combat-workflow-wild-encounter-001.result.md`)
 - Reports: `<category>-<NNN>.md` (e.g., `bug-001.md`, `correction-001.md`, `escalation-001.md`, `feature-gap-001.md`, `ux-gap-001.md`) — counters are per-prefix (e.g., `bug-001` and `feature-gap-001` coexist)
 - Designs: `design-<NNN>.md` (e.g., `design-001.md`) — per-prefix counter in `artifacts/designs/`
+- Code reviews: `code-review-<NNN>.md` (e.g., `code-review-001.md`) — per-prefix counter in `artifacts/reviews/`
+- Rules reviews: `rules-review-<NNN>.md` (e.g., `rules-review-001.md`) — per-prefix counter in `artifacts/reviews/`
 
 ---
 
@@ -593,7 +596,13 @@ updated_by: <skill name>
 | Verifications | not started / in progress / complete | <N>/<total> | <date> |
 | Test Runs | not started / in progress / complete | <N>/<total> | <date> |
 | Results | not started / pending triage / complete | <pass>/<fail>/<error> | <date> |
+| Reviews | not started / pending / in-progress / complete | <N approved>/<N total> | <date> |
 | Designs | design pending / design complete / implemented / re-tested | <N>/<total> complete | <date> |
+
+### Reviews
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| <code-review-NNN or rules-review-NNN> | <target report> | <verdict> | <reviewer> | <date> |
 
 ### Open Issues
 - <report-id>: <severity> <category> — <summary> (assigned to <skill>)
@@ -805,3 +814,155 @@ overflow_files: <count of files that qualified but exceeded the 20-file cap>
 - Overflow section tracks files that exceeded the 20-file deep-read cap
 - Comparison section is empty on first audit
 - Max 10 tickets per audit run
+
+---
+
+## 9. Code Review
+
+**Written by:** Senior Reviewer
+**Read by:** Orchestrator, Developer, Game Logic Reviewer
+**Location:** `artifacts/reviews/code-review-<NNN>.md`
+
+```markdown
+---
+review_id: code-review-<NNN>
+review_type: code
+reviewer: senior-reviewer
+trigger: bug-fix | design-implementation | refactoring
+target_report: <bug-NNN | design-NNN | refactoring-NNN>
+domain: <domain>
+commits_reviewed:
+  - <commit hash>
+  - ...
+files_reviewed:
+  - <app file path>
+  - ...
+verdict: APPROVED | CHANGES_REQUIRED | BLOCKED
+issues_found:
+  critical: <count>
+  high: <count>
+  medium: <count>
+scenarios_to_rerun:
+  - <scenario-id>
+  - ...
+reviewed_at: <ISO timestamp>
+follows_up: <code-review-NNN>  # optional — for re-reviews
+---
+
+## Review Scope
+<What was reviewed — commits, bug report reference, design spec reference>
+
+## Issues
+
+### CRITICAL
+<!-- Empty if none -->
+1. **<title>** — `<file>:<line>`
+   ```<language>
+   <buggy code>
+   ```
+   **Fix:**
+   ```<language>
+   <corrected code>
+   ```
+
+### HIGH
+<!-- Empty if none -->
+
+### MEDIUM
+<!-- Empty if none -->
+
+## What Looks Good
+- <specific positive observations>
+
+## Verdict
+<APPROVED | CHANGES_REQUIRED | BLOCKED> — <one sentence justification>
+
+## Required Changes
+<!-- Empty if APPROVED -->
+1. <specific change with file:line reference>
+
+## Scenarios to Re-run
+- <scenario-id>: <why this scenario is affected>
+```
+
+**Constraints:**
+- One review per target report per review cycle (re-reviews use `follows_up` or create a new artifact)
+- Verdict `BLOCKED` means CRITICAL issues found — Developer must fix before any further pipeline progress
+- Verdict `CHANGES_REQUIRED` means HIGH/MEDIUM issues that must be addressed before approval
+- Verdict `APPROVED` means the code is ready for rules review and eventually re-test
+- `scenarios_to_rerun` is used by the Orchestrator to direct the Playtester after both reviews pass
+- Counters are per-prefix: `code-review-001` and `rules-review-001` coexist independently
+
+---
+
+## 10. Rules Review
+
+**Written by:** Game Logic Reviewer
+**Read by:** Orchestrator, Developer
+**Location:** `artifacts/reviews/rules-review-<NNN>.md`
+
+```markdown
+---
+review_id: rules-review-<NNN>
+review_type: rules
+reviewer: game-logic-reviewer
+trigger: bug-fix | design-implementation | escalation-ruling
+target_report: <bug-NNN | design-NNN | escalation-NNN>
+domain: <domain>
+commits_reviewed:
+  - <commit hash>
+  - ...
+mechanics_verified:
+  - <mechanic-name>
+  - ...
+verdict: APPROVED | CHANGES_REQUIRED | BLOCKED
+issues_found:
+  critical: <count>
+  high: <count>
+  medium: <count>
+ptu_refs:
+  - <rulebook-file>#<section>
+  - ...
+reviewed_at: <ISO timestamp>
+follows_up: <rules-review-NNN>  # optional — for re-reviews
+---
+
+## Review Scope
+<What was reviewed — commits, bug report reference, mechanic areas>
+
+## Mechanics Verified
+
+### <Mechanic Name>
+- **Rule:** "<exact quote>" (`<rulebook-file>#<section>`)
+- **Implementation:** <what the code does>
+- **Status:** CORRECT | INCORRECT | NEEDS REVIEW
+- **Fix (if incorrect):** <specific correction>
+
+### <Next Mechanic>
+...
+
+## Summary
+- Mechanics checked: <N>
+- Correct: <N>
+- Incorrect: <N>
+- Needs review: <N>
+
+## Rulings
+<!-- For escalation triggers or ambiguous rule interpretations -->
+- <ruling with rulebook justification>
+
+## Verdict
+<APPROVED | CHANGES_REQUIRED | BLOCKED> — <one sentence justification>
+
+## Required Changes
+<!-- Empty if APPROVED -->
+1. <specific change with PTU rule reference>
+```
+
+**Constraints:**
+- One review per target report per review cycle (re-reviews use `follows_up` or create a new artifact)
+- Verdict meanings match Code Review (BLOCKED = CRITICAL, CHANGES_REQUIRED = must fix, APPROVED = ready)
+- `mechanics_verified` lists every mechanic the reviewer checked — even if all are correct
+- `ptu_refs` must point to actual rulebook files via `references/ptu-chapter-index.md`
+- Escalation rulings should also produce a `rules-review-*.md` for audit trail
+- Counters are per-prefix: `rules-review-001` and `code-review-001` coexist independently
