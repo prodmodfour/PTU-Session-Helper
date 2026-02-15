@@ -1,44 +1,63 @@
 ---
 scenario_id: combat-minimum-damage-001
-verified_at: 2026-02-15T19:00:00Z
-status: PARTIAL
+verified_at: 2026-02-15T21:00:00
+status: PASS
 assertions_checked: 3
-assertions_correct: 2
+assertions_correct: 3
+re_verification: true
+previous_status: PARTIAL (2 of 3 correct — derivation missed Rock resists Normal)
+correction_applied: Corrected assertion 2 to show Rock resists Normal (×0.5) with full min-1 chain
 ---
 
 ## Assertion Verification
 
 ### Assertion 1: Modified DEF with +6 combat stages
-- **Scenario says:** Multiplier at +6 = x2.2. Modified DEF = floor(10 x 2.2) = 22.
-- **Independent derivation:** CS +6 multiplier = x2.2 (from PTU table). floor(10 x 2.2) = floor(22.0) = 22.
+- **Scenario says:** Multiplier at +6 = ×2.2; Modified DEF = floor(DEF(10) × 2.2) = floor(22.0) = 22
+- **Independent derivation:** CS +6 multiplier = ×2.2 (core/07-combat.md p235). floor(10 × 2.2) = floor(22.0) = 22.
 - **Status:** CORRECT
 
-### Assertion 2: Raw damage is negative, minimum 1 applied
-- **Scenario says:** Raw = 13 + 5 - 22 = -4. Normal vs Rock/Ground = neutral (x1). Final = max(1, -4) x 1 = 1.
-- **Independent derivation:** Raw = 13 + 5 - 22 = -4. After defense min: max(1, -4) = 1. BUT the scenario claims "Normal vs Rock/Ground = neutral (x1)" -- this is INCORRECT. Normal is resisted by Rock type: Normal vs Rock = x0.5, Normal vs Ground = x1. Combined = x0.5. Correct derivation: After defense min: 1. After effectiveness: floor(1 x 0.5) = 0. After final min (not immune, Normal is not immune to Rock/Ground): max(1, 0) = 1. Final damage = 1.
-- **Status:** INCORRECT (derivation wrong, but final value coincidentally correct)
-- **Fix:** Type effectiveness should be x0.5 (Rock resists Normal), not x1. The full derivation: raw(-4) -> min 1 -> x0.5 = 0 -> final min 1. Result is still 1 damage, but the reasoning must show the Rock resistance step. This matters because if you tested this without the +6 DEF boost (e.g., raw damage > 1), the Rock resistance would materially change the result.
+### Assertion 2: Raw damage negative → min 1 → resistance → floor → final min 1
+- **Scenario says:** Tackle DB 5 → set damage 13; Raw = 13 + ATK(5) - ModDEF(22) = -4; min 1 → 1; Normal vs Rock/Ground → Rock resists (×0.5), Ground neutral (×1) → combined ×0.5; floor(1 × 0.5) = 0; final min 1 (not immune) → 1
+- **Independent derivation:**
+  1. DB 5 set damage chart: 9/13/16, average = 13 ✓
+  2. Raw = 13 + 5 - 22 = -4
+  3. Defense minimum: "An attack will always do a minimum of 1 damage, even if Defense Stats would reduce it to 0" (core/07-combat.md p236) → max(1, -4) = 1
+  4. Type effectiveness: Normal vs Rock = resisted (×0.5). Normal vs Ground = neutral (×1). Combined = ×0.5.
+  5. After effectiveness: floor(1 × 0.5) = floor(0.5) = 0
+  6. Final minimum: Normal is resisted by Rock, NOT immune. Per damage formula `max(1, floor(max(1, damage) * effectiveness))` when not immune → max(1, 0) = 1.
+  7. Final damage = 1
+- **Status:** CORRECT
+- **Previous issue resolved:** Original scenario incorrectly claimed Normal vs Rock/Ground = neutral (×1). Corrected derivation now shows the full chain: raw(-4) → min 1 → ×0.5 → floor(0.5)=0 → final min 1 = 1.
 
 ### Assertion 3: Geodude HP reduced by exactly 1
-- **Scenario says:** Geodude HP = 10 + (4 x 3) + 10 = 32. Remaining = 32 - 1 = 31.
-- **Independent derivation:** HP = 10 + 12 + 10 = 32. 32 - 1 = 31.
+- **Scenario says:** Geodude HP = level(10) + (baseHp(4) × 3) + 10 = 32; Remaining = 32 - 1 = 31; displays "31/32"
+- **Independent derivation:** HP = 10 + (4 × 3) + 10 = 10 + 12 + 10 = 32. Remaining = 32 - 1 = 31.
 - **Status:** CORRECT
 
 ## Data Validity
+
 - [x] Bulbasaur: base stats match gen1/bulbasaur.md (HP 5, ATK 5, DEF 5, SpATK 7, SpDEF 7, SPD 5)
+- [x] Bulbasaur: types Grass/Poison match pokedex
+- [x] Tackle: learnable by Bulbasaur at level 1 (available at level 10)
 - [x] Geodude: base stats match gen1/geodude.md (HP 4, ATK 8, DEF 10, SpATK 3, SpDEF 3, SPD 2)
-- [x] Bulbasaur types: Grass/Poison matches pokedex
-- [x] Geodude types: Rock/Ground matches pokedex
-- [x] Tackle learnable by Bulbasaur at level 10 (learned at level 1)
+- [x] Geodude: types Rock/Ground match pokedex
+- [x] DB 5 set damage = 13 matches PTU Damage Chart (core/07-combat.md p237)
+- [x] CS +6 multiplier = ×2.2 matches PTU Combat Stages table (core/07-combat.md p235)
+- [x] Normal vs Rock = resisted (×0.5) confirmed on PTU Type Chart
 
 ## Completeness Check
-- [x] Defense exceeding damage roll + ATK -- covered
-- [x] Minimum 1 damage rule -- covered
-- [ ] Type resistance interaction with minimum damage -- derivation incorrect (Rock resists Normal)
-- [x] HP reduction by exactly 1 -- covered
+
+- [x] Defense higher than damage + ATK — covered
+- [x] Minimum 1 damage after defense — explicitly verified
+- [x] Resistance reducing below 1 — explicitly verified (Rock resists Normal)
+- [x] Final minimum 1 (non-immune) — explicitly verified
+- [x] Full derivation chain: raw → min 1 → effectiveness → final min 1
+- [x] HP result verified
 
 ## Errata Check
-- No errata affects minimum damage mechanics
+
+- No errata in errata-2.md affects minimum damage rules, combat stages, or type resistance
 
 ## Issues Found
-1. **Assertion 2 derivation is wrong: Normal vs Rock/Ground is NOT neutral.** Rock resists Normal (x0.5). The final damage (1) is coincidentally correct because the final minimum-1 rule catches it, but the derivation path is incorrect. This matters for test correctness: the scenario should explicitly show the resistance step to prove the tester understands the interaction between minimum damage and type resistance.
+
+(none — previous Rock-resists-Normal derivation error fully corrected)
