@@ -23,6 +23,7 @@ This skill is part of the 12-skill PTU testing ecosystem. You operate in the **D
   3. Update `.claude/skills/references/app-surface.md` with new routes/endpoints/components added by the implementation
 - **After fixing a bug**, update the bug report's "Fix Log" section with the commit hash and files changed.
 - **The Orchestrator** (in another terminal) tells the user which bug to send you next. Follow priority: CRITICAL first, then HIGH, then MEDIUM.
+- **Review artifacts** from both reviewers live in `app/tests/e2e/artifacts/reviews/`. When the Orchestrator routes you a `CHANGES_REQUIRED` review, read the review artifact's "Required Changes" section and address every item. After fixing, the review cycle will re-run.
 - **After your fix is reviewed** (by Senior Reviewer + Game Logic Reviewer), the Playtester re-runs the affected scenario to verify.
 - **Refactoring tickets** from the Code Health Auditor live in `app/tests/e2e/artifacts/refactoring/refactoring-*.md`. When the Orchestrator routes you a refactoring ticket:
   1. Read the ticket for affected files, findings, and suggested refactoring steps
