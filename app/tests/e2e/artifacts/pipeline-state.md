@@ -111,12 +111,12 @@ All 4 previously corrected scenarios now PASS:
 | Metric | Value |
 |--------|-------|
 | Last analyzed | 2026-02-15T23:59:00 |
-| Total lessons | 3 |
-| Active | 3 |
+| Total lessons | 5 |
+| Active | 5 |
 | Resolved | 0 |
 | Systemic patterns | 0 |
 
-Lessons written for: scenario-crafter (3 lessons — 1 missing-check recurring, 2 data-lookup). See `artifacts/lessons/` for details.
+Lessons written for: scenario-crafter (3 lessons — 1 missing-check, 2 data-lookup), playtester (2 lessons — 2 process-gap). See `artifacts/lessons/` for details.
 
 ## Domain: capture
 
