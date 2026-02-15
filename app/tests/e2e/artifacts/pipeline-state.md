@@ -1,13 +1,13 @@
 ---
-last_updated: 2026-02-15T00:00:00
-updated_by: initial-scaffold
+last_updated: 2026-02-15T12:00:00
+updated_by: gameplay-loop-synthesizer
 ---
 
 ## Domain: combat
 
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
-| Loops | not started | — | — |
+| Loops | complete | 15 loops (+ 12 sub-loops) | 2026-02-15 |
 | Scenarios | not started | — | — |
 | Verifications | not started | — | — |
 | Test Runs | not started | — | — |
