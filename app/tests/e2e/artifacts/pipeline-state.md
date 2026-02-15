@@ -258,11 +258,13 @@ See `artifacts/lessons/` for details and `artifacts/lessons/retrospective-summar
 
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
-| Loops | not started | — | — |
+| Loops | complete | 2 workflows (+ 1 sub-workflow), 9 mechanic validations (+ 2 sub-loops) | 2026-02-15 |
 | Scenarios | not started | — | — |
 | Verifications | not started | — | — |
 | Test Runs | not started | — | — |
 | Results | not started | — | — |
+
+Workflows: W1 (standard capture), W2 (rate assessment). Sub-workflow: W1 multi-attempt retry. Mechanic validations: M1-M9 (base rate, HP tiers, evolution, status, rarity/injury, attempt roll, crit accuracy, faint prevention, post-capture update, worked examples). 5 FEATURE_GAPs identified (ball modifiers, legendary detection, evolution stage accuracy, capture specialist features, re-capture prevention). 1 UX_GAP (attempt button in combat).
 
 ### Open Issues
 
