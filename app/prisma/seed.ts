@@ -308,8 +308,11 @@ function parsePokedexContent(content: string): SpeciesRow[] {
         if (stageNum > maxEvolutionStage) {
           maxEvolutionStage = stageNum
         }
-        // Match current species name against the start of each evo line
-        if (lineText.toLowerCase().startsWith(pokemonName.toLowerCase())) {
+        // Match current species name with word-boundary check to avoid
+        // prefix collisions (e.g. "Kabutops" matching "Kabuto")
+        const nameLC = pokemonName.toLowerCase()
+        const ltLC = lineText.toLowerCase()
+        if (ltLC === nameLC || ltLC.startsWith(nameLC + ' ')) {
           evolutionStage = stageNum
         }
       }
