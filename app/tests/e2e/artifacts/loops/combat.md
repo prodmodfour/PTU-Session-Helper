@@ -1028,3 +1028,505 @@ sub_loops: []
 - All targets miss → no damage phase shown
 - Mixed immunities: one target immune (0 damage), another takes full damage
 - Status move targeting multiple targets: no damage, but status applied to each hit target individually
+
+---
+
+# Tier 1: Session Workflows
+
+## Workflow W1: Run a Complete Wild Encounter
+
+---
+loop_id: combat-workflow-full-wild-encounter
+tier: workflow
+domain: combat
+gm_intent: Run a wild encounter from setup through combat to resolution, the most common combat flow in a PTU session
+ptu_refs:
+  - core/07-combat.md#Types and Contexts of Combat
+  - core/07-combat.md#Initiative
+  - core/07-combat.md#Action Types
+  - core/07-combat.md#Making Attacks
+  - core/07-combat.md#Dealing Damage
+  - core/07-combat.md#Fainted
+  - core/07-combat.md#Injuries
+app_features:
+  - stores/encounter.ts (createEncounter, addCombatant, startEncounter, nextTurn, endEncounter)
+  - stores/encounter.ts (serveEncounter, unserveEncounter)
+  - server/api/encounters/[id]/start.post.ts
+  - server/api/encounters/[id]/damage.post.ts
+  - server/api/encounters/[id]/move.post.ts
+  - server/api/encounters/[id]/next-turn.post.ts
+  - server/api/encounters/[id]/end.post.ts
+  - server/api/encounters/[id]/serve.post.ts
+  - server/api/encounters/[id]/unserve.post.ts
+  - server/api/encounters/[id]/wild-spawn.post.ts
+  - composables/useCombat.ts (calculateInitiative, calculateDamage, getTypeEffectiveness, hasSTAB, checkForInjury)
+  - composables/useMoveCalculation.ts
+  - composables/useEncounterActions.ts (handleExecuteMove, handleDamage)
+  - server/services/combatant.service.ts (calculateDamage, applyDamageToEntity, applyHealingToEntity)
+mechanics_exercised:
+  - encounter-lifecycle
+  - initiative-calculation
+  - turn-progression
+  - damage-formula
+  - stab
+  - type-effectiveness
+  - injury-check
+  - faint-check
+  - serve-unserve
+sub_workflows:
+  - combat-workflow-wild-encounter-capture-variant
+---
+
+### GM Context
+The party enters a new area and encounters wild Pokemon. This is the bread-and-butter combat flow — it happens multiple times per session. The GM needs to set up the encounter, run combat, and resolve it cleanly so the session can continue.
+
+### Preconditions
+- At least one player character exists with at least one Pokemon linked
+- Wild Pokemon species and levels are known (from encounter table generation or GM choice)
+
+### Workflow Steps
+1. **[Setup]** GM creates a new encounter (`POST /api/encounters`, battleType: `full_contact`)
+2. **[Setup]** GM spawns wild Pokemon into the encounter (`POST /api/encounters/:id/wild-spawn` with species/level array) — the pokemon-generator service creates Pokemon records and builds combatants on the enemy side
+3. **[Setup]** GM adds player trainers and their Pokemon as combatants on the players side (`POST /api/encounters/:id/combatants`, side: `players`)
+4. **[Action]** GM starts combat (`POST /api/encounters/:id/start`) — initiative is calculated for all combatants using `calculateInitiative` (modified speed + bonus), combatants sorted descending
+5. **[Action]** GM serves encounter to Group View (`POST /api/encounters/:id/serve`) — WebSocket broadcasts `serve_encounter`, Group View switches to EncounterView tab
+6. **[Mechanic: turn-progression]** First combatant in initiative order becomes active. GM runs their turn:
+   - Selects a damaging move
+   - Selects target(s)
+   - **[Mechanic: accuracy]** System rolls accuracy (d20 >= AC + evasion - accuracy stages; nat 1 always misses, nat 20 always hits)
+   - **[Mechanic: stab]** System checks if move type matches attacker types → +2 DB if yes
+   - **[Mechanic: damage-formula]** System calculates damage: `setDamage(effectiveDB) + modifiedATK - modifiedDEF`, minimum 1
+   - **[Mechanic: type-effectiveness]** System applies type multiplier after defense subtraction
+   - **[Mechanic: damage-application]** Temp HP absorbs first, then real HP reduced
+   - **[Mechanic: injury-check]** System checks for Massive Damage (>= 50% max HP) and HP marker crossings
+7. **[Action]** GM clicks Next Turn (`POST /api/encounters/:id/next-turn`) — active combatant advances; WebSocket broadcasts `turn_change`
+8. **[Action]** Repeat steps 6-7 for each combatant through 2-3 full rounds
+9. **[Mechanic: faint-check]** A wild Pokemon's HP reaches 0 → Fainted status added, all persistent/volatile statuses cleared, turn skipped in subsequent rounds
+10. **[Action]** GM ends encounter (`POST /api/encounters/:id/end`) — encounter marked complete, all volatile statuses cleared, combat stages reset
+11. **[Bookkeeping]** GM unserves encounter (`POST /api/encounters/:id/unserve`) — Group View returns to previous tab
+12. **[Done]** Encounter is complete. Wild Pokemon fainted. Player Pokemon have updated HP, injuries, and status conditions persisted to their records.
+
+### PTU Rules Applied
+- **Full Contact Initiative**: "all participants simply go in order from highest to lowest speed" (core/07-combat.md, p227)
+- **Action Budget**: "each participant may take one Standard Action, one Shift Action, and one Swift Action on their turn" (core/07-combat.md, p227)
+- **Damage Formula**: "Damage = Actual Damage from chart + Attack Stat - Defense Stat" (core/07-combat.md, p236)
+- **Minimum Damage**: "An attack will always do a minimum of 1 damage" (core/07-combat.md, p236)
+- **Type Effectiveness After Defense**: "After defenses and damage reduction have been applied, apply Type Weaknesses or Resistances" (core/07-combat.md, p236)
+- **Massive Damage Injury**: "any single attack or damage source that does damage equal to 50% or more of their Max Hit Points" → 1 injury (core/07-combat.md, p250)
+- **Fainted**: "A Pokémon or Trainer that is at 0 Hit Points or less is Fainted" (core/07-combat.md, p248)
+
+### Expected End State
+- Encounter state is `ended` (isActive: false)
+- Encounter is unserved (isServed: false)
+- Wild Pokemon have `currentHp: 0` and `Fainted` in statusConditions
+- Player Pokemon have updated HP values reflecting damage taken
+- Injury counts incremented where Massive Damage or HP markers were crossed
+- Move log contains entries for all moves executed during combat
+- Group View has returned to lobby/scene tab
+
+### Variations
+- **Capture variant**: Player weakens wild Pokemon instead of fainting it, then attempts capture → sub-workflow combat-workflow-wild-encounter-capture-variant
+- **Party flees**: GM ends encounter before all enemies faint — same end state minus faints
+- **Multiple wild Pokemon**: 2-3 wild Pokemon spawned; combat runs longer, multiple faints tracked
+
+---
+
+### Sub-Workflow: Wild Encounter with Capture Attempt
+
+---
+loop_id: combat-workflow-wild-encounter-capture-variant
+tier: workflow
+domain: combat
+gm_intent: Weaken a wild Pokemon during combat and attempt capture before it faints
+ptu_refs:
+  - core/07-combat.md#Making Attacks
+  - core/05-pokemon.md#Capture Rate
+app_features:
+  - server/api/capture/rate.post.ts
+  - server/api/capture/attempt.post.ts
+  - composables/useCapture.ts
+  - server/services/pokemon-generator.service.ts (origin: 'captured')
+mechanics_exercised:
+  - damage-formula
+  - faint-check
+  - capture-rate
+  - capture-attempt
+sub_workflows: []
+---
+
+#### GM Context
+During a wild encounter, a player wants to capture a Pokemon rather than knock it out. The trainer weakens it first, then throws a Poke Ball.
+
+#### Preconditions
+- Wild encounter is active (from W1 steps 1-5)
+- At least one wild Pokemon has taken some damage but is not fainted
+
+#### Workflow Steps
+1. **[Action]** Player's Pokemon uses a move that reduces the wild Pokemon's HP to a low percentage without fainting it
+2. **[Mechanic: damage-formula]** Damage calculated normally; wild Pokemon survives with HP > 0
+3. **[Action]** On the trainer's turn, GM uses Standard Action to throw a Poke Ball — capture rate is calculated (`POST /api/capture/rate`) factoring in HP%, status, ball type, evolution stage
+4. **[Action]** GM executes capture attempt (`POST /api/capture/attempt`)
+5. **[Done — success]** Capture succeeds → wild Pokemon is linked to the trainer, origin set to `captured`, removed from enemy combatants
+6. **[Done — failure]** Capture fails → combat continues, trainer can try again next turn
+
+#### Expected End State (on capture success)
+- Pokemon record has `origin: 'captured'` and is linked to the capturing trainer
+- Wild Pokemon is removed from the encounter's enemy combatants
+- If no more enemies remain, GM can end the encounter
+
+---
+
+## Workflow W2: Multi-Round Battle with Stage Buffs and Type Matchups
+
+---
+loop_id: combat-workflow-stage-buffs-and-matchups
+tier: workflow
+domain: combat
+gm_intent: Run a multi-round battle where combat stages and type effectiveness interact to produce varied damage outcomes across turns
+ptu_refs:
+  - core/07-combat.md#Combat Stages
+  - core/07-combat.md#Same Type Attack Bonus
+  - core/07-combat.md#Type Effectiveness
+  - core/07-combat.md#Dealing Damage
+app_features:
+  - server/api/encounters/[id]/stages.post.ts
+  - server/api/encounters/[id]/move.post.ts
+  - server/api/encounters/[id]/damage.post.ts
+  - server/services/combatant.service.ts (updateStageModifiers)
+  - composables/useCombat.ts (applyStageModifier, stageMultipliers, calculateDamage, hasSTAB, getTypeEffectiveness)
+  - composables/useMoveCalculation.ts (attackStatValue, targetDamageCalcs)
+  - composables/useEncounterActions.ts (handleStages, handleExecuteMove)
+mechanics_exercised:
+  - combat-stages
+  - stage-multiplier-table
+  - stab
+  - type-effectiveness
+  - damage-formula
+  - evasion-from-stages
+sub_workflows: []
+---
+
+### GM Context
+A combat is underway and one side uses buff/debuff moves (like Swords Dance, Growl, or Leer) to shift the battle in their favor. Subsequent attack damage is higher or lower depending on accumulated stage changes. This workflow validates that stage modifications correctly propagate into damage calculations across multiple turns.
+
+### Preconditions
+- An encounter is active and started with at least two combatants on opposing sides
+- At least one combatant knows a stage-modifying move (or GM applies stages manually)
+- At least one combatant knows a STAB-eligible damaging move
+
+### Workflow Steps
+1. **[Action]** Combatant A uses a buff move (e.g., Swords Dance: +2 ATK combat stages) on their turn
+2. **[Mechanic: combat-stages]** System applies +2 to ATK stage via `POST /api/encounters/:id/stages` — stage clamped to [-6, +6], API returns previous/change/current values
+3. **[Action]** GM clicks Next Turn; Combatant B uses a debuff move (e.g., Growl: -1 ATK to Combatant A)
+4. **[Mechanic: combat-stages]** System applies -1 to Combatant A's ATK stage — net ATK stage is now +1 (stage multiplier ×1.2)
+5. **[Action]** Next round, Combatant A uses a STAB-eligible Physical damaging move against Combatant B
+6. **[Mechanic: stab]** Move type matches attacker type → DB increased by +2
+7. **[Mechanic: damage-formula]** Damage calculated with modified ATK: `modifiedATK = floor(baseATK × 1.2)`. Full formula: `max(1, setDamage(effectiveDB) + modifiedATK - modifiedDEF) × effectiveness`
+8. **[Mechanic: type-effectiveness]** Move type vs target types looked up; multiplier applied after defense
+9. **[Mechanic: evasion-from-stages]** If target has DEF/SpDEF stages, their evasion recalculates from the modified stat: `floor(modifiedDEF / 5)`, max +6
+10. **[Done]** Damage dealt reflects the combined effect of +1 ATK stage, STAB, and type effectiveness — verifiable by tracing each modifier through the formula
+
+### PTU Rules Applied
+- **Positive Stages**: "For every Combat Stage above 0, a Stat is raised by 20%, rounded down" (core/07-combat.md, p235)
+- **Negative Stages**: "For every Combat Stage below 0, a Stat is lowered by 10%, rounded down" (core/07-combat.md, p235)
+- **STAB**: "the Damage Base of the Move is increased by +2" (core/07-combat.md, p236)
+- **Type Effectiveness**: "A Super-Effective hit will deal x1.5 damage...A Resisted Hit deals 1/2 damage" (core/07-combat.md, p236)
+- **Stages Affect Evasion**: "Raising your Defense, Special Defense, and Speed Combat Stages can give you additional evasion" (core/07-combat.md, p234)
+
+### Expected End State
+- Combatant A's stage modifiers show ATK at +1 (after +2 then -1)
+- Damage dealt is higher than a neutral (0 stage) attack by the stage multiplier
+- STAB added +2 to DB before chart lookup
+- Type effectiveness applied after defense subtraction
+- API responses for stage changes include previous/change/current breakdown
+
+### Variations
+- **Max stage stacking**: Multiple buffs push ATK to +6 (×2.2) — verify clamping
+- **Negative stages dominate**: Target debuffed to -6 DEF (×0.4) — very low defense, high incoming damage
+- **Stage-affected evasion**: Target with +3 DEF stage has higher physical evasion, making hits harder
+
+---
+
+## Workflow W3: Handle Faint and Send Replacement Mid-Combat
+
+---
+loop_id: combat-workflow-faint-and-replacement
+tier: workflow
+domain: combat
+gm_intent: When a Pokemon faints during combat, handle the faint correctly and add a replacement Pokemon to continue the fight
+ptu_refs:
+  - core/07-combat.md#Fainted
+  - core/07-combat.md#Injuries
+  - core/07-combat.md#Pokémon Switching
+app_features:
+  - server/services/combatant.service.ts (calculateDamage, applyDamageToEntity)
+  - server/api/encounters/[id]/damage.post.ts
+  - server/api/encounters/[id]/combatants.post.ts
+  - server/api/encounters/[id]/combatants/[combatantId].delete.ts
+  - server/api/encounters/[id]/next-turn.post.ts
+  - stores/encounter.ts (applyDamage, addCombatant, removeCombatant, nextTurn)
+  - composables/useCombat.ts (checkForInjury)
+mechanics_exercised:
+  - damage-application
+  - faint-check
+  - injury-check
+  - status-clear-on-faint
+  - initiative-insertion
+  - turn-progression
+sub_workflows: []
+---
+
+### GM Context
+Mid-combat, a player's Pokemon takes a hit that drops it to 0 HP. The GM needs to correctly handle the faint (add status, clear other statuses, check injuries), then the player sends out a replacement Pokemon that enters combat at the correct initiative position. This is a common mid-combat event.
+
+### Preconditions
+- An encounter is active with multiple rounds already underway
+- A player's Pokemon has low HP and is about to take lethal damage
+- The player's trainer has at least one additional Pokemon available
+
+### Workflow Steps
+1. **[Action]** Enemy combatant uses a damaging move against the player's Pokemon
+2. **[Mechanic: damage-application]** Damage applied via `POST /api/encounters/:id/damage` — temp HP absorbs first, then real HP
+3. **[Mechanic: faint-check]** HP reaches 0 → `calculateDamage` returns `fainted: true` → `applyDamageToEntity` adds `Fainted` to statusConditions
+4. **[Mechanic: injury-check]** System checks Massive Damage (damage >= 50% maxHP) — injury count incremented if threshold met
+5. **[Mechanic: status-clear-on-faint]** All persistent and volatile statuses are cleared when the Pokemon faints (per PTU rules — Fainted status remains)
+6. **[Bookkeeping]** Fainted Pokemon's subsequent turns are skipped during turn progression
+7. **[Action]** GM optionally removes the fainted combatant (`DELETE /api/encounters/:id/combatants/:combatantId`) or leaves it in the initiative list as fainted
+8. **[Action]** GM adds the replacement Pokemon as a new combatant (`POST /api/encounters/:id/combatants`, side: `players`) — it is inserted into the turn order based on its speed/initiative
+9. **[Mechanic: turn-progression]** Combat continues; replacement Pokemon acts on its initiative count
+10. **[Done]** Fainted Pokemon is tracked with 0 HP, injuries updated. Replacement Pokemon is active in combat with full HP and actions.
+
+### PTU Rules Applied
+- **Fainted**: "A Pokémon or Trainer that is at 0 Hit Points or less is Fainted...cannot use any Actions" (core/07-combat.md, p248)
+- **Statuses Cleared on Faint**: "When a Pokémon becomes Fainted, they are automatically cured of all Persistent and Volatile Status Conditions" (core/07-combat.md, p248)
+- **Switching Fainted Pokemon**: "Trainers may Switch out Fainted Pokémon as a Shift Action" (core/07-combat.md, p229)
+- **Full Contact Switching**: In full contact battles, the replacement Pokemon retains its Pokémon turn if the initiative tick hasn't passed (core/07-combat.md, p229-230)
+
+### Expected End State
+- Fainted Pokemon: `currentHp: 0`, `statusConditions: ['Fainted']` (all other statuses cleared), injury count updated
+- Fainted Pokemon's turn is skipped in initiative order
+- Replacement Pokemon appears in combatant list on the players side
+- Replacement Pokemon has full HP, no combat stages, no status conditions
+- Initiative order updated to include replacement at correct position
+
+### Variations
+- **Fainted with pre-existing statuses**: Pokemon was Burned + Confused before fainting — both statuses should be cleared, leaving only Fainted
+- **Massive Damage faint**: The killing blow also triggers Massive Damage injury — fainted Pokemon gains +1 injury from the same hit
+- **No replacement available**: Trainer has no more Pokemon — if all player Pokemon faint, GM may end the encounter
+
+---
+
+## Workflow W4: Status Affliction Chain Through Combat
+
+---
+loop_id: combat-workflow-status-chain
+tier: workflow
+domain: combat
+gm_intent: Inflict a status condition during combat, observe its mechanical effects over subsequent turns, then cure it via Take a Breather or end of combat
+ptu_refs:
+  - core/07-combat.md#Status Afflictions
+  - core/07-combat.md#Persistent Afflictions
+  - core/07-combat.md#Volatile Afflictions
+  - core/07-combat.md#Take a Breather
+app_features:
+  - server/api/encounters/[id]/status.post.ts
+  - server/api/encounters/[id]/breather.post.ts
+  - server/services/combatant.service.ts (updateStatusConditions, VALID_STATUS_CONDITIONS)
+  - composables/useCombat.ts (isImmuneToStatus, typeImmunities)
+  - composables/useEncounterActions.ts (handleStatus, handleExecuteAction)
+  - stores/encounter.ts (addStatusCondition, removeStatusCondition, takeABreather)
+mechanics_exercised:
+  - status-application
+  - type-based-status-immunity
+  - persistent-status-effects
+  - volatile-status-effects
+  - take-a-breather
+  - status-clear-on-combat-end
+sub_workflows: []
+---
+
+### GM Context
+During a fight, a move inflicts a status condition on a combatant. Over the next few turns, the GM observes the mechanical effects (stage penalties from Burn/Paralysis, action restrictions from Freeze/Sleep). Eventually the status is cured — either by Take a Breather (volatile), healing, or end of combat. This workflow tests the full lifecycle of status conditions during a battle.
+
+### Preconditions
+- An encounter is active with combat underway
+- At least one combatant can inflict a status condition (via move or GM manual application)
+- Target Pokemon's type does not grant immunity to the status being applied
+
+### Workflow Steps
+1. **[Action]** A move or ability inflicts a status condition — GM adds it via `POST /api/encounters/:id/status` with `add: ['Paralyzed']`
+2. **[Mechanic: type-based-status-immunity]** System checks `isImmuneToStatus(targetTypes, 'Paralyzed')` — Electric types are immune. If not immune, status is added.
+3. **[Mechanic: persistent-status-effects]** Paralyzed applies: Speed lowered by 4 combat stages. GM applies stage change via `POST /api/encounters/:id/stages` with `{ speed: -4 }`.
+4. **[Mechanic: turn-progression]** On the paralyzed Pokemon's next turn, GM rolls save (DC 5 at start of turn to act). If failed, the Pokemon cannot take actions this turn.
+5. **[Action]** GM advances turns; combat continues for 1-2 more rounds with the status active
+6. **[Action]** Alternatively, a combatant with a volatile status (Confused) uses Take a Breather:
+   - **[Mechanic: take-a-breather]** `POST /api/encounters/:id/breather` — all combat stages reset to 0, all volatile statuses cleared, temp HP removed
+   - Combatant becomes Tripped and Vulnerable until end of next turn
+   - Full Action consumed (Standard + Shift)
+7. **[Mechanic: status-clear-on-combat-end]** When encounter ends, all volatile statuses are removed. Persistent statuses (Burned, Paralyzed, Poisoned) remain on the entity.
+8. **[Done]** Status was applied, affected gameplay for multiple turns, and was correctly resolved.
+
+### PTU Rules Applied
+- **No Limit on Statuses**: "there is no limit to the number of Status Afflictions that a single target can have" (core/07-combat.md, p246)
+- **Paralyzed**: "Speed is lowered 4 Combat Stages...each round at the beginning of their turn, they must make a Save Check. On a result of 5 or higher, they may act normally. On a result below 5, they are unable to take any actions" (core/07-combat.md, p247)
+- **Take a Breather**: "set their Combat Stages back to their default level, lose all Temporary Hit Points, and are cured of all Volatile Status effects" (core/07-combat.md, p245)
+- **Breather Penalty**: "They then become Tripped and are Vulnerable until the end of their next turn" (core/07-combat.md, p245)
+- **Electric Immune to Paralysis**: Type immunity table (core/07-combat.md, Type Effectiveness section)
+- **Volatile Cleared at End**: Volatile afflictions are "cured at the end of an encounter" (core/07-combat.md, p246)
+
+### Expected End State
+- After status application: target's `statusConditions` array contains the applied status
+- After stage effect: target's `stageModifiers.speed` reflects -4 from Paralysis
+- After Take a Breather: all stages at 0, all volatile statuses removed, `Tripped` and `Vulnerable` added
+- After combat end: volatile statuses cleared, persistent statuses remain
+- Type-immune targets: status was never added to the array
+
+### Variations
+- **Type immunity blocks status**: Apply Paralyzed to an Electric-type → status not added, `isImmuneToStatus` returns true
+- **Multiple statuses stacked**: Apply Burned + Confused to the same target — both present simultaneously
+- **Persistent survives combat end**: Pokemon is Burned during combat → after encounter ends, Burned persists on the entity record
+
+---
+
+## Workflow W5: Mid-Combat Healing and Faint Recovery
+
+---
+loop_id: combat-workflow-healing-and-recovery
+tier: workflow
+domain: combat
+gm_intent: Heal a damaged Pokemon during combat, revive a fainted Pokemon, and grant temporary HP to verify all healing interactions
+ptu_refs:
+  - core/07-combat.md#Resting
+  - core/07-combat.md#Fainted
+  - core/07-combat.md#Temporary Hit Points
+app_features:
+  - server/api/encounters/[id]/heal.post.ts
+  - server/services/combatant.service.ts (applyHealingToEntity, HealOptions)
+  - composables/useEncounterActions.ts (handleHeal)
+  - stores/encounter.ts (healCombatant)
+mechanics_exercised:
+  - healing-capped-at-max
+  - faint-recovery
+  - temporary-hp
+  - injury-healing
+sub_workflows: []
+---
+
+### GM Context
+In the middle of a tough fight, the GM needs to heal combatants. A trainer uses a Potion on a damaged Pokemon, a Revive on a fainted Pokemon, and a move grants temporary HP to a tank. This workflow verifies that all healing paths work correctly during active combat.
+
+### Preconditions
+- An encounter is active with combat underway
+- At least one combatant has taken damage (HP below max)
+- At least one combatant is fainted (HP = 0, has Fainted status)
+
+### Workflow Steps
+1. **[Action]** GM heals a damaged Pokemon via `POST /api/encounters/:id/heal` with `{ combatantId, amount: 20 }`
+2. **[Mechanic: healing-capped-at-max]** `applyHealingToEntity` calculates: `newHp = min(maxHp, currentHp + 20)` — HP cannot exceed max HP
+3. **[Action]** GM heals a fainted Pokemon via `POST /api/encounters/:id/heal` with `{ combatantId, amount: 30 }`
+4. **[Mechanic: faint-recovery]** Pokemon was at 0 HP → healed to 30 HP → Fainted status is removed from statusConditions. Pokemon can act again on its next turn.
+5. **[Action]** GM grants temporary HP to a combatant via `POST /api/encounters/:id/heal` with `{ combatantId, amount: 0, tempHp: 15 }`
+6. **[Mechanic: temporary-hp]** Temp HP is added to the entity's `temporaryHp` field. On the next incoming hit, temp HP absorbs damage first.
+7. **[Action]** GM heals injuries via `POST /api/encounters/:id/heal` with `{ combatantId, amount: 0, healInjuries: 1 }`
+8. **[Mechanic: injury-healing]** Injury count reduced by 1 (minimum 0), effective max HP increases by 1/10
+9. **[Done]** All healing types applied correctly. Damaged Pokemon healed (capped at max), fainted Pokemon revived and can act, temp HP tracked separately, injuries reduced.
+
+### PTU Rules Applied
+- **Faint Recovery**: "The Fainted Condition is removed by Revive or being brought to positive HP" (core/07-combat.md, p248)
+- **Temp HP Absorbs First**: "Temporary Hit Points are always lost first from damage" (core/07-combat.md, p247)
+- **Temp HP Don't Stack**: "Temporary Hit Points do not stack" (core/07-combat.md, p247) — only highest value applies
+- **Injury Effect**: "For each Injury...Maximum Hit Points are reduced by 1/10th" (core/07-combat.md, p250)
+
+### Expected End State
+- Healed Pokemon: `currentHp` increased but not exceeding `maxHp`
+- Revived Pokemon: `currentHp > 0`, `Fainted` removed from `statusConditions`, can act on next turn
+- Temp HP Pokemon: `temporaryHp` field set to granted amount; next damage hit absorbs from temp HP first
+- Injury-healed Pokemon: `injuries` count decremented by 1
+- All changes broadcast via WebSocket
+
+### Variations
+- **Over-heal**: Heal amount exceeds missing HP → capped at maxHp, no overflow
+- **Heal fainted with temp HP only**: Granting temp HP alone does NOT remove Fainted (must heal real HP above 0)
+- **Combined heal**: Single heal call with `amount: 20, tempHp: 10, healInjuries: 1` — all three applied in one operation
+
+---
+
+## Workflow W6: Encounter Setup from Template
+
+---
+loop_id: combat-workflow-setup-from-template
+tier: workflow
+domain: combat
+gm_intent: Load a pre-built encounter from a saved template so combat can start immediately without manual setup
+ptu_refs:
+  - core/07-combat.md#Types and Contexts of Combat
+app_features:
+  - server/api/encounter-templates/[id]/load.post.ts
+  - stores/encounter.ts (loadFromTemplate, startEncounter, serveEncounter)
+  - server/api/encounters/[id]/start.post.ts
+  - server/api/encounters/[id]/serve.post.ts
+mechanics_exercised:
+  - encounter-lifecycle
+  - template-loading
+  - initiative-calculation
+  - serve-to-group
+sub_workflows: []
+---
+
+### GM Context
+The GM has a recurring encounter (e.g., a gym battle, a boss fight) saved as a template. Instead of manually creating the encounter and adding combatants one by one, they load the template which pre-populates all combatants with correct species, levels, moves, and sides. Then they start and serve it immediately.
+
+### Preconditions
+- An encounter template exists with saved combatant data (species, levels, moves, sides)
+- Player characters with Pokemon exist to be added to the encounter (or are already in the template)
+
+### Workflow Steps
+1. **[Setup]** GM selects an encounter template and loads it (`POST /api/encounter-templates/:id/load`) — system creates a new encounter with all template combatants pre-populated
+2. **[Setup]** GM optionally adds additional combatants (player Pokemon not in template) via `POST /api/encounters/:id/combatants`
+3. **[Action]** GM starts the encounter (`POST /api/encounters/:id/start`) — initiative calculated for all combatants, turn order established
+4. **[Action]** GM serves to Group View (`POST /api/encounters/:id/serve`)
+5. **[Done]** Encounter is active, served, and ready for combat. All combatants have correct stats, moves, and initiative positions from the template data.
+
+### PTU Rules Applied
+- **Initiative**: All combatants sorted by speed stat (core/07-combat.md, p227)
+- Template data preserves species-accurate base stats, moves, abilities
+
+### Expected End State
+- Encounter exists with all template combatants present
+- Each combatant has correct entity data (stats, moves, abilities, types)
+- Initiative order is calculated and displayed
+- Encounter is served to Group View
+- First combatant in initiative is the active turn
+
+### Variations
+- **Template + wild spawn**: Load template for trainers, then spawn additional wild Pokemon via `wild-spawn` endpoint
+- **Scene-based setup**: Instead of template, create encounter from an active scene via `POST /api/encounters/from-scene` — scene entities become combatants
+
+---
+
+## Tier 1 Mechanic Coverage Verification
+
+The following Tier 2 mechanics are exercised by at least one Tier 1 workflow:
+
+| Mechanic | Covered By |
+|----------|-----------|
+| Basic Physical Attack | W1, W2 |
+| Basic Special Attack | W1, W2 |
+| STAB | W1, W2 |
+| Type Effectiveness | W1, W2 |
+| Critical Hit | — (rare event, adequately covered by Tier 2: combat-critical-hit) |
+| Combat Stages | W2, W4 |
+| Initiative and Turn Order | W1, W2, W3, W6 |
+| Turn Progression | W1, W2, W3, W4 |
+| Struggle Attack | — (edge case, adequately covered by Tier 2: combat-struggle-attack) |
+| Combat Maneuvers / Take a Breather | W4 |
+| Status Conditions | W3, W4 |
+| Damage Application / HP System | W1, W2, W3 |
+| Temporary HP | W5 |
+| Injuries | W1, W3 |
+| Faint | W1, W3 |
+| Healing in Combat | W5 |
+| Encounter Lifecycle | W1, W6 |
+| Multi-Target Moves | — (adequately covered by Tier 2: combat-multi-target) |
+
+**Uncovered by workflows (remain Tier 2 only):** Critical Hit, Struggle Attack, Multi-Target Moves — these are either rare events or edge cases that don't naturally arise in typical GM workflows but have important math worth isolating.

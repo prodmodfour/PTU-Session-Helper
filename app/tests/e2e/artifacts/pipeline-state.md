@@ -16,17 +16,17 @@ updated_by: orchestrator
 | Results | complete | 19/19 result files | 2026-02-15 |
 | Triage | complete | 19/19 PASS — 0 failures to triage | 2026-02-15 |
 
-### Tier 1 (Session Workflows) — NOT STARTED
+### Tier 1 (Session Workflows) — IN PROGRESS
 
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
-| Loops | not started | — | — |
+| Loops | complete | 6 workflows (+ 1 sub-workflow) | 2026-02-15 |
 | Scenarios | not started | — | — |
 | Verifications | not started | — | — |
 | Test Runs | not started | — | — |
 | Results | not started | — | — |
 
-Note: Existing Tier 2 artifacts remain valid. Tier 1 workflow loops need to be synthesized and added to `loops/combat.md`, then new workflow scenarios crafted.
+Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + replacement), W4 (status chain), W5 (healing + recovery), W6 (template setup). Sub-workflow: W1 capture variant. 3 mechanics remain Tier 2 only (critical hit, struggle, multi-target).
 
 ### Results Verification Summary (Result Verifier)
 
@@ -118,7 +118,7 @@ All 4 previously corrected scenarios now PASS:
 
 ### Open Issues
 
-- Combat Tier 1 workflow loops not yet synthesized. Existing Tier 2 mechanic tests remain valid and passing.
+- Combat Tier 1 workflow loops synthesized (6 workflows + 1 sub-workflow). Awaiting Scenario Crafter to produce workflow scenarios.
 
 ### Lessons (Retrospective Analyst)
 
