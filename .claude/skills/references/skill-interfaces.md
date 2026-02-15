@@ -602,10 +602,36 @@ updated_by: <skill name>
 ...
 ```
 
+**Additional sections** (appended after all domain sections):
+
+```markdown
+## Lessons
+
+| Metric | Value |
+|--------|-------|
+| Last analyzed | <ISO timestamp> |
+| Total lessons | <count> |
+| Active | <count> |
+| Resolved | <count> |
+| Systemic patterns | <count> |
+
+## Code Health
+
+| Metric | Value |
+|--------|-------|
+| Last audited | <ISO timestamp> |
+| Open tickets (P0) | <count> |
+| Open tickets (P1) | <count> |
+| Open tickets (P2) | <count> |
+| In-progress tickets | <count> |
+```
+
 **Constraints:**
 - Every skill updates this file after writing its artifacts
 - Orchestrator uses this as its sole source of truth
 - Staleness detection: compare stage timestamps — if a loop is newer than its scenarios, scenarios are stale
+- `## Lessons` section is written by the Retrospective Analyst only
+- `## Code Health` section is written by the Code Health Auditor only
 
 ---
 
