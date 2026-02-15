@@ -122,6 +122,24 @@ If the test fails due to **selector or timing issues** (not assertion value mism
 
 **Never self-correct assertion failures.** If expected value doesn't match actual value, that's potentially an APP_BUG or SCENARIO_BUG — report it exactly as-is.
 
+### Step 4b: Mandatory Discrepancy Reporting
+
+During spec authoring and test execution, you may discover discrepancies between the scenario and the actual app. **You must file a report for every discrepancy — never silently adapt the spec.**
+
+**File a SCENARIO_BUG correction when:**
+- The scenario's API payload field names don't match what the app accepts (e.g., `baseSpAttack` vs `baseSpAtk`)
+- The scenario's expected values assume behavior the app doesn't exhibit
+- The scenario references an API endpoint with a different path or method than what exists
+
+**File an AMBIGUOUS report when:**
+- An assertion requires data that isn't available in the API response (e.g., evasion is computed client-side, not returned by the combatant API)
+- An assertion can only be verified by replicating app logic in the test code (self-referential test)
+
+**File an APP_BUG report when:**
+- The API accepts field names that are inconsistent with each other (mixing full words and abbreviations for the same concept)
+
+**Root cause investigation before retrying:** When a test fails, examine the actual-vs-expected values before attributing the failure to infrastructure (parallelism, timing, selectors). Compare across runs: if the discrepancy varies between runs, the input is likely non-deterministic (report as SCENARIO_BUG). If it's consistent, it's a logic error. Only attribute to infrastructure after ruling out data-level causes.
+
 ### Step 5: Write Test Result
 
 Write the result to `artifacts/results/<scenario-id>.result.md` using the format from `.claude/skills/references/skill-interfaces.md`:

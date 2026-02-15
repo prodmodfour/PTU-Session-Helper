@@ -77,6 +77,10 @@ For each loop, select real Pokemon species and concrete values:
 
 **Type chart validation (mandatory):** For every damage interaction, look up each type pair against the PTU type chart. Don't assume — check: `Normal → Rock: resisted (×0.5)`.
 
+**Non-deterministic API check (mandatory):** Before writing any assertion with an exact expected stat value, determine whether the API endpoint that creates the entity produces deterministic output. Endpoints using `generateAndCreatePokemon` (wild-spawn, template-load) distribute `level - 1` random stat points — exact HP/stat values are non-deterministic. For these endpoints: (a) design the spec to read actual stats from the API after creation and derive expected values dynamically, or (b) use `>=` minimum bounds and relational checks (`currentHp = maxHp`). Document which approach and why in the scenario. Only manually-created Pokemon (via `POST /api/pokemon` with explicit base stats) produce deterministic stats.
+
+**Enforcement boundary check (mandatory):** For every assertion that tests a PTU rule, determine whether the app enforces that rule at the API level or whether it's a GM responsibility. The status API, for example, is a GM tool — it applies any valid status without type checking. The damage API accepts raw damage values without checking move legality. Annotate each rule-dependent assertion: `App-enforced: HP calculation` or `GM-enforced: type immunity (not in API)`. Do not write assertions expecting the API to enforce GM-responsibility rules.
+
 ### Step 3: Map to Actions
 
 Translate game actions to specific interactions using `.claude/skills/references/app-surface.md`.

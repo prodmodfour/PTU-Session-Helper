@@ -63,6 +63,20 @@ My derivation: HP = 15 + (5 * 3) + 10 = 15 + 15 + 10 = 40
 Status: CORRECT
 ```
 
+### Step 3b: Verify Against App Implementation
+
+For each assertion, check whether the expected value depends on an assumption about how the app behaves. PTU-correct math is necessary but not sufficient — the assertion must also match what the app actually does.
+
+**Non-deterministic output check:** If an assertion expects an exact stat value from an API endpoint that creates entities (wild-spawn, template-load, or any endpoint using `generateAndCreatePokemon`), verify whether the endpoint produces deterministic stats. Pokemon created via `generateAndCreatePokemon` distribute `level - 1` random stat points — assertions must use dynamic reads or `>=` minimum bounds, not exact base-stat-only calculations. Check the service code if unsure.
+
+**Enforcement boundary check:** If an assertion assumes the app enforces a PTU rule (type immunity, STAB requirement, move legality), verify that the API actually enforces it. Some APIs are GM tools that apply any valid input without rule checking (e.g., the status API applies any status regardless of type immunity). Cross-reference against existing tests in the same domain — if a Tier 2 test already documents that the API is type-agnostic, a Tier 1 assertion assuming type enforcement is wrong.
+
+**Implementation cross-reference:** For assertions about computed values (HP after damage, stat after stage change, status after faint), verify the app's service code implements the mechanic. If the service code is missing a step (e.g., faint handler doesn't clear statuses), mark the assertion as correct-per-PTU but flag the potential APP_BUG rather than marking PASS.
+
+If this step reveals that an assertion assumes behavior the app doesn't implement, mark it:
+- **INCORRECT (implementation mismatch)** if the scenario's expected value will definitely not match app output
+- Add the mismatch to the Issues Found section with the specific discrepancy
+
 ### Step 4: Check Completeness
 
 Read the source gameplay loop from `artifacts/loops/`:
@@ -185,6 +199,9 @@ For every scenario, verify:
 - [ ] Errata corrections applied
 - [ ] All loop steps have corresponding scenario actions
 - [ ] All expected outcomes have assertions with derivations
+- [ ] Assertions with exact stat values verified as deterministic (not from generateAndCreatePokemon)
+- [ ] Assertions about rule enforcement verified against app implementation (not just PTU rules)
+- [ ] Cross-referenced against existing domain tests for known API behavior
 
 ## What You Do NOT Do
 

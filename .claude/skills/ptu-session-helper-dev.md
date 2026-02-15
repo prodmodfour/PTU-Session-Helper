@@ -109,6 +109,15 @@ Do NOT spend time on structural investigations (route configs, middleware, NuxtL
 - When a bug appears in one file, **always check if the same bug exists in related files** (extracted components, copied patterns). Don't fix one instance and call it done.
 - When a NuxtLink "does nothing," it almost always means the target page has a compile or import error — not a routing/CSS/markup problem.
 
+### Duplicate Code Path Check (MANDATORY for bug fixes)
+When fixing a bug in a service function, **search the entire codebase for all code paths that perform the same operation** before considering the fix complete. The pattern:
+1. Identify the operation the buggy code performs (e.g., "apply damage and check for faint")
+2. Grep for the operation's key terms across all server files (e.g., `currentHp`, `fainted`, `statusConditions`)
+3. If any other code path performs the same operation differently (inline logic vs service call), **unify it** to use the canonical service function
+4. The fix is not complete until all paths route through the same code
+
+**Example from combat (bug-001):** Fixing faint status clearing in `combatant.service.ts` was incomplete because `move.post.ts` performed inline `Math.max(0, hp - damage)` instead of calling the damage pipeline. The initial fix required a second commit to unify the duplicate path. The Senior Reviewer caught it — but the Developer should have searched for it first.
+
 ### Feature Completeness: Always Consider Both Entity Types
 - HumanCharacter and Pokemon are the two primary entity types. They share the same sheets page, card components, and store patterns.
 - **When adding a field or feature to one, ask: does the other need it too?** Example: adding `location` to HumanCharacter and grouping NPCs by location on sheets — Pokemon also needed a `location` field and the same grouping treatment, but the plan missed it entirely.
