@@ -31,6 +31,7 @@ app/tests/e2e/artifacts/
 ├── reports/            # Result Verifier → writes
 ├── designs/            # Feature Designer → writes
 ├── refactoring/        # Code Health Auditor → writes
+├── reviews/            # Senior Reviewer + Game Logic Reviewer → write
 └── pipeline-state.md   # Updated by every skill, read by Orchestrator
 ```
 
@@ -235,7 +236,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | **File** | `.claude/skills/ptu-session-helper-senior-reviewer.md` |
 | **Trigger** | Load at session start, after Dev produces changes |
 | **Input** | Dev's code changes (git diff), bug reports being addressed |
-| **Output** | Review feedback, approval/rejection |
+| **Output** | `app/tests/e2e/artifacts/reviews/code-review-<NNN>.md` |
 | **Terminal** | Persistent — review terminal |
 
 **Ecosystem additions (to existing skill):**
@@ -250,7 +251,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | **File** | `.claude/skills/game-logic-reviewer.md` |
 | **Trigger** | Ask Claude to load the game-logic-reviewer skill |
 | **Input** | Code changes, scenario verifications, escalations from other skills |
-| **Output** | PTU compliance report with CORRECT/INCORRECT/NEEDS REVIEW per mechanic |
+| **Output** | `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md` |
 | **Terminal** | Spin up when needed for PTU rule questions |
 
 **Evolved from:** `verify-ptu.md` (deleted after evolution)
@@ -665,6 +666,105 @@ overflow_files: <count of files that qualified but exceeded the 20-file cap>
 - Overflow section tracks files that exceeded the 20-file deep-read cap
 - Comparison section is empty on first audit
 
+### 4.8 Code Review
+
+**Written by:** Senior Reviewer
+**Read by:** Orchestrator, Developer, Game Logic Reviewer
+**Location:** `artifacts/reviews/code-review-<NNN>.md`
+
+```markdown
+---
+review_id: code-review-<NNN>
+review_type: code
+reviewer: senior-reviewer
+trigger: bug-fix | design-implementation | refactoring
+target_report: <bug-NNN | design-NNN | refactoring-NNN>
+domain: <domain>
+commits_reviewed:
+  - <commit hash>
+files_reviewed:
+  - <app file path>
+verdict: APPROVED | CHANGES_REQUIRED | BLOCKED
+issues_found:
+  critical: <count>
+  high: <count>
+  medium: <count>
+scenarios_to_rerun:
+  - <scenario-id>
+reviewed_at: <ISO timestamp>
+follows_up: <code-review-NNN>  # optional — for re-reviews
+---
+
+## Review Scope
+<What was reviewed>
+
+## Issues
+
+### CRITICAL / HIGH / MEDIUM
+1. **<title>** — `<file>:<line>`
+   <buggy code + fix>
+
+## What Looks Good
+## Verdict
+## Required Changes
+## Scenarios to Re-run
+```
+
+**Constraints:**
+- Verdict `BLOCKED` = CRITICAL issues, `CHANGES_REQUIRED` = HIGH/MEDIUM must fix, `APPROVED` = ready for rules review
+- `scenarios_to_rerun` tells Orchestrator what to re-test after both reviews pass
+- Counters per-prefix: `code-review-001` and `rules-review-001` coexist independently
+- Follow-up reviews: update existing verdict (trivial fix) or new artifact with `follows_up` (substantive re-review)
+
+### 4.9 Rules Review
+
+**Written by:** Game Logic Reviewer
+**Read by:** Orchestrator, Developer
+**Location:** `artifacts/reviews/rules-review-<NNN>.md`
+
+```markdown
+---
+review_id: rules-review-<NNN>
+review_type: rules
+reviewer: game-logic-reviewer
+trigger: bug-fix | design-implementation | escalation-ruling
+target_report: <bug-NNN | design-NNN | escalation-NNN>
+domain: <domain>
+commits_reviewed:
+  - <commit hash>
+mechanics_verified:
+  - <mechanic-name>
+verdict: APPROVED | CHANGES_REQUIRED | BLOCKED
+issues_found:
+  critical: <count>
+  high: <count>
+  medium: <count>
+ptu_refs:
+  - <rulebook-file>#<section>
+reviewed_at: <ISO timestamp>
+follows_up: <rules-review-NNN>  # optional — for re-reviews
+---
+
+## Review Scope
+## Mechanics Verified
+### <Mechanic Name>
+- **Rule:** "<quote>" (`<file>#<section>`)
+- **Implementation:** <what the code does>
+- **Status:** CORRECT | INCORRECT | NEEDS REVIEW
+
+## Summary
+## Rulings
+## Verdict
+## Required Changes
+```
+
+**Constraints:**
+- Verdict meanings match Code Review
+- `mechanics_verified` lists every mechanic checked — even if all correct
+- `ptu_refs` must point to actual rulebook files
+- Escalation rulings also produce a `rules-review-*.md` for audit trail
+- Both reviews (code + rules) are always required before a fix proceeds to re-test
+
 ## 5. Authority Hierarchy
 
 When skills disagree:
@@ -694,6 +794,7 @@ All skills that need PTU knowledge read from shared reference files rather than 
 | Playwright Patterns | `.claude/skills/references/playwright-patterns.md` | Playtester |
 | Lesson Files | `app/tests/e2e/artifacts/lessons/` | Retrospective Analyst (writes), all skills (read) |
 | Refactoring Tickets | `app/tests/e2e/artifacts/refactoring/` | Code Health Auditor (writes), Developer + Senior Reviewer (read) |
+| Review Artifacts | `app/tests/e2e/artifacts/reviews/` | Senior Reviewer + Game Logic Reviewer (write), Orchestrator + Developer (read) |
 
 Reference files live in `.claude/skills/references/`.
 
@@ -716,9 +817,9 @@ Reference files live in `.claude/skills/references/`.
 ### 7.2 Bug Fix Cycle
 
 1. Dev reads bug report, implements fix, commits
-2. Reviewer approves fix, notes affected scenarios
-3. Game Logic Reviewer confirms PTU correctness of fix
-4. Orchestrator: "Fix approved. Go to Playtester terminal, re-run scenario X"
+2. Senior Reviewer reviews code → writes `artifacts/reviews/code-review-<NNN>.md` with verdict
+3. Game Logic Reviewer confirms PTU correctness → writes `artifacts/reviews/rules-review-<NNN>.md` with verdict
+4. Orchestrator detects both reviews APPROVED → "Fix approved. Go to Playtester terminal, re-run scenario X"
 5. Playtester re-runs → new result
 6. Result Verifier checks → PASS or new bug
 
