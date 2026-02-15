@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-15T21:00:00
-updated_by: scenario-verifier
+last_updated: 2026-02-15T23:30:00
+updated_by: playtester
 ---
 
 ## Domain: combat
@@ -10,8 +10,45 @@ updated_by: scenario-verifier
 | Loops | complete | 15 loops (+ 12 sub-loops) | 2026-02-15 |
 | Scenarios | complete | 19/19 (6 P0, 8 P1, 5 P2) | 2026-02-15 |
 | Verifications | complete | 19/19 PASS | 2026-02-15 |
-| Test Runs | not started | — | — |
-| Results | not started | — | — |
+| Test Runs | complete | 80/80 PASS (19 specs) | 2026-02-15 |
+| Results | complete | 19/19 result files | 2026-02-15 |
+
+### Test Run Results (Playtester)
+
+**ALL PASS (80/80 tests across 19 spec files)**
+
+Run: `npx playwright test tests/e2e/scenarios/combat/ --reporter=list`
+Duration: ~26s, 6 workers, 0 retries needed
+
+| Spec File | Tests | Status | Duration |
+|-----------|-------|--------|----------|
+| combat-basic-physical-001.spec.ts | 7 | PASS | ~2s |
+| combat-basic-special-001.spec.ts | 7 | PASS | ~2s |
+| combat-encounter-lifecycle-001.spec.ts | 7 | PASS | ~4s |
+| combat-initiative-order-001.spec.ts | 6 | PASS | ~8s |
+| combat-turn-progression-001.spec.ts | 7 | PASS | ~6s |
+| combat-damage-and-faint-001.spec.ts | 8 | PASS | ~4s |
+| combat-critical-hit-001.spec.ts | 3 | PASS | ~8s |
+| combat-stab-001.spec.ts | 3 | PASS | ~8s |
+| combat-type-effectiveness-001.spec.ts | 3 | PASS | ~5s |
+| combat-type-immunity-001.spec.ts | 3 | PASS | ~6s |
+| combat-healing-001.spec.ts | 4 | PASS | ~10s |
+| combat-combat-stages-001.spec.ts | 6 | PASS | ~14s |
+| combat-status-conditions-001.spec.ts | 6 | PASS | ~13s |
+| combat-take-a-breather-001.spec.ts | 5 | PASS | ~14s |
+| combat-injury-massive-damage-001.spec.ts | 1 | PASS | ~2s |
+| combat-minimum-damage-001.spec.ts | 1 | PASS | ~2s |
+| combat-multi-target-001.spec.ts | 1 | PASS | ~3s |
+| combat-struggle-attack-001.spec.ts | 1 | PASS | ~2s |
+| combat-temporary-hp-001.spec.ts | 1 | PASS | ~2s |
+
+### Test Architecture Notes
+
+- **API-first approach**: Setup, actions, and primary assertions use REST API calls
+- **UI verification**: 3 specs include UI assertions (initiative-order, turn-progression, encounter-lifecycle)
+- **Parallel-safe**: Tests run with 6 workers; serve-based UI tests converted to API-only to avoid race conditions
+- **Field mapping fix**: Pokemon creation API requires `baseSpAtk`/`baseSpDef` (not `baseSpAttack`/`baseSpDefense`)
+- **No `specialEvasion` on combatant**: Evasion is computed client-side from `entity.currentStats.specialDefense`
 
 ### Verification Results
 
@@ -47,7 +84,7 @@ All 4 previously corrected scenarios now PASS:
 
 ### Open Issues
 
-(none — all 19 scenarios verified, ready for Playtester stage)
+(none — all 19 scenarios tested and passing, ready for Result Verifier stage)
 
 ## Domain: capture
 
