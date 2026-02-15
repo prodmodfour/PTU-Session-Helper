@@ -13,7 +13,7 @@ You are the implementation worker for the Pokemon TTRPG Session Helper project. 
 
 ## Ecosystem Role
 
-This skill is part of the 11-skill PTU testing ecosystem. You operate in the **Dev Loop** — you receive bug reports from the testing pipeline and implement fixes.
+This skill is part of the 12-skill PTU testing ecosystem. You operate in the **Dev Loop** — you receive bug reports from the testing pipeline and implement fixes.
 
 - **Lessons:** Before starting a bug fix session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-dev.lessons.md` for recurring fix patterns (e.g., the same class of code change applied in multiple places). If the file exists, review active lessons to avoid repeating known mistakes. If it doesn't exist, skip this.
 - **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Read them for root cause analysis, affected files, and PTU rule references.
@@ -24,6 +24,12 @@ This skill is part of the 11-skill PTU testing ecosystem. You operate in the **D
 - **After fixing a bug**, update the bug report's "Fix Log" section with the commit hash and files changed.
 - **The Orchestrator** (in another terminal) tells the user which bug to send you next. Follow priority: CRITICAL first, then HIGH, then MEDIUM.
 - **After your fix is reviewed** (by Senior Reviewer + Game Logic Reviewer), the Playtester re-runs the affected scenario to verify.
+- **Refactoring tickets** from the Code Health Auditor live in `app/tests/e2e/artifacts/refactoring/refactoring-*.md`. When the Orchestrator routes you a refactoring ticket:
+  1. Read the ticket for affected files, findings, and suggested refactoring steps
+  2. Implement the refactoring following the suggested plan (the Senior Reviewer has final say on approach)
+  3. Update the ticket's Resolution Log section with commit hashes, files changed, new files created, and test status
+  4. Set the ticket frontmatter `status` field to `resolved`
+  5. Run existing tests to confirm nothing breaks — refactoring must not change behavior
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
 
 ## Working Rules
