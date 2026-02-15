@@ -1,6 +1,6 @@
 ---
 name: game-logic-reviewer
-description: PTU 1.05 rules compliance reviewer. Use when verifying game mechanics in code, validating scenario assertions against rulebooks, resolving ambiguous PTU rules, or reviewing dev fixes for game logic correctness. Triggers on /verify-ptu, /verify-game-logic, after editing game mechanics code, when implementing new PTU features, or when another skill escalates an AMBIGUOUS ruling.
+description: PTU 1.05 rules compliance reviewer. Use when verifying game mechanics in code, validating scenario assertions against rulebooks, resolving ambiguous PTU rules, or reviewing dev fixes for game logic correctness. Load when asked to verify PTU rules, verify game logic, after editing game mechanics code, when implementing new PTU features, or when another skill escalates an AMBIGUOUS ruling.
 ---
 
 # Game Logic Reviewer
@@ -9,7 +9,7 @@ You verify that code, scenarios, and test assertions correctly implement PTU 1.0
 
 ## Context
 
-This skill is part of the 9-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Senior Reviewer.
+This skill is part of the 10-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Senior Reviewer.
 
 - **Senior Reviewer** handles code quality and architecture.
 - **You** handle PTU rule correctness — formulas, mechanics, game logic.
@@ -18,7 +18,7 @@ This skill is part of the 9-skill PTU testing ecosystem. You operate in the **Re
 
 ## Triggers
 
-- `/verify-ptu` or `/verify-game-logic`
+- User asks to verify PTU rules or verify game logic
 - After a developer edits game mechanics code
 - When implementing new PTU features
 - When another skill escalates an `AMBIGUOUS` ruling
@@ -26,7 +26,7 @@ This skill is part of the 9-skill PTU testing ecosystem. You operate in the **Re
 
 ## Rulebook Reference
 
-See `references/ptu-chapter-index.md` for the complete mechanic-to-rulebook mapping. Key locations:
+See `.claude/skills/references/ptu-chapter-index.md` for the complete mechanic-to-rulebook mapping. Key locations:
 
 | Mechanic | File | Search Term |
 |----------|------|-------------|
@@ -38,9 +38,13 @@ See `references/ptu-chapter-index.md` for the complete mechanic-to-rulebook mapp
 | Stats / evasion | `core/05-pokemon.md` | "Base Stats" |
 | Errata | `errata-2.md` | (mechanic name) |
 
-Full table and pokedex lookup guide in `references/ptu-chapter-index.md`.
+Full table and pokedex lookup guide in `.claude/skills/references/ptu-chapter-index.md`.
 
 ## Process
+
+### Step 0: Read Lessons
+
+Before starting work, check `app/tests/e2e/artifacts/lessons/game-logic-reviewer.lessons.md` for patterns from previous cycles. If the file exists, review active lessons — they highlight recurring rule ambiguities and past rulings that provide precedent for current decisions. If no lesson file exists, skip this step.
 
 ### Step 1: Identify What to Verify
 
@@ -60,7 +64,7 @@ git diff --name-only HEAD~3 | grep -E "(combat|capture|heal|damage|rest|move|sta
 ### Step 2: Read the Rulebook
 
 For each mechanic involved:
-1. Look up the rulebook file and search term in `references/ptu-chapter-index.md`
+1. Look up the rulebook file and search term in `.claude/skills/references/ptu-chapter-index.md`
 2. Read the relevant section from `books/markdown/core/` or `books/markdown/pokedexes/`
 3. Check `books/markdown/errata-2.md` for corrections — errata always supersedes core text
 4. For species-specific data, read the species file from `books/markdown/pokedexes/gen<N>/<species>.md`

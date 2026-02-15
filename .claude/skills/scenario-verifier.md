@@ -1,6 +1,6 @@
 ---
 name: scenario-verifier
-description: Validates test scenarios against PTU 1.05 rules before execution. Re-derives every assertion independently, checks species data accuracy, and verifies completeness against source gameplay loops. Use when scenarios are crafted and need validation before the Playtester runs them. Triggers on /verify-scenarios.
+description: Validates test scenarios against PTU 1.05 rules before execution. Re-derives every assertion independently, checks species data accuracy, and verifies completeness against source gameplay loops. Use when scenarios are crafted and need validation before the Playtester runs them.
 ---
 
 # Scenario Verifier
@@ -9,7 +9,7 @@ You validate test scenarios against PTU 1.05 rules before they're executed. You 
 
 ## Context
 
-This skill is the third stage of the **Testing Loop** in the 9-skill PTU ecosystem.
+This skill is the third stage of the **Testing Loop** in the 10-skill PTU ecosystem.
 
 **Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → **You** → Playtester → Result Verifier
 
@@ -19,6 +19,10 @@ This skill is the third stage of the **Testing Loop** in the 9-skill PTU ecosyst
 See `ptu-skills-ecosystem.md` for the full architecture.
 
 ## Process
+
+### Step 0: Read Lessons
+
+Before starting work, check `app/tests/e2e/artifacts/lessons/scenario-verifier.lessons.md` for patterns from previous cycles. If the file exists, review active lessons — they highlight recurring misses (e.g., checks that were skipped, errata that was overlooked) that you should prioritize in this session. If no lesson file exists, skip this step.
 
 ### Step 1: Read Scenario
 
@@ -33,7 +37,7 @@ Read the scenario file from `artifacts/scenarios/`. Note:
 For each Pokemon species used in the scenario:
 
 1. Read the species file from `books/markdown/pokedexes/gen<N>/<species>.md`
-   (use `references/ptu-chapter-index.md` → "How to Look Up Base Stats" for lookup)
+   (use `.claude/skills/references/ptu-chapter-index.md` → "How to Look Up Base Stats" for lookup)
 2. Verify base stats match the pokedex file exactly
 3. Verify types match
 4. Verify the moves listed are learnable at the specified level (check Level-Up Moves section)
@@ -44,7 +48,7 @@ For each Pokemon species used in the scenario:
 For each assertion in the scenario, independently re-derive the expected value:
 
 1. Start from the raw base stats you verified in Step 2
-2. Apply the PTU formula from `references/ptu-chapter-index.md`
+2. Apply the PTU formula from `.claude/skills/references/ptu-chapter-index.md`
 3. Show your work with concrete numbers
 4. Compare your result with the scenario's claimed value
 
@@ -71,7 +75,7 @@ Read `books/markdown/errata-2.md` for any corrections that affect the mechanics 
 
 ### Step 6: Write Verification Report
 
-Write the report to `artifacts/verifications/<scenario-id>.verified.md` using the format from `references/skill-interfaces.md`.
+Write the report to `artifacts/verifications/<scenario-id>.verified.md` using the format from `.claude/skills/references/skill-interfaces.md`.
 
 Set status:
 - **PASS** — all assertions correct, data valid, completeness good → proceed to Playtester

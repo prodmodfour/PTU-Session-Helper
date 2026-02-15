@@ -13,8 +13,9 @@ You are the implementation worker for the Pokemon TTRPG Session Helper project. 
 
 ## Ecosystem Role
 
-This skill is part of the 9-skill PTU testing ecosystem. You operate in the **Dev Loop** — you receive bug reports from the testing pipeline and implement fixes.
+This skill is part of the 10-skill PTU testing ecosystem. You operate in the **Dev Loop** — you receive bug reports from the testing pipeline and implement fixes.
 
+- **Lessons:** Before starting a bug fix session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-dev.lessons.md` for recurring fix patterns (e.g., the same class of code change applied in multiple places). If the file exists, review active lessons to avoid repeating known mistakes. If it doesn't exist, skip this.
 - **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Read them for root cause analysis, affected files, and PTU rule references.
 - **After fixing a bug**, update the bug report's "Fix Log" section with the commit hash and files changed.
 - **The Orchestrator** (in another terminal) tells the user which bug to send you next. Follow priority: CRITICAL first, then HIGH, then MEDIUM.

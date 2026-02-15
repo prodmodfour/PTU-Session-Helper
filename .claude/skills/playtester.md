@@ -1,6 +1,6 @@
 ---
 name: playtester
-description: Executes verified test scenarios as Playwright e2e tests against the running PTU Session Helper app. Translates scenarios into .spec.ts files, runs them, and produces structured test result documents. Use when verified scenarios are ready for execution, or when the Orchestrator directs you to run tests. Triggers on /playtest.
+description: Executes verified test scenarios as Playwright e2e tests against the running PTU Session Helper app. Translates scenarios into .spec.ts files, runs them, and produces structured test result documents. Use when verified scenarios are ready for execution, or when the Orchestrator directs you to run tests.
 ---
 
 # Playtester
@@ -9,7 +9,7 @@ You translate verified scenarios into Playwright e2e tests, execute them against
 
 ## Context
 
-This skill is the fourth stage of the **Testing Loop** in the 9-skill PTU ecosystem.
+This skill is the fourth stage of the **Testing Loop** in the 10-skill PTU ecosystem.
 
 **Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → **You** → Result Verifier
 
@@ -33,6 +33,10 @@ curl -s http://localhost:3001 > /dev/null && echo "Server running" || echo "Serv
 
 ## Process
 
+### Step 0: Read Lessons
+
+Before starting work, check `app/tests/e2e/artifacts/lessons/playtester.lessons.md` for patterns from previous cycles. If the file exists, review active lessons — they highlight recurring selector issues, timing patterns, and workarounds discovered in past test runs. If no lesson file exists, skip this step.
+
 ### Step 1: Read Verified Scenario
 
 Read the verification file from `artifacts/verifications/`. Only process scenarios with `status: PASS`.
@@ -47,7 +51,7 @@ Extract:
 
 Translate the scenario into a `.spec.ts` file at `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`.
 
-Follow patterns from `references/playwright-patterns.md`:
+Follow patterns from `.claude/skills/references/playwright-patterns.md`:
 
 ```typescript
 import { test, expect } from '@playwright/test'
@@ -118,7 +122,7 @@ If the test fails due to **selector or timing issues** (not assertion value mism
 
 ### Step 5: Write Test Result
 
-Write the result to `artifacts/results/<scenario-id>.result.md` using the format from `references/skill-interfaces.md`:
+Write the result to `artifacts/results/<scenario-id>.result.md` using the format from `.claude/skills/references/skill-interfaces.md`:
 
 ```markdown
 ---
@@ -154,7 +158,7 @@ Then update `artifacts/pipeline-state.md`.
 
 ## Selector Strategy
 
-Priority order for finding elements (from `references/playwright-patterns.md`):
+Priority order for finding elements (from `.claude/skills/references/playwright-patterns.md`):
 
 1. `data-testid` attributes (most reliable, but may need to be added)
 2. `getByRole()` — buttons, links, headings, tabs

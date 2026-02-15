@@ -1,6 +1,6 @@
 ---
 name: result-verifier
-description: Analyzes test results from the Playtester, triages every failure into exactly one category (APP_BUG, SCENARIO_BUG, TEST_BUG, AMBIGUOUS), and produces actionable reports for the appropriate skill terminal. Use when test results are ready for analysis, or when the Orchestrator directs you to verify results. Triggers on /verify-results.
+description: Analyzes test results from the Playtester, triages every failure into exactly one category (APP_BUG, SCENARIO_BUG, TEST_BUG, AMBIGUOUS), and produces actionable reports for the appropriate skill terminal. Use when test results are ready for analysis, or when the Orchestrator directs you to verify results.
 ---
 
 # Result Verifier
@@ -9,7 +9,7 @@ You analyze test results from the Playtester, diagnose every failure, and route 
 
 ## Context
 
-This skill is the final stage of the **Testing Loop** in the 9-skill PTU ecosystem. Your output feeds into the Dev Loop (for app bugs) or loops back to earlier testing stages (for scenario/test issues).
+This skill is the final stage of the **Testing Loop** in the 10-skill PTU ecosystem. Your output feeds into the Dev Loop (for app bugs) or loops back to earlier testing stages (for scenario/test issues).
 
 **Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → Playtester → **You** → Dev / Crafter / Playtester / Game Logic Reviewer
 
@@ -19,6 +19,10 @@ This skill is the final stage of the **Testing Loop** in the 9-skill PTU ecosyst
 See `ptu-skills-ecosystem.md` for the full architecture.
 
 ## Process
+
+### Step 0: Read Lessons
+
+Before starting work, check `app/tests/e2e/artifacts/lessons/result-verifier.lessons.md` for patterns from previous cycles. If the file exists, review active lessons — they highlight recurring triage mistakes (e.g., misclassifications between APP_BUG and SCENARIO_BUG) that you should be aware of. If no lesson file exists, skip this step.
 
 ### Step 1: Read Test Results
 
@@ -52,7 +56,7 @@ For assertion failures (expected ≠ actual), always verify the expected value:
 
 1. Read the scenario's assertion and its derivation
 2. Read the verification report's independent derivation
-3. Read the PTU rulebook section (via `references/ptu-chapter-index.md`)
+3. Read the PTU rulebook section (via `.claude/skills/references/ptu-chapter-index.md`)
 4. Re-derive the expected value yourself
 
 If all three derivations agree and the app produced a different value → **APP_BUG**.
@@ -63,14 +67,14 @@ If the rulebook is genuinely ambiguous → **AMBIGUOUS**.
 
 When diagnosing an APP_BUG, read the relevant app code to identify the likely root cause:
 
-1. Use `references/app-surface.md` to find the code file
+1. Use `.claude/skills/references/app-surface.md` to find the code file
 2. Read the function that implements the mechanic
 3. Identify where the code deviates from the PTU rule
 4. Note the specific file and function in the report
 
 ### Step 5: Write Reports
 
-For each failure, write a report to `artifacts/reports/` using the format from `references/skill-interfaces.md`.
+For each failure, write a report to `artifacts/reports/` using the format from `.claude/skills/references/skill-interfaces.md`.
 
 ### Step 6: Write Summary
 
@@ -85,7 +89,7 @@ Then update pipeline state with the results stage status.
 The app code produces incorrect results. The PTU rule is clear, the scenario's expected value is correct, but the app returned a different value.
 
 **Report goes to:** Developer terminal
-**Report format:** Bug Report (see `references/skill-interfaces.md`)
+**Report format:** Bug Report (see `.claude/skills/references/skill-interfaces.md`)
 **Contains:** What happened, expected vs actual, root cause analysis, PTU rule reference, affected files, suggested fix
 
 ### SCENARIO_BUG — Scenario assertion is wrong
@@ -93,7 +97,7 @@ The app code produces incorrect results. The PTU rule is clear, the scenario's e
 The scenario's expected value was incorrect. The app might actually be right, or it might also be wrong — but the scenario needs fixing first before we can tell.
 
 **Report goes to:** Scenario Crafter terminal
-**Report format:** Correction (see `references/skill-interfaces.md`)
+**Report format:** Correction (see `.claude/skills/references/skill-interfaces.md`)
 **Contains:** Which assertions were wrong, correct values with derivation
 
 **Important:** Lean toward SCENARIO_BUG when unsure between APP_BUG and SCENARIO_BUG. It's cheaper to re-verify a scenario than to change code.
@@ -111,7 +115,7 @@ The test couldn't run properly due to selector, timing, or infrastructure issues
 The PTU rulebook text could support multiple interpretations for this specific case. Cannot determine if the app or the scenario is correct without a ruling.
 
 **Report goes to:** Game Logic Reviewer terminal
-**Report format:** Escalation (see `references/skill-interfaces.md`)
+**Report format:** Escalation (see `.claude/skills/references/skill-interfaces.md`)
 **Contains:** The ambiguity, possible interpretations with expected values, relevant rulebook sections
 
 ## Report Naming

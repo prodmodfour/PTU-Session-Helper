@@ -1,6 +1,6 @@
 ---
 name: gameplay-loop-synthesizer
-description: Generates structured gameplay loop documents from PTU 1.05 rulebooks and app feature analysis. Use when starting test coverage for a new domain, when the Orchestrator directs you to synthesize loops, or when new app features need gameplay loop coverage. Triggers on /synthesize-loops.
+description: Generates structured gameplay loop documents from PTU 1.05 rulebooks and app feature analysis. Use when starting test coverage for a new domain, when the Orchestrator directs you to synthesize loops, or when new app features need gameplay loop coverage.
 ---
 
 # Gameplay Loop Synthesizer
@@ -9,7 +9,7 @@ You read PTU 1.05 rulebooks and app source code to produce structured gameplay l
 
 ## Context
 
-This skill is the entry point of the **Testing Loop** in the 9-skill PTU ecosystem. Your output feeds directly into the Scenario Crafter.
+This skill is the entry point of the **Testing Loop** in the 10-skill PTU ecosystem. Your output feeds directly into the Scenario Crafter.
 
 **Pipeline position:** You → Scenario Crafter → Scenario Verifier → Playtester → Result Verifier
 
@@ -18,6 +18,10 @@ This skill is the entry point of the **Testing Loop** in the 9-skill PTU ecosyst
 See `ptu-skills-ecosystem.md` for the full architecture.
 
 ## Process
+
+### Step 0: Read Lessons
+
+Before starting work, check `app/tests/e2e/artifacts/lessons/gameplay-loop-synthesizer.lessons.md` for patterns from previous cycles. If the file exists, review active lessons — they highlight process gaps (e.g., missing sub-loops, overlooked edge cases) found in previous loop documents. If no lesson file exists, skip this step.
 
 ### Step 1: Select Domain
 
@@ -36,7 +40,7 @@ If the user doesn't specify a domain, ask which one.
 
 ### Step 2: Read Rulebook
 
-Look up the domain's rulebook chapters in `references/ptu-chapter-index.md`.
+Look up the domain's rulebook chapters in `.claude/skills/references/ptu-chapter-index.md`.
 
 For each chapter:
 1. Read the relevant sections from `books/markdown/core/`
@@ -47,7 +51,7 @@ For each chapter:
 
 ### Step 3: Map to App Features
 
-Read `references/app-surface.md` to identify which app features implement the domain's rules:
+Read `.claude/skills/references/app-surface.md` to identify which app features implement the domain's rules:
 
 1. **Routes** — which pages does the user interact with?
 2. **API endpoints** — which server actions execute the mechanics?
@@ -60,7 +64,7 @@ For each mechanic, note:
 
 ### Step 4: Generate Loops
 
-For each core gameplay flow in the domain, write a loop document following the format in `references/skill-interfaces.md`.
+For each core gameplay flow in the domain, write a loop document following the format in `.claude/skills/references/skill-interfaces.md`.
 
 **What makes a good loop:**
 - Covers one complete user flow from start to observable outcome
@@ -94,7 +98,7 @@ Then update `app/tests/e2e/artifacts/pipeline-state.md`:
 
 ## Output Format
 
-Use the Gameplay Loop format from `references/skill-interfaces.md`:
+Use the Gameplay Loop format from `.claude/skills/references/skill-interfaces.md`:
 
 ```markdown
 ---
