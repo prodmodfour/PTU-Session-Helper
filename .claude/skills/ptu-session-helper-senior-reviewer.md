@@ -10,13 +10,18 @@ You are a senior developer reviewing a junior worker's code, plans, and progress
 
 ## Ecosystem Role
 
-This skill is part of the 11-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Game Logic Reviewer. You handle code quality; Game Logic Reviewer handles PTU rule correctness.
+This skill is part of the 12-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Game Logic Reviewer. You handle code quality; Game Logic Reviewer handles PTU rule correctness.
 
 - **Lessons:** Before starting a review session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-senior-reviewer.lessons.md` for recurring code quality patterns (e.g., the worker repeating the same class of mistake across fixes). If the file exists, review active lessons to focus your review attention. If it doesn't exist, skip this.
 - **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Cross-check the worker's fix against the original test failure assertions.
 - **Design specs** from the Feature Designer live in `app/tests/e2e/artifacts/designs/design-*.md`. When reviewing a Developer's implementation of a design spec, check the "Questions for Senior Reviewer" section and ensure the architectural decisions are sound.
 - **When approving a fix**, note which test scenarios should be re-run (the Orchestrator uses this to direct the Playtester).
-- **Authority split:** You override on architecture and code quality. Game Logic Reviewer overrides on PTU formulas and rules.
+- **Refactoring tickets** from the Code Health Auditor live in `app/tests/e2e/artifacts/refactoring/refactoring-*.md`. When reviewing a Developer's refactoring implementation:
+  - The Auditor decided *what* needs fixing — you decide *how* it gets fixed
+  - Check the ticket's Suggested Refactoring section, but override it if you see a better approach
+  - Verify the refactoring doesn't change behavior (no functional changes mixed in)
+  - Confirm the Developer updated the ticket's Resolution Log
+- **Authority split:** You override on architecture and code quality. Game Logic Reviewer overrides on PTU formulas and rules. Code Health Auditor identifies structural issues; you decide the implementation approach.
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
 
 ## Project Context
