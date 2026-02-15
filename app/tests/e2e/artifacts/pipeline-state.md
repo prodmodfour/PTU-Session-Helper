@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-15T23:45:00
-updated_by: result-verifier
+last_updated: 2026-02-15T23:59:00
+updated_by: retrospective-analyst
 ---
 
 ## Domain: combat
@@ -104,7 +104,19 @@ All 4 previously corrected scenarios now PASS:
 
 ### Open Issues
 
-(none — all 6 pipeline stages complete. Combat domain ready for Retrospective Analyst.)
+(none — all 7 pipeline stages complete. Combat domain fully analyzed.)
+
+### Lessons (Retrospective Analyst)
+
+| Metric | Value |
+|--------|-------|
+| Last analyzed | 2026-02-15T23:59:00 |
+| Total lessons | 3 |
+| Active | 3 |
+| Resolved | 0 |
+| Systemic patterns | 0 |
+
+Lessons written for: scenario-crafter (3 lessons — 1 missing-check recurring, 2 data-lookup). See `artifacts/lessons/` for details.
 
 ## Domain: capture
 
