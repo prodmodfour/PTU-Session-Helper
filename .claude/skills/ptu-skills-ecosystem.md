@@ -63,8 +63,8 @@ Skills are loaded by asking Claude to load the relevant skill file (e.g., "load 
 | 5 | Playtester | `playtester.md` | verified scenarios | spec files + `artifacts/results/` | persistent |
 | 6 | Result Verifier | `result-verifier.md` | result files | `artifacts/reports/` | per-batch |
 | 7 | Developer | `ptu-session-helper-dev.md` | bug reports | code commits | persistent |
-| 8 | Senior Reviewer | `ptu-session-helper-senior-reviewer.md` | code diffs + reports | review feedback | persistent |
-| 9 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | PTU compliance report | as-needed |
+| 8 | Senior Reviewer | `ptu-session-helper-senior-reviewer.md` | code diffs + reports | `artifacts/reviews/` | persistent |
+| 9 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | `artifacts/reviews/` | as-needed |
 | 10 | Feature Designer | `feature-designer.md` | gap reports | `artifacts/designs/` | per-gap |
 | 11 | Retrospective Analyst | `retrospective-analyst.md` | verifications, results, reports, git history | `artifacts/lessons/` | after cycles / on-demand |
 | 12 | Code Health Auditor | `code-health-auditor.md` | source code files under `app/` | `artifacts/refactoring/` | per-audit |
@@ -107,6 +107,7 @@ artifacts/
 ├── designs/            Feature Designer writes → Developer reads
 ├── lessons/            Retrospective Analyst writes → all skills read
 ├── refactoring/        Code Health Auditor writes → Developer/Reviewer reads
+├── reviews/            Senior Reviewer + Game Logic Reviewer write → Orchestrator/Developer reads
 └── pipeline-state.md   All skills update → Orchestrator reads
 ```
 
@@ -142,9 +143,9 @@ Playwright specs: `tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 
 ### Bug Fix Cycle
 1. Dev reads bug report → implements fix → commits
-2. Reviewer approves → notes affected scenarios
-3. Game Logic Reviewer confirms PTU correctness
-4. Load Orchestrator → "Fix approved, re-run scenario X"
+2. Senior Reviewer reviews code → writes `artifacts/reviews/code-review-<NNN>.md` with verdict
+3. Game Logic Reviewer confirms PTU correctness → writes `artifacts/reviews/rules-review-<NNN>.md` with verdict
+4. Load Orchestrator → detects both reviews APPROVED → "Fix approved, re-run scenario X"
 5. Playtester re-runs → new result
 6. Result Verifier checks → PASS or new issue
 
