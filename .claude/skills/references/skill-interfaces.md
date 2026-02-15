@@ -12,6 +12,7 @@ app/tests/e2e/artifacts/
 ├── results/            # Playtester writes
 ├── reports/            # Result Verifier writes
 ├── designs/            # Feature Designer writes
+├── refactoring/        # Code Health Auditor writes
 └── pipeline-state.md   # Every skill updates after writing artifacts
 ```
 
@@ -665,3 +666,116 @@ domains_covered:
 - Resolved lessons remain in the file (marked `status: resolved`) for historical reference
 - Lessons are numbered sequentially within each file
 - The Retrospective Analyst deduplicates before writing — if a pattern already exists, it updates frequency and adds evidence rather than creating a duplicate
+
+---
+
+## 8. Refactoring Ticket + Audit Summary
+
+**Written by:** Code Health Auditor
+**Read by:** Developer (implements refactoring), Senior Reviewer (reviews approach)
+**Location:** `artifacts/refactoring/refactoring-<NNN>.md` and `artifacts/refactoring/audit-summary.md`
+
+### Refactoring Ticket
+
+```markdown
+---
+ticket_id: refactoring-<NNN>
+priority: P0 | P1 | P2
+categories:
+  - <category-id>
+affected_files:
+  - <app file path>
+estimated_scope: small | medium | large
+status: open | in-progress | resolved
+created_at: <ISO timestamp>
+---
+
+## Summary
+<1-2 sentences: what the problem is and why it matters for LLM agents>
+
+## Findings
+
+### Finding 1: <category-id>
+- **Metric:** <measured value>
+- **Threshold:** <threshold that was exceeded>
+- **Impact:** <how this affects LLM agent code generation>
+- **Evidence:** <file:line-range, function names>
+
+### Finding 2: ...
+
+## Suggested Refactoring
+1. <step with exact file paths>
+2. <step referencing existing patterns to follow>
+3. ...
+Estimated commits: <count>
+
+## Related Lessons
+- <cross-reference to Retrospective Analyst finding, or "none">
+
+## Resolution Log
+<!-- Developer fills this in after refactoring -->
+- Commits: ___
+- Files changed: ___
+- New files created: ___
+- Tests passing: ___
+```
+
+**File naming:** `refactoring-<NNN>.md` — sequential counter starting from 001. Examples:
+- `refactoring-001.md`
+- `refactoring-002.md`
+
+**Scope definitions:**
+- **small**: Single file, <50 lines changed, no interface changes
+- **medium**: 2-3 files, possible interface changes, <200 lines changed
+- **large**: 4+ files, interface changes, >200 lines changed
+
+**Status lifecycle:** `open` → `in-progress` → `resolved`
+
+### Audit Summary
+
+```markdown
+---
+last_audited: <ISO timestamp>
+audited_by: code-health-auditor
+scope: <"full codebase" | "domain: <name>" | "targeted: <paths>">
+files_scanned: <count>
+files_deep_read: <count>
+total_tickets: <count>
+overflow_files: <count of files that qualified but exceeded the 20-file cap>
+---
+
+## Metrics
+| Metric | Value |
+|--------|-------|
+| Total files scanned | <count> |
+| Total lines of code | <count> |
+| Files over 800 lines | <count> |
+| Files over 600 lines | <count> |
+| Files over 400 lines | <count> |
+| Open tickets (P0) | <count> |
+| Open tickets (P1) | <count> |
+| Open tickets (P2) | <count> |
+
+## Hotspots
+| Rank | File | Lines | Categories | Priority |
+|------|------|-------|------------|----------|
+| 1 | <path> | <count> | <ids> | <P0/P1/P2> |
+
+## Tickets Written
+- `refactoring-<NNN>`: <summary> (P<X>)
+
+## Overflow
+<!-- Files that qualified for deep-read but were capped -->
+- <path> (<line count>, reason: <size/hot/lesson-ref>)
+
+## Comparison to Last Audit
+- Resolved since last audit: <count>
+- New issues found: <count>
+- Trend: improving | stable | degrading
+```
+
+**Constraints:**
+- One audit summary file — overwritten each audit run
+- Overflow section tracks files that exceeded the 20-file deep-read cap
+- Comparison section is empty on first audit
+- Max 10 tickets per audit run
