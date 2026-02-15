@@ -245,7 +245,8 @@ model SpeciesData {
   baseSpeed     Int
   abilities     String   // JSON array of ability names
   eggGroups     String   // JSON array
-  evolutionStage Int     @default(1)
+  evolutionStage    Int     @default(1)
+  maxEvolutionStage Int     @default(1)
 
   // Movement capabilities (for VTT)
   overland      Int      @default(5)

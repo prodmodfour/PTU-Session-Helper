@@ -216,6 +216,7 @@ interface SpeciesRow {
   baseSpeed: number
   abilities: string[]
   evolutionStage: number
+  maxEvolutionStage: number
   overland: number
   swim: number
   sky: number
@@ -295,13 +296,25 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       }
     }
 
-    // Parse evolution stage
+    // Parse evolution stage and max evolution stage from the full evolution block
     let evolutionStage = 1
-    const evoMatch = pageText.match(/Evolution:\s*\n?\s*(\d)\s*-\s*\w+/i)
-    if (evoMatch) {
-      evolutionStage = parseInt(evoMatch[1], 10)
+    let maxEvolutionStage = 1
+    const evoSectionMatch = pageText.match(/Evolution:\s*\n((?:\s*\d+\s*-\s*[^\n]+\n?)+)/i)
+    if (evoSectionMatch) {
+      const evoLines = [...evoSectionMatch[1].matchAll(/(\d+)\s*-\s*([^\n]+)/g)]
+      for (const evoLine of evoLines) {
+        const stageNum = parseInt(evoLine[1], 10)
+        const lineText = evoLine[2].trim()
+        if (stageNum > maxEvolutionStage) {
+          maxEvolutionStage = stageNum
+        }
+        // Match current species name against the start of each evo line
+        if (lineText.toLowerCase().startsWith(pokemonName.toLowerCase())) {
+          evolutionStage = stageNum
+        }
+      }
     }
-    // Try to infer from name patterns
+    // Mega forms are beyond normal evolution stages
     if (pokemonName.includes('Mega ')) evolutionStage = 3
 
     // Parse movement capabilities
@@ -391,6 +404,7 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       baseSpeed: parseInt(speedMatch?.[1] || '5', 10),
       abilities,
       evolutionStage,
+      maxEvolutionStage,
       overland: parseInt(overlandMatch?.[1] || '5', 10),
       swim: parseInt(swimMatch?.[1] || '0', 10),
       sky: parseInt(skyMatch?.[1] || '0', 10),
@@ -432,37 +446,37 @@ async function seedSpecies() {
   const species = parsePokedexContent(allContent)
   console.log(`Parsed ${species.length} unique Pokemon species`)
 
-  // Clear existing species
-  await prisma.speciesData.deleteMany()
-
-  // Insert species
+  // Upsert species (avoids FK constraint issues from encounter table entries)
   let inserted = 0
   for (const s of species) {
     try {
-      await prisma.speciesData.create({
-        data: {
-          name: s.name,
-          type1: s.type1,
-          type2: s.type2,
-          baseHp: s.baseHp,
-          baseAttack: s.baseAttack,
-          baseDefense: s.baseDefense,
-          baseSpAtk: s.baseSpAtk,
-          baseSpDef: s.baseSpDef,
-          baseSpeed: s.baseSpeed,
-          abilities: JSON.stringify(s.abilities),
-          eggGroups: '[]', // Not parsed for now
-          evolutionStage: s.evolutionStage,
-          overland: s.overland,
-          swim: s.swim,
-          sky: s.sky,
-          burrow: s.burrow,
-          levitate: s.levitate,
-          teleport: 0,
-          learnset: JSON.stringify(s.learnset),
-          skills: JSON.stringify(s.skills),
-          capabilities: JSON.stringify(s.capabilities)
-        }
+      const data = {
+        type1: s.type1,
+        type2: s.type2,
+        baseHp: s.baseHp,
+        baseAttack: s.baseAttack,
+        baseDefense: s.baseDefense,
+        baseSpAtk: s.baseSpAtk,
+        baseSpDef: s.baseSpDef,
+        baseSpeed: s.baseSpeed,
+        abilities: JSON.stringify(s.abilities),
+        eggGroups: '[]',
+        evolutionStage: s.evolutionStage,
+        maxEvolutionStage: s.maxEvolutionStage,
+        overland: s.overland,
+        swim: s.swim,
+        sky: s.sky,
+        burrow: s.burrow,
+        levitate: s.levitate,
+        teleport: 0,
+        learnset: JSON.stringify(s.learnset),
+        skills: JSON.stringify(s.skills),
+        capabilities: JSON.stringify(s.capabilities)
+      }
+      await prisma.speciesData.upsert({
+        where: { name: s.name },
+        update: data,
+        create: { name: s.name, ...data }
       })
       inserted++
       if (inserted % 50 === 0) {

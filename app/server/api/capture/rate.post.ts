@@ -55,9 +55,7 @@ export default defineEventHandler(async (event) => {
 
     if (speciesData) {
       evolutionStage = speciesData.evolutionStage
-      // Determine max evolution stage by looking at the evolution line
-      // For now, estimate based on current stage (could be improved with full evo data)
-      maxEvolutionStage = Math.max(3, evolutionStage) // Assume 3-stage line if final form
+      maxEvolutionStage = speciesData.maxEvolutionStage
     }
   } else {
     // Use provided data
@@ -84,7 +82,7 @@ export default defineEventHandler(async (event) => {
 
       if (speciesData) {
         evolutionStage = speciesData.evolutionStage
-        maxEvolutionStage = Math.max(3, evolutionStage)
+        maxEvolutionStage = speciesData.maxEvolutionStage
       }
     }
   }
