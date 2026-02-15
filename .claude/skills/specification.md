@@ -23,7 +23,7 @@ Each skill runs in its own Claude Code terminal (session). Skills never share co
 All inter-skill communication happens through persistent files on disk. No skill assumes knowledge of another skill's context. Every skill reads its inputs from the filesystem and writes its outputs to the filesystem.
 
 ```
-tests/e2e/artifacts/
+app/tests/e2e/artifacts/
 ├── loops/              # Gameplay Loop Synthesizer → writes
 ├── scenarios/          # Scenario Crafter → writes
 ├── verifications/      # Scenario Verifier → writes
@@ -34,7 +34,7 @@ tests/e2e/artifacts/
 
 Playwright spec files live separately:
 ```
-tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
+app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 ```
 
 ### 2.3 Pipeline Flow
@@ -68,7 +68,7 @@ tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 |-------|-------|
 | **File** | `.claude/skills/orchestrator.md` |
 | **Trigger** | `/orchestrate` |
-| **Input** | `tests/e2e/artifacts/pipeline-state.md`, artifact directory contents |
+| **Input** | `app/tests/e2e/artifacts/pipeline-state.md`, artifact directory contents |
 | **Output** | Advice to user (no files written except `pipeline-state.md` updates) |
 | **Terminal** | Persistent — keep open throughout a testing session |
 
@@ -93,7 +93,7 @@ tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | **File** | `.claude/skills/gameplay-loop-synthesizer.md` |
 | **Trigger** | `/synthesize-loops` |
 | **Input** | PTU rulebook chapters, app feature map |
-| **Output** | `tests/e2e/artifacts/loops/<domain>.md` |
+| **Output** | `app/tests/e2e/artifacts/loops/<domain>.md` |
 | **Terminal** | Spin up per domain, can close after loops written |
 
 **Responsibilities:**
@@ -115,8 +115,8 @@ tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 |-------|-------|
 | **File** | `.claude/skills/scenario-crafter.md` |
 | **Trigger** | `/craft-scenarios` |
-| **Input** | `tests/e2e/artifacts/loops/<domain>.md` |
-| **Output** | `tests/e2e/artifacts/scenarios/<scenario-id>.md` |
+| **Input** | `app/tests/e2e/artifacts/loops/<domain>.md` |
+| **Output** | `app/tests/e2e/artifacts/scenarios/<scenario-id>.md` |
 | **Terminal** | Spin up per batch, can close after scenarios written |
 
 **Responsibilities:**
@@ -135,8 +135,8 @@ tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 |-------|-------|
 | **File** | `.claude/skills/scenario-verifier.md` |
 | **Trigger** | `/verify-scenarios` |
-| **Input** | `tests/e2e/artifacts/scenarios/<scenario-id>.md` |
-| **Output** | `tests/e2e/artifacts/verifications/<scenario-id>.verified.md` |
+| **Input** | `app/tests/e2e/artifacts/scenarios/<scenario-id>.md` |
+| **Output** | `app/tests/e2e/artifacts/verifications/<scenario-id>.verified.md` |
 | **Terminal** | Spin up per verification batch |
 
 **Responsibilities:**
@@ -156,8 +156,8 @@ tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 |-------|-------|
 | **File** | `.claude/skills/playtester.md` |
 | **Trigger** | `/playtest` |
-| **Input** | `tests/e2e/artifacts/verifications/<scenario-id>.verified.md` |
-| **Output** | `tests/e2e/scenarios/<domain>/<id>.spec.ts` + `tests/e2e/artifacts/results/<scenario-id>.result.md` |
+| **Input** | `app/tests/e2e/artifacts/verifications/<scenario-id>.verified.md` |
+| **Output** | `app/tests/e2e/scenarios/<domain>/<id>.spec.ts` + `app/tests/e2e/artifacts/results/<scenario-id>.result.md` |
 | **Terminal** | Persistent during testing phases — needs running dev server |
 
 **Responsibilities:**
@@ -183,8 +183,8 @@ tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 |-------|-------|
 | **File** | `.claude/skills/result-verifier.md` |
 | **Trigger** | `/verify-results` |
-| **Input** | `tests/e2e/artifacts/results/<scenario-id>.result.md` |
-| **Output** | `tests/e2e/artifacts/reports/<report-id>.md` |
+| **Input** | `app/tests/e2e/artifacts/results/<scenario-id>.result.md` |
+| **Output** | `app/tests/e2e/artifacts/reports/<report-id>.md` |
 | **Terminal** | Spin up per results batch |
 
 **Responsibilities:**
@@ -209,12 +209,12 @@ tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 |-------|-------|
 | **File** | `.claude/skills/ptu-session-helper-dev.md` |
 | **Trigger** | Load at session start |
-| **Input** | Bug reports from `tests/e2e/artifacts/reports/`, reviewer feedback |
+| **Input** | Bug reports from `app/tests/e2e/artifacts/reports/`, reviewer feedback |
 | **Output** | Code changes, committed to git |
 | **Terminal** | Persistent — primary implementation terminal |
 
 **Ecosystem additions (to existing skill):**
-- Read bug reports from `tests/e2e/artifacts/reports/`
+- Read bug reports from `app/tests/e2e/artifacts/reports/`
 - After fixing, annotate the bug report file with fix details (file changed, commit hash)
 - Follow the Orchestrator's guidance on which bug to fix next
 
