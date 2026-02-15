@@ -54,6 +54,7 @@ app/tests/e2e/artifacts/results/
 app/tests/e2e/artifacts/reports/
 app/tests/e2e/artifacts/designs/
 app/tests/e2e/artifacts/refactoring/    (check for open tickets when pipeline is clean)
+app/tests/e2e/artifacts/reviews/        (check for review verdicts on pending fixes)
 app/tests/e2e/artifacts/lessons/        (lightweight: check existence/freshness only)
 ```
 
@@ -86,20 +87,26 @@ Apply this priority order:
 
 9. **Implemented designs awaiting re-test.** If `designs/` contains a design spec with frontmatter `status: implemented` and the original scenario has not been re-run since implementation, direct to Playtester terminal with the scenario path. If the design was FULL-scope, also suggest running the Code Health Auditor after re-test passes (large implementations are prime candidates for structural debt).
 
-10. **Feasibility warnings.** If verification reports have `has_feasibility_warnings: true` in frontmatter, direct to Feature Designer terminal (proactive path — gaps detected before testing).
+10. **Developer fix without review.** If a bug report, design spec, or refactoring ticket shows committed fixes (Fix Log / Implementation Log / Resolution Log filled in) but no `code-review-*.md` in `reviews/` has a matching `target_report` with verdict `APPROVED`, route to Senior Reviewer terminal.
 
-11. **Stale artifacts.** If a loop was updated after its scenarios were written, direct to Crafter to re-craft.
+11. **Code review approved, rules review needed.** If a `code-review-*.md` exists with verdict `APPROVED` for a target but no `rules-review-*.md` has a matching `target_report` with verdict `APPROVED`, route to Game Logic Reviewer terminal. Both reviews are always required — no exceptions.
 
-12. **Continue pipeline.** Find the furthest incomplete stage and direct to the next skill:
+12. **Review verdict CHANGES_REQUIRED.** If the latest review for a target has verdict `CHANGES_REQUIRED`, route back to Developer terminal with the review artifact path.
+
+13. **Feasibility warnings.** If verification reports have `has_feasibility_warnings: true` in frontmatter, direct to Feature Designer terminal (proactive path — gaps detected before testing).
+
+14. **Stale artifacts.** If a loop was updated after its scenarios were written, direct to Crafter to re-craft.
+
+15. **Continue pipeline.** Find the furthest incomplete stage and direct to the next skill:
    - No loops for a domain → Synthesizer
    - Loops but no scenarios → Crafter
    - Scenarios but not verified → Verifier
    - Verified but not tested → Playtester
    - Tested but not triaged → Result Verifier
 
-13. **Domain cycle complete.** If a domain just finished a full cycle (results triaged, bugs fixed, re-runs all pass) and no retrospective has been run since, suggest running the Retrospective Analyst. Also suggest running the Code Health Auditor if `app/tests/e2e/artifacts/refactoring/audit-summary.md` either doesn't exist or `last_audited` is older than the cycle completion. The Auditor can run concurrently with the Retrospective Analyst.
+16. **Domain cycle complete.** If a domain just finished a full cycle (results triaged, bugs fixed, re-runs all pass) and no retrospective has been run since, suggest running the Retrospective Analyst. Also suggest running the Code Health Auditor if `app/tests/e2e/artifacts/refactoring/audit-summary.md` either doesn't exist or `last_audited` is older than the cycle completion. The Auditor can run concurrently with the Retrospective Analyst.
 
-14. **All clean.** If all domains have passing tests and no open issues:
+17. **All clean.** If all domains have passing tests and no open issues:
     - If in-progress refactoring tickets exist (check `status: in-progress` in frontmatter), re-surface them to the Developer first — partially-completed refactoring should be finished before starting new work
     - If open refactoring tickets exist in `app/tests/e2e/artifacts/refactoring/`, suggest the Developer address the highest-priority one
     - Otherwise, report status and suggest which domain to add next
@@ -152,6 +159,37 @@ Step 2 — after it loads, paste this:
   Design spec: app/tests/e2e/artifacts/designs/design-001.md (status: implemented)
 ```
 
+**Handoff format for code review → Senior Reviewer:**
+When routing to the Senior Reviewer for a code review:
+```
+Step 2 — after it loads, paste this:
+  Review the Developer's fix for bug-002.
+  Bug report: app/tests/e2e/artifacts/reports/bug-002.md
+  Commits to review: <hash1>, <hash2>
+  Write review artifact to: app/tests/e2e/artifacts/reviews/code-review-001.md
+```
+
+**Handoff format for rules review → Game Logic Reviewer:**
+When routing to the Game Logic Reviewer for a rules review:
+```
+Step 2 — after it loads, paste this:
+  Verify PTU correctness of the Developer's fix for bug-002.
+  Bug report: app/tests/e2e/artifacts/reports/bug-002.md
+  Code review: app/tests/e2e/artifacts/reviews/code-review-001.md (APPROVED)
+  Commits to review: <hash1>, <hash2>
+  Write review artifact to: app/tests/e2e/artifacts/reviews/rules-review-001.md
+```
+
+**Handoff format for changes required → Developer:**
+When routing back to the Developer after a CHANGES_REQUIRED review:
+```
+Step 2 — after it loads, paste this:
+  Address review feedback for bug-002.
+  Review artifact: app/tests/e2e/artifacts/reviews/code-review-001.md
+  Read the "Required Changes" section and implement all items.
+  After fixing, the review cycle will re-run.
+```
+
 **Handoff format for refactoring tickets → Developer:**
 When routing to the Developer for a refactoring ticket:
 ```
@@ -171,6 +209,7 @@ Compare timestamps across stages:
 - **Loop file** modified after scenario files → scenarios are stale
 - **Scenario file** modified after verification file → verification is stale
 - **Code commit** touching a domain's app files after test results → results are stale
+- **Developer commit** after the latest approved review for the same target → review is stale, re-review needed (route to Senior Reviewer)
 
 For code changes, check `git log --oneline -10` and map changed files to domains via `.claude/skills/references/app-surface.md`.
 
