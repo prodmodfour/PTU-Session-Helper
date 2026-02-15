@@ -317,8 +317,8 @@ function parsePokedexContent(content: string): SpeciesRow[] {
         }
       }
     }
-    // Mega forms are beyond normal evolution stages
-    if (pokemonName.includes('Mega ')) evolutionStage = 3
+    // Mega forms are at their final evolution stage
+    if (pokemonName.includes('Mega ')) evolutionStage = maxEvolutionStage
 
     // Parse movement capabilities
     const capText = pageText.match(/Capability List[\s\S]*?(?=Skill List|Move List|$)/i)?.[0] || ''
