@@ -37,6 +37,13 @@ export async function createPokemon(request: APIRequestContext, data: PokemonSet
   return body.data.id
 }
 
+export async function getPokemon(request: APIRequestContext, pokemonId: string): Promise<any> {
+  const res = await request.get(`/api/pokemon/${pokemonId}`)
+  const body = await res.json()
+  if (!body.success) throw new Error(`Failed to get pokemon: ${JSON.stringify(body)}`)
+  return body.data
+}
+
 export async function deletePokemon(request: APIRequestContext, id: string): Promise<void> {
   await request.delete(`/api/pokemon/${id}`)
 }
