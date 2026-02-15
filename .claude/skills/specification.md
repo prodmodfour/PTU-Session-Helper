@@ -29,6 +29,7 @@ app/tests/e2e/artifacts/
 ├── verifications/      # Scenario Verifier → writes
 ├── results/            # Playtester → writes
 ├── reports/            # Result Verifier → writes
+├── designs/            # Feature Designer → writes
 └── pipeline-state.md   # Updated by every skill, read by Orchestrator
 ```
 
@@ -57,7 +58,13 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
         ↓                        (bug reports)
    Playtester
         ↓
-   Result Verifier ──→ bug reports ──→ Dev Loop
+   Result Verifier
+        ├── APP_BUG ──────────→ DEV LOOP (Developer → Reviewer)
+        ├── SCENARIO_BUG ─────→ Scenario Crafter (TESTING LOOP)
+        ├── TEST_BUG ─────────→ Playtester (retry/fix)
+        ├── AMBIGUOUS ────────→ Game Logic Reviewer
+        ├── FEATURE_GAP ──────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
+        └── UX_GAP ───────────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
 ```
 
 ## 3. Skills
@@ -200,6 +207,8 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | `SCENARIO_BUG` | Scenario assertion was wrong | Scenario Crafter terminal (Correction) |
 | `TEST_BUG` | Playwright issue (after Playtester exhausted 2 retries) | Playtester terminal (Fix Notes) |
 | `AMBIGUOUS` | PTU rule unclear, can't determine correct behavior | Game Logic Reviewer terminal (Escalation) |
+| `FEATURE_GAP` | App lacks the capability entirely (no backend) | Feature Designer terminal (Feature Gap Report) |
+| `UX_GAP` | Backend works but no UI exposes the action | Feature Designer terminal (UX Gap Report) |
 
 **Key rule:** A single test failure gets exactly one category. No "it might be X or Y" — commit to a diagnosis. If genuinely uncertain between APP_BUG and SCENARIO_BUG, lean toward SCENARIO_BUG (cheaper to re-verify a scenario than to change code).
 
@@ -265,7 +274,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 
 **Responsibilities:**
 - Scan artifact trail and git history for error patterns across completed pipeline cycles
-- Classify errors into 9 categories with clear boundary definitions
+- Classify errors into 11 categories with clear boundary definitions
 - Track recurrence (observed → recurring → systemic)
 - Deduplicate against existing lessons before writing
 - Write per-skill lesson files with evidence and recommendations
@@ -279,6 +288,33 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 - Triage individual failures (that's Result Verifier)
 - Modify any skill's process steps (recommends changes only)
 - Write to any artifact directory other than `artifacts/lessons/` and `pipeline-state.md`
+
+### 3.11 Feature Designer
+
+| Field | Value |
+|-------|-------|
+| **File** | `.claude/skills/feature-designer.md` |
+| **Trigger** | When Result Verifier classifies a failure as FEATURE_GAP or UX_GAP, when Orchestrator routes a gap report, or when Synthesizer feasibility check flags missing capabilities |
+| **Input** | `app/tests/e2e/artifacts/reports/feature-gap-*.md` or `ux-gap-*.md` |
+| **Output** | `app/tests/e2e/artifacts/designs/design-<NNN>.md` |
+| **Terminal** | Spin up per gap report |
+
+**Responsibilities:**
+- Read gap reports and understand what workflow triggered the failure
+- Analyze current app surface area (server-side for FEATURE_GAP, client-side for UX_GAP)
+- Read PTU rules for FEATURE_GAP designs that involve game mechanics
+- Design the feature: data model, API, services, components, stores, user flows
+- Flag ambiguous PTU rules for Game Logic Reviewer
+- Flag architectural questions for Senior Reviewer
+- Write design specs with `status: complete` for Developer implementation
+
+**Does NOT:**
+- Write code (that's Developer)
+- Make PTU rule rulings (that's Game Logic Reviewer)
+- Judge code architecture quality (that's Senior Reviewer)
+- Write test scenarios (that's Scenario Crafter)
+- Run tests (that's Playtester)
+- Triage test failures (that's Result Verifier)
 
 ## 4. Artifact Formats
 
@@ -501,9 +537,10 @@ When skills disagree:
 |--------|----------------|
 | PTU game logic, formulas, rule interpretation | Game Logic Reviewer |
 | Code quality, architecture, patterns, performance | Senior Reviewer |
+| UI/UX design, feature surface area, user flows | Feature Designer |
 | Pipeline sequencing, what to test next | Orchestrator |
 | Scenario data accuracy, assertion math | Scenario Verifier |
-| Failure classification (APP/SCENARIO/TEST/AMBIGUOUS) | Result Verifier |
+| Failure classification (6 categories: APP_BUG/SCENARIO_BUG/TEST_BUG/AMBIGUOUS/FEATURE_GAP/UX_GAP) | Result Verifier |
 | Pattern identification and lesson accuracy | Retrospective Analyst |
 
 No skill overrides another outside its authority domain.
@@ -514,9 +551,9 @@ All skills that need PTU knowledge read from shared reference files rather than 
 
 | Reference | Path | Used by |
 |-----------|------|---------|
-| Chapter Index | `.claude/skills/references/ptu-chapter-index.md` | Synthesizer, Crafter, Verifiers, Game Logic Reviewer |
+| Chapter Index | `.claude/skills/references/ptu-chapter-index.md` | Synthesizer, Crafter, Verifiers, Game Logic Reviewer, Feature Designer |
 | Skill Interfaces | `.claude/skills/references/skill-interfaces.md` | All skills (artifact format contracts) |
-| App Surface | `.claude/skills/references/app-surface.md` | Crafter, Playtester, Dev |
+| App Surface | `.claude/skills/references/app-surface.md` | Crafter, Playtester, Dev, Feature Designer |
 | Playwright Patterns | `.claude/skills/references/playwright-patterns.md` | Playtester |
 | Lesson Files | `app/tests/e2e/artifacts/lessons/` | Retrospective Analyst (writes), all skills (read) |
 
@@ -558,3 +595,26 @@ The Orchestrator detects staleness by comparing timestamps:
 - Loop file older than app code change in the same domain → loop may be stale
 - Scenario references a loop that was regenerated → scenario needs re-crafting
 - Verification references a scenario that was re-crafted → needs re-verification
+
+### 7.5 Gap Detection Cycle (Reactive)
+
+When tests fail because a feature doesn't exist (not because of a bug):
+
+1. Playtester runs test → API returns 404 or operation unsupported (does NOT retry 404s)
+2. Result Verifier triages → classifies as `FEATURE_GAP` or `UX_GAP` → writes gap report to `reports/`
+3. Orchestrator detects gap report → routes to Feature Designer terminal
+4. Feature Designer reads gap report + workflow context + app surface → writes design spec to `designs/` with `status: complete`
+5. Orchestrator detects pending design → routes to Developer terminal with design spec path
+6. Developer implements design → fills in Implementation Log → sets `status: implemented` → updates `app-surface.md`
+7. Orchestrator detects implemented design → routes to Playtester terminal with original scenario path
+8. Playtester re-runs scenario → Result Verifier re-triages → PASS (gap closed) or new issue
+
+### 7.6 Proactive Gap Detection
+
+Gaps can be detected before testing, avoiding wasted Playtester cycles:
+
+1. Synthesizer runs Step 4b feasibility check → annotates workflow steps with `[GAP: FEATURE_GAP]` or `[GAP: UX_GAP]`
+2. Crafter includes gap-annotated steps as-is (does not skip)
+3. Scenario Verifier detects gap annotations → adds `has_feasibility_warnings: true` to verification report frontmatter
+4. Orchestrator scans verification frontmatter → detects feasibility warnings → can route to Feature Designer before Playtester
+5. Feature Designer writes design spec → Developer implements → Playtester tests (first run succeeds for gap steps)
