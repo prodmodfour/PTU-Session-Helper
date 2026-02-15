@@ -78,7 +78,7 @@ export function applyDamageToEntity(
   entity.injuries = damageResult.newInjuries
 
   // PTU p248: fainting clears all Persistent and Volatile status conditions
-  if (damageResult.fainted && !entity.statusConditions?.includes('Fainted')) {
+  if (damageResult.fainted) {
     entity.statusConditions = ['Fainted']
   }
 }
