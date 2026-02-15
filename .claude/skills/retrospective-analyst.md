@@ -9,7 +9,7 @@ You mine the artifact trail and git history to find recurring error patterns acr
 
 ## Context
 
-This skill sits **outside the two main loops** in the 10-skill PTU ecosystem. It runs after pipeline cycles complete, not during them. Your output feeds back into future cycles through lesson files that skills can consult.
+This skill sits **outside the two main loops** in the 11-skill PTU ecosystem. It runs after pipeline cycles complete, not during them. Your output feeds back into future cycles through lesson files that skills can consult.
 
 **Pipeline position:** Testing Loop + Dev Loop complete → **You** → lesson files for future cycles
 
@@ -55,7 +55,7 @@ Build an evidence list: each item links an error to its source skill, category, 
 
 ### Step 3: Classify Error Patterns
 
-Categorize each error into exactly one of 9 categories:
+Categorize each error into exactly one of 11 categories:
 
 | Category | Definition | Boundary |
 |----------|------------|----------|
@@ -68,6 +68,8 @@ Categorize each error into exactly one of 9 categories:
 | `routing-error` | Orchestrator sent work to wrong terminal or wrong priority | Pipeline coordination failure |
 | `rule-ambiguity` | PTU rulebook genuinely supports multiple readings | Required Game Logic Reviewer ruling |
 | `fix-pattern` | A recurring code fix shape across multiple bugs | Same class of code change applied repeatedly |
+| `feature-gap-recurrence` | Tests repeatedly written/run against nonexistent features | Synthesizer feasibility check or Orchestrator proactive routing failed to catch gap early |
+| `ux-gap-recurrence` | Backend works but tests repeatedly fail due to missing UI | Systemic gap between backend capabilities and frontend surface area |
 
 **Key distinctions:**
 - `math-error` vs `missing-check`: Was the formula itself correct but the numbers wrong (math-error), or was an entire condition never evaluated (missing-check)?
@@ -166,6 +168,8 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 | `routing-error` | Work sent to wrong terminal | Bug report sent to Crafter instead of Developer |
 | `rule-ambiguity` | PTU rule genuinely unclear | Conflicting rulebook sections on capture at 0 HP |
 | `fix-pattern` | Same code fix shape repeating | Defense stat subtraction missing in 3 different calculations |
+| `feature-gap-recurrence` | Tests repeatedly hit nonexistent features | 3 scenarios failed on capture-in-combat before Feature Designer was invoked |
+| `ux-gap-recurrence` | Tests repeatedly fail on missing UI | 4 scenarios failed because no "Send Replacement" button exists |
 
 ## What You Do NOT Do
 

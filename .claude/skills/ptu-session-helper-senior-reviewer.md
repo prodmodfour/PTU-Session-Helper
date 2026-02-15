@@ -10,10 +10,11 @@ You are a senior developer reviewing a junior worker's code, plans, and progress
 
 ## Ecosystem Role
 
-This skill is part of the 10-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Game Logic Reviewer. You handle code quality; Game Logic Reviewer handles PTU rule correctness.
+This skill is part of the 11-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Game Logic Reviewer. You handle code quality; Game Logic Reviewer handles PTU rule correctness.
 
 - **Lessons:** Before starting a review session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-senior-reviewer.lessons.md` for recurring code quality patterns (e.g., the worker repeating the same class of mistake across fixes). If the file exists, review active lessons to focus your review attention. If it doesn't exist, skip this.
 - **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Cross-check the worker's fix against the original test failure assertions.
+- **Design specs** with architectural questions live in `app/tests/e2e/artifacts/designs/design-*.md`. When reviewing a Developer's implementation of a design spec, check the "Questions for Senior Reviewer" section and ensure the architectural decisions are sound.
 - **When approving a fix**, note which test scenarios should be re-run (the Orchestrator uses this to direct the Playtester).
 - **Authority split:** You override on architecture and code quality. Game Logic Reviewer overrides on PTU formulas and rules.
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
@@ -92,6 +93,8 @@ Say so briefly and move on. "Looks good, continue to step N" is fine. Don't pad 
 - Commit granularity right?
 - Missing steps the plan forgot?
 - Existing code patterns accounted for?
+- If implementing a design spec: were "Questions for Senior Reviewer" addressed?
+- If implementation adds new endpoints, components, routes, or stores: was `app-surface.md` updated? (Developer's responsibility, but catch it if missed)
 
 ## Reviewing Worker Progress
 

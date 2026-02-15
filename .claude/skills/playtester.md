@@ -9,7 +9,7 @@ You translate verified scenarios into Playwright e2e tests, execute them against
 
 ## Context
 
-This skill is the fourth stage of the **Testing Loop** in the 10-skill PTU ecosystem.
+This skill is the fourth stage of the **Testing Loop** in the 11-skill PTU ecosystem.
 
 **Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → **You** → Result Verifier
 
@@ -103,6 +103,8 @@ cd app && npx playwright test tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 Capture the full output including pass/fail status, assertion messages, and timing.
 
 ### Step 4: Self-Correction Loop
+
+**Do not retry 404 responses.** A 404 indicates a missing endpoint, not a transient failure. Record it as-is in the result and move on — the Result Verifier will classify it as FEATURE_GAP. Only retry selector/timing issues.
 
 If the test fails due to **selector or timing issues** (not assertion value mismatches):
 

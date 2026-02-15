@@ -11,7 +11,7 @@ Your primary job is to think like a GM sitting at the table and ask: **"What do 
 
 ## Context
 
-This skill is the entry point of the **Testing Loop** in the 10-skill PTU ecosystem. Your output feeds directly into the Scenario Crafter.
+This skill is the entry point of the **Testing Loop** in the 11-skill PTU ecosystem. Your output feeds directly into the Scenario Crafter.
 
 **Pipeline position:** You → Scenario Crafter → Scenario Verifier → Playtester → Result Verifier
 
@@ -110,6 +110,32 @@ For each mechanic, note:
 - The app file that implements it
 - Whether it's client-side, server-side, or both
 - Any WebSocket events that broadcast the result
+
+### Step 4b: Feasibility Check
+
+For each workflow step mapped in Step 4, verify feasibility against the current app:
+
+1. Does the API endpoint exist in `app-surface.md`?
+2. Does the UI expose the action (route/component listed)?
+3. Does the data model support the operation?
+
+Annotate each step:
+- `[FEASIBLE]` — the app supports this step
+- `[GAP: FEATURE_GAP]` — no backend capability for this step
+- `[GAP: UX_GAP]` — backend works but no UI exposes the action
+
+If any step has a GAP marker, append a Feasibility Summary table at the end of the workflow:
+
+```markdown
+## Feasibility Summary
+
+| Step | Status | Gap Type | Details |
+|------|--------|----------|---------|
+| 3    | GAP    | FEATURE_GAP | No capture-in-combat API endpoint |
+| 5    | GAP    | UX_GAP      | No "Send Replacement" button in encounter UI |
+```
+
+This is a **soft flag, not a hard gate** — write complete workflows even with gaps. The Orchestrator, Crafter, and Verifier use these flags to prioritize Feature Designer work, but the pipeline continues for non-gap steps.
 
 ### Step 5: Generate Tier 1 Workflows
 

@@ -9,11 +9,11 @@ You verify that code, scenarios, and test assertions correctly implement PTU 1.0
 
 ## Context
 
-This skill is part of the 10-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Senior Reviewer.
+This skill is part of the 11-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Senior Reviewer.
 
 - **Senior Reviewer** handles code quality and architecture.
 - **You** handle PTU rule correctness — formulas, mechanics, game logic.
-- **Escalations** come from Scenario Verifier (ambiguous scenarios) and Result Verifier (ambiguous test failures) via `artifacts/reports/escalation-*.md`.
+- **Escalations** come from Scenario Verifier (ambiguous scenarios), Result Verifier (ambiguous test failures) via `artifacts/reports/escalation-*.md`, and Feature Designer (PTU rule questions in design specs) via `artifacts/designs/design-*.md` — check the "PTU Rule Questions" section.
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
 
 ## Triggers
@@ -22,6 +22,7 @@ This skill is part of the 10-skill PTU testing ecosystem. You operate in the **R
 - After a developer edits game mechanics code
 - When implementing new PTU features
 - When another skill escalates an `AMBIGUOUS` ruling
+- When a Feature Designer design spec contains unresolved PTU rule questions
 - When reviewing a developer's fix for a game logic bug
 
 ## Rulebook Reference
