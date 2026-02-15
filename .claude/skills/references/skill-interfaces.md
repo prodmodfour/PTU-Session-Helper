@@ -11,6 +11,7 @@ app/tests/e2e/artifacts/
 ├── verifications/      # Scenario Verifier writes
 ├── results/            # Playtester writes
 ├── reports/            # Result Verifier writes
+├── designs/            # Feature Designer writes
 └── pipeline-state.md   # Every skill updates after writing artifacts
 ```
 
@@ -23,7 +24,8 @@ Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 - Mechanic scenarios: `<domain>-<mechanic>-<NNN>.md` (e.g., `combat-stab-001.md`)
 - Verifications: `<scenario-id>.verified.md` (e.g., `combat-workflow-wild-encounter-001.verified.md`)
 - Results: `<scenario-id>.result.md` (e.g., `combat-workflow-wild-encounter-001.result.md`)
-- Reports: `<category>-<NNN>.md` (e.g., `bug-001.md`, `correction-001.md`, `escalation-001.md`)
+- Reports: `<category>-<NNN>.md` (e.g., `bug-001.md`, `correction-001.md`, `escalation-001.md`, `feature-gap-001.md`, `ux-gap-001.md`) — counters are per-prefix (e.g., `bug-001` and `feature-gap-001` coexist)
+- Designs: `design-<NNN>.md` (e.g., `design-001.md`) — per-prefix counter in `artifacts/designs/`
 
 ---
 
@@ -411,6 +413,162 @@ ptu_refs:
 Game Logic Reviewer to make a ruling. Update scenario after ruling.
 ```
 
+### Feature Gap Report (FEATURE_GAP)
+
+```markdown
+---
+feature_gap_id: feature-gap-<NNN>
+category: FEATURE_GAP
+scope: FULL | PARTIAL | MINOR
+scenario_id: <scenario-id>
+loop_id: <source loop_id>
+domain: <domain>
+missing_capabilities:
+  - <capability description>
+  - ...
+ptu_refs:
+  - <rulebook-file>#<section>
+  - ...
+---
+
+## What Is Missing
+<Concise description of the capability the app lacks>
+
+## Workflow Impact
+<Which workflow step fails and why — reference the source loop>
+
+## What Exists Today
+<Any partial implementation, related endpoints, or adjacent features>
+
+## PTU Rule Reference
+<Rulebook quote establishing why this capability is needed>
+
+## Recommended Scope
+<FULL: new subsystem | PARTIAL: extend existing feature | MINOR: small addition>
+
+## Design Spec
+<!-- Feature Designer fills this in -->
+See: `artifacts/designs/design-<NNN>.md`
+```
+
+### UX Gap Report (UX_GAP)
+
+```markdown
+---
+ux_gap_id: ux-gap-<NNN>
+category: UX_GAP
+scope: PARTIAL | MINOR
+scenario_id: <scenario-id>
+loop_id: <source loop_id>
+domain: <domain>
+working_endpoints:
+  - <endpoint that works via direct API call>
+  - ...
+missing_ui:
+  - <UI element that doesn't exist>
+  - ...
+---
+
+## What Is Missing
+<Concise description of the UI gap — backend works but no UI exposes the action>
+
+## Backend Evidence
+<API calls that succeed, confirming the backend supports the operation>
+
+## Workflow Impact
+<Which workflow step fails for the GM and why>
+
+## What GM Sees Today
+<What the GM's current experience is — no button, no route, no form field>
+
+## Design Spec
+<!-- Feature Designer fills this in -->
+See: `artifacts/designs/design-<NNN>.md`
+```
+
+**Constraints (both gap types):**
+- UX_GAP scope is never `FULL` — if there's no backend at all, it's `FEATURE_GAP`
+- Gap reports link to their design spec once the Feature Designer produces one
+- Counters are per-prefix: `feature-gap-001` and `ux-gap-001` start independently
+
+---
+
+## 5e. Design Spec
+
+**Written by:** Feature Designer
+**Read by:** Developer (implements), Senior Reviewer (reviews architecture), Game Logic Reviewer (PTU rule questions)
+**Location:** `artifacts/designs/design-<NNN>.md`
+
+```markdown
+---
+design_id: design-<NNN>
+gap_report: <feature-gap-NNN or ux-gap-NNN>
+category: FEATURE_GAP | UX_GAP
+scope: FULL | PARTIAL | MINOR
+domain: <domain>
+scenario_id: <scenario-id>
+loop_id: <source loop_id>
+status: pending | complete | implemented
+affected_files:
+  - <existing app file path>
+  - ...
+new_files:
+  - <new file path to create>
+  - ...
+---
+
+## Summary
+<1-2 sentences: what this design adds to the app>
+
+## GM User Flow
+1. <step-by-step user interaction from the GM's perspective>
+2. ...
+
+## Data Model Changes
+<!-- FEATURE_GAP only — skip for UX_GAP -->
+- <Prisma schema changes, new fields, new models>
+
+## API Changes
+<!-- FEATURE_GAP only — skip for UX_GAP -->
+- <new or modified endpoints>
+
+## Client Changes
+- **Components:** <new or modified components>
+- **Stores:** <new or modified Pinia stores>
+- **Pages:** <new or modified page routes>
+- **Composables:** <new or modified composables>
+
+## WebSocket Events
+- <new events for GM-to-Group sync, if any>
+
+## Existing Patterns to Follow
+- <reference to existing app code that implements a similar pattern>
+
+## PTU Rule Questions
+<!-- Flag ambiguous rules for Game Logic Reviewer -->
+- <question about PTU rule interpretation, if any>
+
+## Questions for Senior Reviewer
+<!-- Architectural questions the Developer should route during implementation review -->
+- <e.g., "New service vs extend existing?", "New store vs extend?">
+
+## Implementation Log
+<!-- Developer fills this in after implementing -->
+- Commits: <commit hashes>
+- Files changed: <list>
+- `app-surface.md` updated: yes/no
+```
+
+**Status lifecycle:**
+- `pending` — Feature Designer is working on the spec
+- `complete` — spec written, awaiting Developer implementation
+- `implemented` — Developer filled in the Implementation Log and updated `app-surface.md`
+
+**Constraints:**
+- One design spec per gap report (1:1 relationship)
+- The Developer updates `status` to `implemented` after filling in the Implementation Log
+- The Orchestrator uses the `status` frontmatter field for routing decisions
+
 ---
 
 ## 6. Pipeline State
@@ -434,6 +592,7 @@ updated_by: <skill name>
 | Verifications | not started / in progress / complete | <N>/<total> | <date> |
 | Test Runs | not started / in progress / complete | <N>/<total> | <date> |
 | Results | not started / pending triage / complete | <pass>/<fail>/<error> | <date> |
+| Designs | design pending / design complete / implemented / re-tested | <N>/<total> complete | <date> |
 
 ### Open Issues
 - <report-id>: <severity> <category> — <summary> (assigned to <skill>)
