@@ -1,18 +1,32 @@
 ---
 last_updated: 2026-02-15T23:59:00
-updated_by: retrospective-analyst
+updated_by: orchestrator
 ---
 
 ## Domain: combat
 
+### Tier 2 (Mechanic Validations) — COMPLETE
+
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
-| Loops | complete | 15 loops (+ 12 sub-loops) | 2026-02-15 |
+| Loops | complete | 15 mechanic loops (+ 12 sub-loops) | 2026-02-15 |
 | Scenarios | complete | 19/19 (6 P0, 8 P1, 5 P2) | 2026-02-15 |
 | Verifications | complete | 19/19 PASS | 2026-02-15 |
 | Test Runs | complete | 80/80 PASS (19 specs) | 2026-02-15 |
 | Results | complete | 19/19 result files | 2026-02-15 |
-| **Triage** | **complete** | **19/19 PASS — 0 failures to triage** | **2026-02-15** |
+| Triage | complete | 19/19 PASS — 0 failures to triage | 2026-02-15 |
+
+### Tier 1 (Session Workflows) — NOT STARTED
+
+| Stage | Status | Count | Last Updated |
+|-------|--------|-------|-------------|
+| Loops | not started | — | — |
+| Scenarios | not started | — | — |
+| Verifications | not started | — | — |
+| Test Runs | not started | — | — |
+| Results | not started | — | — |
+
+Note: Existing Tier 2 artifacts remain valid. Tier 1 workflow loops need to be synthesized and added to `loops/combat.md`, then new workflow scenarios crafted.
 
 ### Results Verification Summary (Result Verifier)
 
@@ -104,7 +118,7 @@ All 4 previously corrected scenarios now PASS:
 
 ### Open Issues
 
-(none — all 7 pipeline stages complete. Combat domain fully analyzed.)
+- Combat Tier 1 workflow loops not yet synthesized. Existing Tier 2 mechanic tests remain valid and passing.
 
 ### Lessons (Retrospective Analyst)
 
