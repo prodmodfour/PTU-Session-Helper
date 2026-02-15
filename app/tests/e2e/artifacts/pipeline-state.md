@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-15T23:59:00
-updated_by: orchestrator
+last_updated: 2026-02-16T12:00:00
+updated_by: scenario-verifier
 ---
 
 ## Domain: combat
@@ -21,12 +21,33 @@ updated_by: orchestrator
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
 | Loops | complete | 6 workflows (+ 1 sub-workflow) | 2026-02-15 |
-| Scenarios | not started | — | — |
-| Verifications | not started | — | — |
+| Scenarios | complete | 7/7 (6 P0, 1 P1) | 2026-02-15 |
+| Verifications | complete | 7/7 PASS | 2026-02-16 |
 | Test Runs | not started | — | — |
 | Results | not started | — | — |
 
 Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + replacement), W4 (status chain), W5 (healing + recovery), W6 (template setup). Sub-workflow: W1 capture variant. 3 mechanics remain Tier 2 only (critical hit, struggle, multi-target).
+
+### Tier 1 Scenario Summary (Scenario Crafter)
+
+| Scenario ID | Loop | Priority | PTU Assertions | Key Mechanics |
+|-------------|------|----------|---------------|---------------|
+| combat-workflow-wild-encounter-001 | W1 | P0 | 10 | HP, initiative, STAB, type-eff, injury, faint, lifecycle |
+| combat-workflow-stage-buffs-001 | W2 | P0 | 8 | Combat stages, stage multiplier, STAB, type-eff, evasion-from-stages |
+| combat-workflow-faint-replacement-001 | W3 | P0 | 10 | Faint, status-clear-on-faint, initiative insertion, replacement |
+| combat-workflow-status-chain-001 | W4 | P0 | 9 | Status application, type immunity, Take a Breather, persistent vs volatile |
+| combat-workflow-healing-recovery-001 | W5 | P0 | 8 | Heal cap, faint recovery, temp HP, injury healing |
+| combat-workflow-template-setup-001 | W6 | P0 | 7 | Template load, initiative, serve to group |
+| combat-workflow-capture-variant-001 | W1-sub | P1 | 5 | Damage, STAB, capture rate, capture attempt |
+
+**Total: 7 scenarios, 57 PTU assertions**
+
+**Species used:** Growlithe, Oddish, Bulbasaur, Caterpie, Pidgey, Charmander, Eevee, Pikachu, Squirtle, Rattata
+
+**Lessons applied:**
+- Lesson 1 (STAB): Every attacker/move pair explicitly checked for type match. Annotated in every damage phase.
+- Lesson 2 (Learn levels): Every move verified against pokedex file with citation (e.g., "L6, gen1/growlithe.md").
+- Lesson 3 (Type effectiveness): Every type pair checked against chart individually. Dual-type targets show both lookups.
 
 ### Results Verification Summary (Result Verifier)
 
@@ -116,9 +137,34 @@ All 4 previously corrected scenarios now PASS:
 3. **combat-minimum-damage-001:** Rock-resists-Normal derivation now correct. Full chain: raw(-4) → min 1 → ×0.5 → 0 → final min 1. All 3 assertions independently verified.
 4. **combat-multi-target-001:** Geodude L34 has Earthquake at exact learn level. STAB correctly applied (DB 12, set 30). Charmander: 51 damage (fainted). Machop: 33 damage (HP "8/41"). All 4 assertions independently verified.
 
+### Tier 1 Verification Results (Scenario Verifier)
+
+**ALL PASS (7/7) — 57/57 assertions correct**
+
+| Scenario ID | Assertions | Status | Key Checks |
+|-------------|-----------|--------|------------|
+| combat-workflow-wild-encounter-001 | 10/10 | PASS | HP, initiative, STAB×2, type-eff (Fire vs Grass/Poison), injury, faint, lifecycle |
+| combat-workflow-stage-buffs-001 | 8/8 | PASS | Stages (+2/−1 net), multiplier ×1.2, modified stat, evasion recalc |
+| combat-workflow-faint-replacement-001 | 10/10 | PASS | STAB/no-STAB contrast, Burn on non-Fire, status-clear-on-faint, replacement initiative |
+| combat-workflow-status-chain-001 | 9/9 | PASS | Paralysis immunity (Electric), stacked statuses, Take a Breather, persistent survives end |
+| combat-workflow-healing-recovery-001 | 8/8 | PASS | Heal cap, faint recovery, temp HP grant + absorption, injury heal |
+| combat-workflow-template-setup-001 | 7/7 | PASS | Template save/load, HP derivation, initiative with ties |
+| combat-workflow-capture-variant-001 | 5/5 | PASS | Water Gun STAB, injury, capture rate, origin linkage |
+
+**Species verified (10):** Growlithe, Oddish, Bulbasaur, Caterpie, Pidgey, Charmander, Eevee, Pikachu, Rattata, Squirtle — all base stats, types, and move learn levels confirmed against `books/markdown/pokedexes/gen1/` files.
+
+**Lessons applied from scenario-crafter.lessons.md:**
+- Lesson 1 (STAB): 8 attacker/move pairs checked — all correct (including 1 explicit no-STAB: Caterpie/Tackle)
+- Lesson 2 (Learn levels): 8 move/level pairs verified — all at or above learn level (Squirtle/Water Gun at exact L13)
+- Lesson 3 (Type effectiveness): 10 unique type matchups individually verified against type chart
+
+**Errata:** errata-2.md checked for all 7 scenarios. Only capture mechanic errata applies (scenario 7); scenario's assertion is compatible with revised d20 system.
+
+All 7 scenarios proceed to Playtester.
+
 ### Open Issues
 
-- Combat Tier 1 workflow loops synthesized (6 workflows + 1 sub-workflow). Awaiting Scenario Crafter to produce workflow scenarios.
+(none)
 
 ### Lessons (Retrospective Analyst)
 
