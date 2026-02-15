@@ -1,6 +1,6 @@
 # PTU Skills Ecosystem
 
-Master reference for the 10-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing.
+Master reference for the 11-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing.
 
 ## Core Principle
 
@@ -10,7 +10,7 @@ The playtest loop drives the dev loop. Gameplay scenarios — derived from PTU 1
 
 **Separate terminals.** Each skill runs in its own Claude Code session. The user acts as liaison between terminals. Skills communicate through persistent artifact files on disk, never through shared context.
 
-## Two-Loop System
+## Three-Loop System
 
 ```
                     ┌──────────────┐
@@ -29,7 +29,13 @@ The playtest loop drives the dev loop. Gameplay scenarios — derived from PTU 1
         ↓                        (bug reports)
    Playtester
         ↓
-   Result Verifier ──→ issues ──→ Dev Loop / Crafter / Playtester
+   Result Verifier
+        ├── APP_BUG ──────────→ DEV LOOP (Developer → Reviewer)
+        ├── SCENARIO_BUG ─────→ Scenario Crafter (back into TESTING LOOP)
+        ├── TEST_BUG ─────────→ Playtester (retry/fix selectors)
+        ├── AMBIGUOUS ────────→ Game Logic Reviewer
+        ├── FEATURE_GAP ──────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
+        └── UX_GAP ───────────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
 
                     ┌────────────────────────┐
                     │ Retrospective Analyst  │ ← runs after cycles complete
@@ -53,7 +59,8 @@ Skills are loaded by asking Claude to load the relevant skill file (e.g., "load 
 | 7 | Developer | `ptu-session-helper-dev.md` | bug reports | code commits | persistent |
 | 8 | Senior Reviewer | `ptu-session-helper-senior-reviewer.md` | code diffs + reports | review feedback | persistent |
 | 9 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | PTU compliance report | as-needed |
-| 10 | Retrospective Analyst | `retrospective-analyst.md` | verifications, results, reports, git history | `artifacts/lessons/` | after cycles / on-demand |
+| 10 | Feature Designer | `feature-designer.md` | gap reports | `artifacts/designs/` | per-gap |
+| 11 | Retrospective Analyst | `retrospective-analyst.md` | verifications, results, reports, git history | `artifacts/lessons/` | after cycles / on-demand |
 
 ## Skill Files
 
@@ -67,6 +74,7 @@ Skills are loaded by asking Claude to load the relevant skill file (e.g., "load 
 ├── scenario-verifier.md
 ├── playtester.md
 ├── result-verifier.md
+├── feature-designer.md
 ├── ptu-session-helper-dev.md
 ├── ptu-session-helper-senior-reviewer.md
 ├── game-logic-reviewer.md
@@ -87,7 +95,8 @@ artifacts/
 ├── scenarios/          Crafter writes → Verifier reads
 ├── verifications/      Verifier writes → Playtester reads
 ├── results/            Playtester writes → Result Verifier reads
-├── reports/            Result Verifier writes → Dev/Crafter/Playtester reads
+├── reports/            Result Verifier writes → Dev/Crafter/Playtester/Feature Designer reads
+├── designs/            Feature Designer writes → Developer reads
 ├── lessons/            Retrospective Analyst writes → all skills read
 └── pipeline-state.md   All skills update → Orchestrator reads
 ```
@@ -100,9 +109,10 @@ Playwright specs: `tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 |--------|----------------|
 | PTU game logic, formulas, rule interpretation | Game Logic Reviewer |
 | Code quality, architecture, patterns | Senior Reviewer |
+| UI/UX design, feature surface area, user flows | Feature Designer |
 | Pipeline sequencing, what to test next | Orchestrator |
 | Scenario data accuracy, assertion math | Scenario Verifier |
-| Failure classification | Result Verifier |
+| Failure classification (6 categories) | Result Verifier |
 | Pattern identification and lesson accuracy | Retrospective Analyst |
 
 ## Orchestration Patterns
