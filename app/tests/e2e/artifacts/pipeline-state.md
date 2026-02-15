@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-16T12:00:00
-updated_by: scenario-verifier
+last_updated: 2026-02-15T23:59:00
+updated_by: playtester
 ---
 
 ## Domain: combat
@@ -16,17 +16,41 @@ updated_by: scenario-verifier
 | Results | complete | 19/19 result files | 2026-02-15 |
 | Triage | complete | 19/19 PASS — 0 failures to triage | 2026-02-15 |
 
-### Tier 1 (Session Workflows) — IN PROGRESS
+### Tier 1 (Session Workflows) — COMPLETE
 
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
 | Loops | complete | 6 workflows (+ 1 sub-workflow) | 2026-02-15 |
 | Scenarios | complete | 7/7 (6 P0, 1 P1) | 2026-02-15 |
 | Verifications | complete | 7/7 PASS | 2026-02-16 |
-| Test Runs | not started | — | — |
-| Results | not started | — | — |
+| Test Runs | complete | 55/55 PASS (7 specs) | 2026-02-15 |
+| Results | complete | 7/7 result files (7 PASS) | 2026-02-15 |
+| Triage | complete | 4 reports resolved (1 APP_BUG fixed, 3 SCENARIO_BUG corrected) | 2026-02-15 |
 
 Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + replacement), W4 (status chain), W5 (healing + recovery), W6 (template setup). Sub-workflow: W1 capture variant. 3 mechanics remain Tier 2 only (critical hit, struggle, multi-target).
+
+### Tier 1 Test Run Results (Playtester)
+
+**7 PASS, 0 FAIL — 55 tests passed across 7 spec files (serial mode)**
+
+| Spec File | Tests | Status | Duration | Notes |
+|-----------|-------|--------|----------|-------|
+| combat-workflow-healing-recovery-001.spec.ts | 8/8 | PASS | ~3.6s | — |
+| combat-workflow-stage-buffs-001.spec.ts | 7/7 | PASS | ~3.2s | — |
+| combat-workflow-capture-variant-001.spec.ts | 7/7 | PASS | ~2.5s | — |
+| combat-workflow-faint-replacement-001.spec.ts | 9/9 | PASS | ~3.7s | Re-run after APP_BUG fix (72df77b) |
+| combat-workflow-status-chain-001.spec.ts | 7/7 | PASS | ~3.2s | Re-run after SCENARIO_BUG correction (2a4f84e) |
+| combat-workflow-wild-encounter-001.spec.ts | 9/9 | PASS | ~3.6s | Re-run after SCENARIO_BUG correction (2a4f84e) |
+| combat-workflow-template-setup-001.spec.ts | 7/7 | PASS | ~3.7s | Re-run after SCENARIO_BUG correction (2a4f84e) |
+
+**Previous Failures (all resolved):**
+
+| # | Scenario | Assertion | Classification | Resolution |
+|---|----------|-----------|---------------|------------|
+| 1 | faint-replacement-001 | #8 (Burned cleared on faint) | APP_BUG | Fixed: `72df77b` — clear all statuses on faint per PTU p248 |
+| 2 | status-chain-001 | #4 (Electric immunity) | SCENARIO_BUG | Fixed: `2a4f84e` — removed immunity assertion (API is GM tool) |
+| 3 | wild-encounter-001 | #2 (Oddish HP) | SCENARIO_BUG | Fixed: `2a4f84e` — spec reads stats dynamically after spawn |
+| 4 | template-setup-001 | #3 (Charmander HP) | SCENARIO_BUG | Fixed: `2a4f84e` — spec uses >= minimum checks |
 
 ### Tier 1 Scenario Summary (Scenario Crafter)
 
@@ -49,7 +73,7 @@ Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + re
 - Lesson 2 (Learn levels): Every move verified against pokedex file with citation (e.g., "L6, gen1/growlithe.md").
 - Lesson 3 (Type effectiveness): Every type pair checked against chart individually. Dual-type targets show both lookups.
 
-### Results Verification Summary (Result Verifier)
+### Results Verification Summary — Tier 2 (Result Verifier)
 
 **CLEAN RUN — 0 failures to triage**
 
@@ -64,9 +88,50 @@ Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + re
 | TEST_BUG | 0 | — |
 | AMBIGUOUS | 0 | — |
 
-76 assertions across 19 scenarios all confirmed PASS. No retries, no Playwright errors, no self-corrections. The `artifacts/reports/` directory remains empty — no reports needed.
+76 assertions across 19 scenarios all confirmed PASS. No retries, no Playwright errors, no self-corrections.
 
-**Combat domain pipeline: COMPLETE.** All stages from Gameplay Loop Synthesizer through Result Verifier have passed. Ready for Retrospective Analyst.
+### Results Verification Summary — Tier 1 (Result Verifier)
+
+**4 FAILURES TRIAGED — 1 APP_BUG, 3 SCENARIO_BUG**
+
+- Results analyzed: 7
+- Passed: 3
+- Failed: 4
+
+| Category | Count | Reports Generated |
+|----------|-------|-------------------|
+| APP_BUG | 1 | bug-001.md |
+| SCENARIO_BUG | 3 | correction-001.md, correction-002.md, correction-003.md |
+| TEST_BUG | 0 | — |
+| AMBIGUOUS | 0 | — |
+| FEATURE_GAP | 0 | — |
+| UX_GAP | 0 | — |
+
+### Failure Triage
+
+| # | Scenario | Assertion | Category | Report | Assigned To |
+|---|----------|-----------|----------|--------|-------------|
+| 1 | combat-workflow-faint-replacement-001 | #8: Burned cleared on faint | APP_BUG | bug-001.md | Developer |
+| 2 | combat-workflow-status-chain-001 | #4: Electric immunity blocks Paralysis | SCENARIO_BUG | correction-001.md | Scenario Crafter |
+| 3 | combat-workflow-wild-encounter-001 | #2: Oddish HP (random stats) | SCENARIO_BUG | correction-002.md | Scenario Crafter |
+| 4 | combat-workflow-template-setup-001 | #3a: Charmander HP (random stats) | SCENARIO_BUG | correction-003.md | Scenario Crafter |
+
+### Passing Results Confirmed
+
+| Scenario | Assertions | Status |
+|----------|-----------|--------|
+| combat-workflow-healing-recovery-001 | 8/8 | PASS |
+| combat-workflow-stage-buffs-001 | 8/8 | PASS |
+| combat-workflow-capture-variant-001 | 5/5 | PASS |
+
+### Recommended Next Steps
+
+All 4 failures resolved. Combat domain Tier 1 + Tier 2 are fully green.
+
+1. ~~**Developer:** Fix bug-001~~ — DONE (commit `72df77b`)
+2. ~~**Scenario Crafter:** Apply correction-001, -002, -003~~ — DONE (commit `2a4f84e`)
+3. ~~**Playtester:** Re-run all 4 failed scenarios~~ — DONE (run 2026-02-15-002, all PASS)
+4. **Next:** Expand testing to other domains (capture, character-lifecycle, pokemon-lifecycle, etc.)
 
 ### Test Run Results (Playtester)
 
@@ -164,19 +229,30 @@ All 7 scenarios proceed to Playtester.
 
 ### Open Issues
 
-(none)
+All resolved:
+- ~~bug-001: APP_BUG — Faint handler doesn't clear statuses~~ FIXED (72df77b)
+- ~~correction-001: SCENARIO_BUG — Status-chain assumes type immunity~~ FIXED (2a4f84e)
+- ~~correction-002: SCENARIO_BUG — Wild-encounter assumes deterministic stats~~ FIXED (2a4f84e)
+- ~~correction-003: SCENARIO_BUG — Template-setup assumes deterministic stats~~ FIXED (2a4f84e)
 
 ### Lessons (Retrospective Analyst)
 
 | Metric | Value |
 |--------|-------|
-| Last analyzed | 2026-02-15T23:59:00 |
-| Total lessons | 5 |
-| Active | 5 |
-| Resolved | 0 |
-| Systemic patterns | 0 |
+| Last analyzed | 2026-02-16T00:30:00 |
+| Total lessons | 11 |
+| Active | 7 |
+| Resolved | 3 (SC L1-L3 → permanent process steps) |
+| Promote-candidate | 0 |
+| Systemic patterns | 1 (assuming-without-verifying) |
 
-Lessons written for: scenario-crafter (3 lessons — 1 missing-check, 2 data-lookup), playtester (2 lessons — 2 process-gap). See `artifacts/lessons/` for details.
+Lessons written for 4 skills:
+- scenario-crafter (5 lessons — 2 missing-check, 2 data-lookup, 1 missing-check; 3 promoted to promote-candidate after Tier 1 validation)
+- playtester (3 lessons — 3 process-gap)
+- developer (2 lessons — 1 missing-check, 1 fix-pattern) — NEW
+- scenario-verifier (1 lesson — 1 process-gap) — NEW
+
+See `artifacts/lessons/` for details and `artifacts/lessons/retrospective-summary.md` for cross-cutting analysis.
 
 ## Domain: capture
 
