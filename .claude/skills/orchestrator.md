@@ -84,7 +84,7 @@ Apply this priority order:
 
 8. **Pending designs.** If `designs/` contains a design spec with frontmatter `status: complete` (not yet `implemented`), direct to Dev terminal with the design spec path.
 
-9. **Implemented designs awaiting re-test.** If `designs/` contains a design spec with frontmatter `status: implemented` and the original scenario has not been re-run since implementation, direct to Playtester terminal with the scenario path.
+9. **Implemented designs awaiting re-test.** If `designs/` contains a design spec with frontmatter `status: implemented` and the original scenario has not been re-run since implementation, direct to Playtester terminal with the scenario path. If the design was FULL-scope, also suggest running the Code Health Auditor after re-test passes (large implementations are prime candidates for structural debt).
 
 10. **Feasibility warnings.** If verification reports have `has_feasibility_warnings: true` in frontmatter, direct to Feature Designer terminal (proactive path — gaps detected before testing).
 
@@ -100,6 +100,7 @@ Apply this priority order:
 13. **Domain cycle complete.** If a domain just finished a full cycle (results triaged, bugs fixed, re-runs all pass) and no retrospective has been run since, suggest running the Retrospective Analyst. Also suggest running the Code Health Auditor if `app/tests/e2e/artifacts/refactoring/audit-summary.md` either doesn't exist or `last_audited` is older than the cycle completion. The Auditor can run concurrently with the Retrospective Analyst.
 
 14. **All clean.** If all domains have passing tests and no open issues:
+    - If in-progress refactoring tickets exist (check `status: in-progress` in frontmatter), re-surface them to the Developer first — partially-completed refactoring should be finished before starting new work
     - If open refactoring tickets exist in `app/tests/e2e/artifacts/refactoring/`, suggest the Developer address the highest-priority one
     - Otherwise, report status and suggest which domain to add next
 
