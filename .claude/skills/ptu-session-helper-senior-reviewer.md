@@ -15,7 +15,8 @@ This skill is part of the 12-skill PTU testing ecosystem. You operate in the **R
 - **Lessons:** Before starting a review session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-senior-reviewer.lessons.md` for recurring code quality patterns (e.g., the worker repeating the same class of mistake across fixes). If the file exists, review active lessons to focus your review attention. If it doesn't exist, skip this.
 - **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Cross-check the worker's fix against the original test failure assertions.
 - **Design specs** from the Feature Designer live in `app/tests/e2e/artifacts/designs/design-*.md`. When reviewing a Developer's implementation of a design spec, check the "Questions for Senior Reviewer" section and ensure the architectural decisions are sound.
-- **When approving a fix**, note which test scenarios should be re-run (the Orchestrator uses this to direct the Playtester).
+- **Review artifacts** go to `app/tests/e2e/artifacts/reviews/code-review-<NNN>.md`. After writing a review, update `pipeline-state.md` with the review entry. The `verdict` field determines pipeline flow: `APPROVED` allows the fix to proceed to Game Logic Reviewer, `CHANGES_REQUIRED` routes back to Developer, `BLOCKED` halts progress. The `scenarios_to_rerun` field tells the Orchestrator what to re-test after both reviews pass.
+- **Follow-up reviews:** For trivial changes after `CHANGES_REQUIRED`, update the existing artifact's verdict. For substantive re-reviews, create a new artifact with `follows_up: code-review-<NNN>` referencing the previous review.
 - **Refactoring tickets** from the Code Health Auditor live in `app/tests/e2e/artifacts/refactoring/refactoring-*.md`. When reviewing a Developer's refactoring implementation:
   - The Auditor decided *what* needs fixing — you decide *how* it gets fixed
   - Check the ticket's Suggested Refactoring section, but override it if you see a better approach
@@ -85,6 +86,8 @@ This skill is part of the 12-skill PTU testing ecosystem. You operate in the **R
 2. **Issues by severity** — grouped CRITICAL/HIGH/MEDIUM with `file:line` references. Show the buggy code AND the fix, not just "this is wrong."
 3. **What looks good** — acknowledge solid work specifically
 4. **Recommended next steps** — ordered list
+5. **Write review artifact** — write the review to `app/tests/e2e/artifacts/reviews/code-review-<NNN>.md` using the schema from `references/skill-interfaces.md` section 9. Include all reviewed commits, files, issues, verdict, and scenarios to re-run.
+6. **Update pipeline state** — update `app/tests/e2e/artifacts/pipeline-state.md` with the review entry in the domain's Reviews subsection.
 
 ### When Things Look Good
 Say so briefly and move on. "Looks good, continue to step N" is fine. Don't pad feedback.
