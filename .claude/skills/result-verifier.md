@@ -1,6 +1,6 @@
 ---
 name: result-verifier
-description: Analyzes test results from the Playtester, triages every failure into exactly one category (APP_BUG, SCENARIO_BUG, TEST_BUG, AMBIGUOUS), and produces actionable reports for the appropriate skill terminal. Use when test results are ready for analysis, or when the Orchestrator directs you to verify results.
+description: Analyzes test results from the Playtester, triages every failure into exactly one of 6 categories (APP_BUG, SCENARIO_BUG, TEST_BUG, AMBIGUOUS, FEATURE_GAP, UX_GAP), and produces actionable reports for the appropriate skill terminal. Use when test results are ready for analysis, or when the Orchestrator directs you to verify results.
 ---
 
 # Result Verifier
@@ -9,9 +9,9 @@ You analyze test results from the Playtester, diagnose every failure, and route 
 
 ## Context
 
-This skill is the final stage of the **Testing Loop** in the 10-skill PTU ecosystem. Your output feeds into the Dev Loop (for app bugs) or loops back to earlier testing stages (for scenario/test issues).
+This skill is the final stage of the **Testing Loop** in the 11-skill PTU ecosystem. Your output feeds into the Dev Loop (for app bugs) or loops back to earlier testing stages (for scenario/test issues).
 
-**Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → Playtester → **You** → Dev / Crafter / Playtester / Game Logic Reviewer
+**Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → Playtester → **You** → Dev / Crafter / Playtester / Game Logic Reviewer / Feature Designer
 
 **Input:** `app/tests/e2e/artifacts/results/<scenario-id>.result.md`
 **Output:** `app/tests/e2e/artifacts/reports/<type>-<NNN>.md`
@@ -40,15 +40,31 @@ For every failed assertion, determine the root cause by working through this dec
 
 ```
 Was it a Playwright error (selector not found, timeout, navigation)?
-  └─ YES → Did Playtester already retry twice?
-       └─ YES → TEST_BUG
-       └─ NO → Should not be here (Playtester handles retries)
-  └─ NO → Was the expected value correct per PTU rules?
-       └─ Check by re-reading the rulebook section
-       └─ YES (expected is correct, app produced wrong value) → APP_BUG
-       └─ NO (expected value was wrong) → SCENARIO_BUG
-       └─ UNCLEAR (rule is ambiguous) → AMBIGUOUS
+  YES → Did Playtester already retry twice?
+    YES → TEST_BUG
+    NO → Should not be here (Playtester handles retries)
+  NO → Was it a 404/missing endpoint error?
+    YES → Does the scenario reference a capability listed in app-surface.md?
+      YES (capability is listed but 404 anyway) → APP_BUG (likely wrong URL or broken endpoint)
+      NO (capability is NOT in app-surface.md) → FEATURE_GAP
+    NO → Was the expected value correct per PTU rules?
+      YES (expected is correct) →
+        Does the specific operation exist? (Check: read the actual route handler
+        and service source code to verify the endpoint accepts the needed
+        parameters and supports the operation. Do NOT rely solely on
+        app-surface.md for parameter-level detail.)
+          NO (endpoint exists but doesn't support this operation)
+            → FEATURE_GAP (partial — the capability doesn't exist,
+              even though a related endpoint does)
+          YES → Can the GM trigger this action via the UI?
+            Check: is there a button, form, page route for this action?
+            NO → UX_GAP
+            YES → APP_BUG (app produced wrong value)
+      NO (expected was wrong) → SCENARIO_BUG
+      UNCLEAR (rule is ambiguous) → AMBIGUOUS
 ```
+
+**Key:** The "specific operation" check catches cases where an endpoint exists but doesn't support the needed operation (e.g., `/api/capture` exists but doesn't accept `encounterId` for in-combat capture). The response may be 200 with unexpected results, not 404 — so the 404 check alone would miss this. Read actual source code for this check rather than relying on `app-surface.md`, which documents endpoints at the path level but not parameter-level detail.
 
 ### Step 3: Verify Expected Values
 
@@ -118,12 +134,30 @@ The PTU rulebook text could support multiple interpretations for this specific c
 **Report format:** Escalation (see `.claude/skills/references/skill-interfaces.md`)
 **Contains:** The ambiguity, possible interpretations with expected values, relevant rulebook sections
 
+### FEATURE_GAP — App lacks the capability entirely
+
+The app does not have the backend capability needed. Diagnostic signals: 404 from API call AND the endpoint is not listed in `app-surface.md`, OR endpoint exists but doesn't support the needed operation (verified by reading source code), no corresponding service/composable exists.
+
+**Report goes to:** Feature Designer terminal
+**Report format:** Feature Gap Report (see `.claude/skills/references/skill-interfaces.md`)
+**Contains:** What's missing, workflow impact, what exists today, PTU rule reference, recommended scope, link to design spec (once created)
+
+### UX_GAP — Backend works, no UI path
+
+The backend supports the operation (direct API call succeeds), but no UI element exists for the GM to trigger it. The gap is in the frontend surface area, not the server logic.
+
+**Report goes to:** Feature Designer terminal
+**Report format:** UX Gap Report (see `.claude/skills/references/skill-interfaces.md`)
+**Contains:** What's missing, backend evidence, workflow impact, what GM sees today, link to design spec (once created)
+
 ## Report Naming
 
 - Bug reports: `bug-<NNN>.md` (sequential across all domains)
 - Corrections: `correction-<NNN>.md`
 - Test bug fixes: `test-fix-<NNN>.md`
 - Escalations: `escalation-<NNN>.md`
+- Feature gaps: `feature-gap-<NNN>.md`
+- UX gaps: `ux-gap-<NNN>.md`
 
 Check existing reports in `artifacts/reports/` to determine the next sequence number.
 
@@ -133,6 +167,10 @@ Check existing reports in `artifacts/reports/` to determine the next sequence nu
 - **Default to SCENARIO_BUG when uncertain between APP_BUG and SCENARIO_BUG.** Re-verifying a scenario is cheaper than changing code.
 - **Never classify a Playwright issue as APP_BUG.** If the test couldn't run (element not found, timeout, navigation error), it's TEST_BUG regardless of whether the app might also have a bug.
 - **AMBIGUOUS is rare.** Most PTU rules are specific enough to make a determination. Only escalate when the rulebook genuinely supports multiple readings.
+- **FEATURE_GAP guard:** Always cross-check against `app-surface.md` before classifying. If the capability IS listed in `app-surface.md` but returns 404, it's more likely APP_BUG (broken endpoint) or TEST_BUG (wrong URL in test), not FEATURE_GAP.
+- **FEATURE_GAP at operation level:** An endpoint may exist but not support the needed operation (e.g., 200 response but missing parameters or unexpected behavior). Read the actual route handler/service source to verify — `app-surface.md` lists endpoints at the path level but not parameter support.
+- **FEATURE_GAP vs UX_GAP:** Test via direct API call. 404 + not in `app-surface.md` = FEATURE_GAP. API succeeds + no UI = UX_GAP.
+- **UX_GAP scope:** Never FULL — if there's no backend at all, classify as FEATURE_GAP instead.
 
 ## Summary Report Format
 
