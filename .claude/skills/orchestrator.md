@@ -9,7 +9,7 @@ You coordinate the PTU testing pipeline. You read artifact state, determine wher
 
 ## Context
 
-This project uses 11 skills across separate Claude Code terminals. You are the hub that keeps the pipeline moving. Read `ptu-skills-ecosystem.md` for the full architecture.
+This project uses 12 skills across separate Claude Code terminals. You are the hub that keeps the pipeline moving. Read `ptu-skills-ecosystem.md` for the full architecture.
 
 ### The Two Loops
 
@@ -30,6 +30,7 @@ This project uses 11 skills across separate Claude Code terminals. You are the h
 | Game Logic Reviewer | as-needed | `game-logic-reviewer.md` |
 | Feature Designer | new or reuse | `feature-designer.md` |
 | Retrospective Analyst | after cycles / on-demand | `retrospective-analyst.md` |
+| Code Health Auditor | per-audit | `code-health-auditor.md` |
 
 ## Process
 
@@ -52,6 +53,7 @@ app/tests/e2e/artifacts/verifications/
 app/tests/e2e/artifacts/results/
 app/tests/e2e/artifacts/reports/
 app/tests/e2e/artifacts/designs/
+app/tests/e2e/artifacts/refactoring/    (check for open tickets when pipeline is clean)
 app/tests/e2e/artifacts/lessons/        (lightweight: check existence/freshness only)
 ```
 
@@ -95,9 +97,11 @@ Apply this priority order:
    - Verified but not tested → Playtester
    - Tested but not triaged → Result Verifier
 
-13. **Domain cycle complete.** If a domain just finished a full cycle (results triaged, bugs fixed, re-runs all pass) and no retrospective has been run since, suggest running the Retrospective Analyst.
+13. **Domain cycle complete.** If a domain just finished a full cycle (results triaged, bugs fixed, re-runs all pass) and no retrospective has been run since, suggest running the Retrospective Analyst. Also suggest running the Code Health Auditor if `app/tests/e2e/artifacts/refactoring/audit-summary.md` either doesn't exist or `last_audited` is older than the cycle completion. The Auditor can run concurrently with the Retrospective Analyst.
 
-14. **All clean.** If all domains have passing tests and no open issues, report status and suggest which domain to add next.
+14. **All clean.** If all domains have passing tests and no open issues:
+    - If open refactoring tickets exist in `app/tests/e2e/artifacts/refactoring/`, suggest the Developer address the highest-priority one
+    - Otherwise, report status and suggest which domain to add next
 
 ### Step 4: Give Specific Advice
 
@@ -145,6 +149,15 @@ Step 2 — after it loads, paste this:
   Re-test scenario after feature implementation.
   Scenario: app/tests/e2e/artifacts/scenarios/combat-workflow-capture-variant-001.md
   Design spec: app/tests/e2e/artifacts/designs/design-001.md (status: implemented)
+```
+
+**Handoff format for refactoring tickets → Developer:**
+When routing to the Developer for a refactoring ticket:
+```
+Step 2 — after it loads, paste this:
+  Implement refactoring-001: <summary>.
+  Ticket: app/tests/e2e/artifacts/refactoring/refactoring-001.md
+  After refactoring, update the ticket's Resolution Log and run existing tests to confirm nothing breaks.
 ```
 
 ### Step 5: Update Pipeline State
