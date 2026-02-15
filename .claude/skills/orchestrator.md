@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Pipeline coordinator for the PTU skills ecosystem. Use when starting a testing session, when unsure which skill to run next, or when asked to orchestrate. Reads artifact directories to determine pipeline position and advises the user on which terminal to go to and what command to run. Triggers on /orchestrate, "what should I do next", or at the start of any PTU testing workflow.
+description: Pipeline coordinator for the PTU skills ecosystem. Use when starting a testing session, when unsure which skill to run next, or when asked to orchestrate. Reads artifact directories to determine pipeline position and advises the user on which terminal to go to and what skill to load. Load when asked to "orchestrate", "what should I do next", or at the start of any PTU testing workflow.
 ---
 
 # Orchestrator
@@ -9,7 +9,7 @@ You coordinate the PTU testing pipeline. You read artifact state, determine wher
 
 ## Context
 
-This project uses 9 skills across separate Claude Code terminals. You are the hub that keeps the pipeline moving. Read `ptu-skills-ecosystem.md` for the full architecture.
+This project uses 10 skills across separate Claude Code terminals. You are the hub that keeps the pipeline moving. Read `ptu-skills-ecosystem.md` for the full architecture.
 
 ### The Two Loops
 
@@ -18,16 +18,17 @@ This project uses 9 skills across separate Claude Code terminals. You are the hu
 
 ### Skill Triggers
 
-| Skill | Terminal | Command |
-|-------|----------|---------|
-| Gameplay Loop Synthesizer | new or reuse | `/synthesize-loops` |
-| Scenario Crafter | new or reuse | `/craft-scenarios` |
-| Scenario Verifier | new or reuse | `/verify-scenarios` |
-| Playtester | persistent | `/playtest` |
-| Result Verifier | new or reuse | `/verify-results` |
-| Developer | persistent | (load skill at start) |
-| Senior Reviewer | persistent | (load skill at start) |
-| Game Logic Reviewer | as-needed | `/verify-ptu` or `/verify-game-logic` |
+| Skill | Terminal | Skill File |
+|-------|----------|-----------|
+| Gameplay Loop Synthesizer | new or reuse | `gameplay-loop-synthesizer.md` |
+| Scenario Crafter | new or reuse | `scenario-crafter.md` |
+| Scenario Verifier | new or reuse | `scenario-verifier.md` |
+| Playtester | persistent | `playtester.md` |
+| Result Verifier | new or reuse | `result-verifier.md` |
+| Developer | persistent | `ptu-session-helper-dev.md` |
+| Senior Reviewer | persistent | `ptu-session-helper-senior-reviewer.md` |
+| Game Logic Reviewer | as-needed | `game-logic-reviewer.md` |
+| Retrospective Analyst | after cycles / on-demand | `retrospective-analyst.md` |
 
 ## Process
 
@@ -49,6 +50,7 @@ app/tests/e2e/artifacts/scenarios/
 app/tests/e2e/artifacts/verifications/
 app/tests/e2e/artifacts/results/
 app/tests/e2e/artifacts/reports/
+app/tests/e2e/artifacts/lessons/        (lightweight: check existence/freshness only)
 ```
 
 For each domain, determine:
@@ -77,28 +79,43 @@ Apply this priority order:
    - Verified but not tested → Playtester
    - Tested but not triaged → Result Verifier
 
-7. **All clean.** If all domains have passing tests and no open issues, report status and suggest which domain to add next.
+7. **Domain cycle complete.** If a domain just finished a full cycle (results triaged, bugs fixed, re-runs all pass) and no retrospective has been run since, suggest running the Retrospective Analyst.
+
+8. **All clean.** If all domains have passing tests and no open issues, report status and suggest which domain to add next.
 
 ### Step 4: Give Specific Advice
 
 Always tell the user:
 - **Which terminal** to go to (skill name)
-- **What command** to run
+- **What command** to run (two-step — see below)
 - **What domain or artifact** to work on
 - **Why** (one sentence context)
 
+**IMPORTANT — Two-step prompts:** When directing the user to another terminal, always provide two separate prompts. Claude Code skips skill loading if `load` and task instructions are in the same message.
+
+1. **Prompt 1 (load only):** `load .claude/skills/<skill-file>.md`
+2. **Prompt 2 (task):** The actual task instructions with file paths and context
+
 Example output:
 ```
-Next: Go to the Scenario Crafter terminal and run /craft-scenarios
+Next: Go to the Scenario Crafter terminal.
 
-Context: The combat domain has 4 verified loops but no scenarios yet.
+Step 1 — paste this first:
+  load .claude/skills/scenario-crafter.md
+
+Step 2 — after it loads, paste this:
+  Craft test scenarios for the combat domain.
+  Loops input: app/tests/e2e/artifacts/loops/combat.md
+  ...
+
+Context: The combat domain has 15 verified loops but no scenarios yet.
 Read from: artifacts/loops/combat.md
 Write to: artifacts/scenarios/
 ```
 
 ### Step 5: Update Pipeline State
 
-After advising, update `artifacts/pipeline-state.md` with current state if it's stale or missing. Use the format from `references/skill-interfaces.md`.
+After advising, update `artifacts/pipeline-state.md` with current state if it's stale or missing. Use the format from `.claude/skills/references/skill-interfaces.md`.
 
 ## Staleness Detection
 
@@ -107,7 +124,7 @@ Compare timestamps across stages:
 - **Scenario file** modified after verification file → verification is stale
 - **Code commit** touching a domain's app files after test results → results are stale
 
-For code changes, check `git log --oneline -10` and map changed files to domains via `references/app-surface.md`.
+For code changes, check `git log --oneline -10` and map changed files to domains via `.claude/skills/references/app-surface.md`.
 
 ## Domain List
 
@@ -137,8 +154,8 @@ When summarizing pipeline status, use:
 | Domain | Stage | Next Action |
 |--------|-------|-------------|
 | combat | results (3 FAIL) | Dev: fix bug-001 |
-| capture | not started | Synthesizer: /synthesize-loops |
-| healing | loops complete | Crafter: /craft-scenarios |
+| capture | not started | Load Synthesizer |
+| healing | loops complete | Load Crafter |
 
 ### Suggested Next Step
 Go to Dev terminal, fix bug-001 (CRITICAL).

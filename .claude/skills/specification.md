@@ -67,7 +67,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | Field | Value |
 |-------|-------|
 | **File** | `.claude/skills/orchestrator.md` |
-| **Trigger** | `/orchestrate` |
+| **Trigger** | Ask Claude to load the orchestrator skill |
 | **Input** | `app/tests/e2e/artifacts/pipeline-state.md`, artifact directory contents |
 | **Output** | Advice to user (no files written except `pipeline-state.md` updates) |
 | **Terminal** | Persistent — keep open throughout a testing session |
@@ -91,7 +91,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | Field | Value |
 |-------|-------|
 | **File** | `.claude/skills/gameplay-loop-synthesizer.md` |
-| **Trigger** | `/synthesize-loops` |
+| **Trigger** | Ask Claude to load the gameplay-loop-synthesizer skill |
 | **Input** | PTU rulebook chapters, app feature map |
 | **Output** | `app/tests/e2e/artifacts/loops/<domain>.md` |
 | **Terminal** | Spin up per domain, can close after loops written |
@@ -114,7 +114,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | Field | Value |
 |-------|-------|
 | **File** | `.claude/skills/scenario-crafter.md` |
-| **Trigger** | `/craft-scenarios` |
+| **Trigger** | Ask Claude to load the scenario-crafter skill |
 | **Input** | `app/tests/e2e/artifacts/loops/<domain>.md` |
 | **Output** | `app/tests/e2e/artifacts/scenarios/<scenario-id>.md` |
 | **Terminal** | Spin up per batch, can close after scenarios written |
@@ -134,7 +134,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | Field | Value |
 |-------|-------|
 | **File** | `.claude/skills/scenario-verifier.md` |
-| **Trigger** | `/verify-scenarios` |
+| **Trigger** | Ask Claude to load the scenario-verifier skill |
 | **Input** | `app/tests/e2e/artifacts/scenarios/<scenario-id>.md` |
 | **Output** | `app/tests/e2e/artifacts/verifications/<scenario-id>.verified.md` |
 | **Terminal** | Spin up per verification batch |
@@ -155,7 +155,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | Field | Value |
 |-------|-------|
 | **File** | `.claude/skills/playtester.md` |
-| **Trigger** | `/playtest` |
+| **Trigger** | Ask Claude to load the playtester skill |
 | **Input** | `app/tests/e2e/artifacts/verifications/<scenario-id>.verified.md` |
 | **Output** | `app/tests/e2e/scenarios/<domain>/<id>.spec.ts` + `app/tests/e2e/artifacts/results/<scenario-id>.result.md` |
 | **Terminal** | Persistent during testing phases — needs running dev server |
@@ -182,7 +182,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | Field | Value |
 |-------|-------|
 | **File** | `.claude/skills/result-verifier.md` |
-| **Trigger** | `/verify-results` |
+| **Trigger** | Ask Claude to load the result-verifier skill |
 | **Input** | `app/tests/e2e/artifacts/results/<scenario-id>.result.md` |
 | **Output** | `app/tests/e2e/artifacts/reports/<report-id>.md` |
 | **Terminal** | Spin up per results batch |
@@ -238,7 +238,7 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 | Field | Value |
 |-------|-------|
 | **File** | `.claude/skills/game-logic-reviewer.md` |
-| **Trigger** | `/verify-ptu`, `/verify-game-logic` |
+| **Trigger** | Ask Claude to load the game-logic-reviewer skill |
 | **Input** | Code changes, scenario verifications, escalations from other skills |
 | **Output** | PTU compliance report with CORRECT/INCORRECT/NEEDS REVIEW per mechanic |
 | **Terminal** | Spin up when needed for PTU rule questions |
@@ -253,9 +253,36 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 
 **Authority:** On PTU game logic, this skill's judgment overrides all others. On code quality and architecture, Senior Reviewer overrides.
 
+### 3.10 Retrospective Analyst
+
+| Field | Value |
+|-------|-------|
+| **File** | `.claude/skills/retrospective-analyst.md` |
+| **Trigger** | After a domain completes a full cycle (results triaged, bugs fixed, re-runs pass) OR on-demand by user request |
+| **Input** | `app/tests/e2e/artifacts/verifications/`, `results/`, `reports/`, `pipeline-state.md`, git history |
+| **Output** | `app/tests/e2e/artifacts/lessons/<skill-name>.lessons.md`, `retrospective-summary.md` |
+| **Terminal** | Spin up after cycles complete or on user request |
+
+**Responsibilities:**
+- Scan artifact trail and git history for error patterns across completed pipeline cycles
+- Classify errors into 9 categories with clear boundary definitions
+- Track recurrence (observed → recurring → systemic)
+- Deduplicate against existing lessons before writing
+- Write per-skill lesson files with evidence and recommendations
+- Write cross-cutting retrospective summary
+- Update pipeline-state.md with lessons metrics
+
+**Does NOT:**
+- Fix app code (that's Developer)
+- Rewrite scenarios (that's Scenario Crafter)
+- Make PTU rule rulings (that's Game Logic Reviewer)
+- Triage individual failures (that's Result Verifier)
+- Modify any skill's process steps (recommends changes only)
+- Write to any artifact directory other than `artifacts/lessons/` and `pipeline-state.md`
+
 ## 4. Artifact Formats
 
-All artifacts use markdown with YAML frontmatter. Full schemas in `references/skill-interfaces.md`.
+All artifacts use markdown with YAML frontmatter. Full schemas in `.claude/skills/references/skill-interfaces.md`.
 
 ### 4.1 Gameplay Loop
 
@@ -414,6 +441,58 @@ updated_by: result-verifier
 | Loops | not started | — | — |
 ```
 
+### 4.6 Lesson File
+
+```markdown
+---
+skill: <skill-name>
+last_analyzed: <ISO timestamp>
+analyzed_by: retrospective-analyst
+total_lessons: <count>
+domains_covered:
+  - <domain>
+  - ...
+---
+
+# Lessons: <Skill Display Name>
+
+## Summary
+<2-3 sentences summarizing the key patterns found for this skill>
+
+---
+
+## Lesson 1: <imperative title>
+
+- **Category:** math-error | data-lookup | missing-check | process-gap | triage-error | selector-issue | routing-error | rule-ambiguity | fix-pattern
+- **Severity:** high | medium | low
+- **Domain:** combat | capture | healing | pokemon-lifecycle | character-lifecycle | encounter-tables | scenes | vtt-grid | cross-cutting
+- **Frequency:** observed | recurring | systemic
+- **First observed:** <date>
+- **Status:** active | resolved | promote-candidate
+
+### Pattern
+<Concrete description of the error pattern with references to specific artifacts>
+
+### Evidence
+- `artifacts/verifications/<id>.verified.md`: <what was found>
+- `artifacts/results/<id>.result.md`: <expected vs actual>
+- `git diff <hash>`: <what was changed to fix it>
+
+### Recommendation
+<Imperative instruction that could be added to the skill's process>
+
+---
+
+## Lesson 2: ...
+```
+
+**Constraints:**
+- One file per skill — only for skills with actual lessons
+- File naming: `<skill-name>.lessons.md` (hyphenated, matching ecosystem conventions)
+- `promote-candidate` status means the lesson should be considered for integration into the skill's process steps
+- Lessons are append-only within a file; resolved lessons stay for reference but are marked `status: resolved`
+- Cross-cutting summary in `artifacts/lessons/retrospective-summary.md`
+
 ## 5. Authority Hierarchy
 
 When skills disagree:
@@ -425,6 +504,7 @@ When skills disagree:
 | Pipeline sequencing, what to test next | Orchestrator |
 | Scenario data accuracy, assertion math | Scenario Verifier |
 | Failure classification (APP/SCENARIO/TEST/AMBIGUOUS) | Result Verifier |
+| Pattern identification and lesson accuracy | Retrospective Analyst |
 
 No skill overrides another outside its authority domain.
 
@@ -434,10 +514,11 @@ All skills that need PTU knowledge read from shared reference files rather than 
 
 | Reference | Path | Used by |
 |-----------|------|---------|
-| Chapter Index | `references/ptu-chapter-index.md` | Synthesizer, Crafter, Verifiers, Game Logic Reviewer |
-| Skill Interfaces | `references/skill-interfaces.md` | All skills (artifact format contracts) |
-| App Surface | `references/app-surface.md` | Crafter, Playtester, Dev |
-| Playwright Patterns | `references/playwright-patterns.md` | Playtester |
+| Chapter Index | `.claude/skills/references/ptu-chapter-index.md` | Synthesizer, Crafter, Verifiers, Game Logic Reviewer |
+| Skill Interfaces | `.claude/skills/references/skill-interfaces.md` | All skills (artifact format contracts) |
+| App Surface | `.claude/skills/references/app-surface.md` | Crafter, Playtester, Dev |
+| Playwright Patterns | `.claude/skills/references/playwright-patterns.md` | Playtester |
+| Lesson Files | `app/tests/e2e/artifacts/lessons/` | Retrospective Analyst (writes), all skills (read) |
 
 Reference files live in `.claude/skills/references/`.
 
@@ -445,15 +526,15 @@ Reference files live in `.claude/skills/references/`.
 
 ### 7.1 Full Loop (new domain)
 
-1. Orchestrator: "No loops for domain X. Go to Synthesizer terminal, run `/synthesize-loops`"
+1. Orchestrator: "No loops for domain X. Go to Synthesizer terminal, load the gameplay-loop-synthesizer skill"
 2. Synthesizer produces loops → writes to `artifacts/loops/`
-3. Orchestrator: "Loops ready. Go to Crafter terminal, run `/craft-scenarios`"
+3. Orchestrator: "Loops ready. Go to Crafter terminal, load the scenario-crafter skill"
 4. Crafter produces scenarios → writes to `artifacts/scenarios/`
-5. Orchestrator: "Scenarios ready. Go to Verifier terminal, run `/verify-scenarios`"
+5. Orchestrator: "Scenarios ready. Go to Verifier terminal, load the scenario-verifier skill"
 6. Verifier validates → writes to `artifacts/verifications/`
-7. Orchestrator: "Verified. Go to Playtester terminal, run `/playtest`"
+7. Orchestrator: "Verified. Go to Playtester terminal, load the playtester skill"
 8. Playtester executes → writes specs + results
-9. Orchestrator: "Results ready. Go to Result Verifier terminal, run `/verify-results`"
+9. Orchestrator: "Results ready. Go to Result Verifier terminal, load the result-verifier skill"
 10. Result Verifier triages → writes reports
 11. Orchestrator: "3 bugs found. Go to Dev terminal, start with bug-001 (CRITICAL)"
 

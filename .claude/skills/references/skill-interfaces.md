@@ -348,3 +348,63 @@ updated_by: <skill name>
 - Every skill updates this file after writing its artifacts
 - Orchestrator uses this as its sole source of truth
 - Staleness detection: compare stage timestamps — if a loop is newer than its scenarios, scenarios are stale
+
+---
+
+## 7. Lesson File
+
+**Written by:** Retrospective Analyst
+**Read by:** All skills (for learning from past errors)
+**Location:** `artifacts/lessons/<skill-name>.lessons.md`
+
+```markdown
+---
+skill: <skill-name>
+last_analyzed: <ISO timestamp>
+analyzed_by: retrospective-analyst
+total_lessons: <count>
+domains_covered:
+  - <domain>
+  - ...
+---
+
+# Lessons: <Skill Display Name>
+
+## Summary
+<2-3 sentences summarizing key patterns found for this skill>
+
+---
+
+## Lesson <N>: <imperative title>
+
+- **Category:** <one of: math-error, data-lookup, missing-check, process-gap, triage-error, selector-issue, routing-error, rule-ambiguity, fix-pattern>
+- **Severity:** high | medium | low
+- **Domain:** <domain or cross-cutting>
+- **Frequency:** observed | recurring | systemic
+- **First observed:** <date>
+- **Status:** active | resolved | promote-candidate
+
+### Pattern
+<Concrete description of the error pattern with artifact references>
+
+### Evidence
+- `artifacts/<dir>/<file>`: <what was found>
+- `git diff <hash>`: <what was changed>
+
+### Recommendation
+<Imperative instruction that could be added to the skill's process>
+```
+
+**File naming:** `<skill-name>.lessons.md` — hyphenated, matching ecosystem conventions. Examples:
+- `scenario-crafter.lessons.md`
+- `result-verifier.lessons.md`
+- `playtester.lessons.md`
+
+**Cross-cutting summary:** `artifacts/lessons/retrospective-summary.md` — aggregates metrics and patterns that span multiple skills.
+
+**Constraints:**
+- One file per skill — only created for skills with actual lessons
+- `promote-candidate` status means the lesson should be considered for integration into the skill's process
+- Resolved lessons remain in the file (marked `status: resolved`) for historical reference
+- Lessons are numbered sequentially within each file
+- The Retrospective Analyst deduplicates before writing — if a pattern already exists, it updates frequency and adds evidence rather than creating a duplicate

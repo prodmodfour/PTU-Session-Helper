@@ -1,6 +1,6 @@
 # PTU Skills Ecosystem
 
-Master reference for the 9-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing.
+Master reference for the 10-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing.
 
 ## Core Principle
 
@@ -30,21 +30,30 @@ The playtest loop drives the dev loop. Gameplay scenarios — derived from PTU 1
    Playtester
         ↓
    Result Verifier ──→ issues ──→ Dev Loop / Crafter / Playtester
+
+                    ┌────────────────────────┐
+                    │ Retrospective Analyst  │ ← runs after cycles complete
+                    │  (mines error patterns │   writes per-skill lessons
+                    │   across artifacts)    │
+                    └────────────────────────┘
 ```
 
 ## Skills Summary
 
-| # | Skill | Trigger | Input | Output | Terminal |
-|---|-------|---------|-------|--------|----------|
-| 1 | Orchestrator | `/orchestrate` | artifact dirs | advice (no files) | persistent |
-| 2 | Gameplay Loop Synthesizer | `/synthesize-loops` | rulebooks + app code | `artifacts/loops/` | per-domain |
-| 3 | Scenario Crafter | `/craft-scenarios` | loop files | `artifacts/scenarios/` | per-batch |
-| 4 | Scenario Verifier | `/verify-scenarios` | scenario files | `artifacts/verifications/` | per-batch |
-| 5 | Playtester | `/playtest` | verified scenarios | spec files + `artifacts/results/` | persistent |
-| 6 | Result Verifier | `/verify-results` | result files | `artifacts/reports/` | per-batch |
-| 7 | Developer | (load at start) | bug reports | code commits | persistent |
-| 8 | Senior Reviewer | (load at start) | code diffs + reports | review feedback | persistent |
-| 9 | Game Logic Reviewer | `/verify-ptu` | code/scenarios/escalations | PTU compliance report | as-needed |
+Skills are loaded by asking Claude to load the relevant skill file (e.g., "load the orchestrator skill").
+
+| # | Skill | Skill File | Input | Output | Terminal |
+|---|-------|-----------|-------|--------|----------|
+| 1 | Orchestrator | `orchestrator.md` | artifact dirs | advice (no files) | persistent |
+| 2 | Gameplay Loop Synthesizer | `gameplay-loop-synthesizer.md` | rulebooks + app code | `artifacts/loops/` | per-domain |
+| 3 | Scenario Crafter | `scenario-crafter.md` | loop files | `artifacts/scenarios/` | per-batch |
+| 4 | Scenario Verifier | `scenario-verifier.md` | scenario files | `artifacts/verifications/` | per-batch |
+| 5 | Playtester | `playtester.md` | verified scenarios | spec files + `artifacts/results/` | persistent |
+| 6 | Result Verifier | `result-verifier.md` | result files | `artifacts/reports/` | per-batch |
+| 7 | Developer | `ptu-session-helper-dev.md` | bug reports | code commits | persistent |
+| 8 | Senior Reviewer | `ptu-session-helper-senior-reviewer.md` | code diffs + reports | review feedback | persistent |
+| 9 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | PTU compliance report | as-needed |
+| 10 | Retrospective Analyst | `retrospective-analyst.md` | verifications, results, reports, git history | `artifacts/lessons/` | after cycles / on-demand |
 
 ## Skill Files
 
@@ -61,6 +70,7 @@ The playtest loop drives the dev loop. Gameplay scenarios — derived from PTU 1
 ├── ptu-session-helper-dev.md
 ├── ptu-session-helper-senior-reviewer.md
 ├── game-logic-reviewer.md
+├── retrospective-analyst.md
 ├── skill_creation.md                     (unchanged — skill authoring guide)
 └── references/
     ├── ptu-chapter-index.md              (rulebook lookup)
@@ -78,6 +88,7 @@ artifacts/
 ├── verifications/      Verifier writes → Playtester reads
 ├── results/            Playtester writes → Result Verifier reads
 ├── reports/            Result Verifier writes → Dev/Crafter/Playtester reads
+├── lessons/            Retrospective Analyst writes → all skills read
 └── pipeline-state.md   All skills update → Orchestrator reads
 ```
 
@@ -92,32 +103,33 @@ Playwright specs: `tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 | Pipeline sequencing, what to test next | Orchestrator |
 | Scenario data accuracy, assertion math | Scenario Verifier |
 | Failure classification | Result Verifier |
+| Pattern identification and lesson accuracy | Retrospective Analyst |
 
 ## Orchestration Patterns
 
 ### Full Loop (new domain)
-1. `/orchestrate` → "Start Synthesizer for domain X"
-2. `/synthesize-loops` → loops written
-3. `/orchestrate` → "Loops ready, start Crafter"
-4. `/craft-scenarios` → scenarios written
-5. `/orchestrate` → "Scenarios ready, start Verifier"
-6. `/verify-scenarios` → verifications written
-7. `/orchestrate` → "Verified, start Playtester"
-8. `/playtest` → specs + results written
-9. `/orchestrate` → "Results ready, start Result Verifier"
-10. `/verify-results` → reports written
-11. `/orchestrate` → "3 bugs found, start Dev with bug-001"
+1. Load Orchestrator → "Start Synthesizer for domain X"
+2. Load Synthesizer → loops written
+3. Load Orchestrator → "Loops ready, start Crafter"
+4. Load Crafter → scenarios written
+5. Load Orchestrator → "Scenarios ready, start Verifier"
+6. Load Verifier → verifications written
+7. Load Orchestrator → "Verified, start Playtester"
+8. Load Playtester → specs + results written
+9. Load Orchestrator → "Results ready, start Result Verifier"
+10. Load Result Verifier → reports written
+11. Load Orchestrator → "3 bugs found, start Dev with bug-001"
 
 ### Bug Fix Cycle
 1. Dev reads bug report → implements fix → commits
 2. Reviewer approves → notes affected scenarios
 3. Game Logic Reviewer confirms PTU correctness
-4. `/orchestrate` → "Fix approved, re-run scenario X"
+4. Load Orchestrator → "Fix approved, re-run scenario X"
 5. Playtester re-runs → new result
 6. Result Verifier checks → PASS or new issue
 
 ### Targeted Test (feature change)
-1. `/orchestrate` → "Change touches combat domain, existing loops cover it — re-run scenarios 001-004"
+1. Load Orchestrator → "Change touches combat domain, existing loops cover it — re-run scenarios 001-004"
 2. Skip Synthesizer/Crafter/Verifier — artifacts current
 3. Playtester re-runs affected scenarios only
 
@@ -130,4 +142,4 @@ Orchestrator compares timestamps in `pipeline-state.md`:
 ## Detailed Contracts
 
 See `specification.md` for full skill contracts, artifact format schemas, and examples.
-See `references/skill-interfaces.md` for YAML frontmatter templates and field definitions.
+See `.claude/skills/references/skill-interfaces.md` for YAML frontmatter templates and field definitions.
