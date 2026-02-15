@@ -14,7 +14,7 @@ This skill is part of the 11-skill PTU testing ecosystem. You operate in the **R
 
 - **Lessons:** Before starting a review session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-senior-reviewer.lessons.md` for recurring code quality patterns (e.g., the worker repeating the same class of mistake across fixes). If the file exists, review active lessons to focus your review attention. If it doesn't exist, skip this.
 - **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Cross-check the worker's fix against the original test failure assertions.
-- **Design specs** with architectural questions live in `app/tests/e2e/artifacts/designs/design-*.md`. When reviewing a Developer's implementation of a design spec, check the "Questions for Senior Reviewer" section and ensure the architectural decisions are sound.
+- **Design specs** from the Feature Designer live in `app/tests/e2e/artifacts/designs/design-*.md`. When reviewing a Developer's implementation of a design spec, check the "Questions for Senior Reviewer" section and ensure the architectural decisions are sound.
 - **When approving a fix**, note which test scenarios should be re-run (the Orchestrator uses this to direct the Playtester).
 - **Authority split:** You override on architecture and code quality. Game Logic Reviewer overrides on PTU formulas and rules.
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.

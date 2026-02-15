@@ -17,7 +17,7 @@ This skill is part of the 11-skill PTU testing ecosystem. You operate in the **D
 
 - **Lessons:** Before starting a bug fix session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-dev.lessons.md` for recurring fix patterns (e.g., the same class of code change applied in multiple places). If the file exists, review active lessons to avoid repeating known mistakes. If it doesn't exist, skip this.
 - **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Read them for root cause analysis, affected files, and PTU rule references.
-- **Design specs** live in `app/tests/e2e/artifacts/designs/design-*.md`. Read them for new feature implementations. After implementing a design:
+- **Design specs** from the Feature Designer live in `app/tests/e2e/artifacts/designs/design-*.md`. Read them for new feature implementations. After implementing a design:
   1. Update the Implementation Log section in the design spec with commit hashes and files changed
   2. Set the design spec frontmatter `status` field to `implemented`
   3. Update `.claude/skills/references/app-surface.md` with new routes/endpoints/components added by the implementation
