@@ -9,7 +9,9 @@ You mine the artifact trail and git history to find recurring error patterns acr
 
 ## Context
 
-This skill sits **outside the two main loops** in the 11-skill PTU ecosystem. It runs after pipeline cycles complete, not during them. Your output feeds back into future cycles through lesson files that skills can consult.
+This skill sits **outside the two main loops** in the 12-skill PTU ecosystem. It runs after pipeline cycles complete, not during them. Your output feeds back into future cycles through lesson files that skills can consult.
+
+**Cross-reference:** The Code Health Auditor reads your lesson files to boost priority of source files you flagged. If your lessons identify a file as a recurring error source, the Auditor gives it extra scrutiny during structural audits.
 
 **Pipeline position:** Testing Loop + Dev Loop complete → **You** → lesson files for future cycles
 
@@ -23,6 +25,7 @@ This skill sits **outside the two main loops** in the 11-skill PTU ecosystem. It
 - `app/tests/e2e/artifacts/reports/*.md`
 - `app/tests/e2e/artifacts/pipeline-state.md`
 - Git history (`git log`, `git diff`)
+- Past conversation transcripts (`~/.claude/projects/-home-ashraf-pokemon-ttrpg-session-helper/*.jsonl`)
 
 **Output:**
 - `app/tests/e2e/artifacts/lessons/<skill-name>.lessons.md` (per-skill)
@@ -44,18 +47,59 @@ Read `artifacts/pipeline-state.md` to find:
 
 ### Step 2: Collect Evidence
 
-Scan these directories for the determined scope:
+Scan these sources for the determined scope:
 
 1. **Verifications** (`artifacts/verifications/`) — assertions marked INCORRECT or AMBIGUOUS
 2. **Results** (`artifacts/results/`) — expected-vs-actual values from test runs (primary evidence for math-error and data-lookup patterns)
 3. **Reports** (`artifacts/reports/`) — bug reports, corrections, escalations, and their resolution status
 4. **Git diffs** — commits that fixed bugs or corrected scenarios (`git log --oneline` + `git diff` for fix commits)
+5. **Past conversations** — mine conversation transcripts for error patterns, user corrections, debugging sessions, and repeated workarounds (see Step 2b)
 
 Build an evidence list: each item links an error to its source skill, category, and resolution.
 
+### Step 2b: Mine Past Conversations
+
+Conversation transcripts are stored as JSONL files at:
+```
+~/.claude/projects/-home-ashraf-pokemon-ttrpg-session-helper/*.jsonl
+```
+
+**Format:** Each line is a JSON object. Relevant fields:
+- `type`: `"user"` or `"assistant"` (skip `"file-history-snapshot"` lines)
+- `message.role`: `"user"` or `"assistant"`
+- `message.content`: The actual message text (string or array of content blocks)
+- `timestamp`: ISO timestamp
+- `sessionId`: Groups messages into a single conversation
+
+**What to extract:**
+- **User corrections** — where the user told Claude it was wrong ("that's wrong", "no, the formula is...", "you need to...", "that's not how PTU works")
+- **Debugging loops** — sequences where the same fix was attempted multiple times before succeeding
+- **Repeated questions** — the same class of question asked across multiple sessions (indicates missing documentation or unclear process)
+- **Abandoned approaches** — where Claude started down a path and had to backtrack
+- **Explicit frustrations** — user expressing that something keeps going wrong or keeps being forgotten
+
+**Efficient scanning strategy:**
+1. List all JSONL files, sorted by modification time (newest first)
+2. For scoped runs, only read files modified since the last analysis timestamp
+3. Use a streaming approach — read line by line, filter to `type: "user"` and `type: "assistant"` only
+4. Skip lines containing `<command-name>`, `<local-command`, `<system-reminder>` (infrastructure noise)
+5. Look for signal keywords: "wrong", "incorrect", "no,", "actually", "that's not", "fix", "bug", "broken", "again", "keep", "forgot", "mistake", "should be", "instead of"
+6. When a signal is found, capture the surrounding context (2-3 messages before and after) as evidence
+
+**Conversation evidence entries** use this shape:
+```markdown
+- **session:** <sessionId>
+- **timestamp:** <ISO timestamp>
+- **signal:** <what was detected — e.g., "user correction", "debugging loop", "repeated question">
+- **context:** <2-3 sentence summary of what happened>
+- **related_skill:** <which skill's domain this touches, if identifiable>
+```
+
+**Privacy note:** Extract patterns and summaries only. Do not copy verbatim user messages into lesson files — paraphrase the pattern.
+
 ### Step 3: Classify Error Patterns
 
-Categorize each error into exactly one of 11 categories:
+Categorize each error into exactly one of 12 categories:
 
 | Category | Definition | Boundary |
 |----------|------------|----------|
@@ -70,10 +114,12 @@ Categorize each error into exactly one of 11 categories:
 | `fix-pattern` | A recurring code fix shape across multiple bugs | Same class of code change applied repeatedly |
 | `feature-gap-recurrence` | Tests repeatedly written/run against nonexistent features | Synthesizer feasibility check or Orchestrator proactive routing failed to catch gap early |
 | `ux-gap-recurrence` | Backend works but tests repeatedly fail due to missing UI | Systemic gap between backend capabilities and frontend surface area |
+| `conversation-pattern` | Same mistake or misunderstanding recurs across sessions | Mined from past conversation transcripts — user corrections, debugging loops, repeated questions |
 
 **Key distinctions:**
 - `math-error` vs `missing-check`: Was the formula itself correct but the numbers wrong (math-error), or was an entire condition never evaluated (missing-check)?
 - `process-gap` vs `routing-error`: Did the skill's process definition miss a step (process-gap), or did the Orchestrator route to the wrong skill (routing-error)?
+- `conversation-pattern` vs other categories: If an error found in conversations also maps to a more specific category (e.g., a user correction about a math formula → `math-error`), use the more specific category. Use `conversation-pattern` only for patterns that don't fit other categories (e.g., "Claude keeps forgetting to check errata", "user repeatedly has to explain the same PTU mechanic").
 
 ### Step 4: Check for Recurrence
 
@@ -141,6 +187,11 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 2. <second pattern>
 3. <third pattern>
 
+### Conversation Insights
+- Scanned <N> conversations (<date range>)
+- <N> user corrections found, <N> debugging loops, <N> repeated questions
+- Top conversation-sourced pattern: <description>
+
 ### New Lessons Written
 - <skill-name>: <N> lessons (<new>, <updated>)
 - ...
@@ -170,6 +221,7 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 | `fix-pattern` | Same code fix shape repeating | Defense stat subtraction missing in 3 different calculations |
 | `feature-gap-recurrence` | Tests repeatedly hit nonexistent features | 3 scenarios failed on capture-in-combat before Feature Designer was invoked |
 | `ux-gap-recurrence` | Tests repeatedly fail on missing UI | 4 scenarios failed because no "Send Replacement" button exists |
+| `conversation-pattern` | Same mistake recurs across sessions | User corrected evasion formula in 3 separate conversations |
 
 ## What You Do NOT Do
 

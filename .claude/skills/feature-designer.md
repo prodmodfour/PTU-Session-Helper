@@ -9,7 +9,7 @@ You design app features and UI surface area to close gaps between what PTU gamep
 
 ## Context
 
-This skill operates in the **Design Loop** of the 11-skill PTU ecosystem. You sit between gap detection and implementation.
+This skill operates in the **Design Loop** of the 12-skill PTU ecosystem. You sit between gap detection and implementation.
 
 **Pipeline position (reactive):** Result Verifier → gap report → **You** → design spec → Developer → Senior Reviewer
 **Pipeline position (proactive):** Synthesizer feasibility flag → Scenario Verifier warning → Orchestrator → **You** → design spec → Developer
