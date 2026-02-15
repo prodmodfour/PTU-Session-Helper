@@ -18,7 +18,10 @@ You just edited a file containing **PTU game mechanics**.
 1. Does this change affect damage, healing, capture, stats, or combat?
 2. If yes, cross-reference with the rulebooks in `/books/markdown/`
 
-**Run `/verify-ptu`** to do a full verification, or manually check:
+**Run `/verify-ptu`** (or `/verify-game-logic`) to do a full verification using the Game Logic Reviewer skill (`game-logic-reviewer.md`).
+
+Key references:
+- Rulebook lookup: `.claude/skills/references/ptu-chapter-index.md`
 - Core rules: `books/markdown/core/` (12 chapter files, e.g. `07-combat.md`)
 - Errata: `books/markdown/errata-2.md`
 
