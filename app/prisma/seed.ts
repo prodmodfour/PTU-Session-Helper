@@ -244,7 +244,7 @@ function parsePokedexContent(content: string): SpeciesRow[] {
     for (let i = 0; i < lines.length && i < 10; i++) {
       const line = lines[i].trim()
       // Pokemon name is usually in ALL CAPS and at least 3 characters
-      if (line.length >= 3 && /^[A-Z][A-Z\s\-\(\)'É]+$/.test(line) && !line.match(/^\d+$/)) {
+      if (line.length >= 3 && /^[A-Z][A-Z0-9\s\-\(\).:'É\u2019]+$/.test(line) && !line.match(/^\d+$/)) {
         // Skip common non-Pokemon lines
         if (['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST'].includes(line)) continue
         pokemonName = line
