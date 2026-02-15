@@ -4,7 +4,8 @@
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
 import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
-import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
+import { syncDamageToDatabase } from '~/server/services/entity-update.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -35,7 +36,7 @@ export default defineEventHandler(async (event) => {
     }
     const moveName = move?.name || body.moveId || 'Unknown Move'
 
-    // Process targets and collect database updates
+    // Process targets with full PTU damage pipeline
     const dbUpdates: Promise<unknown>[] = []
     const targets = body.targetIds.map((targetId: string) => {
       const target = combatants.find(c => c.id === targetId)
@@ -46,15 +47,27 @@ export default defineEventHandler(async (event) => {
       // Get damage for this specific target
       const targetDamage = body.targetDamages?.[targetId] ?? body.damage ?? 0
 
-      // Apply damage if provided
+      // Apply damage using PTU mechanics (temp HP, injuries, faint + status clearing)
       if (targetDamage > 0) {
-        const newHp = Math.max(0, target.entity.currentHp - targetDamage)
-        target.entity.currentHp = newHp
+        const entity = target.entity
+        const damageResult = calculateDamage(
+          targetDamage,
+          entity.currentHp,
+          entity.maxHp,
+          entity.temporaryHp || 0,
+          entity.injuries || 0
+        )
 
-        // Queue database update if entity has a record
-        if (target.entityId) {
-          dbUpdates.push(syncEntityToDatabase(target, { currentHp: newHp }))
-        }
+        applyDamageToEntity(target, damageResult)
+
+        dbUpdates.push(syncDamageToDatabase(
+          target,
+          damageResult.newHp,
+          damageResult.newTempHp,
+          damageResult.newInjuries,
+          entity.statusConditions || [],
+          damageResult.injuryGained
+        ))
       }
 
       return {
