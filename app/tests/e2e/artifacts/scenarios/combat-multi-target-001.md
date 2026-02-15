@@ -12,7 +12,7 @@ $encounter_id = response.data.id
 
 POST /api/pokemon {
   "species": "Geodude",
-  "level": 10,
+  "level": 34,
   "baseHp": 4, "baseAttack": 8, "baseDefense": 10,
   "baseSpAttack": 3, "baseSpDefense": 3, "baseSpeed": 2,
   "types": ["Rock", "Ground"]
@@ -57,29 +57,30 @@ POST /api/encounters/$encounter_id/start
 
 ## Assertions
 
-1. **Single set damage roll shared across targets:**
-   Earthquake DB 10 → Set damage = 24
-   **Assert: Same base damage value (24) used for both target calculations**
+1. **Single set damage roll shared across targets (with STAB):**
+   Geodude is Rock/Ground, Earthquake is Ground → STAB applies
+   STAB: DB 10 + 2 = 12 → Set damage = 30
+   **Assert: Same base damage value (30) used for both target calculations**
 
 2. **Charmander damage — Ground vs Fire = Super Effective (×1.5):**
-   Damage before effectiveness = max(1, SetDamage(24) + ATK(8) - DEF(4)) = 28
+   Damage before effectiveness = max(1, SetDamage(30) + ATK(8) - DEF(4)) = 34
    Ground vs Fire = SE (×1.5)
-   Final damage = floor(28 × 1.5) = floor(42.0) = 42
+   Final damage = floor(34 × 1.5) = floor(51.0) = 51
    Charmander HP = level(10) + (baseHp(4) × 3) + 10 = 32
-   42 > 32 → HP = 0, Fainted
-   **Assert: Charmander takes 42 damage, HP → 0, Fainted**
+   51 > 32 → HP = 0, Fainted
+   **Assert: Charmander takes 51 damage, HP → 0, Fainted**
 
 3. **Machop damage — Ground vs Fighting = neutral (×1):**
-   Damage before effectiveness = max(1, SetDamage(24) + ATK(8) - DEF(5)) = 27
+   Damage before effectiveness = max(1, SetDamage(30) + ATK(8) - DEF(5)) = 33
    Ground vs Fighting = neutral (×1)
-   Final damage = 27
+   Final damage = 33
    Machop HP = level(10) + (baseHp(7) × 3) + 10 = 41
-   Remaining = 41 - 27 = 14
-   **Assert: Machop takes 27 damage, HP displays "14/41"**
+   Remaining = 41 - 33 = 8
+   **Assert: Machop takes 33 damage, HP displays "8/41"**
 
 4. **Different final damage per target:**
-   Charmander: 42 (SE, lower DEF)
-   Machop: 27 (neutral, higher DEF)
+   Charmander: 51 (SE ×1.5, lower DEF 4)
+   Machop: 33 (neutral ×1, higher DEF 5)
    **Assert: Per-target damage differs despite same base damage roll**
 
 ## Teardown

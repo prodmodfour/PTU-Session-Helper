@@ -12,7 +12,7 @@ $encounter_id = response.data.id
 
 POST /api/pokemon {
   "species": "Squirtle",
-  "level": 10,
+  "level": 13,
   "baseHp": 4, "baseAttack": 5, "baseDefense": 7,
   "baseSpAttack": 5, "baseSpDefense": 6, "baseSpeed": 4,
   "types": ["Water"]

@@ -53,12 +53,15 @@ POST /api/encounters/$encounter_id/stages { "combatantId": $geodude_combatant_id
    Modified DEF = floor(DEF(10) × 2.2) = floor(22.0) = 22
    **Assert: Geodude modified DEF is 22**
 
-2. **Raw damage is negative, minimum 1 applied:**
+2. **Raw damage is negative, minimum 1 applied, then resistance reduces, then final minimum 1:**
    Tackle DB 5 → Set damage = 13
    Raw damage = SetDamage(13) + ATK(5) - ModifiedDEF(22) = 13 + 5 - 22 = -4
    PTU rule: "An attack will always do a minimum of 1 damage, even if Defense Stats would reduce it to 0"
-   Normal vs Rock/Ground = neutral (×1)
-   Final damage = max(1, -4) × 1 = 1
+   After defense minimum: max(1, -4) = 1
+   Type effectiveness: Normal vs Rock/Ground → Rock resists Normal (×0.5), Ground neutral (×1) → combined ×0.5
+   After effectiveness: floor(1 × 0.5) = floor(0.5) = 0
+   Final minimum (not immune — Normal is resisted, not immune): max(1, 0) = 1
+   Final damage = 1
    **Assert: Damage applied is 1 (not 0 or negative)**
 
 3. **Geodude HP reduced by exactly 1:**

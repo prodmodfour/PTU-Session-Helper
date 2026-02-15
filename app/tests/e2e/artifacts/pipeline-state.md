@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-15T19:00:00
-updated_by: scenario-verifier
+last_updated: 2026-02-15T20:00:00
+updated_by: scenario-crafter
 ---
 
 ## Domain: combat
@@ -8,8 +8,8 @@ updated_by: scenario-verifier
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
 | Loops | complete | 15 loops (+ 12 sub-loops) | 2026-02-15 |
-| Scenarios | complete | 19/19 (6 P0, 8 P1, 5 P2) | 2026-02-15 |
-| Verifications | complete | 19/19 (15 PASS, 3 PARTIAL, 1 FAIL) | 2026-02-15 |
+| Scenarios | corrected | 19/19 (6 P0, 8 P1, 5 P2) — 4 fixed | 2026-02-15 |
+| Verifications | needs re-verify | 15/19 PASS, 4 corrected awaiting re-verification | 2026-02-15 |
 | Test Runs | not started | — | — |
 | Results | not started | — | — |
 
@@ -32,20 +32,15 @@ updated_by: scenario-verifier
 - combat-temporary-hp-001 (P2): All 3 assertions correct
 - combat-injury-massive-damage-001 (P2): All 4 assertions correct
 
-**PARTIAL (3):** Return to Scenario Crafter for corrections
-- combat-basic-special-001 (P0): STAB incorrectly omitted -- Charmander (Fire) using Ember (Fire) triggers STAB. Assertions 3-4 have wrong values (13 should be 17, "28/41" should be "24/41"). Fix: use non-STAB attacker/move combo.
-- combat-type-effectiveness-001 (P1): Water Gun not learnable by Squirtle at level 10 (learned at L13). All assertion values are correct. Fix: raise Squirtle to level 13+.
-- combat-minimum-damage-001 (P2): Normal vs Rock/Ground incorrectly stated as neutral -- Rock resists Normal (x0.5). Final damage value (1) is coincidentally correct due to min-1 rule. Fix: correct the derivation to show Rock resistance.
-
-**FAIL (1):** Return to Scenario Crafter for rewrite
-- combat-multi-target-001 (P2): Two fundamental issues: (1) Geodude at L10 cannot know Earthquake (learned at L34), (2) STAB missed -- Geodude (Rock/Ground) using Earthquake (Ground) should get +2 DB. All 4 assertions have wrong values.
+**CORRECTED (4):** Awaiting re-verification by Scenario Verifier
+- combat-basic-special-001 (P0): Replaced Charmander/Ember with Psyduck(Water)/Confusion(Psychic) to eliminate STAB. Target changed to Charmander(Fire) for neutral effectiveness. All 4 assertions rewritten.
+- combat-type-effectiveness-001 (P1): Raised Squirtle from L10 to L13 so Water Gun is available. All assertion math unchanged (base stats don't vary with level, Charmander target stays L10).
+- combat-minimum-damage-001 (P2): Corrected derivation to show Rock resists Normal (×0.5). Full path: raw(-4) → min 1 → ×0.5 → floor(0.5)=0 → final min 1. Same final value, correct reasoning.
+- combat-multi-target-001 (P2): Full rewrite. Geodude raised to L34 for Earthquake access. STAB applied (DB 10+2=12, set=30). Charmander: 51 damage (fainted). Machop: 33 damage (HP "8/41").
 
 ### Open Issues
 
-1. combat-basic-special-001: PARTIAL -- Scenario Crafter must fix STAB omission (P0 priority)
-2. combat-type-effectiveness-001: PARTIAL -- Scenario Crafter must fix Squirtle level or move choice
-3. combat-minimum-damage-001: PARTIAL -- Scenario Crafter must correct type effectiveness derivation
-4. combat-multi-target-001: FAIL -- Scenario Crafter must rewrite with valid move/level and include STAB
+(none — all 4 corrections applied, awaiting re-verification)
 
 ## Domain: capture
 
