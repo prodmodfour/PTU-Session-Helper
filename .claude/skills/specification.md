@@ -30,6 +30,7 @@ app/tests/e2e/artifacts/
 ├── results/            # Playtester → writes
 ├── reports/            # Result Verifier → writes
 ├── designs/            # Feature Designer → writes
+├── refactoring/        # Code Health Auditor → writes
 └── pipeline-state.md   # Updated by every skill, read by Orchestrator
 ```
 
@@ -262,7 +263,34 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 
 **Authority:** On PTU game logic, this skill's judgment overrides all others. On code quality and architecture, Senior Reviewer overrides.
 
-### 3.10 Retrospective Analyst
+### 3.10 Feature Designer
+
+| Field | Value |
+|-------|-------|
+| **File** | `.claude/skills/feature-designer.md` |
+| **Trigger** | When Result Verifier classifies a failure as FEATURE_GAP or UX_GAP, when Orchestrator routes a gap report, or when Synthesizer feasibility check flags missing capabilities |
+| **Input** | `app/tests/e2e/artifacts/reports/feature-gap-*.md` or `ux-gap-*.md` |
+| **Output** | `app/tests/e2e/artifacts/designs/design-<NNN>.md` |
+| **Terminal** | Spin up per gap report |
+
+**Responsibilities:**
+- Read gap reports and understand what workflow triggered the failure
+- Analyze current app surface area (server-side for FEATURE_GAP, client-side for UX_GAP)
+- Read PTU rules for FEATURE_GAP designs that involve game mechanics
+- Design the feature: data model, API, services, components, stores, user flows
+- Flag ambiguous PTU rules for Game Logic Reviewer
+- Flag architectural questions for Senior Reviewer
+- Write design specs with `status: complete` for Developer implementation
+
+**Does NOT:**
+- Write code (that's Developer)
+- Make PTU rule rulings (that's Game Logic Reviewer)
+- Judge code architecture quality (that's Senior Reviewer)
+- Write test scenarios (that's Scenario Crafter)
+- Run tests (that's Playtester)
+- Triage test failures (that's Result Verifier)
+
+### 3.11 Retrospective Analyst
 
 | Field | Value |
 |-------|-------|
@@ -289,32 +317,34 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 - Modify any skill's process steps (recommends changes only)
 - Write to any artifact directory other than `artifacts/lessons/` and `pipeline-state.md`
 
-### 3.11 Feature Designer
+### 3.12 Code Health Auditor
 
 | Field | Value |
 |-------|-------|
-| **File** | `.claude/skills/feature-designer.md` |
-| **Trigger** | When Result Verifier classifies a failure as FEATURE_GAP or UX_GAP, when Orchestrator routes a gap report, or when Synthesizer feasibility check flags missing capabilities |
-| **Input** | `app/tests/e2e/artifacts/reports/feature-gap-*.md` or `ux-gap-*.md` |
-| **Output** | `app/tests/e2e/artifacts/designs/design-<NNN>.md` |
-| **Terminal** | Spin up per gap report |
+| **File** | `.claude/skills/code-health-auditor.md` |
+| **Trigger** | On-demand, after a domain completes a full pipeline cycle, or after Developer implements a FULL-scope design spec |
+| **Input** | Source code files under `app/`, `app-surface.md`, lesson files, git log |
+| **Output** | `app/tests/e2e/artifacts/refactoring/refactoring-<NNN>.md`, `audit-summary.md` |
+| **Terminal** | Spin up per audit |
 
 **Responsibilities:**
-- Read gap reports and understand what workflow triggered the failure
-- Analyze current app surface area (server-side for FEATURE_GAP, client-side for UX_GAP)
-- Read PTU rules for FEATURE_GAP designs that involve game mechanics
-- Design the feature: data model, API, services, components, stores, user flows
-- Flag ambiguous PTU rules for Game Logic Reviewer
-- Flag architectural questions for Senior Reviewer
-- Write design specs with `status: complete` for Developer implementation
+- Scan production source code for structural issues that hinder LLM agent correctness
+- Categorize findings into 12 categories (7 LLM-friendliness + 5 extensibility)
+- Cross-reference Retrospective Analyst lessons to boost priority of flagged files
+- Detect hot files via git change frequency
+- Write prioritized refactoring tickets (max 10 per audit)
+- Write audit summary with metrics and hotspots
+- Update `## Code Health` section of pipeline-state.md
+
+**Authority boundary:** Decides *what* needs fixing and its priority. Senior Reviewer decides *how* the refactoring is implemented.
 
 **Does NOT:**
-- Write code (that's Developer)
-- Make PTU rule rulings (that's Game Logic Reviewer)
-- Judge code architecture quality (that's Senior Reviewer)
-- Write test scenarios (that's Scenario Crafter)
-- Run tests (that's Playtester)
-- Triage test failures (that's Result Verifier)
+- Modify source code (that's Developer)
+- Review code changes (that's Senior Reviewer)
+- Fix bugs or implement features (that's Developer)
+- Make PTU rule judgments (that's Game Logic Reviewer)
+- Scan test files or artifacts — only production code under `app/`
+- Write to any artifact directory other than `artifacts/refactoring/`
 
 ## 4. Artifact Formats
 
@@ -529,6 +559,112 @@ domains_covered:
 - Lessons are append-only within a file; resolved lessons stay for reference but are marked `status: resolved`
 - Cross-cutting summary in `artifacts/lessons/retrospective-summary.md`
 
+### 4.7 Refactoring Ticket + Audit Summary
+
+**Written by:** Code Health Auditor
+**Read by:** Developer (implements refactoring), Senior Reviewer (reviews approach)
+**Location:** `artifacts/refactoring/refactoring-<NNN>.md` and `artifacts/refactoring/audit-summary.md`
+
+#### Refactoring Ticket
+
+```markdown
+---
+ticket_id: refactoring-<NNN>
+priority: P0 | P1 | P2
+categories:
+  - <category-id>
+affected_files:
+  - <app file path>
+estimated_scope: small | medium | large
+status: open | in-progress | resolved
+created_at: <ISO timestamp>
+---
+
+## Summary
+<1-2 sentences: what the problem is and why it matters for LLM agents>
+
+## Findings
+
+### Finding 1: <category-id>
+- **Metric:** <measured value>
+- **Threshold:** <threshold that was exceeded>
+- **Impact:** <how this affects LLM agent code generation>
+- **Evidence:** <file:line-range, function names>
+
+### Finding 2: ...
+
+## Suggested Refactoring
+1. <step with exact file paths>
+2. <step referencing existing patterns to follow>
+3. ...
+Estimated commits: <count>
+
+## Related Lessons
+- <cross-reference to Retrospective Analyst finding, or "none">
+
+## Resolution Log
+<!-- Developer fills this in after refactoring -->
+- Commits: ___
+- Files changed: ___
+- New files created: ___
+- Tests passing: ___
+```
+
+**Scope definitions:**
+- **small**: Single file, <50 lines changed, no interface changes
+- **medium**: 2-3 files, possible interface changes, <200 lines changed
+- **large**: 4+ files, interface changes, >200 lines changed
+
+**Constraints:** One ticket per file/file-group. Max 10 per audit. Status lifecycle: `open` → `in-progress` → `resolved`.
+
+#### Audit Summary
+
+```markdown
+---
+last_audited: <ISO timestamp>
+audited_by: code-health-auditor
+scope: <"full codebase" | "domain: <name>" | "targeted: <paths>">
+files_scanned: <count>
+files_deep_read: <count>
+total_tickets: <count>
+overflow_files: <count of files that qualified but exceeded the 20-file cap>
+---
+
+## Metrics
+| Metric | Value |
+|--------|-------|
+| Total files scanned | <count> |
+| Total lines of code | <count> |
+| Files over 800 lines | <count> |
+| Files over 600 lines | <count> |
+| Files over 400 lines | <count> |
+| Open tickets (P0) | <count> |
+| Open tickets (P1) | <count> |
+| Open tickets (P2) | <count> |
+
+## Hotspots
+| Rank | File | Lines | Categories | Priority |
+|------|------|-------|------------|----------|
+| 1 | <path> | <count> | <ids> | <P0/P1/P2> |
+
+## Tickets Written
+- `refactoring-<NNN>`: <summary> (P<X>)
+
+## Overflow
+<!-- Files that qualified for deep-read but were capped -->
+- <path> (<line count>, reason: <size/hot/lesson-ref>)
+
+## Comparison to Last Audit
+- Resolved since last audit: <count>
+- New issues found: <count>
+- Trend: improving | stable | degrading
+```
+
+**Constraints:**
+- One audit summary per audit run — overwrites the previous summary
+- Overflow section tracks files that exceeded the 20-file deep-read cap
+- Comparison section is empty on first audit
+
 ## 5. Authority Hierarchy
 
 When skills disagree:
@@ -542,6 +678,7 @@ When skills disagree:
 | Scenario data accuracy, assertion math | Scenario Verifier |
 | Failure classification (6 categories: APP_BUG/SCENARIO_BUG/TEST_BUG/AMBIGUOUS/FEATURE_GAP/UX_GAP) | Result Verifier |
 | Pattern identification and lesson accuracy | Retrospective Analyst |
+| Structural code health issues and refactoring priority | Code Health Auditor |
 
 No skill overrides another outside its authority domain.
 
@@ -553,9 +690,10 @@ All skills that need PTU knowledge read from shared reference files rather than 
 |-----------|------|---------|
 | Chapter Index | `.claude/skills/references/ptu-chapter-index.md` | Synthesizer, Crafter, Verifiers, Game Logic Reviewer, Feature Designer |
 | Skill Interfaces | `.claude/skills/references/skill-interfaces.md` | All skills (artifact format contracts) |
-| App Surface | `.claude/skills/references/app-surface.md` | Crafter, Playtester, Dev, Feature Designer |
+| App Surface | `.claude/skills/references/app-surface.md` | Crafter, Playtester, Dev, Feature Designer, Code Health Auditor |
 | Playwright Patterns | `.claude/skills/references/playwright-patterns.md` | Playtester |
 | Lesson Files | `app/tests/e2e/artifacts/lessons/` | Retrospective Analyst (writes), all skills (read) |
+| Refactoring Tickets | `app/tests/e2e/artifacts/refactoring/` | Code Health Auditor (writes), Developer + Senior Reviewer (read) |
 
 Reference files live in `.claude/skills/references/`.
 
