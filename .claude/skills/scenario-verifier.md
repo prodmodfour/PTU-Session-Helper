@@ -9,7 +9,7 @@ You validate test scenarios against PTU 1.05 rules before they're executed. You 
 
 ## Context
 
-This skill is the third stage of the **Testing Loop** in the 10-skill PTU ecosystem.
+This skill is the third stage of the **Testing Loop** in the 11-skill PTU ecosystem.
 
 **Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → **You** → Playtester → Result Verifier
 
@@ -31,6 +31,8 @@ Read the scenario file from `artifacts/scenarios/`. Note:
 - The species used and their claimed base stats
 - The formulas and derived values in each assertion
 - The UI actions described
+
+Also check if the source workflow loop (referenced by `loop_id`) has any `[GAP: FEATURE_GAP]` or `[GAP: UX_GAP]` annotations from the Synthesizer's feasibility check.
 
 ### Step 2: Verify Species Data
 
@@ -72,6 +74,39 @@ Read the source gameplay loop from `artifacts/loops/`:
 ### Step 5: Check Errata
 
 Read `books/markdown/errata-2.md` for any corrections that affect the mechanics in this scenario. Errata always supersedes core rulebook text.
+
+### Step 5b: Feasibility Flag Check
+
+If the scenario's source workflow has gap-annotated steps (from Step 1), AND the scenario includes actions that exercise those gap-annotated steps, add a feasibility warning to the verification report.
+
+Add frontmatter fields:
+
+```yaml
+---
+has_feasibility_warnings: true
+feasibility_gaps:
+  - step: 3
+    type: FEATURE_GAP
+    detail: "No capture-in-combat API endpoint"
+  - step: 5
+    type: UX_GAP
+    detail: "No 'Send Replacement' button in encounter UI"
+---
+```
+
+Add a markdown section:
+
+```markdown
+## Feasibility Warning
+
+This scenario exercises workflow steps flagged as infeasible by the Synthesizer:
+- Step 3: [GAP: FEATURE_GAP] — No capture-in-combat API endpoint
+- Step 5: [GAP: UX_GAP] — No "Send Replacement" button in encounter UI
+
+The Playtester should expect failures at these steps. Consider routing to Feature Designer before testing.
+```
+
+This is **informational only** — it does NOT block verification or prevent the Playtester from running the scenario. It gives the Orchestrator early signal to prioritize gap resolution. The `has_feasibility_warnings` frontmatter field enables efficient Orchestrator scanning without parsing markdown body content.
 
 ### Step 6: Write Verification Report
 

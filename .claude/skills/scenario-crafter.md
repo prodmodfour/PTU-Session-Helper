@@ -11,7 +11,7 @@ You handle two types of input: **session workflows** (multi-step, multi-mechanic
 
 ## Context
 
-This skill is the second stage of the **Testing Loop** in the 10-skill PTU ecosystem.
+This skill is the second stage of the **Testing Loop** in the 11-skill PTU ecosystem.
 
 **Pipeline position:** Gameplay Loop Synthesizer → **You** → Scenario Verifier → Playtester → Result Verifier
 
@@ -58,6 +58,8 @@ Read the gameplay loop(s) from `app/tests/e2e/artifacts/loops/`. Identify:
 - The PTU rules referenced
 - The app features involved
 - The expected outcomes and end states
+
+If a workflow step is annotated with `[GAP: FEATURE_GAP]` or `[GAP: UX_GAP]`, include the step in the scenario anyway. Write the scenario as if the feature existed — the Playtester will fail at that step, the Result Verifier will triage it as FEATURE_GAP/UX_GAP, and the pipeline will route it to the Feature Designer. Do not skip or rewrite gap-annotated steps.
 
 ### Step 2: Choose Concrete Data
 
