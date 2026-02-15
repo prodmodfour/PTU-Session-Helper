@@ -1,6 +1,6 @@
 # PTU Skills Ecosystem
 
-Master reference for the 11-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing.
+Master reference for the 12-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing.
 
 ## Core Principle
 
@@ -42,6 +42,12 @@ The playtest loop drives the dev loop. Gameplay scenarios — derived from PTU 1
                     │  (mines error patterns │   writes per-skill lessons
                     │   across artifacts)    │
                     └────────────────────────┘
+
+                    ┌────────────────────────┐
+                    │ Code Health Auditor    │ ← runs after cycles / on-demand
+                    │  (scans source code    │   writes refactoring tickets
+                    │   for structural debt) │
+                    └────────────────────────┘
 ```
 
 ## Skills Summary
@@ -61,6 +67,7 @@ Skills are loaded by asking Claude to load the relevant skill file (e.g., "load 
 | 9 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | PTU compliance report | as-needed |
 | 10 | Feature Designer | `feature-designer.md` | gap reports | `artifacts/designs/` | per-gap |
 | 11 | Retrospective Analyst | `retrospective-analyst.md` | verifications, results, reports, git history | `artifacts/lessons/` | after cycles / on-demand |
+| 12 | Code Health Auditor | `code-health-auditor.md` | source code files under `app/` | `artifacts/refactoring/` | per-audit |
 
 ## Skill Files
 
@@ -79,6 +86,7 @@ Skills are loaded by asking Claude to load the relevant skill file (e.g., "load 
 ├── ptu-session-helper-senior-reviewer.md
 ├── game-logic-reviewer.md
 ├── retrospective-analyst.md
+├── code-health-auditor.md
 ├── skill_creation.md                     (unchanged — skill authoring guide)
 └── references/
     ├── ptu-chapter-index.md              (rulebook lookup)
@@ -98,6 +106,7 @@ artifacts/
 ├── reports/            Result Verifier writes → Dev/Crafter/Playtester/Feature Designer reads
 ├── designs/            Feature Designer writes → Developer reads
 ├── lessons/            Retrospective Analyst writes → all skills read
+├── refactoring/        Code Health Auditor writes → Developer/Reviewer reads
 └── pipeline-state.md   All skills update → Orchestrator reads
 ```
 
@@ -114,6 +123,7 @@ Playwright specs: `tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 | Scenario data accuracy, assertion math | Scenario Verifier |
 | Failure classification (6 categories) | Result Verifier |
 | Pattern identification and lesson accuracy | Retrospective Analyst |
+| Structural code health issues and refactoring priority | Code Health Auditor |
 
 ## Orchestration Patterns
 
