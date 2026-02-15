@@ -5,7 +5,9 @@ description: Turns gameplay loops into concrete, testable scenarios with real Po
 
 # Scenario Crafter
 
-You turn abstract gameplay loops into concrete, executable test scenarios. Every scenario uses real Pokemon species with looked-up base stats, maps game actions to specific UI interactions, and includes quantitative assertions with shown math.
+You turn gameplay loops into concrete, executable test scenarios. Every scenario uses real Pokemon species with looked-up base stats, maps game actions to specific UI/API interactions, and includes quantitative assertions with shown math.
+
+You handle two types of input: **session workflows** (multi-step, multi-mechanic) and **mechanic validations** (single-mechanic focused). The scenario format adapts to match.
 
 ## Context
 
@@ -18,6 +20,30 @@ This skill is the second stage of the **Testing Loop** in the 10-skill PTU ecosy
 
 See `ptu-skills-ecosystem.md` for the full architecture.
 
+## The Two Scenario Types
+
+### Workflow Scenarios (from Tier 1 loops)
+
+These test whether the app supports a realistic GM task end-to-end. They chain multiple mechanics in the order they'd naturally occur during a session.
+
+**Characteristics:**
+- Multiple phases (setup → action → more action → resolution → bookkeeping)
+- Each phase may exercise a different mechanic
+- Assertions are spread across the workflow, not just at the end
+- The scenario tells a story — "It's session night, the party enters Route 3..."
+- A single workflow scenario may cover 4-8 mechanics implicitly
+
+**Example:** A "run a wild encounter" workflow scenario would assert on: encounter creation, combatant HP calculations, initiative ordering, damage from a move (including STAB/effectiveness), faint threshold, and encounter resolution — all in one scenario.
+
+### Mechanic Scenarios (from Tier 2 loops)
+
+These isolate a single PTU rule and verify its math. Same format as the first pipeline cycle produced.
+
+**Characteristics:**
+- Focused setup for one mechanic
+- 2-5 tightly scoped assertions
+- Good for edge cases, boundary values, and complex formulas
+
 ## Process
 
 ### Step 0: Read Lessons
@@ -27,10 +53,11 @@ Before starting work, check `app/tests/e2e/artifacts/lessons/scenario-crafter.le
 ### Step 1: Read Loop Files
 
 Read the gameplay loop(s) from `app/tests/e2e/artifacts/loops/`. Identify:
-- The main loop and all sub-loops
+- Which loops are Tier 1 (workflows) vs Tier 2 (mechanic validations)
+- The `mechanics_exercised` list for each workflow (these become implicit test points)
 - The PTU rules referenced
 - The app features involved
-- The expected outcomes
+- The expected outcomes and end states
 
 ### Step 2: Choose Concrete Data
 
@@ -42,14 +69,19 @@ For each loop, select real Pokemon species and concrete values:
 4. **Select real moves** — verify the species can learn the move at the given level (check the Level-Up Moves section in the pokedex file)
 5. **Calculate all derived values** — HP, evasion, damage, etc. using formulas from `.claude/skills/references/ptu-chapter-index.md`
 
-### Step 3: Map to UI Actions
+**STAB validation (mandatory):** For every move in the scenario, explicitly check whether the attacker's type(s) match the move type. Annotate the result: `Tackle (Normal) — attacker is Grass/Poison → no STAB` or `Water Gun (Water) — attacker is Water → STAB applies (+2 DB)`.
 
-Translate game actions to specific UI interactions using `.claude/skills/references/app-surface.md`:
+**Move learn-level validation (mandatory):** For every move, verify the species learns it at or before the specified level by reading the pokedex file. Include the citation: `Tackle — learned at L1 (Bulbasaur pokedex: Level-Up Moves)`.
 
-1. **Route** — which page does the user navigate to?
-2. **Form fields** — what inputs need values?
-3. **Buttons** — what triggers the action?
-4. **Responses** — what UI element shows the result?
+**Type chart validation (mandatory):** For every damage interaction, look up each type pair against the PTU type chart. Don't assume — check: `Normal → Rock: resisted (×0.5)`.
+
+### Step 3: Map to Actions
+
+Translate game actions to specific interactions using `.claude/skills/references/app-surface.md`.
+
+**For workflow scenarios:** Actions are a sequence of phases, each with its own API calls and/or UI interactions. Use phase headers to organize.
+
+**For mechanic scenarios:** Actions are a focused setup → single action → check result.
 
 Be specific: not "apply damage" but "click the 'Apply Damage' button, enter '18' in the damage input field."
 
@@ -68,6 +100,8 @@ Assert: Bulbasaur HP displays "18/40"
 ```
 Assert: Bulbasaur HP is reduced
 ```
+
+**For workflow scenarios:** Place assertions at each phase boundary (not just at the end). After initiative is set, assert the order. After damage is dealt, assert HP. After a faint, assert status. This lets the Playtester catch exactly where a workflow breaks down.
 
 ### Step 5: Write Setup and Teardown
 
@@ -93,86 +127,140 @@ DELETE /api/pokemon/$pokemon_id
 
 ### Step 6: Assign Priority
 
-- **P0** — Core mechanic that must work for the app to be useful (e.g., damage calculation, HP display)
-- **P1** — Important flow that most sessions use (e.g., STAB bonus, type effectiveness)
-- **P2** — Edge case or rare interaction (e.g., critical hit with max stages, capture at exactly 0 HP)
+- **P0** — Session workflow: end-to-end GM task that must work for the app to fulfill its purpose
+- **P1** — Workflow variation or important mechanic that most sessions exercise
+- **P2** — Mechanic edge case or rare interaction
 
 ### Step 7: Save
 
 Write each scenario to `app/tests/e2e/artifacts/scenarios/<scenario-id>.md`.
 
-Naming: `<domain>-<description>-<NNN>.md` (e.g., `combat-basic-damage-001.md`)
+Naming:
+- Workflow scenarios: `<domain>-workflow-<description>-<NNN>.md` (e.g., `combat-workflow-wild-encounter-001.md`)
+- Mechanic scenarios: `<domain>-<mechanic>-<NNN>.md` (e.g., `combat-stab-001.md`)
 
 Then update `app/tests/e2e/artifacts/pipeline-state.md`.
 
-## Output Format
-
-Use the Scenario format from `.claude/skills/references/skill-interfaces.md`:
+## Output Format: Workflow Scenario
 
 ```markdown
 ---
-scenario_id: combat-basic-damage-001
-loop_id: combat-basic-damage
+scenario_id: combat-workflow-wild-encounter-001
+loop_id: combat-workflow-wild-encounter
+tier: workflow
 priority: P0
+ptu_assertions: 8
+mechanics_tested:
+  - hp-calculation
+  - initiative-ordering
+  - physical-damage
+  - stab
+  - faint-check
+---
+
+## Narrative
+The party encounters 2 wild Geodude on Route 3. The GM sets up the encounter,
+runs 2 rounds of combat, and one Geodude faints from a super-effective Water Gun.
+
+## Setup (API)
+POST /api/pokemon {
+  species: "Squirtle", level: 13,
+  baseHp: 4, baseAttack: 5, baseDefense: 7,
+  baseSpAtk: 5, baseSpDef: 6, baseSpeed: 4
+}
+$squirtle_id = response.data.id
+<!-- ... more setup ... -->
+
+POST /api/encounters { name: "Route 3: Wild Geodude" }
+$encounter_id = response.data.id
+
+POST /api/encounters/$encounter_id/combatants { pokemonId: $squirtle_id, side: "ally" }
+POST /api/encounters/$encounter_id/combatants { pokemonId: $geodude1_id, side: "enemy" }
+POST /api/encounters/$encounter_id/combatants { pokemonId: $geodude2_id, side: "enemy" }
+
+## Phase 1: Start Encounter
+POST /api/encounters/$encounter_id/start
+
+### Assertions (Phase 1)
+1. Squirtle HP:
+   HP = level(13) + (baseHp(4) * 3) + 10 = 35
+   **Assert: Squirtle HP shows "35/35"**
+
+2. Geodude 1 HP:
+   HP = level(12) + (baseHp(4) * 3) + 10 = 34
+   **Assert: Geodude 1 HP shows "34/34"**
+
+3. Initiative order:
+   Squirtle speed stat = 4, Geodude speed stat = 2
+   **Assert: Squirtle appears before Geodude in turn order**
+
+## Phase 2: Round 1 — Squirtle attacks Geodude 1
+1. Select move: Water Gun (Water, DB 6, Special, AC 2)
+   Learn level: L13 (Squirtle pokedex: Level-Up Moves) ✓
+   STAB: Squirtle is Water, Water Gun is Water → STAB applies (+2 DB → DB 8)
+   Type: Water → Rock/Ground: super effective (×2)
+2. Enter set damage for DB 8: 20
+3. Apply to Geodude 1
+
+### Assertions (Phase 2)
+4. Damage calculation:
+   Raw = setDamage(20) + SpAtk(5) - SpDef(2) = 23
+   Type effectiveness: ×2 = 46
+   Geodude 1 HP: 34 - 46 = -12 → 0 (fainted)
+   **Assert: Geodude 1 HP shows "0/34"**
+   **Assert: Geodude 1 has fainted status**
+
+## Phase 3: Round 1 — Geodude 2 attacks Squirtle
+<!-- ... continues ... -->
+
+## Phase 4: Resolution
+POST /api/encounters/$encounter_id/end
+
+### Assertions (Phase 4)
+8. Encounter ended:
+   **Assert: Encounter status is "ended"**
+
+## Teardown
+DELETE /api/pokemon/$squirtle_id
+DELETE /api/pokemon/$geodude1_id
+DELETE /api/pokemon/$geodude2_id
+```
+
+## Output Format: Mechanic Scenario
+
+```markdown
+---
+scenario_id: combat-stab-001
+loop_id: combat-mechanic-stab
+tier: mechanic
+priority: P1
 ptu_assertions: 3
 ---
 
 ## Setup (API)
-POST /api/encounters { name: "Test: Basic Damage" }
-$encounter_id = response.data.id
+<!-- focused setup for this specific mechanic -->
 
-POST /api/pokemon {
-  species: "Bulbasaur", level: 15,
-  baseHp: 5, baseAttack: 5, baseDefense: 5,
-  baseSpAttack: 7, baseSpDefense: 7, baseSpeed: 5
-}
-$attacker_id = response.data.id
-
-POST /api/pokemon {
-  species: "Charmander", level: 15,
-  baseHp: 4, baseAttack: 5, baseDefense: 4,
-  baseSpAttack: 6, baseSpDefense: 5, baseSpeed: 7
-}
-$target_id = response.data.id
-
-POST /api/encounters/$encounter_id/combatants { pokemonId: $attacker_id, side: "ally" }
-POST /api/encounters/$encounter_id/combatants { pokemonId: $target_id, side: "enemy" }
-POST /api/encounters/$encounter_id/start
-
-## Actions (UI)
-1. Navigate to /gm
-2. Select the test encounter
-3. On Bulbasaur's turn, click "Attack"
-4. Select move: "Tackle" (Normal, DB 5 → 2d6+5, Physical, AC 3)
-5. Select target: Charmander
-6. Enter damage roll result: 18
-7. Click "Apply"
+## Actions
+<!-- single focused interaction -->
 
 ## Assertions
-1. Charmander starting HP:
-   HP = level(15) + (baseHp(4) * 3) + 10 = 37
-   **Assert: Charmander HP bar shows "37/37" before attack**
-
-2. Damage applied:
-   Tackle damage = rolled(18) + ATK(5) - DEF(4) = 19
-   Remaining HP = 37 - 19 = 18
-   **Assert: Charmander HP bar shows "18/37" after attack**
-
-3. Combat log:
-   **Assert: Log entry shows "Bulbasaur used Tackle on Charmander for 19 damage"**
+1. <what to check>
+   Derivation: <formula with concrete values>
+   **Assert: <element> displays "<expected value>"**
 
 ## Teardown
-POST /api/encounters/$encounter_id/end
+<!-- cleanup -->
 ```
 
-## Handling Multiple Loops
+## Handling the Two Tiers
 
-When a domain has multiple loops and sub-loops:
+When a domain has both workflow and mechanic loops:
 
-1. Create one scenario per main loop (P0 priority)
-2. Create one scenario per critical sub-loop (P1 priority)
-3. Create scenarios for edge case sub-loops as needed (P2 priority)
-4. Group related scenarios by prefix: `combat-basic-damage-001`, `combat-stab-damage-001`, `combat-critical-hit-001`
+1. **Workflow scenarios first (P0):** One scenario per Tier 1 workflow loop. These are the most important — they test whether the app fulfills its purpose.
+2. **Workflow variations (P1):** One scenario per sub-workflow (e.g., "encounter where player captures instead of fainting").
+3. **Mechanic scenarios (P1-P2):** One scenario per Tier 2 mechanic loop. Only for mechanics that aren't adequately covered by workflow scenarios, or that have complex math worth isolating.
+
+**Coverage check:** After writing all scenarios, verify that every entry in a workflow's `mechanics_exercised` list has at least one assertion somewhere across the scenario set.
 
 ## Species Data Lookup
 

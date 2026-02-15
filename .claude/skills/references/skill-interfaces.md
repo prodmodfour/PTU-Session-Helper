@@ -19,9 +19,10 @@ Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 ## File Naming Conventions
 
 - Loops: `<domain>.md` (e.g., `combat.md`, `capture.md`)
-- Scenarios: `<domain>-<description>-<NNN>.md` (e.g., `combat-basic-damage-001.md`)
-- Verifications: `<scenario-id>.verified.md` (e.g., `combat-basic-damage-001.verified.md`)
-- Results: `<scenario-id>.result.md` (e.g., `combat-basic-damage-001.result.md`)
+- Workflow scenarios: `<domain>-workflow-<description>-<NNN>.md` (e.g., `combat-workflow-wild-encounter-001.md`)
+- Mechanic scenarios: `<domain>-<mechanic>-<NNN>.md` (e.g., `combat-stab-001.md`)
+- Verifications: `<scenario-id>.verified.md` (e.g., `combat-workflow-wild-encounter-001.verified.md`)
+- Results: `<scenario-id>.result.md` (e.g., `combat-workflow-wild-encounter-001.result.md`)
 - Reports: `<category>-<NNN>.md` (e.g., `bug-001.md`, `correction-001.md`, `escalation-001.md`)
 
 ---
@@ -32,9 +33,61 @@ Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 **Read by:** Scenario Crafter, Scenario Verifier
 **Location:** `artifacts/loops/<domain>.md`
 
+Loops come in two tiers. Tier 1 (Session Workflows) are the primary output — they represent real GM tasks at the table. Tier 2 (Mechanic Validations) are secondary — they isolate individual PTU rules for focused testing.
+
+### 1a. Tier 1: Session Workflow
+
 ```markdown
 ---
-loop_id: <domain>-<description>
+loop_id: <domain>-workflow-<description>
+tier: workflow
+domain: <domain>
+gm_intent: <one sentence: what the GM is trying to accomplish>
+ptu_refs:
+  - <rulebook-file>#<section>
+  - ...
+app_features:
+  - <app-file-path>
+  - ...
+mechanics_exercised:
+  - <mechanic-name>
+  - ...
+sub_workflows:
+  - <loop_id of workflow variation>
+  - ...
+---
+
+## GM Context
+<1-2 sentences: when does this happen in a session? What real-play situation triggers it?>
+
+## Preconditions
+- <state required before this workflow starts>
+
+## Workflow Steps
+1. **[Setup]** <GM creates/configures something>
+2. **[Action]** <GM or system performs a game action>
+3. **[Mechanic: <name>]** <system applies a PTU rule — tag which mechanic fires>
+4. **[Bookkeeping]** <GM resolves aftermath>
+5. **[Done]** <end state that proves the workflow succeeded>
+
+## PTU Rules Applied
+- <rule name>: <exact quote or paraphrase> (file:section)
+- ...
+
+## Expected End State
+- <what the app should show when this workflow is complete>
+- <what data should exist in the database>
+
+## Variations
+- **<variation name>**: <how the workflow changes> → sub-workflow loop_id
+```
+
+### 1b. Tier 2: Mechanic Validation
+
+```markdown
+---
+loop_id: <domain>-mechanic-<description>
+tier: mechanic
 domain: <domain>
 ptu_refs:
   - <rulebook-file>#<section>
@@ -56,11 +109,11 @@ sub_loops:
 3. ...
 
 ## PTU Rules Applied
-- <rule name>: <exact quote or paraphrase from rulebook with file:section reference>
+- <rule name>: <exact quote or paraphrase> (file:section)
 - ...
 
 ## Expected Outcomes
-- <observable result after loop completes>
+- <observable result with formula>
 - ...
 
 ## Edge Cases
@@ -69,10 +122,12 @@ sub_loops:
 ```
 
 **Constraints:**
-- One file per domain, containing the main loop and all sub-loops
-- Each sub-loop gets its own `## Sub-Loop: <name>` section with the same structure
+- One file per domain, containing all workflows and mechanic validations
+- Tier 1 workflows listed first (W1, W2...), Tier 2 mechanics second (M1, M2...)
+- Each sub-workflow/sub-loop gets its own section
 - `ptu_refs` must point to actual rulebook files via `references/ptu-chapter-index.md`
 - `app_features` must point to actual app files via `references/app-surface.md`
+- Workflow `mechanics_exercised` lists which PTU rules are implicitly tested by the workflow
 
 ---
 
@@ -82,49 +137,92 @@ sub_loops:
 **Read by:** Scenario Verifier, Playtester
 **Location:** `artifacts/scenarios/<scenario-id>.md`
 
+Scenarios come in two types matching the two loop tiers.
+
+### 2a. Workflow Scenario (from Tier 1 loops)
+
+Multi-phase scenarios that test a realistic GM task end-to-end. Assertions are placed at phase boundaries.
+
 ```markdown
 ---
-scenario_id: <domain>-<description>-<NNN>
-loop_id: <source loop_id>
-priority: P0 | P1 | P2
-ptu_assertions: <count of assertions that test PTU rules>
+scenario_id: <domain>-workflow-<description>-<NNN>
+loop_id: <source workflow loop_id>
+tier: workflow
+priority: P0 | P1
+ptu_assertions: <count>
+mechanics_tested:
+  - <mechanic-name>
+  - ...
 ---
 
+## Narrative
+<2-3 sentences describing the real play situation this simulates>
+
 ## Setup (API)
-<!-- API calls to create test data. Use request fixture format. -->
-POST /api/<endpoint> {
-  <json body>
-}
-<!-- Variable capture: -->
-<!-- $encounter_id = response.data.id -->
+POST /api/<endpoint> { <json body> }
+<!-- $var = response.data.id -->
 
-## Actions (UI)
-1. Navigate to <route>
-2. <user interaction> (click, type, select)
-3. ...
+## Phase 1: <phase name>
+<API calls and/or UI actions for this phase>
 
-## Assertions
-<!-- EVERY assertion must show its derivation -->
+### Assertions (Phase 1)
 1. <what to check>
    Derivation: <formula with concrete values>
-   Example: HP = level(15) + (baseHp(5) * 3) + 10 = 40
    **Assert: <element> displays "<expected value>"**
 
+## Phase 2: <phase name>
+<actions>
+
+### Assertions (Phase 2)
 2. ...
 
+## Phase N: Resolution
+<final actions>
+
+### Assertions (Phase N)
+N. <end-state assertion>
+
 ## Teardown
-<!-- API calls to clean up test data -->
 DELETE /api/<endpoint>/$variable
 ```
 
-**Constraints:**
+### 2b. Mechanic Scenario (from Tier 2 loops)
+
+Focused scenarios that isolate a single PTU rule.
+
+```markdown
+---
+scenario_id: <domain>-<mechanic>-<NNN>
+loop_id: <source mechanic loop_id>
+tier: mechanic
+priority: P1 | P2
+ptu_assertions: <count>
+---
+
+## Setup (API)
+POST /api/<endpoint> { <json body> }
+
+## Actions
+1. <focused interaction to trigger the mechanic>
+
+## Assertions
+1. <what to check>
+   Derivation: <formula with concrete values>
+   **Assert: <element> displays "<expected value>"**
+
+## Teardown
+DELETE /api/<endpoint>/$variable
+```
+
+**Constraints (both types):**
 - One file per scenario (not per domain)
-- Priority: P0 = core mechanic must work, P1 = important flow, P2 = edge case
+- Priority: P0 = session workflow (must work for app to fulfill its purpose), P1 = workflow variation or important mechanic, P2 = edge case
 - Every assertion MUST show the mathematical derivation with concrete values
 - Use real Pokemon species with looked-up base stats (from pokedex files)
 - Setup uses API calls, not UI navigation (faster, more reliable)
 - Actions use specific route paths from `references/app-surface.md`
 - Variable capture syntax: `$var = response.path.to.value`
+- Workflow scenarios MUST place assertions at each phase boundary, not just at the end
 
 ---
 
