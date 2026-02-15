@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-15T23:59:00
-updated_by: playtester
+last_updated: 2026-02-15T20:00:00
+updated_by: scenario-verifier
 ---
 
 ## Domain: combat
@@ -259,12 +259,69 @@ See `artifacts/lessons/` for details and `artifacts/lessons/retrospective-summar
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
 | Loops | complete | 2 workflows (+ 1 sub-workflow), 9 mechanic validations (+ 2 sub-loops) | 2026-02-15 |
-| Scenarios | not started | — | — |
-| Verifications | not started | — | — |
+| Scenarios | complete | 7/7 (1 P0, 4 P1, 2 P2) | 2026-02-15 |
+| Verifications | complete | 7/7 PASS (40/40 assertions correct) | 2026-02-15 |
 | Test Runs | not started | — | — |
 | Results | not started | — | — |
 
 Workflows: W1 (standard capture), W2 (rate assessment). Sub-workflow: W1 multi-attempt retry. Mechanic validations: M1-M9 (base rate, HP tiers, evolution, status, rarity/injury, attempt roll, crit accuracy, faint prevention, post-capture update, worked examples). 5 FEATURE_GAPs identified (ball modifiers, legendary detection, evolution stage accuracy, capture specialist features, re-capture prevention). 1 UX_GAP (attempt button in combat).
+
+### Verification Results (Scenario Verifier)
+
+**ALL PASS (7/7) — 40/40 assertions correct**
+
+| Scenario ID | Assertions | Status | Key Checks |
+|-------------|-----------|--------|------------|
+| capture-workflow-standard-capture-001 | 8/8 | PASS | Rate=64 at full HP, rate=129 at 1HP+injury, guaranteed capture, ownership transfer |
+| capture-workflow-multi-attempt-001 | 9/9 | PASS | Rate=-10 at full HP, +75 swing to 65, retry loop, Paralyzed +10, ownership |
+| capture-mechanic-hp-modifier-001 | 6/6 | PASS | All 5 HP tier boundaries (100%,-30; 75%,-15; 50%,0; 25%,+15; 1HP,+30) + 0HP rejection |
+| capture-mechanic-status-modifiers-001 | 6/6 | PASS | Persistent +10, Volatile +5, Stuck +10 (separate field), Slow +5 (separate field), stacking |
+| capture-mechanic-attempt-roll-001 | 5/5 | PASS | Response shape, trainerLevel subtraction, crit detection +10, relational assertions |
+| capture-mechanic-cannot-capture-fainted-001 | 3/3 | PASS | Rate API canBeCaptured=false, attempt API rejection with reason, no roll field |
+| capture-mechanic-worked-examples-001 | 3/3 | PASS | PTU Example 1 (Pikachu=70), Example 2 (Caterpie=45), Example 3 (Hydreigon=-15) |
+
+**Species verified (4):** Oddish, Pikachu, Caterpie, Hydreigon — base stats, types, evolution stages confirmed against pokedex files.
+
+**Implementation cross-reference (per Lesson 1):**
+- Non-deterministic output: All Pokemon created with explicit base stats (deterministic HP). Capture rolls use relational assertions.
+- Enforcement boundary: All assertions target App-enforced calculations (calculateCaptureRate, attemptCapture, attempt.post.ts).
+- Massive damage injury: Verified combatant.service.ts calculateDamage confirms `hpDamage >= maxHp/2` rule.
+- Fainted rejection response shape: Verified attempt.post.ts early-return produces minimal response without roll fields.
+
+**Errata:** errata-2.md contains a Sept 2015 Playtest d20-based capture system. App implements 1.05 core d100 system — no errata corrections apply.
+
+**Feasibility:** No scenarios exercise gap-annotated workflow steps. All use API directly.
+
+All 7 scenarios proceed to Playtester.
+
+### Scenario Summary (Scenario Crafter)
+
+| Scenario ID | Loop | Priority | PTU Assertions | Key Mechanics |
+|-------------|------|----------|---------------|---------------|
+| capture-workflow-standard-capture-001 | W1 | P0 | 8 | Rate formula, HP modifier, evolution, injury, attempt roll, trainer level, post-capture ownership |
+| capture-workflow-multi-attempt-001 | W1-sub | P1 | 9 | Rate improvement feedback, HP swing, status modifier, injury, retry loop, post-capture |
+| capture-mechanic-hp-modifier-001 | M2 | P1 | 6 | All 5 HP tier boundaries + 0 HP rejection |
+| capture-mechanic-status-modifiers-001 | M4 | P1 | 6 | Persistent, volatile, stuck, slow, stacking, mixed |
+| capture-mechanic-attempt-roll-001 | M6 | P1 | 5 | Response structure, trainer level subtraction, critical accuracy bonus |
+| capture-mechanic-cannot-capture-fainted-001 | M7 | P2 | 3 | Rate API rejection, attempt API rejection, no roll made |
+| capture-mechanic-worked-examples-001 | M9 | P2 | 3 | 3 PTU worked examples (Pikachu, Caterpie, Hydreigon) |
+
+**Total: 7 scenarios, 40 PTU assertions**
+
+**Species used:** Oddish (workflows + mechanics), Pikachu, Caterpie, Hydreigon (worked examples)
+
+**Skipped (FEATURE_GAP):** Ball modifiers, legendary detection, evolution stage accuracy (non-3-stage), capture specialist features, re-capture prevention. M3 (evolution stage) skipped entirely.
+
+**Skipped (UX_GAP):** W2 (rate assessment UI), capture attempt button in combat UI.
+
+**Skipped (non-testable):** Natural 100 guaranteed capture (1d100 roll is non-deterministic via API; noted in attempt-roll scenario).
+
+**Lessons applied:**
+- Lesson 1 (STAB): Not applicable (no move/damage STAB in capture scenarios)
+- Lesson 2 (Learn levels): Not applicable (no moves used; damage applied directly)
+- Lesson 3 (Type effectiveness): Not applicable (no type damage interactions)
+- Lesson 4 (Non-deterministic APIs): All workflow Pokemon created via `POST /api/pokemon` with explicit base stats for deterministic HP. Capture attempt roll is non-deterministic — handled with guaranteed-capture conditions (scenario 1) and retry loops (scenario 2). Annotated in each scenario.
+- Lesson 5 (Enforcement boundary): Every assertion annotated as App-enforced or GM-enforced. Status API is GM tool (status applied without type checks). Capture rate/attempt are App-enforced calculations.
 
 ### Open Issues
 
