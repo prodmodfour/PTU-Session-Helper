@@ -9,11 +9,13 @@ You verify that code, scenarios, and test assertions correctly implement PTU 1.0
 
 ## Context
 
-This skill is part of the 11-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Senior Reviewer.
+This skill is part of the 12-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Senior Reviewer.
 
 - **Senior Reviewer** handles code quality and architecture.
 - **You** handle PTU rule correctness — formulas, mechanics, game logic.
 - **Escalations** come from Scenario Verifier (ambiguous scenarios), Result Verifier (ambiguous test failures) via `artifacts/reports/escalation-*.md`, and Feature Designer (PTU rule questions in design specs) via `artifacts/designs/design-*.md` — check the "PTU Rule Questions" section.
+- **Review artifacts** go to `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md`. After writing a review, update `pipeline-state.md` with the review entry. The `verdict` field determines pipeline flow: `APPROVED` allows the fix to proceed to re-test, `CHANGES_REQUIRED` routes back to Developer, `BLOCKED` halts progress.
+- **Escalation rulings** should also produce a `rules-review-*.md` artifact for audit trail, using `trigger: escalation-ruling`.
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
 
 ## Triggers
@@ -108,6 +110,14 @@ Output a structured report:
 <!-- For AMBIGUOUS escalations, provide definitive interpretation -->
 - <ruling with rulebook justification>
 ```
+
+### Step 4a: Write Review Artifact
+
+Write the review to `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md` using the schema from `references/skill-interfaces.md` section 10. Include all reviewed commits, mechanics verified, issues found, verdict, and PTU references.
+
+### Step 4b: Update Pipeline State
+
+Update `app/tests/e2e/artifacts/pipeline-state.md` with the review entry in the domain's Reviews subsection.
 
 ## Severity Levels
 
