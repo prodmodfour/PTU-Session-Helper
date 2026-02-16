@@ -8,6 +8,7 @@ import { prisma } from '~/server/utils/prisma'
 import { resolveNickname } from '~/server/utils/pokemon-nickname'
 import { v4 as uuidv4 } from 'uuid'
 import type { PokemonOrigin } from '~/types/character'
+import { sizeToTokenSize } from '~/server/services/grid-placement.service'
 
 // --- Input / Output types ---
 
@@ -280,10 +281,10 @@ export interface CombatantData {
 export function buildPokemonCombatant(
   pokemon: CreatedPokemon,
   side: string,
-  position?: { x: number; y: number },
-  tokenSize: number = 1
+  position?: { x: number; y: number }
 ): CombatantData {
   const { data } = pokemon
+  const tokenSize = sizeToTokenSize(data.size)
   return {
     id: uuidv4(),
     type: 'pokemon',
