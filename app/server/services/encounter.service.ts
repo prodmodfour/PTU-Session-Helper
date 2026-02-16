@@ -4,6 +4,7 @@
  */
 
 import { prisma } from '~/server/utils/prisma'
+import { rollDie } from '~/utils/diceRoller'
 import type { Combatant, Encounter, GridConfig } from '~/types'
 
 // Prisma encounter record type (matches Prisma schema)
@@ -97,6 +98,66 @@ export function findCombatant(combatants: Combatant[], combatantId: string): Com
   }
 
   return combatant
+}
+
+/**
+ * Sort combatants by initiative with d20 roll-off for ties.
+ * Mutates initiativeRollOff on tied combatants, then returns a new sorted array.
+ */
+export function sortByInitiativeWithRollOff(combatants: Combatant[], descending: boolean = true): Combatant[] {
+  // Group combatants by initiative value
+  const initiativeGroups = new Map<number, Combatant[]>()
+
+  for (const c of combatants) {
+    const init = c.initiative
+    if (!initiativeGroups.has(init)) {
+      initiativeGroups.set(init, [])
+    }
+    initiativeGroups.get(init)!.push(c)
+  }
+
+  // For each group with ties, assign roll-off values
+  for (const [, group] of initiativeGroups) {
+    if (group.length > 1) {
+      // Roll d20 for each combatant in the tie
+      for (const c of group) {
+        c.initiativeRollOff = rollDie(20)
+      }
+      // Re-roll any remaining ties within the group
+      let hasTies = true
+      while (hasTies) {
+        const rollOffValues = group.map(c => c.initiativeRollOff)
+        const uniqueValues = new Set(rollOffValues)
+        if (uniqueValues.size === group.length) {
+          hasTies = false
+        } else {
+          // Find tied roll-offs and re-roll them
+          const rollCounts = new Map<number, Combatant[]>()
+          for (const c of group) {
+            const roll = c.initiativeRollOff!
+            if (!rollCounts.has(roll)) rollCounts.set(roll, [])
+            rollCounts.get(roll)!.push(c)
+          }
+          for (const [, tied] of rollCounts) {
+            if (tied.length > 1) {
+              for (const c of tied) {
+                c.initiativeRollOff = rollDie(20)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Sort by initiative (primary) and roll-off (secondary)
+  return [...combatants].sort((a, b) => {
+    const initDiff = b.initiative - a.initiative
+    if (initDiff !== 0) return descending ? initDiff : -initDiff
+    // Tie-breaker: higher roll-off wins
+    const rollDiff = (b.initiativeRollOff || 0) - (a.initiativeRollOff || 0)
+    return descending ? rollDiff : -rollDiff
+  })
 }
 
 /**
