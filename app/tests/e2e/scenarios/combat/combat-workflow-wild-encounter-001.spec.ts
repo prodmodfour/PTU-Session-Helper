@@ -129,9 +129,10 @@ test.describe('P0 Workflow: Wild Encounter Full Lifecycle', () => {
     expect(dmg.damageResult.newHp).toBe(
       Math.max(0, oddishBefore.entity.currentHp - dmg.damageResult.hpDamage)
     )
+    // Massive damage + 50% HP marker crossing = 2 injuries when starting from full HP
     expect(dmg.damageResult.injuryGained).toBe(emberDamage >= oddishBefore.entity.maxHp / 2)
     if (dmg.damageResult.injuryGained) {
-      expect(dmg.damageResult.newInjuries).toBe(1)
+      expect(dmg.damageResult.newInjuries).toBe(2)
     }
 
     await nextTurn(request, encounterId)
