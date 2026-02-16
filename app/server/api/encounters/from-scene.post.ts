@@ -7,6 +7,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
 import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
+import { buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
 
 interface ScenePokemonEntry {
   id: string
@@ -66,58 +67,7 @@ export default defineEventHandler(async (event) => {
     const gridHeight = encounter.gridHeight
 
     // Track occupied cells for auto-placement
-    const occupiedCells = new Set<string>()
-
-    const canFit = (x: number, y: number, size: number): boolean => {
-      if (x + size > gridWidth || y + size > gridHeight) return false
-      for (let dx = 0; dx < size; dx++) {
-        for (let dy = 0; dy < size; dy++) {
-          if (occupiedCells.has(`${x + dx},${y + dy}`)) return false
-        }
-      }
-      return true
-    }
-
-    const findPosition = (side: 'players' | 'allies' | 'enemies', tokenSize: number) => {
-      const sidePositions = {
-        players: { startX: 1, endX: 4 },
-        allies: { startX: 5, endX: 8 },
-        enemies: { startX: gridWidth - 5, endX: gridWidth - 1 }
-      }
-      const sideConfig = sidePositions[side]
-      let position = { x: sideConfig.startX, y: 1 }
-      let found = false
-
-      for (let y = 1; y < gridHeight - tokenSize + 1 && !found; y++) {
-        for (let x = sideConfig.startX; x <= sideConfig.endX - tokenSize + 1 && !found; x++) {
-          if (canFit(x, y, tokenSize)) {
-            position = { x, y }
-            found = true
-          }
-        }
-      }
-
-      // Fallback: try anywhere
-      if (!found) {
-        for (let y = 1; y < gridHeight - tokenSize + 1 && !found; y++) {
-          for (let x = 1; x < gridWidth - tokenSize + 1 && !found; x++) {
-            if (canFit(x, y, tokenSize)) {
-              position = { x, y }
-              found = true
-            }
-          }
-        }
-      }
-
-      // Mark occupied
-      for (let dx = 0; dx < tokenSize; dx++) {
-        for (let dy = 0; dy < tokenSize; dy++) {
-          occupiedCells.add(`${position.x + dx},${position.y + dy}`)
-        }
-      }
-
-      return position
-    }
+    const occupiedCells = buildOccupiedCellsSet([])
 
     // --- Process scene Pokemon (as wild enemies) ---
     const scenePokemon: ScenePokemonEntry[] = JSON.parse(scene.pokemon)
@@ -132,7 +82,7 @@ export default defineEventHandler(async (event) => {
       })
 
       const tokenSize = 1
-      const position = findPosition('enemies', tokenSize)
+      const position = findPlacementPosition(occupiedCells, 'enemies', tokenSize, gridWidth, gridHeight)
       const combatant = buildPokemonCombatant(created, 'enemies', position, tokenSize)
       combatants.push(combatant)
     }
@@ -165,7 +115,7 @@ export default defineEventHandler(async (event) => {
       }
 
       const initiative = character.speed
-      const position = findPosition('players', 1)
+      const position = findPlacementPosition(occupiedCells, 'players', 1, gridWidth, gridHeight)
 
       combatants.push({
         id: uuidv4(),
