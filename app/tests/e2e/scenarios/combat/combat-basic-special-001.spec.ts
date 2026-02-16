@@ -79,20 +79,16 @@ test.describe('P0: Basic Special Damage', () => {
     const encounter = await getEncounter(request, encounterId)
     const charmander = findCombatantByEntityId(encounter, charmanderId)
 
-    // Evasion is computed from entity.currentStats (not a top-level field)
-    const spDef = charmander.entity.currentStats.specialDefense
-    expect(spDef).toBe(5)
-    const specialEvasion = Math.floor(spDef / 5)
-    expect(specialEvasion).toBe(1)
+    // Server computes evasion at combatant creation: floor(stat / 5)
+    expect(charmander.entity.currentStats.specialDefense).toBe(5)
+    expect(charmander.specialEvasion).toBe(1)
 
-    // Physical evasion for comparison: DEF = 4, floor(4/5) = 0
-    const def = charmander.entity.currentStats.defense
-    expect(def).toBe(4)
-    const physicalEvasion = Math.floor(def / 5)
-    expect(physicalEvasion).toBe(0)
+    // Physical evasion for comparison
+    expect(charmander.entity.currentStats.defense).toBe(4)
+    expect(charmander.physicalEvasion).toBe(0)
 
-    // Accuracy threshold = MoveAC(2) + specialEvasion(1) = 3
-    const accuracyThreshold = 2 + specialEvasion
+    // Accuracy threshold = MoveAC(2) + server-computed specialEvasion
+    const accuracyThreshold = 2 + charmander.specialEvasion
     expect(accuracyThreshold).toBe(3)
   })
 
@@ -101,11 +97,18 @@ test.describe('P0: Basic Special Damage', () => {
     // Psychic type vs Fire type = neutral (1x)
     const calculatedDamage = 15
 
+    // Fetch server state before damage
+    const enc = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(enc, charmanderId)
+
     const result = await applyDamage(request, encounterId, charmanderCombatantId, calculatedDamage)
 
     expect(result.damageResult.finalDamage).toBe(15)
     expect(result.damageResult.hpDamage).toBe(15)
-    expect(result.damageResult.newHp).toBe(18)
+    // Assert newHp using server-fetched prior HP instead of hardcoded value
+    expect(result.damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - result.damageResult.hpDamage)
+    )
     expect(result.damageResult.fainted).toBe(false)
     expect(result.damageResult.injuryGained).toBe(false)
   })
