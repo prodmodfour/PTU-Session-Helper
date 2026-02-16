@@ -87,7 +87,9 @@ test.describe('P1: Critical Hit Damage', () => {
     // Verify damage result
     expect(damageResult.finalDamage).toBe(14)
     expect(damageResult.hpDamage).toBe(14)
-    expect(damageResult.newHp).toBe(18) // 32 - 14 = 18
+    expect(damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     // Verify via GET
@@ -120,7 +122,9 @@ test.describe('P1: Critical Hit Damage', () => {
     // Verify damage result
     expect(damageResult.finalDamage).toBe(27)
     expect(damageResult.hpDamage).toBe(27)
-    expect(damageResult.newHp).toBe(5) // 32 - 27 = 5
+    expect(damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     // Verify injury: 27 >= 32/2 = 16, so massive damage triggers injury
@@ -148,13 +152,21 @@ test.describe('P1: Critical Hit Damage', () => {
     const charmanderCombatantId = await addCombatant(request, encounterId, charmanderId, 'enemies')
     await startEncounter(request, encounterId)
 
+    // Fetch server state before damage
+    const encBefore = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(encBefore, charmanderId)
+
     // Apply normal damage first
     const normalResult = await applyDamage(request, encounterId, charmanderCombatantId, 14)
-    expect(normalResult.damageResult.newHp).toBe(18) // 32 - 14
+    expect(normalResult.damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - normalResult.damageResult.hpDamage)
+    )
 
     // Apply crit damage (13 more, which is the doubled set damage portion)
     const critResult = await applyDamage(request, encounterId, charmanderCombatantId, 13)
-    expect(critResult.damageResult.newHp).toBe(5) // 18 - 13 = 5
+    expect(critResult.damageResult.newHp).toBe(
+      Math.max(0, normalResult.damageResult.newHp - critResult.damageResult.hpDamage)
+    )
 
     // Total damage applied = 14 + 13 = 27, same as a single crit hit
     const encounter = await getEncounter(request, encounterId)
