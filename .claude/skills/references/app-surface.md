@@ -131,7 +131,7 @@ Full CRUD + activate/deactivate + nested entities.
 
 ### Damage Calculation (`/api/encounters/:id/calculate-damage`)
 Read-only combat math endpoint.
-- `POST /api/encounters/:id/calculate-damage` — compute full PTU 9-step damage formula (STAB, type effectiveness, stages, crit) with detailed breakdown. Does not modify encounter state.
+- `POST /api/encounters/:id/calculate-damage` — compute full PTU 9-step damage formula (STAB, type effectiveness, stages, crit) with detailed breakdown. Also computes dynamic evasion (physical, special, speed) from stage-modified stats and accuracy threshold. Does not modify encounter state.
 
 ### Capture (`/api/capture`)
 Action-only.
