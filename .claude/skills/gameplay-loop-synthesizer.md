@@ -64,7 +64,7 @@ Before starting work, check `app/tests/e2e/artifacts/lessons/gameplay-loop-synth
 
 Choose the domain to synthesize loops for. Domains (in priority order):
 
-1. **combat** — damage, stages, initiative, turns, status, maneuvers, critical hits
+1. **combat** — damage, stages, initiative, turns, status, maneuvers, positioning, terrain, switching, critical hits
 2. **capture** — capture rate calculation, attempt execution, ball modifiers, status bonuses
 3. **healing** — rest (30 min), extended rest (4h+), Pokemon Center, injuries, new day
 4. **pokemon-lifecycle** — creation, stat calculation, moves, abilities, evolution, linking/unlinking, archiving
@@ -79,13 +79,18 @@ If the user doesn't specify a domain, ask which one.
 
 Before reading any rules, answer these questions for the domain:
 
-1. **When does the GM use this part of the app during a session?** (e.g., "When the party walks into tall grass and I need a wild encounter")
-2. **What is the GM trying to accomplish?** (e.g., "Run a combat that's fun and correctly adjudicated")
-3. **What sequence of actions does the GM perform from start to finish?** (e.g., "Create encounter → add combatants → start → run turns → resolve faints/captures → end → heal")
-4. **What does 'done' look like?** (e.g., "Encounter ended, XP noted, captures resolved, party healed")
-5. **What are the 2-3 most common variations?** (e.g., "All enemies faint", "Player captures one", "Party flees")
+**Procedural (what happens):**
+1. **When does the GM use this during a session, and what triggers it?**
+2. **What is the full sequence from setup to resolution?** Include bookkeeping afterward.
+3. **What are the 2-3 most common variations?** (e.g., "enemy faints", "player captures", "party flees")
 
-Write your answers down — they become the basis for Tier 1 workflows.
+**Tactical (what decisions are made):**
+4. **Where do branching decisions occur?** Points where GM or player chooses between meaningfully different actions (attack vs switch, move vs hold, use item vs use move).
+5. **Does positioning matter?** If yes: what spatial relationships affect outcomes? (adjacency, range, flanking, terrain, AoE coverage)
+6. **What action-economy tradeoffs exist?** Cases where spending one action type forecloses others (Full Action = Standard + Shift consumed; switching costs a Standard Action in non-faint cases).
+7. **What triggers reactive mechanics?** Events that interrupt normal flow (Attacks of Opportunity, Priority moves, Interrupts, forced switches).
+
+Write answers down — procedural answers become Tier 1 workflows, tactical answers become decision-point annotations within those workflows.
 
 ### Step 3: Read Rulebook
 
@@ -124,16 +129,9 @@ Annotate each step:
 - `[GAP: FEATURE_GAP]` — no backend capability for this step
 - `[GAP: UX_GAP]` — backend works but no UI exposes the action
 
-If any step has a GAP marker, append a Feasibility Summary table at the end of the workflow:
+If any step has a GAP marker, the domain file's Feasibility Summary table (see Step 7) will aggregate it.
 
-```markdown
-## Feasibility Summary
-
-| Step | Status | Gap Type | Details |
-|------|--------|----------|---------|
-| 3    | GAP    | FEATURE_GAP | No capture-in-combat API endpoint |
-| 5    | GAP    | UX_GAP      | No "Send Replacement" button in encounter UI |
-```
+Example annotation: `3. **[Action] [GAP: FEATURE_GAP]** GM attempts capture — no capture-in-combat endpoint`
 
 This is a **soft flag, not a hard gate** — write complete workflows even with gaps. The Orchestrator, Crafter, and Verifier use these flags to prioritize Feature Designer work, but the pipeline continues for non-gap steps.
 
@@ -169,7 +167,10 @@ Write the complete loop document to `app/tests/e2e/artifacts/loops/<domain>.md`.
 **Document structure:**
 1. Tier 1 workflows first (numbered W1, W2, W3...)
 2. Tier 2 mechanic validations second (numbered M1, M2, M3...)
-3. Each loop clearly labeled with its tier
+3. Tier 1 Mechanic Coverage Verification table (which T2 mechanics are exercised by which workflows)
+4. Feasibility Summary table (aggregate all GAP annotations — omit only if zero gaps exist)
+
+**Important:** Tier 1 workflows MUST come before Tier 2 validations. Downstream skills expect this order.
 
 Then update `app/tests/e2e/artifacts/pipeline-state.md`:
 - Set the domain's Loops stage to "complete"
@@ -196,6 +197,9 @@ mechanics_exercised:
   - damage-formula
   - faint-check
   - type-effectiveness
+tactical_decisions:  # optional — omit if workflow is purely procedural
+  - switch-or-attack
+  - shift-vs-hold-position
 sub_workflows:
   - <loop_id of variation>
 ---
@@ -212,6 +216,10 @@ sub_workflows:
 3. **[Mechanic: damage-formula]** <system applies a PTU rule — tag which mechanic fires>
 4. **[Bookkeeping]** <GM resolves aftermath>
 5. **[Done]** <end state that proves the workflow succeeded>
+6. **[Decision: <choice-id>]** <GM/player chooses between distinct paths> — list options and implications
+7. **[Position: <requirement>]** <spatial precondition> — adjacency, range, terrain type, line of sight
+
+Combine tags when a step has multiple dimensions: `3. **[Action] [Position: adjacent]** Pokemon uses Push — requires melee range`
 
 ## PTU Rules Applied
 - <rule>: "<quote>" (file:section)
@@ -261,15 +269,30 @@ sub_loops:
 ### Combat
 
 **Tier 1 workflows to consider:**
-- GM runs a full wild encounter (create → populate → initiative → rounds → resolution)
-- GM runs a trainer battle (two sides, each with trainers + Pokemon, turn alternation)
-- A combatant faints mid-combat and the player sends out a replacement
-- Combat ends and GM performs post-combat bookkeeping (injuries, XP)
+- GM runs a full wild encounter (create, populate, initiative, rounds, resolution)
+- GM runs a trainer battle (League vs Full Contact initiative, trainer phase vs pokemon phase)
+- A combatant faints and player sends a replacement (switching rules: Standard Action for live, Shift for fainted, 8m recall range, League command restrictions)
+- Combat ends with post-combat bookkeeping (injuries, rest, XP)
+- Tactical positioning battle (movement through terrain, flanking setup, AoE placement)
+- Pokemon switching as tactical decision (recall/release action costs, command restrictions in League)
+
+**Tactical mechanics to cover (in workflows or Tier 2):**
+- Movement: Shift action, diagonal costs (1m/2m alternating), capability-based speed, Stuck/Slowed
+- Terrain: Regular, Slow (2x movement cost), Rough (-2 ACC), Blocking, Earth (Burrow only), Underwater (Swim only)
+- Flanking: -2 evasion, size-based requirements (2 foes for Small/Medium, 3 Large, 4 Huge, 5 Gigantic)
+- Attack of Opportunity: 5 triggers (foe uses maneuver not targeting you, stands up, uses ranged on non-adjacent, retrieves item, shifts away), once/round, blocked by Sleep/Flinch/Paralysis
+- Expanded maneuvers: Disarm (AC 6), Dirty Trick (Hinder/Blind/Low Blow, AC 2, once/Scene/target), Manipulate (Bon Mot/Flirt/Terrorize, Trainer-only), Grapple Dominance (Secure/Attack/Move/End), Disengage (1m, no AoO)
+- Priority/Interrupt actions: act out of initiative, Priority (Limited) vs (Advanced), Interrupt moves
+- Held Actions: delay to lower initiative, once per round
+- Move frequency: At-Will, EOT, Scene — track usage across turns
+- Move ranges: Melee, Ranged X, Burst, Cone, Blast, Line — distinct targeting/AoE rules
+- Double-Strike/Five-Strike: damage formula step 2 modifications
+- Assisted Take a Breather: Trainer helps Confused/Raged Pokemon (Command DC 12, both Tripped)
 
 **Tier 2 validations to consider (if not covered by workflows):**
-- STAB calculation, critical hit multiplier, type immunity edge case, minimum damage floor, combat stage multiplier table
+- STAB, critical hit multiplier, type immunity, minimum damage floor, combat stage table, AoE resolution
 
-Read: `core/07-combat.md`, `composables/useCombat.ts`, `composables/useMoveCalculation.ts`
+Read: `core/07-combat.md`, `core/06-playing-the-game.md` (capabilities, movement), `composables/useCombat.ts`, `composables/useMoveCalculation.ts`, `composables/useGridMovement.ts`, `constants/combatManeuvers.ts`
 
 ### Capture
 
@@ -318,6 +341,7 @@ Read: `core/07-combat.md` (Resting section), `composables/useRestHealing.ts`, `s
 **Tier 1 workflows to consider:**
 - GM creates an encounter table for a route, adds entries, generates a random encounter
 - GM modifies table weights for different sub-habitats
+- GM designs encounter density using habitat ecosystems and progression curves (core/11-running-the-game.md)
 
 ### Scenes
 
@@ -330,6 +354,19 @@ Read: `core/07-combat.md` (Resting section), `composables/useRestHealing.ts`, `s
 **Tier 1 workflows to consider:**
 - GM moves tokens on the grid during combat (including diagonal movement costs)
 - GM toggles fog of war to reveal/hide areas as party explores
+
+### Cross-Domain Mechanics (Chapter 6)
+
+These mechanics are not domain-specific. Include them in any domain's workflows where they naturally arise:
+
+- **Skill Checks**: rank x d6 vs DC. Opposed checks (both roll, higher wins, defender wins ties). Margin of success affects outcome quality.
+- **Action Points**: Pool = 5 + floor(level / 5). Spend as Free Action before Accuracy or Skill roll for +1. Bound AP (locked until effect ends), Drained AP (locked until Extended Rest). Refresh at end of Scene.
+- **Capabilities**: Power (lifting), Throwing Range (4 + Athletics Rank), High/Long Jump, Movement types (Overland, Swim, Burrow, Sky, Levitate, Teleporter). These constrain what actions are physically possible.
+- **Cooperative Actions**: Team Skill Checks (sum rolls vs Team DC), Assisted Skill Checks (primary + half helper's rank). Helper needs Novice+ rank.
+
+When a combat workflow includes an opposed maneuver check, a scene workflow includes NPC persuasion, or a healing workflow checks Medicine skill, reference these mechanics explicitly.
+
+Read: `core/06-playing-the-game.md`
 
 ## Persistence
 
