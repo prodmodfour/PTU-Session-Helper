@@ -225,6 +225,7 @@ interface SpeciesRow {
   learnset: LearnsetEntry[]
   skills: Record<string, string>
   capabilities: string[]
+  size: string
 }
 
 function parsePokedexContent(content: string): SpeciesRow[] {
@@ -354,6 +355,10 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       }
     }
 
+    // Parse size class from Height line (e.g. "Height : 28' 10" / 8.8m (Huge)")
+    const sizeMatch = pageText.match(/Height\s*:\s*[^(]*\((Small|Medium|Large|Huge|Gigantic)\)/i)
+    const size = sizeMatch ? sizeMatch[1].charAt(0).toUpperCase() + sizeMatch[1].slice(1).toLowerCase() : 'Medium'
+
     // Parse skills (e.g., "Athl 3d6+2, Acro 2d6, Combat 2d6")
     const skills: Record<string, string> = {}
     const skillText = pageText.match(/Skill List[\s\S]*?(?=Move List|Level Up|$)/i)?.[0] || ''
@@ -415,7 +420,8 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       levitate: parseInt(levitateMatch?.[1] || '0', 10),
       learnset,
       skills,
-      capabilities
+      capabilities,
+      size
     })
   }
 
@@ -474,7 +480,8 @@ async function seedSpecies() {
         teleport: 0,
         learnset: JSON.stringify(s.learnset),
         skills: JSON.stringify(s.skills),
-        capabilities: JSON.stringify(s.capabilities)
+        capabilities: JSON.stringify(s.capabilities),
+        size: s.size
       }
       await prisma.speciesData.upsert({
         where: { name: s.name },

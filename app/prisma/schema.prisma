@@ -265,6 +265,9 @@ model SpeciesData {
   // Other capabilities (JSON array: ["Naturewalk (Forest)", "Underdog", etc.])
   capabilities  String   @default("[]")
 
+  // PTU size class: Small, Medium, Large, Huge, Gigantic
+  size          String   @default("Medium")
+
   // Relation to encounter table entries
   encounterTableEntries EncounterTableEntry[]
 }
