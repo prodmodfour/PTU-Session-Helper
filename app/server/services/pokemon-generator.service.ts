@@ -53,6 +53,7 @@ export interface GeneratedPokemonData {
   otherCapabilities: string[]
   skills: Record<string, string>
   eggGroups: string[]
+  size: string
 }
 
 export interface CreatedPokemon {
@@ -84,6 +85,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
   let otherCapabilities: string[] = []
   let movementCaps = { overland: 5, swim: 0, sky: 0, burrow: 0, levitate: 0 }
   let eggGroups: string[] = []
+  let size = 'Medium'
 
   if (speciesData) {
     baseStats = {
@@ -107,6 +109,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
       levitate: speciesData.levitate
     }
     eggGroups = JSON.parse(speciesData.eggGroups || '[]')
+    size = speciesData.size || 'Medium'
   }
 
   // Distribute stat points weighted by base stats (PTU: level - 1 points)
@@ -142,7 +145,8 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     movementCaps,
     otherCapabilities,
     skills,
-    eggGroups
+    eggGroups,
+    size
   }
 }
 
@@ -184,7 +188,8 @@ export async function createPokemonRecord(
       moves: JSON.stringify(data.moves),
       capabilities: JSON.stringify({
         ...data.movementCaps,
-        other: data.otherCapabilities
+        other: data.otherCapabilities,
+        size: data.size
       }),
       skills: JSON.stringify(data.skills),
       eggGroups: JSON.stringify(data.eggGroups),
