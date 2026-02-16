@@ -4,7 +4,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { loadEncounter, buildEncounterResponse } from '~/server/services/encounter.service'
 import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
-import { buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
+import { sizeToTokenSize, buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
 
 interface WildPokemonInput {
   speciesId?: string
@@ -56,10 +56,10 @@ export default defineEventHandler(async (event) => {
         originLabel: 'Wild Pokemon - generated from encounter table'
       })
 
-      const tokenSize = 1
+      const tokenSize = sizeToTokenSize(created.data.size)
       const position = findPlacementPosition(occupiedCells, side, tokenSize, gridWidth, gridHeight)
 
-      const combatant = buildPokemonCombatant(created, side, position, tokenSize)
+      const combatant = buildPokemonCombatant(created, side, position)
 
       ;(combatants as unknown[]).push(combatant)
       createdPokemon.push({

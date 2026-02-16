@@ -71,8 +71,7 @@ export default defineEventHandler(async (event) => {
         const combatant = buildPokemonCombatant(
           created,
           tc.side,
-          tc.position ?? undefined,
-          tc.tokenSize || 1
+          tc.position ?? undefined
         )
         combatants.push(combatant)
       } else {

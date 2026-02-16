@@ -6,7 +6,7 @@
 
 import { prisma } from '~/server/utils/prisma'
 import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
-import { buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
+import { sizeToTokenSize, buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
 import { buildHumanEntityFromRecord, buildCombatantFromEntity } from '~/server/services/combatant.service'
 
 interface ScenePokemonEntry {
@@ -81,9 +81,9 @@ export default defineEventHandler(async (event) => {
         originLabel: `Wild Pokemon - created from scene "${scene.name}"`
       })
 
-      const tokenSize = 1
+      const tokenSize = sizeToTokenSize(created.data.size)
       const position = findPlacementPosition(occupiedCells, 'enemies', tokenSize, gridWidth, gridHeight)
-      const combatant = buildPokemonCombatant(created, 'enemies', position, tokenSize)
+      const combatant = buildPokemonCombatant(created, 'enemies', position)
       combatants.push(combatant)
     }
 
