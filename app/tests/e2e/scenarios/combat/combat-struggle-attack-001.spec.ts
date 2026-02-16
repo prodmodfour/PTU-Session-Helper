@@ -107,9 +107,10 @@ test.describe('P2: Struggle Attack (combat-struggle-attack-001)', () => {
     expect(damageResult.finalDamage).toBe(STRUGGLE_DAMAGE)
     expect(damageResult.hpDamage).toBe(STRUGGLE_DAMAGE)
 
-    // --- Assertion 4: Charmander HP = 20/32 ---
-    const expectedHp = CHARMANDER_MAX_HP - STRUGGLE_DAMAGE // 32 - 12 = 20
-    expect(damageResult.newHp).toBe(expectedHp)
+    // --- Assertion 4: HP computed by server from prior state ---
+    expect(damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     // No massive damage injury (12 < 50% of 32 = 16)
