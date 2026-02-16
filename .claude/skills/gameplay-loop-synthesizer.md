@@ -341,7 +341,6 @@ Read: `core/07-combat.md` (Resting section), `composables/useRestHealing.ts`, `s
 **Tier 1 workflows to consider:**
 - GM creates an encounter table for a route, adds entries, generates a random encounter
 - GM modifies table weights for different sub-habitats
-- GM designs encounter density using habitat ecosystems and progression curves (core/11-running-the-game.md)
 
 ### Scenes
 
