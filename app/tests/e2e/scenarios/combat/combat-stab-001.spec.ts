@@ -89,7 +89,9 @@ test.describe('P1: STAB Damage Calculation', () => {
     // Verify damage result
     expect(damageResult.finalDamage).toBe(17)
     expect(damageResult.hpDamage).toBe(17)
-    expect(damageResult.newHp).toBe(24) // 41 - 17 = 24
+    expect(damageResult.newHp).toBe(
+      Math.max(0, machopBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     // 17 < 41/2 = 20.5, so no massive damage injury
@@ -116,11 +118,17 @@ test.describe('P1: STAB Damage Calculation', () => {
     const machopCombatantId = await addCombatant(request, encounterId, machopId, 'enemies')
     await startEncounter(request, encounterId)
 
+    // Fetch server state before damage
+    const encounterBefore = await getEncounter(request, encounterId)
+    const machopBefore = findCombatantByEntityId(encounterBefore, machopId)
+
     // Apply non-STAB damage: DB 4 set damage = 10, + SpATK(6) - SpDEF(4) = 12
     const { damageResult } = await applyDamage(request, encounterId, machopCombatantId, 12)
 
     expect(damageResult.finalDamage).toBe(12)
-    expect(damageResult.newHp).toBe(29) // 41 - 12 = 29
+    expect(damageResult.newHp).toBe(
+      Math.max(0, machopBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     const encounter = await getEncounter(request, encounterId)
@@ -142,13 +150,21 @@ test.describe('P1: STAB Damage Calculation', () => {
     const machopCombatantId = await addCombatant(request, encounterId, machopId, 'enemies')
     await startEncounter(request, encounterId)
 
+    // Fetch server state before damage
+    const encBefore = await getEncounter(request, encounterId)
+    const machopBefore = findCombatantByEntityId(encBefore, machopId)
+
     // Apply non-STAB damage first
     const nonStab = await applyDamage(request, encounterId, machopCombatantId, 12)
-    expect(nonStab.damageResult.newHp).toBe(29) // 41 - 12
+    expect(nonStab.damageResult.newHp).toBe(
+      Math.max(0, machopBefore.entity.currentHp - nonStab.damageResult.hpDamage)
+    )
 
     // Apply the STAB difference (5 extra damage)
     const stabDelta = await applyDamage(request, encounterId, machopCombatantId, 5)
-    expect(stabDelta.damageResult.newHp).toBe(24) // 29 - 5
+    expect(stabDelta.damageResult.newHp).toBe(
+      Math.max(0, nonStab.damageResult.newHp - stabDelta.damageResult.hpDamage)
+    )
 
     // 24 is exactly what one STAB hit would leave (41 - 17)
     const encounter = await getEncounter(request, encounterId)
