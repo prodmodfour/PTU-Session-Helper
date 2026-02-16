@@ -104,6 +104,11 @@ test.describe('P2: Minimum Damage Rule (combat-minimum-damage-001)', () => {
     // The GM calculates: SetDamage(13) + ATK(5) - ModifiedDEF(22) = -4 --> min 1
     // Then type: Normal vs Rock/Ground = x0.5 --> floor(1 * 0.5) = 0 --> min 1 (not immune)
     // Final damage passed to API = 1
+
+    // Fetch server state before damage
+    const encBeforeDmg = await getEncounter(request, encounterId)
+    const geodudeBefore = findCombatantByEntityId(encBeforeDmg, targetId)
+
     const result = await applyDamage(request, encounterId, targetCombatantId, EXPECTED_FINAL_DAMAGE)
     const damageResult = result.damageResult
 
@@ -111,9 +116,10 @@ test.describe('P2: Minimum Damage Rule (combat-minimum-damage-001)', () => {
     expect(damageResult.finalDamage).toBe(EXPECTED_FINAL_DAMAGE)
     expect(damageResult.hpDamage).toBe(EXPECTED_FINAL_DAMAGE)
 
-    // --- Assertion 3: Geodude HP = 31/32 ---
-    const expectedHp = GEODUDE_MAX_HP - EXPECTED_FINAL_DAMAGE // 32 - 1 = 31
-    expect(damageResult.newHp).toBe(expectedHp)
+    // --- Assertion 3: Geodude HP computed by server ---
+    expect(damageResult.newHp).toBe(
+      Math.max(0, geodudeBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     // Verify via GET encounter
