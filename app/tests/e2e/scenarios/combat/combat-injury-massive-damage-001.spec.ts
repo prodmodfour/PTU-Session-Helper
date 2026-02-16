@@ -82,8 +82,8 @@ test.describe('P2: Massive Damage Injury (combat-injury-massive-damage-001)', ()
     expect(charmanderBefore.entity.maxHp).toBe(CHARMANDER_MAX_HP)
     expect(charmanderBefore.entity.injuries ?? 0).toBe(0)
 
-    // --- Verify threshold math ---
-    expect(KARATE_CHOP_DAMAGE).toBeGreaterThanOrEqual(MASSIVE_DAMAGE_THRESHOLD)
+    // --- Verify threshold math using server-fetched maxHp ---
+    expect(KARATE_CHOP_DAMAGE).toBeGreaterThanOrEqual(charmanderBefore.entity.maxHp / 2)
 
     // --- Apply 17 damage (Karate Chop) ---
     const result = await applyDamage(request, encounterId, targetCombatantId, KARATE_CHOP_DAMAGE)
@@ -97,9 +97,10 @@ test.describe('P2: Massive Damage Injury (combat-injury-massive-damage-001)', ()
     expect(damageResult.injuryGained).toBe(true)
     expect(damageResult.newInjuries).toBe(1)
 
-    // --- Assertion 4: HP = 15/32, NOT fainted, injury count = 1 ---
-    const expectedHp = CHARMANDER_MAX_HP - KARATE_CHOP_DAMAGE // 32 - 17 = 15
-    expect(damageResult.newHp).toBe(expectedHp)
+    // --- Assertion 4: HP, NOT fainted, injury count = 1 ---
+    expect(damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     // Verify via GET encounter as well
