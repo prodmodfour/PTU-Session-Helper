@@ -1,0 +1,298 @@
+/**
+ * PTU 1.05 Damage Calculator
+ *
+ * Pure functions for the 9-step damage formula (07-combat.md:834-847):
+ * 1. Start with Move's Damage Base
+ * 2. Apply Five-Strike/Double-Strike modifiers
+ * 3. Apply STAB (+2 to DB)
+ * 4. Look up set damage from DB chart (or roll)
+ * 5. Apply critical hit (add dice damage again)
+ * 6. Add stage-modified Attack stat
+ * 7. Subtract stage-modified Defense stat + Damage Reduction
+ * 8. Apply type effectiveness multiplier
+ * 9. Minimum 1 damage (unless immune)
+ *
+ * Follows the captureRate.ts pattern: typed input, typed result with breakdown,
+ * pure functions, zero side effects.
+ */
+
+// ============================================
+// CONSTANTS
+// ============================================
+
+/**
+ * Combat stage multiplier table (PTU 07-combat.md:701-728)
+ * Positive: +20% per stage. Negative: -10% per stage.
+ */
+export const STAGE_MULTIPLIERS: Record<number, number> = {
+  [-6]: 0.4,
+  [-5]: 0.5,
+  [-4]: 0.6,
+  [-3]: 0.7,
+  [-2]: 0.8,
+  [-1]: 0.9,
+  [0]: 1.0,
+  [1]: 1.2,
+  [2]: 1.4,
+  [3]: 1.6,
+  [4]: 1.8,
+  [5]: 2.0,
+  [6]: 2.2,
+}
+
+/**
+ * Damage Base → Set Damage chart (PTU 07-combat.md:921-985)
+ * Each entry: { min, avg, max } for the DB value.
+ */
+export const DAMAGE_BASE_CHART: Record<number, { min: number; avg: number; max: number }> = {
+  1:  { min: 2,  avg: 5,   max: 7   },
+  2:  { min: 4,  avg: 7,   max: 9   },
+  3:  { min: 6,  avg: 9,   max: 11  },
+  4:  { min: 7,  avg: 11,  max: 14  },
+  5:  { min: 9,  avg: 13,  max: 16  },
+  6:  { min: 10, avg: 15,  max: 20  },
+  7:  { min: 12, avg: 17,  max: 22  },
+  8:  { min: 12, avg: 19,  max: 26  },
+  9:  { min: 12, avg: 21,  max: 30  },
+  10: { min: 13, avg: 24,  max: 34  },
+  11: { min: 13, avg: 27,  max: 40  },
+  12: { min: 13, avg: 30,  max: 46  },
+  13: { min: 14, avg: 35,  max: 50  },
+  14: { min: 19, avg: 40,  max: 55  },
+  15: { min: 24, avg: 45,  max: 60  },
+  16: { min: 25, avg: 50,  max: 70  },
+  17: { min: 30, avg: 60,  max: 85  },
+  18: { min: 31, avg: 65,  max: 97  },
+  19: { min: 36, avg: 70,  max: 102 },
+  20: { min: 41, avg: 75,  max: 107 },
+  21: { min: 46, avg: 80,  max: 112 },
+  22: { min: 51, avg: 85,  max: 117 },
+  23: { min: 56, avg: 90,  max: 122 },
+  24: { min: 61, avg: 95,  max: 127 },
+  25: { min: 66, avg: 100, max: 132 },
+  26: { min: 72, avg: 110, max: 149 },
+  27: { min: 78, avg: 120, max: 166 },
+  28: { min: 88, avg: 130, max: 176 },
+}
+
+/**
+ * Full 18-type effectiveness chart (PTU 07-combat.md:780-787)
+ * Super Effective = 1.5 (NOT 2.0 like video games)
+ * Only non-1.0 matchups listed per attacking type.
+ */
+export const TYPE_CHART: Record<string, Record<string, number>> = {
+  Normal:   { Rock: 0.5, Ghost: 0, Steel: 0.5 },
+  Fire:     { Fire: 0.5, Water: 0.5, Grass: 1.5, Ice: 1.5, Bug: 1.5, Rock: 0.5, Dragon: 0.5, Steel: 1.5 },
+  Water:    { Fire: 1.5, Water: 0.5, Grass: 0.5, Ground: 1.5, Rock: 1.5, Dragon: 0.5 },
+  Electric: { Water: 1.5, Electric: 0.5, Grass: 0.5, Ground: 0, Flying: 1.5, Dragon: 0.5 },
+  Grass:    { Fire: 0.5, Water: 1.5, Grass: 0.5, Poison: 0.5, Ground: 1.5, Flying: 0.5, Bug: 0.5, Rock: 1.5, Dragon: 0.5, Steel: 0.5 },
+  Ice:      { Fire: 0.5, Water: 0.5, Grass: 1.5, Ice: 0.5, Ground: 1.5, Flying: 1.5, Dragon: 1.5, Steel: 0.5 },
+  Fighting: { Normal: 1.5, Ice: 1.5, Poison: 0.5, Flying: 0.5, Psychic: 0.5, Bug: 0.5, Rock: 1.5, Ghost: 0, Dark: 1.5, Steel: 1.5, Fairy: 0.5 },
+  Poison:   { Grass: 1.5, Poison: 0.5, Ground: 0.5, Rock: 0.5, Ghost: 0.5, Steel: 0, Fairy: 1.5 },
+  Ground:   { Fire: 1.5, Electric: 1.5, Grass: 0.5, Poison: 1.5, Flying: 0, Bug: 0.5, Rock: 1.5, Steel: 1.5 },
+  Flying:   { Electric: 0.5, Grass: 1.5, Fighting: 1.5, Bug: 1.5, Rock: 0.5, Steel: 0.5 },
+  Psychic:  { Fighting: 1.5, Poison: 1.5, Psychic: 0.5, Dark: 0, Steel: 0.5 },
+  Bug:      { Fire: 0.5, Grass: 1.5, Fighting: 0.5, Poison: 0.5, Flying: 0.5, Psychic: 1.5, Ghost: 0.5, Dark: 1.5, Steel: 0.5, Fairy: 0.5 },
+  Rock:     { Fire: 1.5, Ice: 1.5, Fighting: 0.5, Ground: 0.5, Flying: 1.5, Bug: 1.5, Steel: 0.5 },
+  Ghost:    { Normal: 0, Psychic: 1.5, Ghost: 1.5, Dark: 0.5 },
+  Dragon:   { Dragon: 1.5, Steel: 0.5, Fairy: 0 },
+  Dark:     { Fighting: 0.5, Psychic: 1.5, Ghost: 1.5, Dark: 0.5, Fairy: 0.5 },
+  Steel:    { Fire: 0.5, Water: 0.5, Electric: 0.5, Ice: 1.5, Rock: 1.5, Steel: 0.5, Fairy: 1.5 },
+  Fairy:    { Fire: 0.5, Fighting: 1.5, Poison: 0.5, Dragon: 1.5, Dark: 1.5, Steel: 0.5 },
+}
+
+// ============================================
+// INPUT / OUTPUT TYPES
+// ============================================
+
+export interface DamageCalcInput {
+  /** Attacker's types (for STAB check) */
+  attackerTypes: string[]
+  /** Base attack or spAtk stat (pre-stage, calculated stat) */
+  attackStat: number
+  /** Combat stage for the relevant attack stat (-6 to +6) */
+  attackStage: number
+  /** Move's type (e.g., 'Fire', 'Water') */
+  moveType: string
+  /** Move's Damage Base (1-28) */
+  moveDamageBase: number
+  /** Move's damage class — determines which stats are used */
+  moveDamageClass: 'Physical' | 'Special'
+  /** Target's types (for effectiveness calculation) */
+  targetTypes: string[]
+  /** Base defense or spDef stat (pre-stage, calculated stat) */
+  defenseStat: number
+  /** Combat stage for the relevant defense stat (-6 to +6) */
+  defenseStage: number
+  /** Whether this is a critical hit */
+  isCritical?: boolean
+  /** Flat damage reduction from abilities/items */
+  damageReduction?: number
+}
+
+export interface DamageCalcResult {
+  finalDamage: number
+  breakdown: {
+    // Steps 1-3: Damage Base + STAB
+    rawDB: number
+    stabApplied: boolean
+    effectiveDB: number
+    // Steps 4-5: Set damage + critical
+    setDamage: number
+    criticalApplied: boolean
+    critDamageBonus: number
+    baseDamage: number
+    // Step 6: Attack stat (stage-modified)
+    rawAttackStat: number
+    attackStageMultiplier: number
+    effectiveAttack: number
+    subtotalBeforeDefense: number
+    // Step 7: Defense stat (stage-modified) + DR
+    rawDefenseStat: number
+    defenseStageMultiplier: number
+    effectiveDefense: number
+    damageReduction: number
+    afterDefense: number
+    // Step 8: Type effectiveness
+    typeEffectiveness: number
+    typeEffectivenessLabel: string
+    afterEffectiveness: number
+    // Final
+    minimumApplied: boolean
+  }
+}
+
+// ============================================
+// PURE FUNCTIONS
+// ============================================
+
+/**
+ * Apply combat stage multiplier to a base stat.
+ * PTU 07-combat.md:670-675
+ */
+export function applyStageModifier(baseStat: number, stage: number): number {
+  const clamped = Math.max(-6, Math.min(6, stage))
+  return Math.floor(baseStat * STAGE_MULTIPLIERS[clamped])
+}
+
+/**
+ * Check if attacker gets STAB (Same Type Attack Bonus).
+ * PTU 07-combat.md:790-793
+ */
+export function hasSTAB(moveType: string, attackerTypes: string[]): boolean {
+  return attackerTypes.includes(moveType)
+}
+
+/**
+ * Get set damage (average) for a Damage Base value from the DB chart.
+ */
+export function getSetDamage(db: number): number {
+  const clamped = Math.max(1, Math.min(28, db))
+  return DAMAGE_BASE_CHART[clamped].avg
+}
+
+/**
+ * Compute type effectiveness multiplier across all defender types.
+ * PTU uses 1.5 for SE, not 2.0.
+ * Dual-typed defenders multiply: e.g., 1.5 * 1.5 = 2.25 → but PTU caps at
+ * discrete tiers, so we compute raw product and let the caller interpret.
+ */
+export function getTypeEffectiveness(moveType: string, defenderTypes: string[]): number {
+  let multiplier = 1.0
+  for (const defType of defenderTypes) {
+    const chart = TYPE_CHART[moveType]
+    if (chart && chart[defType] !== undefined) {
+      multiplier *= chart[defType]
+    }
+  }
+  return multiplier
+}
+
+/**
+ * Human-readable label for a type effectiveness multiplier.
+ */
+export function getEffectivenessLabel(multiplier: number): string {
+  if (multiplier === 0) return 'Immune'
+  if (multiplier <= 0.25) return 'Doubly Resisted'
+  if (multiplier < 1) return 'Resisted'
+  if (multiplier === 1) return 'Neutral'
+  if (multiplier <= 1.5) return 'Super Effective'
+  if (multiplier <= 2.25) return 'Doubly Super Effective'
+  return 'Triply Super Effective'
+}
+
+/**
+ * Full PTU 9-step damage formula.
+ * PTU 07-combat.md:834-847
+ *
+ * Steps:
+ * 1-3: Damage Base + STAB → effective DB
+ * 4-5: DB chart lookup → set damage + critical bonus
+ * 6:   Add stage-modified attack stat
+ * 7:   Subtract stage-modified defense stat + damage reduction (min 1)
+ * 8:   Multiply by type effectiveness
+ * 9:   Minimum 1 damage (unless immune)
+ */
+export function calculateDamage(input: DamageCalcInput): DamageCalcResult {
+  // Steps 1-3: Damage Base + STAB
+  const rawDB = input.moveDamageBase
+  const stabApplied = hasSTAB(input.moveType, input.attackerTypes)
+  const effectiveDB = rawDB + (stabApplied ? 2 : 0)
+
+  // Steps 4-5: Set damage from chart + critical
+  const setDamage = getSetDamage(effectiveDB)
+  const criticalApplied = input.isCritical ?? false
+  const critDamageBonus = criticalApplied ? getSetDamage(effectiveDB) : 0
+  const baseDamage = setDamage + critDamageBonus
+
+  // Step 6: Add attack stat (stage-modified)
+  const attackStageMultiplier = STAGE_MULTIPLIERS[Math.max(-6, Math.min(6, input.attackStage))]
+  const effectiveAttack = applyStageModifier(input.attackStat, input.attackStage)
+  const subtotalBeforeDefense = baseDamage + effectiveAttack
+
+  // Step 7: Subtract defense stat (stage-modified) + damage reduction
+  const defenseStageMultiplier = STAGE_MULTIPLIERS[Math.max(-6, Math.min(6, input.defenseStage))]
+  const effectiveDefense = applyStageModifier(input.defenseStat, input.defenseStage)
+  const dr = input.damageReduction ?? 0
+  const afterDefense = Math.max(1, subtotalBeforeDefense - effectiveDefense - dr)
+
+  // Step 8: Type effectiveness
+  const typeEffectiveness = getTypeEffectiveness(input.moveType, input.targetTypes)
+  const typeEffectivenessLabel = getEffectivenessLabel(typeEffectiveness)
+  let afterEffectiveness = Math.floor(afterDefense * typeEffectiveness)
+
+  // Minimum 1 damage (unless immune)
+  let minimumApplied = false
+  if (typeEffectiveness === 0) {
+    afterEffectiveness = 0
+  } else if (afterEffectiveness < 1) {
+    afterEffectiveness = 1
+    minimumApplied = true
+  }
+
+  return {
+    finalDamage: afterEffectiveness,
+    breakdown: {
+      rawDB,
+      stabApplied,
+      effectiveDB,
+      setDamage,
+      criticalApplied,
+      critDamageBonus,
+      baseDamage,
+      rawAttackStat: input.attackStat,
+      attackStageMultiplier,
+      effectiveAttack,
+      subtotalBeforeDefense,
+      rawDefenseStat: input.defenseStat,
+      defenseStageMultiplier,
+      effectiveDefense,
+      damageReduction: dr,
+      afterDefense,
+      typeEffectiveness,
+      typeEffectivenessLabel,
+      afterEffectiveness,
+      minimumApplied,
+    },
+  }
+}
