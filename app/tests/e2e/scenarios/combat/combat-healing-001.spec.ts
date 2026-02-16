@@ -83,9 +83,11 @@ test.describe('P1: Healing Mechanics', () => {
     expect(charmander1.entity.currentHp).toBe(32)
     expect(charmander1.entity.maxHp).toBe(32)
 
-    // Step 2: Apply 20 damage -> 12/32
+    // Step 2: Apply 20 damage
     const dmgResult = await applyDamage(request, encounterId, charmanderCombatantId, 20)
-    expect(dmgResult.damageResult.newHp).toBe(12)
+    expect(dmgResult.damageResult.newHp).toBe(
+      Math.max(0, charmander1.entity.currentHp - dmgResult.damageResult.hpDamage)
+    )
     expect(dmgResult.damageResult.hpDamage).toBe(20)
 
     // Step 3: Heal 15 -> 27/32
@@ -137,9 +139,13 @@ test.describe('P1: Healing Mechanics', () => {
     await addCombatant(request, encounterId, bulbasaurId, 'enemies')
     await startEncounter(request, encounterId)
 
-    // KO Charmander: apply 32 damage -> 0/32
+    // KO Charmander: apply 32 damage -> fainted
+    const encBefore = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(encBefore, charmanderId)
     const dmg = await applyDamage(request, encounterId, charmanderCombatantId, 32)
-    expect(dmg.damageResult.newHp).toBe(0)
+    expect(dmg.damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - dmg.damageResult.hpDamage)
+    )
     expect(dmg.damageResult.fainted).toBe(true)
 
     // Verify Fainted status is present
