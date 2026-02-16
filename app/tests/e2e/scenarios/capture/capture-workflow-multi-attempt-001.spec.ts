@@ -3,7 +3,7 @@
  *
  * A high-level wild Oddish L45 on Victory Road. Initial capture rate is -10
  * (nearly impossible). After weakening to 1 HP + injury + Paralysis, rate
- * improves to 65 (Easy). Trainer retries capture with a 70% per-attempt
+ * improves to 70 (Easy). Trainer retries capture with a ~75% per-attempt
  * success rate, looping up to 5 times.
  *
  * Oddish L45: HP 5, ATK 5, DEF 6, SpATK 8, SpDEF 7, SPD 3 (Grass/Poison)
@@ -91,7 +91,7 @@ test.describe('P1 Workflow: Multi-Attempt Retry (capture-workflow-multi-attempt-
       return
     }
 
-    // Step 3a: 69 damage, massive damage -> 1 injury
+    // Step 3a: 69 damage, massive damage + HP marker crossing 50% -> 2 injuries
     const enc = await getEncounter(request, encounterId)
     const oddishBefore = findCombatantByEntityId(enc, oddishId)
     const dmg = await applyDamage(request, encounterId, oddishCombatantId, 69)
@@ -101,9 +101,9 @@ test.describe('P1 Workflow: Multi-Attempt Retry (capture-workflow-multi-attempt-
       Math.max(0, oddishBefore.entity.currentHp - dmg.damageResult.hpDamage)
     )
 
-    // Assertion 5: injury from massive damage (69/70 = 98.6% >= 50%)
+    // Assertion 5: 2 injuries — massive damage (69/70 = 98.6% >= 50%) + HP marker crossing 50%
     expect(dmg.damageResult.injuryGained).toBe(true)
-    expect(dmg.damageResult.newInjuries).toBe(1)
+    expect(dmg.damageResult.newInjuries).toBe(2)
 
     // Step 3b: Apply Paralyzed status
     await applyStatus(request, encounterId, oddishCombatantId, { add: ['Paralyzed'] })
@@ -115,21 +115,22 @@ test.describe('P1 Workflow: Multi-Attempt Retry (capture-workflow-multi-attempt-
     expect(statusConditions).toContain('Paralyzed')
   })
 
-  test('phase 4 — assertions 7-8: improved capture rate = 65 (Easy)', async ({ request }) => {
+  test('phase 4 — assertions 7-8: improved capture rate = 70 (Easy)', async ({ request }) => {
     if (firstAttemptCaptured) {
       test.skip()
       return
     }
 
-    // base(100) + level(-90) + hp(+30) + evo(+10) + status(+10) + injury(+5) = 65
+    // base(100) + level(-90) + hp(+30) + evo(+10) + status(+10) + injury(+10) = 70
+    // 2 injuries: massive damage (69 >= 35) + HP marker crossing 50%
     const res = await getCaptureRate(request, { pokemonId: oddishId })
     expect(res.success).toBe(true)
 
-    // Assertion 7: captureRate = 65 with correct breakdown
-    expect(res.data.captureRate).toBe(65)
+    // Assertion 7: captureRate = 70 with correct breakdown
+    expect(res.data.captureRate).toBe(70)
     expect(res.data.breakdown.hpModifier).toBe(30)
     expect(res.data.breakdown.statusModifier).toBe(10)
-    expect(res.data.breakdown.injuryModifier).toBe(5)
+    expect(res.data.breakdown.injuryModifier).toBe(10)
 
     // Assertion 8: difficulty label
     expect(res.data.difficulty).toBe('Easy')

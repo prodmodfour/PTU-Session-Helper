@@ -2,8 +2,8 @@
  * P0 Workflow: Standard Capture
  *
  * A wild Oddish L8 appears. The trainer checks the capture rate (64 at full HP),
- * deals 32 damage to bring it to 1 HP (triggering massive damage injury),
- * then rechecks the rate (129 — guaranteed capture). The trainer throws a ball,
+ * deals 32 damage to bring it to 1 HP (triggering 2 injuries: massive damage + HP marker),
+ * then rechecks the rate (134 — guaranteed capture). The trainer throws a ball,
  * captures the Oddish, and ownership is verified.
  *
  * Oddish L8: HP 5, ATK 5, DEF 6, SpATK 8, SpDEF 7, SPD 3 (Grass/Poison)
@@ -72,7 +72,7 @@ test.describe('P0 Workflow: Standard Capture (capture-workflow-standard-capture-
   })
 
   test('phase 2 — assertion 3: deal 32 damage, weaken Oddish', async ({ request }) => {
-    // Massive damage: 32 >= maxHp/2 -> 1 injury
+    // Massive damage: 32 >= maxHp/2 -> 1 injury, + HP marker crossing 50% -> 2 injuries total
     const enc = await getEncounter(request, encounterId)
     const oddishBefore = findCombatantByEntityId(enc, oddishId)
     const dmg = await applyDamage(request, encounterId, oddishCombatantId, 32)
@@ -82,29 +82,30 @@ test.describe('P0 Workflow: Standard Capture (capture-workflow-standard-capture-
     expect(dmg.damageResult.injuryGained).toBe(true)
   })
 
-  test('phase 3 — assertions 4-5: improved capture rate at 1 HP = 129 (Very Easy)', async ({ request }) => {
-    // base(100) + level(-16) + hp(+30) + evo(+10) + injury(+5) = 129
+  test('phase 3 — assertions 4-5: improved capture rate at 1 HP = 134 (Very Easy)', async ({ request }) => {
+    // base(100) + level(-16) + hp(+30) + evo(+10) + injury(+10) = 134
+    // 2 injuries: massive damage (32 >= 16.5) + HP marker crossing 50%
     const res = await getCaptureRate(request, { pokemonId: oddishId })
     expect(res.success).toBe(true)
 
-    // Assertion 4: captureRate = 129 with updated breakdown
-    expect(res.data.captureRate).toBe(129)
+    // Assertion 4: captureRate = 134 with updated breakdown
+    expect(res.data.captureRate).toBe(134)
     expect(res.data.breakdown.hpModifier).toBe(30)
-    expect(res.data.breakdown.injuryModifier).toBe(5)
+    expect(res.data.breakdown.injuryModifier).toBe(10)
 
     // Assertion 5: difficulty label
     expect(res.data.difficulty).toBe('Very Easy')
   })
 
   test('phase 4 — assertion 6: capture is mathematically guaranteed', async ({ request }) => {
-    // captureRate=129, trainerLevel=5 -> max modifiedRoll = 95 <= 129 -> always captured
+    // captureRate=134, trainerLevel=5 -> max modifiedRoll = 95 <= 134 -> always captured
     const res = await attemptCapture(request, {
       pokemonId: oddishId,
       trainerId: trainerId
     })
     expect(res.success).toBe(true)
     expect(res.data.captured).toBe(true)
-    expect(res.data.captureRate).toBe(129)
+    expect(res.data.captureRate).toBe(134)
     expect(res.data.trainerLevel).toBe(5)
   })
 
