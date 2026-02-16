@@ -129,6 +129,10 @@ Full CRUD + activate/deactivate + nested entities.
 - `PUT/DELETE /api/scenes/:id/groups/:groupId` — update/delete group
 - `PUT /api/scenes/:id/positions` — batch update positions
 
+### Damage Calculation (`/api/encounters/:id/calculate-damage`)
+Read-only combat math endpoint.
+- `POST /api/encounters/:id/calculate-damage` — compute full PTU 9-step damage formula (STAB, type effectiveness, stages, crit) with detailed breakdown. Does not modify encounter state.
+
 ### Capture (`/api/capture`)
 Action-only.
 - `POST /api/capture/rate` — calculate capture rate
