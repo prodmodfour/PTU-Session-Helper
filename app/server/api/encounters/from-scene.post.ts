@@ -5,9 +5,9 @@
  */
 
 import { prisma } from '~/server/utils/prisma'
-import { v4 as uuidv4 } from 'uuid'
 import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
 import { buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
+import { buildHumanEntityFromRecord, buildCombatantFromEntity } from '~/server/services/combatant.service'
 
 interface ScenePokemonEntry {
   id: string
@@ -93,53 +93,21 @@ export default defineEventHandler(async (event) => {
     for (const sceneChar of sceneCharacters) {
       if (!sceneChar.characterId) continue
 
-      const character = await prisma.humanCharacter.findUnique({
+      const record = await prisma.humanCharacter.findUnique({
         where: { id: sceneChar.characterId }
       })
-      if (!character) continue
+      if (!record) continue
 
-      const charEntity = {
-        id: character.id,
-        name: character.name,
-        level: character.level,
-        stats: {
-          hp: character.hp, attack: character.attack, defense: character.defense,
-          specialAttack: character.specialAttack, specialDefense: character.specialDefense,
-          speed: character.speed
-        },
-        currentHp: character.currentHp,
-        maxHp: character.maxHp,
-        stageModifiers: JSON.parse(character.stageModifiers),
-        statusConditions: JSON.parse(character.statusConditions),
-        avatarUrl: character.avatarUrl
-      }
-
-      const initiative = character.speed
+      const entity = buildHumanEntityFromRecord(record)
       const position = findPlacementPosition(occupiedCells, 'players', 1, gridWidth, gridHeight)
 
-      combatants.push({
-        id: uuidv4(),
-        type: 'human',
-        entityId: character.id,
+      combatants.push(buildCombatantFromEntity({
+        entityType: 'human',
+        entityId: record.id,
+        entity,
         side: 'players',
-        initiative,
-        initiativeBonus: 0,
-        hasActed: false,
-        actionsRemaining: 2,
-        shiftActionsRemaining: 1,
-        turnState: {
-          hasActed: false, standardActionUsed: false, shiftActionUsed: false,
-          swiftActionUsed: false, canBeCommanded: true, isHolding: false
-        },
-        injuries: { count: 0, sources: [] as string[] },
-        physicalEvasion: Math.floor(character.defense / 5),
-        specialEvasion: Math.floor(character.specialDefense / 5),
-        speedEvasion: Math.floor(character.speed / 5),
-        position,
-        tokenSize: 1,
-        readyAction: undefined as string | undefined,
-        entity: charEntity
-      })
+        position
+      }))
     }
 
     // Save combatants to encounter
