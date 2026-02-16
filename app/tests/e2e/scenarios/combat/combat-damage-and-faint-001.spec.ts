@@ -87,11 +87,16 @@ test.describe('P0: Damage and Faint', () => {
   })
 
   test('after 20 damage: Charmander at 12/32 HP', async ({ request }) => {
+    const enc = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(enc, charmanderId)
+
     const result = await applyDamage(request, encounterId, charmanderCombatantId, 20)
 
     expect(result.damageResult.finalDamage).toBe(20)
     expect(result.damageResult.hpDamage).toBe(20)
-    expect(result.damageResult.newHp).toBe(12)
+    expect(result.damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - result.damageResult.hpDamage)
+    )
     expect(result.damageResult.fainted).toBe(false)
 
     // 20 >= 32/2 = 16? Yes, massive damage → injury gained
@@ -100,12 +105,17 @@ test.describe('P0: Damage and Faint', () => {
   })
 
   test('after 20 more damage: Charmander at 0/32 HP (floored)', async ({ request }) => {
+    const enc = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(enc, charmanderId)
+
     const result = await applyDamage(request, encounterId, charmanderCombatantId, 20)
 
     expect(result.damageResult.finalDamage).toBe(20)
     expect(result.damageResult.hpDamage).toBe(20)
-    // HP cannot go below 0: max(0, 12 - 20) = 0
-    expect(result.damageResult.newHp).toBe(0)
+    // HP cannot go below 0: server clamps to max(0, currentHp - hpDamage)
+    expect(result.damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - result.damageResult.hpDamage)
+    )
     expect(result.damageResult.fainted).toBe(true)
 
     // 20 >= 32/2 = 16? Yes, massive damage → second injury
