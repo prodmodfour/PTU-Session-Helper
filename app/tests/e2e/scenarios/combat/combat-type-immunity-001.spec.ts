@@ -89,7 +89,7 @@ test.describe('P1: Type Immunity - Fighting vs Ghost', () => {
     expect(damageResult.finalDamage).toBe(0)
     expect(damageResult.hpDamage).toBe(0)
     expect(damageResult.tempHpAbsorbed).toBe(0)
-    expect(damageResult.newHp).toBe(29)
+    expect(damageResult.newHp).toBe(gastlyBefore.entity.currentHp)
     expect(damageResult.fainted).toBe(false)
     expect(damageResult.injuryGained).toBe(false)
 
@@ -174,7 +174,9 @@ test.describe('P1: Type Immunity - Fighting vs Ghost', () => {
 
     expect(damageResult.finalDamage).toBe(20)
     expect(damageResult.hpDamage).toBe(20)
-    expect(damageResult.newHp).toBe(9) // 29 - 20 = 9
+    expect(damageResult.newHp).toBe(
+      Math.max(0, rattataBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
   })
 })
