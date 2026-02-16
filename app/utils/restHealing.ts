@@ -9,10 +9,7 @@
  * - Natural injury healing: 1 injury after 24 hours without new injuries
  */
 
-// Persistent status conditions that are cleared by extended rest
-export const PERSISTENT_STATUS_CONDITIONS = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned', 'Asleep'
-]
+import { PERSISTENT_CONDITIONS } from '~/constants/statusConditions'
 
 // Check if a day has passed since the last reset
 export function shouldResetDailyCounters(lastReset: Date | null): boolean {
@@ -122,14 +119,14 @@ export function calculatePokemonCenterInjuryHealing(params: {
 // Get status conditions that would be cleared by extended rest
 export function getStatusesToClear(statusConditions: string[]): string[] {
   return statusConditions.filter(status =>
-    PERSISTENT_STATUS_CONDITIONS.includes(status)
+    (PERSISTENT_CONDITIONS as readonly string[]).includes(status)
   )
 }
 
 // Remove persistent status conditions from array
 export function clearPersistentStatusConditions(statusConditions: string[]): string[] {
   return statusConditions.filter(status =>
-    !PERSISTENT_STATUS_CONDITIONS.includes(status)
+    !(PERSISTENT_CONDITIONS as readonly string[]).includes(status)
   )
 }
 
