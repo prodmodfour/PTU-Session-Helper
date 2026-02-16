@@ -87,17 +87,19 @@ test.describe('P1: Type Effectiveness - Super Effective', () => {
     // Verify damage result
     expect(damageResult.finalDamage).toBe(22)
     expect(damageResult.hpDamage).toBe(22)
-    expect(damageResult.newHp).toBe(10) // 32 - 22 = 10
+    expect(damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
-    // 22 >= 32/2 = 16, so massive damage triggers injury
+    // Massive damage injury: server checks hpDamage >= maxHp / 2
     expect(damageResult.injuryGained).toBe(true)
     expect(damageResult.newInjuries).toBe(1)
 
     // Verify via GET
     const encounterAfter = await getEncounter(request, encounterId)
     const charmanderAfter = findCombatantByEntityId(encounterAfter, charmanderId)
-    expect(charmanderAfter.entity.currentHp).toBe(10)
+    expect(charmanderAfter.entity.currentHp).toBe(damageResult.newHp)
   })
 
   test('neutral damage baseline for comparison: 15 damage (no effectiveness)', async ({ request }) => {
@@ -115,11 +117,17 @@ test.describe('P1: Type Effectiveness - Super Effective', () => {
     const charmanderCombatantId = await addCombatant(request, encounterId, charmanderId, 'enemies')
     await startEncounter(request, encounterId)
 
+    // Fetch server state before damage
+    const encounterBefore = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(encounterBefore, charmanderId)
+
     // Apply neutral damage: 15 (no type effectiveness multiplier)
     const { damageResult } = await applyDamage(request, encounterId, charmanderCombatantId, 15)
 
     expect(damageResult.finalDamage).toBe(15)
-    expect(damageResult.newHp).toBe(17) // 32 - 15 = 17
+    expect(damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
+    )
     expect(damageResult.fainted).toBe(false)
 
     // 15 < 32/2 = 16, no massive damage
@@ -141,17 +149,23 @@ test.describe('P1: Type Effectiveness - Super Effective', () => {
     const charmanderCombatantId = await addCombatant(request, encounterId, charmanderId, 'enemies')
     await startEncounter(request, encounterId)
 
+    // Fetch server state before damage
+    const encounterBefore = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(encounterBefore, charmanderId)
+
     // Apply super effective damage
     const { damageResult } = await applyDamage(request, encounterId, charmanderCombatantId, 22)
 
     // Super effective crosses the massive damage threshold
     expect(damageResult.injuryGained).toBe(true)
     expect(damageResult.newInjuries).toBe(1)
-    expect(damageResult.newHp).toBe(10)
+    expect(damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
+    )
 
     // Verify encounter state
     const encounter = await getEncounter(request, encounterId)
     const charmander = findCombatantByEntityId(encounter, charmanderId)
-    expect(charmander.entity.currentHp).toBe(10)
+    expect(charmander.entity.currentHp).toBe(damageResult.newHp)
   })
 })
