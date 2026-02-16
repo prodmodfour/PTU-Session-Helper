@@ -15,15 +15,62 @@ export interface DamageResult {
   hpDamage: number
   newHp: number
   newTempHp: number
+  /** True if any injuries were gained from this hit (massive damage OR marker crossings) */
   injuryGained: boolean
+  /** True if massive damage rule triggered (single hit >= 50% maxHp) */
+  massiveDamageInjury: boolean
+  /** Number of HP marker injuries (from crossing 50%, 0%, -50%, -100%, etc.) */
+  markerInjuries: number
+  /** Which HP thresholds were crossed (e.g., [25, 0] for a 50hp Pokemon crossing 50% and 0%) */
+  markersCrossed: number[]
+  /** Total new injuries from this hit: massive damage + marker crossings */
+  totalNewInjuries: number
   newInjuries: number
   fainted: boolean
 }
 
 /**
+ * Count HP markers crossed between previousHp and newHp.
+ * PTU 07-combat.md:1849-1852 — Markers at 50%, 0%, -50%, -100%, and every -50% below.
+ * Uses REAL maxHp (not injury-reduced) per PTU rules (07-combat.md:1872-1876).
+ *
+ * HP can go negative internally for marker counting, even though the stored
+ * value is clamped to 0.
+ */
+export function countMarkersCrossed(
+  previousHp: number,
+  newHp: number,
+  realMaxHp: number
+): { count: number; markers: number[] } {
+  const markers: number[] = []
+  const fiftyPercent = Math.floor(realMaxHp * 0.5)
+
+  // Safety: don't loop if maxHp is too small to produce meaningful markers
+  if (fiftyPercent <= 0) {
+    return { count: 0, markers }
+  }
+
+  // Generate marker thresholds: 50%, 0%, -50%, -100%, ...
+  // Start at 50% of maxHp, descend by 50% steps into negative territory
+  let threshold = fiftyPercent
+  while (threshold >= newHp) {
+    if (previousHp > threshold && newHp <= threshold) {
+      markers.push(threshold)
+    }
+    threshold -= fiftyPercent
+    // Safety cap — in extreme cases, don't loop forever
+    if (markers.length > 20) break
+  }
+
+  return { count: markers.length, markers }
+}
+
+/**
  * Calculate damage with PTU mechanics
  * - Temporary HP absorbs damage first
- * - Massive Damage rule: 50%+ of max HP = injury
+ * - Massive Damage rule: 50%+ of max HP = injury (07-combat.md:1843-1848)
+ * - HP Marker crossings: 50%, 0%, -50%, -100%, etc. = 1 injury each (07-combat.md:1849-1856)
+ * - newHp is clamped to 0 for storage; unclamped value is used for marker detection
  */
 export function calculateDamage(
   damage: number,
@@ -43,13 +90,27 @@ export function calculateDamage(
 
   const newTempHp = temporaryHp - tempHpAbsorbed
   const hpDamage = remainingDamage
-  const newHp = Math.max(0, currentHp - hpDamage)
 
-  // PTU Massive Damage rule: 50%+ of max HP in one hit = injury
+  // Unclamped HP for marker detection — PTU allows negative HP for injury tracking
+  const unclampedHp = currentHp - hpDamage
+
+  // Clamped HP for storage and display
+  const newHp = Math.max(0, unclampedHp)
+
+  // PTU Massive Damage rule: 50%+ of max HP in one hit = 1 injury
   // Only HP damage counts, not temp HP damage
-  const injuryGained = hpDamage >= maxHp / 2
+  const massiveDamageInjury = hpDamage >= maxHp / 2
 
-  const newInjuries = injuryGained ? currentInjuries + 1 : currentInjuries
+  // HP Marker crossings: each marker crossed = 1 injury
+  const { count: markerInjuries, markers: markersCrossed } = countMarkersCrossed(
+    currentHp,
+    unclampedHp,
+    maxHp
+  )
+
+  const totalNewInjuries = (massiveDamageInjury ? 1 : 0) + markerInjuries
+  const injuryGained = totalNewInjuries > 0
+  const newInjuries = currentInjuries + totalNewInjuries
   const fainted = newHp === 0
 
   return {
@@ -59,6 +120,10 @@ export function calculateDamage(
     newHp,
     newTempHp,
     injuryGained,
+    massiveDamageInjury,
+    markerInjuries,
+    markersCrossed,
+    totalNewInjuries,
     newInjuries,
     fainted
   }
