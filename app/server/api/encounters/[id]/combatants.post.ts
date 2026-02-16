@@ -108,6 +108,12 @@ export default defineEventHandler(async (event) => {
       : entity.stats.speed
     const initiative = speed + (body.initiativeBonus || 0)
 
+    // Calculate evasion from stats (PTU: floor(stat / 5))
+    const stats = body.entityType === 'pokemon' ? entity.currentStats : entity.stats
+    const physicalEvasion = Math.floor((stats.defense || 0) / 5)
+    const specialEvasion = Math.floor((stats.specialDefense || 0) / 5)
+    const speedEvasion = Math.floor((stats.speed || 0) / 5)
+
     // Get existing combatants to calculate position
     const combatants = JSON.parse(encounter.combatants)
     const gridWidth = encounter.gridWidth || 20
@@ -186,6 +192,9 @@ export default defineEventHandler(async (event) => {
       actionsRemaining: 2,
       shiftActionsRemaining: 1,
       readyAction: null,
+      physicalEvasion,
+      specialEvasion,
+      speedEvasion,
       position,
       tokenSize,
       entity
