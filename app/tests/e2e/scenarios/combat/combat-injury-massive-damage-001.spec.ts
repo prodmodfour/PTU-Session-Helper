@@ -93,9 +93,9 @@ test.describe('P2: Massive Damage Injury (combat-injury-massive-damage-001)', ()
     expect(damageResult.finalDamage).toBe(KARATE_CHOP_DAMAGE)
     expect(damageResult.hpDamage).toBe(KARATE_CHOP_DAMAGE)
 
-    // --- Assertion 3: Massive damage triggers injury (0 -> 1) ---
+    // --- Assertion 3: Massive damage (1) + crosses 50% marker at 16 (1) = 2 injuries ---
     expect(damageResult.injuryGained).toBe(true)
-    expect(damageResult.newInjuries).toBe(1)
+    expect(damageResult.newInjuries).toBe(2)
 
     // --- Assertion 4: HP, NOT fainted, injury count = 1 ---
     expect(damageResult.newHp).toBe(
@@ -106,7 +106,7 @@ test.describe('P2: Massive Damage Injury (combat-injury-massive-damage-001)', ()
     // Verify via GET encounter as well
     const afterEncounter = await getEncounter(request, encounterId)
     const charmanderAfter = findCombatantByEntityId(afterEncounter, targetId)
-    expect(charmanderAfter.entity.currentHp).toBe(expectedHp)
-    expect(charmanderAfter.entity.injuries).toBe(1)
+    expect(charmanderAfter.entity.currentHp).toBe(CHARMANDER_MAX_HP - KARATE_CHOP_DAMAGE)
+    expect(charmanderAfter.entity.injuries).toBe(2)
   })
 })

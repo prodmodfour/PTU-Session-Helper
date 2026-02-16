@@ -92,9 +92,9 @@ test.describe('P1: Type Effectiveness - Super Effective', () => {
     )
     expect(damageResult.fainted).toBe(false)
 
-    // Massive damage injury: server checks hpDamage >= maxHp / 2
+    // Massive damage (22 >= 16) + crosses 50% marker at 16 = 2 injuries
     expect(damageResult.injuryGained).toBe(true)
-    expect(damageResult.newInjuries).toBe(1)
+    expect(damageResult.newInjuries).toBe(2)
 
     // Verify via GET
     const encounterAfter = await getEncounter(request, encounterId)
@@ -156,9 +156,9 @@ test.describe('P1: Type Effectiveness - Super Effective', () => {
     // Apply super effective damage
     const { damageResult } = await applyDamage(request, encounterId, charmanderCombatantId, 22)
 
-    // Super effective crosses the massive damage threshold
+    // Super effective crosses massive damage threshold + 50% HP marker = 2 injuries
     expect(damageResult.injuryGained).toBe(true)
-    expect(damageResult.newInjuries).toBe(1)
+    expect(damageResult.newInjuries).toBe(2)
     expect(damageResult.newHp).toBe(
       Math.max(0, charmanderBefore.entity.currentHp - damageResult.hpDamage)
     )

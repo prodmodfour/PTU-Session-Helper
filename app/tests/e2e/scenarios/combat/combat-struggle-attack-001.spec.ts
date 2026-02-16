@@ -119,6 +119,6 @@ test.describe('P2: Struggle Attack (combat-struggle-attack-001)', () => {
     // Verify via GET encounter
     const afterEncounter = await getEncounter(request, encounterId)
     const charmanderAfter = findCombatantByEntityId(afterEncounter, targetId)
-    expect(charmanderAfter.entity.currentHp).toBe(expectedHp)
+    expect(charmanderAfter.entity.currentHp).toBe(CHARMANDER_MAX_HP - STRUGGLE_DAMAGE)
   })
 })

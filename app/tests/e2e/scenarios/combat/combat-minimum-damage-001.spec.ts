@@ -125,7 +125,7 @@ test.describe('P2: Minimum Damage Rule (combat-minimum-damage-001)', () => {
     // Verify via GET encounter
     const afterEncounter = await getEncounter(request, encounterId)
     const geodudeAfter = findCombatantByEntityId(afterEncounter, targetId)
-    expect(geodudeAfter.entity.currentHp).toBe(expectedHp)
+    expect(geodudeAfter.entity.currentHp).toBe(GEODUDE_MAX_HP - EXPECTED_FINAL_DAMAGE)
 
     // Verify no massive damage injury (1 < 50% of 32 = 16)
     expect(damageResult.injuryGained).toBe(false)

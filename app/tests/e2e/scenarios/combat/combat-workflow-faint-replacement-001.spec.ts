@@ -115,8 +115,9 @@ test.describe('P0 Workflow: Faint and Replacement', () => {
     expect(dmg.damageResult.newHp).toBe(
       Math.max(0, caterpieBefore.entity.currentHp - dmg.damageResult.hpDamage)
     )
+    // Massive damage (18 >= 16.5) + crosses 50% marker at 16 = 2 injuries
     expect(dmg.damageResult.injuryGained).toBe(true)
-    expect(dmg.damageResult.newInjuries).toBe(1)
+    expect(dmg.damageResult.newInjuries).toBe(2)
 
     await nextTurn(request, encounterId)
   })

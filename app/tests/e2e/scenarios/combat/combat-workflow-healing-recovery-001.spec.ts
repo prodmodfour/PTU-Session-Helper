@@ -122,8 +122,9 @@ test.describe('P0 Workflow: Healing and Recovery', () => {
     expect(bulbDmg.damageResult.newHp).toBe(
       Math.max(0, bulbasaurBefore.entity.currentHp - bulbDmg.damageResult.hpDamage)
     )
+    // Massive damage (25 >= 20) + crosses 50% marker at 20 = 2 injuries
     expect(bulbDmg.damageResult.injuryGained).toBe(true)
-    expect(bulbDmg.damageResult.newInjuries).toBe(1)
+    expect(bulbDmg.damageResult.newInjuries).toBe(2)
 
     // Charmander: 50 damage → fainted
     const charDmg = await applyDamage(request, encounterId, charmanderCombatantId, 50)
@@ -192,13 +193,13 @@ test.describe('P0 Workflow: Healing and Recovery', () => {
     expect(squirtle.entity.temporaryHp).toBe(0)
   })
 
-  test('Phase 6: heal Bulbasaur injury (1 → 0)', async ({ request }) => {
-    // Previous injuries = 1, heal 1 → 0
+  test('Phase 6: heal Bulbasaur injury (2 → 1)', async ({ request }) => {
+    // Previous injuries = 2 (massive damage + 50% marker), heal 1 → 1
     await applyHeal(request, encounterId, bulbasaurCombatantId, { healInjuries: 1 })
 
     const encounter = await getEncounter(request, encounterId)
     const bulbasaur = findCombatantByEntityId(encounter, bulbasaurId)
-    expect(bulbasaur.entity.injuries).toBe(0)
+    expect(bulbasaur.entity.injuries).toBe(1)
   })
 
   test('teardown', async ({ request }) => {

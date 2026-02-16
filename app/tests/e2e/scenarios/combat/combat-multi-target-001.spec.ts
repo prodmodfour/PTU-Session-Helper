@@ -146,7 +146,7 @@ test.describe('P2: Multi-Target Attack (combat-multi-target-001)', () => {
     const machopAfter = findCombatantByEntityId(afterEncounter, machopPokemonId)
 
     expect(charmanderAfter.entity.currentHp).toBe(0)
-    expect(machopAfter.entity.currentHp).toBe(expectedMachopHp)
+    expect(machopAfter.entity.currentHp).toBe(MACHOP_MAX_HP - MACHOP_DAMAGE)
 
     // Charmander should have Fainted status
     expect(charmanderAfter.entity.statusConditions).toContain('Fainted')

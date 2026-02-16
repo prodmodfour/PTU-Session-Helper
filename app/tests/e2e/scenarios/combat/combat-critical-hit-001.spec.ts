@@ -127,9 +127,9 @@ test.describe('P1: Critical Hit Damage', () => {
     )
     expect(damageResult.fainted).toBe(false)
 
-    // Verify injury: 27 >= 32/2 = 16, so massive damage triggers injury
+    // Verify injury: 27 >= 32/2 = 16 (massive damage) + crosses 50% marker (16)
     expect(damageResult.injuryGained).toBe(true)
-    expect(damageResult.newInjuries).toBe(1)
+    expect(damageResult.newInjuries).toBe(2)
 
     // Verify via GET
     const encounterAfter = await getEncounter(request, encounterId)

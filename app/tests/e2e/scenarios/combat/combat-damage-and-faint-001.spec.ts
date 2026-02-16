@@ -99,9 +99,9 @@ test.describe('P0: Damage and Faint', () => {
     )
     expect(result.damageResult.fainted).toBe(false)
 
-    // 20 >= 32/2 = 16? Yes, massive damage → injury gained
+    // 20 >= 32/2 = 16 → massive damage (1) + crosses 50% marker at 16 (1) = 2 injuries
     expect(result.damageResult.injuryGained).toBe(true)
-    expect(result.damageResult.newInjuries).toBe(1)
+    expect(result.damageResult.newInjuries).toBe(2)
   })
 
   test('after 20 more damage: Charmander at 0/32 HP (floored)', async ({ request }) => {
@@ -118,9 +118,10 @@ test.describe('P0: Damage and Faint', () => {
     )
     expect(result.damageResult.fainted).toBe(true)
 
-    // 20 >= 32/2 = 16? Yes, massive damage → second injury
+    // 20 >= 32/2 = 16 → massive damage (1) + crosses 0% marker (1) = 2 new injuries
+    // Prior injuries: 2, new total: 4
     expect(result.damageResult.injuryGained).toBe(true)
-    expect(result.damageResult.newInjuries).toBe(2)
+    expect(result.damageResult.newInjuries).toBe(4)
   })
 
   test('Fainted status is applied to Charmander', async ({ request }) => {
