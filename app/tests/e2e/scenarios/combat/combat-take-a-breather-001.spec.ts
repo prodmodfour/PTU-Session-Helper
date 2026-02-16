@@ -7,7 +7,7 @@
  * PTU Take a Breather Rules (Full Action):
  *   - Reset ALL combat stages to 0
  *   - Remove Temporary HP
- *   - Cure volatile conditions: Confused, Cursed, Enraged, Suppressed, Flinched
+ *   - Cure all Volatile conditions + Slowed and Stuck (PTU p.245)
  *   - Apply Tripped and Vulnerable as tempConditions (until next turn)
  *   - Consumes full action (standardActionUsed = true, hasActed = true)
  *
@@ -192,6 +192,42 @@ test.describe('P1: Take a Breather', () => {
     const encounterAfter = await getEncounter(request, encounterId)
     const bulbasaurAfter = findCombatantByEntityId(encounterAfter, bulbasaurId)
     expect(bulbasaurAfter.entity.temporaryHp).toBe(0)
+  })
+
+  test('breather cures Slowed and Stuck (non-volatile, PTU p.245)', async ({ request }) => {
+    const bulbasaurId = await createPokemon(request, bulbasaurSetup)
+    pokemonIds.push(bulbasaurId)
+    const charmanderId = await createPokemon(request, charmanderSetup)
+    pokemonIds.push(charmanderId)
+
+    encounterId = await createEncounter(request, 'Breather - Slowed+Stuck')
+    const bulbasaurCombatantId = await addCombatant(request, encounterId, bulbasaurId, 'players')
+    await addCombatant(request, encounterId, charmanderId, 'enemies')
+    await startEncounter(request, encounterId)
+
+    // Apply Slowed and Stuck (Other Afflictions, not Volatile, but explicitly cured by breather)
+    await applyStatus(request, encounterId, bulbasaurCombatantId, {
+      add: ['Slowed', 'Stuck']
+    })
+
+    // Verify pre-breather state
+    const encounterBefore = await getEncounter(request, encounterId)
+    const bulbasaurBefore = findCombatantByEntityId(encounterBefore, bulbasaurId)
+    expect(bulbasaurBefore.entity.statusConditions).toContain('Slowed')
+    expect(bulbasaurBefore.entity.statusConditions).toContain('Stuck')
+
+    // Take a Breather
+    const { breatherResult } = await takeBreather(request, encounterId, bulbasaurCombatantId)
+
+    // Both should appear in conditionsCured
+    expect(breatherResult.conditionsCured).toContain('Slowed')
+    expect(breatherResult.conditionsCured).toContain('Stuck')
+
+    // Verify neither remains after breather
+    const encounterAfter = await getEncounter(request, encounterId)
+    const bulbasaurAfter = findCombatantByEntityId(encounterAfter, bulbasaurId)
+    expect(bulbasaurAfter.entity.statusConditions).not.toContain('Slowed')
+    expect(bulbasaurAfter.entity.statusConditions).not.toContain('Stuck')
   })
 
   test('breather with no active buffs/debuffs still applies Tripped+Vulnerable', async ({ request }) => {
