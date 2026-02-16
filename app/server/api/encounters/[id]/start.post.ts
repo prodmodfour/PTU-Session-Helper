@@ -1,4 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
+import { buildEncounterResponse } from '~/server/services/encounter.service'
 
 /**
  * Roll a d20 for initiative tie-breaking
@@ -158,32 +159,18 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      combatants,
+    const response = buildEncounterResponse(encounter, combatants, {
+      isActive: true,
+      isPaused: false,
       currentRound: 1,
       currentTurnIndex: 0,
       turnOrder,
       trainerTurnOrder,
       pokemonTurnOrder,
-      currentPhase,
-      isActive: true,
-      isPaused: false,
-      isServed: encounter.isServed,
-      gridConfig: {
-        enabled: encounter.gridEnabled,
-        width: encounter.gridWidth,
-        height: encounter.gridHeight,
-        cellSize: encounter.gridCellSize,
-        backgroundImage: encounter.gridBackground
-      },
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
-    }
+      currentPhase
+    })
 
-    return { success: true, data: parsed }
+    return { success: true, data: response }
   } catch (error: any) {
     if (error.statusCode) throw error
     throw createError({

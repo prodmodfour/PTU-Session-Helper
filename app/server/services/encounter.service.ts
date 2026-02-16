@@ -51,6 +51,9 @@ export interface ParsedEncounter {
   defeatedEnemies: { species: string; level: number }[]
   sceneNumber: number // Derived from currentRound for now
   gridConfig: GridConfig | null
+  trainerTurnOrder: string[]
+  pokemonTurnOrder: string[]
+  currentPhase: 'trainer' | 'pokemon'
   createdAt: Date
   updatedAt: Date
 }
@@ -105,9 +108,19 @@ export function buildEncounterResponse(
   options?: {
     moveLog?: unknown[]
     defeatedEnemies?: { species: string; level: number }[]
+    // Override fields for endpoints that modify state before responding
+    isActive?: boolean
+    isPaused?: boolean
+    currentRound?: number
+    currentTurnIndex?: number
+    turnOrder?: string[]
+    // Combat phase fields
+    trainerTurnOrder?: string[]
+    pokemonTurnOrder?: string[]
+    currentPhase?: 'trainer' | 'pokemon'
   }
 ): ParsedEncounter {
-  const turnOrder = JSON.parse(record.turnOrder) as string[]
+  const turnOrder = options?.turnOrder ?? JSON.parse(record.turnOrder) as string[]
   const moveLog = options?.moveLog ?? JSON.parse(record.moveLog)
   const defeatedEnemies = options?.defeatedEnemies ?? JSON.parse(record.defeatedEnemies)
 
@@ -125,16 +138,19 @@ export function buildEncounterResponse(
     battleType: record.battleType,
     weather: record.weather ?? null,
     combatants,
-    currentRound: record.currentRound,
-    currentTurnIndex: record.currentTurnIndex,
+    currentRound: options?.currentRound ?? record.currentRound,
+    currentTurnIndex: options?.currentTurnIndex ?? record.currentTurnIndex,
     turnOrder,
-    isActive: record.isActive,
-    isPaused: record.isPaused,
+    isActive: options?.isActive ?? record.isActive,
+    isPaused: options?.isPaused ?? record.isPaused,
     isServed: record.isServed,
     moveLog,
     defeatedEnemies,
     sceneNumber: 1, // Scene number not stored in DB, default to 1
     gridConfig,
+    trainerTurnOrder: options?.trainerTurnOrder ?? [],
+    pokemonTurnOrder: options?.pokemonTurnOrder ?? [],
+    currentPhase: options?.currentPhase ?? 'pokemon',
     createdAt: record.createdAt,
     updatedAt: record.updatedAt
   }

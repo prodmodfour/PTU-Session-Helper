@@ -2,7 +2,7 @@
  * Spawn wild Pokemon into an encounter
  */
 import { prisma } from '~/server/utils/prisma'
-import { loadEncounter } from '~/server/services/encounter.service'
+import { loadEncounter, buildEncounterResponse } from '~/server/services/encounter.service'
 import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
 
 interface WildPokemonInput {
@@ -136,38 +136,12 @@ export default defineEventHandler(async (event) => {
       data: { combatants: JSON.stringify(combatants) }
     })
 
-    // Parse full encounter for response
-    const parsed = {
-      id: record.id,
-      name: record.name,
-      battleType: record.battleType,
-      weather: record.weather ?? null,
-      combatants,
-      currentRound: record.currentRound,
-      currentTurnIndex: record.currentTurnIndex,
-      turnOrder: JSON.parse(record.turnOrder),
-      trainerTurnOrder: [],
-      pokemonTurnOrder: [],
-      currentPhase: 'pokemon',
-      isActive: record.isActive,
-      isPaused: record.isPaused,
-      isServed: record.isServed,
-      gridConfig: {
-        enabled: record.gridEnabled,
-        width: record.gridWidth,
-        height: record.gridHeight,
-        cellSize: record.gridCellSize,
-        backgroundImage: record.gridBackground
-      },
-      sceneNumber: 1,
-      moveLog: JSON.parse(record.moveLog),
-      defeatedEnemies: JSON.parse(record.defeatedEnemies)
-    }
+    const response = buildEncounterResponse(record, combatants)
 
     return {
       success: true,
       data: {
-        encounter: parsed,
+        encounter: response,
         addedPokemon: createdPokemon
       }
     }

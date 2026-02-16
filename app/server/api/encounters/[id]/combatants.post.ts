@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
+import { buildEncounterResponse } from '~/server/services/encounter.service'
 
 // Map PTU size to grid token size
 const sizeToTokenSize = (size: string | undefined): number => {
@@ -207,34 +208,9 @@ export default defineEventHandler(async (event) => {
       data: { combatants: JSON.stringify(combatants) }
     })
 
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      weather: encounter.weather ?? null,
-      combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder: JSON.parse(encounter.turnOrder),
-      currentPhase: 'pokemon' as const,
-      trainerTurnOrder: [],
-      pokemonTurnOrder: [],
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      isServed: encounter.isServed,
-      gridConfig: {
-        enabled: encounter.gridEnabled,
-        width: encounter.gridWidth,
-        height: encounter.gridHeight,
-        cellSize: encounter.gridCellSize,
-        background: encounter.gridBackground ?? undefined
-      },
-      sceneNumber: 1,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
-    }
+    const response = buildEncounterResponse(encounter, combatants)
 
-    return { success: true, data: parsed }
+    return { success: true, data: response }
   } catch (error: any) {
     if (error.statusCode) throw error
     throw createError({
