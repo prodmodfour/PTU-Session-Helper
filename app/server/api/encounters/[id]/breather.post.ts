@@ -1,32 +1,23 @@
 /**
- * Take a Breather - PTU Full Action
+ * Take a Breather - PTU Full Action (page 245)
  * - Reset all combat stages to 0
  * - Remove Temporary HP
- * - Cure volatile status conditions (Confused, Cursed, Rage, Suppressed, Enraged)
+ * - Cure all Volatile status conditions + Slowed and Stuck
  * - Apply Tripped + Vulnerable until next turn (stored as tempConditions)
  */
 import { prisma } from '~/server/utils/prisma'
 import { loadEncounter, findCombatant, getEntityName } from '~/server/services/encounter.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
-import type { StatusCondition, StageModifiers } from '~/types'
+import { createDefaultStageModifiers } from '~/server/services/combatant.service'
+import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
+import type { StatusCondition } from '~/types'
 
-const VOLATILE_CONDITIONS: StatusCondition[] = [
-  'Confused',
-  'Cursed',
-  'Enraged',
-  'Suppressed',
-  'Flinched'
+// Take a Breather cures all volatile conditions + Slowed and Stuck (PTU 1.05 p.245)
+const BREATHER_CURED_CONDITIONS: StatusCondition[] = [
+  ...VOLATILE_CONDITIONS,
+  'Slowed',
+  'Stuck'
 ]
-
-const DEFAULT_STAGES: StageModifiers = {
-  attack: 0,
-  defense: 0,
-  specialAttack: 0,
-  specialDefense: 0,
-  speed: 0,
-  accuracy: 0,
-  evasion: 0
-}
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -60,10 +51,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // Reset combat stages to 0
-    const stages = entity.stageModifiers || { ...DEFAULT_STAGES }
+    const stages = entity.stageModifiers || createDefaultStageModifiers()
     const hadStages = Object.values(stages).some(v => v !== 0)
     if (hadStages) {
-      entity.stageModifiers = { ...DEFAULT_STAGES }
+      entity.stageModifiers = createDefaultStageModifiers()
       result.stagesReset = true
     }
 
@@ -78,7 +69,7 @@ export default defineEventHandler(async (event) => {
     const remainingStatuses: StatusCondition[] = []
 
     for (const status of currentStatuses) {
-      if (VOLATILE_CONDITIONS.includes(status)) {
+      if (BREATHER_CURED_CONDITIONS.includes(status)) {
         result.conditionsCured.push(status)
       } else {
         remainingStatuses.push(status)

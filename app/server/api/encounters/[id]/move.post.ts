@@ -2,7 +2,6 @@
  * Execute a move in combat and log it
  */
 import { prisma } from '~/server/utils/prisma'
-import { v4 as uuidv4 } from 'uuid'
 import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
 import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
 import { syncDamageToDatabase } from '~/server/services/entity-update.service'
@@ -86,7 +85,7 @@ export default defineEventHandler(async (event) => {
 
     // Create log entry
     const logEntry = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       round: record.currentRound,
       actorId: body.actorId,

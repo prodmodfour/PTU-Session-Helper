@@ -317,7 +317,7 @@ function clampStage(value: number): number {
 /**
  * Create default stage modifiers object
  */
-function createDefaultStageModifiers(): StageModifiers {
+export function createDefaultStageModifiers(): StageModifiers {
   return {
     attack: 0,
     defense: 0,

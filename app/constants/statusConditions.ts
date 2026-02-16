@@ -9,11 +9,12 @@ export const PERSISTENT_CONDITIONS: StatusCondition[] = [
 ]
 
 export const VOLATILE_CONDITIONS: StatusCondition[] = [
-  'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented'
+  'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented',
+  'Enraged', 'Suppressed'
 ]
 
 export const OTHER_CONDITIONS: StatusCondition[] = [
-  'Fainted', 'Stuck', 'Slowed', 'Trapped', 'Tripped', 'Vulnerable', 'Suppressed'
+  'Fainted', 'Stuck', 'Slowed', 'Trapped', 'Tripped', 'Vulnerable'
 ]
 
 export const ALL_STATUS_CONDITIONS: StatusCondition[] = [
