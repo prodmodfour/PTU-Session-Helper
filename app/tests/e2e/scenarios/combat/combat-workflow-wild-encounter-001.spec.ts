@@ -164,7 +164,7 @@ test.describe('P0 Workflow: Wild Encounter Full Lifecycle', () => {
     )
     expect(dmg.damageResult.fainted).toBe(dmg.damageResult.newHp === 0)
 
-    if (shouldFaint) {
+    if (dmg.damageResult.fainted) {
       const encounter = await getEncounter(request, encounterId)
       const oddish = findCombatantByEntityId(encounter, oddishPokemonId)
       expect(oddish.entity.statusConditions).toContain('Fainted')
