@@ -31,7 +31,10 @@ export function useMoveCalculation(
 ) {
   const {
     rollDamageBase,
-    getDamageRoll,
+    getDamageRoll
+  } = useDamageCalculation()
+
+  const {
     hasSTAB: checkSTAB,
     getTypeEffectiveness,
     getEffectivenessDescription,

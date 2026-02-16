@@ -541,7 +541,7 @@ const libraryStore = useLibraryStore()
 const { getSpriteUrl } = usePokemonSprite()
 
 const pokemonId = computed(() => route.params.id as string)
-const { getDamageRoll } = useCombat()
+const { getDamageRoll } = useDamageCalculation()
 
 // State
 const pokemon = ref<Pokemon | null>(null)

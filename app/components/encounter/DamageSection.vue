@@ -63,7 +63,7 @@ const emit = defineEmits<{
   rolled: []
 }>()
 
-const { rollDamageBase } = useCombat()
+const { rollDamageBase } = useDamageCalculation()
 
 const hasRolled = ref(false)
 const rollResult = ref<DiceRollResult | null>(null)
