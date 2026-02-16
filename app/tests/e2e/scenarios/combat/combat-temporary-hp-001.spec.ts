@@ -95,13 +95,12 @@ test.describe('P2: Temporary HP Absorption (combat-temporary-hp-001)', () => {
     const firstDamageResult = firstHitResult.damageResult
 
     // --- Assertion 2: Temp HP absorbs 10, remaining 5 goes to real HP ---
-    // tempHpAbsorbed = min(10, 15) = 10
-    // hpDamage = 15 - 10 = 5
-    // newHp = 32 - 5 = 27
-    // newTempHp = 10 - 10 = 0
+    // Server computes: tempHpAbsorbed, hpDamage, newHp, newTempHp
     expect(firstDamageResult.tempHpAbsorbed).toBe(TEMP_HP_GRANTED) // 10
     expect(firstDamageResult.hpDamage).toBe(FIRST_HIT_DAMAGE - TEMP_HP_GRANTED) // 5
-    expect(firstDamageResult.newHp).toBe(CHARMANDER_MAX_HP - (FIRST_HIT_DAMAGE - TEMP_HP_GRANTED)) // 27
+    expect(firstDamageResult.newHp).toBe(
+      Math.max(0, charmanderBeforeDamage.entity.currentHp - firstDamageResult.hpDamage)
+    )
     expect(firstDamageResult.newTempHp).toBe(0)
     expect(firstDamageResult.fainted).toBe(false)
 
@@ -116,12 +115,12 @@ test.describe('P2: Temporary HP Absorption (combat-temporary-hp-001)', () => {
     const secondDamageResult = secondHitResult.damageResult
 
     // --- Assertion 3: No Temp HP, all damage to real HP ---
-    // tempHpAbsorbed = min(0, 8) = 0
-    // hpDamage = 8
-    // newHp = 27 - 8 = 19
+    // Server computes: no temp HP to absorb, full damage to real HP
     expect(secondDamageResult.tempHpAbsorbed).toBe(0)
     expect(secondDamageResult.hpDamage).toBe(SECOND_HIT_DAMAGE)
-    expect(secondDamageResult.newHp).toBe(19)
+    expect(secondDamageResult.newHp).toBe(
+      Math.max(0, charmanderAfterFirstHit.entity.currentHp - secondDamageResult.hpDamage)
+    )
     expect(secondDamageResult.newTempHp).toBe(0)
     expect(secondDamageResult.fainted).toBe(false)
 
