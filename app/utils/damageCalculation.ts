@@ -102,6 +102,54 @@ export const TYPE_CHART: Record<string, Record<string, number>> = {
 }
 
 // ============================================
+// EVASION & ACCURACY
+// ============================================
+
+/**
+ * Calculate dynamic evasion from stage-modified stat.
+ * PTU 07-combat.md:594-615, 644-647
+ * "for every 5 points ... they gain +1 [Physical/Special/Speed] Evasion, up to a maximum of +6"
+ * Stage-modified stat is used: "Raising your Defense...Combat Stages can give you additional evasion"
+ */
+export function calculateEvasion(baseStat: number, combatStage: number = 0): number {
+  const modifiedStat = applyStageModifier(baseStat, combatStage)
+  return Math.min(6, Math.floor(modifiedStat / 5))
+}
+
+/**
+ * Calculate accuracy threshold for a move.
+ * PTU 07-combat.md:624-657
+ * Threshold = moveAC + min(9, evasion) - attackerAccuracyStage
+ * Result is clamped to min 1 (nat 1 always misses, nat 20 always hits — handled by caller).
+ * Accuracy combat stages apply directly (not as multiplier).
+ */
+export function calculateAccuracyThreshold(
+  moveAC: number,
+  attackerAccuracyStage: number,
+  defenderEvasion: number
+): number {
+  const effectiveEvasion = Math.min(9, defenderEvasion)
+  return Math.max(1, moveAC + effectiveEvasion - attackerAccuracyStage)
+}
+
+export interface AccuracyCalcResult {
+  moveAC: number
+  attackerAccuracyStage: number
+  /** Dynamic evasion from stage-modified Defense: min(6, floor(modifiedDef / 5)) */
+  physicalEvasion: number
+  /** Dynamic evasion from stage-modified SpDef: min(6, floor(modifiedSpDef / 5)) */
+  specialEvasion: number
+  /** Dynamic evasion from stage-modified Speed: min(6, floor(modifiedSpeed / 5)) */
+  speedEvasion: number
+  /** Physical or Special evasion based on the move's damage class */
+  applicableEvasion: number
+  /** min(9, applicableEvasion) — PTU cap on total evasion applied to one check */
+  effectiveEvasion: number
+  /** The d20 roll needed to hit: max(1, moveAC + effectiveEvasion - accuracyStage) */
+  accuracyThreshold: number
+}
+
+// ============================================
 // INPUT / OUTPUT TYPES
 // ============================================
 
