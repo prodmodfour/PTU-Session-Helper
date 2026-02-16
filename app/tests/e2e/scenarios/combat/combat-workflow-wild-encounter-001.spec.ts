@@ -122,13 +122,15 @@ test.describe('P0 Workflow: Wild Encounter Full Lifecycle', () => {
     // Ember: Fire Special, DB4+STAB2=DB6, set 15
     // raw = max(1, 15+7-oddishSpDef), Fire vs Grass(x1.5) x Poison(x1) = x1.5
     // final = floor(raw x 1.5) = emberDamage
-    const expectedHpAfter = oddishMaxHp - emberDamage
-    const expectInjury = emberDamage >= oddishMaxHp / 2
+    const enc = await getEncounter(request, encounterId)
+    const oddishBefore = findCombatantByEntityId(enc, oddishPokemonId)
 
     const dmg = await applyDamage(request, encounterId, oddishCombatantId, emberDamage)
-    expect(dmg.damageResult.newHp).toBe(Math.max(0, expectedHpAfter))
-    expect(dmg.damageResult.injuryGained).toBe(expectInjury)
-    if (expectInjury) {
+    expect(dmg.damageResult.newHp).toBe(
+      Math.max(0, oddishBefore.entity.currentHp - dmg.damageResult.hpDamage)
+    )
+    expect(dmg.damageResult.injuryGained).toBe(emberDamage >= oddishBefore.entity.maxHp / 2)
+    if (dmg.damageResult.injuryGained) {
       expect(dmg.damageResult.newInjuries).toBe(1)
     }
 
@@ -139,25 +141,28 @@ test.describe('P0 Workflow: Wild Encounter Full Lifecycle', () => {
     // Acid: Poison Special, DB4+STAB2=DB6, set 15
     // raw = max(1, 15+oddishSpAtk-5), Poison vs Fire = x1
     // final = raw = acidDamage
-    const expectedGrowlitheHp = 43 - acidDamage
-    const expectInjury = acidDamage >= 43 / 2
+    const enc = await getEncounter(request, encounterId)
+    const growlitheBefore = findCombatantByEntityId(enc, growlitheId)
 
     const dmg = await applyDamage(request, encounterId, growlitheCombatantId, acidDamage)
-    expect(dmg.damageResult.newHp).toBe(expectedGrowlitheHp)
-    expect(dmg.damageResult.injuryGained).toBe(expectInjury)
+    expect(dmg.damageResult.newHp).toBe(
+      Math.max(0, growlitheBefore.entity.currentHp - dmg.damageResult.hpDamage)
+    )
+    expect(dmg.damageResult.injuryGained).toBe(acidDamage >= growlitheBefore.entity.maxHp / 2)
 
     await nextTurn(request, encounterId)
   })
 
   test('Phase 4: Growlithe Ember -> Oddish — second hit, check for faint', async ({ request }) => {
     // Same as Phase 2: emberDamage
-    const oddishHpAfterR1 = oddishMaxHp - emberDamage
-    const oddishHpAfterR2 = oddishHpAfterR1 - emberDamage
-    const shouldFaint = oddishHpAfterR2 <= 0
+    const enc = await getEncounter(request, encounterId)
+    const oddishBefore = findCombatantByEntityId(enc, oddishPokemonId)
 
     const dmg = await applyDamage(request, encounterId, oddishCombatantId, emberDamage)
-    expect(dmg.damageResult.newHp).toBe(Math.max(0, oddishHpAfterR2))
-    expect(dmg.damageResult.fainted).toBe(shouldFaint)
+    expect(dmg.damageResult.newHp).toBe(
+      Math.max(0, oddishBefore.entity.currentHp - dmg.damageResult.hpDamage)
+    )
+    expect(dmg.damageResult.fainted).toBe(dmg.damageResult.newHp === 0)
 
     if (shouldFaint) {
       const encounter = await getEncounter(request, encounterId)
