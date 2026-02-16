@@ -1,4 +1,5 @@
 import type { StatusCondition } from '~/types'
+import { PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 
 export interface CaptureRateData {
   species: string
@@ -142,9 +143,9 @@ export function useCapture() {
     const shinyModifier = isShiny ? -10 : 0
     const legendaryModifier = isLegendary ? -30 : 0
 
-    // Status conditions
-    const persistentConditions = ['Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned', 'Asleep']
-    const volatileConditions = ['Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented', 'Enraged', 'Suppressed']
+    // Status conditions — use canonical lists from constants
+    const persistentConditions = PERSISTENT_CONDITIONS
+    const volatileConditions = VOLATILE_CONDITIONS
 
     let statusModifier = 0
     let stuckModifier = 0

@@ -5,11 +5,11 @@
 import type { StatusCondition } from '~/types'
 
 export const PERSISTENT_CONDITIONS: StatusCondition[] = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned', 'Asleep'
+  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned'
 ]
 
 export const VOLATILE_CONDITIONS: StatusCondition[] = [
-  'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented',
+  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented',
   'Enraged', 'Suppressed'
 ]
 

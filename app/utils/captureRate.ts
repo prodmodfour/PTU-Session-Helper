@@ -11,17 +11,7 @@
  */
 
 import type { StatusCondition } from '~/types'
-
-// Persistent conditions add +10 each
-const PERSISTENT_CONDITIONS: StatusCondition[] = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned', 'Asleep'
-]
-
-// Volatile conditions add +5 each
-const VOLATILE_CONDITIONS: StatusCondition[] = [
-  'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled',
-  'Encored', 'Taunted', 'Tormented', 'Enraged', 'Suppressed'
-]
+import { PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 
 // Special conditions with specific modifiers
 const STUCK_CONDITIONS: StatusCondition[] = ['Stuck', 'Trapped']
