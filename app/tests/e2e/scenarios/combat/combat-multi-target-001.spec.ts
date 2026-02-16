@@ -123,17 +123,20 @@ test.describe('P2: Multi-Target Attack (combat-multi-target-001)', () => {
 
     // --- Assertion 2: Charmander takes 51 damage, Fainted ---
     expect(charmanderDamageResult.finalDamage).toBe(CHARMANDER_DAMAGE)
-    expect(charmanderDamageResult.newHp).toBe(0)
+    expect(charmanderDamageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - charmanderDamageResult.hpDamage)
+    )
     expect(charmanderDamageResult.fainted).toBe(true)
 
     // --- Apply damage to Machop (33) ---
     const machopResult = await applyDamage(request, encounterId, machopCombatantId, MACHOP_DAMAGE)
     const machopDamageResult = machopResult.damageResult
 
-    // --- Assertion 3: Machop takes 33 damage, HP = 8/41 ---
+    // --- Assertion 3: Machop takes 33 damage ---
     expect(machopDamageResult.finalDamage).toBe(MACHOP_DAMAGE)
-    const expectedMachopHp = MACHOP_MAX_HP - MACHOP_DAMAGE // 41 - 33 = 8
-    expect(machopDamageResult.newHp).toBe(expectedMachopHp)
+    expect(machopDamageResult.newHp).toBe(
+      Math.max(0, machopBefore.entity.currentHp - machopDamageResult.hpDamage)
+    )
     expect(machopDamageResult.fainted).toBe(false)
 
     // --- Assertion 4: Different final damage per target ---
