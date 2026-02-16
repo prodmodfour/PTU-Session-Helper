@@ -96,17 +96,18 @@ export function useMoveCalculation(
 
     const entity = target.entity
     const stages = getStageModifiers(entity)
+    const evasionBonus = stages.evasion ?? 0
 
     if (move.value.damageClass === 'Physical') {
       const defStat = target.type === 'pokemon'
         ? getPokemonDefenseStat(entity)
         : getHumanStat(entity, 'defense')
-      return calculatePhysicalEvasion(defStat, stages.defense)
+      return calculatePhysicalEvasion(defStat, stages.defense, evasionBonus)
     } else {
       const spDefStat = target.type === 'pokemon'
         ? getPokemonSpDefStat(entity)
         : getHumanStat(entity, 'specialDefense')
-      return calculateSpecialEvasion(spDefStat, stages.specialDefense)
+      return calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus)
     }
   }
 

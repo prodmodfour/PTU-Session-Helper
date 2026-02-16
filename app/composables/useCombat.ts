@@ -50,21 +50,23 @@ export function useCombat() {
   // Special Evasion = floor(SpDef / 5), max +6
   // Speed Evasion = floor(Speed / 5), max +6
   // ===========================================
-  const calculateEvasion = (stat: number, combatStages: number = 0): number => {
-    const modifiedStat = applyStageModifier(stat, combatStages)
-    return Math.min(6, Math.floor(modifiedStat / 5))
+  const calculateEvasion = (stat: number, combatStages: number = 0, evasionBonus: number = 0): number => {
+    const statEvasion = Math.min(6, Math.floor(applyStageModifier(stat, combatStages) / 5))
+    // Bonus evasion from moves/effects stacks on top (PTU 07-combat.md:648-653)
+    // Negative evasion can erase but not go below 0
+    return Math.max(0, statEvasion + evasionBonus)
   }
 
-  const calculatePhysicalEvasion = (defense: number, defenseStages: number = 0): number => {
-    return calculateEvasion(defense, defenseStages)
+  const calculatePhysicalEvasion = (defense: number, defenseStages: number = 0, evasionBonus: number = 0): number => {
+    return calculateEvasion(defense, defenseStages, evasionBonus)
   }
 
-  const calculateSpecialEvasion = (spDef: number, spDefStages: number = 0): number => {
-    return calculateEvasion(spDef, spDefStages)
+  const calculateSpecialEvasion = (spDef: number, spDefStages: number = 0, evasionBonus: number = 0): number => {
+    return calculateEvasion(spDef, spDefStages, evasionBonus)
   }
 
-  const calculateSpeedEvasion = (speed: number, speedStages: number = 0): number => {
-    return calculateEvasion(speed, speedStages)
+  const calculateSpeedEvasion = (speed: number, speedStages: number = 0, evasionBonus: number = 0): number => {
+    return calculateEvasion(speed, speedStages, evasionBonus)
   }
 
   // ===========================================

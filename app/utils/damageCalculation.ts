@@ -111,9 +111,11 @@ export const TYPE_CHART: Record<string, Record<string, number>> = {
  * "for every 5 points ... they gain +1 [Physical/Special/Speed] Evasion, up to a maximum of +6"
  * Stage-modified stat is used: "Raising your Defense...Combat Stages can give you additional evasion"
  */
-export function calculateEvasion(baseStat: number, combatStage: number = 0): number {
-  const modifiedStat = applyStageModifier(baseStat, combatStage)
-  return Math.min(6, Math.floor(modifiedStat / 5))
+export function calculateEvasion(baseStat: number, combatStage: number = 0, evasionBonus: number = 0): number {
+  const statEvasion = Math.min(6, Math.floor(applyStageModifier(baseStat, combatStage) / 5))
+  // Bonus evasion from moves/effects stacks on top (PTU 07-combat.md:648-653)
+  // Negative evasion can erase but not go below 0
+  return Math.max(0, statEvasion + evasionBonus)
 }
 
 /**

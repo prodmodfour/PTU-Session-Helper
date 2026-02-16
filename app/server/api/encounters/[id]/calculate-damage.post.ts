@@ -185,9 +185,11 @@ export default defineEventHandler(async (event) => {
 
     // Compute dynamic evasion from target's stage-modified stats (P1)
     const targetEvasion = getEntityEvasionStats(target)
-    const physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage)
-    const specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage)
-    const speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage)
+    const targetStages = target.entity.stageModifiers
+    const evasionBonus = targetStages?.evasion ?? 0
+    const physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage, evasionBonus)
+    const specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage, evasionBonus)
+    const speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage, evasionBonus)
 
     // Physical moves use Physical Evasion, Special moves use Special Evasion
     const applicableEvasion = move.damageClass === 'Physical' ? physicalEvasion : specialEvasion
