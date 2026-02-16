@@ -37,7 +37,10 @@ export function useMoveCalculation(
   const {
     hasSTAB: checkSTAB,
     getTypeEffectiveness,
-    getEffectivenessDescription,
+    getEffectivenessDescription
+  } = useTypeChart()
+
+  const {
     applyStageModifier,
     calculatePhysicalEvasion,
     calculateSpecialEvasion

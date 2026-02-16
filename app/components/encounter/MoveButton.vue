@@ -40,7 +40,7 @@ defineEmits<{
   select: [move: Move]
 }>()
 
-const { hasSTAB: checkSTAB } = useCombat()
+const { hasSTAB: checkSTAB } = useTypeChart()
 
 const hasSTAB = computed(() => {
   if (!props.showSTAB || !props.move.type || props.actorTypes.length === 0) return false
