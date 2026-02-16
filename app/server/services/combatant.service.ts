@@ -1,9 +1,15 @@
 /**
  * Combatant Service
- * Handles combat mechanics: damage calculation, healing, status conditions, and stage modifiers
+ * Handles combat mechanics: damage calculation, healing, status conditions, stage modifiers,
+ * and entity transformation (Prisma record → typed entity for combatant embedding).
  */
 
-import type { StatusCondition, StageModifiers, Combatant } from '~/types'
+import { prisma } from '~/server/utils/prisma'
+import { v4 as uuidv4 } from 'uuid'
+import type {
+  StatusCondition, StageModifiers, Combatant,
+  Pokemon, HumanCharacter, CombatSide, GridPosition
+} from '~/types'
 
 // ============================================
 // DAMAGE CALCULATION
@@ -384,5 +390,173 @@ export function validateStageStats(stats: string[]): void {
         message: `Invalid stat: ${stat}. Valid stats are: ${VALID_STATS.join(', ')}`
       })
     }
+  }
+}
+
+// ============================================
+// ENTITY BUILDERS (Prisma Record → Typed Entity)
+// ============================================
+
+// Derive Prisma record types from the client queries
+type PrismaPokemonRecord = NonNullable<Awaited<ReturnType<typeof prisma.pokemon.findUnique>>>
+type PrismaHumanRecord = NonNullable<Awaited<ReturnType<typeof prisma.humanCharacter.findUnique>>>
+
+/**
+ * Transform a Prisma Pokemon record into a typed Pokemon entity.
+ * Parses JSON fields and maps DB column names (e.g. currentSpAtk → specialAttack).
+ */
+export function buildPokemonEntityFromRecord(record: PrismaPokemonRecord): Pokemon {
+  const capabilities = record.capabilities ? JSON.parse(record.capabilities) : {}
+
+  return {
+    id: record.id,
+    species: record.species,
+    nickname: record.nickname,
+    level: record.level,
+    experience: record.experience,
+    nature: JSON.parse(record.nature),
+    types: record.type2
+      ? [record.type1, record.type2] as Pokemon['types']
+      : [record.type1] as Pokemon['types'],
+    baseStats: {
+      hp: record.baseHp,
+      attack: record.baseAttack,
+      defense: record.baseDefense,
+      specialAttack: record.baseSpAtk,
+      specialDefense: record.baseSpDef,
+      speed: record.baseSpeed
+    },
+    currentStats: {
+      hp: record.currentHp,
+      attack: record.currentAttack,
+      defense: record.currentDefense,
+      specialAttack: record.currentSpAtk,
+      specialDefense: record.currentSpDef,
+      speed: record.currentSpeed
+    },
+    currentHp: record.currentHp,
+    maxHp: record.maxHp,
+    stageModifiers: JSON.parse(record.stageModifiers),
+    abilities: JSON.parse(record.abilities),
+    moves: JSON.parse(record.moves),
+    heldItem: record.heldItem ?? undefined,
+    capabilities,
+    skills: JSON.parse(record.skills),
+    statusConditions: JSON.parse(record.statusConditions),
+    injuries: record.injuries,
+    temporaryHp: record.temporaryHp,
+    tutorPoints: record.tutorPoints,
+    trainingExp: record.trainingExp,
+    eggGroups: JSON.parse(record.eggGroups),
+    ownerId: record.ownerId ?? undefined,
+    spriteUrl: record.spriteUrl ?? undefined,
+    shiny: record.shiny,
+    gender: record.gender as Pokemon['gender'],
+    isInLibrary: record.isInLibrary,
+    origin: record.origin as Pokemon['origin'],
+    location: record.location ?? undefined,
+    notes: record.notes ?? undefined
+  }
+}
+
+/**
+ * Transform a Prisma HumanCharacter record into a typed HumanCharacter entity.
+ * Parses JSON fields and maps DB columns to typed interface fields.
+ */
+export function buildHumanEntityFromRecord(record: PrismaHumanRecord): HumanCharacter {
+  return {
+    id: record.id,
+    name: record.name,
+    characterType: record.characterType as HumanCharacter['characterType'],
+    playedBy: record.playedBy ?? undefined,
+    age: record.age ?? undefined,
+    gender: record.gender ?? undefined,
+    height: record.height ?? undefined,
+    weight: record.weight ?? undefined,
+    level: record.level,
+    stats: {
+      hp: record.hp,
+      attack: record.attack,
+      defense: record.defense,
+      specialAttack: record.specialAttack,
+      specialDefense: record.specialDefense,
+      speed: record.speed
+    },
+    currentHp: record.currentHp,
+    maxHp: record.maxHp,
+    trainerClasses: JSON.parse(record.trainerClasses),
+    skills: JSON.parse(record.skills),
+    features: JSON.parse(record.features),
+    edges: JSON.parse(record.edges),
+    pokemonIds: [],
+    statusConditions: JSON.parse(record.statusConditions),
+    stageModifiers: JSON.parse(record.stageModifiers),
+    injuries: record.injuries,
+    temporaryHp: record.temporaryHp,
+    inventory: JSON.parse(record.inventory),
+    money: record.money,
+    avatarUrl: record.avatarUrl ?? undefined,
+    background: record.background ?? undefined,
+    personality: record.personality ?? undefined,
+    goals: record.goals ?? undefined,
+    location: record.location ?? undefined,
+    isInLibrary: record.isInLibrary,
+    notes: record.notes ?? undefined
+  }
+}
+
+// ============================================
+// COMBATANT BUILDER
+// ============================================
+
+export interface BuildCombatantOptions {
+  entityType: 'pokemon' | 'human'
+  entityId: string
+  entity: Pokemon | HumanCharacter
+  side: CombatSide
+  initiativeBonus?: number
+  position?: GridPosition
+  tokenSize?: number
+}
+
+/**
+ * Build a full Combatant wrapper from a typed entity.
+ * Calculates initiative and evasions (PTU: floor(stat / 5)) from entity stats.
+ */
+export function buildCombatantFromEntity(options: BuildCombatantOptions): Combatant {
+  const { entityType, entityId, entity, side, position, tokenSize = 1 } = options
+  const initiativeBonus = options.initiativeBonus ?? 0
+
+  const stats = entityType === 'pokemon'
+    ? (entity as Pokemon).currentStats
+    : (entity as HumanCharacter).stats
+
+  const initiative = stats.speed + initiativeBonus
+
+  return {
+    id: uuidv4(),
+    type: entityType,
+    entityId,
+    side,
+    initiative,
+    initiativeBonus,
+    hasActed: false,
+    actionsRemaining: 2,
+    shiftActionsRemaining: 1,
+    turnState: {
+      hasActed: false,
+      standardActionUsed: false,
+      shiftActionUsed: false,
+      swiftActionUsed: false,
+      canBeCommanded: true,
+      isHolding: false
+    },
+    injuries: { count: 0, sources: [] },
+    physicalEvasion: Math.floor((stats.defense || 0) / 5),
+    specialEvasion: Math.floor((stats.specialDefense || 0) / 5),
+    speedEvasion: Math.floor((stats.speed || 0) / 5),
+    position,
+    tokenSize,
+    entity
   }
 }
