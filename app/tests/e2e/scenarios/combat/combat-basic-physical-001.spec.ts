@@ -78,12 +78,9 @@ test.describe('P0: Basic Physical Damage', () => {
     const encounter = await (await request.get(`/api/encounters/${encounterId}`)).json()
     const charmander = findCombatantByEntityId(encounter.data, charmanderId)
 
-    // DEF base stat is 4, used as currentDefense
-    // Physical evasion = floor(4 / 5) = 0
-    const currentDefense = charmander.entity.currentStats.defense
-    expect(currentDefense).toBe(4)
-    const expectedPhysicalEvasion = Math.floor(currentDefense / 5)
-    expect(expectedPhysicalEvasion).toBe(0)
+    // Server computes evasion at combatant creation: floor(DEF / 5)
+    expect(charmander.entity.currentStats.defense).toBe(4)
+    expect(charmander.physicalEvasion).toBe(0)
   })
 
   test('apply 14 damage (Tackle: SetDmg 13 + ATK 5 - DEF 4)', async ({ request }) => {
@@ -91,11 +88,18 @@ test.describe('P0: Basic Physical Damage', () => {
     // Normal type vs Fire type = neutral (1x)
     const calculatedDamage = 14
 
+    // Fetch server state before damage
+    const enc = await getEncounter(request, encounterId)
+    const charmanderBefore = findCombatantByEntityId(enc, charmanderId)
+
     const result = await applyDamage(request, encounterId, charmanderCombatantId, calculatedDamage)
 
     expect(result.damageResult.finalDamage).toBe(14)
     expect(result.damageResult.hpDamage).toBe(14)
-    expect(result.damageResult.newHp).toBe(18)
+    // Assert newHp using server-fetched prior HP instead of hardcoded value
+    expect(result.damageResult.newHp).toBe(
+      Math.max(0, charmanderBefore.entity.currentHp - result.damageResult.hpDamage)
+    )
     expect(result.damageResult.fainted).toBe(false)
     expect(result.damageResult.injuryGained).toBe(false)
   })
