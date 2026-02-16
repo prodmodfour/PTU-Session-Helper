@@ -9,6 +9,8 @@ interface EncounterActionsOptions {
 export function useEncounterActions(options: EncounterActionsOptions) {
   const { encounter, send, refreshUndoRedoState } = options
   const encounterStore = useEncounterStore()
+  const encounterGridStore = useEncounterGridStore()
+  const encounterCombatStore = useEncounterCombatStore()
   const { getCombatantName } = useCombatantDisplay()
 
   // Helper to broadcast encounter updates
@@ -26,16 +28,8 @@ export function useEncounterActions(options: EncounterActionsOptions) {
 
   // Combat action handlers
   const handleAction = async (combatantId: string, action: { type: string; data: unknown }) => {
-    switch (action.type) {
-      case 'standard':
-        await encounterStore.useStandardAction(combatantId)
-        break
-      case 'shift':
-        await encounterStore.useShiftAction(combatantId)
-        break
-      case 'swift':
-        await encounterStore.useSwiftAction(combatantId)
-        break
+    if (['standard', 'shift', 'swift'].includes(action.type)) {
+      await encounterStore.useAction(combatantId, action.type as 'standard' | 'shift' | 'swift')
     }
   }
 
@@ -62,22 +56,28 @@ export function useEncounterActions(options: EncounterActionsOptions) {
   }
 
   const handleStages = async (combatantId: string, changes: Partial<StageModifiers>, absolute: boolean) => {
+    if (!encounterStore.encounter) return
     const combatant = findCombatant(combatantId)
     const name = getCombatantName(combatant)
     encounterStore.captureSnapshot(`Changed ${name}'s combat stages`)
-    await encounterStore.setCombatStages(combatantId, changes as Record<string, number>, absolute)
+    encounterStore.encounter = await encounterCombatStore.setCombatStages(
+      encounterStore.encounter.id, combatantId, changes as Record<string, number>, absolute
+    )
     refreshUndoRedoState()
     await broadcastUpdate()
   }
 
   const handleStatus = async (combatantId: string, add: StatusCondition[], remove: StatusCondition[]) => {
+    if (!encounterStore.encounter) return
     const combatant = findCombatant(combatantId)
     const name = getCombatantName(combatant)
     const parts: string[] = []
     if (add.length > 0) parts.push(`added ${add.join(', ')}`)
     if (remove.length > 0) parts.push(`removed ${remove.join(', ')}`)
     encounterStore.captureSnapshot(`${name}: ${parts.join('; ')}`)
-    await encounterStore.updateStatusConditions(combatantId, add, remove)
+    encounterStore.encounter = await encounterCombatStore.updateStatusConditions(
+      encounterStore.encounter.id, combatantId, add, remove
+    )
     refreshUndoRedoState()
     await broadcastUpdate()
   }
@@ -117,7 +117,7 @@ export function useEncounterActions(options: EncounterActionsOptions) {
 
   const handleExecuteAction = async (combatantId: string, actionType: string) => {
     const combatant = findCombatant(combatantId)
-    if (!combatant) return
+    if (!combatant || !encounterStore.encounter) return
 
     const name = getCombatantName(combatant)
 
@@ -129,23 +129,25 @@ export function useEncounterActions(options: EncounterActionsOptions) {
 
       // Use standard action for most maneuvers
       if (['push', 'sprint', 'trip', 'grapple'].includes(maneuverId)) {
-        await encounterStore.useStandardAction(combatantId)
+        await encounterStore.useAction(combatantId, 'standard')
       }
       // Full actions use both standard and shift
       if (['take-a-breather', 'intercept-melee', 'intercept-ranged'].includes(maneuverId)) {
-        await encounterStore.useStandardAction(combatantId)
-        await encounterStore.useShiftAction(combatantId)
+        await encounterStore.useAction(combatantId, 'standard')
+        await encounterStore.useAction(combatantId, 'shift')
       }
       // Special handling for Take a Breather
       if (maneuverId === 'take-a-breather') {
-        await encounterStore.takeABreather(combatantId)
+        encounterStore.encounter = await encounterCombatStore.takeABreather(
+          encounterStore.encounter.id, combatantId
+        )
       }
     } else {
       // Handle standard actions
       switch (actionType) {
         case 'shift':
           encounterStore.captureSnapshot(`${name} used Shift action`)
-          await encounterStore.useShiftAction(combatantId)
+          await encounterStore.useAction(combatantId, 'shift')
           break
         case 'pass':
           encounterStore.captureSnapshot(`${name} passed their turn`)
@@ -165,29 +167,49 @@ export function useEncounterActions(options: EncounterActionsOptions) {
 
   // VTT Grid handlers
   const handleGridConfigUpdate = async (config: GridConfig) => {
-    await encounterStore.updateGridConfig(config)
+    if (!encounterStore.encounter) return
+    const updatedConfig = await encounterGridStore.updateGridConfig(encounterStore.encounter.id, config)
+    encounterStore.encounter.gridConfig = {
+      ...encounterStore.encounter.gridConfig,
+      ...updatedConfig
+    }
   }
 
   const handleTokenMove = async (combatantId: string, position: GridPosition) => {
+    if (!encounterStore.encounter) return
     const combatant = findCombatant(combatantId)
     const name = getCombatantName(combatant)
     encounterStore.captureSnapshot(`Moved ${name} to (${position.x}, ${position.y})`)
-    await encounterStore.updateCombatantPosition(combatantId, position)
+    await encounterGridStore.updateCombatantPosition(encounterStore.encounter.id, combatantId, position)
+    const localCombatant = encounterStore.encounter.combatants.find(c => c.id === combatantId)
+    if (localCombatant) {
+      localCombatant.position = position
+    }
     refreshUndoRedoState()
     await broadcastUpdate()
   }
 
   const handleBackgroundUpload = async (file: File) => {
+    if (!encounterStore.encounter) return
     try {
-      await encounterStore.uploadBackgroundImage(file)
+      const background = await encounterGridStore.uploadBackgroundImage(encounterStore.encounter.id, file)
+      encounterStore.encounter.gridConfig = {
+        ...encounterStore.encounter.gridConfig,
+        background
+      }
     } catch (error) {
       console.error('Failed to upload background:', error)
     }
   }
 
   const handleBackgroundRemove = async () => {
+    if (!encounterStore.encounter) return
     try {
-      await encounterStore.removeBackgroundImage()
+      await encounterGridStore.removeBackgroundImage(encounterStore.encounter.id)
+      encounterStore.encounter.gridConfig = {
+        ...encounterStore.encounter.gridConfig,
+        background: undefined
+      }
     } catch (error) {
       console.error('Failed to remove background:', error)
     }
