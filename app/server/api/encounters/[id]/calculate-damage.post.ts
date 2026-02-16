@@ -5,7 +5,8 @@
  * Returns a detailed breakdown for test assertions and (future) UI display.
  */
 import { loadEncounter, findCombatant } from '~/server/services/encounter.service'
-import { calculateDamage } from '~/utils/damageCalculation'
+import { calculateDamage, calculateEvasion, calculateAccuracyThreshold } from '~/utils/damageCalculation'
+import type { AccuracyCalcResult } from '~/utils/damageCalculation'
 import type { Pokemon, HumanCharacter, Move } from '~/types'
 
 interface CalculateDamageRequest {
@@ -16,10 +17,28 @@ interface CalculateDamageRequest {
   damageReduction?: number
 }
 
+interface EntityDamageStats {
+  attackStat: number
+  attackStage: number
+  defenseStat: number
+  defenseStage: number
+  types: string[]
+  accuracyStage: number
+}
+
+interface EntityEvasionStats {
+  defenseBase: number
+  defenseStage: number
+  spDefBase: number
+  spDefStage: number
+  speedBase: number
+  speedStage: number
+}
+
 function getEntityStats(
   combatant: { type: string; entity: Pokemon | HumanCharacter },
   damageClass: 'Physical' | 'Special'
-): { attackStat: number; attackStage: number; defenseStat: number; defenseStage: number; types: string[] } {
+): EntityDamageStats {
   const entity = combatant.entity
   const stages = entity.stageModifiers
 
@@ -32,6 +51,7 @@ function getEntityStats(
           defenseStat: pokemon.currentStats.defense,
           defenseStage: stages?.defense ?? 0,
           types: [...pokemon.types],
+          accuracyStage: stages?.accuracy ?? 0,
         }
       : {
           attackStat: pokemon.currentStats.specialAttack,
@@ -39,6 +59,7 @@ function getEntityStats(
           defenseStat: pokemon.currentStats.specialDefense,
           defenseStage: stages?.specialDefense ?? 0,
           types: [...pokemon.types],
+          accuracyStage: stages?.accuracy ?? 0,
         }
   }
 
@@ -50,6 +71,7 @@ function getEntityStats(
         defenseStat: human.stats.defense,
         defenseStage: stages?.defense ?? 0,
         types: [],
+        accuracyStage: stages?.accuracy ?? 0,
       }
     : {
         attackStat: human.stats.specialAttack,
@@ -57,7 +79,37 @@ function getEntityStats(
         defenseStat: human.stats.specialDefense,
         defenseStage: stages?.specialDefense ?? 0,
         types: [],
+        accuracyStage: stages?.accuracy ?? 0,
       }
+}
+
+function getEntityEvasionStats(
+  combatant: { type: string; entity: Pokemon | HumanCharacter }
+): EntityEvasionStats {
+  const entity = combatant.entity
+  const stages = entity.stageModifiers
+
+  if (combatant.type === 'pokemon') {
+    const pokemon = entity as Pokemon
+    return {
+      defenseBase: pokemon.currentStats.defense,
+      defenseStage: stages?.defense ?? 0,
+      spDefBase: pokemon.currentStats.specialDefense,
+      spDefStage: stages?.specialDefense ?? 0,
+      speedBase: pokemon.currentStats.speed,
+      speedStage: stages?.speed ?? 0,
+    }
+  }
+
+  const human = entity as HumanCharacter
+  return {
+    defenseBase: human.stats.defense,
+    defenseStage: stages?.defense ?? 0,
+    spDefBase: human.stats.specialDefense,
+    spDefStage: stages?.specialDefense ?? 0,
+    speedBase: human.stats.speed,
+    speedStage: stages?.speed ?? 0,
+  }
 }
 
 export default defineEventHandler(async (event) => {
@@ -131,10 +183,33 @@ export default defineEventHandler(async (event) => {
       damageReduction: body.damageReduction,
     })
 
+    // Compute dynamic evasion from target's stage-modified stats (P1)
+    const targetEvasion = getEntityEvasionStats(target)
+    const physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage)
+    const specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage)
+    const speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage)
+
+    // Physical moves use Physical Evasion, Special moves use Special Evasion
+    const applicableEvasion = move.damageClass === 'Physical' ? physicalEvasion : specialEvasion
+    const effectiveEvasion = Math.min(9, applicableEvasion)
+
+    const moveAC = move.ac ?? 0
+    const accuracy: AccuracyCalcResult = {
+      moveAC,
+      attackerAccuracyStage: attackerData.accuracyStage,
+      physicalEvasion,
+      specialEvasion,
+      speedEvasion,
+      applicableEvasion,
+      effectiveEvasion,
+      accuracyThreshold: calculateAccuracyThreshold(moveAC, attackerData.accuracyStage, applicableEvasion),
+    }
+
     return {
       success: true,
       data: {
         ...result,
+        accuracy,
         meta: {
           attackerId: body.attackerId,
           targetId: body.targetId,
