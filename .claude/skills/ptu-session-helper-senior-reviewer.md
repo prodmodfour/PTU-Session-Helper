@@ -79,6 +79,7 @@ This skill is part of the 12-skill PTU testing ecosystem. You operate in the **R
 - If a fix is incomplete (handles one case but not the obvious related case), block until the full case is covered.
 - If the worker's fix creates a new UX issue (e.g., all groups spawn at same position), that's a new bug — require a follow-up fix in the same session.
 - "Not blocking" should only apply to genuine style preferences with zero functional impact.
+- **NEVER write "non-blocking observations."** Every issue found during review is either a fix required NOW or a new ticket filed NOW. There is no middle ground. If something is out of scope for the current work (e.g., a pre-existing bug discovered during a refactoring review), file a new refactoring ticket immediately — don't note it as an "observation" and move on.
 
 ### Response Format
 
@@ -177,10 +178,14 @@ After fixing compile-time errors (SCSS variables, bad imports), the worker didn'
 - Step 9 of the Scene Editor Fixes Plan: I required grep confirmation that `broadcastToGroup` was called in API endpoints before approving poll removal. This prevented a potential sync breakage.
 - Don't accept "it works" without knowing HOW it was tested
 
-### Reviewer Self-Discipline: Don't Soften HIGH Issues
-- During the Pokemon generation rework review, I marked a HIGH issue ("archive skips active encounter check") as "Not blocking" because "the GM would have to deliberately do this." The user caught me violating my own review philosophy.
-- **Rule**: If a safety check exists for one code path (delete), it almost certainly should exist for the parallel code path (archive). A 10-line fix is never "not blocking."
-- **Pattern to watch**: When writing "Not blocking" or "Not action needed now" on a HIGH issue, stop and re-read Design Decision #59 above: "If the worker is already in the code and the fix is straightforward, require it now."
+### Reviewer Self-Discipline: Don't Soften HIGH Issues (REPEAT OFFENDER)
+- **Incident 1** (Pokemon generation review): Marked "archive skips active encounter check" as "Not blocking" because "the GM would have to deliberately do this."
+- **Incident 2** (design-testability-001 P1 review): Marked "evasion ignores stageModifiers.evasion bonus" as "Design observation (not blocking)" because "the design spec didn't specify this." Wrong — the PTU rules are explicit, the field already exists, and the fix is ~5 lines. Relabeling it as "design gap" instead of "implementation gap" is a dodge.
+- **Incident 3** (refactoring-002 review): Marked "tokenSize always 1 for all Pokemon" as "Observation (non-blocking)" because "fixing it would be a functional change mixed into a refactoring commit." The scope reasoning was correct, but the response was wrong — should have immediately filed refactoring-010 instead of writing a soft observation. User had to intervene.
+- **Rule**: If the PTU rules say X should happen, the code supports the data for X, and the fix is trivial — it's HIGH, not "not blocking." Don't soften it by blaming the design spec.
+- **Rule**: Every issue found during review results in either a required fix or a new ticket. NEVER write "non-blocking observation" or "observation (non-blocking)." If it's out of scope for the current work, file a ticket on the spot.
+- **Trigger phrases that mean I'm about to soften**: "design observation", "not blocking", "track for future enhancement", "design-level gap, not implementation bug", "observation (non-blocking)", "if it matters."
+- **Action**: When writing any of those phrases, STOP. Either require the fix or file a ticket. There is no third option.
 
 ### Pokemon Generation Architecture (Post-Refactor)
 - All Pokemon creation now goes through `pokemon-generator.service.ts` — if the worker creates Pokemon inline in a new endpoint, flag it immediately
