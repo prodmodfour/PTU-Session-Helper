@@ -6,9 +6,10 @@
 
 import { prisma } from '~/server/utils/prisma'
 import { resolveNickname } from '~/server/utils/pokemon-nickname'
-import { v4 as uuidv4 } from 'uuid'
 import type { PokemonOrigin } from '~/types/character'
+import type { Combatant, Pokemon, CombatSide } from '~/types'
 import { sizeToTokenSize } from '~/server/services/grid-placement.service'
+import { buildCombatantFromEntity } from '~/server/services/combatant.service'
 
 // --- Input / Output types ---
 
@@ -222,127 +223,78 @@ export async function generateAndCreatePokemon(input: GeneratePokemonInput): Pro
 
 // --- Combatant builder ---
 
-export interface CombatantData {
-  id: string
-  type: 'pokemon'
-  entityId: string
-  side: string
-  initiative: number
-  initiativeBonus: number
-  hasActed: boolean
-  actionsRemaining: number
-  shiftActionsRemaining: number
-  turnState: {
-    hasActed: boolean
-    standardActionUsed: boolean
-    shiftActionUsed: boolean
-    swiftActionUsed: boolean
-    canBeCommanded: boolean
-    isHolding: boolean
-  }
-  injuries: { count: number; sources: string[] }
-  physicalEvasion: number
-  specialEvasion: number
-  speedEvasion: number
-  position?: { x: number; y: number }
-  tokenSize: number
-  readyAction: string | undefined
-  entity: {
-    id: string
-    species: string
-    nickname: string | undefined
-    level: number
-    types: string[]
-    gender: string
+/**
+ * Map a freshly created Pokemon into a full Pokemon entity.
+ * Uses defaults for fields not present in CreatedPokemon (experience, nature, etc.).
+ * The DB record (Pokemon table) holds canonical values; this entity is embedded in
+ * the encounter's combatants JSON for combat use.
+ */
+function createdPokemonToEntity(pokemon: CreatedPokemon): Pokemon {
+  const { data } = pokemon
+  return {
+    id: pokemon.id,
+    species: data.species,
+    nickname: data.nickname,
+    level: data.level,
+    experience: 0,
+    nature: { name: 'Hardy', raisedStat: null, loweredStat: null },
+    types: data.types as Pokemon['types'],
+    baseStats: data.baseStats,
     currentStats: {
-      hp: number; attack: number; defense: number
-      specialAttack: number; specialDefense: number; speed: number
-    }
-    currentHp: number
-    maxHp: number
+      hp: data.maxHp,
+      attack: data.calculatedStats.attack,
+      defense: data.calculatedStats.defense,
+      specialAttack: data.calculatedStats.specialAttack,
+      specialDefense: data.calculatedStats.specialDefense,
+      speed: data.calculatedStats.speed
+    },
+    currentHp: data.maxHp,
+    maxHp: data.maxHp,
     stageModifiers: {
-      attack: number; defense: number; specialAttack: number
-      specialDefense: number; speed: number; accuracy: number; evasion: number
-    }
-    abilities: Array<{ name: string; effect: string }>
-    moves: MoveDetail[]
-    capabilities: { overland: number; swim: number; sky: number; burrow: number; levitate: number; other: string[] }
-    skills: Record<string, string>
-    statusConditions: string[]
-    spriteUrl: string | undefined
-    shiny: boolean
+      attack: 0, defense: 0, specialAttack: 0,
+      specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
+    },
+    abilities: data.abilities as Pokemon['abilities'],
+    moves: data.moves as unknown as Pokemon['moves'],
+    capabilities: {
+      ...data.movementCaps,
+      other: data.otherCapabilities,
+      size: data.size
+    } as unknown as Pokemon['capabilities'],
+    skills: data.skills,
+    statusConditions: [],
+    injuries: 0,
+    temporaryHp: 0,
+    tutorPoints: 0,
+    trainingExp: 0,
+    eggGroups: data.eggGroups,
+    shiny: false,
+    gender: data.gender as Pokemon['gender'],
+    isInLibrary: true,
+    origin: 'wild'
   }
 }
 
 /**
- * Build a combatant JSON wrapper from a created Pokemon.
- * Evasions use calculated stats (not base stats) per PTU rules.
+ * Build a combatant wrapper from a created Pokemon.
+ * Delegates to buildCombatantFromEntity() — the single canonical combatant builder.
  */
 export function buildPokemonCombatant(
   pokemon: CreatedPokemon,
   side: string,
   position?: { x: number; y: number }
-): CombatantData {
-  const { data } = pokemon
-  const tokenSize = sizeToTokenSize(data.size)
-  return {
-    id: uuidv4(),
-    type: 'pokemon',
+): Combatant {
+  const entity = createdPokemonToEntity(pokemon)
+  const tokenSize = sizeToTokenSize(pokemon.data.size)
+
+  return buildCombatantFromEntity({
+    entityType: 'pokemon',
     entityId: pokemon.id,
-    side,
-    initiative: data.calculatedStats.speed,
-    initiativeBonus: 0,
-    hasActed: false,
-    actionsRemaining: 2,
-    shiftActionsRemaining: 1,
-    turnState: {
-      hasActed: false,
-      standardActionUsed: false,
-      shiftActionUsed: false,
-      swiftActionUsed: false,
-      canBeCommanded: true,
-      isHolding: false
-    },
-    injuries: { count: 0, sources: [] },
-    physicalEvasion: Math.floor(data.calculatedStats.defense / 5),
-    specialEvasion: Math.floor(data.calculatedStats.specialDefense / 5),
-    speedEvasion: Math.floor(data.calculatedStats.speed / 5),
+    entity,
+    side: side as CombatSide,
     position,
-    tokenSize,
-    readyAction: undefined,
-    entity: {
-      id: pokemon.id,
-      species: data.species,
-      nickname: data.nickname ?? undefined,
-      level: data.level,
-      types: data.types,
-      gender: data.gender,
-      currentStats: {
-        hp: data.maxHp,
-        attack: data.calculatedStats.attack,
-        defense: data.calculatedStats.defense,
-        specialAttack: data.calculatedStats.specialAttack,
-        specialDefense: data.calculatedStats.specialDefense,
-        speed: data.calculatedStats.speed
-      },
-      currentHp: data.maxHp,
-      maxHp: data.maxHp,
-      stageModifiers: {
-        attack: 0, defense: 0, specialAttack: 0,
-        specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
-      },
-      abilities: data.abilities,
-      moves: data.moves,
-      capabilities: {
-        ...data.movementCaps,
-        other: data.otherCapabilities
-      },
-      skills: data.skills,
-      statusConditions: [],
-      spriteUrl: undefined,
-      shiny: false
-    }
-  }
+    tokenSize
+  })
 }
 
 // --- Internal helpers ---
