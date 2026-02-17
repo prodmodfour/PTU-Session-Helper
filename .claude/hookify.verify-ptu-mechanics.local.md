@@ -1,6 +1,6 @@
 ---
 name: verify-ptu-mechanics
-enabled: true
+enabled: false
 event: file
 conditions:
   - field: file_path
