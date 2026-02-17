@@ -1003,7 +1003,7 @@ sub_loops: []
 ### Steps
 1. GM selects the multi-target move
 2. GM selects all affected targets
-3. System rolls accuracy **separately for each target** (individual d20 rolls)
+3. System rolls accuracy **once** for the move (single d20 roll)
 4. Each target has its own evasion applied to the AC threshold
 5. Damage is rolled **once** for the move
 6. For each target that was hit:
@@ -1014,12 +1014,12 @@ sub_loops: []
 8. Each hit target takes their individual damage amount
 
 ### PTU Rules Applied
-- **Individual Accuracy**: Each target gets its own accuracy check
+- **Single Accuracy Roll**: One d20 compared against each target's individual threshold
 - **Single Damage Roll**: "you add your Attack or Special Attack Stat" once, dice rolled once
 - **Per-Target Defense/Effectiveness**: Each target subtracts their own defense and has their own type effectiveness applied
 
 ### Expected Outcomes
-- One accuracy roll per target (some may hit, some may miss)
+- One accuracy roll for the move, compared per-target (some may hit, some may miss based on individual evasion)
 - One damage base roll shared across all hit targets
 - Different final damage values per target based on their defense and types
 - `targetDamageCalcs` computed property contains per-target breakdown
