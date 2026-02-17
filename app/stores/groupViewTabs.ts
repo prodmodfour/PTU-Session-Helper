@@ -257,7 +257,7 @@ export const useGroupViewTabsStore = defineStore('groupViewTabs', {
       this.loading = true
       this.error = null
       try {
-        await $fetch(`/api/scenes/${id}`, { method: 'DELETE' })
+        await $fetch(`/api/scenes/${id}` as string, { method: 'DELETE' })
         this.scenes = this.scenes.filter(s => s.id !== id)
         if (this.activeScene?.id === id) {
           this.activeScene = null

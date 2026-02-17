@@ -490,7 +490,7 @@ export default defineEventHandler(async (event) => {
           capabilities: JSON.stringify(pokemon.capabilities),
           skills: JSON.stringify(pokemon.skills),
           statusConditions: JSON.stringify([]),
-          gender: pokemon.gender,
+          gender: pokemon.gender ?? undefined,
           isInLibrary: true,
           origin: 'import',
           notes: `Imported from PTU sheet`
