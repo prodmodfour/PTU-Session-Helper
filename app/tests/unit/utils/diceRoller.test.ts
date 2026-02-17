@@ -144,13 +144,14 @@ describe('diceRoller', () => {
       expect(result.dice).toHaveLength(4)
     })
 
-    it('adds modifier only once', () => {
+    it('doubles the flat modifier along with dice', () => {
       vi.mocked(Math.random).mockReturnValue(0.5)
 
       const result = rollCritical('2d6+8')
-      expect(result.modifier).toBe(8)
-      // 4 + 4 + 4 + 4 + 8 = 24
-      expect(result.total).toBe(24)
+      expect(result.modifier).toBe(8) // original modifier stored
+      // PTU crit: dice doubled (4d6) AND modifier doubled (+16)
+      // 4 + 4 + 4 + 4 + 16 = 32
+      expect(result.total).toBe(32)
     })
 
     it('indicates critical in breakdown', () => {
