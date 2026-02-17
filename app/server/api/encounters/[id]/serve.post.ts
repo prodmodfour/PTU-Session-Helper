@@ -11,16 +11,17 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // First, unserve all other encounters
-    await prisma.encounter.updateMany({
-      where: { isServed: true },
-      data: { isServed: false }
-    })
+    // Atomic: unserve all then serve this one in a single transaction
+    const encounter = await prisma.$transaction(async (tx) => {
+      await tx.encounter.updateMany({
+        where: { isServed: true },
+        data: { isServed: false }
+      })
 
-    // Then serve this encounter
-    const encounter = await prisma.encounter.update({
-      where: { id },
-      data: { isServed: true }
+      return tx.encounter.update({
+        where: { id },
+        data: { isServed: true }
+      })
     })
 
     if (!encounter) {
