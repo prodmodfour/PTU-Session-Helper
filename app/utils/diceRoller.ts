@@ -106,12 +106,13 @@ export function rollCritical(notation: string): DiceRollResult {
   const allDice = [...firstRoll, ...secondRoll]
 
   const diceSum = allDice.reduce((a, b) => a + b, 0)
-  const total = diceSum + parsed.modifier
+  const doubledModifier = parsed.modifier * 2
+  const total = diceSum + doubledModifier
 
   // Build breakdown string for crit
   let breakdown = `CRIT: [${firstRoll.join(', ')}] + [${secondRoll.join(', ')}]`
-  if (parsed.modifier !== 0) {
-    breakdown += ` ${parsed.modifier >= 0 ? '+' : ''}${parsed.modifier}`
+  if (doubledModifier !== 0) {
+    breakdown += ` ${doubledModifier >= 0 ? '+' : ''}${doubledModifier}`
   }
   breakdown += ` = ${total}`
 
