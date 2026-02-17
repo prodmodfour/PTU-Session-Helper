@@ -112,10 +112,8 @@ test.describe('P0 Workflow: Wild Encounter Full Lifecycle', () => {
   })
 
   test('Phase 1c: serve encounter', async ({ request }) => {
-    await serveEncounter(request, encounterId)
-
-    const encounter = await getEncounter(request, encounterId)
-    expect(encounter.isServed).toBe(true)
+    const served = await serveEncounter(request, encounterId)
+    expect(served.isServed).toBe(true)
   })
 
   test('Phase 2: Growlithe STAB Ember -> Oddish — dynamic damage + injury check', async ({ request }) => {

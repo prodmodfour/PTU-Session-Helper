@@ -92,11 +92,8 @@ test.describe('P0: Encounter Lifecycle', () => {
   })
 
   test('Phase 4: serve encounter — isServed = true', async ({ request }) => {
-    await serveEncounter(request, encounterId)
-
-    // Verify via direct encounter fetch (avoid parallel test race on served endpoint)
-    const encounter = await getEncounter(request, encounterId)
-    expect(encounter.isServed).toBe(true)
+    const served = await serveEncounter(request, encounterId)
+    expect(served.isServed).toBe(true)
   })
 
   test('Phase 5: end encounter — isActive = false', async ({ request }) => {

@@ -142,14 +142,13 @@ test.describe('P0 Workflow: Setup from Template', () => {
     const startedEncounter = await startEncounter(request, encounterId)
     expect(startedEncounter.isActive).toBe(true)
 
-    await serveEncounter(request, encounterId)
-    const encounter = await getEncounter(request, encounterId)
-    expect(encounter.isServed).toBe(true)
+    const served = await serveEncounter(request, encounterId)
+    expect(served.isServed).toBe(true)
 
     // Squirtle (SPD 4) should be last (Charmander/Rattata SPD >= 7)
-    const squirtleCombatant = encounter.combatants.find((c: any) => c.entity.species === 'Squirtle')
-    const squirtleTurnIndex = encounter.turnOrder.indexOf(squirtleCombatant.id)
-    expect(squirtleTurnIndex).toBe(encounter.turnOrder.length - 1)
+    const squirtleCombatant = served.combatants.find((c: any) => c.entity.species === 'Squirtle')
+    const squirtleTurnIndex = served.turnOrder.indexOf(squirtleCombatant.id)
+    expect(squirtleTurnIndex).toBe(served.turnOrder.length - 1)
   })
 
   test('teardown', async ({ request }) => {
