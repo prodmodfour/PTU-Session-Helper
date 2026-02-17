@@ -128,15 +128,16 @@ export function useMoveCalculation(
   const rollAccuracy = () => {
     if (!move.value.ac) return
 
+    // PTU: one accuracy roll per move use, compared against each target's threshold
+    const d20Result = roll('1d20')
+    const naturalRoll = d20Result.dice[0]
+    const isNat1 = naturalRoll === 1
+    const isNat20 = naturalRoll === 20
+
     const results: Record<string, AccuracyResult> = {}
 
     for (const targetId of selectedTargets.value) {
-      const d20Result = roll('1d20')
-      const naturalRoll = d20Result.dice[0]
       const threshold = getAccuracyThreshold(targetId)
-
-      const isNat1 = naturalRoll === 1
-      const isNat20 = naturalRoll === 20
 
       let hit: boolean
       if (isNat1) {
@@ -318,7 +319,9 @@ export function useMoveCalculation(
   })
 
   const isCriticalHit = computed((): boolean => {
-    return hitTargets.value.some(id => accuracyResults.value[id]?.isNat20)
+    // Single roll shared by all targets — check any result
+    const firstResult = Object.values(accuracyResults.value)[0]
+    return firstResult?.isNat20 ?? false
   })
 
   const rollDamage = () => {
