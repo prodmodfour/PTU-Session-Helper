@@ -317,9 +317,13 @@ export function useMoveCalculation(
     return calcs
   })
 
+  const isCriticalHit = computed((): boolean => {
+    return hitTargets.value.some(id => accuracyResults.value[id]?.isNat20)
+  })
+
   const rollDamage = () => {
     if (!effectiveDB.value) return
-    damageRollResult.value = rollDamageBase(effectiveDB.value, false)
+    damageRollResult.value = rollDamageBase(effectiveDB.value, isCriticalHit.value)
     hasRolledDamage.value = true
   }
 
@@ -438,6 +442,7 @@ export function useMoveCalculation(
     damageNotation,
     getEffectivenessClass,
     targetDamageCalcs,
+    isCriticalHit,
     rollDamage,
 
     // Target selection
