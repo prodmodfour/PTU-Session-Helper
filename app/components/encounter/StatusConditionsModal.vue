@@ -34,6 +34,7 @@
 
 <script setup lang="ts">
 import type { StatusCondition } from '~/types'
+import { ALL_STATUS_CONDITIONS } from '~/constants/statusConditions'
 
 const props = defineProps<{
   combatantName: string
@@ -45,13 +46,7 @@ const emit = defineEmits<{
   save: [add: StatusCondition[], remove: StatusCondition[]]
 }>()
 
-const AVAILABLE_STATUSES: StatusCondition[] = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned',
-  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed',
-  'Disabled', 'Enraged', 'Suppressed',
-  'Stuck', 'Slowed', 'Trapped', 'Fainted',
-  'Tripped', 'Vulnerable'
-]
+const AVAILABLE_STATUSES = ALL_STATUS_CONDITIONS
 
 // Status inputs initialized from current values
 const statusInputs = ref<StatusCondition[]>([...props.currentStatuses])

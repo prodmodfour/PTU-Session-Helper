@@ -5,6 +5,7 @@
  */
 
 import { prisma } from '~/server/utils/prisma'
+import { ALL_STATUS_CONDITIONS } from '~/constants/statusConditions'
 import { v4 as uuidv4 } from 'uuid'
 import type {
   StatusCondition, StageModifiers, Combatant,
@@ -232,13 +233,7 @@ export function applyHealingToEntity(
 // STATUS CONDITIONS
 // ============================================
 
-export const VALID_STATUS_CONDITIONS: StatusCondition[] = [
-  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned',
-  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed',
-  'Disabled', 'Enraged', 'Suppressed',
-  'Stuck', 'Slowed', 'Trapped', 'Fainted',
-  'Tripped', 'Vulnerable'
-]
+export const VALID_STATUS_CONDITIONS = ALL_STATUS_CONDITIONS
 
 export interface StatusChangeResult {
   added: StatusCondition[]
