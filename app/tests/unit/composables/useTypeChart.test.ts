@@ -36,13 +36,25 @@ describe('useTypeChart composable', () => {
       expect(getTypeEffectiveness('Dragon', ['Fairy'])).toBe(0)
     })
 
-    it('should multiply effectiveness for dual types (PTU 1.5x × 1.5x = 2.25)', () => {
-      // Fire vs Grass/Steel = 1.5 * 1.5 = 2.25
-      expect(getTypeEffectiveness('Fire', ['Grass', 'Steel'])).toBe(2.25)
-      // Ground vs Fire/Steel = 1.5 * 1.5 = 2.25
-      expect(getTypeEffectiveness('Ground', ['Fire', 'Steel'])).toBe(2.25)
-      // Electric vs Water/Flying = 1.5 * 1.5 = 2.25
-      expect(getTypeEffectiveness('Electric', ['Water', 'Flying'])).toBe(2.25)
+    it('should return 2.0 for doubly super effective (PTU 07-combat.md:1016-1017)', () => {
+      // Fire vs Grass/Steel: both SE → doubly SE = 2.0
+      expect(getTypeEffectiveness('Fire', ['Grass', 'Steel'])).toBe(2.0)
+      // Ground vs Fire/Steel: both SE → doubly SE = 2.0
+      expect(getTypeEffectiveness('Ground', ['Fire', 'Steel'])).toBe(2.0)
+      // Electric vs Water/Flying: both SE → doubly SE = 2.0
+      expect(getTypeEffectiveness('Electric', ['Water', 'Flying'])).toBe(2.0)
+    })
+
+    it('should return 1.0 for SE + resist (PTU 07-combat.md:1019-1020)', () => {
+      // Fighting vs Ice/Poison: Ice=SE, Poison=resist → neutral
+      expect(getTypeEffectiveness('Fighting', ['Ice', 'Poison'])).toBe(1.0)
+      // Fire vs Grass/Water: Grass=SE, Water=resist → neutral
+      expect(getTypeEffectiveness('Fire', ['Grass', 'Water'])).toBe(1.0)
+    })
+
+    it('should return 3.0 for triply super effective (PTU 07-combat.md:1032-1033)', () => {
+      // Ice vs Grass/Ground/Flying: all three SE → triply SE = 3.0
+      expect(getTypeEffectiveness('Ice', ['Grass', 'Ground', 'Flying'])).toBe(3.0)
     })
 
     it('should handle mixed effectiveness on dual types', () => {
@@ -82,8 +94,16 @@ describe('useTypeChart composable', () => {
       expect(getEffectivenessDescription(1.5)).toBe('Super Effective')
     })
 
-    it('should return Doubly Super Effective for 2.25', () => {
-      expect(getEffectivenessDescription(2.25)).toBe('Doubly Super Effective')
+    it('should return Doubly Super Effective for 2.0', () => {
+      expect(getEffectivenessDescription(2.0)).toBe('Doubly Super Effective')
+    })
+
+    it('should return Triply Super Effective for 3.0', () => {
+      expect(getEffectivenessDescription(3.0)).toBe('Triply Super Effective')
+    })
+
+    it('should return Triply Resisted for 0.125', () => {
+      expect(getEffectivenessDescription(0.125)).toBe('Triply Resisted')
     })
   })
 

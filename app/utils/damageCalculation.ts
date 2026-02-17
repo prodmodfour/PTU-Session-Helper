@@ -242,20 +242,41 @@ export function getSetDamage(db: number): number {
 }
 
 /**
+ * PTU net-classification effectiveness lookup (07-combat.md:780-787, 1010-1033)
+ * Net = SE count - resist count → flat multiplier from table
+ */
+const NET_EFFECTIVENESS: Record<number, number> = {
+  [-3]: 0.125,  // Triply resisted (1/8)
+  [-2]: 0.25,   // Doubly resisted (1/4)
+  [-1]: 0.5,    // Resisted (1/2)
+  [0]: 1.0,     // Neutral
+  [1]: 1.5,     // Super effective (×1.5)
+  [2]: 2.0,     // Doubly super effective (×2)
+  [3]: 3.0,     // Triply super effective (×3)
+}
+
+/**
  * Compute type effectiveness multiplier across all defender types.
- * PTU uses 1.5 for SE, not 2.0.
- * Dual-typed defenders multiply: e.g., 1.5 * 1.5 = 2.25 → but PTU caps at
- * discrete tiers, so we compute raw product and let the caller interpret.
+ * PTU uses qualitative classification: count SE/resist/immune per type,
+ * net them, and look up the flat multiplier (07-combat.md:1010-1033).
  */
 export function getTypeEffectiveness(moveType: string, defenderTypes: string[]): number {
-  let multiplier = 1.0
+  const chart = TYPE_CHART[moveType]
+  if (!chart) return 1
+
+  let seCount = 0
+  let resistCount = 0
+
   for (const defType of defenderTypes) {
-    const chart = TYPE_CHART[moveType]
-    if (chart && chart[defType] !== undefined) {
-      multiplier *= chart[defType]
-    }
+    const value = chart[defType]
+    if (value === undefined) continue
+    if (value === 0) return 0  // Immunity always wins
+    if (value > 1) seCount++
+    else if (value < 1) resistCount++
   }
-  return multiplier
+
+  const net = seCount - resistCount
+  return NET_EFFECTIVENESS[net] ?? 1
 }
 
 /**
@@ -263,12 +284,13 @@ export function getTypeEffectiveness(moveType: string, defenderTypes: string[]):
  */
 export function getEffectivenessLabel(multiplier: number): string {
   if (multiplier === 0) return 'Immune'
+  if (multiplier <= 0.125) return 'Triply Resisted'
   if (multiplier <= 0.25) return 'Doubly Resisted'
   if (multiplier < 1) return 'Resisted'
-  if (multiplier === 1) return 'Neutral'
-  if (multiplier <= 1.5) return 'Super Effective'
-  if (multiplier <= 2.25) return 'Doubly Super Effective'
-  return 'Triply Super Effective'
+  if (multiplier >= 3) return 'Triply Super Effective'
+  if (multiplier >= 2) return 'Doubly Super Effective'
+  if (multiplier > 1) return 'Super Effective'
+  return 'Neutral'
 }
 
 /**

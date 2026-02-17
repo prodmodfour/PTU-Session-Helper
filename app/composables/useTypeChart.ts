@@ -31,25 +31,45 @@ export function useTypeChart() {
     Fairy: { Fire: 0.5, Fighting: 1.5, Poison: 0.5, Dragon: 1.5, Dark: 1.5, Steel: 0.5 }
   }
 
-  // Get type effectiveness multiplier
+  // PTU net-classification effectiveness lookup (07-combat.md:780-787, 1010-1033)
+  // Net = SE count - resist count → flat multiplier from table
+  const NET_EFFECTIVENESS: Record<number, number> = {
+    [-3]: 0.125,  // Triply resisted (1/8)
+    [-2]: 0.25,   // Doubly resisted (1/4)
+    [-1]: 0.5,    // Resisted (1/2)
+    [0]: 1.0,     // Neutral
+    [1]: 1.5,     // Super effective (×1.5)
+    [2]: 2.0,     // Doubly super effective (×2)
+    [3]: 3.0,     // Triply super effective (×3)
+  }
+
+  // Get type effectiveness multiplier using PTU qualitative classification
   const getTypeEffectiveness = (attackType: string, defenderTypes: string[]): number => {
-    let effectiveness = 1
+    const chart = typeEffectiveness[attackType]
+    if (!chart) return 1
+
+    let seCount = 0
+    let resistCount = 0
 
     for (const defType of defenderTypes) {
-      const chart = typeEffectiveness[attackType]
-      if (chart && chart[defType] !== undefined) {
-        effectiveness *= chart[defType]
-      }
+      const value = chart[defType]
+      if (value === undefined) continue
+      if (value === 0) return 0  // Immunity always wins
+      if (value > 1) seCount++
+      else if (value < 1) resistCount++
     }
 
-    return effectiveness
+    const net = seCount - resistCount
+    return NET_EFFECTIVENESS[net] ?? 1
   }
 
   // Get effectiveness description
   const getEffectivenessDescription = (effectiveness: number): string => {
     if (effectiveness === 0) return 'Immune'
+    if (effectiveness <= 0.125) return 'Triply Resisted'
     if (effectiveness <= 0.25) return 'Doubly Resisted'
     if (effectiveness < 1) return 'Resisted'
+    if (effectiveness >= 3) return 'Triply Super Effective'
     if (effectiveness >= 2) return 'Doubly Super Effective'
     if (effectiveness > 1) return 'Super Effective'
     return 'Neutral'
