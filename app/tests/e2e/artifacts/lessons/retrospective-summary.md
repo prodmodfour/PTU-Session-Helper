@@ -1,132 +1,180 @@
 ---
-last_analyzed: 2026-02-16T00:30:00
+last_analyzed: 2026-02-17T13:00:00
 analyzed_by: retrospective-analyst
-scope: combat domain (Tier 2 + Tier 1 full cycles)
+scope: combat domain (Tier 2 + Tier 1 full cycles) + capture domain (full cycle) + refactoring audit (22 tickets)
 ---
 
 # Retrospective Summary
 
 ## Analysis Scope
 
-- **Domain:** combat
-- **Tiers analyzed:** Tier 2 (19 mechanic validations) + Tier 1 (7 session workflows)
-- **Artifacts analyzed:** 26 scenarios, 26 results, 4 reports (1 APP_BUG, 3 SCENARIO_BUG), 21 loops + 13 sub-loops
-- **Period:** 2026-02-15 through 2026-02-16
-- **Reports generated:** 4 (Tier 1 triage: bug-001, correction-001, correction-002, correction-003)
-- **Conversations mined:** 10 sessions (2026-02-15)
-- **Previous retrospective:** 2026-02-15T23:59:00 (Tier 2 only, 5 lessons for 2 skills)
+- **Domains:** combat (complete), capture (complete)
+- **Tiers analyzed:** Tier 2 (19 mechanic validations) + Tier 1 (7 session workflows) + capture (7 scenarios)
+- **Artifacts analyzed:** 33 scenarios, 33 results, 7 reports (2 APP_BUG, 5 SCENARIO_BUG), 22 refactoring tickets, 26 code reviews, 21 rules reviews
+- **Period:** 2026-02-15 through 2026-02-17
+- **New scope since last analysis:** 11 code reviews (016-026), 8 rules reviews (014-021), 12 refactoring tickets (011-022), 45+ git commits
+- **Conversations mined:** 20+ sessions (2026-02-15 through 2026-02-17)
+- **Previous retrospective:** 2026-02-16T12:00:00
 
 ## Aggregate Metrics
 
 | Metric | Value |
 |--------|-------|
-| Total lessons | 11 |
-| Active | 7 |
+| Total lessons | 24 |
+| Active | 18 |
 | Resolved | 3 (SC L1-L3 promoted to permanent process steps) |
 | Promote-candidate | 0 |
 | New since last analysis | 6 |
-| Updated since last analysis | 3 (L1-L3 → promote-candidate) |
+| Updated since last analysis | 3 (Dev L2 recurring, SC L4 systemic, Orch L3 new evidence) |
 | By category: missing-check | 4 |
-| By category: data-lookup | 2 |
-| By category: process-gap | 4 |
+| By category: data-lookup | 3 |
+| By category: process-gap | 6 |
 | By category: fix-pattern | 1 |
-| By frequency: recurring | 3 |
-| By frequency: observed | 8 |
-| Systemic patterns | 1 (assuming-without-verifying, spans 3 skills) |
-| Skills with lessons | 4 (scenario-crafter, playtester, developer, scenario-verifier) |
-| Skills with clean runs | 4 (gameplay-loop-synthesizer, result-verifier, senior-reviewer, feature-designer) |
+| By category: routing-error | 4 |
+| By category: conversation-pattern | 0 |
+| By frequency: systemic | 2 (non-deterministic APIs, PTU-without-verification) |
+| By frequency: recurring | 8 |
+| By frequency: observed | 10 |
+| Skills with lessons | 7 (scenario-crafter, developer, playtester, scenario-verifier, game-logic-reviewer, orchestrator, senior-reviewer) |
+| Skills with clean runs | 3 (gameplay-loop-synthesizer, result-verifier, feature-designer) |
 
-## Error Distribution by Tier
+## Error Distribution by Source
 
-| Source | Tier 2 | Tier 1 | Total |
-|--------|--------|--------|-------|
-| Scenarios corrected | 4 | 3 | 7 |
-| App bugs found | 0 | 1 (+1 escalation) | 2 |
-| Reports filed | 0 | 4 | 4 |
-| Code commits (fixes) | 0 | 4 | 4 |
+| Source | Testing Pipeline | Refactoring Audit | Total |
+|--------|-----------------|-------------------|-------|
+| Scenarios corrected | 7 | — | 7 |
+| App bugs found (testing) | 2 | — | 2 |
+| PTU-INCORRECT found (audit) | — | 6 | 6 |
+| EXT-DUPLICATE found (audit) | — | 7 | 7 |
+| Other code health issues | — | 9 | 9 |
+| Code reviews with issues | 2 (CR-010, CR-023) | — | 2 |
 
 ## Cross-Cutting Patterns
 
-### Pattern A: STAB eligibility not validated (recurring — Tier 2, resolved in Tier 1)
-The Scenario Crafter did not explicitly compare attacker types against move type. Caused 2 Tier 2 scenario rewrites. **Successfully mitigated in Tier 1** — all 8 attacker/move pairs correctly annotated. Lessons 1 promoted to `promote-candidate`.
+### Pattern A-C: STAB, Learn Levels, Type Chart (resolved — from previous retro)
+All three patterns from the original Tier 2 retrospective remain resolved. Lessons 1-3 were integrated as permanent process steps and successfully applied in all subsequent scenarios across both combat and capture domains.
 
-### Pattern B: Move learn levels assumed, not verified (recurring — Tier 2, resolved in Tier 1)
-The Scenario Crafter assigned moves without consulting pokedex files. Caused 2 Tier 2 level increases. **Successfully mitigated in Tier 1** — all 8 moves verified with citations. Lesson 2 promoted to `promote-candidate`.
+### Pattern D: Assuming-without-verifying (SYSTEMIC — upgraded)
+Previously identified as systemic across Scenario Crafter, Scenario Verifier, and Playtester. Now confirmed with additional evidence:
+- Scenario Crafter L4: Upgraded from recurring to systemic after capture-variant-001 (correction-004) showed the same pattern
+- Game Logic Reviewer L3: Accepted "acknowledged limitation" framing without checking rulebook — same root cause applied to the reviewer role
+- Total instances: 6+ across 4 skills and 3 pipeline cycles
 
-### Pattern C: Type effectiveness assumed without chart lookup (observed — Tier 2, resolved in Tier 1)
-Normal vs Rock miscategorized as neutral. Masked by minimum damage rule. **Successfully mitigated in Tier 1** — all 10 type matchups individually verified. Lesson 3 promoted to `promote-candidate`.
+### Pattern E: Playtester silent adaptation (unchanged — recurring)
+No new evidence in this cycle. The Playtester has not been invoked for new test runs since the last analysis.
 
-### Pattern D: Assuming-without-verifying (SYSTEMIC — spans Scenario Crafter, Scenario Verifier, Playtester)
-The dominant Tier 1 failure pattern. Three skills independently assumed things about the app's behavior without verification:
-- **Scenario Crafter** assumed deterministic stats from non-deterministic APIs (2 scenarios) and assumed the status API enforces type immunity (1 scenario)
-- **Scenario Verifier** verified all 57 assertions against PTU rules but didn't cross-reference against app implementation (3 false-PASS verdicts)
-- **Playtester** assumed failures were from parallel interference without examining actual vs expected values (1 wasted retry cycle)
+### Pattern F: Duplicate code paths (unchanged — from previous retro)
+The initial `move.post.ts` duplicate path issue was addressed. However, the broader pattern of code duplication spawning cascading tickets has become its own new pattern (see Pattern H below).
 
-This is a **systemic pattern** — the same root cause ("I assumed X without checking") manifested differently in 3 skills across 4 scenarios. The underlying issue is that no skill's process requires verifying assumptions against the actual app implementation.
+### Pattern H: Duplication chains spawn cascading tickets (NEW — RECURRING)
+Duplicate code creates a chain of cascading fix tickets. The most striking example is the status condition constant:
+1. **refactoring-006:** Deduplicated constants in `breather.post.ts`
+2. **refactoring-008:** Deduplicated in `captureRate.ts` and `useCapture.ts` — but missed `restHealing.ts`
+3. **code-review-010:** Caught the missed `restHealing.ts` instance
+4. **refactoring-009:** Removed phantom conditions from 4 files — had to touch 4 instead of 2 because `combatant.service.ts` and `StatusConditionsModal.vue` still had local copies
+5. **refactoring-022:** Filed to deduplicate the remaining 2 hardcoded arrays
 
-### Pattern E: Playtester silently adapts instead of filing reports (recurring — Tier 2 + Tier 1)
-The Playtester discovered API discrepancies during spec authoring (Tier 2: field name mismatches, missing evasion fields) and during test execution (Tier 1: parallel interference misattribution) and worked around them silently. Now seen in both tiers — upgrading from `observed` to `recurring`. The pipeline depends on reports to propagate discoveries.
+Similarly, the type chart:
+1. **design-testability-001:** Created `damageCalculation.ts` with copied type chart from `useCombat.ts`
+2. **refactoring-019:** Fixed multiplicative type effectiveness in BOTH files independently (same bug in both)
+3. **refactoring-020:** Filed to consolidate the duplicate type chart into `typeChart.ts`
 
-### Pattern F: Duplicate code paths not unified (observed — Tier 1)
-`move.post.ts` performed inline HP subtraction while `combatant.service.ts` had the proper damage pipeline. Fixing one didn't fix the other. The Senior Reviewer caught the duplicate path during review of bug-001. Single occurrence but high severity — the initial fix would have been incomplete without the review escalation.
+**Root cause:** Code is copied rather than extracted to a shared location. Each copy diverges independently. Fixing one requires finding and fixing all copies. Each cycle discovers more copies.
 
-### Pattern G: Faint handler incomplete (observed — Tier 1)
-The only genuine APP_BUG found in the combat domain across both tiers. Status clearing on faint was missing from `applyDamageToEntity()`. Clean fix (1 line changed), but it spawned Patterns F (duplicate path) and required 3 total commits to fully resolve.
+### Pattern I: Incomplete grep during deduplication (NEW — RECURRING)
+The Developer consistently misses one or more locations when deduplicating or cleaning up code:
+- **code-review-010:** 3 of 4 condition arrays fixed, `restHealing.ts` missed
+- **code-review-023:** Phantom conditions cleaned from runtime code, capture loop doc missed
 
-## Corrected Scenarios — Full History
+Both were caught by the Senior Reviewer. The review gate is working, but the Developer's process should prevent this class of error earlier.
 
-| Scenario | Tier | Error Categories | Root Cause |
-|----------|------|-----------------|------------|
-| combat-basic-special-001 | T2 | missing-check | STAB-triggering pair used for no-STAB test |
-| combat-type-effectiveness-001 | T2 | data-lookup | Water Gun learn level wrong (L10 vs L13) |
-| combat-minimum-damage-001 | T2 | data-lookup | Normal vs Rock miscategorized as neutral |
-| combat-multi-target-001 | T2 | data-lookup + missing-check | Earthquake learn level wrong + STAB missed |
-| combat-workflow-wild-encounter-001 | T1 | missing-check | Assumed deterministic stats for wild-spawn |
-| combat-workflow-template-setup-001 | T1 | missing-check | Assumed deterministic stats for template-load |
-| combat-workflow-status-chain-001 | T1 | missing-check | Assumed API enforces type immunity |
+### Pattern J: Pre-existing PTU errors in codebase (NEW — SYSTEMIC)
+The refactoring audit of the combat domain discovered 6 PTU-INCORRECT tickets in pre-existing code:
+- **refactoring-008:** Sleep classified as Persistent (should be Volatile)
+- **refactoring-009:** Phantom conditions Encored/Taunted/Tormented (don't exist in PTU)
+- **refactoring-012:** Evasion +6 cap missing at 3 sites
+- **refactoring-017:** Critical hit flat modifier not doubled
+- **refactoring-018:** Per-target accuracy rolls instead of per-move
+- **refactoring-019:** Multiplicative type effectiveness instead of flat lookup
+
+None were introduced by the pipeline — all were latent in the original code. This suggests the original implementation was written without rigorous PTU verification. The code health audit + rules review pipeline is the first systematic check these formulas have received.
+
+### Pattern K: Review system catching real bugs (POSITIVE — CONTINUED)
+The Senior Reviewer continues to provide high-value catches:
+- **code-review-010:** Caught missed `restHealing.ts` (CRITICAL)
+- **code-review-020:** Caught ±3 net-clamp edge case (MEDIUM)
+- **code-review-023:** Caught stale capture loop doc + filed refactoring-022 (HIGH)
+- **Overall:** 5 of 26 reviews identified actionable issues. 2 required CHANGES_REQUIRED verdicts.
+
+The Game Logic Reviewer performance improved after L1-L3 were recorded:
+- **rules-review-014 through -021:** All APPROVED with thorough PTU verification (6-11 mechanics per review)
+- **rules-review-020 (type chart):** Verified all 18 attacking types, all NET_EFFECTIVENESS tiers, dual-type interactions — comprehensive
+
+### Pattern L: "Acknowledged limitation" as bug suppression (NEW — OBSERVED)
+When the Senior Reviewer framed a PTU incorrectness as an "acknowledged limitation" (code-review-017), the Game Logic Reviewer accepted the framing without checking the rulebook (rules-review-015). The user had to intervene. This is a cross-skill interaction pattern: one skill's informal judgment on PTU mechanics influenced another skill's formal ruling. Addressed in SR L2 and GLR L3.
+
+## Refactoring Audit Results
+
+The code health audit scanned 69 files in the combat domain and filed 22 refactoring tickets:
+
+| Category | Filed | Resolved | Open |
+|----------|-------|----------|------|
+| EXT-GOD | 1 | 1 | 0 |
+| EXT-DUPLICATE | 7 | 6 | 1 |
+| EXT-LAYER | 2 | 2 | 0 |
+| PTU-INCORRECT | 6 | 5 | 1 |
+| LLM-SIZE/MAGIC/INCONSISTENT | 4 | 4 | 0 |
+| TEST-STALE | 2 | 1 | 1 |
+| TYPE-ERROR | 1 | 1 | 0 |
+| RACE-CONDITION | 1 | 1 | 0 |
+| DEAD-CODE | 1 | 0 | 1 |
+| **Total** | **22** | **18** | **4** |
+
+Open tickets: refactoring-012 (evasion cap, P2), refactoring-013 (stale test, P2), refactoring-014 (type errors, P1 — resolved per git but pipeline state shows open), refactoring-021 (dead code, P2).
 
 ## Skill Performance Summary
 
-| Skill | Tier 2 Errors | Tier 1 Errors | Total Lessons | Trend |
-|-------|--------------|--------------|--------------|-------|
-| Scenario Crafter | 5 (4 scenarios) | 3 (3 scenarios) | 5 | Tier 2 lessons applied; new error category in Tier 1 |
-| Scenario Verifier | 0 (caught all 5 T2 errors) | 3 false-PASS | 1 | Degraded — T1 verification missed implementation mismatches |
-| Playtester | 2 (process gaps) | 1 (process gap) | 3 | Consistent — silent adaptation pattern continues |
-| Developer | 0 | 2 (1 bug + 1 escalation) | 2 | New: first app bugs found by pipeline |
-| Result Verifier | 0 | 0 (correct triage of 4 failures) | 0 | Clean across both tiers |
-| Senior Reviewer | — | 0 (caught duplicate path) | 0 | Positive: escalation system working |
-| Loop Synthesizer | 0 | 0 | 0 | Clean across both tiers |
+| Skill | Previous Lessons | New Lessons | Updated | Total | Trend |
+|-------|-----------------|-------------|---------|-------|-------|
+| Scenario Crafter | 5 | 1 (L6) | 1 (L4 systemic) | 6 | L1-L3 proven effective, new pattern (preserve test purpose) |
+| Developer | 2 | 2 (L3, L4) | 1 (L2 recurring) | 4 | Expanded: PTU verification + incomplete grep patterns |
+| Playtester | 3 | 1 (L4) | 0 | 4 | New: role boundary lesson from conversation mining |
+| Scenario Verifier | 1 | 0 | 0 | 1 | Unchanged — not invoked for new verifications |
+| Game Logic Reviewer | 3 | 0 | 0 | 3 | Performance improved post-lessons; L1-L3 were self-filed |
+| Orchestrator | 3 | 1 (L4) | 1 (L3 new evidence) | 4 | Temporal-language pattern persists despite corrections |
+| Senior Reviewer | 1 | 1 (L2) | 0 | 2 | Strong catch rate; new lesson on PTU framing |
 
 ## Lesson Effectiveness
 
-Tier 1 was the first cycle where lessons from a previous retrospective were available. Results:
-
-| Lesson | Applied in Tier 1? | Effective? |
+| Lesson | Applied This Cycle? | Effective? |
 |--------|-------------------|-----------|
-| SC-L1 (STAB) | Yes — 8 pairs checked | Yes — 0 STAB errors |
-| SC-L2 (Learn levels) | Yes — 8 moves verified | Yes — 0 learn-level errors |
-| SC-L3 (Type chart) | Yes — 10 matchups checked | Yes — 0 type-chart errors |
-| PT-L1 (File reports for field mismatches) | Not tested (no new field mismatches) | Unknown |
-| PT-L2 (File reports for missing API fields) | Not tested (no new missing fields) | Unknown |
-
-**Conclusion:** The three Scenario Crafter lessons eliminated their target error categories entirely in Tier 1. The new Tier 1 errors are from categories the lessons didn't address (implementation mismatches, not data-lookup or STAB errors).
+| SC-L1 (STAB) | Yes — capture domain | Yes — 0 errors |
+| SC-L2 (Learn levels) | Yes — capture domain | Yes — 0 errors |
+| SC-L3 (Type chart) | Yes — capture domain | Yes — 0 errors |
+| SC-L4 (Non-deterministic APIs) | Yes — capture domain | Yes — all capture scenarios deterministic |
+| SC-L5 (Enforcement boundary) | Yes — capture domain | Yes — all assertions annotated |
+| Dev-L2 (All code paths) | Yes — refactoring cycle | Partially — caught by reviews, not by developer |
+| GLR-L1 (Enumerated lists) | Yes — rules-review-014+ | Yes — thorough verification in all 8 reviews |
+| GLR-L3 (Don't dismiss mechanics) | Yes — rules-review-015+ | Yes — no more "rules don't specify" language |
+| Orch-L3 (No temporal ordering) | Tested — session 29aac2ff | No — pattern recurred despite prior lesson |
 
 ## Top 5 Recommendations
 
-1. **Add implementation-verification step to Scenario Verifier** (addresses Pattern D — systemic). The Verifier should cross-reference assertions against app behavior, not just PTU math. This is the highest-impact change because it would have caught 3 of 4 Tier 1 failures before they reached the Playtester.
+1. **Add comprehensive-grep requirement to Developer process** (addresses Pattern I). Before declaring a dedup/cleanup refactoring complete, the Developer must provide a grep output showing all occurrences of the target pattern across the entire codebase (including docs, tests, and artifacts), with each occurrence marked as addressed. This would have prevented both code-review-010 and code-review-023 CHANGES_REQUIRED verdicts.
 
-2. **Promote Scenario Crafter Lessons 1-3 to permanent process steps** (Pattern A/B/C — proven effective). These lessons eliminated their target error categories. Integrate them as mandatory checklist items rather than optional lessons to consult.
+2. **Expand code health audit to new domains immediately** (addresses Pattern J). The combat domain audit revealed 6 PTU-INCORRECT bugs in pre-existing code. Other domains (healing, character-lifecycle, pokemon-lifecycle, scenes, VTT) have never been audited. The same class of latent PTU errors likely exists there. Prioritize domains with the most PTU formula logic.
 
-3. **Add non-deterministic API awareness to Scenario Crafter** (addresses Pattern D). Before writing exact expected values, check whether the creation endpoint produces deterministic output. This prevents the largest class of Tier 1 errors.
+3. **Formalize "extract, don't copy" as an architectural principle** (addresses Pattern H). When new code needs access to existing logic, it must import from the canonical source — never copy-paste. If the canonical source doesn't exist yet (e.g., type chart was inline in a composable), extract it first, then import from the new location. This prevents the cascading duplication tickets that dominated the refactoring audit.
 
-4. **Require Playtester to file reports instead of silently adapting** (Pattern E — now recurring). Escalate from lesson to process requirement. The pipeline's feedback loop depends on reports.
+4. **Orchestrator L3 needs escalation** (Pattern L3 persists). The temporal-language ordering pattern has now been corrected 3 times across 3 separate sessions without being resolved. Consider adding a pre-dispatch checklist that forces the Orchestrator to justify ordering by extensibility impact, with the instruction "never use time-based justifications" as a mandatory process constraint rather than an optional lesson.
 
-5. **Add duplicate-path check to Developer fix workflow** (Pattern F). When fixing a bug in a service function, grep for all code paths performing the same operation and unify them.
+5. **Cross-skill PTU boundary enforcement** (addresses Pattern L). The Senior Reviewer should never make informal rulings on PTU mechanics (even framed as "limitations" or "tradeoffs"). Any behavioral note about PTU mechanics should be explicitly flagged for the Game Logic Reviewer with a specific question. Add this as a mandatory routing rule, not just a lesson.
 
 ## Positive Observations
 
-- **Lesson system is working:** Three lessons from the Tier 2 retrospective were applied in Tier 1 and eliminated their target error categories entirely. The feedback loop is functional.
-- **Triage accuracy:** Result Verifier correctly classified all 4 Tier 1 failures (1 APP_BUG, 3 SCENARIO_BUG) with zero misclassifications.
-- **Review escalation:** Senior Reviewer caught the duplicate code path (move.post.ts) that the Developer's initial fix missed. The review layer prevented an incomplete fix from shipping.
-- **Pipeline found a real bug:** bug-001 (faint status clearing) is a genuine app defect that would have affected gameplay. The pipeline justified its existence with this single find.
-- **Full green achieved:** 135/135 tests passing across 26 scenarios (80 Tier 2 + 55 Tier 1) after all fixes applied.
+- **Lesson system effectiveness proven across 2 domains:** SC L1-L5 were applied in the capture domain with zero errors. The feedback loop from retrospective → lessons → future cycles is functioning.
+- **Game Logic Reviewer self-improvement:** Filed its own L1-L3 without needing retrospective intervention. Performance in rules-review-014 through -021 is markedly better than earlier reviews.
+- **Review gate continues to catch bugs:** 5 of 26 reviews found actionable issues. The Senior Reviewer's catch rate is consistently high, especially for missed duplicates and edge cases.
+- **Refactoring audit ROI:** 22 tickets from one domain scan. 6 were PTU-INCORRECT — real game logic bugs that would have affected gameplay. The audit process justified its cost.
+- **Full green maintained:** 134/134 combat tests + 39/39 capture tests = 173/173 passing after all fixes. Zero regressions from the refactoring cycle.
+- **Refactoring velocity:** 18 of 22 tickets resolved in one session cycle with zero regressions.

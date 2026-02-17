@@ -1,16 +1,17 @@
 ---
 skill: scenario-crafter
-last_analyzed: 2026-02-16T00:30:00
+last_analyzed: 2026-02-17T13:00:00
 analyzed_by: retrospective-analyst
-total_lessons: 5
+total_lessons: 6
 domains_covered:
   - combat
+  - capture
 ---
 
 # Lessons: Scenario Crafter
 
 ## Summary
-Five lessons span two pipeline cycles (Tier 2 + Tier 1). The original three (STAB, learn levels, type effectiveness) were successfully applied in all 7 Tier 1 scenarios and have been **integrated as permanent mandatory process steps** in the Scenario Crafter skill (Step 2). Two new Tier 1 patterns share a common root: assuming app behavior matches PTU rules without verifying against the actual implementation — once for non-deterministic stat generation, once for type-immunity enforcement in a GM-tool API. These have also been integrated as mandatory checks in the skill.
+Six lessons span three pipeline cycles (Tier 2, Tier 1, capture). The original three (STAB, learn levels, type effectiveness) were successfully applied in all Tier 1 and capture scenarios and have been **integrated as permanent mandatory process steps** in the Scenario Crafter skill (Step 2). Two Tier 1 patterns share a common root: assuming app behavior matches PTU rules without verifying against the actual implementation — now upgraded to systemic after appearing in capture domain as well. A sixth lesson addresses preserving test purpose when fixing flakiness.
 
 ---
 
@@ -86,19 +87,29 @@ When a scenario involves type effectiveness, explicitly look up each type pair i
 
 - **Category:** missing-check
 - **Severity:** high
-- **Domain:** combat
-- **Frequency:** recurring
+- **Domain:** combat, capture
+- **Frequency:** systemic
 - **First observed:** 2026-02-15 (Tier 1)
 - **Status:** active
 
 ### Pattern
-The Scenario Crafter wrote assertions with exact expected HP values for Pokemon created by `wild-spawn` and `template-load` endpoints, assuming stats would be deterministic based on species base stats alone (HP = level + baseHp×3 + 10). In reality, `generateAndCreatePokemon` distributes `level - 1` random stat points via weighted random selection. Each HP point allocated adds 3 to maxHp, producing a range of possible values. This caused failures in 2 of 7 Tier 1 scenarios (correction-002, correction-003), with a third scenario (correction-003) sharing the identical root cause.
+The Scenario Crafter wrote assertions with exact expected values for Pokemon created by non-deterministic endpoints. This pattern appeared across two domains:
+
+**Combat (3 instances):**
+- Wild-encounter and template-setup scenarios assumed deterministic HP from `generateAndCreatePokemon` (correction-002, correction-003)
+- Capture-variant scenario assumed deterministic HP for wild-spawned Rattata (correction-004, superseded by correction-005)
+
+**Capture (0 new instances):**
+- All capture scenarios correctly applied this lesson using explicit `POST /api/pokemon` with deterministic base stats
+
+The pattern is now systemic — the same root cause ("assumed API output is deterministic") manifested in 3+ scenarios across 2 pipeline cycles before being addressed.
 
 ### Evidence
-- `artifacts/reports/correction-002.md`: Wild-encounter Oddish HP expected 35 but varied (35, 38, 41, 44, 47)
-- `artifacts/reports/correction-003.md`: Template-setup Charmander HP expected 34 but varied due to same mechanism
-- `git diff 2a4f84e`: Wild-encounter spec reads actual stats via `GET /api/pokemon/$id` after spawn; template-setup spec uses `>= minimum` bounds and `currentHp = maxHp` checks
-- Conversation transcripts: Pattern was initially misattributed to parallel test interference by the Playtester, costing a retry cycle before the true root cause was identified
+- `artifacts/reports/correction-002.md`: Wild-encounter Oddish HP varied due to random stat points
+- `artifacts/reports/correction-003.md`: Template-setup Charmander HP varied (same root cause)
+- `artifacts/reports/correction-004.md`: Capture-variant Rattata HP varied (same root cause)
+- `artifacts/reports/correction-005.md`: Superseded correction-004 with query-then-compute pattern
+- Capture domain scenarios: All used explicit creation — lesson applied successfully
 
 ### Recommendation
 Before writing any assertion with an exact expected stat value, determine whether the API endpoint that creates the entity produces deterministic or non-deterministic output. For endpoints that use `generateAndCreatePokemon` (wild-spawn, template-load), stats will be non-deterministic. In these cases, either: (a) read actual stats from the API after creation and derive expected values dynamically, or (b) assert minimum bounds and relational properties (e.g., `currentHp = maxHp`, `maxHp >= base-only minimum`). Document which approach is used and why in the scenario file.
@@ -124,3 +135,25 @@ The Scenario Crafter wrote an assertion expecting the status API to reject Paral
 
 ### Recommendation
 When writing an assertion about a PTU rule, explicitly determine whether the app enforces that rule at the API level or whether it's a GM responsibility. Check existing tests and service code for prior art. If the API is a GM tool (status application, damage application), assertions should test what the API actually does, not what PTU says should happen at the table. Annotate the scenario with the enforcement boundary: "App-enforced" or "GM-enforced (not in API)."
+
+---
+
+## Lesson 6: Preserve test purpose when fixing flakiness
+
+- **Category:** process-gap
+- **Severity:** medium
+- **Domain:** combat
+- **Frequency:** observed
+- **First observed:** 2026-02-16 (Tier 1, capture-variant-001)
+- **Status:** active
+
+### Pattern
+When capture-variant-001 failed due to non-deterministic wild-spawn stats, correction-004 replaced `wild-spawn` with explicit `POST /api/pokemon` creation — eliminating flakiness but also removing the wild-spawn flow from the test entirely. The scenario's name was "Wild Encounter Capture Variant" but it no longer tested wild encounters. Correction-005 superseded this with a query-then-compute pattern that preserved the wild-spawn flow while making assertions dynamic.
+
+### Evidence
+- `artifacts/reports/correction-004.md`: Replaced wild-spawn with explicit creation — stable but removes test purpose
+- `artifacts/reports/correction-005.md`: Superseded correction-004 — keep wild-spawn, query actual stats, compute expected values dynamically
+- Pipeline state: correction-004 superseded by correction-005
+
+### Recommendation
+When fixing a flaky test, evaluate whether the proposed fix removes the feature or flow being tested. If the fix eliminates the scenario's primary purpose (e.g., replacing wild-spawn with manual creation in a "wild encounter" test), find an alternative approach that preserves coverage. Prefer the query-then-compute pattern: keep the real API flow, read actual values after creation, derive expected values dynamically from actuals.

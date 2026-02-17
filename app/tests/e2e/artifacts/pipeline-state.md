@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-15T20:00:00
-updated_by: scenario-verifier
+last_updated: 2026-02-17T13:00:00
+updated_by: retrospective-analyst
 ---
 
 ## Domain: combat
@@ -21,11 +21,11 @@ updated_by: scenario-verifier
 | Stage | Status | Count | Last Updated |
 |-------|--------|-------|-------------|
 | Loops | complete | 6 workflows (+ 1 sub-workflow) | 2026-02-15 |
-| Scenarios | complete | 7/7 (6 P0, 1 P1) | 2026-02-15 |
+| Scenarios | complete | 7/7 (6 P0, 1 P1) — capture-variant rewritten with dynamic assertions | 2026-02-16 |
 | Verifications | complete | 7/7 PASS | 2026-02-16 |
-| Test Runs | complete | 55/55 PASS (7 specs) | 2026-02-15 |
-| Results | complete | 7/7 result files (7 PASS) | 2026-02-15 |
-| Triage | complete | 4 reports resolved (1 APP_BUG fixed, 3 SCENARIO_BUG corrected) | 2026-02-15 |
+| Test Runs | complete | 7/7 PASS (55 tests across 7 specs) | 2026-02-16 |
+| Results | complete | 7/7 result files | 2026-02-16 |
+| Triage | complete | 5 resolved (4 original + correction-005). 0 open failures. | 2026-02-16 |
 
 Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + replacement), W4 (status chain), W5 (healing + recovery), W6 (template setup). Sub-workflow: W1 capture variant. 3 mechanics remain Tier 2 only (critical hit, struggle, multi-target).
 
@@ -37,7 +37,7 @@ Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + re
 |-----------|-------|--------|----------|-------|
 | combat-workflow-healing-recovery-001.spec.ts | 8/8 | PASS | ~3.6s | — |
 | combat-workflow-stage-buffs-001.spec.ts | 7/7 | PASS | ~3.2s | — |
-| combat-workflow-capture-variant-001.spec.ts | 7/7 | PASS | ~2.5s | — |
+| combat-workflow-capture-variant-001.spec.ts | 7/7 | PASS | ~1.4s | Regenerated per correction-005 (wild-spawn + dynamic query-then-compute). Stable across 3 consecutive runs. |
 | combat-workflow-faint-replacement-001.spec.ts | 9/9 | PASS | ~3.7s | Re-run after APP_BUG fix (72df77b) |
 | combat-workflow-status-chain-001.spec.ts | 7/7 | PASS | ~3.2s | Re-run after SCENARIO_BUG correction (2a4f84e) |
 | combat-workflow-wild-encounter-001.spec.ts | 9/9 | PASS | ~3.6s | Re-run after SCENARIO_BUG correction (2a4f84e) |
@@ -62,9 +62,9 @@ Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + re
 | combat-workflow-status-chain-001 | W4 | P0 | 9 | Status application, type immunity, Take a Breather, persistent vs volatile |
 | combat-workflow-healing-recovery-001 | W5 | P0 | 8 | Heal cap, faint recovery, temp HP, injury healing |
 | combat-workflow-template-setup-001 | W6 | P0 | 7 | Template load, initiative, serve to group |
-| combat-workflow-capture-variant-001 | W1-sub | P1 | 5 | Damage, STAB, capture rate, capture attempt |
+| combat-workflow-capture-variant-001 | W1-sub | P1 | 7 | Wild-spawn, damage (dynamic), STAB, injury (dynamic), capture rate, capture attempt |
 
-**Total: 7 scenarios, 57 PTU assertions**
+**Total: 7 scenarios, 59 PTU assertions**
 
 **Species used:** Growlithe, Oddish, Bulbasaur, Caterpie, Pidgey, Charmander, Eevee, Pikachu, Squirtle, Rattata
 
@@ -122,16 +122,25 @@ Workflows: W1 (full wild encounter), W2 (stage buffs + matchups), W3 (faint + re
 |----------|-----------|--------|
 | combat-workflow-healing-recovery-001 | 8/8 | PASS |
 | combat-workflow-stage-buffs-001 | 8/8 | PASS |
-| combat-workflow-capture-variant-001 | 5/5 | PASS |
+| combat-workflow-capture-variant-001 | 7/7 | PASS |
+
+### New Failure (2026-02-16 retest)
+
+| # | Scenario | Assertion | Category | Resolution |
+|---|----------|-----------|----------|------------|
+| 5 | combat-workflow-capture-variant-001 | #2: Rattata HP after 20 damage (expected 9, got 12) | SCENARIO_BUG | Scenario assumes Rattata wild-spawn HP=29 but `generateAndCreatePokemon` uses random stat distribution. correction-004 switched to explicit creation — **superseded by correction-005**: explicit creation removes wild-spawn from the test, defeating its purpose. Recommended fix: keep wild-spawn, query actual stats after spawn, compute expected values dynamically. |
 
 ### Recommended Next Steps
 
-All 4 failures resolved. Combat domain Tier 1 + Tier 2 are fully green.
+4 original failures resolved. 1 SCENARIO_BUG from retest (capture-variant) — correction-004 superseded by correction-005.
 
 1. ~~**Developer:** Fix bug-001~~ — DONE (commit `72df77b`)
 2. ~~**Scenario Crafter:** Apply correction-001, -002, -003~~ — DONE (commit `2a4f84e`)
 3. ~~**Playtester:** Re-run all 4 failed scenarios~~ — DONE (run 2026-02-15-002, all PASS)
-4. **Next:** Expand testing to other domains (capture, character-lifecycle, pokemon-lifecycle, etc.)
+4. ~~**Scenario Crafter:** Apply correction-005~~ — DONE (rewritten with wild-spawn + dynamic assertions)
+5. ~~**Scenario Verifier:** Re-verify capture-variant-001 (7 assertions, dynamic formulas)~~ — DONE (PASS: 7/7 assertions correct, 0 setup issues)
+6. ~~**Playtester:** Regenerate spec from updated scenario~~ — DONE (run 2026-02-16-002, 7/7 PASS, stable across 3 runs)
+7. **Next:** Expand testing to other domains (character-lifecycle, pokemon-lifecycle, etc.)
 
 ### Test Run Results (Playtester)
 
@@ -214,7 +223,7 @@ All 4 previously corrected scenarios now PASS:
 | combat-workflow-status-chain-001 | 9/9 | PASS | Paralysis immunity (Electric), stacked statuses, Take a Breather, persistent survives end |
 | combat-workflow-healing-recovery-001 | 8/8 | PASS | Heal cap, faint recovery, temp HP grant + absorption, injury heal |
 | combat-workflow-template-setup-001 | 7/7 | PASS | Template save/load, HP derivation, initiative with ties |
-| combat-workflow-capture-variant-001 | 5/5 | PASS | Water Gun STAB, injury, capture rate, origin linkage |
+| combat-workflow-capture-variant-001 | 7/7 | PASS | All assertions PTU-correct. Dynamic query-then-compute pattern eliminates flakiness. |
 
 **Species verified (10):** Growlithe, Oddish, Bulbasaur, Caterpie, Pidgey, Charmander, Eevee, Pikachu, Rattata, Squirtle — all base stats, types, and move learn levels confirmed against `books/markdown/pokedexes/gen1/` files.
 
@@ -227,30 +236,190 @@ All 4 previously corrected scenarios now PASS:
 
 All 7 scenarios proceed to Playtester.
 
+### Regression Verification — design-testability-001 P0 (Result Verifier)
+
+**NO REGRESSIONS — 55/55 assertions PASS across 7 Tier 1 specs**
+
+**Trigger:** Post-implementation re-run after design-testability-001 P0 landed (commits `5dc97c7`–`732ee84`).
+
+**Changed files and regression surface:**
+
+| Commit | File | Change | Risk | Coverage |
+|--------|------|--------|------|----------|
+| `84b9f6c` | `combatant.service.ts` | Simplified faint guard in `applyDamageToEntity` — removed redundant `!includes('Fainted')` check | MEDIUM — shared damage path | **Covered** — faint-replacement #7-8, healing-recovery #2, wild-encounter #9 all exercise faint path |
+| `b9dfed7` | `move.post.ts` | Replaced inline HP subtraction with `calculateDamage()` + `applyDamageToEntity()` + `syncDamageToDatabase()` | LOW — move endpoint only | **Not directly tested** — Tier 1 specs use `/damage` not `/move`. Shared code (`calculateDamage`, `applyDamageToEntity`) IS covered via `/damage` path |
+| `e7aa6aa` | `calculate-damage.post.ts` | New file (152 lines) — read-only endpoint | NONE — additive, no existing code modified | N/A — new endpoint, no regression surface |
+
+**Code path analysis:**
+
+The critical shared function `applyDamageToEntity()` (combatant.service.ts:66-82) is exercised by **every damage-applying test** across 5 of 7 specs:
+- `combat-workflow-healing-recovery-001`: assertions 1, 2, 6, 7 (damage + temp HP absorption)
+- `combat-workflow-faint-replacement-001`: assertions 3-5, 7-8, 10 (damage, faint, status clear)
+- `combat-workflow-wild-encounter-001`: assertions 4-9 (STAB damage, injury, faint)
+- `combat-workflow-stage-buffs-001`: assertions 5-6 (stage-modified damage)
+- `combat-workflow-capture-variant-001`: assertions 2-4 (damage, injury conditional)
+
+The 1-line faint guard simplification (`84b9f6c`) is specifically stress-tested by:
+- faint-replacement-001 #7: Caterpie faints to 0 HP
+- faint-replacement-001 #8: Burned status cleared on faint (the exact mechanic this commit touches)
+- wild-encounter-001 #9: Oddish faint after second Ember
+- healing-recovery-001 #2: Charmander fainted from overkill damage
+
+**Coverage gap (noted, not a regression):**
+
+`move.post.ts` was refactored to use the shared damage pipeline but is not directly tested by Tier 1 workflow specs (they apply set damage via `/damage` rather than executing moves via `/move`). The shared code it now calls IS fully covered. The move endpoint's unique code paths (move lookup, accuracy check, STAB calculation) have separate Tier 2 coverage but were not re-run in this cycle.
+
+**Verdict:** PASS — 0 regressions. The `combatant.service.ts` change is well-covered by faint/damage assertions. The `move.post.ts` refactor shares the same code path exercised through `/damage`. The new `calculate-damage.post.ts` is purely additive.
+
+### Regression Verification — design-testability-001 P1+P2 (Playtester)
+
+**NO REGRESSIONS — 134/134 tests PASS across 26 combat specs (19 Tier 2 + 7 Tier 1)**
+
+**Trigger:** Post-implementation re-run after design-testability-001 P1 (commits 01150bf, 2dd0d67) and P2 (commits 20253c3, e3a424e, 2b1a69e, b41d4a5) landed, plus evasion bonus fix (efc4b67).
+
+**Run command:** `npx playwright test tests/e2e/scenarios/combat/ --reporter=list`
+**Duration:** ~15.8s, 6 workers, 0 retries needed
+
+**Changed files and regression surface:**
+
+| Commit | File | Change | Risk |
+|--------|------|--------|------|
+| `01150bf` | `damageCalculation.ts` | Added `calculateEvasion()`, `calculateAccuracyThreshold()`, `AccuracyCalcResult` | NONE — additive, pure functions |
+| `2dd0d67` | `calculate-damage.post.ts` | Added evasion/accuracy section to response | NONE — additive to response |
+| `20253c3` | `combatant.service.ts` | Added `countMarkersCrossed()`, extended `calculateDamage()` with HP marker detection | MEDIUM — shared damage path |
+| `e3a424e` | 2 combat test files | Updated injury expectations for HP marker crossings | LOW — test-only |
+| `2b1a69e` | 11 combat test files | Updated injury count expectations (massive damage + 50% marker = 2 injuries) | LOW — test-only |
+| `b41d4a5` | `combatant.service.ts` | P2 refinement | LOW — follows P2 pattern |
+| `efc4b67` | `damageCalculation.ts` | Fixed evasion bonus inclusion across all 4 code paths | LOW — calculation fix |
+
+**Tier 2 Results (19 specs, 79 tests):**
+
+| Spec File | Tests | Status |
+|-----------|-------|--------|
+| combat-basic-physical-001.spec.ts | 7 | PASS |
+| combat-basic-special-001.spec.ts | 7 | PASS |
+| combat-encounter-lifecycle-001.spec.ts | 7 | PASS |
+| combat-initiative-order-001.spec.ts | 6 | PASS |
+| combat-turn-progression-001.spec.ts | 7 | PASS |
+| combat-damage-and-faint-001.spec.ts | 8 | PASS |
+| combat-critical-hit-001.spec.ts | 3 | PASS |
+| combat-stab-001.spec.ts | 3 | PASS |
+| combat-type-effectiveness-001.spec.ts | 3 | PASS |
+| combat-type-immunity-001.spec.ts | 3 | PASS |
+| combat-healing-001.spec.ts | 4 | PASS |
+| combat-combat-stages-001.spec.ts | 6 | PASS |
+| combat-status-conditions-001.spec.ts | 6 | PASS |
+| combat-take-a-breather-001.spec.ts | 5 | PASS |
+| combat-injury-massive-damage-001.spec.ts | 1 | PASS |
+| combat-minimum-damage-001.spec.ts | 1 | PASS |
+| combat-multi-target-001.spec.ts | 1 | PASS |
+| combat-struggle-attack-001.spec.ts | 1 | PASS |
+| combat-temporary-hp-001.spec.ts | 1 | PASS |
+
+**Tier 1 Results (7 specs, 55 tests):**
+
+| Spec File | Tests | Status |
+|-----------|-------|--------|
+| combat-workflow-wild-encounter-001.spec.ts | 9 | PASS |
+| combat-workflow-stage-buffs-001.spec.ts | 7 | PASS |
+| combat-workflow-faint-replacement-001.spec.ts | 9 | PASS |
+| combat-workflow-status-chain-001.spec.ts | 7 | PASS |
+| combat-workflow-healing-recovery-001.spec.ts | 8 | PASS |
+| combat-workflow-template-setup-001.spec.ts | 7 | PASS |
+| combat-workflow-capture-variant-001.spec.ts | 7 | PASS |
+
+**Verdict:** PASS — 0 regressions across all 26 combat specs. The P1 evasion recalculation, P2 HP marker injury detection, and evasion bonus fix introduced no breakage. All 11 updated injury expectations (from P2 commit 2b1a69e) are confirmed correct. design-testability-001 is fully closed.
+
 ### Open Issues
 
-All resolved:
+Previously resolved:
 - ~~bug-001: APP_BUG — Faint handler doesn't clear statuses~~ FIXED (72df77b)
 - ~~correction-001: SCENARIO_BUG — Status-chain assumes type immunity~~ FIXED (2a4f84e)
 - ~~correction-002: SCENARIO_BUG — Wild-encounter assumes deterministic stats~~ FIXED (2a4f84e)
 - ~~correction-003: SCENARIO_BUG — Template-setup assumes deterministic stats~~ FIXED (2a4f84e)
+- ~~correction-004: SCENARIO_BUG — Capture-variant wild-spawn HP non-deterministic~~ SUPERSEDED by correction-005
+
+Open:
+- ~~correction-005: SCENARIO_BUG — Capture-variant fix (correction-004) removes wild-spawn from test. Rewrite with dynamic assertions instead.~~ DONE — Scenario rewritten with wild-spawn + query-then-compute pattern. Needs re-verification → re-test → result verification.
+- ~~design-testability-001: FEATURE_GAP — Server-side damage calculation endpoint (P0), evasion recalculation (P1), HP marker injuries (P2). Addresses 4 TESTED_TAUTOLOGICAL + 2 NOT_TESTED mechanics from rules-review-test-integrity-001. P0 implemented (commits 5dc97c7–732ee84), code-review-003 APPROVED, rules-review-003 APPROVED. Post-implementation regression check: PASS (55/55 Tier 1 assertions, 0 regressions). P1 implemented (commits 01150bf–2dd0d67), P2 implemented (commits 20253c3–b41d4a5). code-review-004 APPROVED — HIGH #1 (evasion bonus) fixed in efc4b67, verified across all 4 code paths. rules-review-004 APPROVED — 11/11 mechanics correct, 0 issues.~~ **CLOSED** — Full regression verification PASS (134/134 tests, 26 specs, 2026-02-16).
+
+### Reviews
+
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-002 | bug-001 | APPROVED | senior-reviewer | 2026-02-16 |
+| code-review-003 | design-testability-001 | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-002 | bug-001 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| rules-review-003 | design-testability-001 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| rules-review-test-integrity-001 | test-integrity-audit-001 | CHANGES_REQUIRED | game-logic-reviewer | 2026-02-16 |
+| code-review-004 | design-testability-001 (P1+P2) | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-004 | design-testability-001 (P1+P2) | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-005 | refactoring-006 | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-005 | refactoring-006 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-006 | refactoring-004 | APPROVED | senior-reviewer | 2026-02-16 |
+| code-review-007 | refactoring-002 | APPROVED | senior-reviewer | 2026-02-16 |
+| code-review-008 | refactoring-005 | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-008 | refactoring-005 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| rules-review-006 | refactoring-004 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| rules-review-007 | refactoring-002 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-009 | refactoring-003 | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-009 | refactoring-003 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-010 | refactoring-008 | CHANGES_REQUIRED | senior-reviewer | 2026-02-16 |
+| code-review-011 | refactoring-008 (follow-up) | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-010 | refactoring-008 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-012 | refactoring-001 | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-011 | refactoring-001 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-013 | refactoring-010 (plan) | APPROVED | senior-reviewer | 2026-02-16 |
+| code-review-014 | refactoring-010 (implementation) | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-012 | refactoring-010 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-015 | refactoring-007 | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-013 | refactoring-007 | APPROVED | game-logic-reviewer | 2026-02-16 |
+| code-review-016 | refactoring-011 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-014 | refactoring-011 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| code-review-017 | refactoring-017 | APPROVED | senior-reviewer | 2026-02-17 |
+| code-review-018 | refactoring-015 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-015 | refactoring-017 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| rules-review-016 | refactoring-015 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| code-review-019 | refactoring-016 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-017 | refactoring-016 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| code-review-020 | refactoring-019 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-018 | refactoring-019 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| code-review-021 | refactoring-020 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-019 | refactoring-020 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| code-review-022 | refactoring-018 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-020 | refactoring-018 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| code-review-023 | refactoring-009 | CHANGES_REQUIRED | senior-reviewer | 2026-02-17 |
+| code-review-024 | refactoring-009 (follow-up) | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-021 | refactoring-009 | APPROVED | game-logic-reviewer | 2026-02-17 |
+
+### Designs
+
+| Design ID | Gap Report | Scope | Status | Date |
+|-----------|-----------|-------|--------|------|
+| design-testability-001 | rules-review-test-integrity-001 | PARTIAL | closed | 2026-02-16 |
+
+**design-testability-001:** Server-side damage calculation endpoint + evasion recalculation + HP marker injuries. Converts 17+ tautological test files to genuine server-side tests. Three priority tiers: P0 (damage formula + STAB + type effectiveness + stages + crits), P1 (dynamic evasion), P2 (HP marker injuries). Pattern: `captureRate.ts` → `damageCalculation.ts`.
 
 ### Lessons (Retrospective Analyst)
 
 | Metric | Value |
 |--------|-------|
-| Last analyzed | 2026-02-16T00:30:00 |
-| Total lessons | 11 |
-| Active | 7 |
+| Last analyzed | 2026-02-17T13:00:00 |
+| Total lessons | 24 |
+| Active | 18 |
 | Resolved | 3 (SC L1-L3 → permanent process steps) |
-| Promote-candidate | 0 |
-| Systemic patterns | 1 (assuming-without-verifying) |
+| New this cycle | 6 |
+| Updated this cycle | 3 |
+| Systemic patterns | 2 (non-deterministic APIs, PTU-without-verification) |
 
-Lessons written for 4 skills:
-- scenario-crafter (5 lessons — 2 missing-check, 2 data-lookup, 1 missing-check; 3 promoted to promote-candidate after Tier 1 validation)
-- playtester (3 lessons — 3 process-gap)
-- developer (2 lessons — 1 missing-check, 1 fix-pattern) — NEW
-- scenario-verifier (1 lesson — 1 process-gap) — NEW
+Lessons written for 7 skills:
+- scenario-crafter (6 lessons — L4 upgraded to systemic, L6: preserve test purpose)
+- developer (4 lessons — L2 upgraded to recurring, L3 NEW: verify PTU formulas against rulebook, L4 NEW: audit pre-existing code)
+- playtester (4 lessons — L4 NEW: stay within role boundary)
+- scenario-verifier (1 lesson — unchanged)
+- game-logic-reviewer (3 lessons — unchanged, self-filed)
+- orchestrator (4 lessons — L3 updated with new evidence, L4 NEW: route learnings to correct system)
+- senior-reviewer (2 lessons — L2 NEW: don't frame PTU incorrectness as "acknowledged limitation")
 
 See `artifacts/lessons/` for details and `artifacts/lessons/retrospective-summary.md` for cross-cutting analysis.
 
@@ -261,10 +430,32 @@ See `artifacts/lessons/` for details and `artifacts/lessons/retrospective-summar
 | Loops | complete | 2 workflows (+ 1 sub-workflow), 9 mechanic validations (+ 2 sub-loops) | 2026-02-15 |
 | Scenarios | complete | 7/7 (1 P0, 4 P1, 2 P2) | 2026-02-15 |
 | Verifications | complete | 7/7 PASS (40/40 assertions correct) | 2026-02-15 |
-| Test Runs | not started | — | — |
-| Results | not started | — | — |
+| Test Runs | complete | 39/39 PASS (7 specs, 6 workers) | 2026-02-16 |
+| Results | complete | 7 PASS, 0 FAIL | 2026-02-16 |
+| Triage | complete | 1 APP_BUG resolved (bug-002.md — evolution stage fix confirmed) | 2026-02-16 |
 
 Workflows: W1 (standard capture), W2 (rate assessment). Sub-workflow: W1 multi-attempt retry. Mechanic validations: M1-M9 (base rate, HP tiers, evolution, status, rarity/injury, attempt roll, crit accuracy, faint prevention, post-capture update, worked examples). 5 FEATURE_GAPs identified (ball modifiers, legendary detection, evolution stage accuracy, capture specialist features, re-capture prevention). 1 UX_GAP (attempt button in combat).
+
+### Test Run Results (Playtester)
+
+**7 PASS, 0 FAIL — 39 tests passed across 7 spec files (parallel, 6 workers, ~2.5s)**
+
+| Spec File | Tests | Status | Duration | Notes |
+|-----------|-------|--------|----------|-------|
+| capture-mechanic-hp-modifier-001.spec.ts | 6/6 | PASS | ~450ms | All HP tier boundaries correct |
+| capture-mechanic-status-modifiers-001.spec.ts | 6/6 | PASS | ~480ms | All status types and stacking correct |
+| capture-mechanic-attempt-roll-001.spec.ts | 5/5 | PASS | ~700ms | Response shape, crit detection, relational checks |
+| capture-mechanic-cannot-capture-fainted-001.spec.ts | 4/4 | PASS | ~500ms | Rate + attempt rejection, no roll field |
+| capture-mechanic-worked-examples-001.spec.ts | 3/3 | PASS | ~135ms | **Re-run 2026-02-16:** All 3 PTU worked examples now correct after evolution stage fix |
+| capture-workflow-standard-capture-001.spec.ts | 7/7 | PASS | ~600ms | Full workflow: rate→damage→rate→capture→verify |
+| capture-workflow-multi-attempt-001.spec.ts | 7/7 | PASS | ~1300ms | Retry 1: fixed JSON.parse TEST_BUG on statusConditions |
+
+**Previous Failures (all resolved):**
+
+| # | Scenario | Assertion | Classification | Resolution |
+|---|----------|-----------|---------------|------------|
+| 1 | worked-examples-001 | #1 (Pikachu captureRate: expected 70, got 80) | APP_BUG | Fixed: evolution stage seeder (ec11197, 71b6987, 4515dbb, 7c49daf) |
+| 2 | worked-examples-001 | #3 (Hydreigon captureRate: expected -15, got 5) | APP_BUG | Fixed: same root cause — evolutionStage=1 for all species |
 
 ### Verification Results (Scenario Verifier)
 
@@ -323,9 +514,63 @@ All 7 scenarios proceed to Playtester.
 - Lesson 4 (Non-deterministic APIs): All workflow Pokemon created via `POST /api/pokemon` with explicit base stats for deterministic HP. Capture attempt roll is non-deterministic — handled with guaranteed-capture conditions (scenario 1) and retry loops (scenario 2). Annotated in each scenario.
 - Lesson 5 (Enforcement boundary): Every assertion annotated as App-enforced or GM-enforced. Status API is GM tool (status applied without type checks). Capture rate/attempt are App-enforced calculations.
 
+### Results Verification Summary (Result Verifier)
+
+**1 FAILURE TRIAGED — 1 APP_BUG (2 assertions, same root cause)**
+
+- Results analyzed: 7
+- Passed: 6
+- Failed: 1
+
+| Category | Count | Reports Generated |
+|----------|-------|-------------------|
+| APP_BUG | 1 | bug-002.md |
+| SCENARIO_BUG | 0 | — |
+| TEST_BUG | 0 | — |
+| AMBIGUOUS | 0 | — |
+| FEATURE_GAP | 0 | — |
+| UX_GAP | 0 | — |
+
+### Failure Triage
+
+| # | Scenario | Assertion | Category | Report | Assigned To |
+|---|----------|-----------|----------|--------|-------------|
+| 1 | capture-mechanic-worked-examples-001 | #1: Pikachu captureRate (expected 70, got 80) | APP_BUG | bug-002.md | Developer |
+| 2 | capture-mechanic-worked-examples-001 | #3: Hydreigon captureRate (expected -15, got 5) | APP_BUG | bug-002.md | Developer |
+
+**Root cause:** Both failures trace to a single bug — SpeciesData seeder stores `evolutionStage=1` for all species (seed.ts regex only captures the first evolution line). Combined with `Math.max(3, evolutionStage)` hardcode in rate.post.ts, every Pokemon gets evolutionModifier=+10 regardless of actual evolution stage. Pikachu (stage 2/3) should get 0, Hydreigon (stage 3/3) should get -10.
+
+### Passing Results Confirmed
+
+| Scenario | Assertions | Status |
+|----------|-----------|--------|
+| capture-mechanic-attempt-roll-001 | 5/5 | PASS |
+| capture-mechanic-cannot-capture-fainted-001 | 3/3 | PASS |
+| capture-mechanic-hp-modifier-001 | 6/6 | PASS |
+| capture-mechanic-status-modifiers-001 | 6/6 | PASS |
+| capture-mechanic-worked-examples-001 | 3/3 | PASS |
+| capture-workflow-standard-capture-001 | 8/8 | PASS |
+| capture-workflow-multi-attempt-001 | 9/9 | PASS |
+
+**Note:** Bug-002 (evolution stage) has been fixed and confirmed by retest on 2026-02-16. All 7 capture scenarios now PASS.
+
+### Reviews
+
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-001 | bug-002 | APPROVED | senior-reviewer | 2026-02-16 |
+| rules-review-001 | bug-002 | APPROVED | game-logic-reviewer | 2026-02-16 |
+
+### Recommended Next Steps
+
+1. ~~**Developer:** Fix bug-002~~ — DONE (commits ec11197, 71b6987, 4515dbb, 7c49daf)
+2. ~~**Game Logic Reviewer:** Review bug-002 fix for PTU rule correctness~~ — APPROVED (rules-review-001)
+3. ~~**Playtester:** Re-run capture-mechanic-worked-examples-001~~ — DONE (2026-02-16, all 3 assertions PASS)
+4. **Next domain:** Proceed to character-lifecycle or pokemon-lifecycle
+
 ### Open Issues
 
-(none)
+- ~~bug-002: APP_BUG — SpeciesData stores evolutionStage=1 for all species (HIGH severity)~~ FIXED & VERIFIED (retest 2026-02-16, all 3 worked examples PASS)
 
 ## Domain: character-lifecycle
 
@@ -410,3 +655,55 @@ All 7 scenarios proceed to Playtester.
 ### Open Issues
 
 (none)
+
+## Code Health
+
+### Last Audit
+- **Date:** 2026-02-16T01:00:00
+- **Scope:** domain: combat
+- **Files scanned:** 69
+- **Files deep-read:** 15
+
+### Open Tickets
+
+| Ticket | Priority | File(s) | Categories | Status |
+|--------|----------|---------|------------|--------|
+| refactoring-001 | P0 | encounter.ts | LLM-SIZE, EXT-GOD | resolved |
+| refactoring-002 | P1 | combatants.post.ts, wild-spawn.post.ts, from-scene.post.ts | EXT-DUPLICATE, LLM-INCONSISTENT | resolved |
+| refactoring-003 | P1 | combatants.post.ts, from-scene.post.ts | LLM-TYPES, EXT-LAYER | resolved |
+| refactoring-004 | P1 | combatants.post.ts, wild-spawn.post.ts, start.post.ts | LLM-INCONSISTENT | resolved |
+| refactoring-005 | P1 | start.post.ts | EXT-LAYER, LLM-TYPES | resolved |
+| refactoring-006 | P2 | breather.post.ts, move.post.ts | LLM-MAGIC, LLM-INCONSISTENT | resolved |
+| refactoring-007 | P2 | useCombat.ts | EXT-GOD | resolved |
+| refactoring-008 | P1 | statusConditions.ts, captureRate.ts, useCapture.ts, restHealing.ts | PTU-INCORRECT, LLM-MAGIC | resolved |
+| refactoring-009 | P2 | statusConditions.ts, combat.ts, captureRate.ts + 3 more | PTU-INCORRECT | pending-rules-review |
+
+| refactoring-010 | P1 | schema, seed.ts, pokemon-generator, grid-placement, 3 endpoints | FEATURE_GAP, PTU-INCORRECT | resolved |
+| refactoring-011 | P2 | pokemon-generator.service.ts, combatant.service.ts | EXT-DUPLICATE | resolved |
+| refactoring-012 | P2 | combatant.service.ts, pokemon-generator.service.ts, load.post.ts | PTU-INCORRECT | open |
+| refactoring-013 | P2 | settings.test.ts | TEST-STALE | open |
+| refactoring-014 | P1 | import-csv.post.ts, groupViewTabs.ts, capture-helpers.ts, combat-helpers.ts | TYPE-ERROR | open |
+| refactoring-015 | P2 | serve.post.ts | RACE-CONDITION | resolved |
+| refactoring-016 | P1 | useCombat.test.ts | TEST-STALE | resolved |
+| refactoring-017 | P1 | diceRoller.ts, useMoveCalculation.ts | PTU-INCORRECT | resolved |
+| refactoring-018 | P2 | useMoveCalculation.ts | PTU-INCORRECT | resolved (code-review-022: update combat loop doc lines 1006/1017/1022 to reflect single-roll before closing) |
+| refactoring-019 | P1 | useTypeChart.ts | PTU-INCORRECT | resolved |
+| refactoring-020 | P1 | useTypeChart.ts, damageCalculation.ts | EXT-DUPLICATE | resolved |
+| refactoring-021 | P2 | AccuracySection.vue | EXT-DUPLICATE, DEAD-CODE | open |
+
+**Totals:** 0 P0, 0 P1, 4 P2 — 4 tickets open
+
+### Recommended Order
+1. ~~refactoring-004 (small — standardize response building)~~ RESOLVED (86db8fc) — code-review-006 APPROVED
+2. ~~refactoring-002 (medium — extract grid placement service)~~ RESOLVED (c5ecc91–9576503) — code-review-007 APPROVED
+3. ~~refactoring-005 (small — extract initiative sorting)~~ RESOLVED (8168ecc) — code-review-008 APPROVED
+4. ~~refactoring-003 (medium — type entity transformation)~~ RESOLVED (14a54f4–162feff) — code-review-009 APPROVED
+5. ~~refactoring-001 (large — split God store)~~ RESOLVED (2771191) — code-review-012 APPROVED
+6. ~~refactoring-006 (small — deduplicate constants)~~ RESOLVED (767e6f3, a95b67e) — code-review-005 + rules-review-005 APPROVED
+7. ~~refactoring-008 (small — reclassify Sleep as Volatile, fix capture rate +10→+5)~~ RESOLVED (63fe747, 3842bc7, b15f234) — code-review-011 APPROVED
+8. ~~refactoring-009 (medium — remove phantom Encored/Taunted/Tormented conditions)~~ RESOLVED (3fc41eb, 6a3e239) — code-review-024 + rules-review-021 APPROVED
+9. ~~refactoring-007 (medium — split useCombat.ts)~~ RESOLVED (5c8a2bb, d356d00) — code-review-015 APPROVED
+10. ~~refactoring-016 (medium — rewrite useCombat.test.ts to import real composables, fix wrong PTU values)~~ RESOLVED (a4dd634–bf5cb7a) — code-review-019 + rules-review-017 APPROVED
+11. ~~refactoring-019 (medium — fix dual-type effectiveness: multiplicative → PTU flat lookup)~~ RESOLVED (5565b6e) — code-review-020 APPROVED
+12. ~~refactoring-020 (medium — consolidate duplicate type chart code)~~ RESOLVED (3f9afc0–d7bff18) — code-review-021 APPROVED
+13. refactoring-014 (small — fix 4 pre-existing type errors)

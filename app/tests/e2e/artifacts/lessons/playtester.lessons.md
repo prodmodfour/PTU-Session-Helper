@@ -1,8 +1,8 @@
 ---
 skill: playtester
-last_analyzed: 2026-02-16T00:30:00
+last_analyzed: 2026-02-17T13:00:00
 analyzed_by: retrospective-analyst
-total_lessons: 3
+total_lessons: 4
 domains_covered:
   - combat
 ---
@@ -10,7 +10,7 @@ domains_covered:
 # Lessons: Playtester
 
 ## Summary
-Three lessons span two pipeline cycles. The original two (Tier 2) involve the Playtester silently adapting to API discrepancies instead of filing reports. A new Tier 1 lesson addresses a flawed investigation methodology: misattributing genuine failures to infrastructure interference, wasting retry cycles before identifying the real root cause.
+Four lessons span three pipeline cycles. The original two (Tier 2) involve the Playtester silently adapting to API discrepancies instead of filing reports. L3 addresses a flawed investigation methodology: misattributing genuine failures to infrastructure interference. L4 is new from conversation mining: the Playtester attempted to modify application code instead of staying within its role boundary (test specs only).
 
 ---
 
@@ -77,3 +77,35 @@ During initial Tier 1 test execution, wild-encounter and template-setup specs fa
 
 ### Recommendation
 When a test fails, before retrying with different infrastructure settings (solo vs parallel, increased timeouts), first examine the actual expected-vs-actual values in the failure output. Compare the actual values against the scenario's expected values to determine whether the discrepancy is deterministic (always wrong by the same amount = logic error) or variable (wrong by different amounts across runs = non-deterministic input). Only attribute to infrastructure after ruling out data-level causes.
+
+---
+
+## Lesson 4: Stay within role boundary — fix test specs, not application code
+
+- **Category:** process-gap
+- **Severity:** medium
+- **Domain:** combat
+- **Frequency:** observed
+- **First observed:** 2026-02-16 (session ad966148)
+- **Status:** active
+
+### Pattern
+The Playtester identified pre-existing test failures and proposed fixes that included modifying application code (not just test specs). The user corrected the role boundary: "you're the playtester. You're allowed to fix playwright tests, but not edit the actual code. For that, you write tickets." The Playtester adjusted and correctly fixed only test specs while filing a ticket for the application-level issue (serve endpoint race condition → refactoring-015).
+
+### Evidence
+- Conversation session `ad966148`: User corrected Playtester role boundary
+- `artifacts/refactoring/refactoring-015.md`: Serve endpoint race condition ticketed by Playtester instead of directly fixed
+- The Playtester correctly fixed the test-side race (verify from response instead of follow-up GET) while delegating the app-side fix (Prisma transaction) to the Developer
+
+### Recommendation
+The Playtester's scope is limited to:
+1. **Write and run Playwright spec files** — translating scenarios into executable tests
+2. **Fix test infrastructure issues** — selectors, timing, parallel safety in test code
+3. **File tickets for application issues** — when a test failure traces to app code, file an APP_BUG report for the Developer
+
+The Playtester must NOT:
+- Modify application source code (`app/server/`, `app/composables/`, `app/utils/`, etc.)
+- Modify Prisma schema or migrations
+- Modify server endpoints or service files
+
+When in doubt, file a ticket and let the Developer handle the fix.
