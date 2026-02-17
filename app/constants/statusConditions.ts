@@ -9,7 +9,7 @@ export const PERSISTENT_CONDITIONS: StatusCondition[] = [
 ]
 
 export const VOLATILE_CONDITIONS: StatusCondition[] = [
-  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled', 'Encored', 'Taunted', 'Tormented',
+  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled',
   'Enraged', 'Suppressed'
 ]
 

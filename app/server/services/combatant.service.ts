@@ -235,8 +235,8 @@ export function applyHealingToEntity(
 export const VALID_STATUS_CONDITIONS: StatusCondition[] = [
   'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned',
   'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed',
-  'Disabled', 'Encored', 'Taunted', 'Tormented',
-  'Stuck', 'Slowed', 'Trapped', 'Enraged', 'Suppressed', 'Fainted',
+  'Disabled', 'Enraged', 'Suppressed',
+  'Stuck', 'Slowed', 'Trapped', 'Fainted',
   'Tripped', 'Vulnerable'
 ]
 
