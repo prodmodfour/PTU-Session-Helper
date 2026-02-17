@@ -10,7 +10,7 @@ affected_files:
   - app/server/api/encounters/[id]/calculate-damage.post.ts
   - app/tests/unit/composables/useTypeChart.test.ts
 estimated_scope: medium
-status: open
+status: resolved
 created_at: 2026-02-17T07:00:00
 origin: refactoring-019
 ---
@@ -75,4 +75,32 @@ The type chart was originally embedded in `useCombat.ts` (composable). When `dam
    - Type chart data tests and `getTypeEffectiveness` tests should move to `tests/unit/utils/typeChart.test.ts`
    - `useTypeChart.test.ts` retains tests for `isImmuneToStatus`, `hasSTAB`, and the composable's re-export behavior
 
+6. **Clamp net to ±3** (from code-review-020 MEDIUM #1):
+   - `const net = Math.max(-3, Math.min(3, seCount - resistCount))`
+   - PTU defines triply as the maximum tier. Current `?? 1` fallback returns neutral for net beyond ±3 (e.g., 4+-type Pokemon via abilities). Should cap at triply SE (3.0) or triply resisted (0.125).
+
 Estimated commits: 3-4 (extract utility, update damageCalculation imports, update composable delegation, move tests)
+
+## Resolution Log
+
+**Resolved:** 2026-02-17
+
+**Commits:**
+- `3f9afc0` — refactor: extract canonical type chart utility from duplicated code
+- `a51e49c` — refactor: replace inline type chart in damageCalculation with import
+- `07fa45e` — refactor: delegate useTypeChart composable to canonical typeChart utility
+- `d7bff18` — test: split type chart tests between utility and composable
+
+**Files created:**
+- `app/utils/typeChart.ts` — canonical source for TYPE_CHART, NET_EFFECTIVENESS, getTypeEffectiveness(), getEffectivenessLabel()
+- `app/tests/unit/utils/typeChart.test.ts` — 23 tests covering chart completeness, all effectiveness tiers, and ±3 net clamp
+
+**Files changed:**
+- `app/utils/damageCalculation.ts` — removed 77 lines of duplicated type chart code, re-exports from typeChart.ts
+- `app/composables/useTypeChart.ts` — removed 77 lines of duplicated code, delegates to typeChart.ts, keeps typeImmunities/isImmuneToStatus/hasSTAB
+- `app/tests/unit/composables/useTypeChart.test.ts` — retained 13 tests for composable-specific behavior (isImmuneToStatus, hasSTAB, re-export verification)
+
+**Bug fix applied:**
+- Net effectiveness clamped to ±3 (code-review-020 MEDIUM #1): `Math.max(-3, Math.min(3, seCount - resistCount))` instead of `?? 1` fallback for net beyond triply
+
+**Test status:** 507/508 unit tests pass (1 pre-existing failure in settings store unrelated to this change)
