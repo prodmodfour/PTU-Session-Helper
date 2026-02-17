@@ -400,9 +400,6 @@ sub_loops: []
 - Infatuated: +5
 - Cursed: +5
 - Disabled: +5
-- Encored: +5
-- Taunted: +5
-- Tormented: +5
 - Enraged: +5
 - Suppressed: +5
 
