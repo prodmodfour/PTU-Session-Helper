@@ -165,7 +165,7 @@ const extendedRestDescription = computed(() => {
   if (props.entityType === 'character') {
     return 'Heal HP for 4 hours, clear persistent status conditions, restore drained AP.'
   }
-  return 'Heal HP for 4 hours, clear persistent status conditions (Burned, Frozen, Paralyzed, Poisoned, Asleep), restore daily moves.'
+  return 'Heal HP for 4 hours, clear persistent status conditions (Burned, Frozen, Paralyzed, Poisoned), restore daily moves.'
 })
 
 const pokemonCenterDescription = computed(() => {
