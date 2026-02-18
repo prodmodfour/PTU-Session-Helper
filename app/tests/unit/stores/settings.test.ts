@@ -10,9 +10,9 @@ describe('settings store', () => {
   })
 
   describe('initial state', () => {
-    it('has default damage mode as set', () => {
+    it('has default damage mode matching DEFAULT_SETTINGS', () => {
       const store = useSettingsStore()
-      expect(store.damageMode).toBe('set')
+      expect(store.damageMode).toBe(DEFAULT_SETTINGS.damageMode)
     })
 
     it('has correct default grid dimensions', () => {

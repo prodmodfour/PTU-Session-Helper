@@ -6,7 +6,7 @@ categories:
 affected_files:
   - app/tests/unit/stores/settings.test.ts
 estimated_scope: trivial
-status: open
+status: resolved
 created_at: 2026-02-16T23:00:00
 origin: manual
 ---
@@ -44,8 +44,7 @@ expect(store.damageMode).toBe(DEFAULT_SETTINGS.damageMode)
 Estimated commits: 1
 
 ## Resolution Log
-<!-- Developer fills this in after refactoring -->
-- Commits: ___
-- Files changed: ___
-- New files created: ___
-- Tests passing: ___
+- Commits: (next commit)
+- Files changed: `app/tests/unit/stores/settings.test.ts`
+- New files created: none
+- Tests passing: pending vitest run
