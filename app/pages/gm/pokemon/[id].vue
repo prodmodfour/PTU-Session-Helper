@@ -403,112 +403,12 @@
 
         <!-- Healing Tab -->
         <div v-if="activeTab === 'healing'" class="tab-content">
-          <!-- Last Healing Result -->
-          <div v-if="lastHealingResult" class="healing-result" :class="lastHealingResult.success ? 'healing-result--success' : 'healing-result--error'">
-            {{ lastHealingResult.message }}
-          </div>
-
-          <!-- Current Status -->
-          <div class="healing-status">
-            <div class="healing-status__item">
-              <span class="healing-status__label">Current HP</span>
-              <span class="healing-status__value">{{ pokemon.currentHp }} / {{ pokemon.maxHp }}</span>
-            </div>
-            <div class="healing-status__item">
-              <span class="healing-status__label">Injuries</span>
-              <span class="healing-status__value" :class="{ 'text-danger': pokemon.injuries >= 5 }">
-                {{ pokemon.injuries || 0 }}
-                <span v-if="pokemon.injuries >= 5" class="healing-status__warning">(Cannot rest-heal)</span>
-              </span>
-            </div>
-            <div v-if="healingInfo" class="healing-status__item">
-              <span class="healing-status__label">Rest Today</span>
-              <span class="healing-status__value">
-                {{ formatRestTime(480 - healingInfo.restMinutesRemaining) }} / 8h
-              </span>
-            </div>
-            <div v-if="healingInfo" class="healing-status__item">
-              <span class="healing-status__label">HP per Rest</span>
-              <span class="healing-status__value">{{ healingInfo.hpPerRest }} HP</span>
-            </div>
-            <div v-if="healingInfo" class="healing-status__item">
-              <span class="healing-status__label">Injuries Healed Today</span>
-              <span class="healing-status__value">{{ healingInfo.injuriesHealedToday }} / 3</span>
-            </div>
-            <div v-if="healingInfo && healingInfo.hoursSinceLastInjury !== null" class="healing-status__item">
-              <span class="healing-status__label">Time Since Last Injury</span>
-              <span class="healing-status__value">
-                {{ Math.floor(healingInfo.hoursSinceLastInjury) }}h
-                <span v-if="healingInfo.canHealInjuryNaturally" class="text-success">(Can heal naturally)</span>
-                <span v-else-if="healingInfo.hoursUntilNaturalHeal" class="text-muted">
-                  ({{ Math.ceil(healingInfo.hoursUntilNaturalHeal) }}h until natural heal)
-                </span>
-              </span>
-            </div>
-          </div>
-
-          <!-- Healing Actions -->
-          <div class="healing-actions">
-            <div class="healing-action">
-              <h4>Rest (30 min)</h4>
-              <p>Heal {{ healingInfo?.hpPerRest || 0 }} HP. Requires less than 5 injuries and under 8 hours rest today.</p>
-              <button
-                class="btn btn--primary"
-                :disabled="healingLoading || !healingInfo?.canRestHeal || pokemon.currentHp >= pokemon.maxHp"
-                @click="handleRest"
-              >
-                {{ healingLoading ? 'Resting...' : 'Rest 30 min' }}
-              </button>
-            </div>
-
-            <div class="healing-action">
-              <h4>Extended Rest (4+ hours)</h4>
-              <p>Heal HP for 4 hours, clear persistent status conditions (Burned, Frozen, Paralyzed, Poisoned, Asleep), restore daily moves.</p>
-              <button
-                class="btn btn--primary"
-                :disabled="healingLoading"
-                @click="handleExtendedRest"
-              >
-                {{ healingLoading ? 'Resting...' : 'Extended Rest' }}
-              </button>
-            </div>
-
-            <div class="healing-action">
-              <h4>Pokemon Center</h4>
-              <p>Full HP, all status cleared, daily moves restored. Heals up to 3 injuries/day. Time: 1 hour + 30min per injury.</p>
-              <button
-                class="btn btn--accent"
-                :disabled="healingLoading"
-                @click="handlePokemonCenter"
-              >
-                {{ healingLoading ? 'Healing...' : 'Pokemon Center' }}
-              </button>
-            </div>
-
-            <div v-if="pokemon.injuries > 0" class="healing-action">
-              <h4>Natural Injury Healing</h4>
-              <p>Heal 1 injury after 24 hours without gaining new injuries. Max 3 injuries healed per day from all sources.</p>
-              <button
-                class="btn btn--secondary"
-                :disabled="healingLoading || !healingInfo?.canHealInjuryNaturally || healingInfo?.injuriesRemainingToday <= 0"
-                @click="handleHealInjury"
-              >
-                {{ healingLoading ? 'Healing...' : 'Heal Injury Naturally' }}
-              </button>
-            </div>
-
-            <div class="healing-action healing-action--new-day">
-              <h4>New Day</h4>
-              <p>Reset daily healing limits: rest time, injuries healed counter.</p>
-              <button
-                class="btn btn--ghost"
-                :disabled="healingLoading"
-                @click="handleNewDay"
-              >
-                {{ healingLoading ? 'Resetting...' : 'New Day' }}
-              </button>
-            </div>
-          </div>
+          <HealingTab
+            entity-type="pokemon"
+            :entity-id="pokemon.id"
+            :entity="pokemon"
+            @healed="loadPokemon"
+          />
         </div>
 
         <!-- Notes Tab -->
@@ -528,8 +428,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Pokemon, Move } from '~/types'
-import { roll, rollCritical, type DiceRollResult } from '~/utils/diceRoller'
+import type { Pokemon } from '~/types'
 
 definePageMeta({
   layout: 'gm'
@@ -541,7 +440,6 @@ const libraryStore = useLibraryStore()
 const { getSpriteUrl } = usePokemonSprite()
 
 const pokemonId = computed(() => route.params.id as string)
-const { getDamageRoll } = useDamageCalculation()
 
 // State
 const pokemon = ref<Pokemon | null>(null)
@@ -551,21 +449,9 @@ const isEditing = ref(false)
 const saving = ref(false)
 const editData = ref<Partial<Pokemon>>({})
 const activeTab = ref('stats')
-const lastSkillRoll = ref<{ skill: string; result: DiceRollResult } | null>(null)
-const lastMoveRoll = ref<{
-  moveName: string
-  attack?: {
-    result: DiceRollResult
-    resultClass?: string
-    extra?: string
-  }
-  damage?: {
-    result: DiceRollResult
-    resultClass?: string
-    extra?: string
-    isCrit: boolean
-  }
-} | null>(null)
+
+// Dice rolling (extracted composable)
+const { lastSkillRoll, lastMoveRoll, rollSkill, rollAttack, rollDamage, getMoveDamageFormula } = usePokemonSheetRolls(pokemon)
 
 // Check for edit mode from query param
 onMounted(async () => {
@@ -604,66 +490,6 @@ const spriteUrl = computed(() => {
   if (!pokemon.value) return ''
   return getSpriteUrl(pokemon.value.species, pokemon.value.shiny)
 })
-
-// Rest/Healing
-const { rest, extendedRest, pokemonCenter, healInjury, newDay, getHealingInfo, formatRestTime, loading: healingLoading } = useRestHealing()
-const lastHealingResult = ref<{ success: boolean; message: string } | null>(null)
-
-const healingInfo = computed(() => {
-  if (!pokemon.value) return null
-  return getHealingInfo({
-    maxHp: pokemon.value.maxHp,
-    injuries: pokemon.value.injuries || 0,
-    restMinutesToday: pokemon.value.restMinutesToday || 0,
-    lastInjuryTime: pokemon.value.lastInjuryTime || null,
-    injuriesHealedToday: pokemon.value.injuriesHealedToday || 0
-  })
-})
-
-const handleRest = async () => {
-  if (!pokemon.value) return
-  const result = await rest('pokemon', pokemon.value.id)
-  if (result) {
-    lastHealingResult.value = { success: result.success, message: result.message }
-    await loadPokemon()
-  }
-}
-
-const handleExtendedRest = async () => {
-  if (!pokemon.value) return
-  const result = await extendedRest('pokemon', pokemon.value.id)
-  if (result) {
-    lastHealingResult.value = { success: result.success, message: result.message }
-    await loadPokemon()
-  }
-}
-
-const handlePokemonCenter = async () => {
-  if (!pokemon.value) return
-  const result = await pokemonCenter('pokemon', pokemon.value.id)
-  if (result) {
-    lastHealingResult.value = { success: result.success, message: result.message }
-    await loadPokemon()
-  }
-}
-
-const handleHealInjury = async () => {
-  if (!pokemon.value) return
-  const result = await healInjury('pokemon', pokemon.value.id, 'natural')
-  if (result) {
-    lastHealingResult.value = { success: result.success, message: result.message }
-    await loadPokemon()
-  }
-}
-
-const handleNewDay = async () => {
-  if (!pokemon.value) return
-  const result = await newDay('pokemon', pokemon.value.id)
-  if (result) {
-    lastHealingResult.value = { success: result.success, message: result.message }
-    await loadPokemon()
-  }
-}
 
 // Tabs
 const pokemonTabs = [
@@ -712,107 +538,6 @@ const formatStageValue = (value: number | undefined): string => {
 const getStageClass = (value: number | undefined): string => {
   if (value === undefined || value === 0) return ''
   return value > 0 ? 'stage-item--positive' : 'stage-item--negative'
-}
-
-// Skill rolling
-const rollSkill = (skill: string, notation: string) => {
-  const result = roll(notation)
-  lastSkillRoll.value = { skill, result }
-}
-
-// Move helpers
-const getAttackStat = (move: Move): number => {
-  if (!pokemon.value) return 0
-  if (move.damageClass === 'Physical') {
-    return pokemon.value.currentStats?.attack || 0
-  } else if (move.damageClass === 'Special') {
-    return pokemon.value.currentStats?.specialAttack || 0
-  }
-  return 0
-}
-
-const getMoveDamageFormula = (move: Move): string => {
-  if (!move.damageBase) return '-'
-  const diceNotation = getDamageRoll(move.damageBase)
-  const stat = getAttackStat(move)
-  if (stat > 0) {
-    return `${diceNotation}+${stat}`
-  }
-  return diceNotation
-}
-
-// Move rolling
-const rollAttack = (move: Move) => {
-  const result = roll('1d20')
-  const naturalRoll = result.dice[0]
-
-  let extra = ''
-  let resultClass = ''
-
-  if (naturalRoll === 20) {
-    extra = 'Natural 20! CRIT!'
-    resultClass = 'roll-result__total--crit'
-  } else if (naturalRoll === 1) {
-    extra = 'Natural 1! Miss!'
-    resultClass = 'roll-result__total--miss'
-  } else if (move.ac && result.total >= move.ac) {
-    extra = `vs AC ${move.ac} - Hit!`
-    resultClass = 'roll-result__total--hit'
-  } else if (move.ac) {
-    extra = `vs AC ${move.ac} - Miss`
-    resultClass = 'roll-result__total--miss'
-  }
-
-  // New attack clears previous rolls
-  lastMoveRoll.value = {
-    moveName: move.name,
-    attack: {
-      result,
-      resultClass,
-      extra
-    }
-  }
-}
-
-const rollDamage = (move: Move, isCrit: boolean) => {
-  if (!move.damageBase) return
-
-  const notation = getDamageRoll(move.damageBase)
-  const diceResult = isCrit ? rollCritical(notation) : roll(notation)
-  const stat = getAttackStat(move)
-
-  // Add stat to the total
-  const total = diceResult.total + stat
-  const statLabel = move.damageClass === 'Physical' ? 'Atk' : 'SpAtk'
-  const breakdown = stat > 0
-    ? `${diceResult.breakdown.replace(/ = \d+$/, '')} + ${stat} (${statLabel}) = ${total}`
-    : diceResult.breakdown
-
-  const result: DiceRollResult = {
-    ...diceResult,
-    total,
-    breakdown
-  }
-
-  const damageRoll = {
-    result,
-    resultClass: isCrit ? 'roll-result__total--crit' : undefined,
-    extra: isCrit ? 'Critical Hit!' : undefined,
-    isCrit
-  }
-
-  // If same move, keep the attack roll; otherwise start fresh
-  if (lastMoveRoll.value?.moveName === move.name) {
-    lastMoveRoll.value = {
-      ...lastMoveRoll.value,
-      damage: damageRoll
-    }
-  } else {
-    lastMoveRoll.value = {
-      moveName: move.name,
-      damage: damageRoll
-    }
-  }
 }
 
 // Edit mode
@@ -1513,102 +1238,5 @@ const saveChanges = async () => {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-// Healing tab styles
-.healing-result {
-  padding: $spacing-md;
-  border-radius: $border-radius-md;
-  margin-bottom: $spacing-lg;
-  text-align: center;
-  font-weight: 500;
-
-  &--success {
-    background: rgba($color-success, 0.15);
-    border: 1px solid $color-success;
-    color: $color-success;
-  }
-
-  &--error {
-    background: rgba($color-danger, 0.15);
-    border: 1px solid $color-danger;
-    color: $color-danger;
-  }
-}
-
-.healing-status {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-xl;
-  padding: $spacing-lg;
-  background: $color-bg-secondary;
-  border-radius: $border-radius-lg;
-
-  &__item {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xs;
-  }
-
-  &__label {
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  &__value {
-    font-size: $font-size-md;
-    font-weight: 600;
-  }
-
-  &__warning {
-    font-size: $font-size-xs;
-    color: $color-danger;
-    font-weight: normal;
-  }
-}
-
-.healing-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-lg;
-}
-
-.healing-action {
-  padding: $spacing-lg;
-  background: $color-bg-secondary;
-  border-radius: $border-radius-lg;
-  border: 1px solid $glass-border;
-
-  h4 {
-    margin: 0 0 $spacing-sm 0;
-    font-size: $font-size-md;
-    color: $color-text;
-  }
-
-  p {
-    margin: 0 0 $spacing-md 0;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    line-height: 1.5;
-  }
-
-  .btn {
-    width: 100%;
-  }
-}
-
-.text-danger {
-  color: $color-danger;
-}
-
-.text-success {
-  color: $color-success;
-}
-
-.text-muted {
-  color: $color-text-muted;
 }
 </style>
