@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-030
 type: ptu-rule
 priority: P2
-status: resolved
+status: in-progress
 source_ecosystem: dev
 target_ecosystem: dev
 created_by: game-logic-reviewer
@@ -44,6 +44,5 @@ Found during rules-review-032 (review of refactoring-036/037). Pre-existing sinc
 
 ## Fix Log
 
-- **Commit:** 3d7413b
-- **File:** `app/server/services/csv-import.service.ts`
-- **Resolution:** Fixed as part of bug-002. The correct PTU sheet layout has capabilities across rows 32-34 (Overland/Levitate/Power, Sky/Burrow/Weight, Swim/Jump/Size). swim now reads (34,13) instead of (33,13). Also corrected burrow, levitate, power, and jump cell references. See bug-002 fix log for full details.
+- **Commit 1 (WRONG):** 3d7413b — row indices off by +1. Caught by rules-review-034.
+- **Commit 2:** (pending) — corrected to rows 31/32/33. sky → (32,13), swim → (33,13) — now separate cells. See bug-002 fix log for full details.

@@ -248,19 +248,19 @@ export function parsePokemonSheet(rows: string[][]): ParsedPokemon {
   }
 
   // PTU sheet capability layout (cols 12-17, labels in even cols, values in odd):
-  //   Row 32: Overland | val | Levitate | val | Power | val
-  //   Row 33: Sky      | val | Burrow   | val | Weight| val
-  //   Row 34: Swim     | val | Jump H/L | val | Size  | val
+  //   Row 31: Overland | val | Levitate | val | Power | val
+  //   Row 32: Sky      | val | Burrow   | val | Weight| val
+  //   Row 33: Swim     | val | Jump H/L | val | Size  | val
   const capabilities = {
-    overland: parseNumber(getCell(rows, 32, 13)) || 5,
-    swim: parseNumber(getCell(rows, 34, 13)) || 0,
-    sky: parseNumber(getCell(rows, 33, 13)) || 0,
-    burrow: parseNumber(getCell(rows, 33, 15)) || 0,
-    levitate: parseNumber(getCell(rows, 32, 15)) || 0,
-    power: parseNumber(getCell(rows, 32, 17)) || 1,
+    overland: parseNumber(getCell(rows, 31, 13)) || 5,
+    swim: parseNumber(getCell(rows, 33, 13)) || 0,
+    sky: parseNumber(getCell(rows, 32, 13)) || 0,
+    burrow: parseNumber(getCell(rows, 32, 15)) || 0,
+    levitate: parseNumber(getCell(rows, 31, 15)) || 0,
+    power: parseNumber(getCell(rows, 31, 17)) || 1,
     jump: {
-      high: parseNumber(getCell(rows, 34, 15)?.split('/')[0] || '1'),
-      long: parseNumber(getCell(rows, 34, 15)?.split('/')[1] || '1')
+      high: parseNumber(getCell(rows, 33, 15)?.split('/')[0] || '1'),
+      long: parseNumber(getCell(rows, 33, 15)?.split('/')[1] || '1')
     }
   }
 
