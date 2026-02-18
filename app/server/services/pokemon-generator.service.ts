@@ -52,6 +52,9 @@ export interface GeneratedPokemonData {
   abilities: Array<{ name: string; effect: string }>
   gender: string
   movementCaps: { overland: number; swim: number; sky: number; burrow: number; levitate: number }
+  power: number
+  jump: { high: number; long: number }
+  weightClass: number
   otherCapabilities: string[]
   skills: Record<string, string>
   eggGroups: string[]
@@ -92,6 +95,9 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
   let movementCaps = { overland: 5, swim: 0, sky: 0, burrow: 0, levitate: 0 }
   let eggGroups: string[] = []
   let size = 'Medium'
+  let power = 1
+  let jump = { high: 1, long: 1 }
+  let weightClass = 1
 
   if (speciesData) {
     baseStats = {
@@ -116,6 +122,9 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     }
     eggGroups = JSON.parse(speciesData.eggGroups || '[]')
     size = speciesData.size || 'Medium'
+    power = speciesData.power
+    jump = { high: speciesData.jumpHigh, long: speciesData.jumpLong }
+    weightClass = speciesData.weightClass
   }
 
   // Distribute stat points weighted by base stats (PTU: level - 1 points)
@@ -149,6 +158,9 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     abilities,
     gender,
     movementCaps,
+    power,
+    jump,
+    weightClass,
     otherCapabilities,
     skills,
     eggGroups,
@@ -195,8 +207,11 @@ export async function createPokemonRecord(
       heldItem: data.heldItem ?? null,
       capabilities: JSON.stringify({
         ...data.movementCaps,
-        other: data.otherCapabilities,
-        size: data.size
+        power: data.power,
+        jump: data.jump,
+        weightClass: data.weightClass,
+        size: data.size,
+        otherCapabilities: data.otherCapabilities
       }),
       skills: JSON.stringify(data.skills),
       eggGroups: JSON.stringify(data.eggGroups),
@@ -264,9 +279,12 @@ function createdPokemonToEntity(pokemon: CreatedPokemon): Pokemon {
     moves: data.moves as unknown as Pokemon['moves'],
     capabilities: {
       ...data.movementCaps,
-      other: data.otherCapabilities,
-      size: data.size
-    } as unknown as Pokemon['capabilities'],
+      power: data.power,
+      jump: data.jump,
+      weightClass: data.weightClass,
+      size: data.size,
+      otherCapabilities: data.otherCapabilities
+    } as Pokemon['capabilities'],
     skills: data.skills,
     statusConditions: [],
     injuries: 0,
