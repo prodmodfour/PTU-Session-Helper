@@ -391,6 +391,20 @@ Open:
 | code-review-023 | refactoring-009 | CHANGES_REQUIRED | senior-reviewer | 2026-02-17 |
 | code-review-024 | refactoring-009 (follow-up) | APPROVED | senior-reviewer | 2026-02-17 |
 | rules-review-021 | refactoring-009 | APPROVED | game-logic-reviewer | 2026-02-17 |
+| code-review-025 | refactoring-014 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-022 | refactoring-014 | APPROVED | game-logic-reviewer | 2026-02-18 |
+| code-review-026 | refactoring-022 | APPROVED | senior-reviewer | 2026-02-17 |
+| rules-review-023 | refactoring-022 | APPROVED | game-logic-reviewer | 2026-02-18 |
+| code-review-027 | refactoring-012 | APPROVED | senior-reviewer | 2026-02-18 |
+| rules-review-024 | refactoring-012 | APPROVED | game-logic-reviewer | 2026-02-18 |
+| code-review-028 | refactoring-013 | APPROVED | senior-reviewer | 2026-02-18 |
+| rules-review-025 | refactoring-013 | APPROVED | game-logic-reviewer | 2026-02-18 |
+| code-review-029 | refactoring-021 | APPROVED | senior-reviewer | 2026-02-18 |
+| rules-review-026 | refactoring-021 | APPROVED | game-logic-reviewer | 2026-02-18 |
+| code-review-030 | refactoring-025 | APPROVED | senior-reviewer | 2026-02-18 |
+| rules-review-027 | refactoring-025 | APPROVED | game-logic-reviewer | 2026-02-18 |
+| rules-review-028 | refactoring-023 | APPROVED | game-logic-reviewer | 2026-02-18 |
+| code-review-031 | refactoring-023 | APPROVED | senior-reviewer | 2026-02-18 |
 
 ### Designs
 
@@ -659,51 +673,41 @@ All 7 scenarios proceed to Playtester.
 ## Code Health
 
 ### Last Audit
-- **Date:** 2026-02-16T01:00:00
-- **Scope:** domain: combat
-- **Files scanned:** 69
-- **Files deep-read:** 15
+- **Date:** 2026-02-18T12:00:00
+- **Scope:** full codebase
+- **Files scanned:** 261
+- **Files deep-read:** 20
+
+### Resolved Tickets (001-022)
+
+All 22 tickets from the combat-domain audit (2026-02-16) are resolved. See `refactoring/audit-summary.md` for full history.
 
 ### Open Tickets
 
 | Ticket | Priority | File(s) | Categories | Status |
 |--------|----------|---------|------------|--------|
-| refactoring-001 | P0 | encounter.ts | LLM-SIZE, EXT-GOD | resolved |
-| refactoring-002 | P1 | combatants.post.ts, wild-spawn.post.ts, from-scene.post.ts | EXT-DUPLICATE, LLM-INCONSISTENT | resolved |
-| refactoring-003 | P1 | combatants.post.ts, from-scene.post.ts | LLM-TYPES, EXT-LAYER | resolved |
-| refactoring-004 | P1 | combatants.post.ts, wild-spawn.post.ts, start.post.ts | LLM-INCONSISTENT | resolved |
-| refactoring-005 | P1 | start.post.ts | EXT-LAYER, LLM-TYPES | resolved |
-| refactoring-006 | P2 | breather.post.ts, move.post.ts | LLM-MAGIC, LLM-INCONSISTENT | resolved |
-| refactoring-007 | P2 | useCombat.ts | EXT-GOD | resolved |
-| refactoring-008 | P1 | statusConditions.ts, captureRate.ts, useCapture.ts, restHealing.ts | PTU-INCORRECT, LLM-MAGIC | resolved |
-| refactoring-009 | P2 | statusConditions.ts, combat.ts, captureRate.ts + 3 more | PTU-INCORRECT | pending-rules-review |
+| refactoring-023 | P0 | encounter-tables/[id].vue, habitats/[id].vue | EXT-DUPLICATE, LLM-SIZE | resolved |
+| refactoring-024 | P0 | pokemon/[id].vue | LLM-SIZE, EXT-GOD, LLM-TYPES, EXT-LAYER | open |
+| refactoring-025 | P0 | characters/[id].vue, types/index.ts | LLM-SIZE, LLM-TYPES | resolved |
+| refactoring-026 | P1 | pokemon/[id].vue, characters/[id].vue | EXT-DUPLICATE | open |
+| refactoring-027 | P1 | encounter-tables.vue | LLM-SIZE, EXT-GOD, EXT-DUPLICATE | open |
+| refactoring-028 | P1 | import-csv.post.ts | EXT-GOD, EXT-LAYER, LLM-FUNC | open |
+| refactoring-029 | P1 | groupViewTabs.ts, types/index.ts | LLM-TYPES, EXT-COUPLING | open |
+| refactoring-030 | P1 | encounter-tables.vue, habitats/[id].vue | EXT-DUPLICATE | open |
+| refactoring-031 | P2 | CombatantCard.vue, PlayerCombatantCard.vue, GroupCombatantCard.vue | LLM-TYPES | open |
+| refactoring-032 | P2 | 6+ files (sheet pages, table editors) | EXT-DUPLICATE | open |
+| refactoring-033 | P2 | TableEditor.vue | DATA-INCORRECT | open |
 
-| refactoring-010 | P1 | schema, seed.ts, pokemon-generator, grid-placement, 3 endpoints | FEATURE_GAP, PTU-INCORRECT | resolved |
-| refactoring-011 | P2 | pokemon-generator.service.ts, combatant.service.ts | EXT-DUPLICATE | resolved |
-| refactoring-012 | P2 | combatant.service.ts, pokemon-generator.service.ts, load.post.ts | PTU-INCORRECT | open |
-| refactoring-013 | P2 | settings.test.ts | TEST-STALE | open |
-| refactoring-014 | P1 | import-csv.post.ts, groupViewTabs.ts, capture-helpers.ts, combat-helpers.ts | TYPE-ERROR | open |
-| refactoring-015 | P2 | serve.post.ts | RACE-CONDITION | resolved |
-| refactoring-016 | P1 | useCombat.test.ts | TEST-STALE | resolved |
-| refactoring-017 | P1 | diceRoller.ts, useMoveCalculation.ts | PTU-INCORRECT | resolved |
-| refactoring-018 | P2 | useMoveCalculation.ts | PTU-INCORRECT | resolved (code-review-022: update combat loop doc lines 1006/1017/1022 to reflect single-roll before closing) |
-| refactoring-019 | P1 | useTypeChart.ts | PTU-INCORRECT | resolved |
-| refactoring-020 | P1 | useTypeChart.ts, damageCalculation.ts | EXT-DUPLICATE | resolved |
-| refactoring-021 | P2 | AccuracySection.vue | EXT-DUPLICATE, DEAD-CODE | open |
-
-**Totals:** 0 P0, 0 P1, 4 P2 — 4 tickets open
+**Totals:** 2 P0, 5 P1, 3 P2 — 10 tickets open
 
 ### Recommended Order
-1. ~~refactoring-004 (small — standardize response building)~~ RESOLVED (86db8fc) — code-review-006 APPROVED
-2. ~~refactoring-002 (medium — extract grid placement service)~~ RESOLVED (c5ecc91–9576503) — code-review-007 APPROVED
-3. ~~refactoring-005 (small — extract initiative sorting)~~ RESOLVED (8168ecc) — code-review-008 APPROVED
-4. ~~refactoring-003 (medium — type entity transformation)~~ RESOLVED (14a54f4–162feff) — code-review-009 APPROVED
-5. ~~refactoring-001 (large — split God store)~~ RESOLVED (2771191) — code-review-012 APPROVED
-6. ~~refactoring-006 (small — deduplicate constants)~~ RESOLVED (767e6f3, a95b67e) — code-review-005 + rules-review-005 APPROVED
-7. ~~refactoring-008 (small — reclassify Sleep as Volatile, fix capture rate +10→+5)~~ RESOLVED (63fe747, 3842bc7, b15f234) — code-review-011 APPROVED
-8. ~~refactoring-009 (medium — remove phantom Encored/Taunted/Tormented conditions)~~ RESOLVED (3fc41eb, 6a3e239) — code-review-024 + rules-review-021 APPROVED
-9. ~~refactoring-007 (medium — split useCombat.ts)~~ RESOLVED (5c8a2bb, d356d00) — code-review-015 APPROVED
-10. ~~refactoring-016 (medium — rewrite useCombat.test.ts to import real composables, fix wrong PTU values)~~ RESOLVED (a4dd634–bf5cb7a) — code-review-019 + rules-review-017 APPROVED
-11. ~~refactoring-019 (medium — fix dual-type effectiveness: multiplicative → PTU flat lookup)~~ RESOLVED (5565b6e) — code-review-020 APPROVED
-12. ~~refactoring-020 (medium — consolidate duplicate type chart code)~~ RESOLVED (3f9afc0–d7bff18) — code-review-021 APPROVED
-13. refactoring-014 (small — fix 4 pre-existing type errors)
+1. refactoring-025 (small — add healing fields to types, eliminate 13 `as any` casts)
+2. refactoring-029 (small — move Scene types from store to types/)
+3. refactoring-023 (large — deduplicate table editor, ~900 lines removed)
+4. refactoring-026 (medium — extract shared HealingTab component)
+5. refactoring-030 (small — extract encounter creation workflow)
+6. refactoring-024 (large — decompose pokemon/[id].vue God page)
+7. refactoring-027 (medium — decompose encounter-tables.vue)
+8. refactoring-028 (medium — extract CSV import into service layer)
+9. refactoring-031 (small — fix `as any` in encounter components)
+10. refactoring-032 (medium — extract shared SCSS partials)
