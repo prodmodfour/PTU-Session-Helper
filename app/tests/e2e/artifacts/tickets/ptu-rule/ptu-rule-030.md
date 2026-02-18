@@ -45,4 +45,4 @@ Found during rules-review-032 (review of refactoring-036/037). Pre-existing sinc
 ## Fix Log
 
 - **Commit 1 (WRONG):** 3d7413b — row indices off by +1. Caught by rules-review-034.
-- **Commit 2:** (pending) — corrected to rows 31/32/33. sky → (32,13), swim → (33,13) — now separate cells. See bug-002 fix log for full details.
+- **Commit 2:** 3896a22 — corrected to rows 31/32/33. sky → (32,13), swim → (33,13) — now separate cells. See bug-002 fix log for full details.
