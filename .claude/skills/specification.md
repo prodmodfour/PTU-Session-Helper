@@ -8,7 +8,16 @@ The PTU Session Helper app must accurately replicate PTU 1.05 gameplay. Code cor
 
 ## 2. Architecture
 
-### 2.1 Separate Terminals
+### 2.1 Two Ecosystems, One Orchestrator
+
+The ecosystem is split into two logically separate halves:
+
+- **Dev Ecosystem:** Developer, Senior Reviewer, Game Logic Reviewer, Code Health Auditor
+- **Test Ecosystem:** Gameplay Loop Synthesizer, Scenario Crafter, Scenario Verifier, Playtester, Result Verifier
+
+Bridge skills (Feature Designer, Retrospective Analyst) serve both. A single Orchestrator reads both state files and gives parallel recommendations.
+
+### 2.2 Separate Terminals
 
 Each skill runs in its own Claude Code terminal (session). Skills never share context windows. The user acts as liaison between terminals, copy-pasting context summaries and following the Orchestrator's guidance on which terminal to use next.
 
@@ -18,21 +27,34 @@ Each skill runs in its own Claude Code terminal (session). Skills never share co
 - Skills can run concurrently (e.g., Dev fixing bug A while Scenario Crafter writes scenarios for domain B)
 - Matches the real-world model: QA team members don't share a single brain
 
-### 2.2 Artifact-Based Communication
+### 2.3 Artifact-Based Communication
 
-All inter-skill communication happens through persistent files on disk. No skill assumes knowledge of another skill's context. Every skill reads its inputs from the filesystem and writes its outputs to the filesystem.
+All inter-skill communication happens through persistent files on disk. No skill assumes knowledge of another skill's context.
 
+**Cross-ecosystem communication** uses tickets:
+```
+app/tests/e2e/artifacts/tickets/
+├── bug/               # Test → Dev (APP_BUG)
+├── ptu-rule/          # Either → Dev (rule violations)
+├── feature/           # Test → Dev (FEATURE_GAP)
+├── ux/                # Test → Dev (UX_GAP)
+└── retest/            # Dev → Test (after both reviews approve)
+```
+
+**Ecosystem-internal artifacts:**
 ```
 app/tests/e2e/artifacts/
-├── loops/              # Gameplay Loop Synthesizer → writes
-├── scenarios/          # Scenario Crafter → writes
-├── verifications/      # Scenario Verifier → writes
-├── results/            # Playtester → writes
-├── reports/            # Result Verifier → writes
-├── designs/            # Feature Designer → writes
-├── refactoring/        # Code Health Auditor → writes
-├── reviews/            # Senior Reviewer + Game Logic Reviewer → write
-└── pipeline-state.md   # Updated by every skill, read by Orchestrator
+├── loops/              # Test: Synthesizer writes → Crafter reads
+├── scenarios/          # Test: Crafter writes → Verifier reads
+├── verifications/      # Test: Verifier writes → Playtester reads
+├── results/            # Test: Playtester writes → Result Verifier reads
+├── reports/            # Test: Result Verifier writes (internal reports)
+├── designs/            # Shared: Feature Designer writes → Developer reads
+├── refactoring/        # Dev: Code Health Auditor writes → Developer reads
+├── reviews/            # Dev: Reviewers write → Orchestrator/Developer read
+├── lessons/            # Shared: Retrospective Analyst writes → all read
+├── dev-state.md        # Orchestrator writes → Dev skills read
+└── test-state.md       # Orchestrator writes → Test skills read
 ```
 
 Playwright spec files live separately:
@@ -40,33 +62,60 @@ Playwright spec files live separately:
 app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 ```
 
-### 2.3 Pipeline Flow
+### 2.4 Ticket System
+
+Tickets are the **sole cross-ecosystem communication mechanism**. Reports stay internal to the Test ecosystem. Only actionable work items cross the boundary.
+
+| Type | Prefix | Direction | Producer | Consumer |
+|------|--------|-----------|----------|----------|
+| bug | `bug-NNN` | Test → Dev | Result Verifier | Developer |
+| ptu-rule | `ptu-rule-NNN` | Either → Dev | Game Logic Reviewer / Scenario Verifier | Developer |
+| feature | `feature-NNN` | Test → Dev | Result Verifier / Feature Designer | Developer |
+| ux | `ux-NNN` | Test → Dev | Result Verifier / Feature Designer | Developer |
+| retest | `retest-NNN` | Dev → Test | Orchestrator | Playtester |
+| refactoring | `refactoring-NNN` | Dev internal | Code Health Auditor | Developer |
+
+**Ticket vs Report Boundary:**
+- Result Verifier writes **both** a report (internal) AND a ticket (cross-ecosystem) for APP_BUG, FEATURE_GAP, UX_GAP
+- SCENARIO_BUG, TEST_BUG, AMBIGUOUS are testing-internal — reports only, no tickets
+- Tickets are slimmer than reports — just the actionable info plus a `source_report` link
+
+### 2.5 State Files
+
+The Orchestrator is the **sole writer** of both state files:
+- `dev-state.md` — tracks open tickets, active Developer work, review status, refactoring queue
+- `test-state.md` — tracks active domain, pipeline stage progress, pending retests, internal issues
+
+No other skill writes to state files. Skills report completions via their artifacts; the Orchestrator reads artifacts and updates state.
+
+### 2.6 Pipeline Flow
 
 ```
-                    ┌──────────────┐
-                    │ Orchestrator │ ← reads pipeline-state.md
-                    │  (advises)   │   tells user which terminal next
-                    └──────┬───────┘
-                           │
-        ┌──────────────────┼──────────────────────┐
-        │                  │                       │
-   TESTING LOOP       DEV LOOP              REVIEW LOOP
-        │                  │                       │
-   Synthesizer        Developer              Reviewer
-        ↓                  ↑                 Game Logic
-   Crafter            (fixes bugs)           Reviewer
-        ↓                  │                       │
-   Verifier           ←────┴───────────────────────┘
-        ↓                        (bug reports)
-   Playtester
-        ↓
-   Result Verifier
-        ├── APP_BUG ──────────→ DEV LOOP (Developer → Reviewer)
-        ├── SCENARIO_BUG ─────→ Scenario Crafter (TESTING LOOP)
-        ├── TEST_BUG ─────────→ Playtester (retry/fix)
-        ├── AMBIGUOUS ────────→ Game Logic Reviewer
-        ├── FEATURE_GAP ──────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
-        └── UX_GAP ───────────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
+                    ┌──────────────────────┐
+                    │     Orchestrator     │ ← reads both state files
+                    │  (advises on BOTH    │   + all ticket dirs
+                    │   ecosystems)        │
+                    └──────────┬───────────┘
+                               │
+            ┌──────────────────┼──────────────────────┐
+            │                  │                       │
+       DEV ECOSYSTEM     TICKET BOUNDARY      TEST ECOSYSTEM
+            │                  │                       │
+       Developer          ← bug tickets ←         Synthesizer
+       Senior Reviewer    ← feature tickets ←         ↓
+       Game Logic Rev     ← ux tickets ←          Crafter
+       Code Health Aud    ← ptu-rule tickets ←        ↓
+                          → retest tickets →      Verifier
+                                                      ↓
+                                                  Playtester
+                                                      ↓
+                                                  Result Verifier
+                                                  ├── APP_BUG → bug ticket → Dev
+                                                  ├── FEATURE_GAP → feature ticket → Dev
+                                                  ├── UX_GAP → ux ticket → Dev
+                                                  ├── SCENARIO_BUG → correction (internal)
+                                                  ├── TEST_BUG → test-fix (internal)
+                                                  └── AMBIGUOUS → escalation (internal)
 ```
 
 ## 3. Skills
@@ -77,21 +126,22 @@ app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts
 |-------|-------|
 | **File** | `.claude/skills/orchestrator.md` |
 | **Trigger** | Ask Claude to load the orchestrator skill |
-| **Input** | `app/tests/e2e/artifacts/pipeline-state.md`, artifact directory contents |
-| **Output** | Advice to user (no files written except `pipeline-state.md` updates) |
+| **Input** | `dev-state.md`, `test-state.md`, all ticket directories, artifact directories |
+| **Output** | `dev-state.md`, `test-state.md`, `tickets/retest/` tickets, parallel recommendations |
 | **Terminal** | Persistent — keep open throughout a testing session |
 
 **Responsibilities:**
-- Scan artifact directories to determine pipeline position
-- Detect stale artifacts (e.g., loop updated but scenarios not re-crafted)
-- Detect open bug reports that need dev attention
-- Suggest the next action: which terminal, which command, which domain
-- After dev fixes, suggest re-running only affected scenarios
-- When all scenarios pass for a domain, declare it clean and suggest next domain
+- Scan both ecosystems to determine pipeline position
+- Apply D1-D10 priority tree to Dev Ecosystem
+- Apply T1-T8 priority tree to Test Ecosystem
+- Give parallel recommendations when both ecosystems have work
+- Create retest tickets (D8) after both reviews approve a fix
+- Sole writer of both state files
+- Detect stale artifacts and open tickets
 
 **Does NOT:**
 - Write code
-- Write artifacts (other than pipeline-state.md)
+- Write artifacts other than state files and retest tickets
 - Make PTU rule judgments
 - Approve code or plans
 
@@ -474,39 +524,55 @@ In calculateDamage(), subtract the target's relevant defense stat from the damag
 - [ ] Re-run scenario: combat-basic-damage-001
 ```
 
-### 4.5 Pipeline State
+### 4.5 State Files
 
+The Orchestrator maintains two state files (sole writer):
+
+**dev-state.md** — Dev Ecosystem state:
 ```markdown
 ---
-last_updated: 2026-02-15T14:30:00
-updated_by: result-verifier
+last_updated: <ISO timestamp>
+updated_by: orchestrator
 ---
 
-## Domain: combat
+# Dev Ecosystem State
 
-| Stage | Status | Count | Last Updated |
-|-------|--------|-------|-------------|
-| Loops | complete | 4 loops | 2026-02-15 |
-| Scenarios | complete | 12 scenarios | 2026-02-15 |
-| Verifications | complete | 12 verified | 2026-02-15 |
-| Test Runs | partial | 8/12 run | 2026-02-15 |
-| Results | pending | 3 FAIL, 5 PASS | 2026-02-15 |
+## Open Tickets
+### Bug Tickets (`tickets/bug/`)
+### PTU Rule Tickets (`tickets/ptu-rule/`)
+### Feature Tickets (`tickets/feature/`)
+### UX Tickets (`tickets/ux/`)
 
-### Open Issues
-- bug-001: CRITICAL APP_BUG — damage calc missing defense (assigned to Dev)
-- bug-002: HIGH APP_BUG — STAB not applied (assigned to Dev)
-- correction-001: SCENARIO_BUG — wrong base stat for Charmander (assigned to Crafter)
-
-## Domain: capture
-| Stage | Status | Count | Last Updated |
-|-------|--------|-------|-------------|
-| Loops | not started | — | — |
-
-## Domain: healing
-| Stage | Status | Count | Last Updated |
-|-------|--------|-------|-------------|
-| Loops | not started | — | — |
+## Active Developer Work
+## Review Status
+## Retest Tickets Created
+## Refactoring Tickets (`refactoring/`)
+## Code Health
 ```
+
+**test-state.md** — Test Ecosystem state:
+```markdown
+---
+last_updated: <ISO timestamp>
+updated_by: orchestrator
+---
+
+# Test Ecosystem State
+
+## Active Domain
+## Domain Progress
+| Domain | Loops | Scenarios | Verifications | Tests | Triage | Status |
+## Pending Retests from Dev
+## Internal Issues
+### Scenario Corrections
+### Test Bugs
+## Lessons
+## Recommended Next Step
+```
+
+### 4.5b Pipeline State (Legacy)
+
+The original `pipeline-state.md` has been archived as `pipeline-state.legacy.md`. It contains the full historical record from the combat and capture domain cycles. New state tracking uses the two state files above.
 
 ### 4.6 Lesson File
 
@@ -814,14 +880,14 @@ Reference files live in `.claude/skills/references/`.
 10. Result Verifier triages → writes reports
 11. Orchestrator: "3 bugs found. Go to Dev terminal, start with bug-001 (CRITICAL)"
 
-### 7.2 Bug Fix Cycle
+### 7.2 Bug Fix Cycle (Cross-Ecosystem)
 
-1. Dev reads bug report, implements fix, commits
-2. Senior Reviewer reviews code → writes `artifacts/reviews/code-review-<NNN>.md` with verdict
-3. Game Logic Reviewer confirms PTU correctness → writes `artifacts/reviews/rules-review-<NNN>.md` with verdict
-4. Orchestrator detects both reviews APPROVED → "Fix approved. Go to Playtester terminal, re-run scenario X"
-5. Playtester re-runs → new result
-6. Result Verifier checks → PASS or new bug
+1. Dev reads bug ticket (`tickets/bug/`) + source report → implements fix → commits
+2. Senior Reviewer reviews code → writes `reviews/code-review-<NNN>.md` with verdict
+3. Game Logic Reviewer confirms PTU correctness → writes `reviews/rules-review-<NNN>.md` with verdict
+4. Orchestrator detects both reviews APPROVED → creates retest ticket in `tickets/retest/`
+5. Playtester picks up retest ticket → re-runs scenario → new result
+6. Result Verifier checks → PASS or new bug ticket
 
 ### 7.3 Targeted Test (specific feature change)
 
@@ -835,18 +901,18 @@ The Orchestrator detects staleness by comparing timestamps:
 - Scenario references a loop that was regenerated → scenario needs re-crafting
 - Verification references a scenario that was re-crafted → needs re-verification
 
-### 7.5 Gap Detection Cycle (Reactive)
+### 7.5 Gap Detection Cycle (Reactive, Cross-Ecosystem)
 
 When tests fail because a feature doesn't exist (not because of a bug):
 
 1. Playtester runs test → API returns 404 or operation unsupported (does NOT retry 404s)
-2. Result Verifier triages → classifies as `FEATURE_GAP` or `UX_GAP` → writes gap report to `reports/`
-3. Orchestrator detects gap report → routes to Feature Designer terminal
-4. Feature Designer reads gap report + workflow context + app surface → writes design spec to `designs/` with `status: complete`
+2. Result Verifier triages → classifies as `FEATURE_GAP` or `UX_GAP` → writes report + ticket
+3. Orchestrator detects gap ticket → routes to Feature Designer terminal
+4. Feature Designer reads gap ticket + source report + app surface → writes design spec to `designs/`, enriches ticket with `design_spec` reference
 5. Orchestrator detects pending design → routes to Developer terminal with design spec path
 6. Developer implements design → fills in Implementation Log → sets `status: implemented` → updates `app-surface.md`
-7. Orchestrator detects implemented design → routes to Playtester terminal with original scenario path
-8. Playtester re-runs scenario → Result Verifier re-triages → PASS (gap closed) or new issue
+7. Orchestrator detects implemented design → creates retest ticket → routes to Playtester
+8. Playtester re-runs scenario → Result Verifier re-triages → PASS (gap closed) or new ticket
 
 ### 7.6 Proactive Gap Detection
 
