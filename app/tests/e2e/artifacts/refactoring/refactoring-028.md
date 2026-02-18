@@ -56,5 +56,5 @@ Estimated commits: 3-4
 ## Resolution Log
 - Commits: e5baa15, d97fa77, 0f2277b, 4951202
 - Files changed: app/server/api/characters/import-csv.post.ts (518 → 46 lines), app/server/services/pokemon-generator.service.ts (added optional nature/shiny/heldItem overrides)
-- New files created: app/server/utils/csv-parser.ts (70 lines), app/server/services/csv-import.service.ts (295 lines)
+- New files created: app/server/utils/csv-parser.ts (70 lines), app/server/services/csv-import.service.ts (395 lines)
 - Tests passing: typecheck shows only pre-existing errors (location type in create.vue, scenes/[id].vue) — no new issues from refactoring

@@ -166,6 +166,20 @@ Get/set/clear pattern.
 | `selection` | Grid selection | (client-only) |
 | `settings` | User preferences | (localStorage only) |
 
+## Server Services & Utilities
+
+| File | Purpose |
+|------|---------|
+| `server/services/pokemon-generator.service.ts` | Canonical Pokemon creation — generatePokemonData, createPokemonRecord, buildPokemonCombatant |
+| `server/services/csv-import.service.ts` | CSV import parsing (trainer/pokemon sheets) and DB creation |
+| `server/services/combatant.service.ts` | Combatant builder and damage pipeline |
+| `server/services/entity-update.service.ts` | Entity update broadcasting |
+| `server/services/grid-placement.service.ts` | VTT grid placement and size-to-token mapping |
+| `server/utils/csv-parser.ts` | Reusable CSV parser (parseCSV, getCell, parseNumber) |
+| `server/utils/prisma.ts` | Prisma client singleton |
+| `server/utils/websocket.ts` | WebSocket broadcast utilities |
+| `server/utils/pokemon-nickname.ts` | Nickname resolution |
+
 ## Selector Guidance
 
 Prefer `data-testid` attributes for Playwright selectors. The app does not currently have widespread `data-testid` usage — the Playtester should add them as needed when writing spec files, or fall back to:
