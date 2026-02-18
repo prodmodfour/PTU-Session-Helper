@@ -13,24 +13,27 @@ You are the implementation worker for the Pokemon TTRPG Session Helper project. 
 
 ## Ecosystem Role
 
-This skill is part of the 12-skill PTU testing ecosystem. You operate in the **Dev Loop** — you receive bug reports from the testing pipeline and implement fixes.
+This skill is part of the **Dev Ecosystem** in the 12-skill PTU testing pipeline. You receive bug, feature, UX, and PTU rule tickets from the Test ecosystem and implement fixes/features.
 
 - **Lessons:** Before starting a bug fix session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-dev.lessons.md` for recurring fix patterns (e.g., the same class of code change applied in multiple places). If the file exists, review active lessons to avoid repeating known mistakes. If it doesn't exist, skip this.
-- **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Read them for root cause analysis, affected files, and PTU rule references.
+- **Bug tickets** live in `app/tests/e2e/artifacts/tickets/bug/bug-*.md`. Read them for a summary of the issue. For full root cause analysis, follow the `source_report` field to read the detailed report in `artifacts/reports/`.
+- **Feature/UX tickets** live in `app/tests/e2e/artifacts/tickets/feature/` and `tickets/ux/`. These reference gap reports and may have associated design specs in `artifacts/designs/`.
+- **PTU rule tickets** live in `app/tests/e2e/artifacts/tickets/ptu-rule/`. These come from Game Logic Reviewer or Scenario Verifier findings.
 - **Design specs** from the Feature Designer live in `app/tests/e2e/artifacts/designs/design-*.md`. Read them for new feature implementations. After implementing a design:
   1. Update the Implementation Log section in the design spec with commit hashes and files changed
   2. Set the design spec frontmatter `status` field to `implemented`
   3. Update `.claude/skills/references/app-surface.md` with new routes/endpoints/components added by the implementation
-- **After fixing a bug**, update the bug report's "Fix Log" section with the commit hash and files changed.
-- **The Orchestrator** (in another terminal) tells the user which bug to send you next. Follow priority: CRITICAL first, then HIGH, then MEDIUM.
+- **After fixing a bug**, update the bug report's "Fix Log" section AND set the ticket's `status` to `in-progress` (the Orchestrator will create a retest ticket after both reviews approve, which changes it to `resolved`).
+- **The Orchestrator** (in another terminal) tells the user which ticket to send you next. Follow priority: CRITICAL first, then HIGH, then MEDIUM.
 - **Review artifacts** from both reviewers live in `app/tests/e2e/artifacts/reviews/`. When the Orchestrator routes you a `CHANGES_REQUIRED` review, read the review artifact's "Required Changes" section and address every item. After fixing, the review cycle will re-run.
-- **After your fix is reviewed** (by Senior Reviewer + Game Logic Reviewer), the Playtester re-runs the affected scenario to verify.
+- **After your fix is reviewed** (by Senior Reviewer + Game Logic Reviewer), the Orchestrator creates a retest ticket and the Playtester re-runs the affected scenario to verify.
 - **Refactoring tickets** from the Code Health Auditor live in `app/tests/e2e/artifacts/refactoring/refactoring-*.md`. When the Orchestrator routes you a refactoring ticket:
   1. Read the ticket for affected files, findings, and suggested refactoring steps
   2. Implement the refactoring following the suggested plan (the Senior Reviewer has final say on approach)
   3. Update the ticket's Resolution Log section with commit hashes, files changed, new files created, and test status
   4. Set the ticket frontmatter `status` field to `resolved`
   5. Run existing tests to confirm nothing breaks — refactoring must not change behavior
+- **State file:** `app/tests/e2e/artifacts/dev-state.md` tracks Dev ecosystem state (written by Orchestrator, read by you for context).
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
 
 ## Working Rules
