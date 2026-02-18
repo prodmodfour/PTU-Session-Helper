@@ -44,7 +44,7 @@ expect(store.damageMode).toBe(DEFAULT_SETTINGS.damageMode)
 Estimated commits: 1
 
 ## Resolution Log
-- Commits: (next commit)
+- Commits: `74916db`
 - Files changed: `app/tests/unit/stores/settings.test.ts`
 - New files created: none
-- Tests passing: pending vitest run
+- Tests passing: 508/508
