@@ -125,6 +125,11 @@ export interface Pokemon {
   injuries: number;
   temporaryHp: number;
 
+  // Rest & Healing Tracking
+  restMinutesToday: number;
+  lastInjuryTime: string | null;
+  injuriesHealedToday: number;
+
   // Training
   tutorPoints: number;
   trainingExp: number;
@@ -180,6 +185,12 @@ export interface HumanCharacter {
   stageModifiers: StageModifiers;
   injuries: number;
   temporaryHp: number;
+
+  // Rest & Healing Tracking
+  restMinutesToday: number;
+  lastInjuryTime: string | null;
+  injuriesHealedToday: number;
+  drainedAp: number;
 
   // Inventory
   inventory: InventoryItem[];
