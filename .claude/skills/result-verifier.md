@@ -1,20 +1,22 @@
 ---
 name: result-verifier
-description: Analyzes test results from the Playtester, triages every failure into exactly one of 6 categories (APP_BUG, SCENARIO_BUG, TEST_BUG, AMBIGUOUS, FEATURE_GAP, UX_GAP), and produces actionable reports for the appropriate skill terminal. Use when test results are ready for analysis, or when the Orchestrator directs you to verify results.
+description: Analyzes test results from the Playtester, triages every failure into exactly one of 6 categories (APP_BUG, SCENARIO_BUG, TEST_BUG, AMBIGUOUS, FEATURE_GAP, UX_GAP), produces actionable reports, and creates cross-ecosystem tickets for categories that need Dev attention. Use when test results are ready for analysis, or when the Orchestrator directs you to verify results.
 ---
 
 # Result Verifier
 
-You analyze test results from the Playtester, diagnose every failure, and route it to the correct terminal for resolution. You are the triage point that prevents the wrong skill from working on the wrong problem.
+You analyze test results from the Playtester, diagnose every failure, and route it to the correct terminal for resolution. You are the triage point that prevents the wrong skill from working on the wrong problem. For failures that need Dev attention (APP_BUG, FEATURE_GAP, UX_GAP), you also create cross-ecosystem tickets.
 
 ## Context
 
-This skill is the final stage of the **Testing Loop** in the 11-skill PTU ecosystem. Your output feeds into the Dev Loop (for app bugs) or loops back to earlier testing stages (for scenario/test issues).
+This skill is the final stage of the **Testing Loop** in the Testing Ecosystem. Your output feeds into the Dev Ecosystem (via tickets for app bugs and gaps) or loops back to earlier testing stages (for scenario/test issues).
 
-**Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → Playtester → **You** → Dev / Crafter / Playtester / Game Logic Reviewer / Feature Designer
+**Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → Playtester → **You** → tickets/ (Dev) / Crafter / Playtester / Game Logic Reviewer / Feature Designer
 
 **Input:** `app/tests/e2e/artifacts/results/<scenario-id>.result.md`
-**Output:** `app/tests/e2e/artifacts/reports/<type>-<NNN>.md`
+**Output:**
+- `app/tests/e2e/artifacts/reports/<type>-<NNN>.md` (internal reports)
+- `app/tests/e2e/artifacts/tickets/<type>/<type>-<NNN>.md` (cross-ecosystem tickets for APP_BUG, FEATURE_GAP, UX_GAP)
 
 See `ptu-skills-ecosystem.md` for the full architecture.
 
@@ -92,11 +94,58 @@ When diagnosing an APP_BUG, read the relevant app code to identify the likely ro
 
 For each failure, write a report to `artifacts/reports/` using the format from `.claude/skills/references/skill-interfaces.md`.
 
+### Step 5b: Create Cross-Ecosystem Tickets
+
+For categories that need Dev Ecosystem attention, create a **ticket** in addition to the internal report. The ticket is a slimmer document — just the actionable info the Dev ecosystem needs, plus a `source_report` field linking to the full report.
+
+| Category | Internal Report | Cross-Ecosystem Ticket |
+|----------|----------------|------------------------|
+| APP_BUG | `reports/bug-NNN.md` | `tickets/bug/bug-NNN.md` |
+| FEATURE_GAP | `reports/feature-gap-NNN.md` | `tickets/feature/feature-NNN.md` |
+| UX_GAP | `reports/ux-gap-NNN.md` | `tickets/ux/ux-NNN.md` |
+| SCENARIO_BUG | `reports/correction-NNN.md` | None (testing internal) |
+| TEST_BUG | `reports/test-fix-NNN.md` | None (testing internal) |
+| AMBIGUOUS | `reports/escalation-NNN.md` | None (user routes manually) |
+
+**Ticket format:**
+
+```markdown
+---
+ticket_id: <type>-<NNN>
+type: bug | feature | ux
+priority: P0 | P1 | P2
+status: open
+source_ecosystem: test
+target_ecosystem: dev
+created_by: result-verifier
+created_at: <ISO timestamp>
+domain: <domain>
+severity: CRITICAL | HIGH | MEDIUM          # bug only
+scope: FULL | PARTIAL | MINOR              # feature, ux only
+affected_files:                             # bug only
+  - <app file path>
+scenario_ids:
+  - <scenario-id>
+source_report: <report filename>
+---
+
+## Summary
+<1-2 sentences: what the Dev ecosystem needs to fix/build>
+
+## Expected vs Actual
+<brief — full details in source_report>
+
+## PTU Rule Reference
+<one-line reference if applicable>
+```
+
+Use the same sequence number for both the report and the ticket (e.g., `bug-003.md` in both `reports/` and `tickets/bug/`).
+
 ### Step 6: Write Summary
 
-After processing all results, write a summary section at the top of `artifacts/pipeline-state.md`.
+After processing all results, write a summary to `app/tests/e2e/artifacts/test-state.md` (the Test ecosystem state file, updated by the Orchestrator — add your results to a section the Orchestrator will incorporate).
 
-Then update pipeline state with the results stage status.
+Note: The Orchestrator is the sole writer of state files. Write your summary inline in the result reports and let the Orchestrator update the state files on its next scan.
 
 ## Failure Categories
 
