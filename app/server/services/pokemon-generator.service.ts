@@ -56,6 +56,10 @@ export interface GeneratedPokemonData {
   skills: Record<string, string>
   eggGroups: string[]
   size: string
+  // Optional overrides for import-specific data (CSV imports preserve these from the sheet)
+  nature?: { name: string; raisedStat: string | null; loweredStat: string | null }
+  shiny?: boolean
+  heldItem?: string | null
 }
 
 export interface CreatedPokemon {
@@ -166,7 +170,7 @@ export async function createPokemonRecord(
       nickname: await resolveNickname(data.species, data.nickname),
       level: data.level,
       experience: 0,
-      nature: JSON.stringify({ name: 'Hardy', raisedStat: null, loweredStat: null }),
+      nature: JSON.stringify(data.nature ?? { name: 'Hardy', raisedStat: null, loweredStat: null }),
       type1: data.types[0],
       type2: data.types[1] || null,
       baseHp: data.baseStats.hp,
@@ -188,6 +192,7 @@ export async function createPokemonRecord(
       }),
       abilities: JSON.stringify(data.abilities),
       moves: JSON.stringify(data.moves),
+      heldItem: data.heldItem ?? null,
       capabilities: JSON.stringify({
         ...data.movementCaps,
         other: data.otherCapabilities,
@@ -197,6 +202,7 @@ export async function createPokemonRecord(
       eggGroups: JSON.stringify(data.eggGroups),
       statusConditions: JSON.stringify([]),
       gender: data.gender,
+      shiny: data.shiny ?? false,
       isInLibrary: true,
       origin: input.origin,
       notes: input.originLabel || null
