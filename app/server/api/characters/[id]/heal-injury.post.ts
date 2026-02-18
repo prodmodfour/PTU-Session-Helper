@@ -115,7 +115,8 @@ export default defineEventHandler(async (event) => {
       injuries: newInjuries,
       injuriesHealedToday: injuriesHealedToday + 1,
       lastRestReset: new Date(),
-      lastInjuryTime: newInjuries > 0 ? new Date() : null
+      // Only clear timer when all injuries gone — healing is not gaining an injury
+      ...(newInjuries === 0 ? { lastInjuryTime: null } : {})
     }
   })
 
