@@ -219,9 +219,9 @@
             </div>
             <div class="healing-status__item">
               <span class="healing-status__label">Injuries</span>
-              <span class="healing-status__value" :class="{ 'text-danger': (character as any).injuries >= 5 }">
-                {{ (character as any).injuries || 0 }}
-                <span v-if="(character as any).injuries >= 5" class="healing-status__warning">(Cannot rest-heal)</span>
+              <span class="healing-status__value" :class="{ 'text-danger': character.injuries >= 5 }">
+                {{ character.injuries || 0 }}
+                <span v-if="character.injuries >= 5" class="healing-status__warning">(Cannot rest-heal)</span>
               </span>
             </div>
             <div v-if="healingInfo" class="healing-status__item">
@@ -240,7 +240,7 @@
             </div>
             <div class="healing-status__item">
               <span class="healing-status__label">Drained AP</span>
-              <span class="healing-status__value">{{ (character as any).drainedAp || 0 }}</span>
+              <span class="healing-status__value">{{ character.drainedAp || 0 }}</span>
             </div>
             <div v-if="healingInfo && healingInfo.hoursSinceLastInjury !== null" class="healing-status__item">
               <span class="healing-status__label">Time Since Last Injury</span>
@@ -292,7 +292,7 @@
               </button>
             </div>
 
-            <div v-if="(character as any).injuries > 0" class="healing-action">
+            <div v-if="character.injuries > 0" class="healing-action">
               <h4>Natural Injury Healing</h4>
               <p>Heal 1 injury after 24 hours without gaining new injuries. Max 3 injuries healed per day from all sources.</p>
               <button
@@ -304,7 +304,7 @@
               </button>
             </div>
 
-            <div v-if="(character as any).injuries > 0" class="healing-action">
+            <div v-if="character.injuries > 0" class="healing-action">
               <h4>Drain AP to Heal Injury</h4>
               <p>Drain 2 AP to heal 1 injury as an Extended Action. Subject to daily injury limit.</p>
               <button
@@ -418,10 +418,10 @@ const healingInfo = computed(() => {
   if (!character.value) return null
   return getHealingInfo({
     maxHp: character.value.maxHp,
-    injuries: (character.value as any).injuries || 0,
-    restMinutesToday: (character.value as any).restMinutesToday || 0,
-    lastInjuryTime: (character.value as any).lastInjuryTime || null,
-    injuriesHealedToday: (character.value as any).injuriesHealedToday || 0
+    injuries: character.value.injuries || 0,
+    restMinutesToday: character.value.restMinutesToday || 0,
+    lastInjuryTime: character.value.lastInjuryTime || null,
+    injuriesHealedToday: character.value.injuriesHealedToday || 0
   })
 })
 

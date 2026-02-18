@@ -614,9 +614,9 @@ const healingInfo = computed(() => {
   return getHealingInfo({
     maxHp: pokemon.value.maxHp,
     injuries: pokemon.value.injuries || 0,
-    restMinutesToday: (pokemon.value as any).restMinutesToday || 0,
-    lastInjuryTime: (pokemon.value as any).lastInjuryTime || null,
-    injuriesHealedToday: (pokemon.value as any).injuriesHealedToday || 0
+    restMinutesToday: pokemon.value.restMinutesToday || 0,
+    lastInjuryTime: pokemon.value.lastInjuryTime || null,
+    injuriesHealedToday: pokemon.value.injuriesHealedToday || 0
   })
 })
 
