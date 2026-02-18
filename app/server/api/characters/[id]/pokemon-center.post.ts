@@ -10,8 +10,8 @@ import {
  * - Full HP restoration
  * - All status conditions cleared
  * - Injuries healed (max 3/day total)
- * - Drained AP restored (only if healing time >= 4 hours, i.e. Extended Rest)
  * - Time: 1 hour base + 30min/injury (or 1hr/injury if 5+)
+ * Note: Pokemon Centers do NOT restore drained AP — that is exclusively an Extended Rest benefit
  */
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -57,10 +57,6 @@ export default defineEventHandler(async (event) => {
   const statusConditions: string[] = JSON.parse(character.statusConditions || '[]')
   const clearedStatuses = [...statusConditions]
 
-  // Only restore drained AP if healing time meets Extended Rest threshold (4+ hours)
-  const meetsExtendedRest = timeResult.totalTime >= 240
-  const apRestored = meetsExtendedRest ? character.drainedAp : 0
-
   // Calculate new injury count and daily healed count
   const newInjuries = character.injuries - injuryResult.injuriesHealed
   const newInjuriesHealedToday = injuriesHealedToday + injuryResult.injuriesHealed
@@ -74,7 +70,6 @@ export default defineEventHandler(async (event) => {
       lastRestReset: new Date(),
       restMinutesToday: 480, // Max out rest for the day
       statusConditions: JSON.stringify([]),
-      ...(meetsExtendedRest ? { drainedAp: 0 } : {}),
       // Clear last injury time if all injuries healed
       lastInjuryTime: newInjuries > 0 ? character.lastInjuryTime : null
     }
@@ -90,7 +85,7 @@ export default defineEventHandler(async (event) => {
       injuriesHealed: injuryResult.injuriesHealed,
       injuriesRemaining: newInjuries,
       clearedStatuses,
-      apRestored,
+      apRestored: 0,
       healingTime: timeResult.totalTime,
       healingTimeDescription: timeResult.timeDescription,
       atDailyInjuryLimit: injuryResult.atDailyLimit,
