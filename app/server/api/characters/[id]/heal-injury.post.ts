@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
         drainedAp: newDrainedAp,
         injuriesHealedToday: injuriesHealedToday + 1,
         lastRestReset: new Date(),
-        lastInjuryTime: newInjuries > 0 ? new Date() : null
+        ...(newInjuries === 0 ? { lastInjuryTime: null } : {})
       }
     })
 
