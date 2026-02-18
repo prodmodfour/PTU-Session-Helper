@@ -249,8 +249,9 @@ function parsePokedexContent(content: string): SpeciesRow[] {
 
     for (let i = 0; i < lines.length && i < 10; i++) {
       const line = lines[i].trim()
-      // Pokemon name is usually in ALL CAPS and at least 3 characters
-      if (line.length >= 3 && /^[A-Z][A-Z0-9\s\-\(\).:'É\u2019]+$/.test(line) && !line.match(/^\d+$/)) {
+      // Pokemon name starts with an ALL CAPS species name (2+ uppercase letters),
+      // optionally followed by a mixed-case form descriptor (e.g. "HOOPA Confined", "DEOXYS Attack Forme")
+      if (line.length >= 3 && /^[A-Z][A-Z0-9\-\(\).:'É\u2019]+(?:\s+[A-Za-z0-9,%\s\-\(\).:'É\u2019]+)?$/.test(line) && !line.match(/^\d+$/)) {
         // Skip common non-Pokemon lines
         if (['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST'].includes(line)) continue
         pokemonName = line
