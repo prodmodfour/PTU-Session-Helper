@@ -7,6 +7,7 @@ import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
 import type { GridConfig } from '~/types'
 import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
+import { initialEvasion } from '~/server/services/combatant.service'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -112,9 +113,9 @@ export default defineEventHandler(async (event) => {
           },
           statusConditions: [],
           injuries: { count: 0, max: 5 },
-          physicalEvasion: Math.floor(baseDefense / 5),
-          specialEvasion: Math.floor(baseSpDef / 5),
-          speedEvasion: Math.floor(baseSpeed / 5)
+          physicalEvasion: initialEvasion(baseDefense),
+          specialEvasion: initialEvasion(baseSpDef),
+          speedEvasion: initialEvasion(baseSpeed)
         })
       }
     }

@@ -501,6 +501,21 @@ export function buildHumanEntityFromRecord(record: PrismaHumanRecord): HumanChar
 }
 
 // ============================================
+// EVASION HELPERS
+// ============================================
+
+/** PTU max evasion from stats: +6 at 30+ in a stat (PTU p.310-314) */
+const MAX_EVASION = 6
+
+/**
+ * Compute initial evasion for a stat: floor(stat / 5), capped at +6.
+ * PTU p.310-314: "You may never have more than +6 in a [given evasion]."
+ */
+export function initialEvasion(stat: number): number {
+  return Math.min(MAX_EVASION, Math.floor(stat / 5))
+}
+
+// ============================================
 // COMBATANT BUILDER
 // ============================================
 
@@ -547,9 +562,9 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
       isHolding: false
     },
     injuries: { count: 0, sources: [] },
-    physicalEvasion: Math.floor((stats.defense || 0) / 5),
-    specialEvasion: Math.floor((stats.specialDefense || 0) / 5),
-    speedEvasion: Math.floor((stats.speed || 0) / 5),
+    physicalEvasion: initialEvasion(stats.defense || 0),
+    specialEvasion: initialEvasion(stats.specialDefense || 0),
+    speedEvasion: initialEvasion(stats.speed || 0),
     position,
     tokenSize,
     entity
