@@ -20,10 +20,10 @@
         v-if="showGenerateModal && table"
         :table="table"
         :has-active-encounter="!!encounterStore.encounter"
-        :add-error="addError"
-        :adding-to-encounter="addingToEncounter"
+        :add-error="encounterCreation.error.value || addError"
+        :adding-to-encounter="encounterCreation.creating.value"
         :scenes="availableScenes"
-        @close="showGenerateModal = false; addError = null"
+        @close="showGenerateModal = false; addError = null; encounterCreation.clearError()"
         @add-to-encounter="handleAddToEncounter"
         @add-to-scene="handleAddToScene"
       />
@@ -51,12 +51,12 @@ const router = useRouter()
 const tablesStore = useEncounterTablesStore()
 const encounterStore = useEncounterStore()
 const groupViewTabsStore = useGroupViewTabsStore()
+const encounterCreation = useEncounterCreation()
 
 const tableId = computed(() => route.params.id as string)
 
 // Generate modal state
 const showGenerateModal = ref(false)
-const addingToEncounter = ref(false)
 const addError = ref<string | null>(null)
 
 // Delete modal state
@@ -85,21 +85,10 @@ const handleAddToScene = async (sceneId: string, pokemon: Array<{ speciesId: str
 }
 
 const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesName: string; level: number }>) => {
-  addingToEncounter.value = true
-  addError.value = null
-
-  try {
-    const tableName = tablesStore.getTableById(tableId.value)?.name || 'Wild Encounter'
-    await encounterStore.createEncounter(tableName, 'full_contact')
-    await encounterStore.addWildPokemon(pokemon, 'enemies')
-    await encounterStore.serveEncounter()
-
+  const tableName = tablesStore.getTableById(tableId.value)?.name || 'Wild Encounter'
+  const success = await encounterCreation.createWildEncounter(pokemon, tableName)
+  if (success) {
     showGenerateModal.value = false
-    router.push('/gm')
-  } catch (e: unknown) {
-    addError.value = e instanceof Error ? e.message : 'Failed to add Pokemon to encounter'
-  } finally {
-    addingToEncounter.value = false
   }
 }
 
