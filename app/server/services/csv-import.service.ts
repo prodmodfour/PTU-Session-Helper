@@ -372,10 +372,13 @@ export async function createPokemonFromCSV(
       burrow: pokemon.capabilities.burrow,
       levitate: pokemon.capabilities.levitate
     },
+    power: pokemon.capabilities.power,
+    jump: pokemon.capabilities.jump,
+    weightClass: speciesData?.weightClass ?? 1,
     otherCapabilities: [],
     skills: pokemon.skills,
     eggGroups: [],
-    size: 'Medium',
+    size: speciesData?.size ?? 'Medium',
     nature: pokemon.nature,
     shiny: pokemon.shiny,
     heldItem: pokemon.heldItem
