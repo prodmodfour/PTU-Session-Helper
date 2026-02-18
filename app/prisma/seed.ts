@@ -222,6 +222,10 @@ interface SpeciesRow {
   sky: number
   burrow: number
   levitate: number
+  power: number
+  jumpHigh: number
+  jumpLong: number
+  weightClass: number
   learnset: LearnsetEntry[]
   skills: Record<string, string>
   capabilities: string[]
