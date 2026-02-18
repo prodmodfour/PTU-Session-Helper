@@ -1,19 +1,21 @@
 ---
 name: playtester
-description: Executes verified test scenarios as Playwright e2e tests against the running PTU Session Helper app. Translates scenarios into .spec.ts files, runs them, and produces structured test result documents. Use when verified scenarios are ready for execution, or when the Orchestrator directs you to run tests.
+description: Executes verified test scenarios as Playwright e2e tests against the running PTU Session Helper app. Translates scenarios into .spec.ts files, runs them, and produces structured test result documents. Also handles retest tickets from the Dev ecosystem. Use when verified scenarios are ready for execution, when the Orchestrator directs you to run tests, or when retest tickets are pending.
 ---
 
 # Playtester
 
-You translate verified scenarios into Playwright e2e tests, execute them against the running app, and produce structured test results. You are the bridge between scenario documents and actual app behavior.
+You translate verified scenarios into Playwright e2e tests, execute them against the running app, and produce structured test results. You also process retest tickets from the Dev ecosystem — re-running specific scenarios after bug fixes. You are the bridge between scenario documents and actual app behavior.
 
 ## Context
 
-This skill is the fourth stage of the **Testing Loop** in the 11-skill PTU ecosystem.
+This skill is the fourth stage of the **Testing Loop** in the Testing Ecosystem.
 
 **Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → Scenario Verifier → **You** → Result Verifier
 
-**Input:** `app/tests/e2e/artifacts/verifications/<scenario-id>.verified.md` (only PASS status)
+**Input:**
+- `app/tests/e2e/artifacts/verifications/<scenario-id>.verified.md` (only PASS status)
+- `app/tests/e2e/artifacts/tickets/retest/retest-*.md` (retest tickets from Dev)
 **Output:** `app/tests/e2e/scenarios/<domain>/<id>.spec.ts` + `app/tests/e2e/artifacts/results/<scenario-id>.result.md`
 
 See `ptu-skills-ecosystem.md` for the full architecture.
@@ -36,6 +38,21 @@ curl -s http://localhost:3001 > /dev/null && echo "Server running" || echo "Serv
 ### Step 0: Read Lessons
 
 Before starting work, check `app/tests/e2e/artifacts/lessons/playtester.lessons.md` for patterns from previous cycles. If the file exists, review active lessons — they highlight recurring selector issues, timing patterns, and workarounds discovered in past test runs. If no lesson file exists, skip this step.
+
+### Step 0b: Check Retest Tickets
+
+Before processing new scenarios, scan `app/tests/e2e/artifacts/tickets/retest/` for open retest tickets from the Dev ecosystem.
+
+For each retest ticket with `status: open`:
+1. Read the `scenario_ids` field from the ticket
+2. Re-run those specific scenarios (the spec files already exist from the original test run)
+3. Write new result files to `artifacts/results/`
+4. Update the retest ticket:
+   - Set `status: resolved`
+   - Add a resolution note with the run date and pass/fail status
+5. If any scenario fails, the Result Verifier will triage it normally — potentially creating a new bug ticket
+
+**Retests take priority over new scenario execution.** Only proceed to Step 1 after all open retest tickets are processed.
 
 ### Step 1: Read Verified Scenario
 
@@ -174,7 +191,7 @@ retries_used: <0-2>
 <!-- Empty if no retries needed -->
 ```
 
-Then update `artifacts/pipeline-state.md`.
+Then let the Orchestrator know results are ready (it will update both state files on its next scan).
 
 ## Selector Strategy
 
