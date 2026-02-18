@@ -1,6 +1,6 @@
 # PTU Skills Ecosystem
 
-Master reference for the 12-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing.
+Master reference for the 12-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing. The ecosystem is organized into two logically separate halves — Dev and Test — coordinated by a single Orchestrator.
 
 ## Core Principle
 
@@ -10,64 +10,92 @@ The playtest loop drives the dev loop. Gameplay scenarios — derived from PTU 1
 
 **Separate terminals.** Each skill runs in its own Claude Code session. The user acts as liaison between terminals. Skills communicate through persistent artifact files on disk, never through shared context.
 
-## Three-Loop System
+**Two ecosystems, one orchestrator.** The Dev Ecosystem handles implementation, reviews, and code health. The Test Ecosystem handles scenario creation, verification, and execution. The Orchestrator reads both and gives parallel recommendations.
+
+**Ticket boundary.** Reports stay internal to the Test ecosystem. Only actionable work items cross the boundary as **tickets** in `artifacts/tickets/`. The `retest` type is the only ticket flowing Dev → Test.
+
+## Two-Ecosystem Diagram
 
 ```
-                    ┌──────────────┐
-                    │ Orchestrator │ ← reads artifacts, advises user
-                    └──────┬───────┘
-                           │
-        ┌──────────────────┼──────────────────────┐
-        │                  │                       │
-   TESTING LOOP       DEV LOOP              REVIEW LOOP
-        │                  │                       │
-   Synthesizer        Developer              Reviewer
-        ↓                  ↑                 Game Logic
-   Crafter            (fixes bugs)           Reviewer
-        ↓                  │                       │
-   Verifier           ←────┴───────────────────────┘
-        ↓                        (bug reports)
-   Playtester
-        ↓
-   Result Verifier
-        ├── APP_BUG ──────────→ DEV LOOP (Developer → Reviewer)
-        ├── SCENARIO_BUG ─────→ Scenario Crafter (back into TESTING LOOP)
-        ├── TEST_BUG ─────────→ Playtester (retry/fix selectors)
-        ├── AMBIGUOUS ────────→ Game Logic Reviewer
-        ├── FEATURE_GAP ──────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
-        └── UX_GAP ───────────→ DESIGN LOOP (Feature Designer → Developer → Reviewer)
+                    ┌──────────────────────┐
+                    │     Orchestrator     │ ← reads both state files + all ticket dirs
+                    │  (advises on BOTH    │   gives parallel recommendations
+                    │   ecosystems)        │
+                    └──────────┬───────────┘
+                               │
+            ┌──────────────────┼──────────────────────┐
+            │                  │                       │
+       DEV ECOSYSTEM     TICKET BOUNDARY      TEST ECOSYSTEM
+            │                  │                       │
+       Developer          ← bug tickets ←         Synthesizer
+       Senior Reviewer    ← ptu-rule tickets ←        ↓
+       Game Logic Rev     ← feature tickets ←     Crafter
+       Code Health Aud    ← ux tickets ←              ↓
+       Retrospective*                             Verifier
+       Feature Designer*  → retest tickets →          ↓
+                                                  Playtester
+                                                      ↓
+                                                  Result Verifier
+                                                      ↓
+                                                  Feature Designer*
 
-                    ┌────────────────────────┐
-                    │ Retrospective Analyst  │ ← runs after cycles complete
-                    │  (mines error patterns │   writes per-skill lessons
-                    │   across artifacts)    │
-                    └────────────────────────┘
+* Feature Designer bridges both ecosystems
+* Retrospective Analyst reads both ecosystems
+```
 
-                    ┌────────────────────────┐
-                    │ Code Health Auditor    │ ← runs after cycles / on-demand
-                    │  (scans source code    │   writes refactoring tickets
-                    │   for structural debt) │
-                    └────────────────────────┘
+### Internal Loops
+
+**Test Ecosystem Internal:**
+- SCENARIO_BUG → correction report → Scenario Crafter (fix and re-verify)
+- TEST_BUG → test-fix report → Playtester (fix selectors/timing)
+- AMBIGUOUS → escalation report → Game Logic Reviewer (ruling)
+
+**Dev Ecosystem Internal:**
+- CHANGES_REQUIRED review → Developer (address feedback)
+- Refactoring tickets → Developer → Senior Reviewer
+
+### Cross-Ecosystem Flow
+
+```
+Test Result Verifier ──── bug/feature/ux ticket ────→ Dev Developer
+                                                          ↓
+                                                    Senior Reviewer ∥ Game Logic Reviewer
+                                                          ↓
+Dev Orchestrator ──── retest ticket ────→ Test Playtester
+                                              ↓
+                                         Result Verifier (re-triage)
 ```
 
 ## Skills Summary
 
-Skills are loaded by asking Claude to load the relevant skill file (e.g., "load the orchestrator skill").
+Skills are loaded by asking Claude to load the relevant skill file.
+
+### Dev Ecosystem
 
 | # | Skill | Skill File | Input | Output | Terminal |
 |---|-------|-----------|-------|--------|----------|
-| 1 | Orchestrator | `orchestrator.md` | artifact dirs | advice (no files) | persistent |
-| 2 | Gameplay Loop Synthesizer | `gameplay-loop-synthesizer.md` | rulebooks + app code | `artifacts/loops/` | per-domain |
-| 3 | Scenario Crafter | `scenario-crafter.md` | loop files | `artifacts/scenarios/` | per-batch |
-| 4 | Scenario Verifier | `scenario-verifier.md` | scenario files | `artifacts/verifications/` | per-batch |
-| 5 | Playtester | `playtester.md` | verified scenarios | spec files + `artifacts/results/` | persistent |
-| 6 | Result Verifier | `result-verifier.md` | result files | `artifacts/reports/` | per-batch |
-| 7 | Developer | `ptu-session-helper-dev.md` | bug reports | code commits | persistent |
-| 8 | Senior Reviewer | `ptu-session-helper-senior-reviewer.md` | code diffs + reports | `artifacts/reviews/` | persistent |
-| 9 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | `artifacts/reviews/` | as-needed |
-| 10 | Feature Designer | `feature-designer.md` | gap reports | `artifacts/designs/` | per-gap |
-| 11 | Retrospective Analyst | `retrospective-analyst.md` | verifications, results, reports, git history | `artifacts/lessons/` | after cycles / on-demand |
-| 12 | Code Health Auditor | `code-health-auditor.md` | source code files under `app/` | `artifacts/refactoring/` | per-audit |
+| 1 | Developer | `ptu-session-helper-dev.md` | tickets (bug/feature/ux/ptu-rule), designs, reviews | code commits | persistent |
+| 2 | Senior Reviewer | `ptu-session-helper-senior-reviewer.md` | code diffs + tickets | `reviews/code-review-*.md` | persistent |
+| 3 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | `reviews/rules-review-*.md` | as-needed |
+| 4 | Code Health Auditor | `code-health-auditor.md` | source code under `app/` | `refactoring/*.md` | per-audit |
+
+### Test Ecosystem
+
+| # | Skill | Skill File | Input | Output | Terminal |
+|---|-------|-----------|-------|--------|----------|
+| 5 | Gameplay Loop Synthesizer | `gameplay-loop-synthesizer.md` | rulebooks + app code | `loops/*.md` | per-domain |
+| 6 | Scenario Crafter | `scenario-crafter.md` | loop files | `scenarios/*.md` | per-batch |
+| 7 | Scenario Verifier | `scenario-verifier.md` | scenario files | `verifications/*.md` | per-batch |
+| 8 | Playtester | `playtester.md` | verified scenarios + retest tickets | spec files + `results/*.md` | persistent |
+| 9 | Result Verifier | `result-verifier.md` | result files | `reports/*.md` + `tickets/*.md` | per-batch |
+
+### Bridge Skills
+
+| # | Skill | Skill File | Invoked By | Output |
+|---|-------|-----------|------------|--------|
+| 10 | Orchestrator | `orchestrator.md` | user (start of session) | `dev-state.md`, `test-state.md`, `tickets/retest/*.md` |
+| 11 | Feature Designer | `feature-designer.md` | gap tickets from Test | `designs/*.md` + ticket enrichment |
+| 12 | Retrospective Analyst | `retrospective-analyst.md` | after cycles complete | `lessons/*.md` |
 
 ## Skill Files
 
@@ -75,6 +103,7 @@ Skills are loaded by asking Claude to load the relevant skill file (e.g., "load 
 .claude/skills/
 ├── ptu-skills-ecosystem.md              ← you are here
 ├── specification.md                      (full contracts and formats)
+├── USAGE.md                              (two-terminal workflow guide)
 ├── orchestrator.md
 ├── gameplay-loop-synthesizer.md
 ├── scenario-crafter.md
@@ -99,16 +128,23 @@ Skills are loaded by asking Claude to load the relevant skill file (e.g., "load 
 
 ```
 artifacts/
-├── loops/              Synthesizer writes → Crafter reads
-├── scenarios/          Crafter writes → Verifier reads
-├── verifications/      Verifier writes → Playtester reads
-├── results/            Playtester writes → Result Verifier reads
-├── reports/            Result Verifier writes → Dev/Crafter/Playtester/Feature Designer reads
-├── designs/            Feature Designer writes → Developer reads
-├── lessons/            Retrospective Analyst writes → all skills read
-├── refactoring/        Code Health Auditor writes → Developer/Reviewer reads
-├── reviews/            Senior Reviewer + Game Logic Reviewer write → Orchestrator/Developer reads
-└── pipeline-state.md   All skills update → Orchestrator reads
+├── tickets/               Cross-ecosystem communication
+│   ├── bug/               Result Verifier writes → Developer reads
+│   ├── ptu-rule/          Game Logic Reviewer writes → Developer reads
+│   ├── feature/           Result Verifier writes → Feature Designer reads → Developer reads
+│   ├── ux/                Result Verifier writes → Feature Designer reads → Developer reads
+│   └── retest/            Orchestrator writes → Playtester reads
+├── loops/                 Synthesizer writes → Crafter reads
+├── scenarios/             Crafter writes → Verifier reads
+├── verifications/         Verifier writes → Playtester reads
+├── results/               Playtester writes → Result Verifier reads
+├── reports/               Result Verifier writes (testing internal)
+├── designs/               Feature Designer writes → Developer reads (shared read zone)
+├── lessons/               Retrospective Analyst writes → all skills read
+├── refactoring/           Code Health Auditor writes → Developer/Reviewer reads
+├── reviews/               Senior Reviewer + Game Logic Reviewer write → Orchestrator/Developer reads
+├── dev-state.md           Orchestrator writes → Dev skills read
+└── test-state.md          Orchestrator writes → Test skills read
 ```
 
 Playwright specs: `tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
@@ -138,24 +174,24 @@ Playwright specs: `tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 7. Load Orchestrator → "Verified, start Playtester"
 8. Load Playtester → specs + results written
 9. Load Orchestrator → "Results ready, start Result Verifier"
-10. Load Result Verifier → reports written
-11. Load Orchestrator → "3 bugs found, start Dev with bug-001"
+10. Load Result Verifier → reports + tickets written
+11. Load Orchestrator → "bug-001 ticket created, start Dev with bug-001"
 
-### Bug Fix Cycle
-1. Dev reads bug report → implements fix → commits
-2. Senior Reviewer reviews code → writes `artifacts/reviews/code-review-<NNN>.md` with verdict
-3. Game Logic Reviewer confirms PTU correctness → writes `artifacts/reviews/rules-review-<NNN>.md` with verdict
-4. Load Orchestrator → detects both reviews APPROVED → "Fix approved, re-run scenario X"
-5. Playtester re-runs → new result
-6. Result Verifier checks → PASS or new issue
+### Bug Fix Cycle (cross-ecosystem)
+1. Dev reads bug ticket + source report → implements fix → commits
+2. Senior Reviewer reviews code → writes `reviews/code-review-<NNN>.md` with verdict
+3. Game Logic Reviewer confirms PTU correctness → writes `reviews/rules-review-<NNN>.md` with verdict
+4. Load Orchestrator → detects both reviews APPROVED → creates retest ticket in `tickets/retest/`
+5. Playtester picks up retest ticket → re-runs scenario → new result
+6. Result Verifier checks → PASS or new bug ticket
 
-### Targeted Test (feature change)
-1. Load Orchestrator → "Change touches combat domain, existing loops cover it — re-run scenarios 001-004"
-2. Skip Synthesizer/Crafter/Verifier — artifacts current
-3. Playtester re-runs affected scenarios only
+### Parallel Work
+The Orchestrator may recommend work in both ecosystems simultaneously:
+- **Dev Terminal:** Developer fixing bug-001 while...
+- **Test Terminal:** Scenario Crafter writing scenarios for a new domain
 
 ### Stale Artifact Detection
-Orchestrator compares timestamps in `pipeline-state.md`:
+Orchestrator compares timestamps:
 - Loop newer than its scenarios → scenarios stale, re-craft
 - Scenario newer than verification → re-verify
 - Verification newer than test result → re-run
