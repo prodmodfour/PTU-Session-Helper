@@ -9,12 +9,14 @@ You design app features and UI surface area to close gaps between what PTU gamep
 
 ## Context
 
-This skill operates in the **Design Loop** of the 12-skill PTU ecosystem. You sit between gap detection and implementation.
+This skill bridges both the **Dev and Test Ecosystems** in the 12-skill PTU pipeline. You sit between gap detection and implementation. The Test ecosystem creates gap tickets; you design solutions; the Dev ecosystem implements them.
 
-**Pipeline position (reactive):** Result Verifier → gap report → **You** → design spec → Developer → Senior Reviewer
+**Pipeline position (reactive):** Result Verifier → gap ticket (`tickets/feature/` or `tickets/ux/`) → **You** → design spec → Developer → Senior Reviewer
 **Pipeline position (proactive):** Synthesizer feasibility flag → Scenario Verifier warning → Orchestrator → **You** → design spec → Developer
 
-**Input:** `app/tests/e2e/artifacts/reports/feature-gap-*.md` or `ux-gap-*.md`
+**Input:**
+- `app/tests/e2e/artifacts/tickets/feature/feature-*.md` or `tickets/ux/ux-*.md` (cross-ecosystem tickets)
+- `app/tests/e2e/artifacts/reports/feature-gap-*.md` or `ux-gap-*.md` (full reports via `source_report` field)
 **Output:** `app/tests/e2e/artifacts/designs/design-<NNN>.md`
 
 See `ptu-skills-ecosystem.md` for the full architecture.
@@ -25,9 +27,9 @@ See `ptu-skills-ecosystem.md` for the full architecture.
 
 Before starting work, check `app/tests/e2e/artifacts/lessons/feature-designer.lessons.md` for patterns from previous cycles. If the file exists, review active lessons — they highlight recurring design mistakes (e.g., missed WebSocket events, incomplete store integration) that you should watch for. If no lesson file exists, skip this step.
 
-### Step 1: Read Gap Report
+### Step 1: Read Gap Ticket and Report
 
-Read the gap report from `artifacts/reports/`. Understand:
+Read the gap ticket from `artifacts/tickets/feature/` or `artifacts/tickets/ux/`. The ticket has a summary and a `source_report` field linking to the full report in `artifacts/reports/`. Read both for context. Understand:
 - **Category:** FEATURE_GAP (no backend capability) vs UX_GAP (backend works, no UI)
 - **Scope:** FULL (new subsystem), PARTIAL (extend existing), MINOR (small addition)
 - **Scenario:** Which workflow triggered the failure
@@ -110,11 +112,13 @@ Check existing designs in `artifacts/designs/` to determine the next sequence nu
 
 Set frontmatter `status: complete`.
 
-### Step 7: Update Pipeline State
+### Step 7: Update Ticket with Design Reference
 
-Update `artifacts/pipeline-state.md`:
-- Set the domain's Design stage status to `design complete`
-- Add the design spec to the Open Issues section with its gap report reference
+After writing the design spec, update the corresponding ticket in `tickets/feature/` or `tickets/ux/`:
+- Add `design_spec: design-NNN` to the ticket frontmatter
+- This back-reference lets the Orchestrator and Developer find the design from the ticket
+
+Note: The Orchestrator is the sole writer of state files (`dev-state.md`, `test-state.md`). It will update them on its next scan after detecting the new design spec.
 
 ## Authority
 
