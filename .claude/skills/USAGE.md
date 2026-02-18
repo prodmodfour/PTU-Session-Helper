@@ -1,6 +1,6 @@
 # PTU Skills Ecosystem — Usage Guide
 
-How to use the 9-skill testing pipeline to validate the PTU Session Helper app.
+How to use the 12-skill two-ecosystem pipeline to validate the PTU Session Helper app.
 
 ## Prerequisites
 
@@ -21,30 +21,49 @@ Before starting, ensure:
    cd app && npx playwright install chromium
    ```
 
-## Terminal Setup
+## Two-Ecosystem Architecture
 
-Each skill runs in its own Claude Code terminal. You act as the liaison — copy-pasting context and following the Orchestrator's guidance.
+The ecosystem is split into **Dev** and **Test** halves that communicate through tickets:
+
+```
+Dev Terminal                    Test Terminal
+────────────                   ──────────────
+Developer                      Synthesizer
+Senior Reviewer                Crafter
+Game Logic Reviewer            Verifier
+Code Health Auditor            Playtester
+                               Result Verifier
+        ←── bug/feature/ux tickets ──→
+        ←── retest tickets ──────────→
+```
+
+The **Orchestrator** reads both ecosystems and gives parallel recommendations. You can work on both simultaneously — e.g., fixing a bug in the Dev terminal while crafting scenarios for a new domain in the Test terminal.
+
+## Terminal Setup
 
 ### Persistent Terminals (keep open all session)
 
-| Terminal | Skill | How to Start |
-|----------|-------|-------------|
-| T1 | Orchestrator | Open Claude Code, run `/orchestrate` |
-| T2 | Developer | Open Claude Code, load `ptu-session-helper-dev.md` at session start |
-| T3 | Senior Reviewer | Open Claude Code, load `ptu-session-helper-senior-reviewer.md` at session start |
-| T4 | Playtester | Open Claude Code, run `/playtest` when needed |
+| Terminal | Skill | Ecosystem | How to Start |
+|----------|-------|-----------|-------------|
+| T1 | Orchestrator | Both | Open Claude Code, run `/orchestrate` |
+| T2 | Developer | Dev | Open Claude Code, load `ptu-session-helper-dev.md` at session start |
+| T3 | Senior Reviewer | Dev | Open Claude Code, load `ptu-session-helper-senior-reviewer.md` at session start |
+| T4 | Playtester | Test | Open Claude Code, run `/playtest` when needed |
 
 ### Spin-Up Terminals (open as needed, close when done)
 
-| Terminal | Skill | Trigger |
-|----------|-------|---------|
-| T5 | Gameplay Loop Synthesizer | `/synthesize-loops` |
-| T6 | Scenario Crafter | `/craft-scenarios` |
-| T7 | Scenario Verifier | `/verify-scenarios` |
-| T8 | Result Verifier | `/verify-results` |
-| T9 | Game Logic Reviewer | `/verify-ptu` or `/verify-game-logic` |
+| Terminal | Skill | Ecosystem | Trigger |
+|----------|-------|-----------|---------|
+| T5 | Gameplay Loop Synthesizer | Test | `/synthesize-loops` |
+| T6 | Scenario Crafter | Test | `/craft-scenarios` |
+| T7 | Scenario Verifier | Test | `/verify-scenarios` |
+| T8 | Result Verifier | Test | `/verify-results` |
+| T9 | Game Logic Reviewer | Dev | `/verify-ptu` or `/verify-game-logic` |
+| T10 | Feature Designer | Both | When Orchestrator routes gap tickets |
+| T11 | Retrospective Analyst | Both | After domain cycles complete |
+| T12 | Code Health Auditor | Dev | On demand or after cycles |
 
-You don't need all terminals at once. The Orchestrator tells you which one to open next.
+You don't need all terminals at once. The Orchestrator tells you which one to open next — and may recommend parallel work across both ecosystems.
 
 ## Quick Start: Testing a New Domain
 
@@ -57,7 +76,7 @@ Open **T1** and run:
 /orchestrate
 ```
 
-It reads `app/tests/e2e/artifacts/pipeline-state.md`, sees all domains are "not started", and tells you which domain to begin with and which terminal to open.
+It reads `dev-state.md` and `test-state.md`, sees all domains are "not started", and tells you which domain to begin with and which terminal to open.
 
 ### Step 2 — Synthesize gameplay loops
 
@@ -66,13 +85,13 @@ Open **T5** and run:
 /synthesize-loops
 ```
 
-Tell it which domain (e.g., "combat"). It reads the PTU rulebook chapters and produces loop files in `app/tests/e2e/artifacts/loops/`.
+Tell it which domain (e.g., "combat"). It reads the PTU rulebook chapters and produces loop files in `artifacts/loops/`.
 
 Close T5 when done.
 
 ### Step 3 — Check back with Orchestrator
 
-Go back to **T1** and run `/orchestrate` again. It sees the new loop files and tells you to proceed to the Scenario Crafter.
+Go back to **T1** and run `/orchestrate` again. It detects the new loop files and tells you to proceed to the Scenario Crafter.
 
 ### Step 4 — Craft scenarios
 
@@ -81,7 +100,7 @@ Open **T6** and run:
 /craft-scenarios
 ```
 
-It reads the loop files and produces concrete, testable scenarios with real Pokemon data and calculated expected values. Output goes to `app/tests/e2e/artifacts/scenarios/`.
+It reads the loop files and produces concrete, testable scenarios with real Pokemon data. Output goes to `artifacts/scenarios/`.
 
 Close T6 when done.
 
@@ -92,7 +111,7 @@ Open **T7** and run:
 /verify-scenarios
 ```
 
-It independently re-derives every assertion from the PTU rulebook to catch math errors or incorrect data. Output goes to `app/tests/e2e/artifacts/verifications/`.
+It independently re-derives every assertion from the PTU rulebook to catch math errors. Output goes to `artifacts/verifications/`.
 
 If it flags anything `AMBIGUOUS`, open **T9** (`/verify-ptu`) to get a ruling.
 
@@ -105,7 +124,7 @@ Open **T4** and run:
 /playtest
 ```
 
-It translates verified scenarios into Playwright spec files, executes them against the running dev server, and writes results to `app/tests/e2e/artifacts/results/`.
+It translates verified scenarios into Playwright spec files, executes them, and writes results to `artifacts/results/`.
 
 ### Step 7 — Verify results
 
@@ -114,51 +133,57 @@ Open **T8** and run:
 /verify-results
 ```
 
-It triages every failure into one of four categories and writes reports to `app/tests/e2e/artifacts/reports/`:
+It triages every failure and writes reports + cross-ecosystem tickets:
 
 | Category | Meaning | Goes to |
 |----------|---------|---------|
-| `APP_BUG` | App code is wrong | Developer (T2) |
-| `SCENARIO_BUG` | Scenario assertion was wrong | Scenario Crafter (T6) |
-| `TEST_BUG` | Playwright issue | Playtester (T4) |
-| `AMBIGUOUS` | PTU rule unclear | Game Logic Reviewer (T9) |
+| `APP_BUG` | App code is wrong | Bug ticket → Developer (T2) |
+| `FEATURE_GAP` | App lacks the capability | Feature ticket → Feature Designer (T10) |
+| `UX_GAP` | Backend works, no UI | UX ticket → Feature Designer (T10) |
+| `SCENARIO_BUG` | Scenario assertion was wrong | Correction report → Scenario Crafter (T6) |
+| `TEST_BUG` | Playwright issue | Test-fix report → Playtester (T4) |
+| `AMBIGUOUS` | PTU rule unclear | Escalation report → Game Logic Reviewer (T9) |
 
 Close T8 when done.
 
-### Step 8 — Fix bugs
+### Step 8 — Fix bugs (Dev terminal)
 
-Go to **T1** (`/orchestrate`). It reads the reports and tells you which bug to fix first (CRITICAL before HIGH before MEDIUM).
+Go to **T1** (`/orchestrate`). It reads the tickets and tells you which to fix first (CRITICAL before HIGH before MEDIUM).
 
-In **T2** (Developer), read the bug report and implement the fix. After committing, the Developer annotates the bug report's Fix Log section.
+In **T2** (Developer), read the bug ticket and source report, implement the fix.
 
-In **T3** (Senior Reviewer), review the code changes. If the fix involves game logic, also get a ruling from **T9** (`/verify-ptu`).
+In **T3** (Senior Reviewer), review the code changes. Also get a PTU ruling from **T9** if game logic is involved.
 
 ### Step 9 — Re-run affected scenarios
 
-Back to **T1** (`/orchestrate`). It knows which scenarios to re-run based on the fix. Go to **T4** and re-run only those scenarios.
+Back to **T1** (`/orchestrate`). After both reviews APPROVED, it creates a retest ticket. Go to **T4** — the Playtester picks up the retest ticket and re-runs only the affected scenarios.
 
 Repeat steps 7-9 until all scenarios pass.
+
+## Parallel Work
+
+The Orchestrator may recommend work in both ecosystems simultaneously:
+
+```
+## Parallel Recommendation
+**Dev Terminal:** Developer — fix bug-001 (CRITICAL)
+**Test Terminal:** Scenario Crafter — craft healing scenarios
+```
+
+This is safe because the two ecosystems only communicate through tickets. Dev fixing combat bugs doesn't interfere with Test writing healing scenarios.
 
 ## Bug Fix Cycle (standalone)
 
 When you've already completed the full loop and just need to fix a specific bug:
 
-1. **T1** `/orchestrate` — identifies open bugs and priority
-2. **T2** Developer — reads bug report, implements fix, commits
+1. **T1** `/orchestrate` — identifies open bug tickets and priority
+2. **T2** Developer — reads bug ticket + source report, implements fix, commits
 3. **T3** Senior Reviewer — reviews code
 4. **T9** `/verify-ptu` — confirms PTU correctness (if game logic involved)
-5. **T1** `/orchestrate` — "Fix approved, re-run scenario X"
-6. **T4** `/playtest` — re-runs affected scenario
+5. **T1** `/orchestrate` — both reviews APPROVED, creates retest ticket
+6. **T4** `/playtest` — picks up retest ticket, re-runs affected scenario
 7. **T8** `/verify-results` — checks new result
 8. Repeat until PASS
-
-## Targeted Test (after a feature change)
-
-When you change a feature and want to validate it against existing scenarios:
-
-1. **T1** `/orchestrate` — it detects which domain your change touches and whether existing artifacts are still current
-2. If artifacts are current: skip straight to **T4** `/playtest` to re-run affected scenarios
-3. If artifacts are stale: Orchestrator tells you which step to restart from (re-craft, re-verify, etc.)
 
 ## Domains
 
@@ -168,14 +193,14 @@ The pipeline covers 8 domains:
 |--------|---------------|
 | `combat` | Damage, initiative, turns, type effectiveness, STAB |
 | `capture` | Pokeball mechanics, capture rate, status effects |
+| `healing` | Pokemon Center, rest, injuries |
 | `character-lifecycle` | Character creation, stats, leveling |
 | `pokemon-lifecycle` | Pokemon creation, evolution, moves, abilities |
-| `healing` | Pokemon Center, items, rest |
 | `encounter-tables` | Wild encounters, table generation |
 | `scenes` | Scene management, GM/group sync |
 | `vtt-grid` | Virtual tabletop grid, movement, terrain |
 
-Work through one domain at a time. The Orchestrator tracks progress across all domains.
+The Orchestrator can recommend parallel domain work — e.g., Dev fixing combat bugs while Test explores healing.
 
 ## Artifact Locations
 
@@ -183,21 +208,32 @@ All artifacts live under `app/tests/e2e/artifacts/`:
 
 ```
 artifacts/
-├── loops/              # Gameplay loop definitions
-├── scenarios/          # Concrete test scenarios
-├── verifications/      # Independently verified scenarios
-├── results/            # Playwright test results
-├── reports/            # Bug reports, corrections, escalations
-└── pipeline-state.md   # Pipeline progress tracker
+├── tickets/               # Cross-ecosystem communication
+│   ├── bug/               # Bug tickets (Test → Dev)
+│   ├── ptu-rule/          # PTU rule tickets (Either → Dev)
+│   ├── feature/           # Feature gap tickets (Test → Dev)
+│   ├── ux/                # UX gap tickets (Test → Dev)
+│   └── retest/            # Retest tickets (Dev → Test)
+├── loops/                 # Gameplay loop definitions
+├── scenarios/             # Concrete test scenarios
+├── verifications/         # Independently verified scenarios
+├── results/               # Playwright test results
+├── reports/               # Testing-internal reports
+├── designs/               # Feature design specs
+├── refactoring/           # Refactoring tickets
+├── reviews/               # Code + rules reviews
+├── lessons/               # Retrospective lessons
+├── dev-state.md           # Dev ecosystem state (Orchestrator writes)
+└── test-state.md          # Test ecosystem state (Orchestrator writes)
 ```
 
 Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 
 ## Tips
 
-- **Always return to the Orchestrator** between steps. It tracks state so you don't have to.
+- **Always return to the Orchestrator** between steps. It tracks both ecosystems so you don't have to.
 - **Don't skip the Scenario Verifier.** Catching a math error before running Playwright saves significant time.
-- **One domain at a time.** Get a domain to all-PASS before moving to the next.
+- **Parallel work is encouraged.** Dev and Test can work independently. The ticket boundary keeps them decoupled.
 - **Persistent terminals preserve context.** Don't close T1 (Orchestrator), T2 (Developer), T3 (Reviewer), or T4 (Playtester) mid-session.
 - **Spin-up terminals are disposable.** Close them after they finish their batch to free context.
 - **When in doubt, `/orchestrate`.** It reads all artifacts and tells you exactly what to do next.

@@ -6,15 +6,23 @@ Data contracts between skills in the PTU Skills Ecosystem. All artifacts use mar
 
 ```
 app/tests/e2e/artifacts/
-├── loops/              # Gameplay Loop Synthesizer writes
-├── scenarios/          # Scenario Crafter writes
-├── verifications/      # Scenario Verifier writes
-├── results/            # Playtester writes
-├── reports/            # Result Verifier writes
-├── designs/            # Feature Designer writes
-├── refactoring/        # Code Health Auditor writes
-├── reviews/            # Senior Reviewer + Game Logic Reviewer write
-└── pipeline-state.md   # Every skill updates after writing artifacts
+├── tickets/               # Cross-ecosystem communication
+│   ├── bug/               # Result Verifier writes → Developer reads
+│   ├── ptu-rule/          # Game Logic Reviewer writes → Developer reads
+│   ├── feature/           # Result Verifier writes → Feature Designer/Developer reads
+│   ├── ux/                # Result Verifier writes → Feature Designer/Developer reads
+│   └── retest/            # Orchestrator writes → Playtester reads
+├── loops/                 # Gameplay Loop Synthesizer writes
+├── scenarios/             # Scenario Crafter writes
+├── verifications/         # Scenario Verifier writes
+├── results/               # Playtester writes
+├── reports/               # Result Verifier writes (testing internal)
+├── designs/               # Feature Designer writes
+├── refactoring/           # Code Health Auditor writes
+├── reviews/               # Senior Reviewer + Game Logic Reviewer write
+├── lessons/               # Retrospective Analyst writes
+├── dev-state.md           # Orchestrator writes (sole writer)
+└── test-state.md          # Orchestrator writes (sole writer)
 ```
 
 Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
@@ -27,6 +35,7 @@ Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 - Verifications: `<scenario-id>.verified.md` (e.g., `combat-workflow-wild-encounter-001.verified.md`)
 - Results: `<scenario-id>.result.md` (e.g., `combat-workflow-wild-encounter-001.result.md`)
 - Reports: `<category>-<NNN>.md` (e.g., `bug-001.md`, `correction-001.md`, `escalation-001.md`, `feature-gap-001.md`, `ux-gap-001.md`) — counters are per-prefix (e.g., `bug-001` and `feature-gap-001` coexist)
+- Tickets: `<type>-<NNN>.md` in `tickets/<type>/` (e.g., `tickets/bug/bug-003.md`, `tickets/retest/retest-001.md`) — same sequence number as corresponding report
 - Designs: `design-<NNN>.md` (e.g., `design-001.md`) — per-prefix counter in `artifacts/designs/`
 - Code reviews: `code-review-<NNN>.md` (e.g., `code-review-001.md`) — per-prefix counter in `artifacts/reviews/`
 - Rules reviews: `rules-review-<NNN>.md` (e.g., `rules-review-001.md`) — per-prefix counter in `artifacts/reviews/`
@@ -575,72 +584,76 @@ new_files:
 
 ---
 
-## 6. Pipeline State
+## 6. State Files
 
-**Updated by:** Every skill after writing artifacts
-**Read by:** Orchestrator
-**Location:** `artifacts/pipeline-state.md`
+The Orchestrator is the **sole writer** of both state files. No other skill writes to them.
+
+### 6a. Dev State
+
+**Written by:** Orchestrator (sole writer)
+**Read by:** Dev Ecosystem skills
+**Location:** `artifacts/dev-state.md`
+
+Tracks: open tickets per type, active Developer work, review status, retest tickets created, refactoring queue, code health metrics.
+
+### 6b. Test State
+
+**Written by:** Orchestrator (sole writer)
+**Read by:** Test Ecosystem skills
+**Location:** `artifacts/test-state.md`
+
+Tracks: active domain, domain progress table (Loops → Scenarios → Verifications → Tests → Triage), pending retests, internal issues (corrections, test bugs), lessons metrics.
+
+### 6c. Pipeline State (Legacy)
+
+**Location:** `artifacts/pipeline-state.legacy.md`
+
+The original unified state file, archived for historical reference. Contains the full record from combat and capture domain cycles.
+
+## 6d. Cross-Ecosystem Tickets
+
+**Written by:** Result Verifier (bug/feature/ux), Orchestrator (retest), Game Logic Reviewer (ptu-rule)
+**Read by:** Developer, Feature Designer, Playtester (retest only)
+**Location:** `artifacts/tickets/<type>/<type>-<NNN>.md`
+
+### Unified Ticket Schema
 
 ```markdown
 ---
-last_updated: <ISO timestamp>
-updated_by: <skill name>
+ticket_id: <type>-<NNN>
+type: bug | ptu-rule | feature | ux | retest
+priority: P0 | P1 | P2
+status: open | in-progress | resolved | rejected
+source_ecosystem: dev | test
+target_ecosystem: dev | test
+created_by: <skill-name>
+created_at: <ISO timestamp>
+domain: <domain>
+# Type-specific optional fields:
+severity: CRITICAL | HIGH | MEDIUM          # bug, ptu-rule
+scope: FULL | PARTIAL | MINOR              # feature, ux
+affected_files:                             # bug, ptu-rule
+  - <app file path>
+scenario_ids:                               # bug, feature, ux, retest
+  - <scenario-id>
+design_spec: <design-NNN>                  # feature, ux (back-reference, added by Feature Designer)
+source_report: <report-filename>           # bug, feature, ux (link to internal report)
+categories:                                 # refactoring only
+  - <category-id>
+estimated_scope: small | medium | large    # refactoring only
 ---
 
-## Domain: <domain>
+## Summary
+<actionable description for the target ecosystem>
 
-| Stage | Status | Count | Last Updated |
-|-------|--------|-------|-------------|
-| Loops | not started / complete | <N> loops | <date> |
-| Scenarios | not started / in progress / complete | <N>/<total> | <date> |
-| Verifications | not started / in progress / complete | <N>/<total> | <date> |
-| Test Runs | not started / in progress / complete | <N>/<total> | <date> |
-| Results | not started / pending triage / complete | <pass>/<fail>/<error> | <date> |
-| Reviews | not started / pending / in-progress / complete | <N approved>/<N total> | <date> |
-| Designs | design pending / design complete / implemented / re-tested | <N>/<total> complete | <date> |
-
-### Reviews
-| Review ID | Target | Verdict | Reviewer | Date |
-|-----------|--------|---------|----------|------|
-| <code-review-NNN or rules-review-NNN> | <target report> | <verdict> | <reviewer> | <date> |
-
-### Open Issues
-- <report-id>: <severity> <category> — <summary> (assigned to <skill>)
-
-## Domain: <next domain>
-...
-```
-
-**Additional sections** (appended after all domain sections):
-
-```markdown
-## Lessons
-
-| Metric | Value |
-|--------|-------|
-| Last analyzed | <ISO timestamp> |
-| Total lessons | <count> |
-| Active | <count> |
-| Resolved | <count> |
-| Systemic patterns | <count> |
-
-## Code Health
-
-| Metric | Value |
-|--------|-------|
-| Last audited | <ISO timestamp> |
-| Open tickets (P0) | <count> |
-| Open tickets (P1) | <count> |
-| Open tickets (P2) | <count> |
-| In-progress tickets | <count> |
+## <type-specific sections>
 ```
 
 **Constraints:**
-- Every skill updates this file after writing its artifacts
-- Orchestrator uses this as its sole source of truth
-- Staleness detection: compare stage timestamps — if a loop is newer than its scenarios, scenarios are stale
-- `## Lessons` section is written by the Retrospective Analyst only
-- `## Code Health` section is written by the Code Health Auditor only
+- Same sequence number for ticket and corresponding report (e.g., `bug-003` in both `reports/` and `tickets/bug/`)
+- Ticket is slimmer than report — just actionable info + `source_report` link
+- Status lifecycle: `open` → `in-progress` → `resolved` (or `rejected`)
+- Retest tickets are created by the Orchestrator only (D8 priority)
 
 ---
 
