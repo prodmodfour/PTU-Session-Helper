@@ -328,6 +328,11 @@ function parsePokedexContent(content: string): SpeciesRow[] {
     const skyMatch = capText.match(/Sky\s+(\d+)/i)
     const burrowMatch = capText.match(/Burrow\s+(\d+)/i)
     const levitateMatch = capText.match(/Levitate\s+(\d+)/i)
+    const powerMatch = capText.match(/Power\s+(\d+)/i)
+    const jumpMatch = capText.match(/Jump\s+(\d+)\s*\/\s*(\d+)/i)
+
+    // Parse weight class from Weight line (e.g. "13.2 lbs. / 6kg (1)")
+    const weightClassMatch = pageText.match(/Weight\s*:\s*[^(]*\((\d+)\)/i)
 
     // Parse other capabilities (Naturewalk, Underdog, etc.)
     const capabilities: string[] = []
@@ -418,6 +423,10 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       sky: parseInt(skyMatch?.[1] || '0', 10),
       burrow: parseInt(burrowMatch?.[1] || '0', 10),
       levitate: parseInt(levitateMatch?.[1] || '0', 10),
+      power: parseInt(powerMatch?.[1] || '1', 10),
+      jumpHigh: parseInt(jumpMatch?.[1] || '1', 10),
+      jumpLong: parseInt(jumpMatch?.[2] || '1', 10),
+      weightClass: parseInt(weightClassMatch?.[1] || '1', 10),
       learnset,
       skills,
       capabilities,
@@ -478,6 +487,10 @@ async function seedSpecies() {
         burrow: s.burrow,
         levitate: s.levitate,
         teleport: 0,
+        power: s.power,
+        jumpHigh: s.jumpHigh,
+        jumpLong: s.jumpLong,
+        weightClass: s.weightClass,
         learnset: JSON.stringify(s.learnset),
         skills: JSON.stringify(s.skills),
         capabilities: JSON.stringify(s.capabilities),

@@ -256,6 +256,12 @@ model SpeciesData {
   levitate      Int      @default(0)
   teleport      Int      @default(0)
 
+  // PTU capability stats
+  power         Int      @default(1)
+  jumpHigh      Int      @default(1)
+  jumpLong      Int      @default(1)
+  weightClass   Int      @default(1)
+
   // Level-up move learnset (JSON array: [{ level: number, move: string }])
   learnset      String   @default("[]")
 
