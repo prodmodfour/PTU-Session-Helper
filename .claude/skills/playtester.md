@@ -191,7 +191,7 @@ retries_used: <0-2>
 <!-- Empty if no retries needed -->
 ```
 
-Then let the Orchestrator know results are ready (it will update both state files on its next scan).
+Note: The Orchestrator is the sole writer of state files (`test-state.md`). It will detect your new result files on its next scan.
 
 ## Selector Strategy
 

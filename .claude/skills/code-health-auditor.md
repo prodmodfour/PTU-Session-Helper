@@ -48,7 +48,6 @@ You cross-reference: read lesson files to boost priority of files the Analyst al
 
 - `app/tests/e2e/artifacts/refactoring/refactoring-<NNN>.md` (per-ticket)
 - `app/tests/e2e/artifacts/refactoring/audit-summary.md`
-- Updates to `app/tests/e2e/artifacts/pipeline-state.md` (`## Code Health` section only)
 
 ## Process
 

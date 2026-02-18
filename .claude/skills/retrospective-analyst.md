@@ -192,7 +192,6 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 ### Files Written
 - artifacts/lessons/<skill-name>.lessons.md
 - artifacts/lessons/retrospective-summary.md
-- artifacts/pipeline-state.md (updated)
 ```
 
 ## Error Categories

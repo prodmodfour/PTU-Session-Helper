@@ -347,7 +347,7 @@ No other skill writes to state files. Skills report completions via their artifa
 |-------|-------|
 | **File** | `.claude/skills/retrospective-analyst.md` |
 | **Trigger** | After a domain completes a full cycle (results triaged, bugs fixed, re-runs pass) OR on-demand by user request |
-| **Input** | `app/tests/e2e/artifacts/verifications/`, `results/`, `reports/`, `pipeline-state.md`, git history |
+| **Input** | `app/tests/e2e/artifacts/verifications/`, `results/`, `reports/`, `dev-state.md`, `test-state.md`, `tickets/`, git history |
 | **Output** | `app/tests/e2e/artifacts/lessons/<skill-name>.lessons.md`, `retrospective-summary.md` |
 | **Terminal** | Spin up after cycles complete or on user request |
 
@@ -358,7 +358,7 @@ No other skill writes to state files. Skills report completions via their artifa
 - Deduplicate against existing lessons before writing
 - Write per-skill lesson files with evidence and recommendations
 - Write cross-cutting retrospective summary
-- Update pipeline-state.md with lessons metrics
+- Recommend state file updates to the Orchestrator (sole writer of `dev-state.md` and `test-state.md`)
 
 **Does NOT:**
 - Fix app code (that's Developer)
@@ -366,7 +366,7 @@ No other skill writes to state files. Skills report completions via their artifa
 - Make PTU rule rulings (that's Game Logic Reviewer)
 - Triage individual failures (that's Result Verifier)
 - Modify any skill's process steps (recommends changes only)
-- Write to any artifact directory other than `artifacts/lessons/` and `pipeline-state.md`
+- Write to any artifact directory other than `artifacts/lessons/`
 
 ### 3.12 Code Health Auditor
 
@@ -385,7 +385,7 @@ No other skill writes to state files. Skills report completions via their artifa
 - Detect hot files via git change frequency
 - Write prioritized refactoring tickets (max 10 per audit)
 - Write audit summary with metrics and hotspots
-- Update `## Code Health` section of pipeline-state.md
+- Write refactoring tickets to `artifacts/refactoring/` (Orchestrator reads these for dev-state.md updates)
 
 **Authority boundary:** Decides *what* needs fixing and its priority. Senior Reviewer decides *how* the refactoring is implemented.
 
