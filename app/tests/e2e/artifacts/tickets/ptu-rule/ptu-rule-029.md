@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-029
 ticket_type: ptu-rule
 priority: P2
-status: in-progress
+status: resolved
 source: rules-review-029
 domain: healing
 affected_files:

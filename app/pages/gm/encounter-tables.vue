@@ -138,7 +138,7 @@
       v-if="showGenerateModal && generateTable"
       :table="generateTable"
       :has-active-encounter="!!encounterStore.encounter"
-      :add-error="encounterCreation.error.value"
+      :add-error="encounterCreation.error.value || addError"
       :adding-to-encounter="encounterCreation.creating.value"
       :scenes="availableScenes"
       @close="closeGenerateModal"
