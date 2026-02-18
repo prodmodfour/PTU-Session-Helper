@@ -51,7 +51,7 @@ export interface GeneratedPokemonData {
   moves: MoveDetail[]
   abilities: Array<{ name: string; effect: string }>
   gender: string
-  movementCaps: { overland: number; swim: number; sky: number; burrow: number; levitate: number }
+  movementCaps: { overland: number; swim: number; sky: number; burrow: number; levitate: number; teleport: number }
   power: number
   jump: { high: number; long: number }
   weightClass: number
@@ -92,7 +92,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
   let learnset: Array<{ level: number; move: string }> = []
   let skills: Record<string, string> = {}
   let otherCapabilities: string[] = []
-  let movementCaps = { overland: 5, swim: 0, sky: 0, burrow: 0, levitate: 0 }
+  let movementCaps = { overland: 5, swim: 0, sky: 0, burrow: 0, levitate: 0, teleport: 0 }
   let eggGroups: string[] = []
   let size = 'Medium'
   let power = 1
@@ -118,7 +118,8 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
       swim: speciesData.swim,
       sky: speciesData.sky,
       burrow: speciesData.burrow,
-      levitate: speciesData.levitate
+      levitate: speciesData.levitate,
+      teleport: speciesData.teleport
     }
     eggGroups = JSON.parse(speciesData.eggGroups || '[]')
     size = speciesData.size || 'Medium'

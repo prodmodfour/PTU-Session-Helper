@@ -75,6 +75,7 @@ export interface ParsedPokemon {
     sky: number
     burrow: number
     levitate: number
+    teleport?: number
     power: number
     jump: { high: number; long: number }
   }
@@ -374,7 +375,8 @@ export async function createPokemonFromCSV(
       swim: pokemon.capabilities.swim,
       sky: pokemon.capabilities.sky,
       burrow: pokemon.capabilities.burrow,
-      levitate: pokemon.capabilities.levitate
+      levitate: pokemon.capabilities.levitate,
+      teleport: pokemon.capabilities.teleport ?? 0
     },
     power: pokemon.capabilities.power,
     jump: pokemon.capabilities.jump,

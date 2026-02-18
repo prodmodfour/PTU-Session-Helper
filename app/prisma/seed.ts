@@ -222,6 +222,7 @@ interface SpeciesRow {
   sky: number
   burrow: number
   levitate: number
+  teleport: number
   power: number
   jumpHigh: number
   jumpLong: number
@@ -333,6 +334,7 @@ function parsePokedexContent(content: string): SpeciesRow[] {
     const burrowMatch = capText.match(/Burrow\s+(\d+)/i)
     const levitateMatch = capText.match(/Levitate\s+(\d+)/i)
     const powerMatch = capText.match(/Power\s+(\d+)/i)
+    const teleportMatch = capText.match(/Teleporter\s+(\d+)/i)
     const jumpMatch = capText.match(/Jump\s+(\d+)\s*\/\s*(\d+)/i)
 
     // Parse weight class from Weight line (e.g. "13.2 lbs. / 6kg (1)")
@@ -353,7 +355,7 @@ function parsePokedexContent(content: string): SpeciesRow[] {
     }
     // Extract other capabilities - words that start with capital letters
     // Skip movement capabilities and common words
-    const skipWords = new Set(['overland', 'swim', 'sky', 'burrow', 'levitate', 'jump', 'power', 'naturewalk'])
+    const skipWords = new Set(['overland', 'swim', 'sky', 'burrow', 'levitate', 'jump', 'power', 'naturewalk', 'teleporter'])
     const otherCaps = capClean.match(/\b[A-Z][a-z]+(?:\s*\([^)]+\))?/g) || []
     for (const cap of otherCaps) {
       const trimmed = cap.trim()
@@ -427,6 +429,7 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       sky: parseInt(skyMatch?.[1] || '0', 10),
       burrow: parseInt(burrowMatch?.[1] || '0', 10),
       levitate: parseInt(levitateMatch?.[1] || '0', 10),
+      teleport: parseInt(teleportMatch?.[1] || '0', 10),
       power: parseInt(powerMatch?.[1] || '1', 10),
       jumpHigh: parseInt(jumpMatch?.[1] || '1', 10),
       jumpLong: parseInt(jumpMatch?.[2] || '1', 10),
@@ -490,7 +493,7 @@ async function seedSpecies() {
         sky: s.sky,
         burrow: s.burrow,
         levitate: s.levitate,
-        teleport: 0,
+        teleport: s.teleport,
         power: s.power,
         jumpHigh: s.jumpHigh,
         jumpLong: s.jumpLong,
