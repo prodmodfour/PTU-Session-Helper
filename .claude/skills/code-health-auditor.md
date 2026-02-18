@@ -9,7 +9,7 @@ You scan production source code under `app/` to find structural problems that ma
 
 ## Context
 
-This project uses 12 skills across separate Claude Code terminals. You are skill #12 in the PTU testing ecosystem. Read `ptu-skills-ecosystem.md` for the full architecture.
+This project uses 12 skills across separate Claude Code terminals organized into Dev and Test ecosystems. You operate in the **Dev Ecosystem**. Read `ptu-skills-ecosystem.md` for the full architecture.
 
 ### Authority Boundary
 
@@ -113,7 +113,7 @@ Group findings by file. Assign priority:
 
 Deduplicate against existing open tickets in `app/tests/e2e/artifacts/refactoring/`. If a ticket already covers the same file and categories, skip it. If the file has new findings beyond the existing ticket, update the existing ticket or note it in the summary.
 
-**Cap output at 10 tickets per audit.**
+**No cap on ticket count.** Write a ticket for every finding that crosses a threshold.
 
 ### Step 8: Write Tickets
 
@@ -123,9 +123,9 @@ Write to `app/tests/e2e/artifacts/refactoring/refactoring-<NNN>.md` using the fo
 
 Write `app/tests/e2e/artifacts/refactoring/audit-summary.md` using the format below.
 
-### Step 10: Update Pipeline State
+### Step 10: State Update
 
-Add or update the `## Code Health` section in `app/tests/e2e/artifacts/pipeline-state.md`. Only touch this section — leave all other sections intact.
+Note: The Orchestrator is the sole writer of state files (`dev-state.md`). It will incorporate your audit metrics on its next scan. Include metrics in your `audit-summary.md` that the Orchestrator can reference.
 
 ### Step 11: Report to User
 
@@ -153,11 +153,23 @@ Summarize findings:
 
 | ID | Name | Description |
 |----|------|-------------|
-| `EXT-GOD` | God object/fat service | Single file handles 3+ unrelated responsibilities |
-| `EXT-HARDCODE` | Hardcoded behavior | Switch/if-chains with 5+ string-literal branches; should be data-driven |
-| `EXT-LAYER` | Missing abstraction layer | Business logic inline in API handlers or components instead of services/composables |
-| `EXT-COUPLING` | Tight coupling | Component reaches into store internals, module imports 5+ siblings |
+| `EXT-GOD` | God object/fat service | Single file handles 3+ unrelated responsibilities. **SRP indicator:** components mixing UI layout + data fetching + business logic; API endpoints containing validation/calculation/DB logic instead of delegating to services |
+| `EXT-HARDCODE` | Hardcoded behavior | Switch/if-chains with 5+ string-literal branches; should be data-driven. **OCP indicator:** reusable components that require source edits for new variants instead of using slots/props; cross-cutting concerns (auth, logging) copy-pasted across endpoints instead of middleware |
+| `EXT-LAYER` | Missing abstraction layer | Business logic inline in API handlers or components instead of services/composables. **SRP+DIP indicator:** API routes should parse request → call service → return JSON (Controller pattern). Components should use composables for data/logic, not inline `$fetch` or direct Prisma calls |
+| `EXT-COUPLING` | Tight coupling | Component reaches into store internals, module imports 5+ siblings. **ISP+DIP indicator:** components importing stores/composables they only partially use (triggers unnecessary side effects); fat composables returning 5+ unrelated values that force callers to depend on unused data; direct imports of concrete implementations instead of abstractions (hurts testability) |
 | `EXT-DUPLICATE` | Duplicated logic | Same logic (>10 similar lines) in 2+ files |
+
+### SOLID Principles Detection
+
+The project follows SOLID principles (see CLAUDE.md). When auditing, apply these specific detection patterns:
+
+| Principle | What to Look For | Maps To |
+|-----------|-----------------|---------|
+| **SRP** | Components with UI + `$fetch`/`useFetch` + business logic in one file; API endpoints with inline validation + calculation + DB writes (should use service layer: Controller → Service → Repository) | `EXT-GOD`, `EXT-LAYER` |
+| **OCP** | Reusable components (modals, cards, panels) that lack `<slot>` extension points; endpoint groups where adding a feature means editing every handler instead of adding middleware | `EXT-HARDCODE` |
+| **LSP** | Functions that accept a union/generic type but break on valid subtypes; missing shared interfaces in `app/types/` for entities used across multiple services (e.g., HumanCharacter vs Pokemon both used as "combatant") | `LLM-TYPES` |
+| **ISP** | Composables returning 5+ unrelated values (callers forced to depend on unused data); store imports where component only uses 1-2 getters but the store triggers fetches for unrelated data | `EXT-COUPLING` |
+| **DIP** | Components calling `$fetch`/`useFetch` directly instead of through composables; test files that can't mock dependencies because components import concrete implementations; services that import other services directly instead of receiving them | `EXT-COUPLING`, `EXT-LAYER` |
 
 ## Artifact Formats
 
@@ -213,7 +225,7 @@ Estimated commits: <count>
 - **medium**: 2-3 files, possible interface changes, <200 lines changed
 - **large**: 4+ files, interface changes, >200 lines changed
 
-**Constraints:** One ticket per file/file-group. Max 10 per audit. Status lifecycle: `open` → `in-progress` → `resolved`.
+**Constraints:** One ticket per file/file-group. No cap on ticket count. Status lifecycle: `open` → `in-progress` → `resolved`.
 
 ### Audit Summary
 
@@ -274,5 +286,4 @@ overflow_files: <count of files that qualified but exceeded the 20-file cap>
 - Write or modify test scenarios (that's Scenario Crafter)
 - Create bug reports (those come from the testing loop — you find structural smells, not functional bugs)
 - Scan test files or artifacts — only production code under `app/`
-- Modify `pipeline-state.md` beyond the `## Code Health` section
 - Write to any artifact directory other than `app/tests/e2e/artifacts/refactoring/`

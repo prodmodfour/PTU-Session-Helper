@@ -9,7 +9,7 @@ You validate test scenarios against PTU 1.05 rules before they're executed. You 
 
 ## Context
 
-This skill is the third stage of the **Testing Loop** in the 11-skill PTU ecosystem.
+This skill is the third stage of the **Testing Ecosystem**.
 
 **Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → **You** → Playtester → Result Verifier
 
@@ -131,7 +131,7 @@ Set status:
 - **PARTIAL** — some assertions corrected → Scenario Crafter should update original, then this is re-verified
 - **FAIL** — fundamental problems → return to Scenario Crafter for rewrite
 
-Then update `artifacts/pipeline-state.md`.
+Note: The Orchestrator is the sole writer of state files (`test-state.md`). It will detect your verification files on its next scan.
 
 ## Output Format
 

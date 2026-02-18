@@ -11,7 +11,7 @@ You handle two types of input: **session workflows** (multi-step, multi-mechanic
 
 ## Context
 
-This skill is the second stage of the **Testing Loop** in the 11-skill PTU ecosystem.
+This skill is the second stage of the **Testing Ecosystem**.
 
 **Pipeline position:** Gameplay Loop Synthesizer → **You** → Scenario Verifier → Playtester → Result Verifier
 
@@ -145,7 +145,7 @@ Naming:
 - Workflow scenarios: `<domain>-workflow-<description>-<NNN>.md` (e.g., `combat-workflow-wild-encounter-001.md`)
 - Mechanic scenarios: `<domain>-<mechanic>-<NNN>.md` (e.g., `combat-stab-001.md`)
 
-Then update `app/tests/e2e/artifacts/pipeline-state.md`.
+Note: The Orchestrator is the sole writer of state files (`test-state.md`). It will detect your new scenario files on its next scan.
 
 ## Output Format: Workflow Scenario
 

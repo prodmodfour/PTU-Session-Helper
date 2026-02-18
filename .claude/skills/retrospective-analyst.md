@@ -23,7 +23,8 @@ This skill sits **outside the two main loops** in the 12-skill PTU ecosystem. It
 - `app/tests/e2e/artifacts/verifications/*.verified.md`
 - `app/tests/e2e/artifacts/results/*.result.md`
 - `app/tests/e2e/artifacts/reports/*.md`
-- `app/tests/e2e/artifacts/pipeline-state.md`
+- `app/tests/e2e/artifacts/tickets/` (all ticket directories)
+- `app/tests/e2e/artifacts/dev-state.md` and `test-state.md`
 - Git history (`git log`, `git diff`)
 - Past conversation transcripts (`~/.claude/projects/-home-ashraf-pokemon-ttrpg-session-helper/*.jsonl`)
 
@@ -37,7 +38,7 @@ See `ptu-skills-ecosystem.md` for the full architecture.
 
 ### Step 1: Determine Analysis Scope
 
-Read `artifacts/pipeline-state.md` to find:
+Read both ecosystem state files (`artifacts/dev-state.md` and `artifacts/test-state.md`) to find:
 - Which domains have completed full cycles
 - When the last retrospective analysis was run (check `artifacts/lessons/retrospective-summary.md` for `last_analyzed` timestamp)
 
@@ -156,21 +157,9 @@ Write `artifacts/lessons/retrospective-summary.md` with:
 - Cross-cutting patterns (errors that span multiple skills or domains)
 - Top 3 recommendations for ecosystem improvement
 
-### Step 8: Update Pipeline State
+### Step 8: State Update
 
-Update `artifacts/pipeline-state.md` with a `## Lessons` section:
-
-```markdown
-## Lessons
-
-| Metric | Value |
-|--------|-------|
-| Last analyzed | <ISO timestamp> |
-| Total lessons | <count> |
-| Active | <count> |
-| Resolved | <count> |
-| Systemic patterns | <count> |
-```
+Note: The Orchestrator is the sole writer of state files (`dev-state.md`, `test-state.md`). It will incorporate your lessons metrics on its next scan. Include a brief Lessons Summary at the top of your `retrospective-summary.md` that the Orchestrator can reference.
 
 ### Step 9: Report to User
 
@@ -231,4 +220,4 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 - Run tests (that's Playtester)
 - Triage individual failures (that's Result Verifier)
 - Modify any skill's process steps (recommend changes only)
-- Write to any artifact directory other than `artifacts/lessons/` and `pipeline-state.md`
+- Write to any artifact directory other than `artifacts/lessons/`

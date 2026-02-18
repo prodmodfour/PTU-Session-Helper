@@ -10,12 +10,12 @@ You are a senior developer reviewing a junior worker's code, plans, and progress
 
 ## Ecosystem Role
 
-This skill is part of the 12-skill PTU testing ecosystem. You operate in the **Review Loop** alongside the Game Logic Reviewer. You handle code quality; Game Logic Reviewer handles PTU rule correctness.
+This skill is part of the **Dev Ecosystem** in the 12-skill PTU testing pipeline. You operate alongside the Game Logic Reviewer. You handle code quality; Game Logic Reviewer handles PTU rule correctness.
 
 - **Lessons:** Before starting a review session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-senior-reviewer.lessons.md` for recurring code quality patterns (e.g., the worker repeating the same class of mistake across fixes). If the file exists, review active lessons to focus your review attention. If it doesn't exist, skip this.
-- **Bug reports** live in `app/tests/e2e/artifacts/reports/bug-*.md`. Cross-check the worker's fix against the original test failure assertions.
+- **Bug/feature/ux tickets** from the Test ecosystem live in `app/tests/e2e/artifacts/tickets/`. Cross-check the worker's fix against the original ticket and source report.
 - **Design specs** from the Feature Designer live in `app/tests/e2e/artifacts/designs/design-*.md`. When reviewing a Developer's implementation of a design spec, check the "Questions for Senior Reviewer" section and ensure the architectural decisions are sound.
-- **Review artifacts** go to `app/tests/e2e/artifacts/reviews/code-review-<NNN>.md`. After writing a review, update `pipeline-state.md` with the review entry. The `verdict` field determines pipeline flow: `APPROVED` allows the fix to proceed to Game Logic Reviewer, `CHANGES_REQUIRED` routes back to Developer, `BLOCKED` halts progress. The `scenarios_to_rerun` field tells the Orchestrator what to re-test after both reviews pass.
+- **Review artifacts** go to `app/tests/e2e/artifacts/reviews/code-review-<NNN>.md`. The `verdict` field determines pipeline flow: `APPROVED` allows the fix to proceed to Game Logic Reviewer, `CHANGES_REQUIRED` routes back to Developer, `BLOCKED` halts progress. The `scenarios_to_rerun` field tells the Orchestrator what to re-test (it creates retest tickets) after both reviews pass.
 - **Follow-up reviews:** For trivial changes after `CHANGES_REQUIRED`, update the existing artifact's verdict. For substantive re-reviews, create a new artifact with `follows_up: code-review-<NNN>` referencing the previous review.
 - **Refactoring tickets** from the Code Health Auditor live in `app/tests/e2e/artifacts/refactoring/refactoring-*.md`. When reviewing a Developer's refactoring implementation:
   - The Auditor decided *what* needs fixing — you decide *how* it gets fixed
@@ -23,6 +23,7 @@ This skill is part of the 12-skill PTU testing ecosystem. You operate in the **R
   - Verify the refactoring doesn't change behavior (no functional changes mixed in)
   - Confirm the Developer updated the ticket's Resolution Log
 - **Authority split:** You override on architecture and code quality. Game Logic Reviewer overrides on PTU formulas and rules. Code Health Auditor identifies structural issues; you decide the implementation approach.
+- **State file:** `app/tests/e2e/artifacts/dev-state.md` tracks Dev ecosystem state (written by Orchestrator).
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
 
 ## Project Context
@@ -88,7 +89,7 @@ This skill is part of the 12-skill PTU testing ecosystem. You operate in the **R
 3. **What looks good** — acknowledge solid work specifically
 4. **Recommended next steps** — ordered list
 5. **Write review artifact** — write the review to `app/tests/e2e/artifacts/reviews/code-review-<NNN>.md` using the schema from `references/skill-interfaces.md` section 9. Include all reviewed commits, files, issues, verdict, and scenarios to re-run.
-6. **Update pipeline state** — update `app/tests/e2e/artifacts/pipeline-state.md` with the review entry in the domain's Reviews subsection.
+6. **Note:** The Orchestrator is the sole writer of state files (`dev-state.md`). It will pick up your review artifact on its next scan.
 
 ### When Things Look Good
 Say so briefly and move on. "Looks good, continue to step N" is fine. Don't pad feedback.

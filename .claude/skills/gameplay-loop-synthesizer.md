@@ -11,7 +11,7 @@ Your primary job is to think like a GM sitting at the table and ask: **"What do 
 
 ## Context
 
-This skill is the entry point of the **Testing Loop** in the 11-skill PTU ecosystem. Your output feeds directly into the Scenario Crafter.
+This skill is the entry point of the **Testing Ecosystem**. Your output feeds directly into the Scenario Crafter.
 
 **Pipeline position:** You → Scenario Crafter → Scenario Verifier → Playtester → Result Verifier
 
@@ -172,9 +172,7 @@ Write the complete loop document to `app/tests/e2e/artifacts/loops/<domain>.md`.
 
 **Important:** Tier 1 workflows MUST come before Tier 2 validations. Downstream skills expect this order.
 
-Then update `app/tests/e2e/artifacts/pipeline-state.md`:
-- Set the domain's Loops stage to "complete"
-- Record the loop count (workflows + validations) and timestamp
+Note: The Orchestrator is the sole writer of state files (`test-state.md`). It will detect your new loop files on its next scan and update the state accordingly.
 
 ## Output Format
 
