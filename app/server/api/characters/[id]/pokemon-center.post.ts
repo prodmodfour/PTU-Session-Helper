@@ -10,7 +10,7 @@ import {
  * - Full HP restoration
  * - All status conditions cleared
  * - Injuries healed (max 3/day total)
- * - Drained AP restored
+ * - Drained AP restored (only if healing time >= 4 hours, i.e. Extended Rest)
  * - Time: 1 hour base + 30min/injury (or 1hr/injury if 5+)
  */
 export default defineEventHandler(async (event) => {
@@ -57,8 +57,9 @@ export default defineEventHandler(async (event) => {
   const statusConditions: string[] = JSON.parse(character.statusConditions || '[]')
   const clearedStatuses = [...statusConditions]
 
-  // Restore drained AP
-  const apRestored = character.drainedAp
+  // Only restore drained AP if healing time meets Extended Rest threshold (4+ hours)
+  const meetsExtendedRest = timeResult.totalTime >= 240
+  const apRestored = meetsExtendedRest ? character.drainedAp : 0
 
   // Calculate new injury count and daily healed count
   const newInjuries = character.injuries - injuryResult.injuriesHealed
@@ -73,7 +74,7 @@ export default defineEventHandler(async (event) => {
       lastRestReset: new Date(),
       restMinutesToday: 480, // Max out rest for the day
       statusConditions: JSON.stringify([]),
-      drainedAp: 0,
+      ...(meetsExtendedRest ? { drainedAp: 0 } : {}),
       // Clear last injury time if all injuries healed
       lastInjuryTime: newInjuries > 0 ? character.lastInjuryTime : null
     }
