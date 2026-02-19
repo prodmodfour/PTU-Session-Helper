@@ -8,7 +8,7 @@ affected_files:
   - app/server/services/pokemon-generator.service.ts
   - app/server/api/encounter-templates/[id]/load.post.ts
 estimated_scope: small
-status: open
+status: resolved
 created_at: 2026-02-16T22:00:00
 source: rules-review-009
 ---
@@ -76,3 +76,12 @@ Estimated commits: 1
 - **rules-review-009:** Observation that identified this gap
 - **code-review-004:** Previously noted these as "spawn-time initial values — never consumed for live gameplay"
 - **design-testability-001 P1:** Added the correct `calculateEvasion()` with cap for dynamic recalculation
+
+## Resolution Log
+
+- **Commit:** `ed32385` — `fix: cap initial evasion at +6 per PTU rules (p.310-314)`
+- **Files changed:**
+  - `app/server/services/combatant.service.ts` — extracted `initialEvasion()` helper (exported, `Math.min(6, Math.floor(stat / 5))`), applied in `buildCombatantFromEntity`
+  - `app/server/api/encounter-templates/[id]/load.post.ts` — imported `initialEvasion`, applied to inline human combatant builder
+- **Note:** Ticket listed 3 sites, but Site 2 (`buildPokemonCombatant` in `pokemon-generator.service.ts`) already delegates to `buildCombatantFromEntity` — so fixing Site 1 covered both. Only 2 actual code changes needed.
+- **Tests:** 507/508 Vitest pass (1 pre-existing failure in `settings.test.ts` — unrelated)
