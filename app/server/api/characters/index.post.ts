@@ -5,6 +5,14 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
 
+    // Resolve stats first so we can compute HP formula
+    const level = body.level || 1
+    const hpStat = body.stats?.hp || body.hp || 10
+
+    // PTU Trainer HP formula: Level * 2 + HP Stat * 3 + 10
+    const computedMaxHp = level * 2 + hpStat * 3 + 10
+    const maxHp = body.maxHp || computedMaxHp
+
     const character = await prisma.humanCharacter.create({
       data: {
         name: body.name,
@@ -16,15 +24,15 @@ export default defineEventHandler(async (event) => {
         height: body.height,
         weight: body.weight,
         // Stats
-        level: body.level || 1,
-        hp: body.stats?.hp || body.hp || 10,
+        level,
+        hp: hpStat,
         attack: body.stats?.attack || body.attack || 5,
         defense: body.stats?.defense || body.defense || 5,
         specialAttack: body.stats?.specialAttack || body.specialAttack || 5,
         specialDefense: body.stats?.specialDefense || body.specialDefense || 5,
         speed: body.stats?.speed || body.speed || 5,
-        currentHp: body.currentHp || body.maxHp || 10,
-        maxHp: body.maxHp || body.currentHp || 10,
+        currentHp: body.currentHp || maxHp,
+        maxHp,
         // Classes, skills, features, edges
         trainerClasses: JSON.stringify(body.trainerClasses || []),
         skills: JSON.stringify(body.skills || {}),
