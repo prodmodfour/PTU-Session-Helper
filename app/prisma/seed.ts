@@ -283,8 +283,10 @@ function parsePokedexContent(content: string): SpeciesRow[] {
     const spDefMatch = pageText.match(/Special Defense:\s*(\d+)/i)
     const speedMatch = pageText.match(/Speed:\s*(\d+)/i)
 
-    // Parse types
-    const typeMatch = pageText.match(/Type\s*:\s*([A-Za-z]+)(?:\s*\/\s*([A-Za-z]+))?/i)
+    // Parse types - search within "Basic Information" section to avoid name collisions
+    // (e.g., "TYPE: NULL" Pokemon name matching as type "Null" instead of "Normal")
+    const basicInfoSection = pageText.match(/Basic Information[\s\S]*?(?=Evolution:|Size Information|Breeding|$)/i)?.[0] || pageText
+    const typeMatch = basicInfoSection.match(/Type\s*:\s*([A-Za-z]+)(?:\s*\/\s*([A-Za-z]+))?/i)
 
     // Parse abilities
     const abilities: string[] = []
