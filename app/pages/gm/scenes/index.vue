@@ -144,7 +144,7 @@ import {
   PhTrash,
   PhStop
 } from '@phosphor-icons/vue'
-import type { Scene } from '~/stores/groupViewTabs'
+import type { Scene } from '~/types/scene'
 
 definePageMeta({
   layout: 'gm'

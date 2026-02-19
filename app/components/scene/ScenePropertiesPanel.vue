@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { PhGear, PhCaretRight } from '@phosphor-icons/vue'
-import type { Scene } from '~/stores/groupViewTabs'
+import type { Scene } from '~/types/scene'
 
 defineProps<{
   scene: Scene

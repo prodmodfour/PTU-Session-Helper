@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { PhUsers, PhFilmSlate, PhSword, PhMapTrifold } from '@phosphor-icons/vue'
-import type { GroupViewTab } from '~/stores/groupViewTabs'
+import type { GroupViewTab } from '~/types/scene'
 
 const { newDayGlobal, loading: advancingDay } = useRestHealing()
 const groupViewTabsStore = useGroupViewTabsStore()

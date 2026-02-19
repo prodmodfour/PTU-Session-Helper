@@ -28,5 +28,8 @@ export * from './settings';
 // Species data types
 export * from './species';
 
+// Scene types (narrative scene system)
+export * from './scene';
+
 // Type guards
 export * from './guards';

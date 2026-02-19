@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { PhRectangleDashed, PhPlus, PhCaretLeft } from '@phosphor-icons/vue'
-import type { Scene } from '~/stores/groupViewTabs'
+import type { Scene } from '~/types/scene'
 
 const props = defineProps<{
   scene: Scene

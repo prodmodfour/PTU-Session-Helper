@@ -89,7 +89,7 @@
 
 <script setup lang="ts">
 import { PhX, PhUser } from '@phosphor-icons/vue'
-import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/stores/groupViewTabs'
+import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/types/scene'
 
 const props = defineProps<{
   scene: Scene

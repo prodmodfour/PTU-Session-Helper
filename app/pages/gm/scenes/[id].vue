@@ -138,7 +138,7 @@ import {
   PhStop,
   PhSword
 } from '@phosphor-icons/vue'
-import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/stores/groupViewTabs'
+import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/types/scene'
 
 definePageMeta({
   layout: 'gm'

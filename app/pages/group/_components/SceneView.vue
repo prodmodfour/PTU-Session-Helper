@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { PhFilmSlate, PhUser } from '@phosphor-icons/vue'
-import type { Scene } from '~/stores/groupViewTabs'
+import type { Scene } from '~/types/scene'
 
 const groupViewTabsStore = useGroupViewTabsStore()
 
