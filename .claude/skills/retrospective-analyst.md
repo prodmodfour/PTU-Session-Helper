@@ -9,7 +9,7 @@ You mine the artifact trail and git history to find recurring error patterns acr
 
 ## Context
 
-This skill sits **outside the two main loops** in the 12-skill PTU ecosystem. It runs after pipeline cycles complete, not during them. Your output feeds back into future cycles through lesson files that skills can consult.
+This skill sits **outside the two main loops** in the 10-skill PTU ecosystem. It runs after pipeline cycles complete, not during them. Your output feeds back into future cycles through lesson files that skills can consult.
 
 **Cross-reference:** The Code Health Auditor reads your lesson files to boost priority of source files you flagged. If your lessons identify a file as a recurring error source, the Auditor gives it extra scrutiny during structural audits.
 
@@ -108,13 +108,13 @@ Categorize each error into exactly one of 12 categories:
 | `data-lookup` | Incorrect base stat, move data, or species info | Right formula, wrong input data |
 | `missing-check` | Correct formula applied but a condition was never evaluated | E.g., STAB not checked, type immunity skipped |
 | `process-gap` | A skill's defined process lacks a necessary step entirely | The process itself is incomplete |
-| `triage-error` | Result Verifier assigned wrong failure category | APP_BUG vs SCENARIO_BUG misclassification |
+| `triage-error` | Gap detection assigned wrong failure category | FEATURE_GAP vs APP_BUG misclassification |
 | `selector-issue` | Playwright selector or timing problem that survived retries | Infrastructure, not game logic |
 | `routing-error` | Orchestrator sent work to wrong terminal or wrong priority | Pipeline coordination failure |
 | `rule-ambiguity` | PTU rulebook genuinely supports multiple readings | Required Game Logic Reviewer ruling |
 | `fix-pattern` | A recurring code fix shape across multiple bugs | Same class of code change applied repeatedly |
-| `feature-gap-recurrence` | Tests repeatedly written/run against nonexistent features | Synthesizer feasibility check or Orchestrator proactive routing failed to catch gap early |
-| `ux-gap-recurrence` | Backend works but tests repeatedly fail due to missing UI | Systemic gap between backend capabilities and frontend surface area |
+| `feature-gap-recurrence` | Feature Designer repeatedly finds the same class of missing capability | Synthesizer feasibility check failed to catch gap early |
+| `ux-gap-recurrence` | Feature Designer repeatedly finds missing UI for working backends | Systemic gap between backend capabilities and frontend surface area |
 | `conversation-pattern` | Same mistake or misunderstanding recurs across sessions | Mined from past conversation transcripts — user corrections, debugging loops, repeated questions |
 
 **Key distinctions:**
@@ -202,13 +202,13 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 | `data-lookup` | Wrong base stat or move data used | Used Charmander base HP 5 instead of 4 |
 | `missing-check` | Condition never evaluated | STAB bonus never applied despite same-type move |
 | `process-gap` | Skill process missing a step | Verifier didn't check errata corrections |
-| `triage-error` | Wrong failure category assigned | APP_BUG classified when scenario had wrong expected value |
+| `triage-error` | Wrong gap category assigned | FEATURE_GAP classified when it was actually APP_BUG |
 | `selector-issue` | Playwright infrastructure problem | Element selector changed after UI refactor |
 | `routing-error` | Work sent to wrong terminal | Bug report sent to Crafter instead of Developer |
 | `rule-ambiguity` | PTU rule genuinely unclear | Conflicting rulebook sections on capture at 0 HP |
 | `fix-pattern` | Same code fix shape repeating | Defense stat subtraction missing in 3 different calculations |
-| `feature-gap-recurrence` | Tests repeatedly hit nonexistent features | 3 scenarios failed on capture-in-combat before Feature Designer was invoked |
-| `ux-gap-recurrence` | Tests repeatedly fail on missing UI | 4 scenarios failed because no "Send Replacement" button exists |
+| `feature-gap-recurrence` | Same class of missing capability found repeatedly | 3 domains missing capture-in-combat support |
+| `ux-gap-recurrence` | Same class of missing UI found repeatedly | 4 domains have working backend with no UI exposure |
 | `conversation-pattern` | Same mistake recurs across sessions | User corrected evasion formula in 3 separate conversations |
 
 ## What You Do NOT Do
@@ -216,7 +216,6 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 - Fix app code (that's Developer)
 - Rewrite scenarios (that's Scenario Crafter)
 - Make PTU rule rulings (that's Game Logic Reviewer)
-- Run tests (that's Playtester)
-- Triage individual failures (that's Result Verifier)
+- Check the app surface for gaps (that's Feature Designer)
 - Modify any skill's process steps (recommend changes only)
 - Write to any artifact directory other than `artifacts/lessons/`

@@ -13,7 +13,7 @@ Your primary job is to think like a GM sitting at the table and ask: **"What do 
 
 This skill is the entry point of the **Testing Ecosystem**. Your output feeds directly into the Scenario Crafter.
 
-**Pipeline position:** You → Scenario Crafter → Scenario Verifier → Playtester → Result Verifier
+**Pipeline position:** You → Scenario Crafter → Scenario Verifier → Feature Designer (gap detection)
 
 **Output location:** `app/tests/e2e/artifacts/loops/<domain>.md`
 
@@ -376,6 +376,5 @@ Loop files are generated once and reused across testing cycles. Only regenerate 
 ## What You Do NOT Do
 
 - Write test scenarios (that's Scenario Crafter)
-- Write Playwright code (that's Playtester)
 - Make definitive PTU rule interpretations when ambiguous (escalate to Game Logic Reviewer)
 - Modify app code

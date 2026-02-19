@@ -13,7 +13,7 @@ You are the implementation worker for the Pokemon TTRPG Session Helper project. 
 
 ## Ecosystem Role
 
-This skill is part of the **Dev Ecosystem** in the 12-skill PTU testing pipeline. You receive bug, feature, UX, and PTU rule tickets from the Test ecosystem and implement fixes/features.
+This skill is part of the **Dev Ecosystem** in the 10-skill PTU testing pipeline. You receive bug, feature, UX, and PTU rule tickets from the Test ecosystem and implement fixes/features.
 
 - **Lessons:** Before starting a bug fix session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-dev.lessons.md` for recurring fix patterns (e.g., the same class of code change applied in multiple places). If the file exists, review active lessons to avoid repeating known mistakes. If it doesn't exist, skip this.
 - **Bug tickets** live in `app/tests/e2e/artifacts/tickets/bug/bug-*.md`. Read them for a summary of the issue. For full root cause analysis, follow the `source_report` field to read the detailed report in `artifacts/reports/`.
@@ -23,10 +23,10 @@ This skill is part of the **Dev Ecosystem** in the 12-skill PTU testing pipeline
   1. Update the Implementation Log section in the design spec with commit hashes and files changed
   2. Set the design spec frontmatter `status` field to `implemented`
   3. Update `.claude/skills/references/app-surface.md` with new routes/endpoints/components added by the implementation
-- **After fixing a bug**, update the bug report's "Fix Log" section AND set the ticket's `status` to `in-progress` (the Orchestrator will create a retest ticket after both reviews approve, which changes it to `resolved`).
+- **After fixing a bug**, update the bug report's "Fix Log" section AND set the ticket's `status` to `in-progress` (the Orchestrator will update state after both reviews approve).
 - **The Orchestrator** (in another terminal) tells the user which ticket to send you next. Follow priority: CRITICAL first, then HIGH, then MEDIUM.
 - **Review artifacts** from both reviewers live in `app/tests/e2e/artifacts/reviews/`. When the Orchestrator routes you a `CHANGES_REQUIRED` review, read the review artifact's "Required Changes" section and address every item. After fixing, the review cycle will re-run.
-- **After your fix is reviewed** (by Senior Reviewer + Game Logic Reviewer), the Orchestrator creates a retest ticket and the Playtester re-runs the affected scenario to verify.
+- **After your fix is reviewed** (by Senior Reviewer + Game Logic Reviewer), the Orchestrator updates the state files. Playtesting happens externally.
 - **Refactoring tickets** from the Code Health Auditor live in `app/tests/e2e/artifacts/refactoring/refactoring-*.md`. When the Orchestrator routes you a refactoring ticket:
   1. Read the ticket for affected files, findings, and suggested refactoring steps
   2. Implement the refactoring following the suggested plan (the Senior Reviewer has final say on approach)

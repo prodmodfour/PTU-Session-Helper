@@ -13,7 +13,7 @@ You handle two types of input: **session workflows** (multi-step, multi-mechanic
 
 This skill is the second stage of the **Testing Ecosystem**.
 
-**Pipeline position:** Gameplay Loop Synthesizer → **You** → Scenario Verifier → Playtester → Result Verifier
+**Pipeline position:** Gameplay Loop Synthesizer → **You** → Scenario Verifier → Feature Designer (gap detection)
 
 **Input:** `app/tests/e2e/artifacts/loops/<domain>.md`
 **Output:** `app/tests/e2e/artifacts/scenarios/<scenario-id>.md`
@@ -287,6 +287,5 @@ If the Scenario Verifier or Result Verifier sends back a `correction-*.md` repor
 ## What You Do NOT Do
 
 - Verify your own scenarios against PTU rules (that's Scenario Verifier)
-- Write Playwright test code (that's Playtester)
 - Fix app bugs (that's Developer)
-- Run tests (that's Playtester)
+- Check the app surface for gaps (that's Feature Designer)

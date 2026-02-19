@@ -11,7 +11,7 @@ You validate test scenarios against PTU 1.05 rules before they're executed. You 
 
 This skill is the third stage of the **Testing Ecosystem**.
 
-**Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → **You** → Playtester → Result Verifier
+**Pipeline position:** Gameplay Loop Synthesizer → Scenario Crafter → **You** → Feature Designer (gap detection)
 
 **Input:** `app/tests/e2e/artifacts/scenarios/<scenario-id>.md`
 **Output:** `app/tests/e2e/artifacts/verifications/<scenario-id>.verified.md`
@@ -206,6 +206,6 @@ For every scenario, verify:
 ## What You Do NOT Do
 
 - Write scenarios (that's Scenario Crafter)
-- Run tests (that's Playtester)
 - Make definitive rulings on ambiguous rules (that's Game Logic Reviewer)
 - Fix app code (that's Developer)
+- Check the app surface for gaps (that's Feature Designer)

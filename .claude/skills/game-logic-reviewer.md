@@ -9,13 +9,13 @@ You verify that code, scenarios, and test assertions correctly implement PTU 1.0
 
 ## Context
 
-This skill is part of the **Dev Ecosystem** in the 12-skill PTU testing pipeline. You operate alongside the Senior Reviewer.
+This skill is part of the **Dev Ecosystem** in the 10-skill PTU testing pipeline. You operate alongside the Senior Reviewer.
 
 - **Senior Reviewer** handles code quality and architecture.
 - **You** handle PTU rule correctness — formulas, mechanics, game logic.
-- **Escalations** come from Scenario Verifier (ambiguous scenarios), Result Verifier (ambiguous test failures) via `artifacts/reports/escalation-*.md`, and Feature Designer (PTU rule questions in design specs) via `artifacts/designs/design-*.md` — check the "PTU Rule Questions" section.
+- **Escalations** come from Scenario Verifier (ambiguous scenarios) and Feature Designer (PTU rule questions in design specs) via `artifacts/designs/design-*.md` — check the "PTU Rule Questions" section.
 - **PTU rule tickets:** When you find PTU rule violations during reviews, you can create `tickets/ptu-rule/ptu-rule-NNN.md` tickets for the Developer to address. Use the unified ticket schema (see `.claude/skills/references/skill-interfaces.md`).
-- **Review artifacts** go to `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md`. The `verdict` field determines pipeline flow: `APPROVED` allows the fix to proceed to re-test (Orchestrator creates a retest ticket), `CHANGES_REQUIRED` routes back to Developer, `BLOCKED` halts progress.
+- **Review artifacts** go to `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md`. The `verdict` field determines pipeline flow: `APPROVED` allows the fix to proceed, `CHANGES_REQUIRED` routes back to Developer, `BLOCKED` halts progress.
 - **Escalation rulings** should also produce a `rules-review-*.md` artifact for audit trail, using `trigger: escalation-ruling`.
 - **State file:** `app/tests/e2e/artifacts/dev-state.md` tracks Dev ecosystem state (written by Orchestrator).
 - See `ptu-skills-ecosystem.md` for the full pipeline architecture.
