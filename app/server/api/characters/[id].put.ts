@@ -1,4 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
+import { serializeCharacter } from '~/server/utils/serializers'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -50,38 +51,11 @@ export default defineEventHandler(async (event) => {
 
     const character = await prisma.humanCharacter.update({
       where: { id },
-      data: updateData
+      data: updateData,
+      include: { pokemon: true }
     })
 
-    const parsed = {
-      id: character.id,
-      name: character.name,
-      characterType: character.characterType,
-      level: character.level,
-      stats: {
-        hp: character.hp,
-        attack: character.attack,
-        defense: character.defense,
-        specialAttack: character.specialAttack,
-        specialDefense: character.specialDefense,
-        speed: character.speed
-      },
-      currentHp: character.currentHp,
-      maxHp: character.maxHp,
-      trainerClasses: JSON.parse(character.trainerClasses),
-      skills: JSON.parse(character.skills),
-      inventory: JSON.parse(character.inventory),
-      money: character.money,
-      statusConditions: JSON.parse(character.statusConditions),
-      stageModifiers: JSON.parse(character.stageModifiers),
-      avatarUrl: character.avatarUrl,
-      location: character.location,
-      isInLibrary: character.isInLibrary,
-      notes: character.notes,
-      pokemonIds: []
-    }
-
-    return { success: true, data: parsed }
+    return { success: true, data: serializeCharacter(character) }
   } catch (error: any) {
     throw createError({
       statusCode: 500,

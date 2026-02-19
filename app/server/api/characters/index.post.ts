@@ -1,4 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
+import { serializeCharacter } from '~/server/utils/serializers'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -48,56 +49,11 @@ export default defineEventHandler(async (event) => {
         // Library
         isInLibrary: body.isInLibrary !== false,
         notes: body.notes
-      }
+      },
+      include: { pokemon: true }
     })
 
-    const parsed = {
-      id: character.id,
-      name: character.name,
-      characterType: character.characterType,
-      // Player info
-      playedBy: character.playedBy,
-      age: character.age,
-      gender: character.gender,
-      height: character.height,
-      weight: character.weight,
-      // Stats
-      level: character.level,
-      stats: {
-        hp: character.hp,
-        attack: character.attack,
-        defense: character.defense,
-        specialAttack: character.specialAttack,
-        specialDefense: character.specialDefense,
-        speed: character.speed
-      },
-      currentHp: character.currentHp,
-      maxHp: character.maxHp,
-      // Classes, skills, features, edges
-      trainerClasses: JSON.parse(character.trainerClasses),
-      skills: JSON.parse(character.skills),
-      features: JSON.parse(character.features),
-      edges: JSON.parse(character.edges),
-      // Inventory
-      inventory: JSON.parse(character.inventory),
-      money: character.money,
-      // Status
-      statusConditions: JSON.parse(character.statusConditions),
-      stageModifiers: JSON.parse(character.stageModifiers),
-      // Display
-      avatarUrl: character.avatarUrl,
-      // Background
-      background: character.background,
-      personality: character.personality,
-      goals: character.goals,
-      location: character.location,
-      // Library
-      isInLibrary: character.isInLibrary,
-      notes: character.notes,
-      pokemonIds: []
-    }
-
-    return { success: true, data: parsed }
+    return { success: true, data: serializeCharacter(character) }
   } catch (error: any) {
     throw createError({
       statusCode: 500,
