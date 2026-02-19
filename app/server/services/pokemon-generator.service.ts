@@ -130,7 +130,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     weightClass = speciesData.weightClass
   }
 
-  // Distribute stat points weighted by base stats (PTU: level - 1 points)
+  // Distribute stat points weighted by base stats (PTU: level + 10 points)
   const calculatedStats = distributeStatPoints(baseStats, input.level)
 
   // HP formula: Level + (HP stat * 3) + 10
@@ -330,7 +330,8 @@ export function buildPokemonCombatant(
 // --- Internal helpers ---
 
 /**
- * Distribute (level - 1) stat points weighted by base stats.
+ * Distribute (level + 10) stat points weighted by base stats.
+ * PTU Core Chapter 2: a Pokemon has level + 10 stat points at generation.
  */
 function distributeStatPoints(
   baseStats: { hp: number; attack: number; defense: number; specialAttack: number; specialDefense: number; speed: number },
@@ -342,7 +343,7 @@ function distributeStatPoints(
     hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
   }
 
-  let remainingPoints = Math.max(0, level - 1)
+  let remainingPoints = Math.max(0, level + 10)
   while (remainingPoints > 0) {
     const roll = Math.random() * totalBaseStats
     let cumulative = 0
