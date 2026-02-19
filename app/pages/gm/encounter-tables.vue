@@ -138,7 +138,7 @@
       v-if="showGenerateModal && generateTable"
       :table="generateTable"
       :has-active-encounter="!!encounterStore.encounter"
-      :add-error="encounterCreation.error.value || addError"
+      :add-error="encounterCreation.error.value"
       :adding-to-encounter="encounterCreation.creating.value"
       :scenes="availableScenes"
       @close="closeGenerateModal"
@@ -176,7 +176,6 @@ const loading = computed(() => tablesStore.loading)
 const showCreateModal = ref(false)
 const showImportModal = ref(false)
 const showGenerateModal = ref(false)
-const addError = ref<string | null>(null)
 
 // Filters
 const filters = ref({
@@ -265,17 +264,9 @@ const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesN
 }
 
 const handleAddToScene = async (sceneId: string, pokemon: Array<{ speciesId: string; speciesName: string; level: number }>) => {
-  addError.value = null
-  try {
-    for (const p of pokemon) {
-      await $fetch(`/api/scenes/${sceneId}/pokemon`, {
-        method: 'POST',
-        body: { species: p.speciesName, level: p.level, speciesId: p.speciesId }
-      })
-    }
+  const success = await encounterCreation.addToScene(sceneId, pokemon)
+  if (success) {
     closeGenerateModal()
-  } catch (e: unknown) {
-    addError.value = e instanceof Error ? e.message : 'Failed to add Pokemon to scene'
   }
 }
 

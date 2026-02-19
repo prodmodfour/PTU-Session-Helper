@@ -20,10 +20,10 @@
         v-if="showGenerateModal && table"
         :table="table"
         :has-active-encounter="!!encounterStore.encounter"
-        :add-error="encounterCreation.error.value || addError"
+        :add-error="encounterCreation.error.value"
         :adding-to-encounter="encounterCreation.creating.value"
         :scenes="availableScenes"
-        @close="showGenerateModal = false; addError = null; encounterCreation.clearError()"
+        @close="showGenerateModal = false; encounterCreation.clearError()"
         @add-to-encounter="handleAddToEncounter"
         @add-to-scene="handleAddToScene"
       />
@@ -57,7 +57,6 @@ const tableId = computed(() => route.params.id as string)
 
 // Generate modal state
 const showGenerateModal = ref(false)
-const addError = ref<string | null>(null)
 
 // Delete modal state
 const showDeleteModal = ref(false)
@@ -70,17 +69,9 @@ onMounted(() => {
 })
 
 const handleAddToScene = async (sceneId: string, pokemon: Array<{ speciesId: string; speciesName: string; level: number }>) => {
-  addError.value = null
-  try {
-    for (const p of pokemon) {
-      await $fetch(`/api/scenes/${sceneId}/pokemon`, {
-        method: 'POST',
-        body: { species: p.speciesName, level: p.level, speciesId: p.speciesId }
-      })
-    }
+  const success = await encounterCreation.addToScene(sceneId, pokemon)
+  if (success) {
     showGenerateModal.value = false
-  } catch (e: unknown) {
-    addError.value = e instanceof Error ? e.message : 'Failed to add Pokemon to scene'
   }
 }
 

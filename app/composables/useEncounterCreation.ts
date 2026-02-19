@@ -1,6 +1,6 @@
 /**
- * Composable for the wild encounter creation workflow.
- * Encapsulates: create encounter → add wild pokemon → serve to group → navigate to GM page.
+ * Composable for encounter/scene creation workflows from generated Pokemon.
+ * Encapsulates: create encounter or add to scene workflows with error handling.
  * Used by encounter-tables list page and habitat editor page.
  */
 export function useEncounterCreation() {
@@ -36,6 +36,25 @@ export function useEncounterCreation() {
     }
   }
 
+  const addToScene = async (
+    sceneId: string,
+    pokemon: Array<{ speciesId: string; speciesName: string; level: number }>
+  ): Promise<boolean> => {
+    error.value = null
+    try {
+      for (const p of pokemon) {
+        await $fetch(`/api/scenes/${sceneId}/pokemon`, {
+          method: 'POST',
+          body: { species: p.speciesName, level: p.level, speciesId: p.speciesId }
+        })
+      }
+      return true
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to add Pokemon to scene'
+      return false
+    }
+  }
+
   const clearError = () => {
     error.value = null
   }
@@ -44,6 +63,7 @@ export function useEncounterCreation() {
     creating: readonly(creating),
     error: readonly(error),
     clearError,
-    createWildEncounter
+    createWildEncounter,
+    addToScene
   }
 }
