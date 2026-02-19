@@ -10,6 +10,7 @@ import type { PokemonOrigin } from '~/types/character'
 import type { Combatant, Pokemon, CombatSide } from '~/types'
 import { sizeToTokenSize } from '~/server/services/grid-placement.service'
 import { buildCombatantFromEntity } from '~/server/services/combatant.service'
+import { NATURE_TABLE, applyNatureToBaseStats } from '~/constants/natures'
 
 // --- Input / Output types ---
 
@@ -130,8 +131,20 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     weightClass = speciesData.weightClass
   }
 
-  // Distribute stat points weighted by base stats (PTU: level + 10 points)
-  const calculatedStats = distributeStatPoints(baseStats, input.level)
+  // Select random nature and apply modifiers to base stats (PTU Chapter 5)
+  // Nature modifiers: +2/-2 for non-HP stats, +1/-1 for HP, minimum 1
+  const natureNames = Object.keys(NATURE_TABLE)
+  const selectedNature = natureNames[Math.floor(Math.random() * natureNames.length)]
+  const natureEntry = NATURE_TABLE[selectedNature]
+  const natureData = {
+    name: selectedNature,
+    raisedStat: natureEntry.raise === natureEntry.lower ? null : natureEntry.raise,
+    loweredStat: natureEntry.raise === natureEntry.lower ? null : natureEntry.lower
+  }
+  const adjustedBaseStats = applyNatureToBaseStats(baseStats, selectedNature)
+
+  // Distribute stat points weighted by nature-adjusted base stats (PTU: level + 10 points)
+  const calculatedStats = distributeStatPoints(adjustedBaseStats, input.level)
 
   // HP formula: Level + (HP stat * 3) + 10
   const maxHp = input.level + (calculatedStats.hp * 3) + 10
@@ -154,7 +167,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     level: input.level,
     nickname: input.nickname ?? null,
     types,
-    baseStats,
+    baseStats: adjustedBaseStats,
     calculatedStats,
     maxHp,
     moves,
@@ -167,7 +180,8 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     otherCapabilities,
     skills,
     eggGroups,
-    size
+    size,
+    nature: natureData
   }
 }
 
@@ -261,7 +275,7 @@ function createdPokemonToEntity(pokemon: CreatedPokemon): Pokemon {
     nickname: data.nickname,
     level: data.level,
     experience: 0,
-    nature: { name: 'Hardy', raisedStat: null, loweredStat: null },
+    nature: data.nature ?? { name: 'Hardy', raisedStat: null, loweredStat: null },
     types: data.types as Pokemon['types'],
     baseStats: data.baseStats,
     currentStats: {
