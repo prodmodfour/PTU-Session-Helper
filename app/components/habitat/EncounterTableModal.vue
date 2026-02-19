@@ -135,6 +135,7 @@
                   v-model.number="entry.weight"
                   type="number"
                   min="0.1"
+                  max="100"
                   step="0.1"
                   class="form-input form-input--sm"
                   @change="updateEntryWeight(entry)"

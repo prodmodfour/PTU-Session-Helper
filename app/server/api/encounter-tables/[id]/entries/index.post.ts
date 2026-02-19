@@ -43,6 +43,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Validate weight
+    if (body.weight !== undefined && (typeof body.weight !== 'number' || body.weight < 0.1)) {
+      throw createError({
+        statusCode: 400,
+        message: 'Weight must be a number >= 0.1'
+      })
+    }
+
     // Check if entry already exists for this species
     const existingEntry = await prisma.encounterTableEntry.findUnique({
       where: {

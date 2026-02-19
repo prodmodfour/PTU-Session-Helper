@@ -46,6 +46,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Validate weight (skip for remove entries which have null weight)
+    if (!body.remove && body.weight !== undefined && (typeof body.weight !== 'number' || body.weight < 0.1)) {
+      throw createError({
+        statusCode: 400,
+        message: 'Weight must be a number >= 0.1'
+      })
+    }
+
     // Check if entry already exists for this species in this modification
     const existingEntry = await prisma.modificationEntry.findFirst({
       where: {
