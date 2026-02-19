@@ -45,6 +45,13 @@ export default defineEventHandler(async (event) => {
     if (body.moves !== undefined) updateData.moves = JSON.stringify(body.moves)
     if (body.statusConditions !== undefined) updateData.statusConditions = JSON.stringify(body.statusConditions)
 
+    // Healing-related fields
+    if (body.injuries !== undefined) updateData.injuries = body.injuries
+    if (body.restMinutesToday !== undefined) updateData.restMinutesToday = body.restMinutesToday
+    if (body.injuriesHealedToday !== undefined) updateData.injuriesHealedToday = body.injuriesHealedToday
+    if (body.lastInjuryTime !== undefined) updateData.lastInjuryTime = body.lastInjuryTime ? new Date(body.lastInjuryTime) : null
+    if (body.lastRestReset !== undefined) updateData.lastRestReset = body.lastRestReset ? new Date(body.lastRestReset) : null
+
     if (body.baseStats) {
       if (body.baseStats.hp !== undefined) updateData.baseHp = body.baseStats.hp
       if (body.baseStats.attack !== undefined) updateData.baseAttack = body.baseStats.attack
