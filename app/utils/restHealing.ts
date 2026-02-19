@@ -61,8 +61,9 @@ export function calculateRestHealing(params: {
     return { hpHealed: 0, canHeal: false, reason: 'Already at full HP' }
   }
 
-  // Calculate healing: 1/16th of effective max HP, minimum 1
-  const healAmount = Math.max(1, Math.floor(effectiveMax / 16))
+  // Healing amount: 1/16th of REAL max HP (PTU p.250: "use the real maximum")
+  const healAmount = Math.max(1, Math.floor(maxHp / 16))
+  // Healing cap: injury-reduced effective max (PTU p.250: "could only heal up to")
   const actualHeal = Math.min(healAmount, effectiveMax - currentHp)
 
   return { hpHealed: actualHeal, canHeal: true }
@@ -170,7 +171,7 @@ export function getRestHealingInfo(params: {
   const effectiveMax = getEffectiveMaxHp(maxHp, injuries)
   const canRestHeal = injuries < 5 && restMinutesToday < 480
   const restMinutesRemaining = Math.max(0, 480 - restMinutesToday)
-  const hpPerRest = Math.max(1, Math.floor(effectiveMax / 16))
+  const hpPerRest = Math.max(1, Math.floor(maxHp / 16))
 
   let hoursSinceLastInjury: number | null = null
   let hoursUntilNaturalHeal: number | null = null
