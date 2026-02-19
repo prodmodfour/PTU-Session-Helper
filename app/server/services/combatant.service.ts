@@ -218,12 +218,12 @@ export function applyHealingToEntity(
     }
   }
 
-  // Grant Temporary HP (stacks with existing)
+  // Grant Temporary HP — PTU: keep whichever is higher (old or new), do NOT stack
   if (options.tempHp !== undefined && options.tempHp > 0) {
     const previousTempHp = entity.temporaryHp || 0
-    const newTempHp = previousTempHp + options.tempHp
+    const newTempHp = Math.max(previousTempHp, options.tempHp)
     entity.temporaryHp = newTempHp
-    result.tempHpGained = options.tempHp
+    result.tempHpGained = newTempHp - previousTempHp
     result.newTempHp = newTempHp
   }
 
