@@ -182,7 +182,7 @@ Get/set/clear pattern.
 
 ## Selector Guidance
 
-Prefer `data-testid` attributes for Playwright selectors. The app does not currently have widespread `data-testid` usage — the Playtester should add them as needed when writing spec files, or fall back to:
+Prefer `data-testid` attributes for Playwright selectors. The app does not currently have widespread `data-testid` usage — add them as needed when writing spec files, or fall back to:
 
 1. `getByRole()` — buttons, links, headings
 2. `getByLabel()` — form inputs

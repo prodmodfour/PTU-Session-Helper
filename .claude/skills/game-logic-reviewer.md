@@ -149,7 +149,7 @@ When another skill sends an `AMBIGUOUS` escalation:
 3. Check errata for clarification
 4. Make a definitive ruling with justification
 5. Write the ruling into the escalation report
-6. Notify the user which skill's terminal needs the ruling applied (usually Scenario Crafter or Result Verifier)
+6. Notify the user which skill's terminal needs the ruling applied (usually Scenario Crafter or Feature Designer)
 
 ## Game Mechanics Code Locations
 

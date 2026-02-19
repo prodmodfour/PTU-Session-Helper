@@ -59,7 +59,7 @@ Read the gameplay loop(s) from `app/tests/e2e/artifacts/loops/`. Identify:
 - The app features involved
 - The expected outcomes and end states
 
-If a workflow step is annotated with `[GAP: FEATURE_GAP]` or `[GAP: UX_GAP]`, include the step in the scenario anyway. Write the scenario as if the feature existed — the Playtester will fail at that step, the Result Verifier will triage it as FEATURE_GAP/UX_GAP, and the pipeline will route it to the Feature Designer. Do not skip or rewrite gap-annotated steps.
+If a workflow step is annotated with `[GAP: FEATURE_GAP]` or `[GAP: UX_GAP]`, include the step in the scenario anyway. Write the scenario as if the feature existed — the Feature Designer will detect the gap during gap detection and create the appropriate ticket. Do not skip or rewrite gap-annotated steps.
 
 ### Step 2: Choose Concrete Data
 
@@ -107,7 +107,7 @@ Assert: Bulbasaur HP displays "18/40"
 Assert: Bulbasaur HP is reduced
 ```
 
-**For workflow scenarios:** Place assertions at each phase boundary (not just at the end). After initiative is set, assert the order. After damage is dealt, assert HP. After a faint, assert status. This lets the Playtester catch exactly where a workflow breaks down.
+**For workflow scenarios:** Place assertions at each phase boundary (not just at the end). After initiative is set, assert the order. After damage is dealt, assert HP. After a faint, assert status. This lets downstream consumers catch exactly where a workflow breaks down.
 
 ### Step 5: Write Setup and Teardown
 
@@ -279,7 +279,7 @@ When you need base stats for a Pokemon:
 
 ## Corrections
 
-If the Scenario Verifier or Result Verifier sends back a `correction-*.md` report:
+If the Scenario Verifier sends back a `correction-*.md` report:
 1. Read the correction — which assertions were wrong and what the correct values are
 2. Update the scenario file with corrected values
 3. Re-save to `artifacts/scenarios/`

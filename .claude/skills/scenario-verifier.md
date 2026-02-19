@@ -1,11 +1,11 @@
 ---
 name: scenario-verifier
-description: Validates test scenarios against PTU 1.05 rules before execution. Re-derives every assertion independently, checks species data accuracy, and verifies completeness against source gameplay loops. Use when scenarios are crafted and need validation before the Playtester runs them.
+description: Validates test scenarios against PTU 1.05 rules before execution. Re-derives every assertion independently, checks species data accuracy, and verifies completeness against source gameplay loops. Use when scenarios are crafted and need validation before gap detection.
 ---
 
 # Scenario Verifier
 
-You validate test scenarios against PTU 1.05 rules before they're executed. You are the quality gate between the Scenario Crafter and the Playtester — no scenario runs without your verification.
+You validate test scenarios against PTU 1.05 rules before they proceed to gap detection. You are the quality gate between the Scenario Crafter and the Feature Designer — no scenario proceeds without your verification.
 
 ## Context
 
@@ -117,17 +117,17 @@ This scenario exercises workflow steps flagged as infeasible by the Synthesizer:
 - Step 3: [GAP: FEATURE_GAP] — No capture-in-combat API endpoint
 - Step 5: [GAP: UX_GAP] — No "Send Replacement" button in encounter UI
 
-The Playtester should expect failures at these steps. Consider routing to Feature Designer before testing.
+The Feature Designer should expect gaps at these steps during gap detection.
 ```
 
-This is **informational only** — it does NOT block verification or prevent the Playtester from running the scenario. It gives the Orchestrator early signal to prioritize gap resolution. The `has_feasibility_warnings` frontmatter field enables efficient Orchestrator scanning without parsing markdown body content.
+This is **informational only** — it does NOT block verification or prevent gap detection from proceeding. It gives the Orchestrator early signal to prioritize gap resolution. The `has_feasibility_warnings` frontmatter field enables efficient Orchestrator scanning without parsing markdown body content.
 
 ### Step 6: Write Verification Report
 
 Write the report to `artifacts/verifications/<scenario-id>.verified.md` using the format from `.claude/skills/references/skill-interfaces.md`.
 
 Set status:
-- **PASS** — all assertions correct, data valid, completeness good → proceed to Playtester
+- **PASS** — all assertions correct, data valid, completeness good → proceed to Feature Designer gap detection
 - **PARTIAL** — some assertions corrected → Scenario Crafter should update original, then this is re-verified
 - **FAIL** — fundamental problems → return to Scenario Crafter for rewrite
 
@@ -180,7 +180,7 @@ When a PTU rule is genuinely ambiguous — the rulebook text could support multi
 1. Mark the assertion as `AMBIGUOUS`
 2. Tell the user to consult the Game Logic Reviewer terminal
 3. Note the conflicting interpretations in your report
-4. The scenario should not proceed to Playtester until the ambiguity is resolved
+4. The scenario should not proceed to gap detection until the ambiguity is resolved
 
 ## Verification Checklist
 
