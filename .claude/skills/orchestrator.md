@@ -9,14 +9,14 @@ You coordinate both the Dev and Test ecosystems. You read artifact state, determ
 
 ## Context
 
-This project uses 12 skills across separate Claude Code terminals organized into two ecosystems. You are the single hub that keeps both moving. Read `ptu-skills-ecosystem.md` for the full architecture.
+This project uses 10 skills across separate Claude Code terminals organized into two ecosystems. You are the single hub that keeps both moving. Read `ptu-skills-ecosystem.md` for the full architecture.
 
 ### Two Ecosystems
 
 **Dev Ecosystem:** Developer, Senior Reviewer, Game Logic Reviewer, Code Health Auditor, Retrospective Analyst, Feature Designer
-**Test Ecosystem:** Gameplay Loop Synthesizer, Scenario Crafter, Scenario Verifier, Playtester, Result Verifier, Feature Designer
+**Test Ecosystem:** Gameplay Loop Synthesizer, Scenario Crafter, Scenario Verifier, Feature Designer
 
-Feature Designer bridges both ecosystems — Test creates gap tickets, Dev implements the designs.
+Feature Designer bridges both ecosystems — it checks verified scenarios against the app surface, creates gap tickets, and designs features for Dev to implement.
 
 ### Communication Boundary
 
@@ -24,11 +24,10 @@ Ecosystems communicate through **tickets** in `artifacts/tickets/`. Reports stay
 
 | Direction | Ticket Type | Prefix | Producer | Consumer |
 |-----------|-------------|--------|----------|----------|
-| Test → Dev | bug | `bug-NNN` | Result Verifier | Developer |
-| Test → Dev | feature | `feature-NNN` | Result Verifier / Feature Designer | Developer |
-| Test → Dev | ux | `ux-NNN` | Result Verifier / Feature Designer | Developer |
+| Test → Dev | bug | `bug-NNN` | Feature Designer (from gap detection) | Developer |
+| Test → Dev | feature | `feature-NNN` | Feature Designer | Developer |
+| Test → Dev | ux | `ux-NNN` | Feature Designer | Developer |
 | Either → Dev | ptu-rule | `ptu-rule-NNN` | Game Logic Reviewer / Scenario Verifier | Developer |
-| Dev → Test | retest | `retest-NNN` | Orchestrator (after both reviews approve) | Playtester |
 | Dev internal | refactoring | `refactoring-NNN` | Code Health Auditor | Developer |
 
 ### Skill Triggers
@@ -38,8 +37,6 @@ Ecosystems communicate through **tickets** in `artifacts/tickets/`. Reports stay
 | Gameplay Loop Synthesizer | Test | `gameplay-loop-synthesizer.md` |
 | Scenario Crafter | Test | `scenario-crafter.md` |
 | Scenario Verifier | Test | `scenario-verifier.md` |
-| Playtester | Test | `playtester.md` |
-| Result Verifier | Test | `result-verifier.md` |
 | Developer | Dev | `ptu-session-helper-dev.md` |
 | Senior Reviewer | Dev | `ptu-session-helper-senior-reviewer.md` |
 | Game Logic Reviewer | Dev | `game-logic-reviewer.md` |
@@ -69,7 +66,6 @@ app/tests/e2e/artifacts/tickets/bug/
 app/tests/e2e/artifacts/tickets/ptu-rule/
 app/tests/e2e/artifacts/tickets/feature/
 app/tests/e2e/artifacts/tickets/ux/
-app/tests/e2e/artifacts/tickets/retest/
 ```
 
 **Dev ecosystem artifacts:**
@@ -84,8 +80,6 @@ app/tests/e2e/artifacts/designs/
 app/tests/e2e/artifacts/loops/
 app/tests/e2e/artifacts/scenarios/
 app/tests/e2e/artifacts/verifications/
-app/tests/e2e/artifacts/results/
-app/tests/e2e/artifacts/reports/
 ```
 
 **Shared:**
@@ -105,7 +99,7 @@ For each ecosystem, determine:
 
 Apply the priority trees **independently** to each ecosystem. Both may produce a recommendation simultaneously.
 
-#### Dev Ecosystem Priorities (D1–D10)
+#### Dev Ecosystem Priorities (D1–D9)
 
 Applied to `dev-state.md` + tickets consuming from Dev:
 
@@ -118,24 +112,21 @@ Applied to `dev-state.md` + tickets consuming from Dev:
 | D5 | HIGH bugs + PARTIAL/MINOR gaps — `tickets/bug/` HIGH, `tickets/feature/` or `tickets/ux/` | Developer / Feature Designer |
 | D6 | Developer fix without reviews — committed fix missing approved review artifacts | Both reviewers (parallel) |
 | D7 | Pending designs — `designs/` with `status: complete` (awaiting implementation) | Developer |
-| D8 | Create retest tickets — after both reviews approve a fix, write `tickets/retest/retest-NNN.md` | Orchestrator creates ticket |
-| D9 | Refactoring tickets — `refactoring/` open tickets, prioritize by extensibility impact | Developer |
-| D10 | All clean — suggest Code Health Auditor audit or report status | Code Health Auditor |
+| D8 | Refactoring tickets — `refactoring/` open tickets, prioritize by extensibility impact | Developer |
+| D9 | All clean — suggest Code Health Auditor audit or report status | Code Health Auditor |
 
-#### Test Ecosystem Priorities (T1–T8)
+#### Test Ecosystem Priorities (T1–T6)
 
 Applied to `test-state.md` + testing-internal artifacts:
 
 | Priority | Condition | Routes to |
 |----------|-----------|-----------|
-| T1 | Open retest tickets — `tickets/retest/` with status open | Playtester |
-| T2 | Scenario corrections — `reports/correction-*.md` unresolved | Scenario Crafter |
-| T3 | Test bugs — `reports/test-fix-*.md` unresolved | Playtester |
-| T4 | Feasibility warnings — verification reports with `has_feasibility_warnings: true` | Feature Designer |
-| T5 | Stale artifacts — earlier artifacts newer than later ones | Appropriate testing skill |
-| T6 | Continue pipeline — furthest incomplete stage for active domain | Next testing skill |
-| T7 | Domain cycle complete — all pass, no retrospective yet | Retrospective Analyst + Code Health Auditor |
-| T8 | All clean — suggest next domain | Report status |
+| T1 | Scenario corrections — `reports/correction-*.md` unresolved | Scenario Crafter |
+| T2 | Feasibility warnings — verification reports with `has_feasibility_warnings: true` | Feature Designer |
+| T3 | Stale artifacts — earlier artifacts newer than later ones | Appropriate testing skill |
+| T4 | Continue pipeline — furthest incomplete stage for active domain | Next testing skill |
+| T5 | Domain cycle complete — verified scenarios ready, no gap check yet | Feature Designer (gap detection) |
+| T6 | All clean — suggest next domain | Report status |
 
 ### Step 4: Give Parallel Recommendations
 
@@ -171,17 +162,7 @@ If only one ecosystem has work, give a single recommendation. If neither has wor
 Step 2 — after it loads, paste this:
   Fix bug-001: <summary>.
   Ticket: app/tests/e2e/artifacts/tickets/bug/bug-001.md
-  Full report: app/tests/e2e/artifacts/reports/bug-001.md
-  After fixing, update the bug report's Fix Log and the ticket status.
-```
-
-**Handoff format for retest tickets → Playtester:**
-```
-Step 2 — after it loads, paste this:
-  Run retest for retest-001.
-  Ticket: app/tests/e2e/artifacts/tickets/retest/retest-001.md
-  Scenarios to re-run: <scenario_ids from ticket>
-  After running, update the retest ticket status to resolved.
+  After fixing, update the ticket status.
 ```
 
 **Handoff format for parallel reviews → Senior Reviewer + Game Logic Reviewer:**
@@ -236,40 +217,18 @@ Step 2 — after it loads, paste this:
   After refactoring, update the ticket's Resolution Log and run existing tests to confirm nothing breaks.
 ```
 
-### Step 5: Create Retest Tickets (D8)
+**Handoff format for gap detection → Feature Designer:**
+```
+Step 1 — paste this first:
+  load .claude/skills/feature-designer.md
 
-When both reviews (code-review + rules-review) approve a Developer fix for a bug/feature/ux ticket:
-
-1. Determine the next retest sequence number from `tickets/retest/`
-2. Write a retest ticket:
-
-```markdown
----
-ticket_id: retest-NNN
-type: retest
-priority: P0
-status: open
-source_ecosystem: dev
-target_ecosystem: test
-created_by: orchestrator
-created_at: <ISO timestamp>
-domain: <domain>
-scenario_ids:
-  - <scenario-id to re-run>
----
-
-## Retest Request
-
-**Source:** <bug-NNN / feature-NNN / ux-NNN>
-**Fix commits:** <hash1>, <hash2>
-**Both reviews approved:** code-review-NNN, rules-review-NNN
-
-Re-run the listed scenarios to verify the fix resolves the original failure.
+Step 2 — after it loads, paste this:
+  Run gap detection for domain <domain>.
+  Verified scenarios: app/tests/e2e/artifacts/verifications/<domain>-*.verified.md
+  Check each scenario's features against the app surface and create tickets for missing capabilities.
 ```
 
-3. Route to Playtester via T1 recommendation
-
-### Step 6: Update Both State Files
+### Step 5: Update Both State Files
 
 After advising, update **both** `dev-state.md` and `test-state.md` with current state. You are the **sole writer** of these files — no other skill writes to them.
 
@@ -277,12 +236,10 @@ Update `dev-state.md` with:
 - Open tickets per type with status
 - Active Developer work
 - Review status
-- Retest tickets created
 
 Update `test-state.md` with:
 - Active domain and current stage
 - Domain progress table
-- Pending retests from Dev
 - Internal issues
 - Recommended next step
 
@@ -291,7 +248,6 @@ Update `test-state.md` with:
 Compare timestamps across stages:
 - **Loop file** modified after scenario files → scenarios are stale
 - **Scenario file** modified after verification file → verification is stale
-- **Code commit** touching a domain's app files after test results → results are stale
 - **Developer commit** after the latest approved review for the same target → review is stale, re-review needed (route to both reviewers in parallel)
 
 For code changes, check `git log --oneline -10` and map changed files to domains via `.claude/skills/references/app-surface.md`.
@@ -314,6 +270,5 @@ Domains the pipeline covers (ordered by priority):
 - Write code or modify app files
 - Make PTU rule judgments (defer to Game Logic Reviewer)
 - Write test scenarios (defer to Scenario Crafter)
-- Run tests (defer to Playtester)
 - Approve code changes (defer to Senior Reviewer)
-- Write artifacts other than `dev-state.md`, `test-state.md`, and `tickets/retest/` tickets
+- Write artifacts other than `dev-state.md`, `test-state.md`
