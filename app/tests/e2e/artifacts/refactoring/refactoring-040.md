@@ -54,7 +54,7 @@ Estimated commits: 2-3
 - "fix one, miss the rest" pattern — healing fields were added to the write path of PUT but the response shape wasn't updated to match
 
 ## Resolution Log
-- Commits: (pending)
+- Commits: d49325d
 - Files changed:
   - `app/server/api/characters/[id].get.ts` — replaced inline serialization with `serializeCharacter()`
   - `app/server/api/characters/[id].put.ts` — replaced slim response with `serializeCharacter()`, added `include: { pokemon: true }` to update query
