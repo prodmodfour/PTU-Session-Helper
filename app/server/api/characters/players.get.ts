@@ -33,7 +33,7 @@ export default defineEventHandler(async () => {
         playedBy: char.playedBy,
         level: char.level,
         currentHp: char.currentHp,
-        maxHp: char.hp, // Use hp stat as max HP (PTU convention)
+        maxHp: char.maxHp,
         avatarUrl: char.avatarUrl,
         trainerClasses: JSON.parse(char.trainerClasses),
         pokemon: parsedPokemon
