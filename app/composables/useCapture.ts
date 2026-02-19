@@ -157,7 +157,7 @@ export function useCapture() {
       } else if (volatileConditions.includes(condition)) {
         statusModifier += 5
       }
-      if (condition === 'Stuck' || condition === 'Trapped') {
+      if (condition === 'Stuck') {
         stuckModifier += 10
       }
       if (condition === 'Slowed') {

@@ -14,7 +14,7 @@ import type { StatusCondition } from '~/types'
 import { PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 
 // Special conditions with specific modifiers
-const STUCK_CONDITIONS: StatusCondition[] = ['Stuck', 'Trapped']
+const STUCK_CONDITIONS: StatusCondition[] = ['Stuck']
 const SLOW_CONDITIONS: StatusCondition[] = ['Slowed']
 
 export interface CaptureRateInput {
