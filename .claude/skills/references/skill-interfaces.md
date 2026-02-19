@@ -7,17 +7,22 @@ Data contracts between skills in the PTU Skills Ecosystem. All artifacts use mar
 ```
 app/tests/e2e/artifacts/
 ├── tickets/               # Cross-ecosystem communication
-│   ├── bug/               # Feature Designer writes → Developer reads
-│   ├── ptu-rule/          # Game Logic Reviewer writes → Developer reads
-│   ├── feature/           # Feature Designer writes → Developer reads
-│   └── ux/                # Feature Designer writes → Developer reads
-├── loops/                 # Gameplay Loop Synthesizer writes
-├── scenarios/             # Scenario Crafter writes
-├── verifications/         # Scenario Verifier writes → Feature Designer reads (gap detection)
-├── designs/               # Feature Designer writes
+│   ├── bug/               # Orchestrator writes (from audit) → Developer reads
+│   ├── ptu-rule/          # Orchestrator/Game Logic Reviewer writes → Developer reads
+│   ├── feature/           # Orchestrator writes (from matrix) → Developer reads
+│   └── ux/                # Orchestrator writes (from matrix) → Developer reads
+├── matrix/                # Feature Matrix workflow artifacts
+│   ├── <domain>-rules.md          # PTU Rule Extractor writes
+│   ├── <domain>-capabilities.md   # App Capability Mapper writes
+│   ├── <domain>-matrix.md         # Coverage Analyzer writes
+│   └── <domain>-audit.md          # Implementation Auditor writes
+├── designs/               # Developer writes (when feature ticket needs design)
 ├── refactoring/           # Code Health Auditor writes
 ├── reviews/               # Senior Reviewer + Game Logic Reviewer write
 ├── lessons/               # Retrospective Analyst writes
+├── loops/                 # Legacy: from previous Synthesizer runs
+├── scenarios/             # Legacy: from previous Crafter runs
+├── verifications/         # Legacy: from previous Verifier runs
 ├── results/               # Legacy: from previous Playtester runs
 ├── reports/               # Legacy: from previous Result Verifier runs
 ├── dev-state.md           # Orchestrator writes (sole writer)
@@ -26,272 +31,331 @@ app/tests/e2e/artifacts/
 
 ## File Naming Conventions
 
-- Loops: `<domain>.md` (e.g., `combat.md`, `capture.md`)
-- Workflow scenarios: `<domain>-workflow-<description>-<NNN>.md` (e.g., `combat-workflow-wild-encounter-001.md`)
-- Mechanic scenarios: `<domain>-<mechanic>-<NNN>.md` (e.g., `combat-stab-001.md`)
-- Verifications: `<scenario-id>.verified.md` (e.g., `combat-workflow-wild-encounter-001.verified.md`)
-- Results: `<scenario-id>.result.md` (e.g., `combat-workflow-wild-encounter-001.result.md`)
-- Reports: `<category>-<NNN>.md` (e.g., `bug-001.md`, `correction-001.md`, `escalation-001.md`, `feature-gap-001.md`, `ux-gap-001.md`) — counters are per-prefix (e.g., `bug-001` and `feature-gap-001` coexist)
-- Tickets: `<type>-<NNN>.md` in `tickets/<type>/` (e.g., `tickets/bug/bug-003.md`, `tickets/retest/retest-001.md`) — same sequence number as corresponding report
+- Rule catalogs: `<domain>-rules.md` in `matrix/` (e.g., `combat-rules.md`)
+- Capability catalogs: `<domain>-capabilities.md` in `matrix/` (e.g., `combat-capabilities.md`)
+- Coverage matrices: `<domain>-matrix.md` in `matrix/` (e.g., `combat-matrix.md`)
+- Implementation audits: `<domain>-audit.md` in `matrix/` (e.g., `combat-audit.md`)
+- Tickets: `<type>-<NNN>.md` in `tickets/<type>/` (e.g., `tickets/bug/bug-003.md`)
 - Designs: `design-<NNN>.md` (e.g., `design-001.md`) — per-prefix counter in `artifacts/designs/`
 - Code reviews: `code-review-<NNN>.md` (e.g., `code-review-001.md`) — per-prefix counter in `artifacts/reviews/`
 - Rules reviews: `rules-review-<NNN>.md` (e.g., `rules-review-001.md`) — per-prefix counter in `artifacts/reviews/`
 
 ---
 
-## 1. Gameplay Loop
+## 1. Rule Catalog
 
-**Written by:** Gameplay Loop Synthesizer
-**Read by:** Scenario Crafter, Scenario Verifier
-**Location:** `artifacts/loops/<domain>.md`
-
-Loops come in two tiers. Tier 1 (Session Workflows) are the primary output — they represent real GM tasks at the table. Tier 2 (Mechanic Validations) are secondary — they isolate individual PTU rules for focused testing.
-
-### 1a. Tier 1: Session Workflow
+**Written by:** PTU Rule Extractor
+**Read by:** Coverage Analyzer
+**Location:** `artifacts/matrix/<domain>-rules.md`
 
 ```markdown
 ---
-loop_id: <domain>-workflow-<description>
-tier: workflow
 domain: <domain>
-gm_intent: <one sentence: what the GM is trying to accomplish>
-ptu_refs:
-  - <rulebook-file>#<section>
+extracted_at: <ISO timestamp>
+extracted_by: ptu-rule-extractor
+total_rules: <count>
+sources:
+  - <rulebook-file>
   - ...
-app_features:
-  - <app-file-path>
-  - ...
-mechanics_exercised:
-  - <mechanic-name>
-  - ...
-sub_workflows:
-  - <loop_id of workflow variation>
-  - ...
+errata_applied: true | false
 ---
 
-## GM Context
-<1-2 sentences: when does this happen in a session? What real-play situation triggers it?>
+# PTU Rules: <Domain Display Name>
 
-## Preconditions
-- <state required before this workflow starts>
+## Summary
+- Total rules: <count>
+- Categories: formula(<N>), condition(<N>), workflow(<N>), constraint(<N>), enumeration(<N>), modifier(<N>), interaction(<N>)
+- Scopes: core(<N>), situational(<N>), edge-case(<N>)
 
-## Workflow Steps
-1. **[Setup]** <GM creates/configures something>
-2. **[Action]** <GM or system performs a game action>
-3. **[Mechanic: <name>]** <system applies a PTU rule — tag which mechanic fires>
-4. **[Bookkeeping]** <GM resolves aftermath>
-5. **[Done]** <end state that proves the workflow succeeded>
+## Dependency Graph
+<!-- Foundation → Derived → Workflow ordering -->
+- Foundation: <rule_id>, <rule_id>, ...
+- Derived: <rule_id> (depends on <rule_id>), ...
+- Workflow: <rule_id> (depends on <rule_id>, <rule_id>), ...
 
-## PTU Rules Applied
-- <rule name>: <exact quote or paraphrase> (file:section)
-- ...
-
-## Expected End State
-- <what the app should show when this workflow is complete>
-- <what data should exist in the database>
-
-## Variations
-- **<variation name>**: <how the workflow changes> → sub-workflow loop_id
-```
-
-### 1b. Tier 2: Mechanic Validation
-
-```markdown
----
-loop_id: <domain>-mechanic-<description>
-tier: mechanic
-domain: <domain>
-ptu_refs:
-  - <rulebook-file>#<section>
-  - ...
-app_features:
-  - <app-file-path>
-  - ...
-sub_loops:
-  - <loop_id of edge case variant>
-  - ...
 ---
 
-## Preconditions
-- <state required before this loop can execute>
+## <domain>-R001: <Rule Name>
 
-## Steps
-1. <game action in PTU terms>
-2. <system responds>
-3. ...
+- **Category:** formula | condition | workflow | constraint | enumeration | modifier | interaction
+- **Scope:** core | situational | edge-case
+- **PTU Ref:** `<rulebook-file>#<section>`
+- **Quote:** "<exact quote from rulebook or errata>"
+- **Dependencies:** <rule_id>, <rule_id> (or "none" for foundation rules)
+- **Errata:** true | false
 
-## PTU Rules Applied
-- <rule name>: <exact quote or paraphrase> (file:section)
-- ...
-
-## Expected Outcomes
-- <observable result with formula>
-- ...
-
-## Edge Cases
-- <variant condition> → <expected different behavior>
-- ...
+## <domain>-R002: <Rule Name>
+...
 ```
 
 **Constraints:**
-- One file per domain, containing all workflows and mechanic validations
-- Tier 1 workflows listed first (W1, W2...), Tier 2 mechanics second (M1, M2...)
-- Each sub-workflow/sub-loop gets its own section
-- `ptu_refs` must point to actual rulebook files via `references/ptu-chapter-index.md`
-- `app_features` must point to actual app files via `references/app-surface.md`
-- Workflow `mechanics_exercised` lists which PTU rules are implicitly tested by the workflow
+- One file per domain
+- Rule IDs are sequential: `<domain>-R001`, `<domain>-R002`, etc.
+- Every rule has a direct quote from the rulebook or errata
+- Cross-domain references use `scope: cross-domain-ref` and are not fully extracted
+- Dependency graph must be acyclic
+- Ambiguous rules include a `## Notes` section with multiple interpretations
 
 ---
 
-## 2. Scenario
+## 2. Capability Catalog
 
-**Written by:** Scenario Crafter
-**Read by:** Scenario Verifier, Feature Designer (gap detection)
-**Location:** `artifacts/scenarios/<scenario-id>.md`
-
-Scenarios come in two types matching the two loop tiers.
-
-### 2a. Workflow Scenario (from Tier 1 loops)
-
-Multi-phase scenarios that test a realistic GM task end-to-end. Assertions are placed at phase boundaries.
+**Written by:** App Capability Mapper
+**Read by:** Coverage Analyzer
+**Location:** `artifacts/matrix/<domain>-capabilities.md`
 
 ```markdown
 ---
-scenario_id: <domain>-workflow-<description>-<NNN>
-loop_id: <source workflow loop_id>
-tier: workflow
-priority: P0 | P1
-ptu_assertions: <count>
-mechanics_tested:
-  - <mechanic-name>
-  - ...
+domain: <domain>
+mapped_at: <ISO timestamp>
+mapped_by: app-capability-mapper
+total_capabilities: <count>
+files_read: <count>
 ---
 
-## Narrative
-<2-3 sentences describing the real play situation this simulates>
+# App Capabilities: <Domain Display Name>
 
-## Setup (API)
-POST /api/<endpoint> { <json body> }
-<!-- $var = response.data.id -->
-
-## Phase 1: <phase name>
-<API calls and/or UI actions for this phase>
-
-### Assertions (Phase 1)
-1. <what to check>
-   Derivation: <formula with concrete values>
-   **Assert: <element> displays "<expected value>"**
-
-## Phase 2: <phase name>
-<actions>
-
-### Assertions (Phase 2)
-2. ...
-
-## Phase N: Resolution
-<final actions>
-
-### Assertions (Phase N)
-N. <end-state assertion>
-
-## Teardown
-DELETE /api/<endpoint>/$variable
-```
-
-### 2b. Mechanic Scenario (from Tier 2 loops)
-
-Focused scenarios that isolate a single PTU rule.
-
-```markdown
----
-scenario_id: <domain>-<mechanic>-<NNN>
-loop_id: <source mechanic loop_id>
-tier: mechanic
-priority: P1 | P2
-ptu_assertions: <count>
----
-
-## Setup (API)
-POST /api/<endpoint> { <json body> }
-
-## Actions
-1. <focused interaction to trigger the mechanic>
-
-## Assertions
-1. <what to check>
-   Derivation: <formula with concrete values>
-   **Assert: <element> displays "<expected value>"**
-
-## Teardown
-DELETE /api/<endpoint>/$variable
-```
-
-**Constraints (both types):**
-- One file per scenario (not per domain)
-- Priority: P0 = session workflow (must work for app to fulfill its purpose), P1 = workflow variation or important mechanic, P2 = edge case
-- Every assertion MUST show the mathematical derivation with concrete values
-- Use real Pokemon species with looked-up base stats (from pokedex files)
-- Setup uses API calls, not UI navigation (faster, more reliable)
-- Actions use specific route paths from `references/app-surface.md`
-- Variable capture syntax: `$var = response.path.to.value`
-- Workflow scenarios MUST place assertions at each phase boundary, not just at the end
+## Summary
+- Total capabilities: <count>
+- Types: api-endpoint(<N>), service-function(<N>), composable-function(<N>), store-action(<N>), store-getter(<N>), component(<N>), constant(<N>), utility(<N>), websocket-event(<N>), prisma-model(<N>), prisma-field(<N>)
+- Orphan capabilities: <count>
 
 ---
 
-## 3. Verification Report
+## <domain>-C001: <Capability Name>
 
-**Written by:** Scenario Verifier
-**Read by:** Feature Designer (gap detection — checks verified scenarios against app surface)
-**Location:** `artifacts/verifications/<scenario-id>.verified.md`
+- **Type:** api-endpoint | service-function | composable-function | store-action | store-getter | component | constant | utility | websocket-event | prisma-model | prisma-field
+- **Location:** `<file-path>:<function-or-export-name>`
+- **Game Concept:** <what PTU concept this relates to>
+- **Description:** <1-2 sentences>
+- **Inputs:** <parameters, request body fields>
+- **Outputs:** <response fields, state changes, UI updates>
+- **Orphan:** true | false
 
-```markdown
+## <domain>-C002: <Capability Name>
+...
+
 ---
-scenario_id: <scenario-id>
-verified_at: <ISO timestamp>
-status: PASS | FAIL | PARTIAL
-assertions_checked: <count>
-assertions_correct: <count>
----
 
-## Assertion Verification
+## Capability Chains
 
-### Assertion 1: <description>
-- **Scenario says:** <the assertion from the scenario>
-- **Independent derivation:** <re-derived from scratch using rulebook>
-- **Status:** CORRECT | INCORRECT
-- **Fix (if incorrect):** <corrected value with derivation>
+### Chain 1: <Workflow Name>
+1. `<cap_id>` (<type>) → 2. `<cap_id>` (<type>) → ... → N. `<cap_id>` (<type>)
+**Breaks at:** <cap_id where chain is incomplete, or "complete">
 
-### Assertion 2: ...
-
-## Data Validity
-- [ ] Species exist in pokedex
-- [ ] Base stats match pokedex files
-- [ ] Moves are learnable at specified level
-- [ ] Abilities are available to species
-- [ ] Status conditions are valid PTU statuses
-
-## Completeness Check
-- [ ] All steps from source gameplay loop are covered
-- [ ] Edge cases from loop are addressed or noted as separate scenarios
-- [ ] Errata corrections applied where relevant
-
-## Issues Found
-<!-- List any problems, empty if all correct -->
-1. <issue description and fix>
+### Chain 2: ...
 ```
 
 **Constraints:**
-- Only scenarios with status `PASS` proceed to Feature Designer gap detection
-- `PARTIAL` means some assertions were corrected — Scenario Crafter should update the original
-- `FAIL` means fundamental problems — return to Scenario Crafter for rewrite
-- Verifier must re-derive assertions from rulebook independently, not just check the math
+- One file per domain
+- Cap IDs are sequential: `<domain>-C001`, `<domain>-C002`, etc.
+- Every capability has a specific `file:function` location from actual source code reading
+- Orphan capabilities (not connected to any chain) are flagged
+- Capability chains trace full paths from UI to DB
 
 ---
 
-## 4. Bug Report / Correction / Escalation
+## 3. Feature Completeness Matrix
 
-**Written by:** Feature Designer (bug, feature-gap, ux-gap), Scenario Verifier (correction), Game Logic Reviewer (escalation)
-**Read by:** Developer (bug), Scenario Crafter (correction), Game Logic Reviewer (escalation)
+**Written by:** Coverage Analyzer
+**Read by:** Implementation Auditor, Orchestrator (ticket creation)
+**Location:** `artifacts/matrix/<domain>-matrix.md`
+
+```markdown
+---
+domain: <domain>
+analyzed_at: <ISO timestamp>
+analyzed_by: coverage-analyzer
+total_rules: <count>
+implemented: <count>
+partial: <count>
+missing: <count>
+out_of_scope: <count>
+coverage_score: <XX.X>
+---
+
+# Feature Completeness Matrix: <Domain Display Name>
+
+## Coverage Score
+**<XX.X>%** — (Implemented + 0.5 * Partial) / (Total - OutOfScope) * 100
+
+| Classification | Count |
+|---------------|-------|
+| Implemented | <N> |
+| Partial | <N> |
+| Missing | <N> |
+| Out of Scope | <N> |
+| **Total** | **<N>** |
+
+---
+
+## Implemented Rules
+
+### <domain>-R001: <Rule Name>
+- **Classification:** Implemented
+- **Mapped to:** `<cap_id>` — `<capability name>` (`<file:function>`)
+
+### <domain>-R002: ...
+
+---
+
+## Partial Rules
+
+### <domain>-R010: <Rule Name>
+- **Classification:** Partial
+- **Present:** <what aspects are implemented>
+- **Missing:** <what aspects are not implemented>
+- **Mapped to:** `<cap_id>` — `<capability name>` (`<file:function>`)
+- **Gap Priority:** P0 | P1 | P2 | P3
+
+---
+
+## Missing Rules
+
+### <domain>-R020: <Rule Name>
+- **Classification:** Missing
+- **Gap Priority:** P0 | P1 | P2 | P3
+- **Notes:** <why this matters, any partial workarounds>
+
+---
+
+## Out of Scope
+
+### <domain>-R030: <Rule Name>
+- **Classification:** Out of Scope
+- **Justification:** <why this rule is outside the app's purpose>
+
+---
+
+## Auditor Queue
+
+Ordered list of items for the Implementation Auditor to check:
+
+1. `<domain>-R001` — Implemented — core/formula
+2. `<domain>-R002` — Implemented — core/condition
+3. `<domain>-R010` — Partial (present portion) — core/workflow
+...
+```
+
+**Constraints:**
+- One file per domain
+- Every rule from the rule catalog has exactly one classification
+- Partial items MUST specify present vs. missing
+- Missing and Partial items MUST have a gap priority (P0-P3)
+- Out of Scope items MUST have justification
+- Coverage score formula: `(Implemented + 0.5 * Partial) / (Total - OutOfScope) * 100`
+- Auditor Queue is ordered: core before situational, formulas/conditions first
+
+---
+
+## 4. Implementation Audit Report
+
+**Written by:** Implementation Auditor
+**Read by:** Orchestrator (ticket creation), Game Logic Reviewer (ambiguous items)
+**Location:** `artifacts/matrix/<domain>-audit.md`
+
+```markdown
+---
+domain: <domain>
+audited_at: <ISO timestamp>
+audited_by: implementation-auditor
+items_audited: <count>
+correct: <count>
+incorrect: <count>
+approximation: <count>
+ambiguous: <count>
+---
+
+# Implementation Audit: <Domain Display Name>
+
+## Summary
+
+| Classification | Count |
+|---------------|-------|
+| Correct | <N> |
+| Incorrect | <N> |
+| Approximation | <N> |
+| Ambiguous | <N> |
+| **Total** | **<N>** |
+
+### Severity Breakdown (Incorrect + Approximation)
+- CRITICAL: <N>
+- HIGH: <N>
+- MEDIUM: <N>
+- LOW: <N>
+
+---
+
+## Correct Items
+
+### <domain>-R001: <Rule Name>
+- **Classification:** Correct
+- **Code:** `<file>:<line-range>` — `<function name>`
+- **Rule:** "<PTU quote>"
+- **Verification:** <brief confirmation of why it's correct>
+
+---
+
+## Incorrect Items
+
+### <domain>-R005: <Rule Name>
+- **Classification:** Incorrect
+- **Severity:** CRITICAL | HIGH | MEDIUM | LOW
+- **Code:** `<file>:<line-range>` — `<function name>`
+- **Rule:** "<PTU quote>"
+- **Expected:** <what the rule requires>
+- **Actual:** <what the code does>
+- **Evidence:** <specific code behavior with values>
+
+---
+
+## Approximation Items
+
+### <domain>-R012: <Rule Name>
+- **Classification:** Approximation
+- **Severity:** CRITICAL | HIGH | MEDIUM | LOW
+- **Code:** `<file>:<line-range>` — `<function name>`
+- **Rule:** "<PTU quote>"
+- **Expected:** <full rule behavior>
+- **Actual:** <simplified behavior>
+- **What's Missing:** <specific simplification>
+
+---
+
+## Ambiguous Items
+
+### <domain>-R018: <Rule Name>
+- **Classification:** Ambiguous
+- **Code:** `<file>:<line-range>` — `<function name>`
+- **Rule:** "<PTU quote>"
+- **Interpretation A:** <one reading> → expected behavior X
+- **Interpretation B:** <another reading> → expected behavior Y
+- **Code follows:** Interpretation <A|B>
+- **Action:** Escalate to Game Logic Reviewer
+
+---
+
+## Additional Observations
+<!-- Items noticed outside the audit queue -->
+```
+
+**Constraints:**
+- One file per domain
+- Every item in the Auditor Queue from the matrix has been checked
+- Source code and rulebook sections were actually read (not assumed)
+- Every Incorrect item has specific `file:line` references
+- Every Incorrect item explains expected vs. actual behavior
+- Every Ambiguous item documents multiple interpretations
+- Severity assignments are consistent across items
+
+---
+
+## 5. Bug Report / Correction / Escalation (Legacy)
+
+> **Note:** Sections 5-5e below are from the previous test pipeline. The reports format is retained for existing artifacts in `reports/`. New bug/feature/ux tickets are created by the Orchestrator from matrix data using the ticket schema in Section 6d.
+
+**Written by:** Previously Feature Designer (bug, feature-gap, ux-gap), Scenario Verifier (correction), Game Logic Reviewer (escalation)
+**Read by:** Developer (bug), Game Logic Reviewer (escalation)
 **Location:** `artifacts/reports/<type>-<NNN>.md`
 
 ### Bug Report (APP_BUG)
@@ -451,10 +515,10 @@ See: `artifacts/designs/design-<NNN>.md`
 
 ---
 
-## 4e. Design Spec
+## 5e. Design Spec
 
-**Written by:** Feature Designer
-**Read by:** Developer (implements), Senior Reviewer (reviews architecture), Game Logic Reviewer (PTU rule questions)
+**Written by:** Developer (when a feature ticket needs a design before implementation)
+**Read by:** Senior Reviewer (reviews architecture), Game Logic Reviewer (PTU rule questions)
 **Location:** `artifacts/designs/design-<NNN>.md`
 
 ```markdown
@@ -529,11 +593,11 @@ new_files:
 
 ---
 
-## 5. State Files
+## 6. State Files
 
 The Orchestrator is the **sole writer** of both state files. No other skill writes to them.
 
-### 5a. Dev State
+### 6a. Dev State
 
 **Written by:** Orchestrator (sole writer)
 **Read by:** Dev Ecosystem skills
@@ -541,24 +605,24 @@ The Orchestrator is the **sole writer** of both state files. No other skill writ
 
 Tracks: open tickets per type, active Developer work, review status, retest tickets created, refactoring queue, code health metrics.
 
-### 5b. Test State
+### 6b. Matrix State
 
 **Written by:** Orchestrator (sole writer)
-**Read by:** Test Ecosystem skills
+**Read by:** Matrix Ecosystem skills
 **Location:** `artifacts/test-state.md`
 
-Tracks: active domain, domain progress table (Loops → Scenarios → Verifications → Gap Check), internal issues (corrections), lessons metrics.
+Tracks: domain progress table (Rules → Capabilities → Matrix → Audit → Tickets), coverage scores, active work, ambiguous items pending ruling.
 
-### 5c. Pipeline State (Legacy)
+### 6c. Pipeline State (Legacy)
 
 **Location:** `artifacts/pipeline-state.legacy.md`
 
 The original unified state file, archived for historical reference. Contains the full record from combat and capture domain cycles.
 
-## 5d. Cross-Ecosystem Tickets
+## 6d. Cross-Ecosystem Tickets
 
-**Written by:** Feature Designer (bug/feature/ux), Game Logic Reviewer (ptu-rule)
-**Read by:** Developer, Feature Designer
+**Written by:** Orchestrator (bug/feature/ux from matrix data), Game Logic Reviewer (ptu-rule)
+**Read by:** Developer
 **Location:** `artifacts/tickets/<type>/<type>-<NNN>.md`
 
 ### Unified Ticket Schema
@@ -581,8 +645,12 @@ affected_files:                             # bug, ptu-rule
   - <app file path>
 scenario_ids:                               # bug, feature, ux, retest
   - <scenario-id>
-design_spec: <design-NNN>                  # feature, ux (back-reference, added by Feature Designer)
-source_report: <report-filename>           # bug, feature, ux (link to internal report)
+design_spec: <design-NNN>                  # feature, ux (back-reference)
+source_report: <report-filename>           # bug, feature, ux (link to internal report — legacy)
+matrix_source:                             # bug, feature, ux, ptu-rule (from matrix workflow)
+  rule_id: <domain>-R<NNN>
+  domain: <domain>
+  audit_classification: incorrect | approximation | missing | partial
 categories:                                 # refactoring only
   - <category-id>
 estimated_scope: small | medium | large    # refactoring only
@@ -595,14 +663,14 @@ estimated_scope: small | medium | large    # refactoring only
 ```
 
 **Constraints:**
-- Same sequence number for ticket and corresponding report (e.g., `bug-003` in both `reports/` and `tickets/bug/`)
-- Ticket is slimmer than report — just actionable info + `source_report` link
+- Ticket is slimmer than full matrix data — just actionable info + `matrix_source` link back to rule_id/domain
 - Status lifecycle: `open` → `in-progress` → `resolved` (or `rejected`)
-- Bug/feature/ux tickets are created by the Feature Designer during gap detection
+- Bug/feature/ux tickets are created by the Orchestrator when processing completed matrix + audit data
+- Legacy tickets may have `source_report` instead of `matrix_source` — both are valid
 
 ---
 
-## 6. Lesson File
+## 7. Lesson File
 
 **Written by:** Retrospective Analyst
 **Read by:** All skills (for learning from past errors)
@@ -662,7 +730,7 @@ domains_covered:
 
 ---
 
-## 7. Refactoring Ticket + Audit Summary
+## 8. Refactoring Ticket + Audit Summary
 
 **Written by:** Code Health Auditor
 **Read by:** Developer (implements refactoring), Senior Reviewer (reviews approach)
@@ -775,7 +843,7 @@ overflow_files: <count of files that qualified but exceeded the 20-file cap>
 
 ---
 
-## 8. Code Review
+## 9. Code Review
 
 **Written by:** Senior Reviewer
 **Read by:** Orchestrator, Developer, Game Logic Reviewer
@@ -853,7 +921,7 @@ follows_up: <code-review-NNN>  # optional — for re-reviews
 
 ---
 
-## 9. Rules Review
+## 10. Rules Review
 
 **Written by:** Game Logic Reviewer
 **Read by:** Orchestrator, Developer
