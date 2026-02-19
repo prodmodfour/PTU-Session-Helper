@@ -165,7 +165,6 @@ mechanics_exercised:
   - pokemon-center-injury-cap
   - pokemon-center-time-calculation
   - status-clearing-all
-  - drained-ap-restoration
   - daily-move-recovery
 tactical_decisions:
   - heal-now-vs-wait-for-natural-injury-healing
@@ -188,14 +187,13 @@ The party has reached a town with a Pokemon Center. This is the most comprehensi
 2. **[Setup]** GM reviews current state: HP, injuries, status conditions, injuries healed today count
 3. **[Decision: heal-now-vs-wait]** If entity has injuries but `injuriesHealedToday` is already at 3, GM may decide to wait for new day before visiting the Pokemon Center to maximize injury healing
 4. **[Action]** GM clicks "Pokemon Center" button
-5. **[Mechanic: pokemon-center-full-heal]** Server sets `currentHp` to `maxHp`, clears ALL status conditions (persistent + volatile + other), sets `restMinutesToday` to 480 (maxed out)
+5. **[Mechanic: pokemon-center-full-heal]** Server sets `currentHp` to `maxHp`, clears ALL status conditions (persistent + volatile + other)
 6. **[Mechanic: pokemon-center-injury-cap]** Server calculates injuries to heal: `min(injuries, max(0, 3 - injuriesHealedToday))`. Increments `injuriesHealedToday`. If all injuries healed, sets `lastInjuryTime` to null
 7. **[Mechanic: pokemon-center-time-calculation]** Server calculates healing time: 60 min base + 30 min per injury (or 60 min per injury if 5+). Returns `healingTime` and `healingTimeDescription` for narrative use
-8. **[Mechanic: drained-ap-restoration]** For characters: sets `drainedAp` to 0
-9. **[Mechanic: daily-move-recovery]** For Pokemon: resets all move usage (`usedToday` and `usedThisScene` both set to 0)
-10. **[Bookkeeping]** UI displays success message with HP healed, injuries healed, remaining injuries, cleared statuses, healing time description, and daily injury limit status
-11. **[Action]** GM repeats for each party member and Pokemon
-12. **[Done]** Party is fully healed (within daily injury limits). GM notes the in-game time elapsed for narrative purposes
+8. **[Mechanic: daily-move-recovery]** For Pokemon: resets all move usage (`usedToday` and `usedThisScene` both set to 0)
+9. **[Bookkeeping]** UI displays success message with HP healed, injuries healed, remaining injuries, cleared statuses, healing time description, and daily injury limit status
+10. **[Action]** GM repeats for each party member and Pokemon
+11. **[Done]** Party is fully healed (within daily injury limits). GM notes the in-game time elapsed for narrative purposes
 
 #### PTU Rules Applied
 
@@ -209,8 +207,6 @@ The party has reached a town with a Pokemon Center. This is the most comprehensi
 - `statusConditions` is empty array `[]`
 - `injuries` decreased by amount healed (0 if under daily cap)
 - `injuriesHealedToday` increased by injuries healed
-- `restMinutesToday` set to 480
-- `drainedAp` set to 0 (characters only)
 - Pokemon moves: all `usedToday` and `usedThisScene` reset to 0
 - API response includes `healingTimeDescription` for narrative pacing (e.g., "2 hours 30 minutes")
 
