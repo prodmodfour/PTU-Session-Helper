@@ -38,7 +38,7 @@ Basic Information
 
 Size Information
   Height : 1' 0" / 0.3m (Medium)
-  Weight : 22.0 lbs. / 10.0kg (3)
+  Weight : 66.1 lbs. / 30.0kg (3)
 
 
 Breeding Information

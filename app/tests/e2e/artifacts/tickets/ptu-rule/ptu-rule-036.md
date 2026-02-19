@@ -74,6 +74,8 @@ The original `rotom.md` is kept as-is — the parser already silently skips it (
 - Rotom Fan: Electric/Flying, WC 3
 - Rotom Mow: Electric/Grass, WC 3
 
+**Review fix (code-review-044 M1):** Weight values corrected from `22.0 lbs. / 10.0kg` (WC 1 range) to `66.1 lbs. / 30.0kg` (WC 3 range) in all 5 appliance files. The parser only uses the parenthesized weight class `(3)`, so zero functional impact — this is a data consistency fix.
+
 **Related findings (separate tickets needed):**
 - Oricorio (`gen7/oricorio.md`): seeded as type "Special/Flying" instead of per-form types
 - Type: Null (`gen7/type-null.md`): name `TYPE: NULL` matches type regex — seeded as type "Null" instead of "Normal"
