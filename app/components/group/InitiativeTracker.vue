@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant } from '~/types'
+import type { Combatant, Pokemon } from '~/types'
 
 defineProps<{
   combatants: Combatant[]

@@ -283,7 +283,7 @@ const createHuman = async () => {
       name: humanForm.value.name,
       characterType: humanForm.value.characterType,
       level: humanForm.value.level,
-      location: humanForm.value.location || null,
+      location: humanForm.value.location || undefined,
       stats: {
         hp: humanForm.value.hp,
         attack: humanForm.value.attack,
@@ -316,7 +316,7 @@ const createPokemon = async () => {
       species: pokemonForm.value.species,
       nickname: pokemonForm.value.nickname || undefined,
       level: pokemonForm.value.level,
-      location: pokemonForm.value.location || null,
+      location: pokemonForm.value.location || undefined,
       gender: pokemonForm.value.gender,
       shiny: pokemonForm.value.shiny,
       types: (pokemonForm.value.type2

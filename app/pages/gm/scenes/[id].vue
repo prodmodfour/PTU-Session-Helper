@@ -106,7 +106,7 @@
         <!-- Right Panel: Habitat -->
         <SceneHabitatPanel
           :encounter-tables="encounterTables"
-          :scene-habitat-id="scene.habitatId"
+          :scene-habitat-id="scene.habitatId ?? null"
           :collapsed="habitatPanelCollapsed"
           :generating="generatingEncounter"
           @select-habitat="handleSelectHabitat"
