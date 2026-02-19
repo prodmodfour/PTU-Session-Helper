@@ -317,7 +317,7 @@ model EncounterTableEntry {
   species       SpeciesData @relation(fields: [speciesId], references: [id])
 
   // Weight determines encounter probability (higher = more common)
-  weight        Int      @default(10)
+  weight        Float    @default(10)
 
   // Optional level override (null = use table's default range)
   levelMin      Int?
@@ -365,7 +365,7 @@ model ModificationEntry {
   // Action: override weight, or remove from table
   // If weight is null and remove is true, this species is excluded
   // If weight is set, it overrides parent weight (or adds if not in parent)
-  weight        Int?
+  weight        Float?
   remove        Boolean  @default(false)
 
   // Optional level override

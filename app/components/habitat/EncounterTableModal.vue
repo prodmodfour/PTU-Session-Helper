@@ -108,6 +108,7 @@
                 <option :value="5">Uncommon (5)</option>
                 <option :value="2">Rare (2)</option>
                 <option :value="1">Very Rare (1)</option>
+                <option :value="0.1">Legendary (0.1)</option>
               </select>
             </div>
             <button
@@ -133,8 +134,8 @@
                 <input
                   v-model.number="entry.weight"
                   type="number"
-                  min="1"
-                  max="100"
+                  min="0.1"
+                  step="0.1"
                   class="form-input form-input--sm"
                   @change="updateEntryWeight(entry)"
                 />
