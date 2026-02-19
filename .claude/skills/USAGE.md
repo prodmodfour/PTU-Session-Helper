@@ -4,21 +4,21 @@ How to use the 10-skill two-ecosystem pipeline to validate the PTU Session Helpe
 
 ## Two-Ecosystem Architecture
 
-The ecosystem is split into **Dev** and **Test** halves that communicate through tickets:
+The ecosystem is split into **Dev** and **Matrix** halves that communicate through tickets:
 
 ```
-Dev Terminal                    Test Terminal
-────────────                   ──────────────
-Developer                      Synthesizer
-Senior Reviewer                Crafter
-Game Logic Reviewer            Verifier
-Code Health Auditor            Feature Designer (gap detection)
-        ←── bug/feature/ux tickets ──→
+Dev Terminal                    Matrix Terminals
+────────────                   ────────────────
+Developer                      PTU Rule Extractor     ─┐
+Senior Reviewer                App Capability Mapper   ─┤→ Coverage Analyzer → Implementation Auditor
+Game Logic Reviewer                                    ─┘
+Code Health Auditor
+        ←── bug/feature/ptu-rule/ux tickets ──→
 ```
 
-The **Orchestrator** reads both ecosystems and gives parallel recommendations. You can work on both simultaneously — e.g., fixing a bug in the Dev terminal while crafting scenarios for a new domain in the Test terminal.
+The **Orchestrator** reads both ecosystems and gives parallel recommendations. You can work on both simultaneously — e.g., fixing a bug in the Dev terminal while extracting rules for a new domain in the Matrix terminal.
 
-**Playtesting is external.** Running Playwright tests against the app happens outside this ecosystem. The ecosystem produces verified scenarios and design specs.
+**Playtesting is external.** Running Playwright tests against the app happens outside this ecosystem. The ecosystem produces coverage matrices and correctness audits.
 
 ## Terminal Setup
 
@@ -34,19 +34,19 @@ The **Orchestrator** reads both ecosystems and gives parallel recommendations. Y
 
 | Terminal | Skill | Ecosystem | Trigger |
 |----------|-------|-----------|---------|
-| T4 | Gameplay Loop Synthesizer | Test | `/synthesize-loops` |
-| T5 | Scenario Crafter | Test | `/craft-scenarios` |
-| T6 | Scenario Verifier | Test | `/verify-scenarios` |
-| T7 | Game Logic Reviewer | Dev | `/verify-ptu` or `/verify-game-logic` |
-| T8 | Feature Designer | Both | When Orchestrator routes gap detection or gap tickets |
+| T4 | PTU Rule Extractor | Matrix | When Orchestrator directs rule extraction for a domain |
+| T5 | App Capability Mapper | Matrix | When Orchestrator directs capability mapping for a domain |
+| T6 | Coverage Analyzer | Matrix | When both rules + capabilities are ready for a domain |
+| T7 | Implementation Auditor | Matrix | When matrix is ready for a domain |
+| T8 | Game Logic Reviewer | Dev | `/verify-ptu` or `/verify-game-logic`, or ambiguous audit items |
 | T9 | Retrospective Analyst | Both | After domain cycles complete |
 | T10 | Code Health Auditor | Dev | On demand or after cycles |
 
 You don't need all terminals at once. The Orchestrator tells you which one to open next — and may recommend parallel work across both ecosystems.
 
-## Quick Start: Testing a New Domain
+## Quick Start: Analyzing a New Domain
 
-This walks through the full pipeline for a domain (e.g., `combat`) from scratch.
+This walks through the full Feature Matrix workflow for a domain (e.g., `combat`) from scratch.
 
 ### Step 1 — Ask the Orchestrator what to do
 
@@ -55,67 +55,78 @@ Open **T1** and run:
 /orchestrate
 ```
 
-It reads `dev-state.md` and `test-state.md`, sees all domains are "not started", and tells you which domain to begin with and which terminal to open.
+It reads `dev-state.md` and `test-state.md`, sees all domains are "not started", and tells you which domain to begin with and which terminals to open.
 
-### Step 2 — Synthesize gameplay loops
+### Step 2 — Extract rules AND map capabilities (parallel)
 
-Open **T4** and run:
+The Orchestrator will recommend opening two terminals simultaneously:
+
+**Terminal T4 — Rule Extractor:**
 ```
-/synthesize-loops
+load .claude/skills/ptu-rule-extractor.md
 ```
+Then: "Extract all PTU rules for domain combat."
 
-Tell it which domain (e.g., "combat"). It reads the PTU rulebook chapters and produces loop files in `artifacts/loops/`.
+It reads the PTU rulebook chapters and produces a rule catalog in `artifacts/matrix/combat-rules.md`.
 
-Close T4 when done.
+**Terminal T5 — Capability Mapper** (at the same time):
+```
+load .claude/skills/app-capability-mapper.md
+```
+Then: "Map all app capabilities for domain combat."
+
+It reads the app source code and produces a capability catalog in `artifacts/matrix/combat-capabilities.md`.
+
+Close T4 and T5 when both are done.
 
 ### Step 3 — Check back with Orchestrator
 
-Go back to **T1** and run `/orchestrate` again. It detects the new loop files and tells you to proceed to the Scenario Crafter.
+Go back to **T1** and run `/orchestrate` again. It detects both catalogs and tells you to proceed to the Coverage Analyzer.
 
-### Step 4 — Craft scenarios
+### Step 4 — Analyze coverage
 
-Open **T5** and run:
+Open **T6**:
 ```
-/craft-scenarios
+load .claude/skills/coverage-analyzer.md
 ```
+Then: "Analyze coverage for domain combat."
 
-It reads the loop files and produces concrete, testable scenarios with real Pokemon data. Output goes to `artifacts/scenarios/`.
-
-Close T5 when done.
-
-### Step 5 — Verify scenarios
-
-Open **T6** and run:
-```
-/verify-scenarios
-```
-
-It independently re-derives every assertion from the PTU rulebook to catch math errors. Output goes to `artifacts/verifications/`.
-
-If it flags anything `AMBIGUOUS`, open **T7** (`/verify-ptu`) to get a ruling.
+It cross-references every rule against every capability and produces the matrix in `artifacts/matrix/combat-matrix.md` with coverage score and gap priorities.
 
 Close T6 when done.
 
-### Step 6 — Run gap detection
+### Step 5 — Audit implementation correctness
 
-Open **T8** (Feature Designer). It reads the verified scenarios and checks each step against the app surface:
-- Does the API endpoint exist?
-- Does the UI expose the action?
-- Is the data model complete?
+Open **T7**:
+```
+load .claude/skills/implementation-auditor.md
+```
+Then: "Audit implementation correctness for domain combat."
 
-For missing capabilities, it creates tickets (feature-gap, ux-gap, or bug) and design specs for FULL-scope gaps.
+It deep-reads source code AND rulebook sections side-by-side to verify every implemented rule is correct. Produces audit in `artifacts/matrix/combat-audit.md`.
 
-### Step 7 — Fix gaps (Dev terminal)
+If it flags anything `AMBIGUOUS`, open **T8** (`/verify-ptu`) to get a ruling.
 
-Go to **T1** (`/orchestrate`). It reads the tickets and tells you which to fix first (CRITICAL before HIGH before MEDIUM).
+Close T7 when done.
 
-In **T2** (Developer), read the ticket and design spec, implement the fix.
+### Step 6 — Orchestrator creates tickets
 
-In **T3** (Senior Reviewer), review the code changes. Also get a PTU ruling from **T7** if game logic is involved.
+Go to **T1** (`/orchestrate`). It reads the completed matrix and audit, then creates tickets:
+- **Bug tickets** for `Incorrect` audit items
+- **Feature tickets** for `Missing` matrix items
+- **PTU rule tickets** for `Approximation` audit items
+
+### Step 7 — Fix issues (Dev terminal)
+
+The Orchestrator tells you which tickets to fix first (CRITICAL before HIGH before MEDIUM).
+
+In **T2** (Developer), read the ticket and implement the fix.
+
+In **T3** (Senior Reviewer), review the code changes. Also get a PTU ruling from **T8** if game logic is involved.
 
 ### Step 8 — Iterate
 
-Repeat steps 6-7 for remaining gaps. The Orchestrator tracks progress across both ecosystems.
+After fixes, the Orchestrator may recommend re-mapping capabilities (since code changed) or moving to the next domain.
 
 ## Parallel Work
 
@@ -124,19 +135,22 @@ The Orchestrator may recommend work in both ecosystems simultaneously:
 ```
 ## Parallel Recommendation
 **Dev Terminal:** Developer — fix bug-001 (CRITICAL)
-**Test Terminal:** Scenario Crafter — craft healing scenarios
+**Matrix Terminal A:** Rule Extractor — extract healing rules
+**Matrix Terminal B:** Capability Mapper — map healing capabilities
 ```
 
-This is safe because the two ecosystems only communicate through tickets. Dev fixing combat bugs doesn't interfere with Test writing healing scenarios.
+This is safe because the two ecosystems only communicate through tickets. Dev fixing combat bugs doesn't interfere with Matrix analyzing the healing domain.
+
+**Within the Matrix Ecosystem**, Steps 2a and 2b (Rule Extractor + Capability Mapper) always run in parallel for maximum throughput. Steps 3 and 4 (Coverage Analyzer + Implementation Auditor) run sequentially since each depends on the previous.
 
 ## Bug Fix Cycle (standalone)
 
-When you've already completed the full loop and just need to fix a specific bug:
+When you've already completed the full matrix and just need to fix a specific bug:
 
 1. **T1** `/orchestrate` — identifies open bug tickets and priority
 2. **T2** Developer — reads bug ticket, implements fix, commits
 3. **T3** Senior Reviewer — reviews code
-4. **T7** `/verify-ptu` — confirms PTU correctness (if game logic involved)
+4. **T8** `/verify-ptu` — confirms PTU correctness (if game logic involved)
 5. **T1** `/orchestrate` — both reviews APPROVED, updates state
 
 ## Domains
@@ -154,7 +168,7 @@ The pipeline covers 8 domains:
 | `scenes` | Scene management, GM/group sync |
 | `vtt-grid` | Virtual tabletop grid, movement, terrain |
 
-The Orchestrator can recommend parallel domain work — e.g., Dev fixing combat bugs while Test explores healing.
+The Orchestrator can recommend parallel domain work — e.g., Dev fixing combat bugs while Matrix analyzes healing.
 
 ## Artifact Locations
 
@@ -163,28 +177,34 @@ All artifacts live under `app/tests/e2e/artifacts/`:
 ```
 artifacts/
 ├── tickets/               # Cross-ecosystem communication
-│   ├── bug/               # Bug tickets (Feature Designer → Dev)
-│   ├── ptu-rule/          # PTU rule tickets (Either → Dev)
-│   ├── feature/           # Feature gap tickets (Feature Designer → Dev)
-│   └── ux/                # UX gap tickets (Feature Designer → Dev)
-├── loops/                 # Gameplay loop definitions
-├── scenarios/             # Concrete test scenarios
-├── verifications/         # Independently verified scenarios
-├── designs/               # Feature design specs
+│   ├── bug/               # Bug tickets (Orchestrator from audit → Dev)
+│   ├── ptu-rule/          # PTU rule tickets (Orchestrator/GLR → Dev)
+│   ├── feature/           # Feature gap tickets (Orchestrator from matrix → Dev)
+│   └── ux/                # UX gap tickets (Orchestrator from matrix → Dev)
+├── matrix/                # Feature Matrix workflow
+│   ├── <domain>-rules.md          # PTU Rule Extractor output
+│   ├── <domain>-capabilities.md   # App Capability Mapper output
+│   ├── <domain>-matrix.md         # Coverage Analyzer output
+│   └── <domain>-audit.md          # Implementation Auditor output
+├── designs/               # Feature design specs (Developer writes when needed)
 ├── refactoring/           # Refactoring tickets
 ├── reviews/               # Code + rules reviews
 ├── lessons/               # Retrospective lessons
+├── loops/                 # Legacy: previous Synthesizer runs
+├── scenarios/             # Legacy: previous Crafter runs
+├── verifications/         # Legacy: previous Verifier runs
 ├── results/               # Legacy: previous Playtester runs
 ├── reports/               # Legacy: previous Result Verifier runs
 ├── dev-state.md           # Dev ecosystem state (Orchestrator writes)
-└── test-state.md          # Test ecosystem state (Orchestrator writes)
+└── test-state.md          # Matrix ecosystem state (Orchestrator writes)
 ```
 
 ## Tips
 
 - **Always return to the Orchestrator** between steps. It tracks both ecosystems so you don't have to.
-- **Don't skip the Scenario Verifier.** Catching a math error before gap detection saves significant time.
-- **Parallel work is encouraged.** Dev and Test can work independently. The ticket boundary keeps them decoupled.
+- **Run Rule Extractor and Capability Mapper in parallel.** They have no dependency on each other and this cuts domain analysis time nearly in half.
+- **Parallel work is encouraged.** Dev and Matrix can work independently. The ticket boundary keeps them decoupled.
 - **Persistent terminals preserve context.** Don't close T1 (Orchestrator), T2 (Developer), or T3 (Reviewer) mid-session.
-- **Spin-up terminals are disposable.** Close them after they finish their batch to free context.
+- **Spin-up terminals are disposable.** Close them after they finish their domain to free context.
 - **When in doubt, `/orchestrate`.** It reads all artifacts and tells you exactly what to do next.
+- **Multiple domains can be in different stages.** One domain might be at the audit stage while another is still being extracted. The Orchestrator tracks each independently.
