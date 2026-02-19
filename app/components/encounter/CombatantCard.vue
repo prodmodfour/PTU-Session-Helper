@@ -13,7 +13,7 @@
     <div class="combatant-card__visual">
       <img v-if="isPokemon" :src="spriteUrl" :alt="displayName" class="combatant-card__sprite" />
       <div v-else class="combatant-card__avatar">
-        <img v-if="(entity as any).avatarUrl" :src="(entity as any).avatarUrl" :alt="displayName" />
+        <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" />
         <span v-else>{{ displayName.charAt(0) }}</span>
       </div>
     </div>
@@ -28,7 +28,7 @@
       <!-- Types (Pokemon only) -->
       <div v-if="isPokemon" class="combatant-card__types">
         <span
-          v-for="type in (entity as any).types"
+          v-for="type in pokemonTypes"
           :key="type"
           class="type-badge type-badge--sm"
           :class="`type-badge--${type.toLowerCase()}`"
@@ -222,6 +222,8 @@ const showStatusModal = ref(false)
 // Computed properties
 const entity = computed(() => props.combatant.entity)
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
+const avatarUrl = computed(() => isPokemon.value ? '' : (entity.value as HumanCharacter).avatarUrl || '')
+const pokemonTypes = computed(() => isPokemon.value ? (entity.value as Pokemon).types : [])
 
 const displayName = computed(() => {
   if (isPokemon.value) {

@@ -10,7 +10,7 @@
     <div class="group-combatant__sprite">
       <img v-if="isPokemon" :src="spriteUrl" :alt="displayName" />
       <div v-else class="group-combatant__avatar">
-        <img v-if="(entity as any).avatarUrl" :src="(entity as any).avatarUrl" :alt="displayName" />
+        <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" />
         <span v-else>{{ displayName.charAt(0) }}</span>
       </div>
     </div>
@@ -22,7 +22,7 @@
       <!-- Types -->
       <div v-if="isPokemon" class="group-combatant__types">
         <span
-          v-for="type in (entity as any).types"
+          v-for="type in pokemonTypes"
           :key="type"
           class="type-badge"
           :class="`type-badge--${type.toLowerCase()}`"
@@ -80,6 +80,8 @@ const { getHealthPercentage, getHealthStatus } = useCombat()
 
 const entity = computed(() => props.combatant.entity)
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
+const avatarUrl = computed(() => isPokemon.value ? '' : (entity.value as HumanCharacter).avatarUrl || '')
+const pokemonTypes = computed(() => isPokemon.value ? (entity.value as Pokemon).types : [])
 
 const displayName = computed(() => {
   if (isPokemon.value) {
