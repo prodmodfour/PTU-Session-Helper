@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
   })
 
   const evolutionStage = speciesData?.evolutionStage || 1
-  const maxEvolutionStage = Math.max(3, evolutionStage)
+  const maxEvolutionStage = speciesData?.maxEvolutionStage || evolutionStage
 
   // Calculate capture rate
   const rateResult = calculateCaptureRate({
