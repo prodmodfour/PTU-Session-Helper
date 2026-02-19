@@ -89,6 +89,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
   let baseStats = { hp: 5, attack: 5, defense: 5, specialAttack: 5, specialDefense: 5, speed: 5 }
   let types: string[] = ['Normal']
   let abilityNames: string[] = []
+  let numBasicAbilities = 2
   let learnset: Array<{ level: number; move: string }> = []
   let skills: Record<string, string> = {}
   let otherCapabilities: string[] = []
@@ -110,6 +111,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     }
     types = speciesData.type2 ? [speciesData.type1, speciesData.type2] : [speciesData.type1]
     abilityNames = JSON.parse(speciesData.abilities)
+    numBasicAbilities = speciesData.numBasicAbilities
     learnset = JSON.parse(speciesData.learnset || '[]')
     skills = JSON.parse(speciesData.skills || '{}')
     otherCapabilities = JSON.parse(speciesData.capabilities || '[]')
@@ -142,7 +144,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
   // Abilities: use overrides if provided, otherwise pick random from species
   const abilities = input.overrideAbilities
     ? input.overrideAbilities
-    : pickRandomAbility(abilityNames)
+    : pickRandomAbility(abilityNames, numBasicAbilities)
 
   // Random gender
   const gender = ['Male', 'Female'][Math.floor(Math.random() * 2)]
@@ -409,11 +411,14 @@ async function selectMovesFromLearnset(
 }
 
 /**
- * Pick a random ability from the first 2 ability names.
- * Returns an array with a single ability object, or empty if none available.
+ * Pick a random Basic Ability for a newly generated Pokemon.
+ * PTU rules: new Pokemon get one ability chosen from their Basic Abilities only.
+ * Advanced Abilities are only available at Level 20+.
  */
-function pickRandomAbility(abilityNames: string[]): Array<{ name: string; effect: string }> {
+function pickRandomAbility(abilityNames: string[], numBasicAbilities: number): Array<{ name: string; effect: string }> {
   if (abilityNames.length === 0) return []
-  const selected = abilityNames[Math.floor(Math.random() * Math.min(2, abilityNames.length))]
+  const basicCount = Math.min(numBasicAbilities, abilityNames.length)
+  const pool = basicCount > 0 ? basicCount : abilityNames.length
+  const selected = abilityNames[Math.floor(Math.random() * pool)]
   return [{ name: selected, effect: '' }]
 }

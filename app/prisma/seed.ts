@@ -215,6 +215,7 @@ interface SpeciesRow {
   baseSpDef: number
   baseSpeed: number
   abilities: string[]
+  numBasicAbilities: number
   evolutionStage: number
   maxEvolutionStage: number
   overland: number
@@ -288,15 +289,23 @@ function parsePokedexContent(content: string): SpeciesRow[] {
     const basicInfoSection = pageText.match(/Basic Information[\s\S]*?(?=Evolution:|Size Information|Breeding|$)/i)?.[0] || pageText
     const typeMatch = basicInfoSection.match(/Type\s*:\s*([A-Za-z]+)(?:\s*\/\s*([A-Za-z]+))?/i)
 
-    // Parse abilities
+    // Parse abilities (basic first, then advanced, then high)
     const abilities: string[] = []
-    const abilityPatterns = [
-      /Basic Ability \d:\s*([^\n]+)/gi,
+    let numBasicAbilities = 0
+    const basicPattern = /Basic Ability \d:\s*([^\n]+)/gi
+    let match
+    while ((match = basicPattern.exec(pageText)) !== null) {
+      const ability = match[1].trim()
+      if (ability && ability !== 'None' && !abilities.includes(ability)) {
+        abilities.push(ability)
+        numBasicAbilities++
+      }
+    }
+    const advancedPatterns = [
       /Adv Ability \d:\s*([^\n]+)/gi,
       /High Ability:\s*([^\n]+)/gi
     ]
-    for (const pattern of abilityPatterns) {
-      let match
+    for (const pattern of advancedPatterns) {
       while ((match = pattern.exec(pageText)) !== null) {
         const ability = match[1].trim()
         if (ability && ability !== 'None' && !abilities.includes(ability)) {
@@ -425,6 +434,7 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       baseSpDef: parseInt(spDefMatch?.[1] || '5', 10),
       baseSpeed: parseInt(speedMatch?.[1] || '5', 10),
       abilities,
+      numBasicAbilities,
       evolutionStage,
       maxEvolutionStage,
       overland: parseInt(overlandMatch?.[1] || '5', 10),
@@ -488,6 +498,7 @@ async function seedSpecies() {
         baseSpDef: s.baseSpDef,
         baseSpeed: s.baseSpeed,
         abilities: JSON.stringify(s.abilities),
+        numBasicAbilities: s.numBasicAbilities,
         eggGroups: '[]',
         evolutionStage: s.evolutionStage,
         maxEvolutionStage: s.maxEvolutionStage,

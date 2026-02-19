@@ -243,7 +243,8 @@ model SpeciesData {
   baseSpAtk     Int
   baseSpDef     Int
   baseSpeed     Int
-  abilities     String   // JSON array of ability names
+  abilities         String   // JSON array of ability names
+  numBasicAbilities Int      @default(2)  // Count of basic abilities (for random selection)
   eggGroups     String   // JSON array
   evolutionStage    Int     @default(1)
   maxEvolutionStage Int     @default(1)
