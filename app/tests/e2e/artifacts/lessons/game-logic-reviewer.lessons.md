@@ -1,16 +1,17 @@
 ---
 skill: game-logic-reviewer
-last_analyzed: 2026-02-17T01:00:00
+last_analyzed: 2026-02-18T18:10:00
 analyzed_by: game-logic-reviewer
-total_lessons: 3
+total_lessons: 4
 domains_covered:
   - combat
+  - healing
 ---
 
 # Lessons: Game Logic Reviewer
 
 ## Summary
-Three lessons from the combat domain's refactoring cycle. Lesson 1: condition taxonomy audit gaps. Lesson 2: pre-existing issues found during review must always produce a ticket. Lesson 3: never dismiss a mechanic as "acceptable limitation" without verifying the rulebook first.
+Four lessons from refactoring review cycles. Lesson 1: condition taxonomy audit gaps. Lesson 2: pre-existing issues found during review must always produce a ticket. Lesson 3: never dismiss a mechanic as "acceptable limitation" without verifying the rulebook first. Lesson 4: file tickets inline during the review — never defer to a separate step.
 
 ---
 
@@ -111,3 +112,31 @@ When a review encounters ANY behavioral note about PTU mechanics — whether fra
 2. **Never write "the rules don't specify"** without having actually searched — absence of evidence is not evidence of absence
 3. **Never defer to other skills** (Senior Reviewer, code review, ticket description) on PTU correctness questions — that is exclusively this skill's domain
 4. **Treat "acknowledged limitation" as a red flag** — if someone acknowledged a limitation in PTU behavior, that means they knew it was wrong and chose not to fix it. Verify whether the limitation is actually acceptable per the rules
+
+---
+
+## Lesson 4: File tickets inline during the review — never defer to a separate step
+
+- **Category:** process-gap
+- **Severity:** medium
+- **Domain:** all
+- **Frequency:** first occurrence
+- **First observed:** 2026-02-18 (rules-review-029, refactoring-024/026)
+- **Status:** active
+
+### Pattern
+During rules-review-029, the Game Logic Reviewer correctly identified a pre-existing MEDIUM issue (Asleep mislabeled as persistent in `HealingTab.vue` extended rest description text) and documented it in the review artifact's "Pre-Existing Issues" section. However, the reviewer did not file a ticket in the same pass — the ticket was only created after the user explicitly requested it.
+
+This is a partial recurrence of Lesson 2's pattern. The reviewer correctly identified the issue and documented it (improvement over Lesson 2's "observation" pattern), but still required user intervention to create the actual ticket. Lesson 2 says "always create a refactoring ticket immediately" — "immediately" means in the same review session, not as a follow-up.
+
+### Evidence
+- `artifacts/reviews/rules-review-029.md`: Review identified the issue, wrote "Ticket recommended" but did not create the ticket
+- User instruction: "File a ticket for the Asleep UI text issue, do this proactively in future"
+- `artifacts/tickets/ptu-rule/ptu-rule-029.md`: Ticket created after user intervention
+
+### Recommendation
+When a rules review identifies ANY PTU incorrectness (including pre-existing issues in touched code), file the ticket **in the same tool-call batch as writing the review artifact**. The review artifact and the ticket should be created together, not sequentially. Specifically:
+1. Write the review artifact with the finding documented
+2. Write the ticket in the same pass — do not write "Ticket recommended" and wait
+3. Reference the ticket ID in the review artifact's findings section
+4. This applies to all severity levels — MEDIUM and LOW issues get lost just as easily as HIGH ones if not ticketed

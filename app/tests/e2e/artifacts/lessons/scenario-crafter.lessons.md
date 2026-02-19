@@ -2,10 +2,11 @@
 skill: scenario-crafter
 last_analyzed: 2026-02-17T13:00:00
 analyzed_by: retrospective-analyst
-total_lessons: 6
+total_lessons: 7
 domains_covered:
   - combat
   - capture
+  - healing
 ---
 
 # Lessons: Scenario Crafter
@@ -157,3 +158,25 @@ When capture-variant-001 failed due to non-deterministic wild-spawn stats, corre
 
 ### Recommendation
 When fixing a flaky test, evaluate whether the proposed fix removes the feature or flow being tested. If the fix eliminates the scenario's primary purpose (e.g., replacing wild-spawn with manual creation in a "wild encounter" test), find an alternative approach that preserves coverage. Prefer the query-then-compute pattern: keep the real API flow, read actual values after creation, derive expected values dynamically from actuals.
+
+---
+
+## Lesson 7: Always set `lastRestReset` when pre-loading daily counters via PUT
+
+- **Category:** missing-check
+- **Severity:** high
+- **Domain:** healing
+- **Frequency:** systemic (3 scenarios affected)
+- **First observed:** 2026-02-18 (healing domain)
+- **Status:** resolved (all 3 scenarios fixed)
+
+### Pattern
+When a scenario uses PUT to pre-load daily counter values (`restMinutesToday`, `injuriesHealedToday`) to test cap behavior, it must also set `lastRestReset` to a same-day timestamp. Without it, `lastRestReset` defaults to `null`, and healing endpoints call `shouldResetDailyCounters(null)` which returns `true` — resetting the counters to 0 before the healing logic executes. This silently invalidates the pre-loaded state.
+
+### Evidence
+- `artifacts/verifications/healing-daily-rest-cap-001.verified.md`: Test 1 restMinutesToday reset from 450→0 (1/3 assertions failed)
+- `artifacts/verifications/healing-daily-injury-cap-001.verified.md`: Test 4 injuriesHealedToday reset from 3→0 (1/4 assertions failed)
+- `artifacts/verifications/healing-workflow-injury-healing-cycle-001.verified.md`: injuriesHealedToday reset from 1→0, cascading through all phases (5/7 assertions failed)
+
+### Recommendation
+Whenever a scenario sets daily counters (`restMinutesToday`, `injuriesHealedToday`) via PUT to simulate mid-day state, always include `"lastRestReset": "<today's ISO timestamp>"` in the same PUT body. This prevents the auto-reset guard from discarding the pre-loaded values. This is analogous to Lesson 4 (non-deterministic API check) — the scenario must account for server-side guard logic, not just the field values.

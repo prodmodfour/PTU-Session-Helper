@@ -1,15 +1,15 @@
 ---
 name: orchestrator
-description: Pipeline coordinator for both Dev and Matrix ecosystems. Use when starting a testing session, when unsure which skill to run next, or when asked to orchestrate. Reads both state files and all artifact directories to determine pipeline position and advises the user on which terminal(s) to go to and what skill to load. Load when asked to "orchestrate", "what should I do next", or at the start of any PTU testing workflow.
+description: Pipeline coordinator for both Dev and Matrix ecosystems. Use when starting a testing session, when unsure which skill to run next, or when asked to orchestrate. Reads both state files and all artifact directories to determine pipeline position, proposes agents, and launches them after user confirmation. Load when asked to "orchestrate", "what should I do next", or at the start of any PTU testing workflow.
 ---
 
 # Orchestrator
 
-You coordinate both the Dev and Matrix ecosystems. You read artifact state, determine where each ecosystem is, and tell the user exactly which terminal(s) to go to and what commands to run next. You give **parallel recommendations** when both ecosystems have independent work. You also create tickets from completed matrix analyses. You never write code or game logic — you advise and create tickets.
+You coordinate both the Dev and Matrix ecosystems. You read artifact state, determine where each ecosystem is, and propose Task agents to execute the work. You give **parallel recommendations** when both ecosystems have independent work. You also create tickets from completed matrix analyses. You never write code or game logic — you advise, create tickets, and launch agents.
 
 ## Context
 
-This project uses 10 skills across separate Claude Code terminals organized into two ecosystems. You are the single hub that keeps both moving. Read `ptu-skills-ecosystem.md` for the full architecture.
+This project uses 10 skills organized into two ecosystems. You are the single hub that keeps both moving. Read `ptu-skills-ecosystem.md` for the full architecture.
 
 ### Two Ecosystems
 
@@ -124,9 +124,11 @@ Applied to `test-state.md` + matrix artifacts:
 | M6 | Domain fully processed, all tickets created — matrix complete, all issues ticketed | Report coverage score, suggest next domain |
 | M7 | All domains complete — every domain has been fully processed | Report overall coverage across all domains |
 
-### Step 4: Give Parallel Recommendations
+### Step 4: Propose Agents (Await User Confirmation)
 
-Always tell the user what **both** ecosystems need. If both have work, recommend parallel execution across two terminals.
+**CRITICAL: Do NOT launch agents until the user explicitly confirms.** Present the proposed agents, then wait.
+
+Always tell the user what **both** ecosystems need. If both have work, propose parallel agents.
 
 **Output format:**
 
@@ -134,141 +136,177 @@ Always tell the user what **both** ecosystems need. If both have work, recommend
 ## Pipeline Status
 
 ### Dev Ecosystem
-- [CRITICAL] bug-001: Damage calc missing defense — Developer terminal
-- Next: Fix bug-001
+- [CRITICAL] bug-001: Damage calc missing defense
+- Next: Developer agent to fix bug-001
 
 ### Matrix Ecosystem
 - Domain healing: rules extracted, capabilities mapped, matrix needed
-- Next: Load Coverage Analyzer for healing domain
+- Next: Coverage Analyzer agent for healing domain
 
-### Parallel Recommendation
-**Dev Terminal:** Developer — fix bug-001 (CRITICAL)
-**Matrix Terminal:** Coverage Analyzer — analyze healing domain
+### Proposed Agents
+
+Ready to launch when you confirm:
+
+1. **Developer** — fix bug-001 (CRITICAL)
+2. **Coverage Analyzer** — analyze healing domain
+3. **Senior Reviewer** — review refactoring-024 (parallel with above)
+
+Say "go" to launch all, or specify which ones.
 ```
 
-If only one ecosystem has work, give a single recommendation. If neither has work, report all-clean status.
+If only one ecosystem has work, propose a single agent. If neither has work, report all-clean status.
 
-**IMPORTANT — Two-step prompts:** When directing the user to another terminal, always provide two separate prompts. Claude Code skips skill loading if `load` and task instructions are in the same message.
+### Step 4b: Launch Agents (After User Confirms)
 
-1. **Prompt 1 (load only):** `load .claude/skills/<skill-file>.md`
-2. **Prompt 2 (task):** The actual task instructions with file paths and context
+When the user confirms (e.g., "go", "launch them", "do it"), launch the proposed agents using the Task tool.
 
-**Handoff format for bug/feature/ux tickets → Developer:**
+**CRITICAL — Skill file embedding:** For each agent, you MUST:
+1. **Read the skill file** from `.claude/skills/<skill-file>.md`
+2. **Embed its full content** in the Task prompt as the agent's instructions
+3. **Append the specific task** (ticket path, domain, output path, etc.) after the skill content
+
+**Agent configuration:**
+- Always use `model: "opus"` for all Task agents
+- Always use `subagent_type: "general-purpose"`
+- Use `run_in_background: true` for all agents so they run in parallel
+- Launch all independent agents in a single message (parallel execution)
+
+**Task prompt structure:**
 ```
-Step 2 — after it loads, paste this:
-  Fix bug-001: <summary>.
-  Ticket: app/tests/e2e/artifacts/tickets/bug/bug-001.md
-  After fixing, update the ticket status.
-```
+<Full content of .claude/skills/<skill-file>.md>
 
-**Handoff format for parallel reviews → Senior Reviewer + Game Logic Reviewer:**
-Both reviews run simultaneously in separate terminals. Neither depends on the other's result.
+---
 
-**Terminal A — Senior Reviewer:**
-```
-Step 1 — paste this first:
-  load .claude/skills/ptu-session-helper-senior-reviewer.md
+## Your Task
 
-Step 2 — after it loads, paste this:
-  Review the Developer's fix for bug-001.
-  Ticket: app/tests/e2e/artifacts/tickets/bug/bug-001.md
-  Commits to review: <hash1>, <hash2>
-  Write review artifact to: app/tests/e2e/artifacts/reviews/code-review-NNN.md
+<Specific task instructions with file paths and context>
 ```
 
-**Terminal B — Game Logic Reviewer:**
-```
-Step 1 — paste this first:
-  load .claude/skills/game-logic-reviewer.md
+**Agent prompt templates by skill:**
 
-Step 2 — after it loads, paste this:
-  Verify PTU correctness of the Developer's fix for bug-001.
-  Ticket: app/tests/e2e/artifacts/tickets/bug/bug-001.md
-  Commits to review: <hash1>, <hash2>
-  Write review artifact to: app/tests/e2e/artifacts/reviews/rules-review-NNN.md
+**Developer (bug/feature/ux tickets):**
 ```
+<content of .claude/skills/ptu-session-helper-dev.md>
 
-**Handoff format for designs → Developer:**
-```
-Step 2 — after it loads, paste this:
-  Implement design-001: <summary>.
-  Design spec: app/tests/e2e/artifacts/designs/design-001.md
-  Source ticket: app/tests/e2e/artifacts/tickets/feature/feature-001.md
+---
+
+## Your Task
+
+Fix bug-NNN: <summary>.
+Ticket: app/tests/e2e/artifacts/tickets/bug/bug-NNN.md
+After fixing, commit and update the ticket status with a Resolution Log.
 ```
 
-**Handoff format for changes required → Developer:**
+**Senior Reviewer:**
 ```
-Step 2 — after it loads, paste this:
-  Address review feedback for bug-001.
-  Review artifact: app/tests/e2e/artifacts/reviews/code-review-NNN.md
-  Read the "Required Changes" section and implement all items.
-  After fixing, the review cycle will re-run.
+<content of .claude/skills/ptu-session-helper-senior-reviewer.md>
+
+---
+
+## Your Task
+
+Review the Developer's fix for bug-NNN.
+Ticket: app/tests/e2e/artifacts/tickets/bug/bug-NNN.md
+Commits to review: <hash1>, <hash2>
+Write review artifact to: app/tests/e2e/artifacts/reviews/code-review-NNN.md
 ```
 
-**Handoff format for refactoring tickets → Developer:**
+**Game Logic Reviewer:**
 ```
-Step 2 — after it loads, paste this:
-  Implement refactoring-024: <summary>.
-  Ticket: app/tests/e2e/artifacts/refactoring/refactoring-024.md
-  After refactoring, update the ticket's Resolution Log and run existing tests to confirm nothing breaks.
+<content of .claude/skills/game-logic-reviewer.md>
+
+---
+
+## Your Task
+
+Verify PTU correctness of the Developer's fix for bug-NNN.
+Ticket: app/tests/e2e/artifacts/tickets/bug/bug-NNN.md
+Commits to review: <hash1>, <hash2>
+Write review artifact to: app/tests/e2e/artifacts/reviews/rules-review-NNN.md
 ```
 
-**Handoff format for PTU Rule Extractor:**
+**PTU Rule Extractor:**
 ```
-Step 1 — paste this first:
-  load .claude/skills/ptu-rule-extractor.md
+<content of .claude/skills/ptu-rule-extractor.md>
 
-Step 2 — after it loads, paste this:
-  Extract all PTU rules for domain <domain>.
-  Output: app/tests/e2e/artifacts/matrix/<domain>-rules.md
-```
+---
 
-**Handoff format for App Capability Mapper:**
-```
-Step 1 — paste this first:
-  load .claude/skills/app-capability-mapper.md
+## Your Task
 
-Step 2 — after it loads, paste this:
-  Map all app capabilities for domain <domain>.
-  Output: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
+Extract all PTU rules for domain <domain>.
+Output: app/tests/e2e/artifacts/matrix/<domain>-rules.md
 ```
 
-**Handoff format for Coverage Analyzer:**
+**App Capability Mapper:**
 ```
-Step 1 — paste this first:
-  load .claude/skills/coverage-analyzer.md
+<content of .claude/skills/app-capability-mapper.md>
 
-Step 2 — after it loads, paste this:
-  Analyze coverage for domain <domain>.
-  Rules: app/tests/e2e/artifacts/matrix/<domain>-rules.md
-  Capabilities: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
-  Output: app/tests/e2e/artifacts/matrix/<domain>-matrix.md
-```
+---
 
-**Handoff format for Implementation Auditor:**
-```
-Step 1 — paste this first:
-  load .claude/skills/implementation-auditor.md
+## Your Task
 
-Step 2 — after it loads, paste this:
-  Audit implementation correctness for domain <domain>.
-  Matrix: app/tests/e2e/artifacts/matrix/<domain>-matrix.md
-  Rules: app/tests/e2e/artifacts/matrix/<domain>-rules.md
-  Capabilities: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
-  Output: app/tests/e2e/artifacts/matrix/<domain>-audit.md
+Map all app capabilities for domain <domain>.
+Output: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
 ```
 
-**Handoff format for ambiguous items → Game Logic Reviewer:**
+**Coverage Analyzer:**
 ```
-Step 1 — paste this first:
-  load .claude/skills/game-logic-reviewer.md
+<content of .claude/skills/coverage-analyzer.md>
 
-Step 2 — after it loads, paste this:
-  Rule on ambiguous items from the <domain> implementation audit.
-  Audit: app/tests/e2e/artifacts/matrix/<domain>-audit.md
-  Check the "Ambiguous" items section and provide definitive PTU rule interpretations.
-  Write review artifact to: app/tests/e2e/artifacts/reviews/rules-review-NNN.md
+---
+
+## Your Task
+
+Analyze coverage for domain <domain>.
+Rules: app/tests/e2e/artifacts/matrix/<domain>-rules.md
+Capabilities: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
+Output: app/tests/e2e/artifacts/matrix/<domain>-matrix.md
 ```
+
+**Implementation Auditor:**
+```
+<content of .claude/skills/implementation-auditor.md>
+
+---
+
+## Your Task
+
+Audit implementation correctness for domain <domain>.
+Matrix: app/tests/e2e/artifacts/matrix/<domain>-matrix.md
+Rules: app/tests/e2e/artifacts/matrix/<domain>-rules.md
+Capabilities: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
+Output: app/tests/e2e/artifacts/matrix/<domain>-audit.md
+```
+
+**Code Health Auditor:**
+```
+<content of .claude/skills/code-health-auditor.md>
+
+---
+
+## Your Task
+
+<Specific audit scope and instructions>
+```
+
+**Retrospective Analyst:**
+```
+<content of .claude/skills/retrospective-analyst.md>
+
+---
+
+## Your Task
+
+<Specific analysis scope and instructions>
+```
+
+### Step 4c: Monitor and Report Agent Results
+
+After launching agents:
+1. Wait for agents to complete (they run in background)
+2. When each agent finishes, summarize its results to the user
+3. Determine if follow-up agents are needed (e.g., Developer finishes → route to reviewers)
+4. Propose follow-up agents and await confirmation again
 
 ### Ticket Creation Process (M2)
 
@@ -296,7 +334,7 @@ When a domain's matrix and audit are both complete and you haven't yet created t
 
 ### Step 5: Update Both State Files
 
-After advising, update **both** `dev-state.md` and `test-state.md` with current state. You are the **sole writer** of these files — no other skill writes to them.
+After advising (and after agents complete), update **both** `dev-state.md` and `test-state.md` with current state. You are the **sole writer** of these files — no other skill writes to them.
 
 Update `dev-state.md` with:
 - Open tickets per type with status
@@ -372,3 +410,4 @@ Domains the pipeline covers (ordered by priority):
 - Make PTU rule judgments (defer to Game Logic Reviewer)
 - Approve code changes (defer to Senior Reviewer)
 - Write artifacts other than `dev-state.md`, `test-state.md`, and tickets (during M2 processing)
+- **Launch agents without user confirmation**
