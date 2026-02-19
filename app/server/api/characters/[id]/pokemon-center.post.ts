@@ -68,7 +68,6 @@ export default defineEventHandler(async (event) => {
       injuries: newInjuries,
       injuriesHealedToday: newInjuriesHealedToday,
       lastRestReset: new Date(),
-      restMinutesToday: 480, // Max out rest for the day
       statusConditions: JSON.stringify([]),
       // Clear last injury time if all injuries healed
       lastInjuryTime: newInjuries > 0 ? character.lastInjuryTime : null
