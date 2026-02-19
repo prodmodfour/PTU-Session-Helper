@@ -145,7 +145,7 @@ Before writing, read any existing lesson files in `artifacts/lessons/`:
 
 For each skill that has lessons, write or update `artifacts/lessons/<skill-name>.lessons.md`.
 
-Use the format from `.claude/skills/references/skill-interfaces.md` Section 7.
+Use the format from `.claude/skills/references/skill-interfaces.md` Section 6.
 
 Only write lesson files for skills with actual lessons — don't create empty files.
 

@@ -115,7 +115,7 @@ Output a structured report:
 
 ### Step 4a: Write Review Artifact
 
-Write the review to `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md` using the schema from `references/skill-interfaces.md` section 10. Include all reviewed commits, mechanics verified, issues found, verdict, and PTU references.
+Write the review to `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md` using the schema from `references/skill-interfaces.md` section 9. Include all reviewed commits, mechanics verified, issues found, verdict, and PTU references.
 
 ### Step 4b: State Update
 

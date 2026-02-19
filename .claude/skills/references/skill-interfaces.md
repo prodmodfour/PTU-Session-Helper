@@ -7,25 +7,22 @@ Data contracts between skills in the PTU Skills Ecosystem. All artifacts use mar
 ```
 app/tests/e2e/artifacts/
 ├── tickets/               # Cross-ecosystem communication
-│   ├── bug/               # Result Verifier writes → Developer reads
+│   ├── bug/               # Feature Designer writes → Developer reads
 │   ├── ptu-rule/          # Game Logic Reviewer writes → Developer reads
-│   ├── feature/           # Result Verifier writes → Feature Designer/Developer reads
-│   ├── ux/                # Result Verifier writes → Feature Designer/Developer reads
-│   └── retest/            # Orchestrator writes → Playtester reads
+│   ├── feature/           # Feature Designer writes → Developer reads
+│   └── ux/                # Feature Designer writes → Developer reads
 ├── loops/                 # Gameplay Loop Synthesizer writes
 ├── scenarios/             # Scenario Crafter writes
-├── verifications/         # Scenario Verifier writes
-├── results/               # Playtester writes
-├── reports/               # Result Verifier writes (testing internal)
+├── verifications/         # Scenario Verifier writes → Feature Designer reads (gap detection)
 ├── designs/               # Feature Designer writes
 ├── refactoring/           # Code Health Auditor writes
 ├── reviews/               # Senior Reviewer + Game Logic Reviewer write
 ├── lessons/               # Retrospective Analyst writes
+├── results/               # Legacy: from previous Playtester runs
+├── reports/               # Legacy: from previous Result Verifier runs
 ├── dev-state.md           # Orchestrator writes (sole writer)
 └── test-state.md          # Orchestrator writes (sole writer)
 ```
-
-Playwright spec files: `app/tests/e2e/scenarios/<domain>/<scenario-id>.spec.ts`
 
 ## File Naming Conventions
 
@@ -149,7 +146,7 @@ sub_loops:
 ## 2. Scenario
 
 **Written by:** Scenario Crafter
-**Read by:** Scenario Verifier, Playtester
+**Read by:** Scenario Verifier, Feature Designer (gap detection)
 **Location:** `artifacts/scenarios/<scenario-id>.md`
 
 Scenarios come in two types matching the two loop tiers.
@@ -244,7 +241,7 @@ DELETE /api/<endpoint>/$variable
 ## 3. Verification Report
 
 **Written by:** Scenario Verifier
-**Read by:** Playtester (only runs verified scenarios)
+**Read by:** Feature Designer (gap detection — checks verified scenarios against app surface)
 **Location:** `artifacts/verifications/<scenario-id>.verified.md`
 
 ```markdown
@@ -284,68 +281,16 @@ assertions_correct: <count>
 ```
 
 **Constraints:**
-- Only scenarios with status `PASS` proceed to Playtester
+- Only scenarios with status `PASS` proceed to Feature Designer gap detection
 - `PARTIAL` means some assertions were corrected — Scenario Crafter should update the original
 - `FAIL` means fundamental problems — return to Scenario Crafter for rewrite
 - Verifier must re-derive assertions from rulebook independently, not just check the math
 
 ---
 
-## 4. Test Result
+## 4. Bug Report / Correction / Escalation
 
-**Written by:** Playtester
-**Read by:** Result Verifier
-**Location:** `artifacts/results/<scenario-id>.result.md`
-
-```markdown
----
-scenario_id: <scenario-id>
-run_id: <YYYY-MM-DD-NNN>
-status: PASS | FAIL | ERROR
-spec_file: tests/e2e/scenarios/<domain>/<id>.spec.ts
-duration_ms: <number>
-retries_used: <0-2>
----
-
-## Assertion Results
-
-| # | Description | Expected | Actual | Status |
-|---|-------------|----------|--------|--------|
-| 1 | <what> | <value> | <value> | PASS/FAIL |
-| 2 | ... | ... | ... | ... |
-
-## Errors
-<!-- Empty if all passed -->
-- Assertion <N> failed: Expected "<expected>", got "<actual>"
-- ...
-
-## Playwright Errors
-<!-- Selector failures, timeouts, navigation errors -->
-<!-- Empty if test ran cleanly -->
-- <error message>
-
-## Screenshots
-<!-- Captured on failure -->
-- <relative path to screenshot>
-
-## Self-Correction Log
-<!-- If Playtester retried due to selector/timing issues -->
-- Retry 1: <what was adjusted>
-- Retry 2: <what was adjusted>
-```
-
-**Constraints:**
-- `PASS`: all assertions passed
-- `FAIL`: one or more assertion failures (expected vs actual mismatch)
-- `ERROR`: test could not run (selector not found, timeout, server error) after exhausting retries
-- Screenshots are mandatory on any FAIL or ERROR
-- Self-correction log documents what the Playtester tried before reporting
-
----
-
-## 5. Bug Report / Correction / Escalation
-
-**Written by:** Result Verifier
+**Written by:** Feature Designer (bug, feature-gap, ux-gap), Scenario Verifier (correction), Game Logic Reviewer (escalation)
 **Read by:** Developer (bug), Scenario Crafter (correction), Game Logic Reviewer (escalation)
 **Location:** `artifacts/reports/<type>-<NNN>.md`
 
@@ -506,7 +451,7 @@ See: `artifacts/designs/design-<NNN>.md`
 
 ---
 
-## 5e. Design Spec
+## 4e. Design Spec
 
 **Written by:** Feature Designer
 **Read by:** Developer (implements), Senior Reviewer (reviews architecture), Game Logic Reviewer (PTU rule questions)
@@ -584,11 +529,11 @@ new_files:
 
 ---
 
-## 6. State Files
+## 5. State Files
 
 The Orchestrator is the **sole writer** of both state files. No other skill writes to them.
 
-### 6a. Dev State
+### 5a. Dev State
 
 **Written by:** Orchestrator (sole writer)
 **Read by:** Dev Ecosystem skills
@@ -596,24 +541,24 @@ The Orchestrator is the **sole writer** of both state files. No other skill writ
 
 Tracks: open tickets per type, active Developer work, review status, retest tickets created, refactoring queue, code health metrics.
 
-### 6b. Test State
+### 5b. Test State
 
 **Written by:** Orchestrator (sole writer)
 **Read by:** Test Ecosystem skills
 **Location:** `artifacts/test-state.md`
 
-Tracks: active domain, domain progress table (Loops → Scenarios → Verifications → Tests → Triage), pending retests, internal issues (corrections, test bugs), lessons metrics.
+Tracks: active domain, domain progress table (Loops → Scenarios → Verifications → Gap Check), internal issues (corrections), lessons metrics.
 
-### 6c. Pipeline State (Legacy)
+### 5c. Pipeline State (Legacy)
 
 **Location:** `artifacts/pipeline-state.legacy.md`
 
 The original unified state file, archived for historical reference. Contains the full record from combat and capture domain cycles.
 
-## 6d. Cross-Ecosystem Tickets
+## 5d. Cross-Ecosystem Tickets
 
-**Written by:** Result Verifier (bug/feature/ux), Orchestrator (retest), Game Logic Reviewer (ptu-rule)
-**Read by:** Developer, Feature Designer, Playtester (retest only)
+**Written by:** Feature Designer (bug/feature/ux), Game Logic Reviewer (ptu-rule)
+**Read by:** Developer, Feature Designer
 **Location:** `artifacts/tickets/<type>/<type>-<NNN>.md`
 
 ### Unified Ticket Schema
@@ -621,7 +566,7 @@ The original unified state file, archived for historical reference. Contains the
 ```markdown
 ---
 ticket_id: <type>-<NNN>
-type: bug | ptu-rule | feature | ux | retest
+type: bug | ptu-rule | feature | ux
 priority: P0 | P1 | P2
 status: open | in-progress | resolved | rejected
 source_ecosystem: dev | test
@@ -653,11 +598,11 @@ estimated_scope: small | medium | large    # refactoring only
 - Same sequence number for ticket and corresponding report (e.g., `bug-003` in both `reports/` and `tickets/bug/`)
 - Ticket is slimmer than report — just actionable info + `source_report` link
 - Status lifecycle: `open` → `in-progress` → `resolved` (or `rejected`)
-- Retest tickets are created by the Orchestrator only (D8 priority)
+- Bug/feature/ux tickets are created by the Feature Designer during gap detection
 
 ---
 
-## 7. Lesson File
+## 6. Lesson File
 
 **Written by:** Retrospective Analyst
 **Read by:** All skills (for learning from past errors)
@@ -703,8 +648,8 @@ domains_covered:
 
 **File naming:** `<skill-name>.lessons.md` — hyphenated, matching ecosystem conventions. Examples:
 - `scenario-crafter.lessons.md`
-- `result-verifier.lessons.md`
-- `playtester.lessons.md`
+- `feature-designer.lessons.md`
+- `game-logic-reviewer.lessons.md`
 
 **Cross-cutting summary:** `artifacts/lessons/retrospective-summary.md` — aggregates metrics and patterns that span multiple skills.
 
@@ -717,7 +662,7 @@ domains_covered:
 
 ---
 
-## 8. Refactoring Ticket + Audit Summary
+## 7. Refactoring Ticket + Audit Summary
 
 **Written by:** Code Health Auditor
 **Read by:** Developer (implements refactoring), Senior Reviewer (reviews approach)
@@ -830,7 +775,7 @@ overflow_files: <count of files that qualified but exceeded the 20-file cap>
 
 ---
 
-## 9. Code Review
+## 8. Code Review
 
 **Written by:** Senior Reviewer
 **Read by:** Orchestrator, Developer, Game Logic Reviewer
@@ -903,12 +848,12 @@ follows_up: <code-review-NNN>  # optional — for re-reviews
 - Verdict `BLOCKED` means CRITICAL issues found — Developer must fix before any further pipeline progress
 - Verdict `CHANGES_REQUIRED` means HIGH/MEDIUM issues that must be addressed before approval
 - Verdict `APPROVED` means the code is ready for rules review and eventually re-test
-- `scenarios_to_rerun` is used by the Orchestrator to direct the Playtester after both reviews pass
+- `scenarios_to_rerun` is informational — notes which scenarios are affected by the reviewed changes
 - Counters are per-prefix: `code-review-001` and `rules-review-001` coexist independently
 
 ---
 
-## 10. Rules Review
+## 9. Rules Review
 
 **Written by:** Game Logic Reviewer
 **Read by:** Orchestrator, Developer

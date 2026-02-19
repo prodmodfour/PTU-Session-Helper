@@ -282,7 +282,7 @@ Note these in the design spec's "Questions for Senior Reviewer" section. The Dev
 
 ### Step 6: Write Design Spec
 
-Write the design spec to `artifacts/designs/design-<NNN>.md` using the format from `.claude/skills/references/skill-interfaces.md` Section 5e.
+Write the design spec to `artifacts/designs/design-<NNN>.md` using the format from `.claude/skills/references/skill-interfaces.md` Section 4e.
 
 Check existing designs in `artifacts/designs/` to determine the next sequence number.
 
