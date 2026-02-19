@@ -39,6 +39,15 @@ export default defineEventHandler(async (event) => {
     if (body.statusConditions !== undefined) updateData.statusConditions = JSON.stringify(body.statusConditions)
     if (body.stageModifiers !== undefined) updateData.stageModifiers = JSON.stringify(body.stageModifiers)
 
+    // Healing-related fields
+    if (body.maxHp !== undefined) updateData.maxHp = body.maxHp
+    if (body.injuries !== undefined) updateData.injuries = body.injuries
+    if (body.drainedAp !== undefined) updateData.drainedAp = body.drainedAp
+    if (body.restMinutesToday !== undefined) updateData.restMinutesToday = body.restMinutesToday
+    if (body.injuriesHealedToday !== undefined) updateData.injuriesHealedToday = body.injuriesHealedToday
+    if (body.lastInjuryTime !== undefined) updateData.lastInjuryTime = body.lastInjuryTime ? new Date(body.lastInjuryTime) : null
+    if (body.lastRestReset !== undefined) updateData.lastRestReset = body.lastRestReset ? new Date(body.lastRestReset) : null
+
     const character = await prisma.humanCharacter.update({
       where: { id },
       data: updateData
@@ -58,7 +67,7 @@ export default defineEventHandler(async (event) => {
         speed: character.speed
       },
       currentHp: character.currentHp,
-      maxHp: character.hp,
+      maxHp: character.maxHp,
       trainerClasses: JSON.parse(character.trainerClasses),
       skills: JSON.parse(character.skills),
       inventory: JSON.parse(character.inventory),
