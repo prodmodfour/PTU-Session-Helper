@@ -153,6 +153,7 @@ const interaction = useGridInteraction({
   calculateMoveDistance: movement.calculateMoveDistance,
   getSpeed: movement.getSpeed,
   getBlockedCells: movement.getBlockedCells,
+  isValidMove: movement.isValidMove,
   onTokenMove: (id, pos) => emit('tokenMove', id, pos),
   onTokenSelect: (id) => emit('tokenSelect', id),
   onCellClick: (pos) => emit('cellClick', pos),
@@ -184,7 +185,8 @@ const rendering = useGridRendering({
   getSpeed: movement.getSpeed,
   getBlockedCells: movement.getBlockedCells,
   calculateMoveDistance: movement.calculateMoveDistance,
-  getTerrainCostAt: movement.getTerrainCostAt
+  getTerrainCostAt: movement.getTerrainCostAt,
+  isValidMove: movement.isValidMove
 })
 
 // Marquee pixel rect for visual overlay (in screen coordinates)

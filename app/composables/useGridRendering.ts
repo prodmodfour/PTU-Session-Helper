@@ -29,6 +29,7 @@ interface UseGridRenderingOptions {
   getBlockedCells: (excludeCombatantId?: string) => GridPosition[]
   calculateMoveDistance: (from: GridPosition, to: GridPosition) => number
   getTerrainCostAt: (x: number, y: number) => number
+  isValidMove: (from: GridPosition, to: GridPosition, combatantId: string, gridWidth: number, gridHeight: number) => { valid: boolean; distance: number; blocked: boolean }
 }
 
 // Constants
@@ -365,19 +366,26 @@ export function useGridRendering(options: UseGridRenderingOptions) {
   }
 
   /**
-   * Draw movement preview arrow when in click-to-move mode
+   * Draw movement preview arrow when in click-to-move mode.
+   * Uses terrain-aware validation for accurate cost display.
    */
   const drawMovementPreview = (ctx: CanvasRenderingContext2D) => {
     const token = options.movingToken.value
     const target = options.hoveredCell.value
     if (!token || !target) return
 
-    const { cellSize } = options.config.value
-    const speed = options.getSpeed(token.combatantId)
-    const distance = options.calculateMoveDistance(token.position, target)
-    const blocked = options.getBlockedCells(token.combatantId)
-    const isBlocked = blocked.some(b => b.x === target.x && b.y === target.y)
-    const isValidMove = distance <= speed && distance > 0 && !isBlocked
+    const { cellSize, width: gridWidth, height: gridHeight } = options.config.value
+
+    // Use terrain-aware validation for preview
+    const moveResult = options.isValidMove(
+      token.position,
+      target,
+      token.combatantId,
+      gridWidth,
+      gridHeight
+    )
+
+    const distance = moveResult.distance
 
     // Token center
     const startX = token.position.x * cellSize + (token.size * cellSize) / 2
@@ -388,8 +396,8 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     const endY = target.y * cellSize + cellSize / 2
 
     // Choose colors based on validity
-    const arrowColor = isValidMove ? MOVEMENT_VALID_COLOR : MOVEMENT_INVALID_COLOR
-    const bgColor = isValidMove ? MOVEMENT_VALID_BG : MOVEMENT_INVALID_BG
+    const arrowColor = moveResult.valid ? MOVEMENT_VALID_COLOR : MOVEMENT_INVALID_COLOR
+    const bgColor = moveResult.valid ? MOVEMENT_VALID_BG : MOVEMENT_INVALID_BG
 
     // Highlight target cell
     if (distance > 0) {
@@ -404,7 +412,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
       // Draw arrow
       drawArrow(ctx, { startX, startY, endX, endY, color: arrowColor })
 
-      // Draw distance indicator
+      // Draw distance indicator (shows terrain-aware path cost)
       const labelY = target.y * cellSize - 12
       drawDistanceLabel(ctx, {
         x: endX,
@@ -413,9 +421,9 @@ export function useGridRendering(options: UseGridRenderingOptions) {
         color: arrowColor
       })
 
-      // Show "Out of range" or "Blocked" message if invalid
-      if (!isValidMove) {
-        const message = isBlocked ? 'Blocked' : 'Out of range'
+      // Show "Out of range", "Blocked", or "Impassable" message if invalid
+      if (!moveResult.valid) {
+        const message = moveResult.blocked ? 'Blocked' : 'Out of range'
         drawMessageLabel(ctx, {
           x: endX,
           y: labelY - 20,

@@ -23,6 +23,7 @@ interface UseGridInteractionOptions {
   calculateMoveDistance: (from: GridPosition, to: GridPosition) => number
   getSpeed: (combatantId: string) => number
   getBlockedCells: (excludeCombatantId?: string) => GridPosition[]
+  isValidMove: (from: GridPosition, to: GridPosition, combatantId: string, gridWidth: number, gridHeight: number) => { valid: boolean; distance: number; blocked: boolean }
   // Emitters
   onTokenMove: (combatantId: string, position: GridPosition) => void
   onTokenSelect: (combatantId: string | null) => void
@@ -197,22 +198,24 @@ export function useGridInteraction(options: UseGridInteractionOptions) {
       if (movingTokenId.value && options.isGm.value) {
         const token = movingToken.value
         if (token) {
-          const speed = options.getSpeed(token.combatantId)
-          const distance = options.calculateMoveDistance(token.position, gridPos)
-          const blocked = options.getBlockedCells(token.combatantId)
-          const isBlocked = blocked.some(b => b.x === gridPos.x && b.y === gridPos.y)
+          // Use terrain-aware validation
+          const moveResult = options.isValidMove(
+            token.position,
+            gridPos,
+            token.combatantId,
+            options.config.value.width,
+            options.config.value.height
+          )
 
-          // Check if move is valid
-          if (distance > 0 && distance <= speed && !isBlocked &&
-              gridPos.x >= 0 && gridPos.x < options.config.value.width &&
-              gridPos.y >= 0 && gridPos.y < options.config.value.height) {
+          // Check if move is valid (terrain-aware: accounts for slow, blocking terrain)
+          if (moveResult.valid) {
             options.onTokenMove(movingTokenId.value, gridPos)
             options.onMovementPreviewChange(null)
             movingTokenId.value = null
             moveTargetCell.value = null
             options.render()
             return
-          } else if (distance === 0) {
+          } else if (moveResult.distance === 0) {
             // Clicked on same cell, cancel move mode
             options.onMovementPreviewChange(null)
             movingTokenId.value = null
@@ -273,18 +276,21 @@ export function useGridInteraction(options: UseGridInteractionOptions) {
       if (options.isGm.value) {
         const token = movingToken.value
         if (token && gridPos.x >= 0 && gridPos.y >= 0) {
-          const distance = options.calculateMoveDistance(token.position, gridPos)
-          const speed = options.getSpeed(token.combatantId)
-          const blocked = options.getBlockedCells(token.combatantId)
-          const isBlocked = blocked.some(b => b.x === gridPos.x && b.y === gridPos.y)
-          const isValid = distance > 0 && distance <= speed && !isBlocked
+          // Use terrain-aware validation for preview
+          const moveResult = options.isValidMove(
+            token.position,
+            gridPos,
+            token.combatantId,
+            options.config.value.width,
+            options.config.value.height
+          )
 
           options.onMovementPreviewChange({
             combatantId: token.combatantId,
             fromPosition: token.position,
             toPosition: gridPos,
-            distance,
-            isValid
+            distance: moveResult.distance,
+            isValid: moveResult.valid
           })
         }
       }
