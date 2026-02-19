@@ -26,7 +26,7 @@ Speed:
  
  
 Basic Information 
-Type: Special / Flying (see Forme Change) 
+Type: Fire / Flying
 Basic Ability 1: Dancer 
 Adv Ability 1: Adaptability 
 Adv Ability 2: Spinning Dance 
