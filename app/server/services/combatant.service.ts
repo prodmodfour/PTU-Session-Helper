@@ -6,6 +6,7 @@
 
 import { prisma } from '~/server/utils/prisma'
 import { ALL_STATUS_CONDITIONS } from '~/constants/statusConditions'
+import { getEffectiveMaxHp } from '~/utils/restHealing'
 import { v4 as uuidv4 } from 'uuid'
 import type {
   StatusCondition, StageModifiers, Combatant,
@@ -190,11 +191,11 @@ export function applyHealingToEntity(
     faintedRemoved: false
   }
 
-  // Heal HP (capped at max HP)
+  // Heal HP (capped at injury-reduced effective max HP)
   if (options.amount !== undefined && options.amount > 0) {
-    const maxHp = entity.maxHp
+    const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
     const previousHp = entity.currentHp
-    const newHp = Math.min(maxHp, previousHp + options.amount)
+    const newHp = Math.min(effectiveMax, previousHp + options.amount)
     entity.currentHp = newHp
     result.hpHealed = newHp - previousHp
     result.newHp = newHp

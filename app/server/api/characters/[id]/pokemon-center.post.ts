@@ -2,7 +2,8 @@ import { prisma } from '~/server/utils/prisma'
 import {
   shouldResetDailyCounters,
   calculatePokemonCenterTime,
-  calculatePokemonCenterInjuryHealing
+  calculatePokemonCenterInjuryHealing,
+  getEffectiveMaxHp
 } from '~/utils/restHealing'
 
 /**
@@ -50,21 +51,22 @@ export default defineEventHandler(async (event) => {
     injuriesHealedToday
   })
 
-  // Heal HP to full
-  const hpHealed = character.maxHp - character.currentHp
+  // Calculate new injury count and daily healed count
+  const newInjuries = character.injuries - injuryResult.injuriesHealed
+  const newInjuriesHealedToday = injuriesHealedToday + injuryResult.injuriesHealed
+
+  // Heal HP to effective max (injury-reduced) after injury healing
+  const effectiveMax = getEffectiveMaxHp(character.maxHp, newInjuries)
+  const hpHealed = Math.max(0, effectiveMax - character.currentHp)
 
   // Clear ALL status conditions
   const statusConditions: string[] = JSON.parse(character.statusConditions || '[]')
   const clearedStatuses = [...statusConditions]
 
-  // Calculate new injury count and daily healed count
-  const newInjuries = character.injuries - injuryResult.injuriesHealed
-  const newInjuriesHealedToday = injuriesHealedToday + injuryResult.injuriesHealed
-
   const updated = await prisma.humanCharacter.update({
     where: { id },
     data: {
-      currentHp: character.maxHp,
+      currentHp: effectiveMax,
       injuries: newInjuries,
       injuriesHealedToday: newInjuriesHealedToday,
       lastRestReset: new Date(),
@@ -81,6 +83,7 @@ export default defineEventHandler(async (event) => {
       hpHealed,
       newHp: updated.currentHp,
       maxHp: updated.maxHp,
+      effectiveMaxHp: effectiveMax,
       injuriesHealed: injuryResult.injuriesHealed,
       injuriesRemaining: newInjuries,
       clearedStatuses,
