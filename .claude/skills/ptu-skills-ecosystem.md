@@ -1,52 +1,50 @@
 # PTU Skills Ecosystem
 
-Master reference for the 10-skill ecosystem that validates the PTU Session Helper through gameplay-driven testing. The ecosystem is organized into two logically separate halves — Dev and Test — coordinated by a single Orchestrator.
+Master reference for the 10-skill ecosystem that validates the PTU Session Helper through direct PTU rule-to-code coverage analysis. The ecosystem is organized into two logically separate halves — Dev and Matrix — coordinated by a single Orchestrator.
 
 ## Core Principle
 
-The test loop drives the dev loop. Gameplay scenarios — derived from PTU 1.05 rulebooks — define what "correct" means. Development responds to gap detection and rule violations, not the other way around.
+The Feature Matrix drives the dev loop. Every PTU rule is extracted, every app capability is mapped, and the two are cross-referenced to find gaps and verify correctness. Development responds to matrix gaps and audit findings, not indirect scenario testing.
 
 ## Architecture
 
 **Separate terminals.** Each skill runs in its own Claude Code session. The user acts as liaison between terminals. Skills communicate through persistent artifact files on disk, never through shared context.
 
-**Two ecosystems, one orchestrator.** The Dev Ecosystem handles implementation, reviews, and code health. The Test Ecosystem handles scenario creation, verification, and gap detection. The Orchestrator reads both and gives parallel recommendations.
+**Two ecosystems, one orchestrator.** The Dev Ecosystem handles implementation, reviews, and code health. The Matrix Ecosystem handles rule extraction, capability mapping, coverage analysis, and implementation auditing. The Orchestrator reads both and gives parallel recommendations.
 
-**Ticket boundary.** Reports stay internal to the Test ecosystem. Only actionable work items cross the boundary as **tickets** in `artifacts/tickets/`.
+**Ticket boundary.** Matrix artifacts stay in `artifacts/matrix/`. Only actionable work items cross the boundary as **tickets** in `artifacts/tickets/`, created by the Orchestrator from completed matrix analyses.
 
-**Playtesting is external.** Running Playwright tests against the app happens outside this ecosystem. The ecosystem produces verified scenarios and design specs; actual test execution is a separate concern.
+**Playtesting is external.** Running Playwright tests against the app happens outside this ecosystem. The ecosystem produces coverage matrices and correctness audits; actual test execution is a separate concern.
 
 ## Two-Ecosystem Diagram
 
 ```
                     ┌──────────────────────┐
                     │     Orchestrator     │ ← reads both state files + all ticket dirs
-                    │  (advises on BOTH    │   gives parallel recommendations
+                    │  (advises on BOTH    │   creates tickets from completed matrices
                     │   ecosystems)        │
                     └──────────┬───────────┘
                                │
             ┌──────────────────┼──────────────────────┐
             │                  │                       │
-       DEV ECOSYSTEM     TICKET BOUNDARY      TEST ECOSYSTEM
+       DEV ECOSYSTEM     TICKET BOUNDARY      MATRIX ECOSYSTEM
             │                  │                       │
-       Developer          ← bug tickets ←         Synthesizer
-       Senior Reviewer    ← ptu-rule tickets ←        ↓
-       Game Logic Rev     ← feature tickets ←     Crafter
-       Code Health Aud    ← ux tickets ←              ↓
-       Retrospective*                             Verifier
-       Feature Designer*                              ↓
-                                                 Feature Designer*
-                                                 (gap detection + design)
-
-* Feature Designer bridges both ecosystems
-* Retrospective Analyst reads both ecosystems
+       Developer          ← bug tickets ←       Rule Extractor ──┐
+       Senior Reviewer    ← feature tickets ←                    ├→ Coverage Analyzer
+       Game Logic Rev     ← ptu-rule tickets ←  Capability Mapper┘        │
+       Code Health Aud    ← ux tickets ←                         Implementation Auditor
+       Retrospective*                                                     │
+                                                              Orchestrator reads matrix,
+                                                              creates tickets
 ```
+
+* Retrospective Analyst reads both ecosystems
 
 ### Internal Loops
 
-**Test Ecosystem Internal:**
-- SCENARIO_BUG → correction report → Scenario Crafter (fix and re-verify)
-- AMBIGUOUS → escalation report → Game Logic Reviewer (ruling)
+**Matrix Ecosystem Internal:**
+- AMBIGUOUS audit items → Game Logic Reviewer (ruling) → re-audit
+- App code changed → re-map capabilities → re-analyze → re-audit
 
 **Dev Ecosystem Internal:**
 - CHANGES_REQUIRED review → Developer (address feedback)
@@ -55,7 +53,9 @@ The test loop drives the dev loop. Gameplay scenarios — derived from PTU 1.05 
 ### Cross-Ecosystem Flow
 
 ```
-Feature Designer ──── bug/feature/ux ticket ────→ Dev Developer
+Orchestrator ──── reads matrix + audit ────→ creates bug/feature/ptu-rule tickets
+                                                      ↓
+                                                Dev Developer
                                                       ↓
                                                 Senior Reviewer ∥ Game Logic Reviewer
                                                       ↓
@@ -72,23 +72,23 @@ Skills are loaded by asking Claude to load the relevant skill file.
 |---|-------|-----------|-------|--------|----------|
 | 1 | Developer | `ptu-session-helper-dev.md` | tickets (bug/feature/ux/ptu-rule), designs, reviews | code commits | persistent |
 | 2 | Senior Reviewer | `ptu-session-helper-senior-reviewer.md` | code diffs + tickets | `reviews/code-review-*.md` | persistent |
-| 3 | Game Logic Reviewer | `game-logic-reviewer.md` | code/scenarios/escalations | `reviews/rules-review-*.md` | as-needed |
+| 3 | Game Logic Reviewer | `game-logic-reviewer.md` | code/audit ambiguities/escalations | `reviews/rules-review-*.md` | as-needed |
 | 4 | Code Health Auditor | `code-health-auditor.md` | source code under `app/` | `refactoring/*.md` | per-audit |
 
-### Test Ecosystem
+### Matrix Ecosystem
 
 | # | Skill | Skill File | Input | Output | Terminal |
 |---|-------|-----------|-------|--------|----------|
-| 5 | Gameplay Loop Synthesizer | `gameplay-loop-synthesizer.md` | rulebooks + app code | `loops/*.md` | per-domain |
-| 6 | Scenario Crafter | `scenario-crafter.md` | loop files | `scenarios/*.md` | per-batch |
-| 7 | Scenario Verifier | `scenario-verifier.md` | scenario files | `verifications/*.md` | per-batch |
+| 5 | PTU Rule Extractor | `ptu-rule-extractor.md` | PTU rulebook chapters + errata | `matrix/<domain>-rules.md` | per-domain |
+| 6 | App Capability Mapper | `app-capability-mapper.md` | app source code + app-surface.md | `matrix/<domain>-capabilities.md` | per-domain |
+| 7 | Coverage Analyzer | `coverage-analyzer.md` | rules + capabilities catalogs | `matrix/<domain>-matrix.md` | per-domain |
+| 8 | Implementation Auditor | `implementation-auditor.md` | matrix + source code + rulebook | `matrix/<domain>-audit.md` | per-domain |
 
-### Bridge Skills
+### Coordination Skills
 
 | # | Skill | Skill File | Invoked By | Output |
 |---|-------|-----------|------------|--------|
-| 8 | Orchestrator | `orchestrator.md` | user (start of session) | `dev-state.md`, `test-state.md` |
-| 9 | Feature Designer | `feature-designer.md` | after verification, or gap tickets | `designs/*.md` + `tickets/feature/*.md` + `tickets/ux/*.md` |
+| 9 | Orchestrator | `orchestrator.md` | user (start of session) | `dev-state.md`, `test-state.md`, tickets from matrix |
 | 10 | Retrospective Analyst | `retrospective-analyst.md` | after cycles complete | `lessons/*.md` |
 
 ## Skill Files
@@ -99,10 +99,10 @@ Skills are loaded by asking Claude to load the relevant skill file.
 ├── specification.md                      (full contracts and formats)
 ├── USAGE.md                              (workflow guide)
 ├── orchestrator.md
-├── gameplay-loop-synthesizer.md
-├── scenario-crafter.md
-├── scenario-verifier.md
-├── feature-designer.md
+├── ptu-rule-extractor.md
+├── app-capability-mapper.md
+├── coverage-analyzer.md
+├── implementation-auditor.md
 ├── ptu-session-helper-dev.md
 ├── ptu-session-helper-senior-reviewer.md
 ├── game-logic-reviewer.md
@@ -121,21 +121,26 @@ Skills are loaded by asking Claude to load the relevant skill file.
 ```
 artifacts/
 ├── tickets/               Cross-ecosystem communication
-│   ├── bug/               Feature Designer writes → Developer reads
-│   ├── ptu-rule/          Game Logic Reviewer writes → Developer reads
-│   ├── feature/           Feature Designer writes → Developer reads
-│   └── ux/                Feature Designer writes → Developer reads
-├── loops/                 Synthesizer writes → Crafter reads
-├── scenarios/             Crafter writes → Verifier reads
-├── verifications/         Verifier writes → Feature Designer reads (gap detection)
-├── designs/               Feature Designer writes → Developer reads (shared read zone)
+│   ├── bug/               Orchestrator writes (from audit) → Developer reads
+│   ├── ptu-rule/          Orchestrator/Game Logic Reviewer writes → Developer reads
+│   ├── feature/           Orchestrator writes (from matrix) → Developer reads
+│   └── ux/                Orchestrator writes (from matrix) → Developer reads
+├── matrix/                Feature Matrix workflow artifacts
+│   ├── <domain>-rules.md          Rule Extractor writes → Coverage Analyzer reads
+│   ├── <domain>-capabilities.md   Capability Mapper writes → Coverage Analyzer reads
+│   ├── <domain>-matrix.md         Coverage Analyzer writes → Auditor reads, Orchestrator reads
+│   └── <domain>-audit.md          Implementation Auditor writes → Orchestrator reads
+├── designs/               Developer writes (when feature ticket needs design) → shared read zone
 ├── lessons/               Retrospective Analyst writes → all skills read
 ├── refactoring/           Code Health Auditor writes → Developer/Reviewer reads
 ├── reviews/               Senior Reviewer + Game Logic Reviewer write → Orchestrator/Developer reads
+├── loops/                 (legacy — from previous Synthesizer runs)
+├── scenarios/             (legacy — from previous Crafter runs)
+├── verifications/         (legacy — from previous Verifier runs)
 ├── results/               (legacy — from previous Playtester runs)
 ├── reports/               (legacy — from previous Result Verifier runs)
 ├── dev-state.md           Orchestrator writes → Dev skills read
-└── test-state.md          Orchestrator writes → Test skills read
+└── test-state.md          Orchestrator writes → Matrix skills read
 ```
 
 ## Authority Hierarchy
@@ -144,25 +149,27 @@ artifacts/
 |--------|----------------|
 | PTU game logic, formulas, rule interpretation | Game Logic Reviewer |
 | Code quality, architecture, patterns | Senior Reviewer |
-| UI/UX design, feature surface area, user flows | Feature Designer |
-| Pipeline sequencing, what to test next | Orchestrator |
-| Scenario data accuracy, assertion math | Scenario Verifier |
-| Gap detection and ticket creation | Feature Designer |
+| Pipeline sequencing, what to analyze next | Orchestrator |
+| Rule extraction completeness | PTU Rule Extractor |
+| Capability mapping completeness | App Capability Mapper |
+| Coverage classification accuracy | Coverage Analyzer |
+| Implementation correctness verification | Implementation Auditor |
+| Gap detection and ticket creation | Orchestrator (from matrix data) |
 | Pattern identification and lesson accuracy | Retrospective Analyst |
 | Structural code health issues and refactoring priority | Code Health Auditor |
 
 ## Orchestration Patterns
 
 ### Full Loop (new domain)
-1. Load Orchestrator → "Start Synthesizer for domain X"
-2. Load Synthesizer → loops written
-3. Load Orchestrator → "Loops ready, start Crafter"
-4. Load Crafter → scenarios written
-5. Load Orchestrator → "Scenarios ready, start Verifier"
-6. Load Verifier → verifications written
-7. Load Orchestrator → "Verified, start Feature Designer for gap detection"
-8. Load Feature Designer → gap check + tickets written for missing features
-9. Load Orchestrator → "feature-001 ticket created, start Dev with feature-001"
+1. Load Orchestrator → "Start Rule Extractor and Capability Mapper for domain X" (parallel)
+2. **Terminal A:** Load Rule Extractor → rules catalog written to `matrix/<domain>-rules.md`
+3. **Terminal B:** Load Capability Mapper → capabilities catalog written to `matrix/<domain>-capabilities.md`
+4. Load Orchestrator → "Both catalogs ready, start Coverage Analyzer"
+5. Load Coverage Analyzer → matrix written to `matrix/<domain>-matrix.md`
+6. Load Orchestrator → "Matrix ready, start Implementation Auditor"
+7. Load Implementation Auditor → audit written to `matrix/<domain>-audit.md`
+8. Load Orchestrator → "Audit complete, creating tickets" → Orchestrator creates bug/feature/ptu-rule tickets
+9. Load Orchestrator → "bug-001 ticket created, start Dev with bug-001"
 
 ### Bug Fix Cycle (cross-ecosystem)
 1. Dev reads bug ticket + source info → implements fix → commits
@@ -173,12 +180,13 @@ artifacts/
 ### Parallel Work
 The Orchestrator may recommend work in both ecosystems simultaneously:
 - **Dev Terminal:** Developer fixing bug-001 while...
-- **Test Terminal:** Scenario Crafter writing scenarios for a new domain
+- **Matrix Terminal A:** Rule Extractor extracting rules for healing domain
+- **Matrix Terminal B:** Capability Mapper mapping capabilities for healing domain (parallel with A)
 
 ### Stale Artifact Detection
 Orchestrator compares timestamps:
-- Loop newer than its scenarios → scenarios stale, re-craft
-- Scenario newer than verification → re-verify
+- App code changed after capability mapping → re-map, re-analyze, re-audit
+- Developer commit after latest approved review for same target → re-review needed
 
 ## Detailed Contracts
 
