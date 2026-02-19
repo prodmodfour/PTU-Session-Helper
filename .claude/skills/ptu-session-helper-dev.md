@@ -16,10 +16,10 @@ You are the implementation worker for the Pokemon TTRPG Session Helper project. 
 This skill is part of the **Dev Ecosystem** in the 10-skill PTU testing pipeline. You receive bug, feature, UX, and PTU rule tickets from the Test ecosystem and implement fixes/features.
 
 - **Lessons:** Before starting a bug fix session, check `app/tests/e2e/artifacts/lessons/ptu-session-helper-dev.lessons.md` for recurring fix patterns (e.g., the same class of code change applied in multiple places). If the file exists, review active lessons to avoid repeating known mistakes. If it doesn't exist, skip this.
-- **Bug tickets** live in `app/tests/e2e/artifacts/tickets/bug/bug-*.md`. Read them for a summary of the issue. For full root cause analysis, follow the `source_report` field to read the detailed report in `artifacts/reports/`.
-- **Feature/UX tickets** live in `app/tests/e2e/artifacts/tickets/feature/` and `tickets/ux/`. These reference gap reports and may have associated design specs in `artifacts/designs/`.
-- **PTU rule tickets** live in `app/tests/e2e/artifacts/tickets/ptu-rule/`. These come from Game Logic Reviewer or Scenario Verifier findings.
-- **Design specs** from the Feature Designer live in `app/tests/e2e/artifacts/designs/design-*.md`. Read them for new feature implementations. After implementing a design:
+- **Bug tickets** live in `app/tests/e2e/artifacts/tickets/bug/bug-*.md`. Read them for a summary of the issue. Tickets from the matrix workflow include a `matrix_source` field linking to the rule_id and domain.
+- **Feature/UX tickets** live in `app/tests/e2e/artifacts/tickets/feature/` and `tickets/ux/`. These identify missing PTU rules and may have associated design specs in `artifacts/designs/`.
+- **PTU rule tickets** live in `app/tests/e2e/artifacts/tickets/ptu-rule/`. These come from the Implementation Auditor (approximations) or Game Logic Reviewer findings.
+- **Design specs** live in `app/tests/e2e/artifacts/designs/design-*.md`. Write them when a feature ticket needs design before implementation. After implementing a design:
   1. Update the Implementation Log section in the design spec with commit hashes and files changed
   2. Set the design spec frontmatter `status` field to `implemented`
   3. Update `.claude/skills/references/app-surface.md` with new routes/endpoints/components added by the implementation

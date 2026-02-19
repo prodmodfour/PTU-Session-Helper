@@ -13,7 +13,7 @@ This skill is part of the **Dev Ecosystem** in the 10-skill PTU testing pipeline
 
 - **Senior Reviewer** handles code quality and architecture.
 - **You** handle PTU rule correctness — formulas, mechanics, game logic.
-- **Escalations** come from Scenario Verifier (ambiguous scenarios) and Feature Designer (PTU rule questions in design specs) via `artifacts/designs/design-*.md` — check the "PTU Rule Questions" section.
+- **Escalations** come from the Implementation Auditor (ambiguous audit items) and design specs with PTU rule questions via `artifacts/designs/design-*.md` — check the "PTU Rule Questions" section.
 - **PTU rule tickets:** When you find PTU rule violations during reviews, you can create `tickets/ptu-rule/ptu-rule-NNN.md` tickets for the Developer to address. Use the unified ticket schema (see `.claude/skills/references/skill-interfaces.md`).
 - **Review artifacts** go to `app/tests/e2e/artifacts/reviews/rules-review-<NNN>.md`. The `verdict` field determines pipeline flow: `APPROVED` allows the fix to proceed, `CHANGES_REQUIRED` routes back to Developer, `BLOCKED` halts progress.
 - **Escalation rulings** should also produce a `rules-review-*.md` artifact for audit trail, using `trigger: escalation-ruling`.
@@ -26,7 +26,7 @@ This skill is part of the **Dev Ecosystem** in the 10-skill PTU testing pipeline
 - After a developer edits game mechanics code
 - When implementing new PTU features
 - When another skill escalates an `AMBIGUOUS` ruling
-- When a Feature Designer design spec contains unresolved PTU rule questions
+- When a design spec contains unresolved PTU rule questions
 - When reviewing a developer's fix for a game logic bug
 
 ## Rulebook Reference
@@ -149,7 +149,7 @@ When another skill sends an `AMBIGUOUS` escalation:
 3. Check errata for clarification
 4. Make a definitive ruling with justification
 5. Write the ruling into the escalation report
-6. Notify the user which skill's terminal needs the ruling applied (usually Scenario Crafter or Feature Designer)
+6. Notify the user which skill's terminal needs the ruling applied (usually Implementation Auditor for re-audit)
 
 ## Game Mechanics Code Locations
 

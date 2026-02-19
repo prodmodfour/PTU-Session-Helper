@@ -282,7 +282,7 @@ overflow_files: <count of files that qualified but exceeded the 20-file cap>
 - Fix bugs or implement features (that's Developer)
 - Make PTU rule judgments (that's Game Logic Reviewer)
 - Decide scheduling priority vs bugs (that's Orchestrator — you only suggest)
-- Write or modify test scenarios (that's Scenario Crafter)
-- Create bug reports (those come from the testing loop — you find structural smells, not functional bugs)
+- Write or modify matrix artifacts or test scenarios (that's the Matrix Ecosystem skills)
+- Create bug reports (those come from the matrix workflow — you find structural smells, not functional bugs)
 - Scan test files or artifacts — only production code under `app/`
 - Write to any artifact directory other than `app/tests/e2e/artifacts/refactoring/`

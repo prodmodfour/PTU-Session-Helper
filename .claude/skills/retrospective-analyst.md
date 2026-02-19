@@ -113,8 +113,8 @@ Categorize each error into exactly one of 12 categories:
 | `routing-error` | Orchestrator sent work to wrong terminal or wrong priority | Pipeline coordination failure |
 | `rule-ambiguity` | PTU rulebook genuinely supports multiple readings | Required Game Logic Reviewer ruling |
 | `fix-pattern` | A recurring code fix shape across multiple bugs | Same class of code change applied repeatedly |
-| `feature-gap-recurrence` | Feature Designer repeatedly finds the same class of missing capability | Synthesizer feasibility check failed to catch gap early |
-| `ux-gap-recurrence` | Feature Designer repeatedly finds missing UI for working backends | Systemic gap between backend capabilities and frontend surface area |
+| `feature-gap-recurrence` | Coverage Analyzer repeatedly finds the same class of missing capability across domains | Systemic pattern in what the app doesn't implement |
+| `ux-gap-recurrence` | Coverage Analyzer repeatedly finds missing UI for working backends | Systemic gap between backend capabilities and frontend surface area |
 | `conversation-pattern` | Same mistake or misunderstanding recurs across sessions | Mined from past conversation transcripts — user corrections, debugging loops, repeated questions |
 
 **Key distinctions:**
@@ -214,8 +214,8 @@ Analyzed: <domains>, covering <N> artifacts since <date>
 ## What You Do NOT Do
 
 - Fix app code (that's Developer)
-- Rewrite scenarios (that's Scenario Crafter)
+- Write matrix artifacts or scenarios (that's the Matrix Ecosystem skills)
 - Make PTU rule rulings (that's Game Logic Reviewer)
-- Check the app surface for gaps (that's Feature Designer)
+- Check the app surface for gaps (that's Coverage Analyzer)
 - Modify any skill's process steps (recommend changes only)
 - Write to any artifact directory other than `artifacts/lessons/`

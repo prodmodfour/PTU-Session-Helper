@@ -469,7 +469,7 @@ ptu_refs:
 <FULL: new subsystem | PARTIAL: extend existing feature | MINOR: small addition>
 
 ## Design Spec
-<!-- Feature Designer fills this in -->
+<!-- Developer fills this in when needed -->
 See: `artifacts/designs/design-<NNN>.md`
 ```
 
@@ -504,13 +504,13 @@ missing_ui:
 <What the GM's current experience is — no button, no route, no form field>
 
 ## Design Spec
-<!-- Feature Designer fills this in -->
+<!-- Developer fills this in when needed -->
 See: `artifacts/designs/design-<NNN>.md`
 ```
 
 **Constraints (both gap types):**
 - UX_GAP scope is never `FULL` — if there's no backend at all, it's `FEATURE_GAP`
-- Gap reports link to their design spec once the Feature Designer produces one
+- Gap reports link to their design spec once one is produced
 - Counters are per-prefix: `feature-gap-001` and `ux-gap-001` start independently
 
 ---
@@ -582,7 +582,7 @@ new_files:
 ```
 
 **Status lifecycle:**
-- `pending` — Feature Designer is working on the spec
+- `pending` — Design is in progress
 - `complete` — spec written, awaiting Developer implementation
 - `implemented` — Developer filled in the Implementation Log and updated `app-surface.md`
 
@@ -715,8 +715,8 @@ domains_covered:
 ```
 
 **File naming:** `<skill-name>.lessons.md` — hyphenated, matching ecosystem conventions. Examples:
-- `scenario-crafter.lessons.md`
-- `feature-designer.lessons.md`
+- `ptu-rule-extractor.lessons.md`
+- `coverage-analyzer.lessons.md`
 - `game-logic-reviewer.lessons.md`
 
 **Cross-cutting summary:** `artifacts/lessons/retrospective-summary.md` — aggregates metrics and patterns that span multiple skills.
