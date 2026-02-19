@@ -42,6 +42,7 @@
 
 <script setup lang="ts">
 import type { Combatant, Pokemon } from '~/types'
+import { getEffectiveMaxHp } from '~/utils/restHealing'
 
 defineProps<{
   combatants: Combatant[]
@@ -56,16 +57,14 @@ const handleSpriteError = (event: Event) => {
   img.src = '/images/pokemon-placeholder.svg'
 }
 
-const getEffectiveMaxHp = (combatant: Combatant): number => {
+const getCombatantEffectiveMax = (combatant: Combatant): number => {
   const { maxHp, injuries } = combatant.entity
-  if (!maxHp || maxHp <= 0) return 0
-  const injuryReduction = (injuries || 0) * 0.1
-  return Math.floor(maxHp * (1 - injuryReduction))
+  return getEffectiveMaxHp(maxHp, injuries || 0)
 }
 
 const getHpPercentage = (combatant: Combatant): number => {
   const { currentHp } = combatant.entity
-  const effectiveMax = getEffectiveMaxHp(combatant)
+  const effectiveMax = getCombatantEffectiveMax(combatant)
   if (effectiveMax <= 0) return 100
   return Math.max(0, Math.min(100, (currentHp / effectiveMax) * 100))
 }

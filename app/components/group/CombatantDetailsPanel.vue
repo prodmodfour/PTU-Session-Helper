@@ -175,6 +175,7 @@
 
 <script setup lang="ts">
 import type { Combatant, Pokemon, HumanCharacter } from '~/types'
+import { getEffectiveMaxHp } from '~/utils/restHealing'
 
 const props = defineProps<{
   combatant: Combatant | null
@@ -206,9 +207,7 @@ const isPlayerSide = computed(() => {
 const effectiveMaxHp = computed(() => {
   if (!props.combatant) return 0
   const { maxHp, injuries } = props.combatant.entity
-  if (!maxHp || maxHp <= 0) return 0
-  const injuryReduction = (injuries || 0) * 0.1
-  return Math.floor(maxHp * (1 - injuryReduction))
+  return getEffectiveMaxHp(maxHp, injuries || 0)
 })
 
 const hpPercentage = computed(() => {
