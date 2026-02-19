@@ -168,7 +168,6 @@ export function getRestHealingInfo(params: {
 }): RestHealingInfo {
   const { maxHp, injuries, restMinutesToday, lastInjuryTime, injuriesHealedToday } = params
 
-  const effectiveMax = getEffectiveMaxHp(maxHp, injuries)
   const canRestHeal = injuries < 5 && restMinutesToday < 480
   const restMinutesRemaining = Math.max(0, 480 - restMinutesToday)
   const hpPerRest = Math.max(1, Math.floor(maxHp / 16))
