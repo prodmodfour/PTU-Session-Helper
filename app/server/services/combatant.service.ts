@@ -191,7 +191,16 @@ export function applyHealingToEntity(
     faintedRemoved: false
   }
 
-  // Heal HP (capped at injury-reduced effective max HP)
+  // Heal injuries first so effective max HP reflects post-heal injury count
+  if (options.healInjuries !== undefined && options.healInjuries > 0) {
+    const previousInjuries = entity.injuries || 0
+    const newInjuries = Math.max(0, previousInjuries - options.healInjuries)
+    entity.injuries = newInjuries
+    result.injuriesHealed = previousInjuries - newInjuries
+    result.newInjuries = newInjuries
+  }
+
+  // Heal HP (capped at injury-reduced effective max HP, using post-injury-heal count)
   if (options.amount !== undefined && options.amount > 0) {
     const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
     const previousHp = entity.currentHp
@@ -216,15 +225,6 @@ export function applyHealingToEntity(
     entity.temporaryHp = newTempHp
     result.tempHpGained = options.tempHp
     result.newTempHp = newTempHp
-  }
-
-  // Heal injuries (can't go below 0)
-  if (options.healInjuries !== undefined && options.healInjuries > 0) {
-    const previousInjuries = entity.injuries || 0
-    const newInjuries = Math.max(0, previousInjuries - options.healInjuries)
-    entity.injuries = newInjuries
-    result.injuriesHealed = previousInjuries - newInjuries
-    result.newInjuries = newInjuries
   }
 
   return result
