@@ -9,7 +9,7 @@ affected_files:
   - app/tests/e2e/scenarios/capture/capture-helpers.ts
   - app/tests/e2e/scenarios/combat/combat-helpers.ts
 estimated_scope: small
-status: open
+status: resolved
 created_at: 2026-02-16T22:00:00
 ---
 
@@ -46,8 +46,17 @@ created_at: 2026-02-16T22:00:00
 Estimated commits: 2-3
 
 ## Resolution Log
-<!-- Developer fills this in after refactoring -->
-- Commits: ___
-- Files changed: ___
-- New files created: ___
-- Tests passing: ___
+
+**Note:** The original 4 errors from Feb 16 had evolved by the time of resolution. The test helper `import type` fixes (Finding 3) were already applied in prior commits. Finding 1 (import-csv.post.ts) and Finding 2 (groupViewTabs.ts DELETE) no longer reproduced — likely fixed by intervening refactors (csv-import service extraction, scene type refactor). However, `npx nuxi typecheck` revealed 31 new/different errors across 5 files. All resolved.
+
+**Errors fixed (31 total, 5 root causes):**
+1. `types/api.ts` — WebSocketEvent union missing 14 scene/tab events (caused 28 errors in `useGroupViewWebSocket.ts`). Added all scene, tab, and sync events with proper typed data shapes.
+2. `types/api.ts` — `serve_map` data used `unknown[]` for locations/connections. Replaced with `ServedMap` import from `stores/groupView.ts` (fixed 1 error in `useWebSocket.ts`).
+3. `components/group/InitiativeTracker.vue` — Missing `Pokemon` type import for template cast.
+4. `pages/gm/create.vue` — `location: string | null` incompatible with `Partial<HumanCharacter>` / `Partial<Pokemon>` which expect `string | undefined`. Changed `|| null` to `|| undefined`.
+5. `pages/gm/scenes/[id].vue` — `scene.habitatId` is `string | null | undefined` but prop expects `string | null`. Added `?? null` coalescing.
+
+- Commits: 8b04a40
+- Files changed: `app/types/api.ts`, `app/components/group/InitiativeTracker.vue`, `app/pages/gm/create.vue`, `app/pages/gm/scenes/[id].vue`
+- New files created: none
+- Tests passing: `npx nuxi typecheck` — 0 errors (only pre-existing duplicated import warnings)
