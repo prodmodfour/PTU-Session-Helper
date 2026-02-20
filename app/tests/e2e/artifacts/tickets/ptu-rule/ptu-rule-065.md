@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-065
 priority: P1
-status: open
+status: in-progress
 domain: combat
 source: code-review-079
 created_at: 2026-02-20
@@ -29,3 +29,26 @@ The encounter end endpoint (`app/server/api/encounters/[id]/end.post.ts`) clears
 ## Notes
 
 The scene deactivation endpoint (`deactivate.post.ts`) correctly clears `boundAp`, but encounters can end independently of scenes (e.g., GM ends combat mid-scene). Both paths need to handle this.
+
+## Resolution Log
+
+### 2026-02-20 — Fix applied to encounter end endpoint
+
+**File changed:** `app/server/api/encounters/[id]/end.post.ts`
+
+**What was done:**
+- Imported `calculateSceneEndAp` from `~/utils/restHealing`
+- After the existing sync loop (volatile conditions + scene-frequency moves), added a new block that:
+  1. Collects all human combatant `entityId` values from the encounter
+  2. Fetches their DB records (`level`, `drainedAp`) via `prisma.humanCharacter.findMany`
+  3. For each character, sets `boundAp: 0` and `currentAp: calculateSceneEndAp(level, drainedAp)`
+- Updated file docstring to reference PTU Core p.59 Stratagem unbinding rule
+
+**Pattern followed:** Matches `app/server/api/scenes/[id]/deactivate.post.ts` which already clears `boundAp` at scene end using the same `calculateSceneEndAp` utility.
+
+**Other code paths checked:**
+- `POST /api/encounters/:id/end` — the only server-side encounter-end path (store calls this single endpoint)
+- Scene deactivation (`deactivate.post.ts`) — already handles `boundAp` clearing (no change needed)
+- Extended rest (`extended-rest.post.ts`) — already clears `boundAp` (no change needed)
+- New day endpoints — already clear `boundAp` (no change needed)
+- Scene activation (`activate.post.ts`) — already clears `boundAp` when deactivating other scenes (no change needed)
