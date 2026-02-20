@@ -6,8 +6,7 @@ interface CaptureAttemptRequest {
   pokemonId: string
   trainerId: string
   accuracyRoll?: number  // The accuracy check roll (to detect nat 20)
-  modifiers?: number     // Equipment/feature modifiers
-  pokeBallType?: string  // For future Poke Ball modifiers
+  modifiers?: number     // Equipment/feature/ball modifiers (pre-calculated by GM)
 }
 
 export default defineEventHandler(async (event) => {

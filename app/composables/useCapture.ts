@@ -131,7 +131,6 @@ export function useCapture() {
     trainerId: string
     accuracyRoll?: number
     modifiers?: number
-    pokeBallType?: string
     encounterContext?: {
       encounterId: string
       trainerCombatantId: string
@@ -148,8 +147,7 @@ export function useCapture() {
           pokemonId: params.pokemonId,
           trainerId: params.trainerId,
           accuracyRoll: params.accuracyRoll,
-          modifiers: params.modifiers,
-          pokeBallType: params.pokeBallType
+          modifiers: params.modifiers
         }
       })
 

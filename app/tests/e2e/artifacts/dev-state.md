@@ -21,7 +21,7 @@ updated_by: orchestrator
 | ptu-rule-045 | P3 | **open** | Equipment/armor system |
 | ptu-rule-046 | P2 | resolved | League battle declaration phase — both reviews APPROVED (session 9) |
 | ptu-rule-048 | P3 | **open** | Evasion CS treatment |
-| ptu-rule-050 | P3 | **open** | pokeBallType dead code |
+| ptu-rule-050 | P3 | **in-progress** | pokeBallType dead code |
 | ptu-rule-051 | P3 | **open** | Breather shift movement |
 | ptu-rule-054 | P3 | **open** | Base Relations Rule |
 | ptu-rule-055 | P3 | **open** | XP calculation |
