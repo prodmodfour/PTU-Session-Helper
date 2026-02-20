@@ -16,7 +16,14 @@ import { calculateSceneEndAp } from '~/utils/restHealing'
  * @returns The number of characters whose AP was restored
  */
 export async function restoreSceneAp(charactersJson: string): Promise<number> {
-  const characters: Array<{ characterId?: string; id?: string }> = JSON.parse(charactersJson || '[]')
+  let characters: Array<{ characterId?: string; id?: string }>
+  try {
+    characters = JSON.parse(charactersJson || '[]')
+  } catch {
+    console.error('restoreSceneAp: failed to parse characters JSON, skipping AP restore')
+    return 0
+  }
+
   const characterIds = characters
     .map(c => c.characterId || c.id)
     .filter((cid): cid is string => !!cid)
