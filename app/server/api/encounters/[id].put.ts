@@ -19,6 +19,9 @@ export default defineEventHandler(async (event) => {
       data: {
         name: body.name,
         battleType: body.battleType,
+        weather: body.weather ?? null,
+        weatherDuration: body.weatherDuration ?? 0,
+        weatherSource: body.weatherSource ?? null,
         combatants: JSON.stringify(body.combatants ?? []),
         currentRound: body.currentRound ?? 1,
         currentTurnIndex: body.currentTurnIndex ?? 0,
