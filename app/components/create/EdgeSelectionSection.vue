@@ -71,11 +71,6 @@
       </div>
     </div>
 
-    <!-- Skill Edge Error -->
-    <div v-if="skillEdgeError" class="edge-selection__error">
-      {{ skillEdgeError }}
-    </div>
-
     <!-- Selected Edges Tags -->
     <div v-if="edges.length" class="selected-tags">
       <span
@@ -127,7 +122,6 @@ const emit = defineEmits<{
 // --- Local State ---
 const newEdge = ref('')
 const showSkillEdgeDropdown = ref(false)
-const skillEdgeError = ref('')
 
 // --- Computed ---
 const filteredWarnings = computed((): CreationWarning[] =>
@@ -169,7 +163,6 @@ function getSkillEdgeTooltip(skill: PtuSkillName): string {
 }
 
 function onAddSkillEdge(skill: PtuSkillName): void {
-  skillEdgeError.value = ''
   emit('addSkillEdge', skill)
   // Note: the parent composable's addSkillEdge returns an error string or null.
   // Since we use emits, the parent will handle validation. We show a brief
@@ -197,16 +190,6 @@ function onAddSkillEdge(skill: PtuSkillName): void {
       font-weight: 600;
       flex: 1;
     }
-  }
-
-  &__error {
-    margin-top: $spacing-sm;
-    padding: $spacing-xs $spacing-sm;
-    font-size: $font-size-sm;
-    background: rgba($color-danger, 0.1);
-    border: 1px solid rgba($color-danger, 0.3);
-    color: $color-danger;
-    border-radius: $border-radius-sm;
   }
 
   &__warnings {
