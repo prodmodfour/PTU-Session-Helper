@@ -546,6 +546,30 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // ===========================================
+    // Weather Management
+    // ===========================================
+
+    // Set weather on encounter with PTU duration tracking
+    async setWeather(
+      weather: string | null,
+      source: 'move' | 'ability' | 'manual' = 'manual',
+      duration?: number
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/weather`, {
+          method: 'POST',
+          body: { weather, source, duration }
+        })
+        this.encounter = response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to set weather'
+        throw e
+      }
+    },
+
+    // ===========================================
     // Wild Pokemon Spawning (From Encounter Tables)
     // ===========================================
 
