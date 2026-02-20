@@ -54,7 +54,7 @@ const handleRollSkill = (skill: string, notation: string) => {
 
 <style lang="scss" scoped>
 .tab-content {
-  animation: fadeIn 0.2s ease-out;
+  @include pokemon-tab-content;
 }
 
 .skills-grid {
@@ -104,61 +104,11 @@ const handleRollSkill = (skill: string, notation: string) => {
 }
 
 .roll-result {
-  background: linear-gradient(135deg, rgba($color-accent-violet, 0.15) 0%, rgba($color-accent-scarlet, 0.1) 100%);
-  border: 1px solid rgba($color-accent-violet, 0.3);
-  border-radius: $border-radius-lg;
-  padding: $spacing-md $spacing-lg;
-  margin-bottom: $spacing-lg;
-  animation: rollIn 0.3s ease-out;
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__skill {
-    font-weight: 600;
-    color: $color-text;
-  }
-
-  &__total {
-    font-size: $font-size-xxl;
-    font-weight: 700;
-    color: $color-accent-violet;
-  }
-
-  &__breakdown {
-    width: 100%;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    font-family: 'Fira Code', 'Consolas', monospace;
-  }
-}
-
-@keyframes rollIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  @include pokemon-roll-result;
 }
 
 .info-section {
-  margin-top: $spacing-lg;
-  padding-top: $spacing-md;
-  border-top: 1px solid $glass-border;
-
-  h4 {
-    margin: 0 0 $spacing-sm 0;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    text-transform: uppercase;
-  }
+  @include pokemon-info-section;
 }
 
 .training-info {
@@ -167,26 +117,16 @@ const handleRollSkill = (skill: string, notation: string) => {
 }
 
 .tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
+  @include pokemon-tag-list;
 }
 
 .tag {
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
+  @include pokemon-tag;
 }
 
 .empty-state {
-  text-align: center;
-  color: $color-text-muted;
-  padding: $spacing-xl;
+  @include pokemon-empty-state;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@include pokemon-sheet-keyframes;
 </style>
