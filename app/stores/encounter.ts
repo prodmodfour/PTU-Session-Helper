@@ -358,6 +358,11 @@ export const useEncounterStore = defineStore('encounter', {
       this.encounter.currentRound = data.currentRound ?? this.encounter.currentRound
       this.encounter.currentTurnIndex = data.currentTurnIndex ?? this.encounter.currentTurnIndex
       this.encounter.isPaused = data.isPaused ?? this.encounter.isPaused
+      // League battle phase tracking
+      this.encounter.currentPhase = data.currentPhase ?? this.encounter.currentPhase
+      this.encounter.turnOrder = data.turnOrder ?? this.encounter.turnOrder
+      this.encounter.trainerTurnOrder = data.trainerTurnOrder ?? this.encounter.trainerTurnOrder
+      this.encounter.pokemonTurnOrder = data.pokemonTurnOrder ?? this.encounter.pokemonTurnOrder
       // Critical: preserve isServed if not in incoming data
       if (data.isServed !== undefined) {
         this.encounter.isServed = data.isServed
