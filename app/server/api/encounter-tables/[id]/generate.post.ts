@@ -1,6 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import type { DensityTier } from '~/types'
-import { DENSITY_RANGES } from '~/types'
+import { DENSITY_RANGES, MAX_SPAWN_COUNT } from '~/types'
 
 interface GeneratedPokemon {
   speciesId: string
@@ -101,16 +101,16 @@ export default defineEventHandler(async (event) => {
     // Calculate spawn count from density
     let count: number
     if (countOverride !== undefined) {
-      // Manual override provided
-      count = Math.min(Math.max(countOverride, 1), 10)
+      // Manual override provided — cap at the highest density tier max
+      count = Math.min(Math.max(countOverride, 1), MAX_SPAWN_COUNT)
     } else {
       // Use density-based calculation
       const baseDensity = (table.density as DensityTier) || 'moderate'
       const densityRange = DENSITY_RANGES[baseDensity] || DENSITY_RANGES.moderate
 
-      // Apply modification multiplier
+      // Apply modification multiplier — cap at the highest density tier max
       const scaledMin = Math.max(1, Math.round(densityRange.min * densityMultiplier))
-      const scaledMax = Math.min(10, Math.round(densityRange.max * densityMultiplier))
+      const scaledMax = Math.min(MAX_SPAWN_COUNT, Math.round(densityRange.max * densityMultiplier))
 
       // Random count within scaled range
       count = Math.floor(Math.random() * (scaledMax - scaledMin + 1)) + scaledMin

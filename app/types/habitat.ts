@@ -21,6 +21,12 @@ export const DENSITY_RANGES: Record<DensityTier, { min: number; max: number }> =
   abundant: { min: 12, max: 16 },
 };
 
+// Derived max spawn count from the highest density tier range
+// Used as the safety cap for both manual override and density-based generation
+export const MAX_SPAWN_COUNT = Math.max(
+  ...Object.values(DENSITY_RANGES).map(r => r.max)
+);
+
 // Level range for encounter generation
 export interface LevelRange {
   min: number;

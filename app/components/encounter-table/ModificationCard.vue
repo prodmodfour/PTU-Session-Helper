@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import type { TableModification, EncounterTableEntry, ModificationEntry, DensityTier } from '~/types'
-import { DENSITY_RANGES } from '~/types'
+import { DENSITY_RANGES, MAX_SPAWN_COUNT } from '~/types'
 
 const props = defineProps<{
   modification: TableModification
@@ -187,7 +187,7 @@ const getEffectiveSpawnRange = (): string => {
   const multiplier = props.modification.densityMultiplier
 
   const scaledMin = Math.max(1, Math.round(range.min * multiplier))
-  const scaledMax = Math.min(10, Math.round(range.max * multiplier))
+  const scaledMax = Math.min(MAX_SPAWN_COUNT, Math.round(range.max * multiplier))
 
   return `${scaledMin}-${scaledMax} Pokemon`
 }

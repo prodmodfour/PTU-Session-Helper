@@ -43,7 +43,7 @@
               type="number"
               class="form-input"
               min="1"
-              max="10"
+              :max="MAX_SPAWN_COUNT"
               data-testid="gen-count-input"
             />
           </div>
@@ -250,7 +250,7 @@
 
 <script setup lang="ts">
 import type { EncounterTable, ResolvedTableEntry, DensityTier } from '~/types'
-import { DENSITY_RANGES } from '~/types'
+import { DENSITY_RANGES, MAX_SPAWN_COUNT } from '~/types'
 
 const props = defineProps<{
   table: EncounterTable
@@ -351,7 +351,7 @@ const getSpawnRange = (): string => {
   const multiplier = getMultiplier()
 
   const scaledMin = Math.max(1, Math.round(range.min * multiplier))
-  const scaledMax = Math.min(10, Math.round(range.max * multiplier))
+  const scaledMax = Math.min(MAX_SPAWN_COUNT, Math.round(range.max * multiplier))
 
   return `${scaledMin}-${scaledMax}`
 }
