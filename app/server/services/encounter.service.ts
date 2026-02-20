@@ -56,7 +56,7 @@ export interface ParsedEncounter {
   isPaused: boolean
   isServed: boolean
   moveLog: unknown[]
-  defeatedEnemies: { species: string; level: number }[]
+  defeatedEnemies: { species: string; level: number; type?: 'pokemon' | 'human' }[]
   sceneNumber: number // Derived from currentRound for now
   gridConfig: GridConfig | null
   trainerTurnOrder: string[]
@@ -175,7 +175,7 @@ export function buildEncounterResponse(
   combatants: Combatant[],
   options?: {
     moveLog?: unknown[]
-    defeatedEnemies?: { species: string; level: number }[]
+    defeatedEnemies?: { species: string; level: number; type?: 'pokemon' | 'human' }[]
     // Override fields for endpoints that modify state before responding
     isActive?: boolean
     isPaused?: boolean
@@ -233,7 +233,7 @@ export async function saveEncounterCombatants(
   id: string,
   combatants: Combatant[],
   additionalData?: {
-    defeatedEnemies?: { species: string; level: number }[]
+    defeatedEnemies?: { species: string; level: number; type?: 'pokemon' | 'human' }[]
     moveLog?: unknown[]
   }
 ): Promise<void> {

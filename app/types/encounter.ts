@@ -129,8 +129,8 @@ export interface Encounter {
   // History
   moveLog: MoveLogEntry[];
 
-  // XP tracking
-  defeatedEnemies: { species: string; level: number }[];
+  // XP tracking (type field added for trainer 2x XP rule; older entries may lack it)
+  defeatedEnemies: { species: string; level: number; type?: 'pokemon' | 'human' }[];
 }
 
 // Movement preview for broadcasting to group view

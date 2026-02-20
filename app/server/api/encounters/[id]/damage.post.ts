@@ -58,7 +58,8 @@ export default defineEventHandler(async (event) => {
         : (entity as { name: string }).name
       defeatedEnemies.push({
         species: entityName,
-        level: entity.level
+        level: entity.level,
+        type: combatant.type
       })
     }
 
