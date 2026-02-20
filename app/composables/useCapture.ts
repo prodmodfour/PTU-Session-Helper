@@ -206,7 +206,9 @@ export function useCapture() {
   }
 
   /**
-   * Attempt to capture a Pokemon
+   * Attempt to capture a Pokemon.
+   * Per PTU Core (p227): Throwing a Poke Ball is a Standard Action.
+   * When encounterContext is provided, consumes the trainer's Standard Action.
    */
   async function attemptCapture(params: {
     pokemonId: string
@@ -214,6 +216,10 @@ export function useCapture() {
     accuracyRoll?: number
     modifiers?: number
     pokeBallType?: string
+    encounterContext?: {
+      encounterId: string
+      trainerCombatantId: string
+    }
   }): Promise<CaptureAttemptResult | null> {
     loading.value = true
     error.value = null
@@ -221,10 +227,31 @@ export function useCapture() {
     try {
       const response = await $fetch<{ success: boolean; data: CaptureAttemptResult }>('/api/capture/attempt', {
         method: 'POST',
-        body: params
+        body: {
+          pokemonId: params.pokemonId,
+          trainerId: params.trainerId,
+          accuracyRoll: params.accuracyRoll,
+          modifiers: params.modifiers,
+          pokeBallType: params.pokeBallType
+        }
       })
 
       if (response.success) {
+        // Consume the trainer's Standard Action if in an encounter
+        if (params.encounterContext) {
+          const { encounterId, trainerCombatantId } = params.encounterContext
+          try {
+            await $fetch(`/api/encounters/${encounterId}/action`, {
+              method: 'POST',
+              body: {
+                combatantId: trainerCombatantId,
+                actionType: 'standard'
+              }
+            })
+          } catch (actionError: any) {
+            console.error('Failed to consume standard action for capture:', actionError)
+          }
+        }
         return response.data
       }
       return null
