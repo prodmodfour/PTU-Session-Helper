@@ -159,12 +159,10 @@ export function useEncounterActions(options: EncounterActionsOptions) {
           break
         case 'pass':
           encounterStore.captureSnapshot(`${name} passed their turn`)
-          // Mark turn as complete
-          if (combatant.turnState) {
-            combatant.turnState.hasActed = true
-            combatant.turnState.standardActionUsed = true
-            combatant.turnState.shiftActionUsed = true
-          }
+          // Persist pass via server endpoint (marks all actions as used)
+          encounterStore.encounter = await encounterCombatStore.pass(
+            encounterStore.encounter.id, combatantId
+          )
           break
       }
     }

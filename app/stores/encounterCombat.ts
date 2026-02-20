@@ -132,6 +132,17 @@ export const useEncounterCombatStore = defineStore('encounterCombat', {
       return response.data
     },
 
+    /**
+     * Pass Turn - Forfeits all remaining actions, ending the combatant's turn
+     */
+    async pass(encounterId: string, combatantId: string) {
+      const response = await $fetch<{ data: Encounter }>(`/api/encounters/${encounterId}/pass`, {
+        method: 'POST',
+        body: { combatantId }
+      })
+      return response.data
+    },
+
     // ===========================================
     // League Battle Phase Management
     // ===========================================
