@@ -2,7 +2,7 @@
  * Take a Breather - PTU Full Action (page 245)
  * - Reset all combat stages to 0
  * - Remove Temporary HP
- * - Cure all Volatile status conditions + Slowed and Stuck
+ * - Cure all Volatile status conditions + Slowed and Stuck (except Cursed — requires GM adjudication)
  * - Apply Tripped + Vulnerable until next turn (stored as tempConditions)
  */
 import { prisma } from '~/server/utils/prisma'
@@ -13,8 +13,11 @@ import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 import type { StatusCondition } from '~/types'
 
 // Take a Breather cures all volatile conditions + Slowed and Stuck (PTU 1.05 p.245)
+// Exception: Cursed requires the curse source to be KO'd or >12m away (p.245).
+// Since the app does not track curse sources, Cursed is excluded from auto-clearing
+// and left for the GM to remove manually when the prerequisite is met.
 const BREATHER_CURED_CONDITIONS: StatusCondition[] = [
-  ...VOLATILE_CONDITIONS,
+  ...VOLATILE_CONDITIONS.filter(c => c !== 'Cursed'),
   'Slowed',
   'Stuck'
 ]
