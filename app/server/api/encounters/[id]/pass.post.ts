@@ -32,7 +32,8 @@ export default defineEventHandler(async (event) => {
       ...combatant.turnState,
       hasActed: true,
       standardActionUsed: true,
-      shiftActionUsed: true
+      shiftActionUsed: true,
+      swiftActionUsed: true
     }
 
     // Add to move log
