@@ -58,6 +58,7 @@
           :enemy-combatants="enemyCombatants"
           :current-combatant="currentCombatant"
           :is-active="encounter.isActive"
+          :current-phase="encounter.battleType === 'trainer' ? encounterStore.currentPhase : undefined"
           @action="handleAction"
           @damage="handleDamage"
           @heal="handleHeal"

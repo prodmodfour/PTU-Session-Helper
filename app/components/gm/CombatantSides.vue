@@ -10,7 +10,10 @@
         'current-turn--enemy': currentCombatant.side === 'enemies'
       }"
     >
-      <h3>Current Turn</h3>
+      <h3>
+        Current Turn
+        <span v-if="currentPhaseLabel" class="phase-indicator">{{ currentPhaseLabel }}</span>
+      </h3>
       <CombatantCard
         :combatant="currentCombatant"
         :is-current="true"
@@ -117,7 +120,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, CombatSide, StageModifiers, StatusCondition } from '~/types'
+import type { Combatant, CombatSide, StageModifiers, StatusCondition, TurnPhase } from '~/types'
+
+const PHASE_LABELS: Record<string, string> = {
+  trainer_declaration: 'Trainer Phase',
+  trainer_resolution: 'Trainer Resolution',
+  pokemon: 'Pokemon Phase'
+}
 
 interface Props {
   playerCombatants: Combatant[]
@@ -125,9 +134,15 @@ interface Props {
   enemyCombatants: Combatant[]
   currentCombatant: Combatant | null
   isActive: boolean
+  currentPhase?: TurnPhase
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const currentPhaseLabel = computed(() => {
+  if (!props.currentPhase) return ''
+  return PHASE_LABELS[props.currentPhase] ?? ''
+})
 
 const emit = defineEmits<{
   action: [combatantId: string, action: { type: string; data: unknown }]
@@ -153,6 +168,9 @@ const emit = defineEmits<{
   padding: $spacing-lg;
 
   h3 {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
     margin-bottom: $spacing-md;
     font-weight: 600;
   }
@@ -246,5 +264,16 @@ const emit = defineEmits<{
     padding: $spacing-lg;
     font-style: italic;
   }
+}
+
+.phase-indicator {
+  font-size: $font-size-xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+  color: #fff;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-sm;
 }
 </style>
