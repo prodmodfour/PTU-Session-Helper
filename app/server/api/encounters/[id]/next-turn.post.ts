@@ -31,9 +31,12 @@ export default defineEventHandler(async (event) => {
     }
 
     const combatants = JSON.parse(encounter.combatants)
-    const turnOrder = JSON.parse(encounter.turnOrder)
+    let turnOrder = JSON.parse(encounter.turnOrder)
     let currentTurnIndex = encounter.currentTurnIndex
     let currentRound = encounter.currentRound
+    let currentPhase = encounter.currentPhase || 'pokemon'
+    const trainerTurnOrder = JSON.parse(encounter.trainerTurnOrder || '[]')
+    const pokemonTurnOrder = JSON.parse(encounter.pokemonTurnOrder || '[]')
 
     // Weather duration tracking
     let weather = encounter.weather
@@ -54,29 +57,51 @@ export default defineEventHandler(async (event) => {
     // Move to next turn
     currentTurnIndex++
 
-    // Check if round is over
-    if (currentTurnIndex >= turnOrder.length) {
-      currentTurnIndex = 0
-      currentRound++
+    const isLeagueBattle = encounter.battleType === 'trainer'
 
-      // Reset all combatants for new round
-      combatants.forEach((c: any) => {
-        c.hasActed = false
-        c.actionsRemaining = 2
-        c.shiftActionsRemaining = 1
-        c.readyAction = null
-      })
+    if (isLeagueBattle) {
+      // League Battle: phase-based turn progression
+      // trainer_declaration → pokemon → new round (back to trainer_declaration)
+      if (currentTurnIndex >= turnOrder.length) {
+        if (currentPhase === 'trainer_declaration') {
+          // Declaration phase done → transition to Pokemon phase
+          if (pokemonTurnOrder.length > 0) {
+            currentPhase = 'pokemon'
+            turnOrder = [...pokemonTurnOrder]
+            currentTurnIndex = 0
+          } else {
+            // No Pokemon — start new round with trainer declarations
+            currentPhase = trainerTurnOrder.length > 0 ? 'trainer_declaration' : 'pokemon'
+            turnOrder = trainerTurnOrder.length > 0 ? [...trainerTurnOrder] : [...pokemonTurnOrder]
+            currentTurnIndex = 0
+            currentRound++
+            resetCombatantsForNewRound(combatants);
+            ({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
+          }
+        } else {
+          // Pokemon phase done → new round starts with trainer declarations
+          currentTurnIndex = 0
+          currentRound++
+          resetCombatantsForNewRound(combatants)
 
-      // Decrement weather duration at end of round (PTU: weather lasts N rounds)
-      // Only decrement if duration is tracked (> 0) and source is not 'manual'
-      if (weather && weatherDuration > 0 && weatherSource !== 'manual') {
-        weatherDuration--
-        if (weatherDuration <= 0) {
-          // Weather expires
-          weather = null
-          weatherDuration = 0
-          weatherSource = null
+          if (trainerTurnOrder.length > 0) {
+            currentPhase = 'trainer_declaration'
+            turnOrder = [...trainerTurnOrder]
+          } else {
+            currentPhase = 'pokemon'
+            turnOrder = [...pokemonTurnOrder]
+          }
+
+          ;({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
         }
+      }
+    } else {
+      // Full Contact: standard linear turn progression
+      if (currentTurnIndex >= turnOrder.length) {
+        currentTurnIndex = 0
+        currentRound++
+        resetCombatantsForNewRound(combatants);
+        ({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
       }
     }
 
@@ -85,6 +110,8 @@ export default defineEventHandler(async (event) => {
       data: {
         currentTurnIndex,
         currentRound,
+        currentPhase,
+        turnOrder: JSON.stringify(turnOrder),
         combatants: JSON.stringify(combatants),
         weather,
         weatherDuration,
@@ -104,3 +131,34 @@ export default defineEventHandler(async (event) => {
     })
   }
 })
+
+/**
+ * Reset all combatants for a new round (immutable pattern applied to each combatant in-place)
+ */
+function resetCombatantsForNewRound(combatants: any[]) {
+  combatants.forEach((c: any) => {
+    c.hasActed = false
+    c.actionsRemaining = 2
+    c.shiftActionsRemaining = 1
+    c.readyAction = null
+  })
+}
+
+/**
+ * Decrement weather duration at end of round (PTU: weather lasts N rounds).
+ * Returns new weather state without mutating inputs.
+ */
+function decrementWeather(
+  weather: string | null,
+  weatherDuration: number,
+  weatherSource: string | null
+): { weather: string | null; weatherDuration: number; weatherSource: string | null } {
+  if (weather && weatherDuration > 0 && weatherSource !== 'manual') {
+    const newDuration = weatherDuration - 1
+    if (newDuration <= 0) {
+      return { weather: null, weatherDuration: 0, weatherSource: null }
+    }
+    return { weather, weatherDuration: newDuration, weatherSource }
+  }
+  return { weather, weatherDuration, weatherSource }
+}
