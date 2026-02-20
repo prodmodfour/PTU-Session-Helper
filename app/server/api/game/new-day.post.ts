@@ -37,25 +37,32 @@ export default defineEventHandler(async () => {
     }
 
     // Reset all Character daily counters (including drained and bound AP)
-    // Need per-character updates since maxAp depends on level
+    // Group by level so we can batch updateMany per level (L+1 instead of N+1)
     const characters = await prisma.humanCharacter.findMany({
       select: { id: true, level: true }
     })
 
+    const charactersByLevel = new Map<number, string[]>()
     for (const char of characters) {
-      const maxAp = calculateMaxAp(char.level)
-      await prisma.humanCharacter.update({
-        where: { id: char.id },
-        data: {
-          restMinutesToday: 0,
-          injuriesHealedToday: 0,
-          drainedAp: 0,
-          boundAp: 0,
-          currentAp: maxAp,
-          lastRestReset: now
-        }
-      })
+      const ids = charactersByLevel.get(char.level) || []
+      charactersByLevel.set(char.level, [...ids, char.id])
     }
+
+    await prisma.$transaction(
+      [...charactersByLevel.entries()].map(([level, ids]) =>
+        prisma.humanCharacter.updateMany({
+          where: { id: { in: ids } },
+          data: {
+            restMinutesToday: 0,
+            injuriesHealedToday: 0,
+            drainedAp: 0,
+            boundAp: 0,
+            currentAp: calculateMaxAp(level),
+            lastRestReset: now
+          }
+        })
+      )
+    )
 
     return {
       success: true,
