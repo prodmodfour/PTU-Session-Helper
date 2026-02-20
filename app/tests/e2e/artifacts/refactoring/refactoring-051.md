@@ -13,7 +13,7 @@ affected_files:
   - app/server/api/encounters/from-scene.post.ts
   - app/server/api/encounters/served.get.ts
 estimated_scope: small
-status: open
+status: resolved
 created_at: 2026-02-20
 filed_by: code-review-086
 ---
@@ -58,3 +58,16 @@ Replace each `const parsed = { ... }` block with a call to `buildEncounterRespon
 5. For `index.post.ts`: pass `combatants: [], turnOrder: [], moveLog: [], defeatedEnemies: []` as overrides since these are empty for a new encounter (or adjust the builder to handle fresh records)
 
 Estimated commits: 1-2 (mechanical, same pattern repeated 8 times)
+
+## Resolution Log
+
+All 8 endpoints migrated to `buildEncounterResponse()` in 4 commits:
+
+- **`c61549d`** — `[id].get.ts`, `served.get.ts`: Replaced manual response with `loadEncounter()` + `buildEncounterResponse()`. Added `createdAt`/`updatedAt`.
+- **`6912161`** — `serve.post.ts`, `unserve.post.ts`: Added 7 missing fields (`gridConfig`, `sceneNumber`, `currentPhase`, `trainerTurnOrder`, `pokemonTurnOrder`, `createdAt`, `updatedAt`).
+- **`b6100c3`** — `index.post.ts`, `from-scene.post.ts`: Fresh encounter creation now uses builder with empty combatants array. Added `createdAt`/`updatedAt`.
+- **`7a31790`** — `[id].put.ts`, `next-turn.post.ts`: Mutation endpoints now capture the updated Prisma record and pass it to the builder. Added `createdAt`/`updatedAt`.
+
+**Files changed:** 8 endpoint files
+**Tests:** 640/640 Vitest unit tests pass. No regressions.
+**Verification:** `grep 'const parsed = {' app/server/api/encounters/` returns 0 hits. All 21 encounter endpoint files now use `buildEncounterResponse`.
