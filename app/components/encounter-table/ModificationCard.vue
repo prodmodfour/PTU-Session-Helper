@@ -463,6 +463,10 @@ const addChange = async () => {
 .modal {
   @include modal-container-base;
   max-width: 450px;
+
+  &__header h3 {
+    font-size: 1rem;
+  }
 }
 
 .form-group {
