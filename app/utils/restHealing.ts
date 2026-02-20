@@ -195,3 +195,22 @@ export function getRestHealingInfo(params: {
     injuriesRemainingToday: Math.max(0, 3 - injuriesHealedToday)
   }
 }
+
+/**
+ * Calculate max Action Points for a trainer.
+ * Per PTU Core (p221): Trainers have 5 AP + 1 more for every 5 Trainer Levels.
+ * Level 1 = 5 AP, Level 5 = 6 AP, Level 10 = 7 AP, Level 15 = 8 AP.
+ */
+export function calculateMaxAp(level: number): number {
+  return 5 + Math.floor(level / 5)
+}
+
+/**
+ * Calculate available AP after scene-end restoration.
+ * Per PTU Core (p221): AP is completely regained at the end of each Scene.
+ * Drained AP remains unavailable until Extended Rest.
+ */
+export function calculateSceneEndAp(level: number, drainedAp: number): number {
+  const maxAp = calculateMaxAp(level)
+  return Math.max(0, maxAp - drainedAp)
+}
