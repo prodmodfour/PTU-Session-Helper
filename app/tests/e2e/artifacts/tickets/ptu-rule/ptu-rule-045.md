@@ -37,4 +37,13 @@ P0 tier implemented: data model, constants catalog, CRUD API, bonuses utility.
 - **D: Bonuses Utility** — `computeEquipmentBonuses()` pure function in `app/utils/equipmentBonuses.ts` aggregates DR, evasion, stat bonuses, speed default CS, and conditional DR.
 - **Serializers** — Both `serializeCharacter` and `serializeCharacterSummary` now include parsed `equipment` field.
 
-P1 (combat integration) and P2 (UI) remain for future implementation.
+### P1 Implementation (2026-02-20)
+
+P1 tier implemented: combat integration for DR, evasion, Focus bonuses, and Heavy Armor speed penalty.
+
+- **E: DR from Armor** — Server-side `calculate-damage.post.ts` auto-reads equipment DR for human targets. Helmet conditional DR (+15) on critical hits. Client-side `useMoveCalculation.ts` also subtracts equipment DR in damage calcs. Caller-provided DR still overrides for manual GM adjustments.
+- **F: Evasion from Shields** — Equipment evasion bonus added to evasion calculations in server endpoint, client composable, and `buildCombatantFromEntity()` initial evasion values.
+- **G: Focus Stat Bonuses** — New `applyStageModifierWithBonus()` helper in `damageCalculation.ts`. `DamageCalcInput` gains `attackBonus`/`defenseBonus` fields. Applied for human attackers/targets in both server and client damage calculations.
+- **H: Heavy Armor Speed Penalty** — `buildCombatantFromEntity()` applies speed default CS (-1) to initiative and initial stage modifiers. `breather.post.ts` resets speed CS to equipment default instead of 0.
+
+P2 (UI: equipment tab, catalog browser) remains for future implementation.

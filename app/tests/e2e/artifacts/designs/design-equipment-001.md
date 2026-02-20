@@ -4,7 +4,7 @@ ticket_id: ptu-rule-045
 category: FEATURE_GAP
 scope: FULL
 domain: combat
-status: design-complete
+status: p1-complete
 affected_files:
   - app/prisma/schema.prisma
   - app/types/character.ts
@@ -740,3 +740,21 @@ Equipment changes emit a `character_update` WebSocket event (existing event type
 | `aaab058` | M1 fix: add equipment endpoints to app-surface.md | `.claude/skills/references/app-surface.md` |
 
 **P0 Status:** All 4 items implemented + review fixes applied. P1/P2 remain.
+
+### P1 — Combat Integration (2026-02-20)
+
+| Commit | Description | Files |
+|--------|-------------|-------|
+| `61203a8` | E+F+G: Auto-apply DR, evasion, Focus bonuses in server damage calc | `app/utils/damageCalculation.ts`, `app/server/api/encounters/[id]/calculate-damage.post.ts` |
+| `978f529` | F+H: Equipment evasion/initiative/speed CS in combatant builder | `app/server/services/combatant.service.ts` |
+| `6027e57` | H: Take a Breather respects Heavy Armor speed default CS | `app/server/api/encounters/[id]/breather.post.ts` |
+| `8f79acb` | E+F+G: Equipment bonuses in client-side move calculation | `app/composables/useMoveCalculation.ts` |
+
+**P1 Summary:**
+
+- **E (DR from Armor):** `calculate-damage.post.ts` auto-reads equipment DR for human targets. Helmet conditional DR (+15) applied on critical hits. Caller-provided DR overrides for manual GM adjustments. Client-side `useMoveCalculation.ts` also subtracts equipment DR in `targetDamageCalcs`.
+- **F (Evasion from Shields):** Equipment evasion bonus added to evasion calculations in both server (`calculate-damage.post.ts`) and client (`useMoveCalculation.ts` `getTargetEvasion`/`getTargetEvasionLabel`). `buildCombatantFromEntity()` includes equipment evasion in initial evasion values.
+- **G (Focus Stat Bonuses):** New `applyStageModifierWithBonus()` helper in `damageCalculation.ts`. `DamageCalcInput` gains `attackBonus`/`defenseBonus` fields. Server endpoint computes Focus bonuses for human attackers/targets. Client composable applies Focus bonuses to `attackStatValue` and `targetDamageCalcs`.
+- **H (Heavy Armor Speed Penalty):** `buildCombatantFromEntity()` applies speed default CS to initiative and initial stage modifiers. `breather.post.ts` resets speed CS to equipment default (not 0) for Heavy Armor wearers.
+
+**P1 Status:** All 4 items (E, F, G, H) implemented. P2 (UI) remains.
