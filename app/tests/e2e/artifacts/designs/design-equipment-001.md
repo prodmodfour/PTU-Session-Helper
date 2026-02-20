@@ -731,4 +731,12 @@ Equipment changes emit a `character_update` WebSocket event (existing event type
 | `9626886` | Serializer + PUT endpoint equipment support | `app/server/utils/serializers.ts`, `app/server/api/characters/[id].put.ts` |
 | `a120134` | Equipment CRUD API (GET + PUT) | `app/server/api/characters/[id]/equipment.get.ts` (new), `app/server/api/characters/[id]/equipment.put.ts` (new) |
 
-**P0 Status:** All 4 items implemented (A: data model, B: constants, C: CRUD API, D: bonuses utility). P1/P2 remain.
+### P0 — Review Fixes (code-review-115) (2026-02-20)
+
+| Commit | Description | Files |
+|--------|-------------|-------|
+| `4590346` | C1 fix: include equipment in buildHumanEntityFromRecord() | `app/server/services/combatant.service.ts` |
+| `1626800` | H1 fix: Zod validation for equipment PUT endpoint | `app/server/api/characters/[id]/equipment.put.ts`, `app/package.json` |
+| `aaab058` | M1 fix: add equipment endpoints to app-surface.md | `.claude/skills/references/app-surface.md` |
+
+**P0 Status:** All 4 items implemented + review fixes applied. P1/P2 remain.
