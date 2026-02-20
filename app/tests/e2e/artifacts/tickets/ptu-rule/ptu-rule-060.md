@@ -1,7 +1,8 @@
 ---
 ticket_id: ptu-rule-060
 priority: P3
-status: open
+status: in-progress
+design_spec: designs/design-level-budget-001.md
 domain: scenes
 matrix_source:
   rule_ids:

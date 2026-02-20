@@ -1,7 +1,8 @@
 ---
 ticket_id: ptu-rule-058
 priority: P3
-status: open
+status: in-progress
+design_spec: designs/design-density-significance-001.md
 domain: encounter-tables
 matrix_source:
   rule_ids:

@@ -1,7 +1,8 @@
 ---
 ticket_id: ptu-rule-055
 priority: P3
-status: open
+status: in-progress
+design_spec: designs/design-xp-system-001.md
 domain: pokemon-lifecycle
 matrix_source:
   rule_id: pokemon-lifecycle-R058

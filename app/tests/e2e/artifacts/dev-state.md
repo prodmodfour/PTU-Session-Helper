@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T22:30:00
+last_updated: 2026-02-20T23:45:00
 updated_by: orchestrator
 ---
 
@@ -15,16 +15,12 @@ updated_by: orchestrator
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| ptu-rule-029–075 | P1–P3 | resolved | (all resolved — see sessions 1–10) |
-| ptu-rule-045 | P3 | **open** | Equipment/armor system |
-| ptu-rule-048 | P3 | **open** | Evasion CS treatment |
-| ptu-rule-051 | P3 | **open** | Breather shift movement |
-| ptu-rule-054 | P3 | **open** | Base Relations Rule |
-| ptu-rule-055 | P3 | **open** | XP calculation |
-| ptu-rule-056 | P3 | **open** | Character creation form |
-| ptu-rule-057 | P3 | **open** | Species diversity |
-| ptu-rule-058 | P3 | **open** | Encounter density/significance mismatch |
-| ptu-rule-060 | P3 | **open** | Level-budget/significance |
+| ptu-rule-029–075 | P1–P3 | resolved | (all resolved — see sessions 1–11) |
+| ptu-rule-045 | P3 | **in-progress** | Equipment/armor system — design spec written (`design-equipment-001.md`) |
+| ptu-rule-055 | P3 | **in-progress** | XP calculation — design spec written (`design-xp-system-001.md`) |
+| ptu-rule-056 | P3 | **in-progress** | Character creation form — design spec written (`design-char-creation-001.md`) |
+| ptu-rule-058 | P3 | **in-progress** | Encounter density/significance — design spec written (`design-density-significance-001.md`) |
+| ptu-rule-060 | P3 | **in-progress** | Level-budget/significance — design spec written (`design-level-budget-001.md`) |
 
 ### Feature Tickets (`tickets/feature/`)
 (none)
@@ -34,18 +30,25 @@ updated_by: orchestrator
 
 ## Active Developer Work
 
-**Current task:** Idle — end of session 10.
+**Current task:** Idle — end of session 11.
 
-**Session 10 completed:**
-- 6 tickets resolved (all P3) — all reviewed + approved
-- 26 review artifacts created (13 code reviews, 13 rules reviews)
-- 3 follow-up fix cycles (ptu-rule-074 swiftActionUsed, refactoring-046 variant prop + JSON, refactoring-052 footer gap)
-- 1 new refactoring ticket filed (refactoring-054 from code-review-103)
+**Session 11 completed:**
+- 5 fixes implemented, all reviewed + approved
+- 5 design specs written for FULL-scope feature gaps
+- 11 review artifacts created (6 code reviews, 5 rules reviews)
+- 1 follow-up fix cycle (ptu-rule-051 banner persistence — CHANGES_REQUIRED → follow-up → APPROVED)
+- 1 inline review fix (ptu-rule-054 dead `total` field — from code-review-110)
 
 **Next session queue (by priority):**
-1. P3 ptu-rule tickets (045/048/051/054–058/060 — 9 remaining)
-2. P3 refactoring (054 — encounters.vue mixin smell, from session 10 review)
-3. Re-map all 8 stale matrix domains (deferred until P3 queue is smaller)
+1. Design implementations — 5 design specs ready for P0 implementation (045/055/056/058/060)
+2. Re-map all 8 stale matrix domains (deferred until design implementations begin)
+
+**Design spec dependency graph:**
+- ptu-rule-045 (equipment) — independent, can start immediately
+- ptu-rule-056 (char creation) — independent, can start immediately
+- ptu-rule-055 (XP system) — independent, can start immediately
+- ptu-rule-058 (density/significance) — P1 depends on 055 (XP)
+- ptu-rule-060 (level budget) — P1 depends on 055 (XP), P2 depends on 058 (density)
 
 ## Review Status
 
@@ -95,6 +98,21 @@ updated_by: orchestrator
 | code-review-107 | refactoring-053 | APPROVED | senior-reviewer | 2026-02-20 |
 | rules-review-097 | refactoring-053 | PASS | game-logic-reviewer | 2026-02-20 |
 
+### Session 11 Reviews
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-108 | ptu-rule-057 | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-098 | ptu-rule-057 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-109 | refactoring-054 | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-099 | refactoring-054 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-110 | ptu-rule-054 | APPROVED (with fix) | senior-reviewer | 2026-02-20 |
+| rules-review-100 | ptu-rule-054 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-111 | ptu-rule-051 | CHANGES_REQUIRED | senior-reviewer | 2026-02-20 |
+| rules-review-101 | ptu-rule-051 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-111b | ptu-rule-051 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-112 | ptu-rule-048 | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-102 | ptu-rule-048 | PASS | game-logic-reviewer | 2026-02-20 |
+
 ## Refactoring Tickets (`refactoring/`)
 
 | Ticket | Priority | Status | Summary |
@@ -105,14 +123,14 @@ updated_by: orchestrator
 | refactoring-042 | P2 | resolved | MoveTargetModal SCSS extraction (session 8) |
 | refactoring-044 | P2 | resolved | Surface capture action error (session 8) |
 | refactoring-045 | P3 | resolved | N+1 query batch optimization (session 9) |
-| refactoring-046 | P3 | resolved | Duplicate capabilities display + AP restore loop — both reviews APPROVED (session 10) |
+| refactoring-046 | P3 | resolved | Duplicate capabilities display + AP restore loop (session 10) |
 | refactoring-047 | P2 | resolved | Pokemon sheet SCSS dedup (session 8) |
 | refactoring-048 | P3 | resolved | Capture rate deduplication (session 9) |
 | refactoring-050 | P3 | resolved | Unicode star → Phosphor Icon (session 9) |
 | refactoring-051 | P2 | resolved | 8 encounter endpoints → buildEncounterResponse (session 8) |
-| refactoring-052 | P3 | resolved | encounters.vue overflow model change — both reviews APPROVED (session 10) |
-| refactoring-053 | P3 | resolved | Unused enhanced modal mixins → @include — both reviews APPROVED (session 10) |
-| refactoring-054 | P3 | open | encounters.vue mixin override smell (from code-review-103) |
+| refactoring-052 | P3 | resolved | encounters.vue overflow model change (session 10) |
+| refactoring-053 | P3 | resolved | Unused enhanced modal mixins → @include (session 10) |
+| refactoring-054 | P3 | resolved | encounters.vue mixin override smell — both reviews APPROVED (session 11) |
 
 ## Code Health
 
@@ -122,24 +140,30 @@ updated_by: orchestrator
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 0 |
-| Open tickets (P3) | 10 (9 ptu-rules + 1 refactoring) |
-| Total open | 10 |
-| Total resolved | 120 |
+| Open tickets (P3) | 5 (5 ptu-rules with design specs, awaiting implementation) |
+| Total open | 5 |
+| Total resolved | 126 |
 
-## Session Summary (2026-02-20, session 10)
+## Session Summary (2026-02-20, session 11)
 
-**Resolved this session:** 6 tickets (all P3)
-- ptu-rule-074 (pass action reactive mutation → server endpoint — FAIL/CHANGES_REQUIRED → follow-up → APPROVED/PASS)
-- refactoring-046 (capabilities display + AP restore dedup — CHANGES_REQUIRED → follow-up → APPROVED)
-- refactoring-053 (enhanced modal mixins → @include — APPROVED)
-- refactoring-052 (encounters.vue overflow model — CHANGES_REQUIRED → follow-up → APPROVED)
-- ptu-rule-037 (seed parser regex false-positive — CHANGES_REQUIRED → follow-up → APPROVED)
-- ptu-rule-050 (pokeBallType dead code removal — APPROVED)
+**Resolved this session:** 5 fixes + 5 design specs (all P3)
 
-**Reviews completed:** 26 reviews (13 code, 13 rules) — 8 initial APPROVED/PASS, 4 CHANGES_REQUIRED + 1 FAIL (all addressed same session), 4 follow-up APPROVED/PASS
+**Fixes resolved (all reviewed + approved):**
+- ptu-rule-057 (species diversity — exponential weight decay + per-species cap — APPROVED/PASS)
+- refactoring-054 (encounters.vue mixin inlining — APPROVED/PASS)
+- ptu-rule-054 (base relations enforcement — APPROVED with dead code fix + PASS)
+- ptu-rule-048 (evasion CS — audit was incorrect, formulas already correct, UI clarity fix — APPROVED/PASS)
+- ptu-rule-051 (breather shift banner + auto-grid-switch — CHANGES_REQUIRED → follow-up APPROVED + PASS)
 
-**Tickets created:** 1 (refactoring-054 from review findings)
+**Design specs written:**
+- design-equipment-001.md (ptu-rule-045 — equipment/armor system)
+- design-xp-system-001.md (ptu-rule-055 — XP calculation + distribution)
+- design-char-creation-001.md (ptu-rule-056 — character creation form expansion)
+- design-density-significance-001.md (ptu-rule-058 — density/significance separation)
+- design-level-budget-001.md (ptu-rule-060 — level-budget encounter creation)
 
-**Net movement:** 14→10 open (-4 net, -6 resolved +1 new +1 already counted), 114→120 resolved (+6)
+**Reviews completed:** 11 reviews (6 code, 5 rules) — 4 initial APPROVED/PASS, 1 CHANGES_REQUIRED (addressed same session), 1 APPROVED with inline fix
+
+**Net movement:** 10→5 open (-5 net, -5 resolved as fixes, 5 remaining with designs), 120→126 resolved (+6 including refactoring-054)
 
 **All P0, P1, and P2 tickets remain at 0.**

@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T22:30:00
+last_updated: 2026-02-20T23:45:00
 updated_by: orchestrator
 ---
 
@@ -26,18 +26,22 @@ All 8 domains fully processed through M2 ticket creation. Matrix pipeline is **c
 
 ## Staleness Status
 
-All 8 domains are stale due to sessions 5–10 code changes. Re-mapping deferred until P3 dev queue is smaller.
+All 8 domains are stale due to sessions 5–11 code changes. Re-mapping deferred until design implementations begin.
 
-**Session 10 changes (6 tickets resolved):**
-- **combat:** ptu-rule-074 — New pass server endpoint (new capability to map)
-- **capture:** ptu-rule-050 — Removed dead pokeBallType parameter (minor capability change)
-- **character-lifecycle:** refactoring-046 — Extracted CapabilitiesDisplay.vue (structural, no coverage impact)
-- **scenes:** refactoring-046 — Extracted restoreSceneAp() service (structural, no coverage impact)
-- **combat/scenes/capture:** refactoring-052, refactoring-053 — SCSS-only changes (no coverage impact)
-- **pokemon-generation:** ptu-rule-037 — Seed parser skip list fix (no coverage impact)
+**Session 11 changes (5 fixes + 5 designs):**
+- **combat:** ptu-rule-048 — UI label changes + documentation (no formula changes, no coverage impact)
+- **healing/combat:** ptu-rule-051 — New BreatherShiftBanner component, shift movement prompt (new capability to map)
+- **pokemon-lifecycle:** ptu-rule-054 — Base Relations enforcement in stat distribution (correctness fix, may change coverage)
+- **encounter-tables:** ptu-rule-057 — Species diversity enforcement in generation (new capability to map)
+- **encounter-tables (SCSS):** refactoring-054 — encounters.vue mixin inlining (no coverage impact)
+- **5 design specs written** — equipment, XP, char creation, density/significance, level-budget (no code changes yet)
+
+## Audit Correction
+
+- **combat-R010** (evasion CS treatment): Original audit classified as "Approximation" — Game Logic Reviewer (rules-review-102) independently confirmed the implementation was already correct per PTU's two-part evasion system. Audit item should be reclassified as "Correct" on next re-audit.
 
 ## Recommended Next Steps
 
-1. Continue burning through P3 dev ticket queue (9 ptu-rule + 1 refactoring remaining)
-2. Re-map all 8 domains once P3 queue is clear or nearly clear
-3. Combat domain is most impacted — pass endpoint + League battle phases are new capabilities
+1. Begin P0 implementation of independent design specs (045 equipment, 055 XP, 056 char creation)
+2. Re-map all 8 domains after P0 implementations land (significant new capabilities to map)
+3. Combat and encounter-tables domains most impacted by session 11 changes
