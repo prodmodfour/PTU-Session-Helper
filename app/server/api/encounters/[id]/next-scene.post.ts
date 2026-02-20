@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
       const resetMoves = resetSceneUsage(moves)
 
       // Only create a new combatant if moves actually changed
-      if (resetMoves === moves || resetMoves.every((m, i) => m === moves[i])) {
+      if (resetMoves.every((m, i) => m === moves[i])) {
         return combatant
       }
 
