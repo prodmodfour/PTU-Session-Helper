@@ -147,13 +147,23 @@ export function useCapture() {
     const persistentConditions = PERSISTENT_CONDITIONS
     const volatileConditions = VOLATILE_CONDITIONS
 
+    // Poisoned and Badly Poisoned are variants of the same affliction (PTU p.246);
+    // only one should contribute +10 to capture rate, never both.
     let statusModifier = 0
     let stuckModifier = 0
     let slowModifier = 0
+    let hasPoisonBonus = false
 
     for (const condition of statusConditions) {
       if (persistentConditions.includes(condition)) {
-        statusModifier += 10
+        if (condition === 'Poisoned' || condition === 'Badly Poisoned') {
+          if (!hasPoisonBonus) {
+            statusModifier += 10
+            hasPoisonBonus = true
+          }
+        } else {
+          statusModifier += 10
+        }
       } else if (volatileConditions.includes(condition)) {
         statusModifier += 5
       }

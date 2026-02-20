@@ -106,13 +106,23 @@ export function calculateCaptureRate(input: CaptureRateInput): CaptureRateResult
   const legendaryModifier = isLegendary ? -30 : 0
 
   // Status condition modifiers
+  // Poisoned and Badly Poisoned are variants of the same affliction (PTU p.246);
+  // only one should contribute +10 to capture rate, never both.
   let statusModifier = 0
   let stuckModifier = 0
   let slowModifier = 0
+  let hasPoisonBonus = false
 
   for (const condition of statusConditions) {
     if (PERSISTENT_CONDITIONS.includes(condition)) {
-      statusModifier += 10
+      if (condition === 'Poisoned' || condition === 'Badly Poisoned') {
+        if (!hasPoisonBonus) {
+          statusModifier += 10
+          hasPoisonBonus = true
+        }
+      } else {
+        statusModifier += 10
+      }
     } else if (VOLATILE_CONDITIONS.includes(condition)) {
       statusModifier += 5
     }
