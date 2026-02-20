@@ -19,6 +19,9 @@ interface EncounterRecord {
   currentRound: number
   currentTurnIndex: number
   turnOrder: string
+  currentPhase: string
+  trainerTurnOrder: string
+  pokemonTurnOrder: string
   isActive: boolean
   isPaused: boolean
   isServed: boolean
@@ -58,7 +61,7 @@ export interface ParsedEncounter {
   gridConfig: GridConfig | null
   trainerTurnOrder: string[]
   pokemonTurnOrder: string[]
-  currentPhase: 'trainer' | 'pokemon'
+  currentPhase: 'trainer_declaration' | 'trainer_resolution' | 'pokemon'
   createdAt: Date
   updatedAt: Date
 }
@@ -182,7 +185,7 @@ export function buildEncounterResponse(
     // Combat phase fields
     trainerTurnOrder?: string[]
     pokemonTurnOrder?: string[]
-    currentPhase?: 'trainer' | 'pokemon'
+    currentPhase?: 'trainer_declaration' | 'trainer_resolution' | 'pokemon'
   }
 ): ParsedEncounter {
   const turnOrder = options?.turnOrder ?? JSON.parse(record.turnOrder) as string[]
@@ -215,9 +218,9 @@ export function buildEncounterResponse(
     defeatedEnemies,
     sceneNumber: 1, // Scene number not stored in DB, default to 1
     gridConfig,
-    trainerTurnOrder: options?.trainerTurnOrder ?? [],
-    pokemonTurnOrder: options?.pokemonTurnOrder ?? [],
-    currentPhase: options?.currentPhase ?? 'pokemon',
+    trainerTurnOrder: options?.trainerTurnOrder ?? JSON.parse(record.trainerTurnOrder || '[]'),
+    pokemonTurnOrder: options?.pokemonTurnOrder ?? JSON.parse(record.pokemonTurnOrder || '[]'),
+    currentPhase: (options?.currentPhase ?? record.currentPhase ?? 'pokemon') as 'trainer_declaration' | 'trainer_resolution' | 'pokemon',
     createdAt: record.createdAt,
     updatedAt: record.updatedAt
   }

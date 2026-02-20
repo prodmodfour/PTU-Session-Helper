@@ -28,7 +28,7 @@
             v-for="type in getTypes(species)"
             :key="type"
             class="type-badge"
-            :class="`type--${type.toLowerCase()}`"
+            :class="`type-badge--${type.toLowerCase()}`"
           >
             {{ type }}
           </span>
@@ -206,32 +206,8 @@ const selectSpecies = (species: SpeciesData) => {
 }
 
 .type-badge {
-  padding: 2px 6px;
-  border-radius: $border-radius-sm;
+  @include pokemon-sheet-type-badge;
   font-size: 0.65rem;
-  text-transform: uppercase;
-  font-weight: 600;
-  color: white;
-
-  // Type colors
-  &.type--normal { background: #A8A878; }
-  &.type--fire { background: #F08030; }
-  &.type--water { background: #6890F0; }
-  &.type--electric { background: #F8D030; color: #333; }
-  &.type--grass { background: #78C850; }
-  &.type--ice { background: #98D8D8; color: #333; }
-  &.type--fighting { background: #C03028; }
-  &.type--poison { background: #A040A0; }
-  &.type--ground { background: #E0C068; color: #333; }
-  &.type--flying { background: #A890F0; }
-  &.type--psychic { background: #F85888; }
-  &.type--bug { background: #A8B820; }
-  &.type--rock { background: #B8A038; }
-  &.type--ghost { background: #705898; }
-  &.type--dragon { background: #7038F8; }
-  &.type--dark { background: #705848; }
-  &.type--steel { background: #B8B8D0; color: #333; }
-  &.type--fairy { background: #EE99AC; color: #333; }
 }
 
 .search-empty {

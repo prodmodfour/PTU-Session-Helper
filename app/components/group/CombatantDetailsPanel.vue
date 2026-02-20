@@ -516,30 +516,7 @@ const formatFrequency = (freq: string): string => {
 }
 
 .type-badge {
-  font-size: $font-size-xs;
-  font-weight: 600;
-  padding: 2px $spacing-sm;
-  border-radius: $border-radius-sm;
-  text-transform: uppercase;
-
-  &--normal { background: #A8A878; color: #fff; }
-  &--fire { background: #F08030; color: #fff; }
-  &--water { background: #6890F0; color: #fff; }
-  &--electric { background: #F8D030; color: #000; }
-  &--grass { background: #78C850; color: #fff; }
-  &--ice { background: #98D8D8; color: #000; }
-  &--fighting { background: #C03028; color: #fff; }
-  &--poison { background: #A040A0; color: #fff; }
-  &--ground { background: #E0C068; color: #000; }
-  &--flying { background: #A890F0; color: #fff; }
-  &--psychic { background: #F85888; color: #fff; }
-  &--bug { background: #A8B820; color: #fff; }
-  &--rock { background: #B8A038; color: #fff; }
-  &--ghost { background: #705898; color: #fff; }
-  &--dragon { background: #7038F8; color: #fff; }
-  &--dark { background: #705848; color: #fff; }
-  &--steel { background: #B8B8D0; color: #000; }
-  &--fairy { background: #EE99AC; color: #000; }
+  @include pokemon-sheet-type-badge;
 }
 
 .ability-list {

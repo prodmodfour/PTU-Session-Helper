@@ -23,7 +23,10 @@ export type CombatSide = 'players' | 'allies' | 'enemies';
 export type BattleType = 'trainer' | 'full_contact';
 
 // PTU Turn Phase (for League battles)
-export type TurnPhase = 'trainer' | 'pokemon';
+// trainer_declaration: trainers declare actions, lowest speed first
+// trainer_resolution: trainers resolve actions, highest speed first
+// pokemon: pokemon act, highest speed first
+export type TurnPhase = 'trainer_declaration' | 'trainer_resolution' | 'pokemon';
 
 // Stage modifiers (-6 to +6)
 export interface StageModifiers {

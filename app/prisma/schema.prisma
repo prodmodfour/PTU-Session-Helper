@@ -181,6 +181,11 @@ model Encounter {
   currentTurnIndex Int   @default(0)
   turnOrder     String   @default("[]") // JSON array of combatant IDs
 
+  // League Battle phase tracking (PTU: trainers declare/act first, then Pokemon)
+  currentPhase      String @default("pokemon") // 'trainer_declaration' | 'trainer_resolution' | 'pokemon'
+  trainerTurnOrder  String @default("[]") // JSON array — trainer combatant IDs (low→high speed for declaration)
+  pokemonTurnOrder  String @default("[]") // JSON array — pokemon combatant IDs (high→low speed)
+
   // State
   isActive      Boolean  @default(true)
   isPaused      Boolean  @default(false)
