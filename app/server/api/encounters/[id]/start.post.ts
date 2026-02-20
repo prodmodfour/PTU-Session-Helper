@@ -1,6 +1,8 @@
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse, sortByInitiativeWithRollOff } from '~/server/services/encounter.service'
+import { resetSceneUsage } from '~/utils/moveFrequency'
 import type { Combatant } from '~/types'
+import type { Move, Pokemon } from '~/types/character'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -33,7 +35,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Reset turn state for all combatants
+    // Reset turn state and scene-frequency moves for all combatants
+    const dbUpdates: Promise<unknown>[] = []
     combatants.forEach((c) => {
       c.hasActed = false
       c.actionsRemaining = 2
@@ -45,6 +48,24 @@ export default defineEventHandler(async (event) => {
         swiftActionUsed: false,
         canBeCommanded: true,
         isHolding: false
+      }
+
+      // Reset scene-frequency usage for Pokemon (new encounter = new scene)
+      if (c.type === 'pokemon') {
+        const entity = c.entity as Pokemon
+        const moves: Move[] = entity.moves || []
+        const resetMoves = resetSceneUsage(moves)
+        if (!resetMoves.every((m, i) => m === moves[i])) {
+          entity.moves = resetMoves
+          if (c.entityId) {
+            dbUpdates.push(
+              prisma.pokemon.update({
+                where: { id: c.entityId },
+                data: { moves: JSON.stringify(resetMoves) }
+              })
+            )
+          }
+        }
       }
     })
 
@@ -79,6 +100,11 @@ export default defineEventHandler(async (event) => {
       const sortedCombatants = sortByInitiativeWithRollOff(combatants, true)
       turnOrder = sortedCombatants.map((c) => c.id)
       currentPhase = 'pokemon' // Phase doesn't matter for full contact
+    }
+
+    // Persist any scene-frequency move resets
+    if (dbUpdates.length > 0) {
+      await Promise.all(dbUpdates)
     }
 
     await prisma.encounter.update({
