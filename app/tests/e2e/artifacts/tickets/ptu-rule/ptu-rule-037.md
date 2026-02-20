@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-037
 type: ptu-rule
 priority: P3
-status: in-progress
+status: resolved
 source_ecosystem: dev
 target_ecosystem: dev
 created_by: senior-reviewer
