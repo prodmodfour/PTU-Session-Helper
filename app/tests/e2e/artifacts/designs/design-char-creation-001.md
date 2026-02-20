@@ -4,7 +4,7 @@ ticket_id: ptu-rule-056
 category: FEATURE_GAP
 scope: FULL
 domain: character-lifecycle
-status: p0-complete
+status: p1-complete
 affected_files:
   - app/pages/gm/create.vue
   - app/server/api/characters/index.post.ts
@@ -895,3 +895,39 @@ pages/gm/create.vue
 **Commits:**
 7. `fix: correct Hermit background skill assignments per PTU Core p.14`
 8. `fix: cap evasion values at +6 per PTU Core p.16`
+
+### P1 Implementation (2026-02-20)
+
+**Status:** Complete
+
+**Files created:**
+- `app/constants/trainerStats.ts` -- Shared stat allocation constants (BASE_HP, BASE_OTHER, TOTAL_STAT_POINTS, MAX_POINTS_PER_STAT)
+- `app/constants/trainerClasses.ts` -- 39 trainer classes across 6 categories with associated skills, branching flag, `getClassesByCategory()` utility
+- `app/components/create/ClassFeatureSection.vue` -- Searchable class picker grouped by category, branching specialization prompts, feature text input (4+1 Training Feature), tag display
+- `app/components/create/EdgeSelectionSection.vue` -- Edge name input with counter, Skill Edge shortcut integrating with skill grid, PTU rank-up validation
+
+**Files modified:**
+- `app/composables/useCharacterCreation.ts` -- Added class add/remove, feature add/remove/training, edge add/remove/skillEdge, allFeatures computed, classFeatureEdgeWarnings, expanded buildCreatePayload; imported shared stat constants; fixed applyBackground immutability pattern
+- `app/components/create/StatAllocationSection.vue` -- Imports stat constants from shared trainerStats.ts instead of local declarations
+- `app/utils/characterCreationValidation.ts` -- validateEdgesAndFeatures already existed from P0 (no changes needed)
+- `app/pages/gm/create.vue` -- Integrated EdgeSelectionSection and ClassFeatureSection with handleSkillEdge bridge function
+
+**Code review fixes addressed (from code-review-118):**
+- M1: Stat constants extracted to `constants/trainerStats.ts`, imported by both composable and StatAllocationSection
+- M2: `applyBackground` uses immutable spread pattern instead of bracket-assignment mutation
+
+**Design decisions:**
+- Class picker uses searchable grouped list (not modal) -- keeps the form flow single-page
+- Branching classes (Type Ace, Stat Ace, Researcher, Martial Artist, Style Expert) prompt for specialization name before adding
+- Features are free-text input (not a database lookup) per design spec rationale -- PTU has hundreds of features
+- Skill Edge shortcut validates: cannot raise Pathetic skills, cannot exceed Novice at level 1
+- Edge counter is informational (4 starting), not a hard cap -- GM may override for higher-level characters
+- Section order: Background/Skills -> Edges -> Classes/Features -> Stats (edges before classes so Skill Edges are visible when selecting class features)
+
+**Commits:**
+9. `1ed7df6` -- `refactor: extract stat constants to shared trainerStats.ts and fix applyBackground immutability`
+10. `68d4c2e` -- `feat: add PTU trainer class constants with categories and descriptions`
+11. `9be9663` -- `feat: add class, feature, and edge state management to useCharacterCreation`
+12. `295d4dd` -- `feat: add ClassFeatureSection component for character creation`
+13. `a2c638a` -- `feat: add EdgeSelectionSection component for character creation`
+14. `4a0eb0c` -- `feat: integrate class, feature, and edge sections into create page`

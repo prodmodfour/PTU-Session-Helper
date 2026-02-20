@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-056
 priority: P3
-status: p0-complete
+status: p1-complete
 design_spec: designs/design-char-creation-001.md
 domain: character-lifecycle
 matrix_source:
