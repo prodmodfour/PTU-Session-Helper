@@ -1,5 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
-import type { GridConfig } from '~/types'
+import { buildEncounterResponse } from '~/server/services/encounter.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -80,7 +80,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    await prisma.encounter.update({
+    const updatedRecord = await prisma.encounter.update({
       where: { id },
       data: {
         currentTurnIndex,
@@ -92,41 +92,15 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      weather,
-      weatherDuration,
-      weatherSource,
-      combatants,
-      currentRound,
-      currentTurnIndex,
-      turnOrder,
-      currentPhase: 'pokemon' as const,
-      trainerTurnOrder: [] as string[],
-      pokemonTurnOrder: [] as string[],
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      isServed: encounter.isServed,
-      gridConfig: {
-        enabled: encounter.gridEnabled,
-        width: encounter.gridWidth,
-        height: encounter.gridHeight,
-        cellSize: encounter.gridCellSize,
-        background: encounter.gridBackground ?? undefined,
-      } as GridConfig,
-      sceneNumber: 1,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
-    }
+    const response = buildEncounterResponse(updatedRecord, combatants)
 
-    return { success: true, data: parsed }
-  } catch (error: any) {
-    if (error.statusCode) throw error
+    return { success: true, data: response }
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error) throw error
+    const message = error instanceof Error ? error.message : 'Failed to advance turn'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to advance turn'
+      message
     })
   }
 })
