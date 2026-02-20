@@ -122,14 +122,9 @@
   font-size: $font-size-sm;
 }
 
-// Simplified type badge for Pokemon sheet context (flat colors)
-@mixin pokemon-sheet-type-badge {
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  font-weight: 600;
-  text-transform: uppercase;
-
+// Type color modifiers only (background + text color per type)
+// Use this for elements that only need type colors without badge styling (e.g., type-pip dots)
+@mixin type-color-modifiers {
   &--normal { background: $type-normal; color: #fff; }
   &--fire { background: $type-fire; color: #fff; }
   &--water { background: $type-water; color: #fff; }
@@ -148,6 +143,17 @@
   &--dark { background: $type-dark; color: #fff; }
   &--steel { background: $type-steel; color: #000; }
   &--fairy { background: $type-fairy; color: #000; }
+}
+
+// Simplified type badge for Pokemon sheet context (flat colors)
+@mixin pokemon-sheet-type-badge {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  @include type-color-modifiers;
 }
 
 // Shared keyframes

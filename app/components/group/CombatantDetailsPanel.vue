@@ -648,15 +648,15 @@ const formatFrequency = (freq: string): string => {
   border-radius: $border-radius-sm;
   text-transform: uppercase;
 
-  &--burned, &--burn { background: #F08030; color: #fff; }
-  &--frozen, &--freeze { background: #98D8D8; color: #000; }
-  &--paralyzed, &--paralysis { background: #F8D030; color: #000; }
-  &--poisoned, &--poison { background: #A040A0; color: #fff; }
-  &--badly-poisoned { background: #682a68; color: #fff; }
-  &--asleep, &--sleep { background: #705898; color: #fff; }
-  &--confused, &--confusion { background: #F85888; color: #fff; }
-  &--flinched, &--flinch { background: #705848; color: #fff; }
-  &--infatuated, &--infatuation { background: #EE99AC; color: #000; }
+  &--burned, &--burn { background: $type-fire; color: #fff; }
+  &--frozen, &--freeze { background: $type-ice; color: #000; }
+  &--paralyzed, &--paralysis { background: $type-electric; color: #000; }
+  &--poisoned, &--poison { background: $type-poison; color: #fff; }
+  &--badly-poisoned { background: darken($type-poison, 15%); color: #fff; }
+  &--asleep, &--sleep { background: $type-ghost; color: #fff; }
+  &--confused, &--confusion { background: $type-psychic; color: #fff; }
+  &--flinched, &--flinch { background: $type-dark; color: #fff; }
+  &--infatuated, &--infatuation { background: $type-fairy; color: #000; }
 }
 
 .stages-grid {
