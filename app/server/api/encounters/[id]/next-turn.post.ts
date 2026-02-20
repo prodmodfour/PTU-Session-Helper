@@ -133,7 +133,8 @@ export default defineEventHandler(async (event) => {
 })
 
 /**
- * Reset all combatants for a new round (immutable pattern applied to each combatant in-place)
+ * Reset all combatants for a new round by mutating each object in the array.
+ * Acceptable here because combatants are freshly parsed from JSON (no shared references).
  */
 function resetCombatantsForNewRound(combatants: any[]) {
   combatants.forEach((c: any) => {
