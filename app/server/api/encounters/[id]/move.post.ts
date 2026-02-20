@@ -107,27 +107,31 @@ export default defineEventHandler(async (event) => {
     }
 
     // Increment move usage tracking (immutably update the move on the actor)
+    const moveDbUpdates: Promise<unknown>[] = []
     if (move && moveIndex >= 0 && actor.type === 'pokemon') {
       const pokemonEntity = actor.entity as { moves: Move[] }
       const updatedMove = incrementMoveUsage(move, record.currentRound)
-      pokemonEntity.moves = pokemonEntity.moves.map((m, i) =>
+      const updatedMoves = pokemonEntity.moves.map((m, i) =>
         i === moveIndex ? updatedMove : m
       )
 
+      // Update the actor immutably for the combatants snapshot
+      actor.entity = { ...actor.entity, moves: updatedMoves }
+
       // Sync updated moves to the Pokemon's database record
       if (actor.entityId) {
-        dbUpdates.push(
+        moveDbUpdates.push(
           prisma.pokemon.update({
             where: { id: actor.entityId },
-            data: { moves: JSON.stringify(pokemonEntity.moves) }
+            data: { moves: JSON.stringify(updatedMoves) }
           })
         )
       }
     }
 
-    // Execute any remaining database updates (move usage sync)
-    if (dbUpdates.length > 0) {
-      await Promise.all(dbUpdates)
+    // Execute move usage database updates
+    if (moveDbUpdates.length > 0) {
+      await Promise.all(moveDbUpdates)
     }
 
     // Create log entry
