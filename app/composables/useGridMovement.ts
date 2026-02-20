@@ -148,8 +148,9 @@ export function useGridMovement(options: UseGridMovementOptions) {
     const tempConditions = combatant.tempConditions ?? []
 
     // Stuck: cannot Shift at all (PTU 1.05 p.231, p.253)
+    // Early-return so no downstream modifier (Speed CS, Sprint, min floor) can override
     if (conditions.includes('Stuck')) {
-      modifiedSpeed = 0
+      return 0
     }
 
     // Slowed: reduce all movement speeds by half
