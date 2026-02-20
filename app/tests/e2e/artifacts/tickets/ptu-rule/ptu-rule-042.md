@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-042
 priority: P2
-status: in-progress
+status: resolved
 domain: character-lifecycle
 matrix_source:
   rule_ids:

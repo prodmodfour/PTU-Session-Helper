@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-043
 priority: P2
-status: in-progress
+status: resolved
 domain: pokemon-lifecycle
 matrix_source:
   rule_ids:

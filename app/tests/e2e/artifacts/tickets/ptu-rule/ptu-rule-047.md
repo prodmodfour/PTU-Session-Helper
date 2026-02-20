@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-047
 priority: P2
-status: in-progress
+status: resolved
 domain: combat
 matrix_source:
   rule_ids:

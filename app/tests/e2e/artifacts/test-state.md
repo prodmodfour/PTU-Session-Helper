@@ -31,11 +31,11 @@ All 9 ambiguous items ruled on in rules-review-047 (2026-02-19). No new ambiguou
 ## Staleness Status
 
 Multiple domains have had Developer fixes since last capability mapping:
-- **combat:** bug-008 (temp HP), bug-014 (Cursed breather), bug-023 (Speed Evasion + label)
-- **pokemon-lifecycle:** bug-009 (nature adjustments)
-- **character-lifecycle:** bug-010, bug-015 (features/edges PUT), bug-024, bug-025
+- **combat:** bug-008 (temp HP), bug-014 (Cursed breather), bug-023 (Speed Evasion + label), ptu-rule-047 (faint conditions, encounter-end volatile clearing)
+- **pokemon-lifecycle:** bug-009 (nature adjustments), ptu-rule-043 (level-up notification system)
+- **character-lifecycle:** bug-010, bug-015 (features/edges PUT), bug-024, bug-025, ptu-rule-042 (derived trainer stats), bug-022 (AP tracking)
 - **encounter-tables:** bug-011 (weight column), bug-016 (spawn cap), bug-027 (min/max clamp)
-- **capture:** bug-013 (Trapped bonus)
+- **capture:** bug-013 (Trapped bonus), bug-021 (capture action consumption)
 - **vtt-grid:** bug-012 (terrain-aware movement), bug-017 (Earth/Rough terrain types), bug-018 (LoS blocking wired), bug-019 (multi-cell range wired)
 - **healing:** bug-006 (injury max HP)
 
@@ -43,6 +43,6 @@ All fixes are correctness improvements. Capability mappings would show higher co
 
 ## Recommended Next Steps
 
-1. **Dev ecosystem focus:** Work through P3 bug queue (bug-020, bug-021, bug-022)
-2. **Then P2 ptu-rule tickets** — prioritize by extensibility impact
+1. **Dev ecosystem focus:** Work through P2 ptu-rule queue (20 remaining tickets)
+2. **High-impact refactoring:** refactoring-043 (Pokemon page EXT-GOD, 1384 lines)
 3. **Re-map when ready:** Re-run Capability Mapper + Coverage Analyzer for stale domains to update coverage scores
