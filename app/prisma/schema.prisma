@@ -53,6 +53,7 @@ model HumanCharacter {
   injuriesHealedToday Int      @default(0) // Injuries healed today (max 3 from Pokemon Center)
   lastRestReset      DateTime? // When daily rest counters were last reset
   drainedAp          Int       @default(0) // Drained AP (restored by extended rest)
+  currentAp          Int       @default(5) // Current AP pool (restored at scene end, minus drainedAp)
 
   // Display
   avatarUrl     String?
