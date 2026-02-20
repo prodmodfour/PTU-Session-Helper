@@ -137,7 +137,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * Apply movement-modifying conditions and combat stage effects to base speed.
    *
    * PTU Rules:
-   * - Stuck: movement actions cost double (halve effective speed)
+   * - Stuck: cannot Shift at all — effective speed 0 (PTU 1.05 p.231)
    * - Slowed: reduce all movement speeds by half
    * - Speed CS: stage multiplier applied to movement speed
    * - Sprint (tempCondition): +50% movement speed for the turn
@@ -147,9 +147,9 @@ export function useGridMovement(options: UseGridMovementOptions) {
     const conditions = combatant.entity.statusConditions ?? []
     const tempConditions = combatant.tempConditions ?? []
 
-    // Stuck: movement costs double -> effectively halve speed
+    // Stuck: cannot Shift at all (PTU 1.05 p.231, p.253)
     if (conditions.includes('Stuck')) {
-      modifiedSpeed = Math.floor(modifiedSpeed / 2)
+      modifiedSpeed = 0
     }
 
     // Slowed: reduce all movement speeds by half
