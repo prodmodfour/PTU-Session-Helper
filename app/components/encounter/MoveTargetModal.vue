@@ -257,8 +257,6 @@ const {
   accuracyResults,
   // Range & LoS filtering
   targetRangeStatus,
-  inRangeTargets,
-  outOfRangeTargets,
   // STAB
   hasSTAB,
   effectiveDB,
