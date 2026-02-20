@@ -17,9 +17,10 @@ import { loadEncounter } from '~/server/services/encounter.service'
 import {
   calculateEncounterXp,
   calculateLevelUps,
+  enrichDefeatedEnemies,
   MAX_EXPERIENCE
 } from '~/utils/experienceCalculation'
-import type { DefeatedEnemy, XpApplicationResult } from '~/utils/experienceCalculation'
+import type { RawDefeatedEnemy, XpApplicationResult } from '~/utils/experienceCalculation'
 import type { LearnsetEntry } from '~/utils/levelUpCheck'
 
 export default defineEventHandler(async (event) => {
@@ -88,16 +89,8 @@ export default defineEventHandler(async (event) => {
     const { record } = await loadEncounter(id)
 
     // Recalculate XP from encounter data to verify
-    const rawDefeatedEnemies: { species: string; level: number; type?: 'pokemon' | 'human' }[] =
-      JSON.parse(record.defeatedEnemies)
-
-    const trainerEnemyIds: string[] = body.trainerEnemyIds ?? []
-
-    const defeatedEnemies: DefeatedEnemy[] = rawDefeatedEnemies.map((entry, index) => ({
-      species: entry.species,
-      level: entry.level,
-      isTrainer: entry.type === 'human' || trainerEnemyIds.includes(String(index))
-    }))
+    const rawDefeatedEnemies: RawDefeatedEnemy[] = JSON.parse(record.defeatedEnemies)
+    const defeatedEnemies = enrichDefeatedEnemies(rawDefeatedEnemies, body.trainerEnemyIds)
 
     const xpResult = calculateEncounterXp({
       defeatedEnemies,

@@ -8,8 +8,8 @@
  * PTU Core p.460: total defeated levels, apply significance, divide by players.
  */
 import { loadEncounter } from '~/server/services/encounter.service'
-import { calculateEncounterXp } from '~/utils/experienceCalculation'
-import type { DefeatedEnemy } from '~/utils/experienceCalculation'
+import { calculateEncounterXp, enrichDefeatedEnemies } from '~/utils/experienceCalculation'
+import type { RawDefeatedEnemy } from '~/utils/experienceCalculation'
 import type { Combatant } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -41,22 +41,9 @@ export default defineEventHandler(async (event) => {
   try {
     const { record, combatants } = await loadEncounter(id)
 
-    // Parse defeated enemies from encounter record
-    const rawDefeatedEnemies: { species: string; level: number; type?: 'pokemon' | 'human' }[] =
-      JSON.parse(record.defeatedEnemies)
-
-    // Build trainer ID set for override (if client provides explicit trainer IDs)
-    const trainerEnemyIds: string[] = body.trainerEnemyIds ?? []
-
-    // Enrich with isTrainer flag:
-    // - Use the 'type' field if present (new entries from damage.post.ts)
-    // - Fall back to trainerEnemyIds from the request body
-    // - Default to false for legacy entries without type
-    const defeatedEnemies: DefeatedEnemy[] = rawDefeatedEnemies.map((entry, index) => ({
-      species: entry.species,
-      level: entry.level,
-      isTrainer: entry.type === 'human' || trainerEnemyIds.includes(String(index))
-    }))
+    // Parse and enrich defeated enemies from encounter record
+    const rawDefeatedEnemies: RawDefeatedEnemy[] = JSON.parse(record.defeatedEnemies)
+    const defeatedEnemies = enrichDefeatedEnemies(rawDefeatedEnemies, body.trainerEnemyIds)
 
     // Calculate XP
     const result = calculateEncounterXp({

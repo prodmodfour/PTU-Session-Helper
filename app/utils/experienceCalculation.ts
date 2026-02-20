@@ -144,9 +144,41 @@ export interface LevelUpEvent {
   newAbilitySlot: 'second' | 'third' | null
 }
 
+/** A raw defeated enemy entry as stored in the encounter's JSON column */
+export interface RawDefeatedEnemy {
+  species: string
+  level: number
+  /** Present on entries created after the type field was added; absent on legacy entries */
+  type?: 'pokemon' | 'human'
+}
+
 // ============================================
 // FUNCTIONS
 // ============================================
+
+/**
+ * Enrich raw defeated enemy entries from the encounter record into the
+ * DefeatedEnemy shape required by calculateEncounterXp().
+ *
+ * Determines isTrainer via:
+ * 1. The `type` field on the entry (new entries from damage.post.ts)
+ * 2. Fallback: index-based trainerEnemyIds from the request body
+ * 3. Default: false for legacy entries with no type info
+ *
+ * @param raw - Defeated enemy entries parsed from the encounter JSON column
+ * @param trainerEnemyIds - Optional index-based string IDs for legacy trainer identification
+ * @returns Enriched DefeatedEnemy array ready for XP calculation
+ */
+export function enrichDefeatedEnemies(
+  raw: RawDefeatedEnemy[],
+  trainerEnemyIds: string[] = []
+): DefeatedEnemy[] {
+  return raw.map((entry, index) => ({
+    species: entry.species,
+    level: entry.level,
+    isTrainer: entry.type === 'human' || trainerEnemyIds.includes(String(index))
+  }))
+}
 
 /**
  * Get the cumulative XP needed to reach a specific level.
