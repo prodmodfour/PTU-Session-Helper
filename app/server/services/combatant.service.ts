@@ -496,6 +496,7 @@ export function buildHumanEntityFromRecord(record: PrismaHumanRecord): HumanChar
     lastInjuryTime: record.lastInjuryTime?.toISOString() ?? null,
     injuriesHealedToday: record.injuriesHealedToday,
     drainedAp: record.drainedAp,
+    currentAp: record.currentAp,
     inventory: JSON.parse(record.inventory),
     money: record.money,
     avatarUrl: record.avatarUrl ?? undefined,
