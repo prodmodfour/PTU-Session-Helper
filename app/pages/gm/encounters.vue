@@ -501,11 +501,17 @@ const confirmDelete = async () => {
   @include modal-container-base;
   background: $color-bg-primary;
   width: 90%;
+  overflow: auto;
+  display: block;
 
   &__header h2 {
     margin: 0;
     font-size: 1.25rem;
     color: $color-text;
+  }
+
+  &__body {
+    overflow-y: visible;
   }
 }
 
