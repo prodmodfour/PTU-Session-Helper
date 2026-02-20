@@ -96,24 +96,28 @@ export default defineEventHandler(async (event) => {
             ...tc.entityData,
             currentHp: maxHp,
             maxHp: maxHp,
-            tempHp: 0,
-            injuries: { count: 0, max: 5 }
+            temporaryHp: 0,
+            injuries: 0,
+            stageModifiers: {
+              attack: 0, defense: 0, specialAttack: 0,
+              specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
+            }
           } : null,
           initiative: baseSpeed,
           initiativeBonus: 0,
           hasActed: false,
+          actionsRemaining: 2,
+          shiftActionsRemaining: 1,
           turnState: {
             hasActed: false,
             standardActionUsed: false,
             shiftActionUsed: false,
-            swiftActionUsed: false
-          },
-          combatStages: {
-            attack: 0, defense: 0, specialAttack: 0,
-            specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
+            swiftActionUsed: false,
+            canBeCommanded: true,
+            isHolding: false
           },
           statusConditions: [],
-          injuries: { count: 0, max: 5 },
+          injuries: { count: 0, sources: [] },
           physicalEvasion: initialEvasion(baseDefense),
           specialEvasion: initialEvasion(baseSpDef),
           speedEvasion: initialEvasion(baseSpeed)
