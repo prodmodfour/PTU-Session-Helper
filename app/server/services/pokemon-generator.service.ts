@@ -408,12 +408,11 @@ function enforceBaseRelations(
   distributedPoints: Record<string, number>,
   statKeys: readonly string[]
 ): Record<string, number> {
-  // Build array of { key, base, added, total } and sort by base descending
+  // Build array of { key, base, added } and sort by base descending
   const entries = statKeys.map(key => ({
     key,
     base: baseStats[key],
-    added: distributedPoints[key],
-    total: baseStats[key] + distributedPoints[key]
+    added: distributedPoints[key]
   }))
 
   // Sort entries by base stat descending (stable: preserves original order for ties)
