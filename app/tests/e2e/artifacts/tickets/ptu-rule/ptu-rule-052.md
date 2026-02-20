@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-052
 priority: P2
-status: in-progress
+status: resolved
 domain: healing
 matrix_source:
   rule_id: healing-R034
@@ -35,3 +35,5 @@ All daily moves are reset to available on Extended Rest regardless of when they 
 - Added unit tests for `isDailyMoveRefreshable` in `app/tests/unit/utils/restHealing.test.ts`
 
 **Remaining:** Move execution code paths need to set `lastUsedAt` when a move is used. Currently move usage tracking does not populate this field — it needs to be wired in wherever `usedToday` is incremented. Pokemon Center healing correctly resets all moves unconditionally (PTU rules allow full refresh at Pokemon Center).
+
+- **Resolved:** 2026-02-20 — Both Senior Reviewer and Game Logic Reviewer approved.

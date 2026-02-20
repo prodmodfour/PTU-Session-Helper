@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-049
 priority: P2
-status: in-progress
+status: resolved
 domain: capture
 matrix_source:
   rule_ids:
@@ -42,3 +42,5 @@ Both Poisoned and Badly Poisoned can contribute to capture rate. Bad Sleep is no
 - Automatically appears in GMActionModal volatile conditions UI (uses `VOLATILE_CONDITIONS`)
 - Validated by `VALID_STATUS_CONDITIONS` in combatant service (uses `ALL_STATUS_CONDITIONS`)
 - Files changed: `app/types/combat.ts`, `app/constants/statusConditions.ts`
+
+- **Resolved:** 2026-02-20 — Both Senior Reviewer and Game Logic Reviewer approved.

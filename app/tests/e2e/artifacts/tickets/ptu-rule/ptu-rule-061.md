@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-061
 priority: P2
-status: in-progress
+status: resolved
 domain: scenes
 matrix_source:
   rule_id: scenes-R040
@@ -51,3 +51,5 @@ Weather is set on a scene and persists until manually changed. No round counter,
 - WebSocket `ws.ts` includes weather fields in encounter state sync
 
 **Test results:** All 578 unit tests pass (0 regressions).
+
+- **Resolved:** 2026-02-20 — Both Senior Reviewer and Game Logic Reviewer approved.

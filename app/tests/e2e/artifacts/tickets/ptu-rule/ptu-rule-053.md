@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-053
 priority: P2
-status: in-progress
+status: resolved
 domain: healing
 matrix_source:
   rule_id: healing-R042
@@ -44,3 +44,5 @@ Only `drainedAp` is stored. No total AP, no bound AP, no scene-end refresh trigg
 - Added unit tests for `calculateAvailableAp` in `app/tests/unit/utils/restHealing.test.ts`
 
 **Remaining:** UI components for binding/unbinding AP as a Free Action during combat are not yet implemented. The data layer is complete — GMs can manually set `boundAp` via character edit.
+
+- **Resolved:** 2026-02-20 — Both Senior Reviewer and Game Logic Reviewer approved.

@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-059
 priority: P2
-status: in-progress
+status: resolved
 domain: scenes
 matrix_source:
   rule_id: scenes-R025
@@ -57,3 +57,5 @@ The DB fields exist but are never read or written during move execution. All mov
 8. **`app/tests/unit/utils/moveFrequency.test.ts`** (new) -- 39 unit tests covering all frequency types, validation, usage tracking, and scene reset.
 
 **Test results:** All 546 unit tests pass (20 files). No regressions.
+
+- **Resolved:** 2026-02-20 — Both Senior Reviewer and Game Logic Reviewer approved.
