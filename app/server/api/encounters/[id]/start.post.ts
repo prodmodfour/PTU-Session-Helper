@@ -35,13 +35,10 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Reset turn state and scene-frequency moves for all combatants
+    // Reset turn state and scene-frequency moves for all combatants (immutable)
     const dbUpdates: Promise<unknown>[] = []
-    combatants.forEach((c) => {
-      c.hasActed = false
-      c.actionsRemaining = 2
-      c.shiftActionsRemaining = 1
-      c.turnState = {
+    const readyCombatants = combatants.map((c) => {
+      const baseTurnState = {
         hasActed: false,
         standardActionUsed: false,
         shiftActionUsed: false,
@@ -50,23 +47,39 @@ export default defineEventHandler(async (event) => {
         isHolding: false
       }
 
+      const baseUpdates = {
+        ...c,
+        hasActed: false,
+        actionsRemaining: 2,
+        shiftActionsRemaining: 1,
+        turnState: baseTurnState
+      }
+
       // Reset scene-frequency usage for Pokemon (new encounter = new scene)
       if (c.type === 'pokemon') {
         const entity = c.entity as Pokemon
         const moves: Move[] = entity.moves || []
         const resetMoves = resetSceneUsage(moves)
-        if (!resetMoves.every((m, i) => m === moves[i])) {
-          entity.moves = resetMoves
-          if (c.entityId) {
-            dbUpdates.push(
-              prisma.pokemon.update({
-                where: { id: c.entityId },
-                data: { moves: JSON.stringify(resetMoves) }
-              })
-            )
-          }
+        const movesChanged = !resetMoves.every((m, i) => m === moves[i])
+
+        if (movesChanged && c.entityId) {
+          dbUpdates.push(
+            prisma.pokemon.update({
+              where: { id: c.entityId },
+              data: { moves: JSON.stringify(resetMoves) }
+            })
+          )
+        }
+
+        return {
+          ...baseUpdates,
+          entity: movesChanged
+            ? { ...entity, moves: resetMoves }
+            : entity
         }
       }
+
+      return baseUpdates
     })
 
     let turnOrder: string[] = []
@@ -79,8 +92,8 @@ export default defineEventHandler(async (event) => {
       // Trainers: declare low→high speed, resolve high→low
       // Pokemon: act high→low speed
 
-      const trainers = combatants.filter((c) => c.type === 'human')
-      const pokemon = combatants.filter((c) => c.type === 'pokemon')
+      const trainers = readyCombatants.filter((c) => c.type === 'human')
+      const pokemon = readyCombatants.filter((c) => c.type === 'pokemon')
 
       // Sort trainers by initiative (high→low for action resolution)
       const sortedTrainers = sortByInitiativeWithRollOff(trainers, true)
@@ -97,7 +110,7 @@ export default defineEventHandler(async (event) => {
 
     } else {
       // Full Contact / Wild Encounter: Everyone in initiative order
-      const sortedCombatants = sortByInitiativeWithRollOff(combatants, true)
+      const sortedCombatants = sortByInitiativeWithRollOff(readyCombatants, true)
       turnOrder = sortedCombatants.map((c) => c.id)
       currentPhase = 'pokemon' // Phase doesn't matter for full contact
     }
@@ -115,11 +128,11 @@ export default defineEventHandler(async (event) => {
         currentRound: 1,
         currentTurnIndex: 0,
         turnOrder: JSON.stringify(turnOrder),
-        combatants: JSON.stringify(combatants)
+        combatants: JSON.stringify(readyCombatants)
       }
     })
 
-    const response = buildEncounterResponse(encounter, combatants, {
+    const response = buildEncounterResponse(encounter, readyCombatants, {
       isActive: true,
       isPaused: false,
       currentRound: 1,
