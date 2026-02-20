@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T23:30:00
+last_updated: 2026-02-20T23:59:00
 updated_by: orchestrator
 ---
 
@@ -27,8 +27,8 @@ updated_by: orchestrator
 | bug-015 | P2 | MEDIUM | resolved | Features/edges not editable via PUT |
 | bug-016 | P2 | MEDIUM | resolved | Spawn count hard-capped at 10 |
 | bug-017 | P2 | MEDIUM | resolved | Missing Earth and Rough terrain types |
-| bug-018 | P2 | MEDIUM | **in-progress** | Blocking terrain doesn't block LoS — LoS function written (72d383c), reviewed APPROVED, not yet wired into callers |
-| bug-019 | P2 | MEDIUM | **in-progress** | Multi-cell token range uses single point — range functions written (6ff3b0a), reviewed APPROVED, not yet wired into callers |
+| bug-018 | P2 | MEDIUM | resolved | Blocking terrain doesn't block LoS — fully wired into targeting |
+| bug-019 | P2 | MEDIUM | resolved | Multi-cell token range — fully wired into targeting |
 | bug-020 | P3 | LOW | **open** | Disarm and Dirty Trick maneuvers missing |
 | bug-021 | P3 | LOW | **open** | Capture doesn't consume standard action |
 | bug-022 | P3 | LOW | **open** | No scene-end AP restoration |
@@ -78,28 +78,17 @@ updated_by: orchestrator
 **Current task:** Idle — end of session.
 
 **Next session queue (by priority):**
-1. bug-018 (P2, MEDIUM) — Wire `hasLineOfSight` into targeting flow (function exists, needs integration)
-2. bug-019 (P2, MEDIUM) — Wire multi-cell token size params into `isInRange` callers (function exists, needs integration)
-3. bug-020–022 (P3, LOW) — 3 low bugs
-4. ptu-rule-042–064 (P2–P3) — 23 approximation tickets
-5. refactoring-032, 033, 035, 039, 041 (P2–P3) — 5 open refactoring tickets
+1. bug-020–022 (P3, LOW) — 3 low bugs
+2. ptu-rule-042–064 (P2–P3) — 23 approximation tickets
+3. refactoring-032, 033, 035, 039, 041, 042 (P2–P3) — 6 open refactoring tickets
 
 ## Review Status
 
 ### Recently Completed Reviews (this session)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
-| code-review-066 | bug-017 | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-067 | bug-027 | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-068 | bug-028 | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-069 | bug-023 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-070 | bug-026 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-071 | bug-018 | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-072 | bug-019 | APPROVED | senior-reviewer | 2026-02-20 |
-| rules-review-059 | bug-017 | APPROVED | game-logic-reviewer | 2026-02-20 |
-| rules-review-060 | bug-027 | APPROVED | game-logic-reviewer | 2026-02-20 |
-| rules-review-061 | bug-018 | APPROVED | game-logic-reviewer | 2026-02-20 |
-| rules-review-062 | bug-019 | APPROVED | game-logic-reviewer | 2026-02-20 |
+| code-review-073 | bug-018, bug-019 (wiring) | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-063 | bug-018, bug-019 (wiring) | APPROVED | game-logic-reviewer | 2026-02-20 |
 
 **Pending reviews:** None.
 
@@ -113,8 +102,9 @@ updated_by: orchestrator
 | refactoring-039 | P2 | open | habitats/index.vue duplicated encounter creation (EXT-DUPLICATE) |
 | refactoring-040 | P2 | resolved | PUT response shapes — reviewed, APPROVED |
 | refactoring-041 | P3 | open | Stale test in characters.test.ts (TEST-STALE) |
+| refactoring-042 | P2 | open | MoveTargetModal SCSS extraction (EXT-DUPLICATE) |
 
-**Open totals:** 0 P0, 0 P1, 4 P2 + 1 P3 (refactoring)
+**Open totals:** 0 P0, 0 P1, 5 P2 + 1 P3 (refactoring)
 
 ## Code Health
 
@@ -123,28 +113,25 @@ updated_by: orchestrator
 | Last audited | 2026-02-18T12:00:00 |
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
-| Open tickets (P2) | 22 (2 bugs in-progress + 14 ptu-rules + 4 refactoring + 2 review-discovered) |
-| Open tickets (P3) | 13 (3 bugs + 9 ptu-rules + 1 refactoring) |
+| Open tickets (P2) | 21 (14 ptu-rules + 5 refactoring + 2 review-discovered) |
+| Open tickets (P3) | 12 (3 bugs + 9 ptu-rules + 0 refactoring) |
 | Awaiting review | 0 |
 | Changes required | 0 |
-| Total open | 35 |
-| Total resolved | 63 |
+| Total open | 33 |
+| Total resolved | 65 |
 
-## Session Summary (2026-02-20, session 2)
+## Session Summary (2026-02-20, session 3)
 
-**Resolved this session:** 5 tickets
-- bug-017 (P2 MEDIUM) — Earth/Rough terrain types, both reviews APPROVED
-- bug-023 (P2 MEDIUM) — Speed Evasion label follow-up, code-review-069 APPROVED
-- bug-026 (P2 MEDIUM) — statusConditions + entityId follow-up, code-review-070 APPROVED
-- bug-027 (P2 MEDIUM) — scaledMin clamp, both reviews APPROVED
-- bug-028 (P3 LOW) — Cursed breather E2E test, code-review-068 APPROVED
+**Resolved this session:** 2 tickets
+- bug-018 (P2 MEDIUM) — LoS blocking terrain wired into targeting, both reviews APPROVED
+- bug-019 (P2 MEDIUM) — Multi-cell token size wired into targeting, both reviews APPROVED
 
-**Implementation committed (awaiting wiring):** 2
-- bug-018 (72d383c) — LoS blocking terrain function in useRangeParser.ts, both reviews APPROVED
-- bug-019 (6ff3b0a) — Multi-cell token range functions in useRangeParser.ts, both reviews APPROVED
+**Cleanup commit:** 57afbdb — removed unused inRangeTargets/outOfRangeTargets destructuring
 
-**Reviews completed:** 11
-- 7 code reviews (066–072)
-- 4 rules reviews (059–062)
+**New ticket filed:** refactoring-042 — MoveTargetModal SCSS extraction (from code-review-073 MEDIUM-1)
+
+**Reviews completed:** 2
+- code-review-073 (APPROVED)
+- rules-review-063 (APPROVED)
 
 **All P0 and P1 bugs remain resolved.** Remaining work is P2/P3.

@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T23:30:00
+last_updated: 2026-02-20T23:59:00
 updated_by: orchestrator
 ---
 
@@ -36,13 +36,13 @@ Multiple domains have had Developer fixes since last capability mapping:
 - **character-lifecycle:** bug-010, bug-015 (features/edges PUT), bug-024, bug-025
 - **encounter-tables:** bug-011 (weight column), bug-016 (spawn cap), bug-027 (min/max clamp)
 - **capture:** bug-013 (Trapped bonus)
-- **vtt-grid:** bug-012 (terrain-aware movement), bug-017 (Earth/Rough terrain types), bug-018 (LoS function), bug-019 (multi-cell range functions)
+- **vtt-grid:** bug-012 (terrain-aware movement), bug-017 (Earth/Rough terrain types), bug-018 (LoS blocking wired), bug-019 (multi-cell range wired)
 - **healing:** bug-006 (injury max HP)
 
-All fixes are correctness improvements. Capability mappings would show higher coverage after re-mapping, but no new incorrect items expected. Re-mapping is **optional** — recommend deferring until bug-018 and bug-019 wiring is complete.
+All fixes are correctness improvements. Capability mappings would show higher coverage after re-mapping, but no new incorrect items expected. Re-mapping is **optional** — recommend deferring until next feature batch.
 
 ## Recommended Next Steps
 
-1. **Dev ecosystem focus:** Wire bug-018 (LoS) and bug-019 (multi-cell range) functions into UI callers
-2. **Continue P3 bug queue:** bug-020, bug-021, bug-022
-3. **Re-map after wiring complete:** Once bug-018/019 are fully wired, re-run Capability Mapper + Coverage Analyzer for vtt-grid to update coverage scores
+1. **Dev ecosystem focus:** Work through P3 bug queue (bug-020, bug-021, bug-022)
+2. **Then P2 ptu-rule tickets** — prioritize by extensibility impact
+3. **Re-map when ready:** Re-run Capability Mapper + Coverage Analyzer for stale domains to update coverage scores
