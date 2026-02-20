@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T23:59:00
+last_updated: 2026-02-21T01:30:00
 updated_by: orchestrator
 ---
 
@@ -10,62 +10,41 @@ updated_by: orchestrator
 ### Bug Tickets (`tickets/bug/`)
 | Ticket | Priority | Severity | Status | Summary |
 |--------|----------|----------|--------|---------|
-| bug-001 | P2 | — | resolved | CSV parser swim/sky read same cell |
-| bug-002 | P1 | — | resolved | CSV parser capability rows off by +1 |
-| bug-003 | P1 | — | resolved | `other` → `otherCapabilities` JSON key migration |
-| bug-004 | P1 | — | resolved | Capture attempt hardcodes maxEvolutionStage |
-| bug-005 | P1 | — | resolved | pickRandomAbility selects Advanced Abilities |
-| bug-006 | P0 | CRITICAL | resolved | Injury-reduced max HP never computed |
-| bug-007 | P0 | CRITICAL | resolved | Stat point allocation uses level-1 instead of level+10 |
-| bug-008 | P1 | HIGH | resolved | Temp HP stacks additively instead of max(old,new) |
-| bug-009 | P1 | HIGH | resolved | Nature stat adjustments never applied |
-| bug-010 | P1 | HIGH | resolved | Trainer HP formula never computed on manual creation |
-| bug-011 | P1 | HIGH | resolved | Int weight column truncates fractional weights |
-| bug-012 | P1 | HIGH | resolved | Click-to-move ignores terrain costs |
-| bug-013 | P2 | MEDIUM | resolved | Trapped +10 capture bonus incorrect |
-| bug-014 | P2 | MEDIUM | resolved | Breather removes Cursed without checking source |
-| bug-015 | P2 | MEDIUM | resolved | Features/edges not editable via PUT |
-| bug-016 | P2 | MEDIUM | resolved | Spawn count hard-capped at 10 |
-| bug-017 | P2 | MEDIUM | resolved | Missing Earth and Rough terrain types |
-| bug-018 | P2 | MEDIUM | resolved | Blocking terrain doesn't block LoS — fully wired into targeting |
-| bug-019 | P2 | MEDIUM | resolved | Multi-cell token range — fully wired into targeting |
-| bug-020 | P3 | LOW | resolved | Disarm and Dirty Trick maneuvers missing |
-| bug-021 | P3 | LOW | resolved | Capture doesn't consume standard action |
-| bug-022 | P3 | LOW | resolved | No scene-end AP restoration |
-| bug-023 | P2 | MEDIUM | resolved | Speed Evasion auto-selection — fully fixed with per-target label |
-| bug-024 | P2 | MEDIUM | resolved | Encounter template trainer HP formula missing hpStat |
-| bug-025 | P2 | MEDIUM | resolved | players.get.ts returns raw hp stat as maxHp |
-| bug-026 | P2 | MEDIUM | resolved | Template load type shape mismatches — fully fixed with statusConditions + entityId |
-| bug-027 | P2 | MEDIUM | resolved | scaledMin > scaledMax density inversion |
-| bug-028 | P3 | LOW | resolved | E2E test for Cursed breather exclusion |
+| bug-001–028 | P0–P3 | — | resolved | (all resolved — see previous sessions) |
+| bug-029 | P3 | LOW | **open** | Character PUT accepts AP fields without bounds validation |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| ptu-rule-029–041 | P1–P3 | resolved | (all resolved — see previous state) |
-| ptu-rule-042 | P2 | resolved | 7 derived trainer stats |
-| ptu-rule-043 | P2 | resolved | 7 level-up automation items (5/7 implemented, 2 deferred) |
-| ptu-rule-044 | P2 | **open** | Movement conditions not enforced on grid |
+| ptu-rule-029–043 | P1–P3 | resolved | (all resolved — see previous sessions) |
+| ptu-rule-044 | P2 | **in-progress** | Movement conditions not enforced on grid — implemented, CHANGES_REQUIRED |
 | ptu-rule-045 | P3 | **open** | Equipment/armor system |
 | ptu-rule-046 | P2 | **open** | League battle declaration phase |
 | ptu-rule-047 | P2 | resolved | Condition clearing on faint/encounter-end |
 | ptu-rule-048 | P3 | **open** | Evasion CS treatment |
-| ptu-rule-049 | P2 | **open** | Capture status condition definitions |
+| ptu-rule-049 | P2 | **in-progress** | Capture status condition definitions — implemented, both reviews APPROVED |
 | ptu-rule-050 | P3 | **open** | pokeBallType dead code |
 | ptu-rule-051 | P3 | **open** | Breather shift movement |
-| ptu-rule-052 | P2 | **open** | Extended Rest daily move refresh |
-| ptu-rule-053 | P2 | **open** | AP pool tracking |
+| ptu-rule-052 | P2 | **in-progress** | Extended Rest daily move refresh — implemented, both reviews APPROVED |
+| ptu-rule-053 | P2 | **in-progress** | AP pool tracking — implemented, both reviews APPROVED |
 | ptu-rule-054 | P3 | **open** | Base Relations Rule |
 | ptu-rule-055 | P3 | **open** | XP calculation |
 | ptu-rule-056 | P3 | **open** | Character creation form |
 | ptu-rule-057 | P3 | **open** | Species diversity |
 | ptu-rule-058 | P3 | **open** | Encounter density/significance mismatch |
-| ptu-rule-059 | P2 | **open** | Scene-frequency move enforcement |
+| ptu-rule-059 | P2 | **in-progress** | Scene-frequency move enforcement — implemented, both reviews APPROVED |
 | ptu-rule-060 | P3 | **open** | Level-budget/significance |
-| ptu-rule-061 | P2 | **open** | Weather duration |
-| ptu-rule-062 | P2 | **open** | Terrain/movement types |
-| ptu-rule-063 | P2 | **open** | Water terrain canSwim hardcoded to false |
-| ptu-rule-064 | P2 | **open** | Template HP stat fallback defaults to 0 instead of 10 |
+| ptu-rule-061 | P2 | **in-progress** | Weather duration — implemented, both reviews APPROVED |
+| ptu-rule-062 | P2 | **in-progress** | Terrain/movement types — implemented, CHANGES_REQUIRED |
+| ptu-rule-063 | P2 | **in-progress** | Water terrain canSwim — implemented, CHANGES_REQUIRED |
+| ptu-rule-064 | P3 | **in-progress** | Template HP stat fallback — implemented, both reviews APPROVED |
+| ptu-rule-065 | P1 | **open** | Encounter end doesn't clear boundAp (from code-review-079) |
+| ptu-rule-066 | P2 | **open** | Global new-day doesn't reset Pokemon daily move counters (from code-review-079) |
+| ptu-rule-067 | P1 | **open** | Stuck condition halves speed instead of blocking movement (from reviews 067, 077) |
+| ptu-rule-068 | P2 | **open** | Speed CS movement uses multiplicative instead of additive formula (from reviews 067, 077) |
+| ptu-rule-069 | P2 | **open** | Sprint tempCondition mutation + no DB persistence (from code-review-077) |
+| ptu-rule-070 | P2 | **open** | Scene x2/x3 missing EOT + Daily x2/x3 missing per-scene cap (from rules-review-070) |
+| ptu-rule-071 | P2 | **open** | Weather undo/redo snapshot missing (from code-review-081) |
 
 ### Feature Tickets (`tickets/feature/`)
 (none)
@@ -75,26 +54,43 @@ updated_by: orchestrator
 
 ## Active Developer Work
 
-**Current task:** Idle — end of session.
+**Current task:** Idle — end of session 5.
+
+**CHANGES_REQUIRED (must fix next session):**
+1. ptu-rule-067 (P1, CRITICAL) — Stuck = speed 0, not halved
+2. ptu-rule-068 (P2, HIGH) — Speed CS additive not multiplicative
+3. ptu-rule-069 (P2, HIGH) — Sprint mutation + persistence
+
+**Approved work awaiting resolution:**
+- ptu-rule-049, 052, 053, 059, 061, 064 — all APPROVED by both reviewers, can be marked resolved
+- refactoring-043 — APPROVED by both reviewers, can be marked resolved
 
 **Next session queue (by priority):**
-1. ptu-rule-044–064 (P2–P3) — 20 approximation tickets
-2. refactoring-043 (P2, EXT-GOD) — Pokemon page over 800-line limit (1384 lines)
-3. refactoring-032, 033, 035, 039, 041, 042, 044, 045, 046 (P2–P3) — 9 open refactoring tickets
+1. Fix CHANGES_REQUIRED items (ptu-rule-067, 068, 069) — re-review needed for VTT batch
+2. ptu-rule-065 (P1) — encounter end boundAp clearing
+3. Remaining P2 ptu-rule tickets (046, 066, 070, 071)
+4. Remaining P2 refactoring (032, 033, 035, 039, 042, 044, 047, 049)
+5. P3 tickets (045, 048, 050–051, 054–058, 060)
 
 ## Review Status
 
-### Recently Completed Reviews (this session)
+### Session 5 Reviews
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
-| code-review-073 | bug-018, bug-019 (wiring) | APPROVED | senior-reviewer | 2026-02-20 |
-| rules-review-063 | bug-018, bug-019 (wiring) | APPROVED | game-logic-reviewer | 2026-02-20 |
-| code-review-074 | bug-020, bug-021, bug-022 | APPROVED_WITH_ISSUES | senior-reviewer | 2026-02-20 |
-| rules-review-064 | bug-020, bug-021, bug-022 | APPROVED_WITH_NOTES | game-logic-reviewer | 2026-02-20 |
-| code-review-075 | ptu-rule-042, 043, 047 | REVISE→APPROVED (C1 fixed: 65612c3) | senior-reviewer | 2026-02-20 |
-| rules-review-065 | ptu-rule-042, 043, 047 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-076 | refactoring-043, ptu-rule-064 | APPROVED_WITH_ISSUES | senior-reviewer | 2026-02-20 |
+| rules-review-066 | refactoring-043, ptu-rule-064 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-077 | ptu-rule-044, 062, 063 | APPROVED_WITH_ISSUES | senior-reviewer | 2026-02-20 |
+| rules-review-067 | ptu-rule-044, 062, 063 | CHANGES_REQUIRED | game-logic-reviewer | 2026-02-20 |
+| code-review-078 | ptu-rule-049 | APPROVED_WITH_ISSUES | senior-reviewer | 2026-02-20 |
+| rules-review-068 | ptu-rule-049 | APPROVED_WITH_NOTES | game-logic-reviewer | 2026-02-20 |
+| code-review-079 | ptu-rule-052, 053 | APPROVED_WITH_ISSUES | senior-reviewer | 2026-02-20 |
+| rules-review-069 | ptu-rule-052, 053 | APPROVED_WITH_NOTES | game-logic-reviewer | 2026-02-20 |
+| code-review-080 | ptu-rule-059 | APPROVED_WITH_ISSUES | senior-reviewer | 2026-02-20 |
+| rules-review-070 | ptu-rule-059 | APPROVED_WITH_NOTES | game-logic-reviewer | 2026-02-20 |
+| code-review-081 | ptu-rule-061 | APPROVED_WITH_ISSUES | senior-reviewer | 2026-02-20 |
+| rules-review-071 | ptu-rule-061 | APPROVED_WITH_NOTES | game-logic-reviewer | 2026-02-20 |
 
-**Pending reviews:** None.
+**Pending reviews:** VTT batch re-review after CHANGES_REQUIRED fixes.
 
 ## Refactoring Tickets (`refactoring/`)
 
@@ -107,12 +103,14 @@ updated_by: orchestrator
 | refactoring-040 | P2 | resolved | PUT response shapes — reviewed, APPROVED |
 | refactoring-041 | P3 | open | Stale test in characters.test.ts (TEST-STALE) |
 | refactoring-042 | P2 | open | MoveTargetModal SCSS extraction (EXT-DUPLICATE) |
-| refactoring-043 | P2 | open | Pokemon detail page over 800 lines (EXT-GOD) |
+| refactoring-043 | P2 | resolved | Pokemon detail page — 6 components extracted, both reviews APPROVED |
 | refactoring-044 | P2 | open | Surface capture action error to user (EXT-DUPLICATE) |
 | refactoring-045 | P3 | open | N+1 query in new-day/activate AP updates (PERF) |
 | refactoring-046 | P3 | open | Duplicate capabilities display + AP restore loop (EXT-DUPLICATE) |
-
-**Open totals:** 0 P0, 0 P1, 7 P2 + 3 P3 (refactoring)
+| refactoring-047 | P2 | open | Pokemon sheet SCSS duplication across 6 extracted components (EXT-DUPLICATE) |
+| refactoring-048 | P3 | open | Capture rate calculation duplication (EXT-DUPLICATE) |
+| refactoring-049 | P2 | open | Scene-frequency move.post.ts mutation + cleanup (EXT-DUPLICATE) |
+| refactoring-050 | P3 | open | Unicode star shiny badge → Phosphor Icon (UI-CONVENTION) |
 
 ## Code Health
 
@@ -120,35 +118,33 @@ updated_by: orchestrator
 |--------|-------|
 | Last audited | 2026-02-18T12:00:00 |
 | Open tickets (P0) | 0 |
-| Open tickets (P1) | 0 |
-| Open tickets (P2) | 18 (11 ptu-rules + 7 refactoring) |
-| Open tickets (P3) | 12 (9 ptu-rules + 3 refactoring) |
-| Awaiting review | 0 |
-| Changes required | 0 |
-| Total open | 30 |
-| Total resolved | 72 |
+| Open tickets (P1) | 2 (ptu-rule-065, ptu-rule-067) |
+| Open tickets (P2) | 22 (12 ptu-rules + 10 refactoring) |
+| Open tickets (P3) | 15 (10 ptu-rules + 1 bug + 4 refactoring) |
+| In-progress (approved) | 7 (ptu-rule-049, 052, 053, 059, 061, 064 + refactoring-043) |
+| Changes required | 3 (ptu-rule-044, 062, 063 — VTT batch) |
+| Total open | 39 |
+| Total resolved | 79 |
 
-## Session Summary (2026-02-20, session 4)
+## Session Summary (2026-02-20, session 5)
 
-**Resolved this session:** 6 tickets + 1 critical fix
-- bug-020 (P3 LOW) — Disarm and Dirty Trick maneuvers added, both reviews approved
-- bug-021 (P3 LOW) — Capture consumes standard action, both reviews approved
-- bug-022 (P3 LOW) — Full AP tracking system with scene-end restoration, both reviews approved
-- ptu-rule-042 (P2) — 7 derived trainer stats computed from skills, both reviews approved
-- ptu-rule-043 (P2) — Level-up notification system (5/7 items), both reviews approved
-- ptu-rule-047 (P2) — Faint preserves Other conditions, encounter-end clears Volatile, both reviews approved
-- Critical fix: 65612c3 — prevent duplicate Fainted on re-faint (from code-review-075 C1)
+**Implemented this session:** 13 tickets across 7 parallel Developer agents (~33 commits)
+- refactoring-043 (P2) — Pokemon page 1384→388 lines, 6 components extracted
+- ptu-rule-044 + 062 + 063 — VTT terrain/movement (swim, burrow, speed selection, movement conditions)
+- ptu-rule-049 (P2) — Poison stacking fix + Bad Sleep volatile condition
+- ptu-rule-052 (P2) — Extended Rest daily move rolling window
+- ptu-rule-053 (P2) — Bound AP tracking with full lifecycle
+- ptu-rule-059 (P2) — Scene-frequency move enforcement (216-line utility + 39 tests)
+- ptu-rule-061 (P2) — Weather duration counter with auto-expiration (full stack)
+- ptu-rule-064 (P3) — Template HP stat fallback 0→10
 
-**New tickets filed:** 4 refactoring tickets from review findings
-- refactoring-043 (P2, EXT-GOD) — Pokemon page 1384 lines
-- refactoring-044 (P2, EXT-DUPLICATE) — Surface capture action error
-- refactoring-045 (P3, PERF) — N+1 query in AP updates
-- refactoring-046 (P3, EXT-DUPLICATE) — Duplicate capabilities + AP restore
+**Reviews completed:** 12 (6 batches x 2 reviewers)
+- 5 batches APPROVED (with issues/notes → new tickets filed)
+- 1 batch CHANGES_REQUIRED (VTT terrain — Stuck and Speed CS formula wrong per PTU)
 
-**Reviews completed:** 4
-- code-review-074 (APPROVED_WITH_ISSUES)
-- rules-review-064 (APPROVED_WITH_NOTES)
-- code-review-075 (REVISE→APPROVED after C1 fix)
-- rules-review-065 (PASS)
+**New tickets filed from reviews:** 12
+- ptu-rule-065 through 071 (7 ptu-rule tickets from review findings)
+- bug-029 (AP bounds validation)
+- refactoring-047 through 050 (4 refactoring tickets)
 
-**All P0 and P1 bugs remain resolved. All P3 bugs now resolved. 3 P2 ptu-rules resolved.** Remaining work is P2/P3 approximation tickets and refactoring.
+**All P0 bugs remain resolved. 2 new P1 tickets from reviews (ptu-rule-065, 067).** Session was the most productive: 7 parallel dev agents + 12 parallel review agents.
