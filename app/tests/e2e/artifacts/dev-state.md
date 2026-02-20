@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T22:00:00
+last_updated: 2026-02-20T23:30:00
 updated_by: orchestrator
 ---
 
@@ -26,18 +26,18 @@ updated_by: orchestrator
 | bug-014 | P2 | MEDIUM | resolved | Breather removes Cursed without checking source |
 | bug-015 | P2 | MEDIUM | resolved | Features/edges not editable via PUT |
 | bug-016 | P2 | MEDIUM | resolved | Spawn count hard-capped at 10 |
-| bug-017 | P2 | MEDIUM | **in-progress** | Missing Earth and Rough terrain types — fix committed, awaiting review |
-| bug-018 | P2 | MEDIUM | **open** | Blocking terrain doesn't block LoS |
-| bug-019 | P2 | MEDIUM | **open** | Multi-cell token range uses single point |
+| bug-017 | P2 | MEDIUM | resolved | Missing Earth and Rough terrain types |
+| bug-018 | P2 | MEDIUM | **in-progress** | Blocking terrain doesn't block LoS — LoS function written (72d383c), reviewed APPROVED, not yet wired into callers |
+| bug-019 | P2 | MEDIUM | **in-progress** | Multi-cell token range uses single point — range functions written (6ff3b0a), reviewed APPROVED, not yet wired into callers |
 | bug-020 | P3 | LOW | **open** | Disarm and Dirty Trick maneuvers missing |
 | bug-021 | P3 | LOW | **open** | Capture doesn't consume standard action |
 | bug-022 | P3 | LOW | **open** | No scene-end AP restoration |
-| bug-023 | P2 | MEDIUM | **changes-required** | Speed Evasion auto-selection — fix done, code-review-064 CHANGES_REQUIRED |
+| bug-023 | P2 | MEDIUM | resolved | Speed Evasion auto-selection — fully fixed with per-target label |
 | bug-024 | P2 | MEDIUM | resolved | Encounter template trainer HP formula missing hpStat |
 | bug-025 | P2 | MEDIUM | resolved | players.get.ts returns raw hp stat as maxHp |
-| bug-026 | P2 | MEDIUM | **changes-required** | Template load type shape mismatches — fix done, code-review-065 CHANGES_REQUIRED |
-| bug-027 | P2 | MEDIUM | **in-progress** | scaledMin > scaledMax density inversion — fix committed, awaiting review |
-| bug-028 | P3 | LOW | **in-progress** | E2E test for Cursed breather exclusion — test written, awaiting review |
+| bug-026 | P2 | MEDIUM | resolved | Template load type shape mismatches — fully fixed with statusConditions + entityId |
+| bug-027 | P2 | MEDIUM | resolved | scaledMin > scaledMax density inversion |
+| bug-028 | P3 | LOW | resolved | E2E test for Cursed breather exclusion |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
@@ -78,38 +78,30 @@ updated_by: orchestrator
 **Current task:** Idle — end of session.
 
 **Next session queue (by priority):**
-1. bug-023 (P2, MEDIUM) — CHANGES_REQUIRED: add evasion type label that reflects Speed Evasion selection
-2. bug-026 (P2, MEDIUM) — CHANGES_REQUIRED: move statusConditions to entity level, add entityId to combatant
-3. bug-017 (P2, MEDIUM) — fix committed (f2fe6a1), awaiting both reviews
-4. bug-027 (P2, MEDIUM) — fix committed (dc65a10), awaiting both reviews
-5. bug-028 (P3, LOW) — test written (ef1fe54), awaiting both reviews
-6. bug-018 (P2, MEDIUM) — Blocking terrain doesn't block LoS
-7. bug-019 (P2, MEDIUM) — Multi-cell token range uses single point
-8. bug-020–022 (P3, LOW) — 3 low bugs
-9. ptu-rule-042–064 (P2–P3) — 23 approximation tickets
-10. refactoring-032, 033, 035, 039, 041 (P2–P3) — 5 open refactoring tickets
+1. bug-018 (P2, MEDIUM) — Wire `hasLineOfSight` into targeting flow (function exists, needs integration)
+2. bug-019 (P2, MEDIUM) — Wire multi-cell token size params into `isInRange` callers (function exists, needs integration)
+3. bug-020–022 (P3, LOW) — 3 low bugs
+4. ptu-rule-042–064 (P2–P3) — 23 approximation tickets
+5. refactoring-032, 033, 035, 039, 041 (P2–P3) — 5 open refactoring tickets
 
 ## Review Status
 
-### Recently Completed Reviews
+### Recently Completed Reviews (this session)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
-| code-review-060 | bug-011 (re-review) | APPROVED | senior-reviewer | 2026-02-19 |
-| code-review-061 | bug-015 | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-062 | bug-016 | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-063 | bug-014 | APPROVED | senior-reviewer | 2026-02-20 |
-| code-review-064 | bug-023 | CHANGES_REQUIRED | senior-reviewer | 2026-02-20 |
-| code-review-065 | bug-026 | CHANGES_REQUIRED | senior-reviewer | 2026-02-20 |
-| rules-review-054 | bug-014 | APPROVED | game-logic-reviewer | 2026-02-20 |
-| rules-review-055 | bug-016 | APPROVED | game-logic-reviewer | 2026-02-20 |
-| rules-review-056 | bug-015 | APPROVED | game-logic-reviewer | 2026-02-20 |
-| rules-review-057 | bug-023 | APPROVED | game-logic-reviewer | 2026-02-20 |
-| rules-review-058 | bug-026 | APPROVED | game-logic-reviewer | 2026-02-20 |
+| code-review-066 | bug-017 | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-067 | bug-027 | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-068 | bug-028 | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-069 | bug-023 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-070 | bug-026 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-071 | bug-018 | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-072 | bug-019 | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-059 | bug-017 | APPROVED | game-logic-reviewer | 2026-02-20 |
+| rules-review-060 | bug-027 | APPROVED | game-logic-reviewer | 2026-02-20 |
+| rules-review-061 | bug-018 | APPROVED | game-logic-reviewer | 2026-02-20 |
+| rules-review-062 | bug-019 | APPROVED | game-logic-reviewer | 2026-02-20 |
 
-**Pending reviews (next session):**
-- bug-017 fix (f2fe6a1) — needs both code-review + rules-review
-- bug-027 fix (dc65a10) — needs both code-review + rules-review
-- bug-028 test (ef1fe54) — needs code-review only (no game logic)
+**Pending reviews:** None.
 
 ## Refactoring Tickets (`refactoring/`)
 
@@ -131,35 +123,28 @@ updated_by: orchestrator
 | Last audited | 2026-02-18T12:00:00 |
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
-| Open tickets (P2) | 27 (5 bugs + 14 ptu-rules + 4 refactoring + 4 review-discovered) |
+| Open tickets (P2) | 22 (2 bugs in-progress + 14 ptu-rules + 4 refactoring + 2 review-discovered) |
 | Open tickets (P3) | 13 (3 bugs + 9 ptu-rules + 1 refactoring) |
-| Awaiting review | 3 (bug-017, bug-027, bug-028) |
-| Changes required | 2 (bug-023, bug-026) |
-| Total open | 40 |
-| Total resolved | 58 |
+| Awaiting review | 0 |
+| Changes required | 0 |
+| Total open | 35 |
+| Total resolved | 63 |
 
-## Session Summary (2026-02-20)
+## Session Summary (2026-02-20, session 2)
 
-**Resolved this session:** 3 tickets
-- bug-014 (P2 MEDIUM) — Cursed breather exclusion, both reviews APPROVED
-- bug-015 (P2 MEDIUM) — Features/edges PUT, both reviews APPROVED
-- bug-016 (P2 MEDIUM) — Spawn count cap, both reviews APPROVED
+**Resolved this session:** 5 tickets
+- bug-017 (P2 MEDIUM) — Earth/Rough terrain types, both reviews APPROVED
+- bug-023 (P2 MEDIUM) — Speed Evasion label follow-up, code-review-069 APPROVED
+- bug-026 (P2 MEDIUM) — statusConditions + entityId follow-up, code-review-070 APPROVED
+- bug-027 (P2 MEDIUM) — scaledMin clamp, both reviews APPROVED
+- bug-028 (P3 LOW) — Cursed breather E2E test, code-review-068 APPROVED
 
-**Fixes committed (awaiting review):** 3
-- bug-017 (f2fe6a1) — Earth + Rough terrain types added (6 files, 42 unit tests pass)
-- bug-027 (dc65a10) — scaledMin clamped to not exceed scaledMax (3 files)
-- bug-028 (ef1fe54) — E2E regression test for Cursed surviving breather
+**Implementation committed (awaiting wiring):** 2
+- bug-018 (72d383c) — LoS blocking terrain function in useRangeParser.ts, both reviews APPROVED
+- bug-019 (6ff3b0a) — Multi-cell token range functions in useRangeParser.ts, both reviews APPROVED
 
 **Reviews completed:** 11
-- 6 code reviews (060–065)
-- 5 rules reviews (054–058)
-
-**Changes required (route back to Developer):** 2
-- bug-023: evasion label misleading when Speed Evasion wins (code-review-064 HIGH)
-- bug-026: statusConditions on wrong level + missing entityId (code-review-065 HIGH x2)
-
-**New tickets filed:** 2
-- bug-027 (from code-review-062) — density min/max inversion
-- bug-028 (from code-review-063) — Cursed breather regression test
+- 7 code reviews (066–072)
+- 4 rules reviews (059–062)
 
 **All P0 and P1 bugs remain resolved.** Remaining work is P2/P3.

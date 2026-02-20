@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T22:00:00
+last_updated: 2026-02-20T23:30:00
 updated_by: orchestrator
 ---
 
@@ -31,19 +31,18 @@ All 9 ambiguous items ruled on in rules-review-047 (2026-02-19). No new ambiguou
 ## Staleness Status
 
 Multiple domains have had Developer fixes since last capability mapping:
-- **combat:** bug-008 (temp HP), bug-014 (Cursed breather), bug-023 (Speed Evasion)
+- **combat:** bug-008 (temp HP), bug-014 (Cursed breather), bug-023 (Speed Evasion + label)
 - **pokemon-lifecycle:** bug-009 (nature adjustments)
 - **character-lifecycle:** bug-010, bug-015 (features/edges PUT), bug-024, bug-025
 - **encounter-tables:** bug-011 (weight column), bug-016 (spawn cap), bug-027 (min/max clamp)
 - **capture:** bug-013 (Trapped bonus)
-- **vtt-grid:** bug-012 (terrain-aware movement), bug-017 (Earth/Rough terrain types)
+- **vtt-grid:** bug-012 (terrain-aware movement), bug-017 (Earth/Rough terrain types), bug-018 (LoS function), bug-019 (multi-cell range functions)
 - **healing:** bug-006 (injury max HP)
 
-All fixes are correctness improvements. Capability mappings would show higher coverage after re-mapping, but no new incorrect items expected. Re-mapping is **optional** — recommend deferring until the P2 bug batch and CHANGES_REQUIRED fixes are complete.
+All fixes are correctness improvements. Capability mappings would show higher coverage after re-mapping, but no new incorrect items expected. Re-mapping is **optional** — recommend deferring until bug-018 and bug-019 wiring is complete.
 
 ## Recommended Next Steps
 
-1. **Dev ecosystem focus:** Address CHANGES_REQUIRED feedback for bug-023 and bug-026
-2. **Review new fixes:** bug-017, bug-027, bug-028 need review cycles
-3. **Continue P2 bug queue:** bug-018, bug-019 after reviews clear
-4. **Re-map after P2 batch:** Once P2 bugs are resolved, re-run Capability Mapper + Coverage Analyzer for affected domains to update coverage scores
+1. **Dev ecosystem focus:** Wire bug-018 (LoS) and bug-019 (multi-cell range) functions into UI callers
+2. **Continue P3 bug queue:** bug-020, bug-021, bug-022
+3. **Re-map after wiring complete:** Once bug-018/019 are fully wired, re-run Capability Mapper + Coverage Analyzer for vtt-grid to update coverage scores
