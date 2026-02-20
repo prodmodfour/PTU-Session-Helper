@@ -126,6 +126,17 @@
         @update-status="handleStatus"
       />
     </Teleport>
+
+    <!-- XP Distribution Modal -->
+    <Teleport to="body">
+      <XpDistributionModal
+        v-if="showXpModal && encounter"
+        :encounter="encounter"
+        @skip="handleXpSkip"
+        @complete="handleXpComplete"
+        @close="showXpModal = false"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -287,6 +298,9 @@ const showLoadTemplateModal = ref(false)
 // Keyboard shortcuts help
 const showShortcutsHelp = ref(false)
 
+// XP Distribution Modal
+const showXpModal = ref(false)
+
 // GM Action Modal state - store ID only, compute fresh combatant from store
 const actionModalCombatantId = ref<string | null>(null)
 const actionModalCombatant = computed(() => {
@@ -429,10 +443,31 @@ const handleSetWeather = async (weather: string | null, source: string) => {
 }
 
 const endEncounter = async () => {
+  // If there are defeated enemies, show the XP distribution modal
+  const defeated = encounterStore.encounter?.defeatedEnemies ?? []
+  if (defeated.length > 0) {
+    showXpModal.value = true
+    return
+  }
+
+  // No defeated enemies — just confirm and end
   if (confirm('Are you sure you want to end this encounter?')) {
     pendingBreatherShift.value = null
     await encounterStore.endEncounter()
   }
+}
+
+// XP Modal handlers
+const handleXpSkip = async () => {
+  showXpModal.value = false
+  pendingBreatherShift.value = null
+  await encounterStore.endEncounter()
+}
+
+const handleXpComplete = async () => {
+  showXpModal.value = false
+  pendingBreatherShift.value = null
+  await encounterStore.endEncounter()
 }
 
 const serveEncounter = async () => {
