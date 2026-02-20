@@ -6,7 +6,7 @@ categories:
 affected_files:
   - app/components/encounter-table/TableEditor.vue
 estimated_scope: small
-status: open
+status: resolved
 created_at: 2026-02-18T18:00:00
 found_by: rules-review-028
 ---
@@ -45,3 +45,9 @@ Replace the hardcoded option labels with values derived from `DENSITY_RANGES`:
 Where `densityTiers` is computed from `DENSITY_RANGES`. Alternatively, just fix the hardcoded strings to match the constant values.
 
 Estimated commits: 1
+
+## Resolution Log
+
+- **Commit:** `b7feca3` — fix: derive density dropdown labels from DENSITY_RANGES constant
+- **Files changed:** `app/components/encounter-table/TableEditor.vue`
+- **Approach:** Replaced 4 hardcoded `<option>` elements with a `v-for` loop over a `densityOptions` array derived from `DENSITY_RANGES`. Imported `DENSITY_RANGES` and `DensityTier` from `~/types`. Labels now dynamically reflect the constant values (e.g., "Sparse (2-4 Pokemon)") and will stay in sync if ranges change in the future.
