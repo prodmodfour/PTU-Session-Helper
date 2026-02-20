@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-064
 type: ptu-rule
 priority: P3
-status: open
+status: in-progress
 source_ecosystem: dev
 target_ecosystem: dev
 created_by: game-logic-reviewer
@@ -60,3 +60,7 @@ const hpStat = tc.entityData?.stats?.hp ?? 10
 ## Discovery Context
 
 Found during rules-review-053 while reviewing bug-024 fix (commit `98287f5`). Pre-existing issue partially introduced by the same commit (the `?? 0` fallback is new code, but the save endpoint fallback was added in the same commit).
+
+## Resolution Log
+
+- **2026-02-20**: Fixed both fallback defaults. Save endpoint (`from-encounter.post.ts` line 68) now uses `{ hp: 10, attack: 5, defense: 5, specialAttack: 5, specialDefense: 5, speed: 5 }`. Load endpoint (`load.post.ts` line 84) now uses `?? 10` for HP fallback. Searched entire server codebase for similar patterns; the only other `hp: 0` occurrence is in `pokemon-generator.service.ts` which is an accumulator initialization (correct). All 529 unit tests pass. Commit: `e2644c6`.
