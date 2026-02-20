@@ -370,10 +370,9 @@
             <div class="form-group">
               <label class="form-label">Population Density</label>
               <select v-model="editor.editSettings.density" class="form-select">
-                <option value="sparse">Sparse (1-2 Pokemon)</option>
-                <option value="moderate">Moderate (2-4 Pokemon)</option>
-                <option value="dense">Dense (4-6 Pokemon)</option>
-                <option value="abundant">Abundant (6-8 Pokemon)</option>
+                <option v-for="opt in densityOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
               </select>
               <p class="form-hint">
                 Controls how many Pokemon spawn when generating encounters
@@ -398,6 +397,8 @@
 </template>
 
 <script setup lang="ts">
+import { DENSITY_RANGES, type DensityTier } from '~/types'
+
 const props = defineProps<{
   tableId: string
   backLink: string
@@ -405,6 +406,11 @@ const props = defineProps<{
 }>()
 
 const editor = reactive(useTableEditor(computed(() => props.tableId)))
+
+const densityOptions = Object.entries(DENSITY_RANGES).map(([tier, range]) => ({
+  value: tier as DensityTier,
+  label: `${tier.charAt(0).toUpperCase() + tier.slice(1)} (${range.min}-${range.max} Pokemon)`,
+}))
 </script>
 
 <style lang="scss" scoped>
