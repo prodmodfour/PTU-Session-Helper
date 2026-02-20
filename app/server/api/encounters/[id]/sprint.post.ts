@@ -4,7 +4,7 @@
  * - Persists to database so state survives page refresh
  */
 import { prisma } from '~/server/utils/prisma'
-import { loadEncounter, findCombatant, getEntityName } from '~/server/services/encounter.service'
+import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -60,28 +60,11 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const turnOrder = JSON.parse(record.turnOrder)
-
-    const parsed = {
-      id: record.id,
-      name: record.name,
-      battleType: record.battleType,
-      weather: record.weather ?? null,
-      weatherDuration: record.weatherDuration ?? 0,
-      weatherSource: record.weatherSource ?? null,
-      combatants,
-      currentRound: record.currentRound,
-      currentTurnIndex: record.currentTurnIndex,
-      turnOrder,
-      isActive: record.isActive,
-      isPaused: record.isPaused,
-      moveLog,
-      defeatedEnemies: JSON.parse(record.defeatedEnemies)
-    }
+    const response = buildEncounterResponse(record, combatants, { moveLog })
 
     return {
       success: true,
-      data: parsed,
+      data: response,
       sprintResult: {
         combatantId: body.combatantId,
         sprintApplied

@@ -10,6 +10,7 @@
  * automatically unbind when combat ends."
  */
 import { prisma } from '~/server/utils/prisma'
+import { buildEncounterResponse } from '~/server/services/encounter.service'
 import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { resetSceneUsage } from '~/utils/moveFrequency'
@@ -155,26 +156,12 @@ export default defineEventHandler(async (event) => {
 
     await Promise.all(syncPromises)
 
-    const turnOrder = JSON.parse(encounter.turnOrder)
-
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      weather: encounter.weather ?? null,
-      weatherDuration: encounter.weatherDuration ?? 0,
-      weatherSource: encounter.weatherSource ?? null,
-      combatants: updatedCombatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder,
+    const response = buildEncounterResponse(encounter, updatedCombatants, {
       isActive: false,
-      isPaused: false,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
-    }
+      isPaused: false
+    })
 
-    return { success: true, data: parsed }
+    return { success: true, data: response }
   } catch (error: any) {
     if (error.statusCode) throw error
     throw createError({

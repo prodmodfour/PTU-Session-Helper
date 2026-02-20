@@ -6,7 +6,7 @@
  * - Apply Tripped + Vulnerable until next turn (stored as tempConditions)
  */
 import { prisma } from '~/server/utils/prisma'
-import { loadEncounter, findCombatant, getEntityName } from '~/server/services/encounter.service'
+import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { createDefaultStageModifiers } from '~/server/services/combatant.service'
 import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
@@ -126,28 +126,11 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const turnOrder = JSON.parse(record.turnOrder)
-
-    const parsed = {
-      id: record.id,
-      name: record.name,
-      battleType: record.battleType,
-      weather: record.weather ?? null,
-      weatherDuration: record.weatherDuration ?? 0,
-      weatherSource: record.weatherSource ?? null,
-      combatants,
-      currentRound: record.currentRound,
-      currentTurnIndex: record.currentTurnIndex,
-      turnOrder,
-      isActive: record.isActive,
-      isPaused: record.isPaused,
-      moveLog,
-      defeatedEnemies: JSON.parse(record.defeatedEnemies)
-    }
+    const response = buildEncounterResponse(record, combatants, { moveLog })
 
     return {
       success: true,
-      data: parsed,
+      data: response,
       breatherResult: {
         combatantId: body.combatantId,
         ...result
