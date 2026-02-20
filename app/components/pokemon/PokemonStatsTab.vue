@@ -105,7 +105,7 @@
             <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.accuracy) }}</span>
           </div>
           <div v-if="pokemon.stageModifiers?.evasion !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.evasion)">
-            <span class="stage-stat">EVA</span>
+            <span class="stage-stat">EVA+</span>
             <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.evasion) }}</span>
           </div>
         </div>

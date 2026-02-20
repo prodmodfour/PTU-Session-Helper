@@ -83,15 +83,27 @@ export { TYPE_CHART, NET_EFFECTIVENESS, getTypeEffectiveness, getEffectivenessLa
 // ============================================
 
 /**
- * Calculate dynamic evasion from stage-modified stat.
- * PTU 07-combat.md:594-615, 644-647
- * "for every 5 points ... they gain +1 [Physical/Special/Speed] Evasion, up to a maximum of +6"
- * Stage-modified stat is used: "Raising your Defense...Combat Stages can give you additional evasion"
+ * Calculate evasion using PTU's two-part system (07-combat.md:594-657).
+ *
+ * Part 1 — Stat-derived evasion (MULTIPLIER-based via combat stages):
+ *   "for every 5 points ... they gain +1 [Physical/Special/Speed] Evasion, up to +6"
+ *   Combat stages on Def/SpDef/Speed modify the stat via the multiplier table
+ *   (e.g., CS +1 = x1.2), and evasion is derived from the modified stat.
+ *
+ * Part 2 — Evasion bonus from moves/effects (ADDITIVE, not multiplier):
+ *   "Besides these base values for evasion, Moves and effects can raise or lower
+ *    Evasion. These extra Changes in Evasion apply to all types of Evasion, and
+ *    stack on top." (07-combat.md:648-653) Range: -6 to +6.
+ *
+ * The total evasion is clamped to min 0 because "Negative Evasion can erase
+ * Evasion from other sources, but does not increase the Accuracy of an enemy's
+ * Moves." The +9 cap on accuracy checks is enforced in calculateAccuracyThreshold.
  */
 export function calculateEvasion(baseStat: number, combatStage: number = 0, evasionBonus: number = 0): number {
+  // Part 1: Combat stage multiplier applied to stat, then derive evasion
   const statEvasion = Math.min(6, Math.floor(applyStageModifier(baseStat, combatStage) / 5))
-  // Bonus evasion from moves/effects stacks on top (PTU 07-combat.md:648-653)
-  // Negative evasion can erase but not go below 0
+  // Part 2: Bonus evasion from moves/effects stacks additively on top
+  // Negative evasion can erase stat-derived evasion but total never goes below 0
   return Math.max(0, statEvasion + evasionBonus)
 }
 

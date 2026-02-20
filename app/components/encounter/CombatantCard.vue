@@ -293,6 +293,7 @@ const captureRate = computed(() => {
 })
 
 // Format stat name for display
+// PTU: Evasion bonus is from moves/effects (additive), distinct from stat-derived evasion
 const STAT_NAMES: Record<string, string> = {
   attack: 'Atk',
   defense: 'Def',
@@ -300,7 +301,7 @@ const STAT_NAMES: Record<string, string> = {
   specialDefense: 'SpD',
   speed: 'Spe',
   accuracy: 'Acc',
-  evasion: 'Eva'
+  evasion: 'Eva+'
 }
 
 const formatStatName = (stat: string): string => STAT_NAMES[stat] || stat

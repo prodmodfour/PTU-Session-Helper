@@ -183,7 +183,9 @@ export default defineEventHandler(async (event) => {
       damageReduction: body.damageReduction,
     })
 
-    // Compute dynamic evasion from target's stage-modified stats (P1)
+    // Compute dynamic evasion from target's stage-modified stats (PTU p.234)
+    // Part 1: Stat-derived evasion uses combat stage MULTIPLIER on the stat (floor(modified/5))
+    // Part 2: Evasion bonus from moves/effects is ADDITIVE, stacking on top
     const targetEvasion = getEntityEvasionStats(target)
     const targetStages = target.entity.stageModifiers
     const evasionBonus = targetStages?.evasion ?? 0

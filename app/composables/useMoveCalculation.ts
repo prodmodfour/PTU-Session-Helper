@@ -193,6 +193,10 @@ export function useMoveCalculation(
 
     const entity = target.entity
     const stages = getStageModifiers(entity)
+    // PTU p.234 (07-combat.md:648-653): Evasion bonus from moves/effects is additive,
+    // stacking on top of stat-derived evasion. This is NOT a combat stage multiplier —
+    // the actual combat stages on Def/SpDef/Speed already affect evasion via the
+    // multiplier table applied to the stat before dividing by 5.
     const evasionBonus = stages.evasion ?? 0
 
     // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
@@ -228,6 +232,7 @@ export function useMoveCalculation(
 
     const entity = target.entity
     const stages = getStageModifiers(entity)
+    // Evasion bonus from moves/effects (additive, not a multiplier-based combat stage)
     const evasionBonus = stages.evasion ?? 0
 
     const speedStat = target.type === 'pokemon'

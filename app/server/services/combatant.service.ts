@@ -302,11 +302,15 @@ export function validateStatusConditions(statuses: StatusCondition[]): void {
 
 export type StageStat = keyof StageModifiers
 
+// PTU has three modifier categories, all sharing the -6/+6 range:
+// 1. Combat Stages (atk, def, spA, spD, spe): use the multiplier table (+20%/-10% per stage)
+// 2. Accuracy modifier: applied directly to accuracy rolls (PTU p.234)
+// 3. Evasion bonus: additive bonus from moves/effects, stacks on stat-derived evasion (PTU p.234)
 export const VALID_STATS: StageStat[] = [
   'attack', 'defense', 'specialAttack', 'specialDefense', 'speed', 'accuracy', 'evasion'
 ]
 
-// PTU stage modifiers are clamped to -6 to +6
+// All three categories are clamped to -6 to +6
 const MIN_STAGE = -6
 const MAX_STAGE = 6
 

@@ -261,6 +261,7 @@ const getStatValue = (stat: string): number => {
   }
 }
 
+// PTU: Evasion bonus is from moves/effects (additive), distinct from stat-derived evasion
 const formatStageName = (key: string): string => {
   const names: Record<string, string> = {
     attack: 'ATK',
@@ -269,7 +270,7 @@ const formatStageName = (key: string): string => {
     specialDefense: 'SP.DEF',
     speed: 'SPD',
     accuracy: 'ACC',
-    evasion: 'EVA'
+    evasion: 'EVA+'
   }
   return names[key] || key.toUpperCase()
 }

@@ -28,14 +28,24 @@ export type BattleType = 'trainer' | 'full_contact';
 // pokemon: pokemon act, highest speed first
 export type TurnPhase = 'trainer_declaration' | 'trainer_resolution' | 'pokemon';
 
-// Stage modifiers (-6 to +6)
+// Stage modifiers (-6 to +6). Three distinct PTU mechanics sharing the same range:
+// - Combat Stages (atk/def/spA/spD/spe): apply multiplier table to stats (+20%/-10% per stage)
+// - Accuracy: additive modifier applied directly to accuracy rolls (PTU p.234)
+// - Evasion: additive bonus from moves/effects, stacks on top of stat-derived evasion (PTU p.234)
 export interface StageModifiers {
+  /** Combat Stage — multiplier applied to Attack stat */
   attack: number;
+  /** Combat Stage — multiplier applied to Defense stat (also affects Physical Evasion) */
   defense: number;
+  /** Combat Stage — multiplier applied to Special Attack stat */
   specialAttack: number;
+  /** Combat Stage — multiplier applied to Special Defense stat (also affects Special Evasion) */
   specialDefense: number;
+  /** Combat Stage — multiplier applied to Speed stat (also affects Speed Evasion + movement) */
   speed: number;
+  /** Additive modifier applied directly to accuracy rolls (NOT a multiplier) */
   accuracy: number;
+  /** Additive evasion bonus from moves/effects — stacks on top of stat-derived evasion (NOT a multiplier) */
   evasion: number;
 }
 
