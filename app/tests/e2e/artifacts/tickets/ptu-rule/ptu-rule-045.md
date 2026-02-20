@@ -1,7 +1,8 @@
 ---
 ticket_id: ptu-rule-045
 priority: P3
-status: open
+status: in-progress
+design_spec: designs/design-equipment-001.md
 domain: combat
 matrix_source:
   rule_ids:
