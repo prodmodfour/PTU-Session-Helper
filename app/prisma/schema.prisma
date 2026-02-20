@@ -169,6 +169,8 @@ model Encounter {
   name          String
   battleType    String   @default("trainer") // 'trainer' or 'full_contact'
   weather       String?  // sunny, rain, sandstorm, hail, snow, fog, harsh_sunlight, heavy_rain, strong_winds
+  weatherDuration Int     @default(0)  // Rounds remaining (0 = indefinite/manual, 5 = standard PTU weather)
+  weatherSource String?  // 'move', 'ability', or 'manual' — determines expiration behavior
 
   // Combatants stored as JSON (includes all combat state + positions)
   combatants    String   @default("[]") // JSON array
