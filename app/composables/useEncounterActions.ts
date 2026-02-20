@@ -138,14 +138,11 @@ export function useEncounterActions(options: EncounterActionsOptions) {
         await encounterStore.useAction(combatantId, 'standard')
         await encounterStore.useAction(combatantId, 'shift')
       }
-      // Special handling for Sprint: add Sprint tempCondition for +50% movement speed
+      // Special handling for Sprint: persist Sprint tempCondition via server endpoint
       if (maneuverId === 'sprint') {
-        if (!combatant.tempConditions) {
-          combatant.tempConditions = []
-        }
-        if (!combatant.tempConditions.includes('Sprint')) {
-          combatant.tempConditions.push('Sprint')
-        }
+        encounterStore.encounter = await encounterCombatStore.sprint(
+          encounterStore.encounter.id, combatantId
+        )
       }
       // Special handling for Take a Breather
       if (maneuverId === 'take-a-breather') {
