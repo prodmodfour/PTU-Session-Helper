@@ -46,6 +46,7 @@ export default defineEventHandler(async (event) => {
     if (body.maxHp !== undefined) updateData.maxHp = body.maxHp
     if (body.injuries !== undefined) updateData.injuries = body.injuries
     if (body.drainedAp !== undefined) updateData.drainedAp = body.drainedAp
+    if (body.boundAp !== undefined) updateData.boundAp = body.boundAp
     if (body.currentAp !== undefined) updateData.currentAp = body.currentAp
     if (body.restMinutesToday !== undefined) updateData.restMinutesToday = body.restMinutesToday
     if (body.injuriesHealedToday !== undefined) updateData.injuriesHealedToday = body.injuriesHealedToday

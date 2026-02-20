@@ -193,6 +193,7 @@ export interface HumanCharacter {
   lastInjuryTime: string | null;
   injuriesHealedToday: number;
   drainedAp: number;
+  boundAp: number;
   currentAp: number;
 
   // Inventory

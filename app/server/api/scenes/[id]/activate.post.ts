@@ -32,10 +32,14 @@ export default defineEventHandler(async (event) => {
         })
 
         for (const char of dbCharacters) {
+          // Scene end: unbind all bound AP and restore to max minus drained
           const restoredAp = calculateSceneEndAp(char.level, char.drainedAp)
           await prisma.humanCharacter.update({
             where: { id: char.id },
-            data: { currentAp: restoredAp }
+            data: {
+              boundAp: 0,
+              currentAp: restoredAp
+            }
           })
         }
       }

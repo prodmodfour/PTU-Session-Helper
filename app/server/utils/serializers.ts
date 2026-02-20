@@ -102,6 +102,7 @@ export function serializeCharacter(character: CharacterWithPokemon) {
     injuriesHealedToday: character.injuriesHealedToday,
     lastRestReset: character.lastRestReset,
     drainedAp: character.drainedAp,
+    boundAp: character.boundAp,
     currentAp: character.currentAp,
     // Display
     avatarUrl: character.avatarUrl,
@@ -165,6 +166,7 @@ export function serializeCharacterSummary(character: CharacterWithPokemonSummary
     injuriesHealedToday: character.injuriesHealedToday,
     lastRestReset: character.lastRestReset,
     drainedAp: character.drainedAp,
+    boundAp: character.boundAp,
     currentAp: character.currentAp,
     // Display
     avatarUrl: character.avatarUrl,

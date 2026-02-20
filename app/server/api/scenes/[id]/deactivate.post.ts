@@ -30,7 +30,8 @@ export default defineEventHandler(async (event) => {
 
     // Restore AP for all characters in the scene (PTU Core p221:
     // "Action Points are completely regained at the end of each Scene.
-    //  Drained AP remains unavailable until Extended Rest.")
+    //  Drained AP remains unavailable until Extended Rest.
+    //  Bound AP is released at scene end (Stratagems auto-unbind).")
     const characters: Array<{ characterId?: string; id?: string }> = JSON.parse(sceneData.characters || '[]')
     const characterIds = characters
       .map(c => c.characterId || c.id)
@@ -44,10 +45,14 @@ export default defineEventHandler(async (event) => {
       })
 
       for (const char of dbCharacters) {
+        // Scene end: unbind all bound AP and restore to max minus drained
         const restoredAp = calculateSceneEndAp(char.level, char.drainedAp)
         await prisma.humanCharacter.update({
           where: { id: char.id },
-          data: { currentAp: restoredAp }
+          data: {
+            boundAp: 0, // All binding effects end at scene close
+            currentAp: restoredAp
+          }
         })
         apRestoredCount++
       }

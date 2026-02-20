@@ -71,8 +71,9 @@ export default defineEventHandler(async (event) => {
   const clearedStatuses = getStatusesToClear(statusConditions)
   const newStatusConditions = clearPersistentStatusConditions(statusConditions)
 
-  // Restore drained AP and set currentAp to full max
+  // Restore drained AP and clear bound AP, set currentAp to full max
   const apRestored = character.drainedAp
+  const boundApCleared = character.boundAp
   const maxAp = calculateMaxAp(character.level)
 
   const updated = await prisma.humanCharacter.update({
@@ -84,7 +85,8 @@ export default defineEventHandler(async (event) => {
       lastRestReset: new Date(),
       statusConditions: JSON.stringify(newStatusConditions),
       drainedAp: 0, // Restore all drained AP
-      currentAp: maxAp // Full AP pool since drained is now 0
+      boundAp: 0, // Clear all bound AP (binding effects end)
+      currentAp: maxAp // Full AP pool since drained and bound are now 0
     }
   })
 
@@ -97,6 +99,7 @@ export default defineEventHandler(async (event) => {
       maxHp: updated.maxHp,
       clearedStatuses,
       apRestored,
+      boundApCleared,
       restMinutesToday: currentRestMinutes,
       restMinutesRemaining: Math.max(0, 480 - currentRestMinutes)
     }

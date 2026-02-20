@@ -14,7 +14,7 @@ export default defineEventHandler(async () => {
       }
     })
 
-    // Reset all Character daily counters (including drained AP)
+    // Reset all Character daily counters (including drained and bound AP)
     // Need per-character updates since maxAp depends on level
     const characters = await prisma.humanCharacter.findMany({
       select: { id: true, level: true }
@@ -28,6 +28,7 @@ export default defineEventHandler(async () => {
           restMinutesToday: 0,
           injuriesHealedToday: 0,
           drainedAp: 0,
+          boundAp: 0,
           currentAp: maxAp,
           lastRestReset: now
         }
