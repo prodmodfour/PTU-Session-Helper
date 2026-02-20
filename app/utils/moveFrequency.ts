@@ -123,6 +123,7 @@ export function checkMoveFrequency(
   }
 
   // Scene-frequency moves: check scene usage limit
+  // PTU p.337: Scene x2/x3 moves still enforce EOT (every other turn) between uses
   const sceneLimit = getSceneLimit(frequency)
   if (sceneLimit !== null) {
     const used = move.usedThisScene ?? 0
@@ -134,10 +135,22 @@ export function checkMoveFrequency(
         remainingSceneUses: 0
       }
     }
+    // Scene x2/x3: enforce EOT between uses (Scene x1 is implicitly safe — only 1 use total)
+    if (sceneLimit > 1) {
+      const lastUsed = move.lastTurnUsed ?? 0
+      if (lastUsed > 0 && currentRound <= lastUsed + 1) {
+        return {
+          canUse: false,
+          reason: `${frequency} move was used on round ${lastUsed}, must wait until round ${lastUsed + 2} (EOT restriction)`,
+          remainingSceneUses: remaining
+        }
+      }
+    }
     return { canUse: true, remainingSceneUses: remaining }
   }
 
   // Daily-frequency moves: check daily usage limit
+  // PTU p.337: Daily x2/x3 moves can still only be used once per scene
   const dailyLimit = getDailyLimit(frequency)
   if (dailyLimit !== null) {
     const used = move.usedToday ?? 0
@@ -147,6 +160,17 @@ export function checkMoveFrequency(
         canUse: false,
         reason: `${frequency} move has been used ${used}/${dailyLimit} times today`,
         remainingDailyUses: 0
+      }
+    }
+    // Daily x2/x3: enforce 1-use-per-scene cap (Daily x1 is implicitly safe — only 1 use total)
+    if (dailyLimit > 1) {
+      const usedScene = move.usedThisScene ?? 0
+      if (usedScene >= 1) {
+        return {
+          canUse: false,
+          reason: `${frequency} move already used this scene (1 use per scene limit)`,
+          remainingDailyUses: remaining
+        }
       }
     }
     return { canUse: true, remainingDailyUses: remaining }
@@ -177,9 +201,13 @@ export function incrementMoveUsage(move: Move, currentRound: number): Move {
     updates.lastTurnUsed = currentRound
   }
 
-  // Track scene-frequency usage
+  // Track scene-frequency usage + EOT round tracking for Scene x2/x3
   if (isSceneFrequency(frequency)) {
     updates.usedThisScene = (move.usedThisScene ?? 0) + 1
+    const sceneLimit = getSceneLimit(frequency)
+    if (sceneLimit !== null && sceneLimit > 1) {
+      updates.lastTurnUsed = currentRound
+    }
   }
 
   // Track daily-frequency usage
@@ -211,6 +239,25 @@ export function resetSceneUsage(moves: Move[]): Move[] {
       ...move,
       usedThisScene: 0,
       lastTurnUsed: 0
+    }
+  })
+}
+
+/**
+ * Reset daily move usage counters on all moves in a list.
+ * Used by new-day endpoints to clear yesterday's usage.
+ * Returns a new array (no mutation).
+ */
+export function resetDailyUsage(moves: Move[]): Move[] {
+  return moves.map(move => {
+    const needsReset = (move.usedToday ?? 0) > 0 || move.lastUsedAt !== undefined
+    if (!needsReset) {
+      return move
+    }
+    return {
+      ...move,
+      usedToday: 0,
+      lastUsedAt: undefined
     }
   })
 }

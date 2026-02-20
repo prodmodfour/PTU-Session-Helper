@@ -1,11 +1,12 @@
 import { prisma } from '~/server/utils/prisma'
 import { calculateMaxAp } from '~/utils/restHealing'
+import { resetDailyUsage } from '~/utils/moveFrequency'
 
 export default defineEventHandler(async () => {
   try {
     const now = new Date()
 
-    // Reset all Pokemon daily counters
+    // Reset all Pokemon daily counters (scalar fields via bulk update)
     const pokemonResult = await prisma.pokemon.updateMany({
       data: {
         restMinutesToday: 0,
@@ -13,6 +14,27 @@ export default defineEventHandler(async () => {
         lastRestReset: now
       }
     })
+
+    // Reset daily move usage counters inside each Pokemon's moves JSON
+    // updateMany cannot touch JSON columns, so iterate individually
+    const allPokemon = await prisma.pokemon.findMany({
+      select: { id: true, moves: true }
+    })
+
+    let pokemonMovesReset = 0
+    for (const pokemon of allPokemon) {
+      const moves = JSON.parse(pokemon.moves || '[]')
+      const resetMoves = resetDailyUsage(moves)
+
+      // Only write back if something actually changed
+      if (JSON.stringify(moves) !== JSON.stringify(resetMoves)) {
+        await prisma.pokemon.update({
+          where: { id: pokemon.id },
+          data: { moves: JSON.stringify(resetMoves) }
+        })
+        pokemonMovesReset++
+      }
+    }
 
     // Reset all Character daily counters (including drained and bound AP)
     // Need per-character updates since maxAp depends on level
@@ -37,9 +59,10 @@ export default defineEventHandler(async () => {
 
     return {
       success: true,
-      message: 'New day! All daily healing counters have been reset.',
+      message: 'New day! All daily healing counters and move usage have been reset.',
       data: {
         pokemonReset: pokemonResult.count,
+        pokemonMovesReset,
         charactersReset: characters.length,
         timestamp: now
       }

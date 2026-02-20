@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { calculateMaxAp } from '~/utils/restHealing'
+import { resetDailyUsage } from '~/utils/moveFrequency'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -13,7 +14,8 @@ export default defineEventHandler(async (event) => {
 
   try {
     const character = await prisma.humanCharacter.findUnique({
-      where: { id }
+      where: { id },
+      include: { pokemon: { select: { id: true, moves: true } } }
     })
 
     if (!character) {
@@ -22,6 +24,8 @@ export default defineEventHandler(async (event) => {
         message: 'Character not found'
       })
     }
+
+    const now = new Date()
 
     // Reset daily healing counters (including drained and bound AP for trainers)
     // New day clears drained AP and bound AP, so currentAp goes back to full maxAp
@@ -34,9 +38,28 @@ export default defineEventHandler(async (event) => {
         drainedAp: 0,
         boundAp: 0,
         currentAp: maxAp,
-        lastRestReset: new Date()
+        lastRestReset: now
       }
     })
+
+    // Reset daily counters and move usage for this character's Pokemon
+    let pokemonReset = 0
+    for (const pokemon of character.pokemon) {
+      const moves = JSON.parse(pokemon.moves || '[]')
+      const resetMoves = resetDailyUsage(moves)
+      const movesChanged = JSON.stringify(moves) !== JSON.stringify(resetMoves)
+
+      await prisma.pokemon.update({
+        where: { id: pokemon.id },
+        data: {
+          restMinutesToday: 0,
+          injuriesHealedToday: 0,
+          lastRestReset: now,
+          ...(movesChanged ? { moves: JSON.stringify(resetMoves) } : {})
+        }
+      })
+      pokemonReset++
+    }
 
     return {
       success: true,
@@ -47,7 +70,8 @@ export default defineEventHandler(async (event) => {
         drainedAp: updated.drainedAp,
         boundAp: updated.boundAp,
         currentAp: updated.currentAp,
-        lastRestReset: updated.lastRestReset
+        lastRestReset: updated.lastRestReset,
+        pokemonReset
       }
     }
   } catch (error: any) {
