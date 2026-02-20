@@ -86,11 +86,11 @@ export default defineEventHandler(async (event) => {
       combatant.tempConditions = []
     }
     if (!combatant.tempConditions.includes('Tripped')) {
-      combatant.tempConditions.push('Tripped')
+      combatant.tempConditions = [...combatant.tempConditions, 'Tripped']
       result.trippedApplied = true
     }
     if (!combatant.tempConditions.includes('Vulnerable')) {
-      combatant.tempConditions.push('Vulnerable')
+      combatant.tempConditions = [...combatant.tempConditions, 'Vulnerable']
       result.vulnerableApplied = true
     }
 

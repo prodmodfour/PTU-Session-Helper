@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-075
 priority: P3
-status: open
+status: in-progress
 domain: combat
 source: code-review-086
 created_at: 2026-02-20
@@ -46,3 +46,10 @@ if (!combatant.tempConditions.includes('Vulnerable')) {
 ## Notes
 
 This is server-side code operating on a JSON-parsed object (not a reactive Pinia store), so the mutation is not functionally broken. The issue is consistency with project immutability guidelines and the adjacent sprint endpoint's pattern. Pre-existing issue, not introduced by commit c1d49a7.
+
+## Fix Log
+
+- **Date:** 2026-02-20
+- **Change:** Replaced `combatant.tempConditions.push('Tripped')` and `combatant.tempConditions.push('Vulnerable')` with immutable spread assignments (`combatant.tempConditions = [...combatant.tempConditions, 'Tripped']` / `'Vulnerable'`), matching the pattern used in `sprint.post.ts`.
+- **File:** `app/server/api/encounters/[id]/breather.post.ts` (lines 89, 93)
+- **Risk:** None — behavioral equivalence on JSON-parsed objects; purely a consistency/style fix.
