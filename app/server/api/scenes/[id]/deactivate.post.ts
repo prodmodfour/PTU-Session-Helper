@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { broadcastToGroup } from '~/server/utils/websocket'
+import { calculateSceneEndAp } from '~/utils/restHealing'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,11 +13,45 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Read scene before deactivating to get character list
+    const sceneData = await prisma.scene.findUnique({ where: { id } })
+    if (!sceneData) {
+      throw createError({
+        statusCode: 404,
+        message: 'Scene not found'
+      })
+    }
+
     // Deactivate the scene
     const scene = await prisma.scene.update({
       where: { id },
       data: { isActive: false }
     })
+
+    // Restore AP for all characters in the scene (PTU Core p221:
+    // "Action Points are completely regained at the end of each Scene.
+    //  Drained AP remains unavailable until Extended Rest.")
+    const characters: Array<{ characterId?: string; id?: string }> = JSON.parse(sceneData.characters || '[]')
+    const characterIds = characters
+      .map(c => c.characterId || c.id)
+      .filter((id): id is string => !!id)
+
+    let apRestoredCount = 0
+    if (characterIds.length > 0) {
+      const dbCharacters = await prisma.humanCharacter.findMany({
+        where: { id: { in: characterIds } },
+        select: { id: true, level: true, drainedAp: true }
+      })
+
+      for (const char of dbCharacters) {
+        const restoredAp = calculateSceneEndAp(char.level, char.drainedAp)
+        await prisma.humanCharacter.update({
+          where: { id: char.id },
+          data: { currentAp: restoredAp }
+        })
+        apRestoredCount++
+      }
+    }
 
     // Clear GroupViewState if it was pointing to this scene
     await prisma.groupViewState.updateMany({
@@ -29,7 +64,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      message: 'Scene deactivated successfully'
+      message: `Scene deactivated successfully. AP restored for ${apRestoredCount} character(s).`
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) {

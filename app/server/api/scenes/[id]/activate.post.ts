@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { broadcastToGroup } from '~/server/utils/websocket'
+import { calculateSceneEndAp } from '~/utils/restHealing'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,7 +13,35 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Deactivate all other scenes first
+    // Restore AP for characters in any currently active scenes before deactivating
+    // Per PTU Core (p221): AP is completely regained at scene end (minus drained AP)
+    const activeScenes = await prisma.scene.findMany({
+      where: { isActive: true }
+    })
+
+    for (const activeScene of activeScenes) {
+      const characters: Array<{ characterId?: string; id?: string }> = JSON.parse(activeScene.characters || '[]')
+      const characterIds = characters
+        .map(c => c.characterId || c.id)
+        .filter((cid): cid is string => !!cid)
+
+      if (characterIds.length > 0) {
+        const dbCharacters = await prisma.humanCharacter.findMany({
+          where: { id: { in: characterIds } },
+          select: { id: true, level: true, drainedAp: true }
+        })
+
+        for (const char of dbCharacters) {
+          const restoredAp = calculateSceneEndAp(char.level, char.drainedAp)
+          await prisma.humanCharacter.update({
+            where: { id: char.id },
+            data: { currentAp: restoredAp }
+          })
+        }
+      }
+    }
+
+    // Deactivate all other scenes
     await prisma.scene.updateMany({
       where: { isActive: true },
       data: { isActive: false }
