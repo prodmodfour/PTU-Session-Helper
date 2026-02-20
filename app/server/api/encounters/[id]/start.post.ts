@@ -85,31 +85,36 @@ export default defineEventHandler(async (event) => {
     let turnOrder: string[] = []
     let trainerTurnOrder: string[] = []
     let pokemonTurnOrder: string[] = []
-    let currentPhase: 'trainer' | 'pokemon' = 'pokemon'
+    let currentPhase: 'trainer_declaration' | 'trainer_resolution' | 'pokemon' = 'pokemon'
 
     if (encounter.battleType === 'trainer') {
-      // League Battle: Trainers act first, then Pokemon
-      // Trainers: declare low→high speed, resolve high→low
+      // League Battle (PTU): Declaration phase then Pokemon phase
+      // Declaration: trainers declare low→high speed (slowest first, fastest reacts)
       // Pokemon: act high→low speed
 
       const trainers = readyCombatants.filter((c) => c.type === 'human')
       const pokemon = readyCombatants.filter((c) => c.type === 'pokemon')
 
-      // Sort trainers by initiative (high→low for action resolution)
-      const sortedTrainers = sortByInitiativeWithRollOff(trainers, true)
-      // Sort pokemon by initiative (high→low)
+      // Sort trainers by initiative (low→high for declaration order)
+      const sortedTrainersDeclaration = sortByInitiativeWithRollOff(trainers, false)
+      // Sort pokemon by initiative (high→low for action order)
       const sortedPokemon = sortByInitiativeWithRollOff(pokemon, true)
 
-      trainerTurnOrder = sortedTrainers.map((c) => c.id)
+      trainerTurnOrder = sortedTrainersDeclaration.map((c) => c.id)
       pokemonTurnOrder = sortedPokemon.map((c) => c.id)
 
-      // In trainer battles, trainers go first
-      // turnOrder is trainers (high→low) then pokemon (high→low)
-      turnOrder = [...trainerTurnOrder, ...pokemonTurnOrder]
-      currentPhase = trainers.length > 0 ? 'trainer' : 'pokemon'
+      if (trainers.length > 0) {
+        // Start with trainer declaration phase (low→high speed)
+        turnOrder = [...trainerTurnOrder]
+        currentPhase = 'trainer_declaration'
+      } else {
+        // No trainers — skip straight to pokemon phase
+        turnOrder = [...pokemonTurnOrder]
+        currentPhase = 'pokemon'
+      }
 
     } else {
-      // Full Contact / Wild Encounter: Everyone in initiative order
+      // Full Contact / Wild Encounter: Everyone in initiative order (high→low)
       const sortedCombatants = sortByInitiativeWithRollOff(readyCombatants, true)
       turnOrder = sortedCombatants.map((c) => c.id)
       currentPhase = 'pokemon' // Phase doesn't matter for full contact
@@ -128,6 +133,9 @@ export default defineEventHandler(async (event) => {
         currentRound: 1,
         currentTurnIndex: 0,
         turnOrder: JSON.stringify(turnOrder),
+        currentPhase,
+        trainerTurnOrder: JSON.stringify(trainerTurnOrder),
+        pokemonTurnOrder: JSON.stringify(pokemonTurnOrder),
         combatants: JSON.stringify(readyCombatants)
       }
     })
