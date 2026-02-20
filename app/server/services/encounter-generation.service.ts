@@ -2,10 +2,10 @@
  * Encounter Generation Service
  * Pure logic for weighted random species selection with diversity enforcement.
  * Extracted from generate.post.ts for testability.
+ *
+ * Note: calculateSpawnCount was removed in ptu-rule-058 (density/significance separation).
+ * Spawn count is now provided directly by the caller rather than derived from density tiers.
  */
-
-import type { DensityTier } from '~/types'
-import { DENSITY_RANGES, MAX_SPAWN_COUNT } from '~/types'
 
 // --- Types ---
 
@@ -33,37 +33,6 @@ export interface GenerateEncounterInput {
   levelMax: number
   /** Injectable RNG for testing. Defaults to Math.random. */
   randomFn?: () => number
-}
-
-export interface CalculateSpawnCountInput {
-  density: DensityTier
-  densityMultiplier: number
-  countOverride?: number
-  /** Injectable RNG for testing. Defaults to Math.random. */
-  randomFn?: () => number
-}
-
-// --- Spawn Count ---
-
-/**
- * Calculate spawn count from density tier, multiplier, and optional override.
- * The count is clamped between 1 and MAX_SPAWN_COUNT.
- */
-export function calculateSpawnCount(input: CalculateSpawnCountInput): number {
-  const { density, densityMultiplier, countOverride, randomFn = Math.random } = input
-
-  if (countOverride !== undefined) {
-    return Math.min(Math.max(countOverride, 1), MAX_SPAWN_COUNT)
-  }
-
-  const baseDensity = density || 'moderate'
-  const densityRange = DENSITY_RANGES[baseDensity] || DENSITY_RANGES.moderate
-
-  const rawMin = Math.max(1, Math.round(densityRange.min * densityMultiplier))
-  const scaledMax = Math.min(MAX_SPAWN_COUNT, Math.round(densityRange.max * densityMultiplier))
-  const scaledMin = Math.min(rawMin, scaledMax)
-
-  return Math.floor(randomFn() * (scaledMax - scaledMin + 1)) + scaledMin
 }
 
 // --- Weighted Random Selection with Diversity Enforcement ---
