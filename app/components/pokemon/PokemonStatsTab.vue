@@ -1,0 +1,401 @@
+<template>
+  <div class="tab-content">
+    <div class="stats-grid">
+      <div class="stat-block">
+        <label>HP</label>
+        <div class="stat-values">
+          <span class="stat-base">{{ pokemon.baseStats?.hp || 0 }}</span>
+          <span class="stat-current">{{ editData.currentHp }} / {{ editData.maxHp }}</span>
+        </div>
+        <div v-if="isEditing" class="stat-edit">
+          <input v-model.number="localCurrentHp" type="number" class="form-input form-input--sm" />
+          <span>/</span>
+          <input v-model.number="localMaxHp" type="number" class="form-input form-input--sm" />
+        </div>
+      </div>
+      <div class="stat-block">
+        <label>Attack</label>
+        <div class="stat-values">
+          <span class="stat-base">{{ pokemon.baseStats?.attack || 0 }}</span>
+          <span class="stat-current">{{ pokemon.currentStats?.attack || 0 }}</span>
+        </div>
+      </div>
+      <div class="stat-block">
+        <label>Defense</label>
+        <div class="stat-values">
+          <span class="stat-base">{{ pokemon.baseStats?.defense || 0 }}</span>
+          <span class="stat-current">{{ pokemon.currentStats?.defense || 0 }}</span>
+        </div>
+      </div>
+      <div class="stat-block">
+        <label>Sp. Atk</label>
+        <div class="stat-values">
+          <span class="stat-base">{{ pokemon.baseStats?.specialAttack || 0 }}</span>
+          <span class="stat-current">{{ pokemon.currentStats?.specialAttack || 0 }}</span>
+        </div>
+      </div>
+      <div class="stat-block">
+        <label>Sp. Def</label>
+        <div class="stat-values">
+          <span class="stat-base">{{ pokemon.baseStats?.specialDefense || 0 }}</span>
+          <span class="stat-current">{{ pokemon.currentStats?.specialDefense || 0 }}</span>
+        </div>
+      </div>
+      <div class="stat-block">
+        <label>Speed</label>
+        <div class="stat-values">
+          <span class="stat-base">{{ pokemon.baseStats?.speed || 0 }}</span>
+          <span class="stat-current">{{ pokemon.currentStats?.speed || 0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combat State Section -->
+    <div class="combat-state">
+      <!-- Status Conditions -->
+      <div v-if="statusConditions.length > 0" class="combat-state__section">
+        <h4>Status Conditions</h4>
+        <div class="status-list">
+          <span
+            v-for="status in statusConditions"
+            :key="status"
+            class="status-badge"
+            :class="`status-badge--${status.toLowerCase().replace(' ', '-')}`"
+          >
+            {{ status }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Injuries -->
+      <div v-if="pokemon.injuries > 0" class="combat-state__section">
+        <h4>Injuries</h4>
+        <div class="injury-display">
+          <span class="injury-count">{{ pokemon.injuries }}</span>
+          <span class="injury-label">Injur{{ pokemon.injuries === 1 ? 'y' : 'ies' }}</span>
+        </div>
+      </div>
+
+      <!-- Stage Modifiers -->
+      <div v-if="hasStageModifiers" class="combat-state__section">
+        <h4>Combat Stages</h4>
+        <div class="stage-grid">
+          <div v-if="pokemon.stageModifiers?.attack !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.attack)">
+            <span class="stage-stat">ATK</span>
+            <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.attack) }}</span>
+          </div>
+          <div v-if="pokemon.stageModifiers?.defense !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.defense)">
+            <span class="stage-stat">DEF</span>
+            <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.defense) }}</span>
+          </div>
+          <div v-if="pokemon.stageModifiers?.specialAttack !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.specialAttack)">
+            <span class="stage-stat">SP.ATK</span>
+            <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.specialAttack) }}</span>
+          </div>
+          <div v-if="pokemon.stageModifiers?.specialDefense !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.specialDefense)">
+            <span class="stage-stat">SP.DEF</span>
+            <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.specialDefense) }}</span>
+          </div>
+          <div v-if="pokemon.stageModifiers?.speed !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.speed)">
+            <span class="stage-stat">SPD</span>
+            <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.speed) }}</span>
+          </div>
+          <div v-if="pokemon.stageModifiers?.accuracy !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.accuracy)">
+            <span class="stage-stat">ACC</span>
+            <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.accuracy) }}</span>
+          </div>
+          <div v-if="pokemon.stageModifiers?.evasion !== 0" class="stage-item" :class="getStageClass(pokemon.stageModifiers?.evasion)">
+            <span class="stage-stat">EVA</span>
+            <span class="stage-value">{{ formatStageValue(pokemon.stageModifiers?.evasion) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h4>Nature</h4>
+      <p v-if="pokemon.nature">
+        {{ pokemon.nature.name }}
+        <span v-if="pokemon.nature.raisedStat" class="nature-mod nature-mod--up">
+          +{{ formatStatName(pokemon.nature.raisedStat) }}
+        </span>
+        <span v-if="pokemon.nature.loweredStat" class="nature-mod nature-mod--down">
+          -{{ formatStatName(pokemon.nature.loweredStat) }}
+        </span>
+      </p>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { Pokemon } from '~/types'
+
+const props = defineProps<{
+  pokemon: Pokemon
+  editData: Partial<Pokemon>
+  isEditing: boolean
+}>()
+
+const emit = defineEmits<{
+  'update:editData': [data: Partial<Pokemon>]
+}>()
+
+// Two-way binding for HP edit fields
+const localCurrentHp = computed({
+  get: () => props.editData.currentHp,
+  set: (val) => emit('update:editData', { ...props.editData, currentHp: val })
+})
+
+const localMaxHp = computed({
+  get: () => props.editData.maxHp,
+  set: (val) => emit('update:editData', { ...props.editData, maxHp: val })
+})
+
+const statusConditions = computed(() => {
+  if (!props.pokemon?.statusConditions) return []
+  return Array.isArray(props.pokemon.statusConditions)
+    ? props.pokemon.statusConditions
+    : []
+})
+
+const hasStageModifiers = computed(() => {
+  if (!props.pokemon?.stageModifiers) return false
+  const mods = props.pokemon.stageModifiers
+  return mods.attack !== 0 || mods.defense !== 0 ||
+         mods.specialAttack !== 0 || mods.specialDefense !== 0 ||
+         mods.speed !== 0 || mods.accuracy !== 0 || mods.evasion !== 0
+})
+
+const formatStageValue = (value: number | undefined): string => {
+  if (value === undefined || value === 0) return '0'
+  return value > 0 ? `+${value}` : `${value}`
+}
+
+const getStageClass = (value: number | undefined): string => {
+  if (value === undefined || value === 0) return ''
+  return value > 0 ? 'stage-item--positive' : 'stage-item--negative'
+}
+
+const formatStatName = (stat: string) => {
+  const names: Record<string, string> = {
+    'hp': 'HP',
+    'attack': 'Atk',
+    'defense': 'Def',
+    'specialAttack': 'SpAtk',
+    'specialDefense': 'SpDef',
+    'speed': 'Spd'
+  }
+  return names[stat] || stat
+}
+</script>
+
+<style lang="scss" scoped>
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.stat-block {
+  background: $color-bg-secondary;
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  text-align: center;
+
+  label {
+    display: block;
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    margin-bottom: $spacing-xs;
+    text-transform: uppercase;
+  }
+
+  .stat-values {
+    display: flex;
+    justify-content: center;
+    gap: $spacing-sm;
+    align-items: baseline;
+  }
+
+  .stat-base {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+  }
+
+  .stat-current {
+    font-size: $font-size-lg;
+    font-weight: 700;
+    color: $color-text;
+  }
+
+  .stat-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-xs;
+    margin-top: $spacing-sm;
+
+    .form-input--sm {
+      width: 60px;
+      padding: $spacing-xs;
+      text-align: center;
+    }
+  }
+}
+
+// Combat state styles
+.combat-state {
+  margin-bottom: $spacing-lg;
+
+  &__section {
+    margin-bottom: $spacing-md;
+    padding: $spacing-md;
+    background: $color-bg-secondary;
+    border-radius: $border-radius-md;
+
+    h4 {
+      margin: 0 0 $spacing-sm 0;
+      font-size: $font-size-sm;
+      color: $color-text-muted;
+      text-transform: uppercase;
+    }
+  }
+}
+
+.status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  // Persistent conditions
+  &--burned { background: #ff6b35; color: #fff; }
+  &--frozen { background: #7dd3fc; color: #000; }
+  &--paralyzed { background: #facc15; color: #000; }
+  &--poisoned { background: #a855f7; color: #fff; }
+  &--badly-poisoned { background: #7c3aed; color: #fff; }
+  &--asleep { background: #6b7280; color: #fff; }
+  &--fainted { background: #1f2937; color: #9ca3af; }
+
+  // Volatile conditions
+  &--confused { background: #f472b6; color: #000; }
+  &--flinched { background: #fbbf24; color: #000; }
+  &--infatuated { background: #ec4899; color: #fff; }
+  &--cursed { background: #581c87; color: #fff; }
+  &--disabled { background: #64748b; color: #fff; }
+  &--encored { background: #22d3ee; color: #000; }
+  &--taunted { background: #ef4444; color: #fff; }
+  &--tormented { background: #991b1b; color: #fff; }
+  &--enraged { background: #dc2626; color: #fff; }
+  &--suppressed { background: #475569; color: #fff; }
+
+  // Movement conditions
+  &--stuck { background: #92400e; color: #fff; }
+  &--trapped { background: #78350f; color: #fff; }
+  &--slowed { background: #0369a1; color: #fff; }
+
+  // Default
+  background: $color-bg-tertiary;
+  color: $color-text;
+}
+
+.injury-display {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  .injury-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: $color-danger;
+    color: #fff;
+    border-radius: 50%;
+    font-size: $font-size-lg;
+    font-weight: 700;
+  }
+
+  .injury-label {
+    color: $color-danger;
+    font-weight: 500;
+  }
+}
+
+.stage-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.stage-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-sm;
+  min-width: 50px;
+
+  .stage-stat {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    text-transform: uppercase;
+  }
+
+  .stage-value {
+    font-size: $font-size-md;
+    font-weight: 700;
+  }
+
+  &--positive {
+    border: 1px solid $color-success;
+    .stage-value { color: $color-success; }
+  }
+
+  &--negative {
+    border: 1px solid $color-danger;
+    .stage-value { color: $color-danger; }
+  }
+}
+
+.info-section {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid $glass-border;
+
+  h4 {
+    margin: 0 0 $spacing-sm 0;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    text-transform: uppercase;
+  }
+}
+
+.nature-mod {
+  font-size: $font-size-sm;
+  margin-left: $spacing-sm;
+
+  &--up { color: $color-success; }
+  &--down { color: $color-danger; }
+}
+
+.tab-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+</style>
