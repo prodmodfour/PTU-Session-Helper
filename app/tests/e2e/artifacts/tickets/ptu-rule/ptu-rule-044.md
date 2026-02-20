@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-044
 priority: P2
-status: open
+status: in-progress
 domain: combat
 matrix_source:
   rule_ids:
@@ -30,3 +30,33 @@ Movement-modifying conditions (Stuck, Slowed) and speed-modifying combat stages/
 ## Actual Behavior
 
 These conditions/modifiers are displayed in the combat UI but the VTT grid movement system does not read or enforce them when validating click-to-move.
+
+## Resolution Log
+
+**Date:** 2026-02-20
+**Status:** in-progress (code complete, awaiting review)
+
+### Changes Made
+
+1. **`app/composables/useGridMovement.ts`**: Added `applyMovementModifiers()` function that reads the combatant's `statusConditions` and `tempConditions` to adjust effective speed:
+   - **Stuck**: Halves effective speed (`Math.floor(speed / 2)`)
+   - **Slowed**: Halves effective speed (`Math.floor(speed / 2)`)
+   - **Speed CS**: Applies stage multiplier (-6 to +6, same table as `useCombat.ts`)
+   - **Sprint**: +50% speed (`Math.floor(speed * 1.5)`) when `tempConditions` includes 'Sprint'
+   - Minimum speed of 1 preserved (combatant can always move at least 1 cell)
+
+   The `getSpeed()` function now calls `applyMovementModifiers()` after determining base speed, so both `isValidMove` and the movement range display respect these modifiers.
+
+2. **`app/composables/useEncounterActions.ts`**: When Sprint maneuver is executed, adds 'Sprint' to `combatant.tempConditions`. This is the same pattern used for Take a Breather's Tripped/Vulnerable.
+
+3. **`app/server/api/encounters/[id]/next-turn.post.ts`**: Clears `tempConditions` array when advancing past a combatant's turn. This ensures Sprint's +50% bonus expires at end of turn, and Tripped/Vulnerable from Take a Breather also expire correctly (fixing a pre-existing gap in tempConditions lifecycle).
+
+### Design Notes
+
+- Stuck and Slowed stack multiplicatively: a combatant with both conditions gets speed quartered.
+- Sprint is applied AFTER Stuck/Slowed/Speed CS, so it boosts the already-modified speed.
+- Speed CS uses the same multiplier table as `useCombat.ts` (0.4x at -6 through 2.2x at +6).
+
+### Verification
+
+All 546 unit tests pass.

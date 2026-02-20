@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-063
 type: ptu-rule
 priority: P2
-status: open
+status: in-progress
 source_ecosystem: dev
 target_ecosystem: dev
 created_by: game-logic-reviewer
@@ -49,3 +49,20 @@ The TODO comment already acknowledges this gap. The fix would require:
 ## Discovery Context
 
 Found during rules-review-050 while verifying bug-012 terrain movement fix (commit `49a7fb2`). This is a pre-existing issue, not introduced by the reviewed commits.
+
+## Resolution Log
+
+**Date:** 2026-02-20
+**Status:** in-progress (code complete, awaiting review)
+
+### Changes Made
+
+1. **`app/composables/useGridMovement.ts`**: Added `getCombatant` callback option to `UseGridMovementOptions`. Created `combatantCanSwim()` and `combatantCanBurrow()` helper functions that check Pokemon `capabilities.swim` and `capabilities.burrow` respectively. Added `getTerrainCostForCombatant(x, y, combatantId)` that looks up the combatant and passes correct `canSwim`/`canBurrow` to `terrainStore.getMovementCost`. Updated `getTerrainCostGetter()` to accept optional `combatantId` and return a closure bound to that combatant's capabilities. Both `calculateTerrainAwarePathCost` and `isValidMove` now pass `combatantId` to the terrain cost getter.
+
+2. **`app/components/vtt/GridCanvas.vue`**: Wired `getCombatant` callback from `props.combatants` into `useGridMovement`. Also passes `getTerrainCostForCombatant` to the rendering composable.
+
+3. **`app/composables/useGridRendering.ts`**: Added optional `getTerrainCostForCombatant` to the rendering options interface. Movement range display (`drawMovementRange` and `drawExternalMovementPreview`) now uses combatant-aware terrain costs when available, so Swim/Burrow Pokemon see correct reachable cells.
+
+### Verification
+
+All 546 unit tests pass. Water terrain now uses combatant's actual Swim capability instead of hardcoded `false`.
