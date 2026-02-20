@@ -94,8 +94,9 @@ export default defineEventHandler(async (event) => {
       result.vulnerableApplied = true
     }
 
-    // Mark as having used their standard action
+    // Mark as having used their full action (standard + shift) — PTU p.245
     combatant.turnState.standardActionUsed = true
+    combatant.turnState.shiftActionUsed = true
     combatant.turnState.hasActed = true
 
     // Sync to database if entity has a record
