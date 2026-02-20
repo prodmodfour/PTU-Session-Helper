@@ -498,24 +498,38 @@ const confirmDelete = async () => {
 }
 
 .modal {
-  @include modal-container-base;
   background: $color-bg-primary;
+  border-radius: $border-radius-lg;
+  border: 1px solid $glass-border;
   width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
   overflow: auto;
-  display: block;
 
-  &__header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: $color-text;
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-md $spacing-lg;
+    border-bottom: 1px solid $glass-border;
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: $color-text;
+    }
   }
 
   &__body {
-    overflow-y: visible;
+    padding: $spacing-lg;
   }
 
   &__footer {
+    display: flex;
+    justify-content: flex-end;
     gap: $spacing-md;
+    padding: $spacing-md $spacing-lg;
+    border-top: 1px solid $glass-border;
   }
 }
 
