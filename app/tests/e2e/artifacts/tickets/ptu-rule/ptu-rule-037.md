@@ -48,7 +48,7 @@ Or tighten the first regex group to exclude colon: `[A-Z][A-Z0-9\-\(\).'É\u2019
 - **Before:** `['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST']`
 - **After:** `['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST', 'HP:', 'HP']`
 - **Verification:** Confirmed no Pokemon species is named "HP" or "HP:" across all 994 pokedex files. The only occurrences of `^HP:$` in pokedex files are stat-header lines (e.g., Oricorio forms) that appear after `Base Stats:`.
-- **Risk:** None. Only `HP:` and `HP` can false-positive among stat headers because the regex requires 2+ uppercase chars in the first group; `Attack:`, `Defense:`, `Speed:`, etc. start with a single uppercase letter followed by lowercase, so they never match.
+- **Risk:** None. Among stat headers that actually appear in pokedex files, only `HP:` matches because it is inherently all-uppercase (an abbreviation). The other stat headers (`Attack:`, `Defense:`, `Speed:`, etc.) use mixed-case in the files, so their first character class fails after position 1. If the files contained all-uppercase forms (`ATTACK:`, `DEFENSE:`, etc.), those would also match the regex — but no pokedex file uses that format.
 
 ## Source
 
