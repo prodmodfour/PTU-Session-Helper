@@ -132,7 +132,7 @@ updated_by: orchestrator
 | refactoring-052 | P3 | resolved | encounters.vue overflow model change (session 10) |
 | refactoring-053 | P3 | resolved | Unused enhanced modal mixins → @include (session 10) |
 | refactoring-054 | P3 | resolved | encounters.vue mixin override smell — both reviews APPROVED (session 11) |
-| refactoring-055 | P3 | open | `calculateEvasion` duplication in useCombat.ts + damageCalculation.ts (from code-review-112) |
+| refactoring-055 | P3 | resolved | `calculateEvasion` duplication in useCombat.ts + damageCalculation.ts (from code-review-112) |
 | refactoring-056 | P3 | open | No unit tests for encounter generation endpoint (from code-review-108) |
 
 ## Code Health
