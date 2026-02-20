@@ -248,94 +248,32 @@ const saveChanges = async () => {
 
 <style lang="scss" scoped>
 .pokemon-sheet-page {
-  max-width: 900px;
-  margin: 0 auto;
+  @include sheet-page;
 }
 
 .sheet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: $spacing-lg;
-  padding-bottom: $spacing-md;
-  border-bottom: 1px solid $glass-border;
-
-  &__actions {
-    display: flex;
-    gap: $spacing-sm;
-  }
+  @include sheet-header;
 }
 
 .back-link {
-  color: $color-text-muted;
-  text-decoration: none;
-  transition: color $transition-fast;
-
-  &:hover {
-    color: $color-text;
-  }
+  @include sheet-back-link;
 }
 
 .sheet-loading,
 .sheet-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  color: $color-text-muted;
-
-  p {
-    margin-bottom: $spacing-md;
-  }
+  @include sheet-loading-error;
 }
 
 .sheet {
-  background: $glass-bg;
-  backdrop-filter: $glass-blur;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-xl;
-  padding: $spacing-lg;
-
-  &__tabs {
-    display: flex;
-    gap: $spacing-xs;
-    margin-bottom: $spacing-md;
-    padding-bottom: $spacing-sm;
-    border-bottom: 1px solid $glass-border;
-    overflow-x: auto;
-  }
-
-  &__content {
-    min-height: 300px;
-  }
+  @include sheet-card;
 }
 
 .tab-btn {
-  padding: $spacing-sm $spacing-md;
-  background: transparent;
-  border: none;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: $border-radius-md;
-  transition: all $transition-fast;
-  white-space: nowrap;
-
-  &:hover {
-    background: $color-bg-hover;
-    color: $color-text;
-  }
-
-  &--active {
-    background: $gradient-sv-cool;
-    color: $color-text;
-  }
+  @include sheet-tab-btn;
 }
 
 .tab-content {
-  animation: fadeIn 0.2s ease-out;
+  @include sheet-tab-content;
 }
 
 .abilities-list {
@@ -376,9 +314,7 @@ const saveChanges = async () => {
 }
 
 .empty-state {
-  text-align: center;
-  color: $color-text-muted;
-  padding: $spacing-xl;
+  @include sheet-empty-state;
 }
 
 @keyframes fadeIn {
