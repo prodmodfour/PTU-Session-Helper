@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-068
 priority: P2
-status: open
+status: in-progress
 domain: combat
 source: rules-review-067, code-review-077
 created_at: 2026-02-20
@@ -30,3 +30,9 @@ Uses `getSpeedStageMultiplier()` which applies the stat multiplier table (x0.4 a
 ## Fix
 
 Replace multiplicative stage multiplier with additive `Math.floor(stage / 2)`. Set minimum floor to 2.
+
+## Resolution Log
+
+- **Commit:** `9f2fe2b` — Replaced `getSpeedStageMultiplier()` (multiplicative stat table) with additive `Math.floor(clamped / 2)` bonus/penalty. Added `Math.max(modifiedSpeed, 2)` guard for negative CS per PTU 1.05 p.700. Removed the now-unused `getSpeedStageMultiplier` function entirely.
+- **Duplicate code path check:** Searched entire `app/` for all code paths using `getSpeedStageMultiplier` or applying speed stage to movement. Confirmed it was only used in `applyMovementModifiers()`. The stat multiplier table in `useCombat.ts`/`damageCalculation.ts` is a separate concern (evasion calculation, not movement).
+- **Awaiting:** Code review and test verification before marking done.

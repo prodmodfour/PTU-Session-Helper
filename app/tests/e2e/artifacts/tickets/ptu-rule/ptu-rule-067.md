@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-067
 priority: P1
-status: open
+status: in-progress
 domain: combat
 source: rules-review-067, code-review-077
 created_at: 2026-02-20
@@ -31,3 +31,9 @@ Stuck combatants should have effective movement speed of 0 (cannot move at all).
 ## Fix
 
 Change `modifiedSpeed = Math.floor(modifiedSpeed / 2)` for the Stuck condition to `modifiedSpeed = 0`.
+
+## Resolution Log
+
+- **Commit:** `8ecdb47` — Changed Stuck handler in `applyMovementModifiers()` from `Math.floor(modifiedSpeed / 2)` to `modifiedSpeed = 0`. Updated JSDoc to reference PTU 1.05 p.231.
+- **Duplicate code path check:** Searched entire `app/` for all code paths applying Stuck to movement. Confirmed `applyMovementModifiers()` is the sole code path. Other Stuck references are in capture rate calculations (separate concern), status condition constants, and breather/healing logic (condition clearing, not movement).
+- **Awaiting:** Code review and test verification before marking done.
