@@ -48,7 +48,6 @@
                 <select
                   v-model="selectedPreset"
                   class="form-select"
-                  @change="handlePresetChange"
                 >
                   <option v-for="(value, key) in SIGNIFICANCE_PRESETS" :key="key" :value="key">
                     {{ formatPresetLabel(key) }} (x{{ value }})
@@ -457,13 +456,6 @@ const splitEvenly = (group: PlayerGroup) => {
 // Format preset label for display
 const formatPresetLabel = (key: string): string => {
   return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-}
-
-// Handle preset change
-const handlePresetChange = () => {
-  if (selectedPreset.value !== 'custom') {
-    recalculate()
-  }
 }
 
 // Recalculate XP from the server
