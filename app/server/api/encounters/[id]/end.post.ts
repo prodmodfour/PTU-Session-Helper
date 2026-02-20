@@ -4,11 +4,16 @@
  * Ends an encounter, deactivating it and clearing volatile conditions
  * from all combatants per PTU p.247: "Volatile Afflictions are cured
  * completely at the end of the encounter."
+ *
+ * Also clears bound AP for human combatants per PTU Core p.59:
+ * "[Stratagem] Features may only be bound during combat and
+ * automatically unbind when combat ends."
  */
 import { prisma } from '~/server/utils/prisma'
 import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { resetSceneUsage } from '~/utils/moveFrequency'
+import { calculateSceneEndAp } from '~/utils/restHealing'
 import type { Combatant, StatusCondition } from '~/types'
 import type { Move, Pokemon } from '~/types/character'
 
@@ -117,6 +122,32 @@ export default defineEventHandler(async (event) => {
           prisma.pokemon.update({
             where: { id: c.entityId },
             data: { moves: JSON.stringify(pokemonEntity.moves || []) }
+          })
+        )
+      }
+    }
+
+    // PTU Core p.59: Stratagems "automatically unbind when combat ends."
+    // Clear boundAp and recalculate currentAp for all human combatants with DB records.
+    const humanEntityIds = updatedCombatants
+      .filter(c => c.type === 'human' && c.entityId)
+      .map(c => c.entityId!)
+
+    if (humanEntityIds.length > 0) {
+      const dbCharacters = await prisma.humanCharacter.findMany({
+        where: { id: { in: humanEntityIds } },
+        select: { id: true, level: true, drainedAp: true }
+      })
+
+      for (const char of dbCharacters) {
+        const restoredAp = calculateSceneEndAp(char.level, char.drainedAp)
+        syncPromises.push(
+          prisma.humanCharacter.update({
+            where: { id: char.id },
+            data: {
+              boundAp: 0,
+              currentAp: restoredAp
+            }
           })
         )
       }
