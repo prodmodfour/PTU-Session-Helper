@@ -1,13 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
-import type { GridConfig } from '~/types'
-
-// Default grid configuration
-const DEFAULT_GRID_CONFIG: GridConfig = {
-  enabled: true,
-  width: 20,
-  height: 15,
-  cellSize: 40,
-}
+import { buildEncounterResponse } from '~/server/services/encounter.service'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -35,40 +27,14 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      weather: encounter.weather ?? null,
-      weatherDuration: encounter.weatherDuration ?? 0,
-      weatherSource: encounter.weatherSource ?? null,
-      combatants: [],
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder: [],
-      currentPhase: 'pokemon' as const,
-      trainerTurnOrder: [],
-      pokemonTurnOrder: [],
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      isServed: encounter.isServed,
-      gridConfig: {
-        enabled: encounter.gridEnabled,
-        width: encounter.gridWidth,
-        height: encounter.gridHeight,
-        cellSize: encounter.gridCellSize,
-        background: encounter.gridBackground ?? undefined,
-      } as GridConfig,
-      sceneNumber: 1,
-      moveLog: [],
-      defeatedEnemies: []
-    }
+    const response = buildEncounterResponse(encounter, [])
 
-    return { success: true, data: parsed }
-  } catch (error: any) {
+    return { success: true, data: response }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to create encounter'
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to create encounter'
+      message
     })
   }
 })

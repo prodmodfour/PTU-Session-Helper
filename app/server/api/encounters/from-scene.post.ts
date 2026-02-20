@@ -8,6 +8,8 @@ import { prisma } from '~/server/utils/prisma'
 import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/services/pokemon-generator.service'
 import { sizeToTokenSize, buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
 import { buildHumanEntityFromRecord, buildCombatantFromEntity } from '~/server/services/combatant.service'
+import { buildEncounterResponse } from '~/server/services/encounter.service'
+import type { Combatant } from '~/types'
 
 interface ScenePokemonEntry {
   id: string
@@ -62,7 +64,7 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const combatants: unknown[] = []
+    const combatants: Combatant[] = []
     const gridWidth = encounter.gridWidth
     const gridHeight = encounter.gridHeight
 
@@ -111,42 +113,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Save combatants to encounter
-    await prisma.encounter.update({
+    const updatedEncounter = await prisma.encounter.update({
       where: { id: encounter.id },
       data: { combatants: JSON.stringify(combatants) }
     })
 
-    // Build response
-    const parsed = {
-      id: encounter.id,
-      name: encounter.name,
-      battleType: encounter.battleType,
-      weather: encounter.weather ?? null,
-      weatherDuration: encounter.weatherDuration ?? 0,
-      weatherSource: encounter.weatherSource ?? null,
-      combatants,
-      currentRound: encounter.currentRound,
-      currentTurnIndex: encounter.currentTurnIndex,
-      turnOrder: JSON.parse(encounter.turnOrder),
-      trainerTurnOrder: [],
-      pokemonTurnOrder: [],
-      currentPhase: 'pokemon',
-      isActive: encounter.isActive,
-      isPaused: encounter.isPaused,
-      isServed: encounter.isServed,
-      gridConfig: {
-        enabled: encounter.gridEnabled,
-        width: encounter.gridWidth,
-        height: encounter.gridHeight,
-        cellSize: encounter.gridCellSize,
-        background: encounter.gridBackground ?? undefined
-      },
-      sceneNumber: 1,
-      moveLog: JSON.parse(encounter.moveLog),
-      defeatedEnemies: JSON.parse(encounter.defeatedEnemies)
-    }
+    const response = buildEncounterResponse(updatedEncounter, combatants)
 
-    return { success: true, data: parsed }
+    return { success: true, data: response }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
     const message = error instanceof Error ? error.message : 'Failed to create encounter from scene'
