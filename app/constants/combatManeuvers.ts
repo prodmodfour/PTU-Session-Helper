@@ -102,7 +102,7 @@ export const COMBAT_MANEUVERS: Maneuver[] = [
     actionLabel: 'Full Action',
     ac: null,
     icon: '/icons/phosphor/wind.svg',
-    shortDesc: 'Reset stages, cure volatile status, become Tripped',
+    shortDesc: 'Reset stages, cure volatile status, become Tripped. Must Shift away from enemies.',
     requiresTarget: false
   }
 ]

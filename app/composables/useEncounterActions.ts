@@ -1,5 +1,10 @@
 import type { StageModifiers, StatusCondition, GridConfig, GridPosition, MovementPreview, Encounter, WebSocketEvent } from '~/types'
 
+export interface BreatherShiftResult {
+  combatantId: string
+  combatantName: string
+}
+
 interface EncounterActionsOptions {
   encounter: Ref<Encounter | null>
   send: (event: WebSocketEvent) => void
@@ -117,11 +122,12 @@ export function useEncounterActions(options: EncounterActionsOptions) {
     await broadcastUpdate()
   }
 
-  const handleExecuteAction = async (combatantId: string, actionType: string) => {
+  const handleExecuteAction = async (combatantId: string, actionType: string): Promise<BreatherShiftResult | undefined> => {
     const combatant = findCombatant(combatantId)
-    if (!combatant || !encounterStore.encounter) return
+    if (!combatant || !encounterStore.encounter) return undefined
 
     const name = getCombatantName(combatant)
+    let breatherShift: BreatherShiftResult | undefined
 
     // Handle maneuvers (prefixed with 'maneuver:')
     if (actionType.startsWith('maneuver:')) {
@@ -149,6 +155,8 @@ export function useEncounterActions(options: EncounterActionsOptions) {
         encounterStore.encounter = await encounterCombatStore.takeABreather(
           encounterStore.encounter.id, combatantId
         )
+        // Signal that the GM needs to shift this combatant away from enemies (PTU p.245)
+        breatherShift = { combatantId, combatantName: name }
       }
     } else {
       // Handle standard actions
@@ -169,6 +177,7 @@ export function useEncounterActions(options: EncounterActionsOptions) {
 
     refreshUndoRedoState()
     await broadcastUpdate()
+    return breatherShift
   }
 
   // VTT Grid handlers

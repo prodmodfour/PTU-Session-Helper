@@ -32,6 +32,14 @@
         @update:damage-mode="settingsStore.setDamageMode($event)"
       />
 
+      <!-- Breather Shift Banner -->
+      <BreatherShiftBanner
+        v-if="pendingBreatherShift"
+        :combatant-name="pendingBreatherShift.combatantName"
+        @focus-token="focusBreatherToken"
+        @dismiss="pendingBreatherShift = null"
+      />
+
       <!-- Main Content -->
       <div class="encounter-content">
         <!-- Grid View -->
@@ -43,7 +51,7 @@
             :is-gm="true"
             :encounter-id="encounter.id"
             @config-update="handleGridConfigUpdate"
-            @token-move="handleTokenMove"
+            @token-move="handleTokenMoveWithBreatherClear"
             @background-upload="handleBackgroundUpload"
             @background-remove="handleBackgroundRemove"
             @movement-preview-change="handleMovementPreviewChange"
@@ -114,7 +122,7 @@
         :all-combatants="encounter.combatants"
         @close="actionModalCombatantId = null"
         @execute-move="handleExecuteMoveWithClose"
-        @execute-action="handleExecuteAction"
+        @execute-action="handleExecuteActionWithBreatherShift"
         @update-status="handleStatus"
       />
     </Teleport>
@@ -123,6 +131,7 @@
 
 <script setup lang="ts">
 import type { CombatSide } from '~/types'
+import type { BreatherShiftResult } from '~/composables/useEncounterActions'
 
 definePageMeta({
   layout: 'gm'
@@ -322,9 +331,40 @@ const {
   refreshUndoRedoState
 })
 
+// Breather shift state — shown when Take a Breather requires the GM to shift the token
+const pendingBreatherShift = ref<BreatherShiftResult | null>(null)
+
 // GM Action Modal handler
 const handleOpenActions = (combatantId: string) => {
   actionModalCombatantId.value = combatantId
+}
+
+// Wrap handleExecuteAction to handle breather shift prompt
+const handleExecuteActionWithBreatherShift = async (combatantId: string, actionType: string) => {
+  const breatherResult = await handleExecuteAction(combatantId, actionType)
+  if (breatherResult) {
+    pendingBreatherShift.value = breatherResult
+    // Auto-switch to grid view so the GM can move the token
+    activeView.value = 'grid'
+  }
+}
+
+// Focus the breather token on the grid for movement
+const focusBreatherToken = () => {
+  if (!pendingBreatherShift.value) return
+  // Switch to grid view if not already there
+  activeView.value = 'grid'
+  // Dismiss the banner — the GM will move the token manually on the grid
+  pendingBreatherShift.value = null
+}
+
+// Wrap handleTokenMove to auto-dismiss breather banner when the pending token is moved
+const handleTokenMoveWithBreatherClear = async (combatantId: string, position: { x: number; y: number }) => {
+  await handleTokenMove(combatantId, position)
+  // Clear breather shift if the moved token is the one pending a shift
+  if (pendingBreatherShift.value && pendingBreatherShift.value.combatantId === combatantId) {
+    pendingBreatherShift.value = null
+  }
 }
 
 // Wrap handleExecuteMove to close modal after execution

@@ -115,7 +115,7 @@ export default defineEventHandler(async (event) => {
       actorName: entityName,
       moveName: 'Take a Breather',
       targets: [],
-      notes: `Reset stages, removed ${result.tempHpRemoved} temp HP, cured: ${result.conditionsCured.join(', ') || 'none'}`
+      notes: `Reset stages, removed ${result.tempHpRemoved} temp HP, cured: ${result.conditionsCured.join(', ') || 'none'}. SHIFT REQUIRED: Move away from all enemies using full movement.`
     })
 
     await prisma.encounter.update({
