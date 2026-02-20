@@ -19,6 +19,12 @@
         <div class="encounter-header__info">
           <h1>{{ encounter.name }}</h1>
           <span class="round-badge">Round {{ encounter.currentRound }}</span>
+          <span v-if="encounter.weather" class="weather-badge" :title="weatherTooltip">
+            {{ weatherLabel }}
+            <span v-if="encounter.weatherDuration > 0" class="weather-rounds">
+              {{ encounter.weatherDuration }}r
+            </span>
+          </span>
         </div>
         <div class="encounter-header__turn" v-if="currentCombatant">
           <span class="turn-label">Current Turn:</span>
@@ -56,6 +62,18 @@ import { PhSpinner } from '@phosphor-icons/vue'
 import type { GridConfig } from '~/types'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
 import { useTerrainStore } from '~/stores/terrain'
+
+const WEATHER_LABELS: Record<string, string> = {
+  sunny: 'Sunny',
+  rain: 'Rain',
+  sandstorm: 'Sandstorm',
+  hail: 'Hail',
+  snow: 'Snow',
+  fog: 'Fog',
+  harsh_sunlight: 'Harsh Sunlight',
+  heavy_rain: 'Heavy Rain',
+  strong_winds: 'Strong Winds'
+}
 
 const { getCombatantName } = useCombatantDisplay()
 
@@ -154,6 +172,22 @@ const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
   height: 15,
   cellSize: 40,
   background: undefined
+})
+
+// Weather display
+const weatherLabel = computed(() => {
+  if (!encounter.value?.weather) return ''
+  return WEATHER_LABELS[encounter.value.weather] ?? encounter.value.weather
+})
+
+const weatherTooltip = computed(() => {
+  if (!encounter.value?.weather) return ''
+  const duration = encounter.value.weatherDuration ?? 0
+  const source = encounter.value.weatherSource ?? 'manual'
+  if (duration > 0) {
+    return `${weatherLabel.value} - ${duration} round${duration === 1 ? '' : 's'} remaining (${source})`
+  }
+  return `${weatherLabel.value} - indefinite (${source})`
 })
 </script>
 
@@ -277,6 +311,29 @@ const gridConfig = computed((): GridConfig => encounter.value?.gridConfig ?? {
     font-size: $font-size-xl;
     padding: $spacing-md $spacing-lg;
   }
+}
+
+.weather-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+  color: #fff;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-md;
+  font-weight: 700;
+  font-size: $font-size-lg;
+  box-shadow: 0 0 12px rgba(#29b6f6, 0.4);
+
+  @media (min-width: 3000px) {
+    font-size: $font-size-xl;
+    padding: $spacing-md $spacing-lg;
+  }
+}
+
+.weather-rounds {
+  font-size: 0.85em;
+  opacity: 0.85;
 }
 
 .turn-label {
