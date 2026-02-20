@@ -370,16 +370,7 @@ const formatStatName = (stat: string) => {
 }
 
 .info-section {
-  margin-top: $spacing-lg;
-  padding-top: $spacing-md;
-  border-top: 1px solid $glass-border;
-
-  h4 {
-    margin: 0 0 $spacing-sm 0;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    text-transform: uppercase;
-  }
+  @include pokemon-info-section;
 }
 
 .nature-mod {
@@ -391,11 +382,8 @@ const formatStatName = (stat: string) => {
 }
 
 .tab-content {
-  animation: fadeIn 0.2s ease-out;
+  @include pokemon-tab-content;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@include pokemon-sheet-keyframes;
 </style>
