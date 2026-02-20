@@ -22,6 +22,7 @@ const createMockCharacter = (overrides = {}) => ({
   characterType: 'player',
   level: 5,
   hp: 50,
+  maxHp: 165, // PTU formula: level + (baseHp * 3) + 10 = 5 + (50*3) + 10
   attack: 10,
   defense: 10,
   specialAttack: 10,
@@ -81,7 +82,7 @@ describe('Characters API', () => {
           speed: char.speed
         },
         currentHp: char.currentHp,
-        maxHp: char.hp,
+        maxHp: char.maxHp,
         trainerClasses: JSON.parse(char.trainerClasses),
         skills: JSON.parse(char.skills),
         inventory: JSON.parse(char.inventory),
