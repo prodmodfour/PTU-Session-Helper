@@ -156,7 +156,7 @@ export function applyDamageToEntity(
   if (damageResult.fainted) {
     const conditionsToClear = [...PERSISTENT_CONDITIONS, ...VOLATILE_CONDITIONS] as StatusCondition[]
     const survivingConditions = (entity.statusConditions || []).filter(
-      (s: StatusCondition) => !conditionsToClear.includes(s)
+      (s: StatusCondition) => !conditionsToClear.includes(s) && s !== 'Fainted'
     )
     entity.statusConditions = ['Fainted', ...survivingConditions]
   }
