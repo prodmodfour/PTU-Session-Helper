@@ -7,6 +7,13 @@
           {{ encounter.battleType === 'trainer' ? 'Trainer Battle' : 'Full Contact' }}
         </span>
         <span class="badge badge--gray">Round {{ encounter.currentRound }}</span>
+        <span
+          v-if="encounter.battleType === 'trainer' && encounter.isActive"
+          class="badge badge--phase"
+          :title="phaseTooltip"
+        >
+          {{ phaseLabel }}
+        </span>
         <span v-if="encounter.isPaused" class="badge badge--yellow">Paused</span>
         <span v-if="encounter.isServed" class="badge badge--green">
           <img src="/icons/phosphor/monitor.svg" alt="" class="badge-icon" /> Served to Group
@@ -179,6 +186,28 @@ const emit = defineEmits<{
   setWeather: [weather: string | null, source: string]
 }>()
 
+const PHASE_LABELS: Record<string, string> = {
+  trainer_declaration: 'Trainer Phase',
+  trainer_resolution: 'Trainer Resolution',
+  pokemon: 'Pokemon Phase'
+}
+
+const PHASE_TOOLTIPS: Record<string, string> = {
+  trainer_declaration: 'Trainers declare actions (slowest first, fastest reacts)',
+  trainer_resolution: 'Trainer actions resolve (fastest first)',
+  pokemon: 'Pokemon act in initiative order (fastest first)'
+}
+
+const phaseLabel = computed(() => {
+  const phase = props.encounter.currentPhase ?? 'pokemon'
+  return PHASE_LABELS[phase] ?? phase
+})
+
+const phaseTooltip = computed(() => {
+  const phase = props.encounter.currentPhase ?? 'pokemon'
+  return PHASE_TOOLTIPS[phase] ?? ''
+})
+
 const weatherLabel = computed(() => {
   if (!props.encounter.weather) return ''
   return WEATHER_LABELS[props.encounter.weather] ?? props.encounter.weather
@@ -341,6 +370,11 @@ const handleSourceChange = (event: Event) => {
   &--gray {
     background: $color-bg-tertiary;
     border: 1px solid $border-color-default;
+  }
+  &--phase {
+    background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(#7c3aed, 0.4);
   }
   &--yellow {
     background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
