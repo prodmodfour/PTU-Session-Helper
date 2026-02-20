@@ -59,7 +59,7 @@ defineProps<{
 
 <style lang="scss" scoped>
 .tab-content {
-  animation: fadeIn 0.2s ease-out;
+  @include pokemon-tab-content;
 }
 
 .capabilities-grid {
@@ -88,33 +88,16 @@ defineProps<{
 }
 
 .info-section {
-  margin-top: $spacing-lg;
-  padding-top: $spacing-md;
-  border-top: 1px solid $glass-border;
-
-  h4 {
-    margin: 0 0 $spacing-sm 0;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    text-transform: uppercase;
-  }
+  @include pokemon-info-section;
 }
 
 .tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
+  @include pokemon-tag-list;
 }
 
 .tag {
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
+  @include pokemon-tag;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@include pokemon-sheet-keyframes;
 </style>
