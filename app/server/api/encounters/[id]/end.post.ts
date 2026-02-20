@@ -8,7 +8,9 @@
 import { prisma } from '~/server/utils/prisma'
 import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import { resetSceneUsage } from '~/utils/moveFrequency'
 import type { Combatant, StatusCondition } from '~/types'
+import type { Move, Pokemon } from '~/types/character'
 
 /**
  * Remove volatile conditions from a combatant's entity.
@@ -44,22 +46,39 @@ export default defineEventHandler(async (event) => {
 
     const combatants: Combatant[] = JSON.parse(encounter.combatants)
 
-    // PTU p.247: clear volatile conditions from all combatants at encounter end
+    // PTU p.247: clear volatile conditions and reset scene-frequency moves at encounter end
     const updatedCombatants = combatants.map(combatant => {
       const currentConditions: StatusCondition[] = combatant.entity?.statusConditions || []
       const clearedConditions = clearVolatileConditions(currentConditions)
+      const conditionsChanged = clearedConditions.length !== currentConditions.length
 
-      // Only create new object if conditions actually changed
-      if (clearedConditions.length === currentConditions.length) {
+      // Reset scene-frequency moves for Pokemon combatants
+      let updatedEntity = combatant.entity
+      if (combatant.type === 'pokemon') {
+        const pokemonEntity = combatant.entity as Pokemon
+        const moves: Move[] = pokemonEntity.moves || []
+        const resetMoves = resetSceneUsage(moves)
+        const movesChanged = !resetMoves.every((m, i) => m === moves[i])
+
+        if (movesChanged || conditionsChanged) {
+          updatedEntity = {
+            ...pokemonEntity,
+            moves: resetMoves,
+            statusConditions: clearedConditions
+          }
+        }
+      }
+
+      // Only create new object if something actually changed
+      if (updatedEntity === combatant.entity && !conditionsChanged) {
         return combatant
       }
 
       return {
         ...combatant,
-        entity: {
-          ...combatant.entity,
-          statusConditions: clearedConditions
-        }
+        entity: conditionsChanged && combatant.type !== 'pokemon'
+          ? { ...combatant.entity, statusConditions: clearedConditions }
+          : updatedEntity
       }
     })
 
@@ -73,17 +92,35 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    // Sync volatile condition clearing to database for entities with records
-    const syncPromises = updatedCombatants
-      .filter(c => {
-        const originalConditions: StatusCondition[] =
-          combatants.find(oc => oc.id === c.id)?.entity?.statusConditions || []
-        const newConditions: StatusCondition[] = c.entity?.statusConditions || []
-        return newConditions.length !== originalConditions.length
-      })
-      .map(c => syncEntityToDatabase(c, {
-        statusConditions: c.entity?.statusConditions || []
-      }))
+    // Sync changes to database for entities with records
+    const syncPromises: Promise<unknown>[] = []
+
+    for (const c of updatedCombatants) {
+      if (!c.entityId) continue
+
+      const original = combatants.find(oc => oc.id === c.id)
+      const originalConditions: StatusCondition[] = original?.entity?.statusConditions || []
+      const newConditions: StatusCondition[] = c.entity?.statusConditions || []
+      const conditionsChanged = newConditions.length !== originalConditions.length
+
+      // Sync volatile condition clearing
+      if (conditionsChanged) {
+        syncPromises.push(syncEntityToDatabase(c, {
+          statusConditions: newConditions
+        }))
+      }
+
+      // Sync scene-frequency move resets for Pokemon
+      if (c.type === 'pokemon') {
+        const pokemonEntity = c.entity as Pokemon
+        syncPromises.push(
+          prisma.pokemon.update({
+            where: { id: c.entityId },
+            data: { moves: JSON.stringify(pokemonEntity.moves || []) }
+          })
+        )
+      }
+    }
 
     await Promise.all(syncPromises)
 
