@@ -78,6 +78,35 @@
       </div>
 
       <div class="create-form__section">
+        <EdgeSelectionSection
+          :edges="creation.form.edges"
+          :skills="creation.form.skills"
+          :starting-edges="creation.STARTING_EDGES"
+          :level="creation.form.level"
+          :warnings="creation.classFeatureEdgeWarnings.value"
+          @add-edge="creation.addEdge"
+          @remove-edge="creation.removeEdge"
+          @add-skill-edge="handleSkillEdge"
+        />
+      </div>
+
+      <div class="create-form__section">
+        <ClassFeatureSection
+          :trainer-classes="creation.form.trainerClasses"
+          :features="creation.form.features"
+          :training-feature="creation.form.trainingFeature"
+          :max-classes="creation.MAX_TRAINER_CLASSES"
+          :max-features="creation.MAX_FEATURES"
+          :warnings="creation.classFeatureEdgeWarnings.value"
+          @add-class="creation.addClass"
+          @remove-class="creation.removeClass"
+          @add-feature="creation.addFeature"
+          @remove-feature="creation.removeFeature"
+          @update:training-feature="creation.setTrainingFeature"
+        />
+      </div>
+
+      <div class="create-form__section">
         <StatAllocationSection
           :stat-points="creation.form.statPoints"
           :computed-stats="creation.computedStats.value"
@@ -232,6 +261,7 @@
 
 <script setup lang="ts">
 import type { PokemonType } from '~/types'
+import type { PtuSkillName } from '~/constants/trainerSkills'
 
 definePageMeta({
   layout: 'gm'
@@ -255,6 +285,14 @@ const pokemonTypes: PokemonType[] = [
 
 // Human form via composable
 const creation = useCharacterCreation()
+
+/** Handle Skill Edge add -- composable returns error string or null */
+function handleSkillEdge(skill: PtuSkillName): void {
+  const error = creation.addSkillEdge(skill)
+  if (error) {
+    alert(error)
+  }
+}
 
 // Pokemon form (unchanged)
 const pokemonForm = ref({
