@@ -108,11 +108,16 @@ export function useMoveCalculation(
         continue
       }
 
+      const attackerSize = actor.value.tokenSize || 1
+      const targetSize = target.tokenSize || 1
+
       const result = isInRange(
         actorPos,
         target.position,
         parsedMoveRange.value,
-        isBlockingTerrain
+        isBlockingTerrain,
+        attackerSize,
+        targetSize
       )
 
       if (result) {
@@ -123,7 +128,10 @@ export function useMoveCalculation(
         const inRangeWithoutLoS = isInRange(
           actorPos,
           target.position,
-          parsedMoveRange.value
+          parsedMoveRange.value,
+          undefined,
+          attackerSize,
+          targetSize
         )
 
         if (inRangeWithoutLoS) {
