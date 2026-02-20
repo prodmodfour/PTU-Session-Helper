@@ -1,4 +1,5 @@
 import type { Pokemon, HumanCharacter } from '~/types'
+import { calculateEvasion } from '~/utils/damageCalculation'
 
 // PTU 1.05 combat calculations and utilities
 export function useCombat() {
@@ -43,31 +44,8 @@ export function useCombat() {
     return (level * 2) + (hpStat * 3) + 10
   }
 
-  // ===========================================
-  // PTU Evasion Calculation (two-part system, PTU p.234)
-  //
-  // Part 1 — Stat-derived evasion (uses combat stage MULTIPLIER on the stat):
-  //   Physical Evasion = floor(stageModified(Defense) / 5), max +6
-  //   Special Evasion  = floor(stageModified(SpDef) / 5),   max +6
-  //   Speed Evasion    = floor(stageModified(Speed) / 5),   max +6
-  //
-  // Part 2 — Evasion bonus from moves/effects (ADDITIVE, not multiplier):
-  //   "Besides these base values for evasion, Moves and effects can raise
-  //    or lower Evasion. These extra Changes in Evasion apply to all types
-  //    of Evasion, and stack on top." (PTU 07-combat.md:648-653)
-  //   Range: -6 to +6. Cleared when combat stages are cleared.
-  //
-  // Total evasion applied to accuracy check: min(9, statEvasion + bonus)
-  // Negative total evasion does not reduce accuracy (PTU: "does not increase
-  // the Accuracy of an enemy's Moves").
-  // ===========================================
-  const calculateEvasion = (stat: number, combatStages: number = 0, evasionBonus: number = 0): number => {
-    // Part 1: Apply combat stage multiplier to stat, then derive evasion
-    const statEvasion = Math.min(6, Math.floor(applyStageModifier(stat, combatStages) / 5))
-    // Part 2: Bonus evasion from moves/effects stacks additively on top
-    // Negative evasion can erase stat-derived evasion but total never goes below 0
-    return Math.max(0, statEvasion + evasionBonus)
-  }
+  // PTU Evasion — canonical implementation in ~/utils/damageCalculation.ts
+  // Wrappers below provide semantic aliases for the three evasion types.
 
   const calculatePhysicalEvasion = (defense: number, defenseStages: number = 0, evasionBonus: number = 0): number => {
     return calculateEvasion(defense, defenseStages, evasionBonus)
