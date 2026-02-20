@@ -40,13 +40,15 @@ export default defineEventHandler(async (event) => {
     let weatherDuration = encounter.weatherDuration ?? 0
     let weatherSource = encounter.weatherSource
 
-    // Mark current combatant as having acted
+    // Mark current combatant as having acted and clear temp conditions (Sprint, Tripped, etc.)
     const currentCombatantId = turnOrder[currentTurnIndex]
     const currentCombatant = combatants.find((c: any) => c.id === currentCombatantId)
     if (currentCombatant) {
       currentCombatant.hasActed = true
       currentCombatant.actionsRemaining = 0
       currentCombatant.shiftActionsRemaining = 0
+      // Clear temporary conditions that last "until next turn"
+      currentCombatant.tempConditions = []
     }
 
     // Move to next turn
