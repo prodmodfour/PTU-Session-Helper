@@ -1,0 +1,170 @@
+// Pokemon Sheet Shared Styles
+// Mixins used across PokemonStatsTab, PokemonMovesTab, PokemonSkillsTab,
+// PokemonEditForm, PokemonLevelUpPanel, PokemonCapabilitiesTab
+
+// Tab content fade-in animation
+@mixin pokemon-tab-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+// Roll result display (skill checks, move rolls)
+@mixin pokemon-roll-result {
+  background: linear-gradient(135deg, rgba($color-accent-violet, 0.15) 0%, rgba($color-accent-scarlet, 0.1) 100%);
+  border: 1px solid rgba($color-accent-violet, 0.3);
+  border-radius: $border-radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+  animation: rollIn 0.3s ease-out;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__skill {
+    font-weight: 600;
+    color: $color-text;
+  }
+
+  &__total {
+    font-size: $font-size-xxl;
+    font-weight: 700;
+    color: $color-accent-violet;
+
+    &--crit {
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    &--hit {
+      color: $color-success;
+    }
+
+    &--miss {
+      color: $color-danger;
+    }
+  }
+
+  &__type {
+    font-size: $font-size-sm;
+    padding: $spacing-xs $spacing-sm;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-sm;
+    color: $color-text-muted;
+  }
+
+  &__extra {
+    font-size: $font-size-sm;
+    margin-left: $spacing-sm;
+    color: $color-text-muted;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm 0;
+    border-bottom: 1px solid rgba($glass-border, 0.5);
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    &:first-of-type {
+      padding-top: 0;
+    }
+  }
+
+  &__breakdown {
+    width: 100%;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    font-family: 'Fira Code', 'Consolas', monospace;
+  }
+}
+
+// Empty state placeholder text
+@mixin pokemon-empty-state {
+  text-align: center;
+  color: $color-text-muted;
+  padding: $spacing-xl;
+}
+
+// Info section with bordered header (Nature, Training, Egg Groups, Capabilities)
+@mixin pokemon-info-section {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid $glass-border;
+
+  h4 {
+    margin: 0 0 $spacing-sm 0;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    text-transform: uppercase;
+  }
+}
+
+// Tag list for capabilities, egg groups, etc.
+@mixin pokemon-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+@mixin pokemon-tag {
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+}
+
+// Simplified type badge for Pokemon sheet context (flat colors)
+@mixin pokemon-sheet-type-badge {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &--normal { background: #A8A878; color: #fff; }
+  &--fire { background: #F08030; color: #fff; }
+  &--water { background: #6890F0; color: #fff; }
+  &--electric { background: #F8D030; color: #000; }
+  &--grass { background: #78C850; color: #fff; }
+  &--ice { background: #98D8D8; color: #000; }
+  &--fighting { background: #C03028; color: #fff; }
+  &--poison { background: #A040A0; color: #fff; }
+  &--ground { background: #E0C068; color: #000; }
+  &--flying { background: #A890F0; color: #fff; }
+  &--psychic { background: #F85888; color: #fff; }
+  &--bug { background: #A8B820; color: #fff; }
+  &--rock { background: #B8A038; color: #fff; }
+  &--ghost { background: #705898; color: #fff; }
+  &--dragon { background: #7038F8; color: #fff; }
+  &--dark { background: #705848; color: #fff; }
+  &--steel { background: #B8B8D0; color: #000; }
+  &--fairy { background: #EE99AC; color: #000; }
+}
+
+// Shared keyframes
+@mixin pokemon-sheet-keyframes {
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes rollIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
