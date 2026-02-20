@@ -76,23 +76,24 @@ export default defineEventHandler(async (event) => {
         )
         combatants.push(combatant)
       } else {
-        // Human combatants: keep inline-only (no entityId, no DB sync)
-        // These remain as-is per Design Decision #2
+        // Human combatants: inline-only (no DB sync), but still need entityId per Combatant type
         const level = tc.entityData?.level ?? 1
         const baseSpeed = tc.entityData?.stats?.speed ?? 5
         const baseDefense = tc.entityData?.stats?.defense ?? 5
         const baseSpDef = tc.entityData?.stats?.specialDefense ?? 5
         const hpStat = tc.entityData?.stats?.hp ?? 0
         const maxHp = (level * 2) + (hpStat * 3) + 10
+        const entityId = uuidv4()
 
         combatants.push({
           id: uuidv4(),
           type: tc.type,
+          entityId,
           side: tc.side,
           position: tc.position,
           tokenSize: tc.tokenSize || 1,
           entity: tc.entityData ? {
-            id: uuidv4(),
+            id: entityId,
             ...tc.entityData,
             currentHp: maxHp,
             maxHp: maxHp,
@@ -101,7 +102,8 @@ export default defineEventHandler(async (event) => {
             stageModifiers: {
               attack: 0, defense: 0, specialAttack: 0,
               specialDefense: 0, speed: 0, accuracy: 0, evasion: 0
-            }
+            },
+            statusConditions: []
           } : null,
           initiative: baseSpeed,
           initiativeBonus: 0,
@@ -116,7 +118,6 @@ export default defineEventHandler(async (event) => {
             canBeCommanded: true,
             isHolding: false
           },
-          statusConditions: [],
           injuries: { count: 0, sources: [] },
           physicalEvasion: initialEvasion(baseDefense),
           specialEvasion: initialEvasion(baseSpDef),
