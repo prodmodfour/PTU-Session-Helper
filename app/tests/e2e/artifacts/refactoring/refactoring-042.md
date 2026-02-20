@@ -1,11 +1,12 @@
 ---
 ticket_id: refactoring-042
 priority: P2
-status: open
+status: resolved
 category: EXT-DUPLICATE
 created_at: 2026-02-20
 created_by: senior-reviewer
 source_review: code-review-073
+resolved_at: 2026-02-20
 ---
 
 ## Summary
@@ -27,3 +28,15 @@ MoveTargetModal.vue is 869 lines (exceeds 800-line limit). The bloat is entirely
 - MoveTargetModal.vue under 800 lines
 - No visual regressions in the move targeting modal
 - SCSS organization follows project patterns
+
+## Resolution Log
+
+**Commit:** `11e33ac` — refactor: extract MoveTargetModal SCSS to dedicated partial
+
+**Files changed:**
+- `app/components/encounter/MoveTargetModal.vue` — removed 551 inline SCSS lines, replaced with `@import` of the new partial (869 → 318 lines)
+
+**Files created:**
+- `app/assets/scss/components/_move-target-modal.scss` — 555 lines, contains all extracted SCSS
+
+**Approach:** Extracted the entire 552-line scoped `<style>` block into a dedicated SCSS partial at `app/assets/scss/components/_move-target-modal.scss`. The component's `<style lang="scss" scoped>` block now contains a single `@import` statement. Scoping is preserved because Vue applies the `scoped` attribute to all selectors from imported files. The partial lives alongside existing component partials (`_modal.scss`, `_type-badges.scss`, `_effectiveness.scss`, `_conditions.scss`) following project conventions. Not added to `_index.scss` since it is only consumed via scoped import, not globally.
