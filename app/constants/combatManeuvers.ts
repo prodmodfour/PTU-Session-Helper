@@ -56,6 +56,26 @@ export const COMBAT_MANEUVERS: Maneuver[] = [
     requiresTarget: true
   },
   {
+    id: 'disarm',
+    name: 'Disarm',
+    actionType: 'standard',
+    actionLabel: 'Standard',
+    ac: 6,
+    icon: '/icons/phosphor/hand-fist.svg',
+    shortDesc: 'Force target to drop held item (opposed Combat/Stealth)',
+    requiresTarget: true
+  },
+  {
+    id: 'dirty-trick',
+    name: 'Dirty Trick',
+    actionType: 'standard',
+    actionLabel: 'Standard',
+    ac: 2,
+    icon: '/icons/phosphor/eye-slash.svg',
+    shortDesc: 'Hinder, Blind, or Low Blow (once per Scene per target)',
+    requiresTarget: true
+  },
+  {
     id: 'intercept-melee',
     name: 'Intercept Melee',
     actionType: 'interrupt',

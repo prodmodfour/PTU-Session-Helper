@@ -88,6 +88,8 @@ export function useEncounterActions(options: EncounterActionsOptions) {
     'sprint': 'Sprint',
     'trip': 'Trip',
     'grapple': 'Grapple',
+    'disarm': 'Disarm',
+    'dirty-trick': 'Dirty Trick',
     'intercept-melee': 'Intercept Melee',
     'intercept-ranged': 'Intercept Ranged',
     'take-a-breather': 'Take a Breather'
@@ -128,7 +130,7 @@ export function useEncounterActions(options: EncounterActionsOptions) {
       encounterStore.captureSnapshot(`${name} used ${maneuverName}`)
 
       // Use standard action for most maneuvers
-      if (['push', 'sprint', 'trip', 'grapple'].includes(maneuverId)) {
+      if (['push', 'sprint', 'trip', 'grapple', 'disarm', 'dirty-trick'].includes(maneuverId)) {
         await encounterStore.useAction(combatantId, 'standard')
       }
       // Full actions use both standard and shift
