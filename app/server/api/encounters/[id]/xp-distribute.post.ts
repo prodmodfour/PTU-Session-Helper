@@ -101,12 +101,9 @@ export default defineEventHandler(async (event) => {
 
     // Validate total distribution does not exceed available XP
     // Sum all xpAmounts — should not exceed totalXpPerPlayer * playerCount
-    // TODO (P1): Add per-player XP validation when the UI provides player grouping.
-    // Currently this is a pool-level check — Player A could receive 0 XP while
-    // Player B receives 2x their share. The distribution request body has no
-    // player-grouping data (just flat pokemonId + xpAmount pairs), so per-player
-    // enforcement requires the P1 XpDistributionModal to include owner info.
-    // See design-xp-system-001 section D and M1 from code-review-117.
+    // Note: Per-player validation is enforced client-side in XpDistributionModal
+    // (P1), which groups Pokemon by owner and prevents over-allocation per player.
+    // The server keeps the pool-level check as a safety net.
     const totalDistributed = body.distribution.reduce(
       (sum: number, entry: { xpAmount: number }) => sum + entry.xpAmount, 0
     )
