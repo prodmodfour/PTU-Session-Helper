@@ -132,21 +132,61 @@ export default defineEventHandler(async (event) => {
     const levelMin = levelOverride?.min ?? table.levelMin
     const levelMax = levelOverride?.max ?? table.levelMax
 
-    // Generate Pokemon using weighted random selection
+    // Generate Pokemon using weighted random selection with diversity enforcement.
+    // Each time a species is selected, its effective weight is halved for subsequent
+    // draws (exponential decay). This preserves the weighted distribution while
+    // naturally reducing single-species dominance at higher spawn counts.
+    // A per-species cap of ceil(count / 2) prevents any species from exceeding
+    // half the encounter. When only 1 species exists in the pool, diversity
+    // logic is skipped since there is nothing to diversify.
     const generated: GeneratedPokemon[] = []
+    const selectionCounts: Map<string, number> = new Map()
+    const maxPerSpecies = Math.ceil(count / 2)
+    const applyDiversity = entries.length > 1
 
     for (let i = 0; i < count; i++) {
-      // Weighted random selection
-      let random = Math.random() * totalWeight
+      // Build effective weights with diversity decay
+      const effectiveEntries = entries.map(entry => {
+        const timesSelected = selectionCounts.get(entry.speciesName) ?? 0
+
+        // Skip species that hit the per-species cap
+        if (applyDiversity && timesSelected >= maxPerSpecies) {
+          return { entry, effectiveWeight: 0 }
+        }
+
+        // Halve weight for each prior selection of this species
+        const effectiveWeight = applyDiversity
+          ? entry.weight * Math.pow(0.5, timesSelected)
+          : entry.weight
+
+        return { entry, effectiveWeight }
+      })
+
+      const effectiveTotalWeight = effectiveEntries.reduce(
+        (sum, e) => sum + e.effectiveWeight, 0
+      )
+
+      // Fallback: if all effective weights are 0 (all species capped), use original weights
+      const useOriginal = effectiveTotalWeight === 0
+      const drawWeight = useOriginal ? totalWeight : effectiveTotalWeight
+
+      let random = Math.random() * drawWeight
       let selected = entries[0]
 
-      for (const entry of entries) {
-        random -= entry.weight
+      for (const { entry, effectiveWeight } of effectiveEntries) {
+        const w = useOriginal ? entry.weight : effectiveWeight
+        random -= w
         if (random <= 0) {
           selected = entry
           break
         }
       }
+
+      // Track selection count for diversity
+      selectionCounts.set(
+        selected.speciesName,
+        (selectionCounts.get(selected.speciesName) ?? 0) + 1
+      )
 
       // Calculate level within range (entry-specific or table default)
       const entryLevelMin = selected.levelMin ?? levelMin
