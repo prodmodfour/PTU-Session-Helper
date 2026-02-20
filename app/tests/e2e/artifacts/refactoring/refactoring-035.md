@@ -6,7 +6,7 @@ categories:
 affected_files:
   - app/pages/gm/encounter-tables.vue
 estimated_scope: small
-status: open
+status: resolved
 source: rules-review-030
 created_at: 2026-02-18T19:00:00
 ---
@@ -39,4 +39,10 @@ to:
 
 Also wire `encounterCreation.clearError()` into the `@close` handler (as `habitats/[id].vue` does).
 
-Estimated commits: 1
+Estimated commits: 0
+
+## Resolution Log
+
+- **Fixed by:** refactoring-034 (commit `a607adb`)
+- **No additional code change needed.** Refactoring-034 extracted `handleAddToScene` into the `useEncounterCreation` composable, removing the local `addError` ref from `encounter-tables.vue`. All scene-add errors now flow through `encounterCreation.error.value`, which is already wired to the modal via `:add-error="encounterCreation.error.value"`. The `closeGenerateModal` handler already calls `encounterCreation.clearError()`.
+- **Verification:** All three consumers (`encounter-tables.vue`, `habitats/[id].vue`, `habitats/index.vue`) now delegate to the composable and wire `encounterCreation.error.value` to the modal's `:add-error` prop.
