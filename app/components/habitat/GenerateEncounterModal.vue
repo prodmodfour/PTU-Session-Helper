@@ -14,7 +14,7 @@
           <div class="table-info__meta">
             <span class="badge">Lv. {{ table.levelRange.min }}-{{ table.levelRange.max }}</span>
             <span class="badge badge--density" :class="`density--${table.density}`">
-              {{ getDensityLabel(table.density) }} ({{ getSpawnRange() }})
+              {{ getDensityLabel(table.density) }}
             </span>
             <span class="badge">{{ table.entries.length }} species</span>
           </div>
@@ -23,21 +23,8 @@
         <!-- Generation Options -->
         <div class="form-section">
           <div class="form-group">
-            <label>Spawn Count</label>
-            <div class="spawn-info">
-              <span class="spawn-range">{{ getSpawnRange() }} Pokemon</span>
-              <span class="spawn-hint">(based on {{ getDensityLabel(effectiveDensity) }} density{{ selectedModification ? ` × ${getMultiplierLabel()}` : '' }})</span>
-            </div>
-            <label class="override-label">
-              <input
-                type="checkbox"
-                v-model="overrideCount"
-                class="form-checkbox"
-              />
-              Override spawn count
-            </label>
+            <label for="gen-count">Spawn Count</label>
             <input
-              v-if="overrideCount"
               id="gen-count"
               v-model.number="count"
               type="number"
@@ -46,6 +33,9 @@
               :max="MAX_SPAWN_COUNT"
               data-testid="gen-count-input"
             />
+            <p class="spawn-suggestion">
+              Suggestion: {{ densitySuggestion.suggested }} ({{ getDensityLabel(table.density) }} -- {{ densitySuggestion.description }})
+            </p>
           </div>
 
           <div class="form-group" v-if="table.modifications.length > 0">
@@ -250,7 +240,7 @@
 
 <script setup lang="ts">
 import type { EncounterTable, ResolvedTableEntry, DensityTier } from '~/types'
-import { DENSITY_RANGES, MAX_SPAWN_COUNT } from '~/types'
+import { DENSITY_SUGGESTIONS, MAX_SPAWN_COUNT } from '~/types'
 
 const props = defineProps<{
   table: EncounterTable
@@ -276,8 +266,7 @@ onMounted(() => {
 
 // State
 const servingToTv = ref(false)
-const count = ref(2)
-const overrideCount = ref(false)
+const count = ref(DENSITY_SUGGESTIONS[props.table.density]?.suggested ?? 4)
 const selectedModification = ref('')
 const overrideLevel = ref(false)
 const levelMin = ref(props.table.levelRange.min)
@@ -320,41 +309,14 @@ const totalWeight = computed(() => {
   return resolvedEntries.value.reduce((sum, e) => sum + e.weight, 0)
 })
 
-// Get the selected modification object
-const selectedMod = computed(() => {
-  if (!selectedModification.value) return null
-  return props.table.modifications.find(m => m.id === selectedModification.value) || null
+// Density suggestion for the current table (informational hint)
+const densitySuggestion = computed(() => {
+  return DENSITY_SUGGESTIONS[props.table.density] ?? DENSITY_SUGGESTIONS.moderate
 })
-
-// Effective density tier
-const effectiveDensity = computed((): DensityTier => {
-  return props.table.density
-})
-
-// Get density multiplier for selected modification
-const getMultiplier = (): number => {
-  return selectedMod.value?.densityMultiplier ?? 1.0
-}
 
 // Methods
 const getDensityLabel = (density: DensityTier): string => {
   return density.charAt(0).toUpperCase() + density.slice(1)
-}
-
-const getMultiplierLabel = (): string => {
-  const mult = getMultiplier()
-  return `${mult}x`
-}
-
-const getSpawnRange = (): string => {
-  const range = DENSITY_RANGES[effectiveDensity.value]
-  const multiplier = getMultiplier()
-
-  const rawMin = Math.max(1, Math.round(range.min * multiplier))
-  const scaledMax = Math.min(MAX_SPAWN_COUNT, Math.round(range.max * multiplier))
-  const scaledMin = Math.min(rawMin, scaledMax)
-
-  return `${scaledMin}-${scaledMax}`
 }
 
 const formatPercent = (weight: number): string => {
@@ -385,14 +347,11 @@ const generate = async () => {
   generating.value = true
   try {
     const options: {
-      count?: number
+      count: number
       modificationId?: string
       levelRange?: { min: number; max: number }
-    } = {}
-
-    // Only pass count if override is enabled
-    if (overrideCount.value) {
-      options.count = count.value
+    } = {
+      count: count.value
     }
 
     if (selectedModification.value) {
@@ -543,35 +502,11 @@ watch(() => props.table, (newTable) => {
   }
 }
 
-.spawn-info {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-  padding: $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-  margin-bottom: $spacing-sm;
-}
-
-.spawn-range {
-  font-weight: 600;
-  font-size: $font-size-lg;
-  color: $color-text;
-}
-
-.spawn-hint {
+.spawn-suggestion {
+  margin-top: $spacing-xs;
   font-size: $font-size-xs;
   color: $color-text-muted;
-}
-
-.override-label {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  font-size: $font-size-sm;
-  color: $color-text-muted;
-  cursor: pointer;
-  margin-bottom: $spacing-sm;
+  font-style: italic;
 }
 
 .form-section {
