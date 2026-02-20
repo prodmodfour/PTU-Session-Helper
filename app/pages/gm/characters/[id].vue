@@ -144,6 +144,41 @@
               <input v-model.number="editData.money" type="number" class="form-input" :disabled="!isEditing" />
             </div>
           </div>
+
+          <!-- Derived Trainer Capabilities -->
+          <div class="capabilities-section">
+            <h4 class="section-label">Capabilities</h4>
+            <div class="capabilities-grid">
+              <div class="capability-block">
+                <label>Power</label>
+                <span class="capability-value">{{ derivedStats.power }}</span>
+              </div>
+              <div class="capability-block">
+                <label>High Jump</label>
+                <span class="capability-value">{{ derivedStats.highJump }}m</span>
+              </div>
+              <div class="capability-block">
+                <label>Long Jump</label>
+                <span class="capability-value">{{ derivedStats.longJump }}m</span>
+              </div>
+              <div class="capability-block">
+                <label>Overland</label>
+                <span class="capability-value">{{ derivedStats.overland }}</span>
+              </div>
+              <div class="capability-block">
+                <label>Swimming</label>
+                <span class="capability-value">{{ derivedStats.swimming }}</span>
+              </div>
+              <div class="capability-block">
+                <label>Throwing Range</label>
+                <span class="capability-value">{{ derivedStats.throwingRange }}m</span>
+              </div>
+              <div class="capability-block">
+                <label>Weight Class</label>
+                <span class="capability-value">{{ derivedStats.weightClass != null ? derivedStats.weightClass : '—' }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Classes Tab -->
@@ -240,6 +275,7 @@
 
 <script setup lang="ts">
 import type { HumanCharacter } from '~/types'
+import { computeTrainerDerivedStats } from '~/utils/trainerDerivedStats'
 
 definePageMeta({
   layout: 'gm'
@@ -260,6 +296,14 @@ const isEditing = ref(false)
 const saving = ref(false)
 const editData = ref<Partial<HumanCharacter>>({})
 const activeTab = ref('stats')
+
+// Derived trainer capabilities (computed from skills + weight)
+const derivedStats = computed(() =>
+  computeTrainerDerivedStats({
+    skills: character.value?.skills || {},
+    weightKg: character.value?.weight
+  })
+)
 
 // Check for edit mode from query param
 onMounted(async () => {
@@ -656,6 +700,47 @@ const saveChanges = async () => {
   text-align: center;
   color: $color-text-muted;
   padding: $spacing-xl;
+}
+
+.capabilities-section {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid $glass-border;
+}
+
+.section-label {
+  margin: 0 0 $spacing-sm 0;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.capabilities-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
+}
+
+.capability-block {
+  background: $color-bg-secondary;
+  border-radius: $border-radius-sm;
+  padding: $spacing-sm;
+  text-align: center;
+
+  label {
+    display: block;
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    margin-bottom: $spacing-xs;
+  }
+}
+
+.capability-value {
+  font-size: $font-size-md;
+  font-weight: 600;
+  color: $color-accent-teal;
 }
 
 .form-row {
