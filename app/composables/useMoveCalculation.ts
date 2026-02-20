@@ -94,10 +94,6 @@ export function useMoveCalculation(
     return stages.accuracy || 0
   })
 
-  const evasionTypeLabel = computed((): string => {
-    return move.value.damageClass === 'Physical' ? 'Phys Evasion' : 'Spec Evasion'
-  })
-
   const getTargetEvasion = (targetId: string): number => {
     const target = targets.value.find(t => t.id === targetId)
     if (!target || !target.entity) return 0
@@ -125,6 +121,39 @@ export function useMoveCalculation(
         : getHumanStat(entity, 'specialDefense')
       const specEvasion = calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus)
       return Math.max(specEvasion, speedEvasion)
+    }
+  }
+
+  /**
+   * Returns the label for which evasion type won the Math.max selection
+   * for a given target. Reflects whether Phys, Spec, or Speed Evasion
+   * is actually being used in the accuracy threshold.
+   */
+  const getTargetEvasionLabel = (targetId: string): string => {
+    const target = targets.value.find(t => t.id === targetId)
+    if (!target || !target.entity) return 'Evasion'
+
+    const entity = target.entity
+    const stages = getStageModifiers(entity)
+    const evasionBonus = stages.evasion ?? 0
+
+    const speedStat = target.type === 'pokemon'
+      ? getPokemonSpeedStat(entity)
+      : getHumanStat(entity, 'speed')
+    const speedEvasion = calculateSpeedEvasion(speedStat, stages.speed, evasionBonus)
+
+    if (move.value.damageClass === 'Physical') {
+      const defStat = target.type === 'pokemon'
+        ? getPokemonDefenseStat(entity)
+        : getHumanStat(entity, 'defense')
+      const physEvasion = calculatePhysicalEvasion(defStat, stages.defense, evasionBonus)
+      return speedEvasion > physEvasion ? 'Speed Evasion' : 'Phys Evasion'
+    } else {
+      const spDefStat = target.type === 'pokemon'
+        ? getPokemonSpDefStat(entity)
+        : getHumanStat(entity, 'specialDefense')
+      const specEvasion = calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus)
+      return speedEvasion > specEvasion ? 'Speed Evasion' : 'Spec Evasion'
     }
   }
 
@@ -438,8 +467,8 @@ export function useMoveCalculation(
 
     // Accuracy
     attackerAccuracyStage,
-    evasionTypeLabel,
     getTargetEvasion,
+    getTargetEvasionLabel,
     getAccuracyThreshold,
     rollAccuracy,
     hitCount,

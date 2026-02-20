@@ -82,7 +82,7 @@
               </div>
               <!-- Evasion preview before accuracy roll -->
               <div v-else-if="selectedTargets.includes(target.id) && move.ac && !hasRolledAccuracy" class="target-btn__evasion">
-                <span class="evasion-label">{{ evasionTypeLabel }}:</span>
+                <span class="evasion-label">{{ getTargetEvasionLabel(target.id) }}:</span>
                 <span class="evasion-value">+{{ getTargetEvasion(target.id) }}</span>
                 <span class="evasion-threshold">→ Need {{ getAccuracyThreshold(target.id) }}+</span>
               </div>
@@ -255,8 +255,8 @@ const {
   effectiveDB,
   // Accuracy
   attackerAccuracyStage,
-  evasionTypeLabel,
   getTargetEvasion,
+  getTargetEvasionLabel,
   getAccuracyThreshold,
   rollAccuracy,
   hitCount,
