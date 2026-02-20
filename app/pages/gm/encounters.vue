@@ -513,6 +513,10 @@ const confirmDelete = async () => {
   &__body {
     overflow-y: visible;
   }
+
+  &__footer {
+    gap: $spacing-md;
+  }
 }
 
 .form-group {
