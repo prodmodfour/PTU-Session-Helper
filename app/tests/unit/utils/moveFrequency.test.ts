@@ -7,7 +7,8 @@ import {
   isDailyFrequency,
   checkMoveFrequency,
   incrementMoveUsage,
-  resetSceneUsage
+  resetSceneUsage,
+  resetDailyUsage
 } from '~/utils/moveFrequency'
 import type { Move } from '~/types/character'
 import type { MoveFrequency } from '~/types/combat'
@@ -418,5 +419,85 @@ describe('resetSceneUsage', () => {
     const moves = [makeMove()]
     const result = resetSceneUsage(moves)
     expect(result).not.toBe(moves)
+  })
+})
+
+describe('resetDailyUsage', () => {
+  it('resets usedToday to 0 for daily-frequency moves', () => {
+    const moves = [
+      makeMove({ frequency: 'Daily', usedToday: 1 }),
+      makeMove({ frequency: 'Daily x2', usedToday: 2 }),
+      makeMove({ frequency: 'Daily x3', usedToday: 3 })
+    ]
+    const result = resetDailyUsage(moves)
+    expect(result[0].usedToday).toBe(0)
+    expect(result[1].usedToday).toBe(0)
+    expect(result[2].usedToday).toBe(0)
+  })
+
+  it('resets lastUsedAt to undefined for daily-frequency moves', () => {
+    const moves = [
+      makeMove({ frequency: 'Daily', usedToday: 1, lastUsedAt: '2026-02-19T10:00:00.000Z' }),
+      makeMove({ frequency: 'Daily x2', usedToday: 2, lastUsedAt: '2026-02-19T14:30:00.000Z' })
+    ]
+    const result = resetDailyUsage(moves)
+    expect(result[0].lastUsedAt).toBeUndefined()
+    expect(result[1].lastUsedAt).toBeUndefined()
+  })
+
+  it('returns same reference for moves needing no reset (At-Will, Scene frequencies)', () => {
+    const atWill = makeMove({ frequency: 'At-Will' })
+    const scene = makeMove({ frequency: 'Scene', usedThisScene: 1 })
+    const eot = makeMove({ frequency: 'EOT', lastTurnUsed: 3 })
+    const result = resetDailyUsage([atWill, scene, eot])
+    expect(result[0]).toBe(atWill)
+    expect(result[1]).toBe(scene)
+    expect(result[2]).toBe(eot)
+  })
+
+  it('does not mutate original array or move objects', () => {
+    const originalMove = makeMove({ frequency: 'Daily', usedToday: 1, lastUsedAt: '2026-02-19T10:00:00.000Z' })
+    const moves = [originalMove]
+    const result = resetDailyUsage(moves)
+    expect(originalMove.usedToday).toBe(1)
+    expect(originalMove.lastUsedAt).toBe('2026-02-19T10:00:00.000Z')
+    expect(result[0].usedToday).toBe(0)
+    expect(result[0].lastUsedAt).toBeUndefined()
+  })
+
+  it('returns new array reference when changes are made', () => {
+    const moves = [makeMove({ frequency: 'Daily', usedToday: 1 })]
+    const result = resetDailyUsage(moves)
+    expect(result).not.toBe(moves)
+  })
+
+  it('resets move with only lastUsedAt set (usedToday is 0)', () => {
+    const move = makeMove({ frequency: 'Daily', usedToday: 0, lastUsedAt: '2026-02-19T10:00:00.000Z' })
+    const result = resetDailyUsage([move])
+    expect(result[0].lastUsedAt).toBeUndefined()
+    expect(result[0].usedToday).toBe(0)
+    expect(result[0]).not.toBe(move)
+  })
+
+  it('handles empty array', () => {
+    const result = resetDailyUsage([])
+    expect(result).toEqual([])
+  })
+
+  it('preserves non-daily fields on reset moves', () => {
+    const move = makeMove({
+      frequency: 'Daily x2',
+      usedToday: 2,
+      lastUsedAt: '2026-02-19T10:00:00.000Z',
+      usedThisScene: 1,
+      lastTurnUsed: 4
+    })
+    const result = resetDailyUsage([move])
+    expect(result[0].usedToday).toBe(0)
+    expect(result[0].lastUsedAt).toBeUndefined()
+    expect(result[0].usedThisScene).toBe(1)
+    expect(result[0].lastTurnUsed).toBe(4)
+    expect(result[0].name).toBe('Test Move')
+    expect(result[0].frequency).toBe('Daily x2')
   })
 })
