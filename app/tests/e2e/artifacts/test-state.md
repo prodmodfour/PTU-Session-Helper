@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-19T23:45:00
+last_updated: 2026-02-20T22:00:00
 updated_by: orchestrator
 ---
 
@@ -26,35 +26,24 @@ All 8 domains fully processed through M2 ticket creation. Matrix pipeline is **c
 
 ## Ambiguous Items — Resolved
 
-All 9 ambiguous items ruled on in rules-review-047:
-
-| Rule ID | Domain | Verdict | Action Taken |
-|---------|--------|---------|-------------|
-| combat-R011 | combat | DESIGN_CHOICE | No change — threshold approach is mathematically equivalent |
-| combat-R012 | combat | INCORRECT | bug-023 filed — Speed Evasion auto-selection |
-| combat-R104 | combat | CORRECT | No change — post-temp-HP damage is correct |
-| capture-R027 | capture | CORRECT | No change — sign convention documented |
-| healing-R007 | healing | CORRECT | No change — real maxHp for 1/16th is correct |
-| character-lifecycle-R042 | character-lifecycle | CORRECT | Drain persistence correct; scene refresh is separate gap |
-| character-lifecycle-R020 | character-lifecycle | DESIGN_CHOICE | Store kg, convert to lbs for weight class derivation |
-| scenes-R018 | scenes | INCORRECT | Covered by bug-017 (Missing Earth and Rough terrain types) |
-| vtt-grid-R029 | vtt-grid | DESIGN_CHOICE | Manual GM repositioning is acceptable |
+All 9 ambiguous items ruled on in rules-review-047 (2026-02-19). No new ambiguous items.
 
 ## Staleness Status
 
 Multiple domains have had Developer fixes since last capability mapping:
-- **combat:** bug-008 (temp HP), affects `combatant.service.ts`
-- **pokemon-lifecycle:** bug-009 (nature adjustments), affects `pokemon-generator.service.ts`
-- **character-lifecycle:** bug-010, bug-024, bug-025, affects character endpoints
-- **encounter-tables:** bug-011 (weight column), affects schema + endpoints
-- **capture:** bug-013 (Trapped bonus), affects `captureRate.ts` + `useCapture.ts`
-- **vtt-grid:** bug-012 (terrain-aware movement), affects grid composables
-- **healing:** bug-006 (injury max HP), affects `restHealing.ts` + `combatant.service.ts`
+- **combat:** bug-008 (temp HP), bug-014 (Cursed breather), bug-023 (Speed Evasion)
+- **pokemon-lifecycle:** bug-009 (nature adjustments)
+- **character-lifecycle:** bug-010, bug-015 (features/edges PUT), bug-024, bug-025
+- **encounter-tables:** bug-011 (weight column), bug-016 (spawn cap), bug-027 (min/max clamp)
+- **capture:** bug-013 (Trapped bonus)
+- **vtt-grid:** bug-012 (terrain-aware movement), bug-017 (Earth/Rough terrain types)
+- **healing:** bug-006 (injury max HP)
 
-All fixes are correctness improvements (bugs → fixed). Capability mappings would show higher coverage after re-mapping, but no new incorrect items expected. Re-mapping is **optional** — recommend deferring until the P2 bug batch is complete.
+All fixes are correctness improvements. Capability mappings would show higher coverage after re-mapping, but no new incorrect items expected. Re-mapping is **optional** — recommend deferring until the P2 bug batch and CHANGES_REQUIRED fixes are complete.
 
 ## Recommended Next Steps
 
-1. **Dev ecosystem focus:** Work through P2 MEDIUM bugs (bug-014 through bug-019, bug-023, bug-026)
-2. **Re-map after P2 batch:** Once P2 bugs are resolved, re-run Capability Mapper + Coverage Analyzer for affected domains to update coverage scores
-3. **Staleness is low-risk:** All changes were bug fixes that INCREASE correctness, so re-mapping will only improve scores
+1. **Dev ecosystem focus:** Address CHANGES_REQUIRED feedback for bug-023 and bug-026
+2. **Review new fixes:** bug-017, bug-027, bug-028 need review cycles
+3. **Continue P2 bug queue:** bug-018, bug-019 after reviews clear
+4. **Re-map after P2 batch:** Once P2 bugs are resolved, re-run Capability Mapper + Coverage Analyzer for affected domains to update coverage scores
