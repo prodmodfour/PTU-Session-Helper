@@ -37,6 +37,9 @@ model HumanCharacter {
   features       String  @default("[]") // JSON array of feature names
   edges          String  @default("[]") // JSON array of edge names
 
+  // Equipment (JSON object mapping slot to equipped item)
+  equipment     String   @default("{}") // JSON: EquipmentSlots
+
   // Inventory
   inventory     String   @default("[]") // JSON array
   money         Int      @default(0)
