@@ -352,10 +352,8 @@ const handleExecuteActionWithBreatherShift = async (combatantId: string, actionT
 // Focus the breather token on the grid for movement
 const focusBreatherToken = () => {
   if (!pendingBreatherShift.value) return
-  // Switch to grid view if not already there
+  // Switch to grid view — banner stays until token is moved or explicitly dismissed
   activeView.value = 'grid'
-  // Dismiss the banner — the GM will move the token manually on the grid
-  pendingBreatherShift.value = null
 }
 
 // Wrap handleTokenMove to auto-dismiss breather banner when the pending token is moved
@@ -401,6 +399,7 @@ const startEncounter = async () => {
 }
 
 const nextTurn = async () => {
+  pendingBreatherShift.value = null
   await encounterStore.nextTurn()
   // Wait for Vue reactivity to process the store update
   await nextTick()
@@ -431,6 +430,7 @@ const handleSetWeather = async (weather: string | null, source: string) => {
 
 const endEncounter = async () => {
   if (confirm('Are you sure you want to end this encounter?')) {
+    pendingBreatherShift.value = null
     await encounterStore.endEncounter()
   }
 }
