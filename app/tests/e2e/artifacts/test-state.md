@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T16:00:00
+last_updated: 2026-02-20T19:00:00
 updated_by: orchestrator
 ---
 
@@ -26,22 +26,19 @@ All 8 domains fully processed through M2 ticket creation. Matrix pipeline is **c
 
 ## Staleness Status
 
-All 8 domains are stale due to sessions 5, 6, and 7 code changes:
+All 8 domains are stale due to sessions 5, 6, 7, and 8 code changes.
 
-**Session 7 changes (11 tickets resolved, 3 refactoring in-progress):**
-- **combat:** ptu-rule-044 (movement conditions), 067 (Stuck early-return), 068 (Math.trunc), 069 (Sprint persistence), 070 (move frequency), 071 (weather undo), 072 (Stuck fix)
-- **healing:** ptu-rule-065 (boundAp clearing), 066 (daily move reset)
-- **vtt-grid:** ptu-rule-044, 062, 063 (terrain-aware movement)
-- **scenes:** ptu-rule-071 (weather undo/redo)
+**Session 8 changes (5 refactoring tickets resolved):**
+- **combat/encounter:** refactoring-051 — 8 encounter endpoints migrated to `buildEncounterResponse()` (structural, no coverage impact)
+- **combat:** refactoring-042 — MoveTargetModal SCSS extraction (no coverage impact)
+- **capture:** refactoring-044 — capture action error surfacing via warning ref (minor coverage improvement)
+- **pokemon-lifecycle:** refactoring-047 — Pokemon sheet SCSS dedup (no coverage impact)
+- **encounter-tables:** refactoring-033 — density dropdown labels fixed (minor data-correctness improvement)
 
-All fixes are correctness improvements. Coverage scores would increase after re-mapping.
-
-**Re-mapping is recommended** after all session 7 reviews and dev work complete.
+Session 8 changes are primarily structural refactoring (SCSS, response construction). Coverage scores are unlikely to change significantly from re-mapping — defer re-mapping until the remaining P2 queue (refactoring-032, ptu-rule-046) is cleared.
 
 ## Recommended Next Steps
 
-1. Wait for active agents to complete (2 reviewers, 3 developers)
-2. Process review results for c1d49a7 (ptu-rule-073)
-3. Launch reviewers for completed dev work (refactoring-035, 039, 049)
-4. Re-map stale domains when ready — all 8 domains have code changes since last capability mapping
-5. Continue P2/P3 ticket queue
+1. Clear remaining P2 tickets (refactoring-032, ptu-rule-046)
+2. Re-map all 8 stale domains once P2 queue is empty
+3. Continue P3 ticket queue
