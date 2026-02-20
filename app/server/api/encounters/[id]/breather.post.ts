@@ -95,9 +95,12 @@ export default defineEventHandler(async (event) => {
     }
 
     // Mark as having used their full action (standard + shift) — PTU p.245
-    combatant.turnState.standardActionUsed = true
-    combatant.turnState.shiftActionUsed = true
-    combatant.turnState.hasActed = true
+    combatant.turnState = {
+      ...combatant.turnState,
+      standardActionUsed: true,
+      shiftActionUsed: true,
+      hasActed: true
+    }
 
     // Sync to database if entity has a record
     await syncEntityToDatabase(combatant, {
