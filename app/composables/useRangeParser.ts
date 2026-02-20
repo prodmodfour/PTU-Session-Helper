@@ -147,12 +147,72 @@ export function useRangeParser() {
   }
 
   /**
-   * Check if a target position is within range of an attacker
+   * Check if there is an unobstructed line of sight between two grid positions.
+   * Uses Bresenham's line algorithm to trace cells along the path.
+   *
+   * PTU Rule: Blocking terrain blocks both movement AND targeting/line of sight.
+   * Cells occupied by the attacker or the target are excluded from the check.
+   *
+   * @param from - Origin position (attacker)
+   * @param to - Target position
+   * @param isBlockingFn - Function that returns true if a cell blocks line of sight
+   */
+  function hasLineOfSight(
+    from: GridPosition,
+    to: GridPosition,
+    isBlockingFn: (x: number, y: number) => boolean
+  ): boolean {
+    // Same cell always has LoS
+    if (from.x === to.x && from.y === to.y) return true
+
+    // Bresenham's line from center-of-cell to center-of-cell
+    let x0 = from.x
+    let y0 = from.y
+    const x1 = to.x
+    const y1 = to.y
+
+    const dx = Math.abs(x1 - x0)
+    const dy = Math.abs(y1 - y0)
+    const sx = x0 < x1 ? 1 : -1
+    const sy = y0 < y1 ? 1 : -1
+    let err = dx - dy
+
+    while (true) {
+      // Skip the origin and destination cells — only check intermediate cells
+      if (!(x0 === from.x && y0 === from.y) && !(x0 === to.x && y0 === to.y)) {
+        if (isBlockingFn(x0, y0)) {
+          return false
+        }
+      }
+
+      if (x0 === x1 && y0 === y1) break
+
+      const e2 = 2 * err
+      if (e2 > -dy) {
+        err -= dy
+        x0 += sx
+      }
+      if (e2 < dx) {
+        err += dx
+        y0 += sy
+      }
+    }
+
+    return true
+  }
+
+  /**
+   * Check if a target position is within range of an attacker.
+   *
+   * When an isBlockingFn is provided, also checks line of sight —
+   * blocking terrain between attacker and target prevents targeting
+   * per PTU rules.
    */
   function isInRange(
     attacker: GridPosition,
     target: GridPosition,
-    parsedRange: RangeParseResult
+    parsedRange: RangeParseResult,
+    isBlockingFn?: (x: number, y: number) => boolean
   ): boolean {
     // Self only affects user
     if (parsedRange.type === 'self') {
@@ -174,7 +234,13 @@ export function useRangeParser() {
     if (parsedRange.type === 'cardinally-adjacent') {
       const dx = Math.abs(target.x - attacker.x)
       const dy = Math.abs(target.y - attacker.y)
-      return (dx === 1 && dy === 0) || (dx === 0 && dy === 1)
+      const isAdjacent = (dx === 1 && dy === 0) || (dx === 0 && dy === 1)
+      if (!isAdjacent) return false
+      // Check LoS even for adjacent (wall between adjacent cells blocks targeting)
+      if (isBlockingFn) {
+        return hasLineOfSight(attacker, target, isBlockingFn)
+      }
+      return true
     }
 
     // Check min range if applicable
@@ -182,7 +248,16 @@ export function useRangeParser() {
       return false
     }
 
-    return distance <= parsedRange.range
+    if (distance > parsedRange.range) {
+      return false
+    }
+
+    // Check line of sight if blocking function provided
+    if (isBlockingFn) {
+      return hasLineOfSight(attacker, target, isBlockingFn)
+    }
+
+    return true
   }
 
   /**
@@ -585,6 +660,7 @@ export function useRangeParser() {
   return {
     parseRange,
     isInRange,
+    hasLineOfSight,
     getAffectedCells,
     getMovementRangeCells,
     calculateMoveCost,
