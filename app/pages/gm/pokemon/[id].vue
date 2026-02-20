@@ -149,39 +149,12 @@
         </div>
 
         <!-- Skills Tab -->
-        <div v-if="activeTab === 'skills'" class="tab-content">
-          <!-- Last Roll Result -->
-          <div v-if="lastSkillRoll" class="roll-result">
-            <div class="roll-result__header">
-              <span class="roll-result__skill">{{ lastSkillRoll.skill }}</span>
-              <span class="roll-result__total">{{ lastSkillRoll.result.total }}</span>
-            </div>
-            <div class="roll-result__breakdown">{{ lastSkillRoll.result.breakdown }}</div>
-          </div>
-
-          <div v-if="pokemon.skills && Object.keys(pokemon.skills).length" class="skills-grid">
-            <div v-for="(value, skill) in pokemon.skills" :key="skill" class="skill-item skill-item--clickable" @click="rollSkill(skill as string, value as string)">
-              <label>{{ skill }}</label>
-              <span class="skill-dice">{{ value }}</span>
-            </div>
-          </div>
-          <p v-else class="empty-state">No skills recorded</p>
-
-          <div class="info-section">
-            <h4>Training</h4>
-            <div class="training-info">
-              <span><strong>Tutor Points:</strong> {{ pokemon.tutorPoints || 0 }}</span>
-              <span><strong>Training EXP:</strong> {{ pokemon.trainingExp || 0 }}</span>
-            </div>
-          </div>
-
-          <div v-if="pokemon.eggGroups?.length" class="info-section">
-            <h4>Egg Groups</h4>
-            <div class="tag-list">
-              <span v-for="eg in pokemon.eggGroups" :key="eg" class="tag">{{ eg }}</span>
-            </div>
-          </div>
-        </div>
+        <PokemonSkillsTab
+          v-if="activeTab === 'skills'"
+          :pokemon="pokemon"
+          :last-skill-roll="lastSkillRoll"
+          @roll-skill="(skill, notation) => rollSkill(skill, notation)"
+        />
 
         <!-- Healing Tab -->
         <div v-if="activeTab === 'healing'" class="tab-content">
@@ -469,147 +442,6 @@ const saveChanges = async () => {
     font-size: $font-size-lg;
     font-weight: 600;
   }
-}
-
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-sm;
-}
-
-.skill-item {
-  display: flex;
-  justify-content: space-between;
-  padding: $spacing-sm $spacing-md;
-  background: $color-bg-secondary;
-  border-radius: $border-radius-sm;
-
-  label {
-    font-size: $font-size-sm;
-  }
-
-  span {
-    font-weight: 500;
-    font-size: $font-size-sm;
-  }
-
-  &--clickable {
-    cursor: pointer;
-    transition: all $transition-fast;
-
-    &:hover {
-      background: $color-bg-tertiary;
-      transform: translateX(4px);
-
-      .skill-dice {
-        color: $color-accent-violet;
-      }
-    }
-
-    &:active {
-      transform: translateX(2px);
-    }
-  }
-}
-
-.skill-dice {
-  font-family: 'Fira Code', 'Consolas', monospace;
-  transition: color $transition-fast;
-}
-
-.roll-result {
-  background: linear-gradient(135deg, rgba($color-accent-violet, 0.15) 0%, rgba($color-accent-scarlet, 0.1) 100%);
-  border: 1px solid rgba($color-accent-violet, 0.3);
-  border-radius: $border-radius-lg;
-  padding: $spacing-md $spacing-lg;
-  margin-bottom: $spacing-lg;
-  animation: rollIn 0.3s ease-out;
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__skill {
-    font-weight: 600;
-    color: $color-text;
-  }
-
-  &__total {
-    font-size: $font-size-xxl;
-    font-weight: 700;
-    color: $color-accent-violet;
-
-    &--crit {
-      color: #ffd700;
-      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-    }
-
-    &--hit {
-      color: $color-success;
-    }
-
-    &--miss {
-      color: $color-danger;
-    }
-  }
-
-  &__type {
-    font-size: $font-size-sm;
-    padding: $spacing-xs $spacing-sm;
-    background: $color-bg-tertiary;
-    border-radius: $border-radius-sm;
-    color: $color-text-muted;
-  }
-
-  &__extra {
-    font-size: $font-size-sm;
-    margin-left: $spacing-sm;
-    color: $color-text-muted;
-  }
-
-  &__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: $spacing-sm;
-    padding: $spacing-sm 0;
-    border-bottom: 1px solid rgba($glass-border, 0.5);
-
-    &:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    &:first-of-type {
-      padding-top: 0;
-    }
-  }
-
-  &__breakdown {
-    width: 100%;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    font-family: 'Fira Code', 'Consolas', monospace;
-  }
-}
-
-@keyframes rollIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.training-info {
-  display: flex;
-  gap: $spacing-lg;
 }
 
 .tag-list {
