@@ -54,8 +54,12 @@
               v-for="move in moves"
               :key="move.id || move.name"
               class="move-btn"
-              :class="`move-btn--${move.type?.toLowerCase() || 'normal'}`"
-              :disabled="turnState.standardActionUsed"
+              :class="[
+                `move-btn--${move.type?.toLowerCase() || 'normal'}`,
+                { 'move-btn--exhausted': isMoveExhausted(move) }
+              ]"
+              :disabled="turnState.standardActionUsed || isMoveExhausted(move)"
+              :title="isMoveExhausted(move) ? getMoveDisabledReason(move) : ''"
               @click="selectMove(move)"
             >
               <div class="move-btn__main">
@@ -235,6 +239,7 @@ import {
   OTHER_CONDITIONS,
   getConditionClass
 } from '~/constants/statusConditions'
+import { checkMoveFrequency } from '~/utils/moveFrequency'
 
 const props = defineProps<{
   combatant: Combatant
@@ -249,6 +254,7 @@ const emit = defineEmits<{
 }>()
 
 const { getSpriteUrl } = usePokemonSprite()
+const encounterStore = useEncounterStore()
 
 const selectedMove = ref<Move | null>(null)
 const showManeuvers = ref(false)
@@ -293,6 +299,22 @@ const moves = computed(() => {
   }
   return []
 })
+
+/** Check if a move is exhausted (frequency limit reached). */
+const isMoveExhausted = (move: Move): boolean => {
+  if (!move.frequency) return false
+  const currentRound = encounterStore.currentRound || 1
+  const result = checkMoveFrequency(move, currentRound)
+  return !result.canUse
+}
+
+/** Get a tooltip reason for why a move is disabled. */
+const getMoveDisabledReason = (move: Move): string => {
+  if (!move.frequency) return ''
+  const currentRound = encounterStore.currentRound || 1
+  const result = checkMoveFrequency(move, currentRound)
+  return result.reason || ''
+}
 
 // Get current status conditions from the entity
 const currentConditions = computed((): StatusCondition[] => {
@@ -577,6 +599,12 @@ const selectManeuver = (maneuver: Maneuver) => {
 
   &__ac {
     opacity: 0.7;
+  }
+
+  &--exhausted {
+    opacity: 0.4;
+    text-decoration: line-through;
+    cursor: not-allowed;
   }
 
   // Type colors
