@@ -139,7 +139,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * PTU Rules:
    * - Stuck: cannot Shift at all — effective speed 0 (PTU 1.05 p.231)
    * - Slowed: reduce all movement speeds by half
-   * - Speed CS: stage multiplier applied to movement speed
+   * - Speed CS: additive bonus/penalty of half stage value (PTU 1.05 p.234), min 2
    * - Sprint (tempCondition): +50% movement speed for the turn
    */
   const applyMovementModifiers = (combatant: Combatant, speed: number): number => {
@@ -157,11 +157,18 @@ export function useGridMovement(options: UseGridMovementOptions) {
       modifiedSpeed = Math.floor(modifiedSpeed / 2)
     }
 
-    // Speed Combat Stage modifier (-6 to +6)
+    // Speed Combat Stage modifier (-6 to +6): additive bonus/penalty
+    // PTU 1.05 p.234: "bonus or penalty to all Movement Speeds equal to
+    // half your current Speed Combat Stage value rounded down"
     const speedStage = combatant.entity.stageModifiers?.speed ?? 0
     if (speedStage !== 0) {
-      const stageMultiplier = getSpeedStageMultiplier(speedStage)
-      modifiedSpeed = Math.floor(modifiedSpeed * stageMultiplier)
+      const clamped = Math.max(-6, Math.min(6, speedStage))
+      const stageBonus = Math.floor(clamped / 2)
+      modifiedSpeed = modifiedSpeed + stageBonus
+      // PTU 1.05 p.700: negative CS may never reduce movement below 2
+      if (stageBonus < 0) {
+        modifiedSpeed = Math.max(modifiedSpeed, 2)
+      }
     }
 
     // Sprint: +50% movement speed for the turn (tracked as tempCondition)
@@ -171,21 +178,6 @@ export function useGridMovement(options: UseGridMovementOptions) {
 
     // Minimum speed is 1 (can always move at least 1 cell unless at 0)
     return Math.max(modifiedSpeed, speed > 0 ? 1 : 0)
-  }
-
-  /**
-   * Get speed combat stage multiplier.
-   * PTU combat stages: -6 to +6 with specific multipliers.
-   */
-  const getSpeedStageMultiplier = (stage: number): number => {
-    const clamped = Math.max(-6, Math.min(6, stage))
-    const multipliers: Record<number, number> = {
-      [-6]: 0.4, [-5]: 0.5, [-4]: 0.6, [-3]: 0.7,
-      [-2]: 0.8, [-1]: 0.9, [0]: 1.0,
-      [1]: 1.2, [2]: 1.4, [3]: 1.6,
-      [4]: 1.8, [5]: 2.0, [6]: 2.2
-    }
-    return multipliers[clamped] ?? 1.0
   }
 
   /**
