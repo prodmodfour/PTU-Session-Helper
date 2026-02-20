@@ -344,8 +344,12 @@ export function buildPokemonCombatant(
 // --- Internal helpers ---
 
 /**
- * Distribute (level + 10) stat points weighted by base stats.
- * PTU Core Chapter 2: a Pokemon has level + 10 stat points at generation.
+ * Distribute (level + 10) stat points weighted by base stats,
+ * then enforce the Base Relations Rule (PTU Core Chapter 5).
+ *
+ * Base Relations: the ordering of a Pokemon's base stats from highest to lowest
+ * must be maintained after adding stat points.  Stats with equal base values
+ * form a "tier" and may end up in any order relative to each other.
  */
 function distributeStatPoints(
   baseStats: { hp: number; attack: number; defense: number; specialAttack: number; specialDefense: number; speed: number },
@@ -371,14 +375,90 @@ function distributeStatPoints(
     }
   }
 
+  // Enforce Base Relations: sort added points so higher base stats get >= added points
+  // than lower base stats.  Equal base stats may receive any distribution.
+  const enforced = enforceBaseRelations(baseStats, distributedPoints, statKeys)
+
   return {
-    hp: baseStats.hp + distributedPoints.hp,
-    attack: baseStats.attack + distributedPoints.attack,
-    defense: baseStats.defense + distributedPoints.defense,
-    specialAttack: baseStats.specialAttack + distributedPoints.specialAttack,
-    specialDefense: baseStats.specialDefense + distributedPoints.specialDefense,
-    speed: baseStats.speed + distributedPoints.speed
+    hp: baseStats.hp + enforced.hp,
+    attack: baseStats.attack + enforced.attack,
+    defense: baseStats.defense + enforced.defense,
+    specialAttack: baseStats.specialAttack + enforced.specialAttack,
+    specialDefense: baseStats.specialDefense + enforced.specialDefense,
+    speed: baseStats.speed + enforced.speed
   }
+}
+
+/**
+ * Enforce the PTU Base Relations Rule on distributed stat points.
+ *
+ * Groups stats into tiers by base value (equal base = same tier).
+ * Within each tier, keeps original random distribution.
+ * Across tiers, redistributes added points so that every stat in a higher
+ * tier has a final value >= every stat in a lower tier.
+ *
+ * Algorithm:
+ * 1. Group stat keys by base value (descending).
+ * 2. Sort the added-point values in descending order.
+ * 3. Assign the sorted values to tiers top-down, preserving randomness
+ *    within each tier by only sorting the slice assigned to that tier.
+ */
+function enforceBaseRelations(
+  baseStats: Record<string, number>,
+  distributedPoints: Record<string, number>,
+  statKeys: readonly string[]
+): Record<string, number> {
+  // Build array of { key, base, added, total } and sort by base descending
+  const entries = statKeys.map(key => ({
+    key,
+    base: baseStats[key],
+    added: distributedPoints[key],
+    total: baseStats[key] + distributedPoints[key]
+  }))
+
+  // Sort entries by base stat descending (stable: preserves original order for ties)
+  const sorted = [...entries].sort((a, b) => b.base - a.base)
+
+  // Collect all added-point values sorted descending
+  const addedValues = sorted.map(e => e.added).sort((a, b) => b - a)
+
+  // Assign sorted added values to tiers.
+  // A "tier" = consecutive entries with the same base stat.
+  // Within a tier, we take the next N values from the sorted pool
+  // but shuffle them so the within-tier assignment stays random.
+  const result: Record<string, number> = {}
+  let poolIndex = 0
+
+  let i = 0
+  while (i < sorted.length) {
+    // Find the extent of this tier (all entries with the same base value)
+    let tierEnd = i + 1
+    while (tierEnd < sorted.length && sorted[tierEnd].base === sorted[i].base) {
+      tierEnd++
+    }
+    const tierSize = tierEnd - i
+
+    // Take the next tierSize values from the descending pool
+    const tierValues = addedValues.slice(poolIndex, poolIndex + tierSize)
+    poolIndex += tierSize
+
+    // Shuffle within tier to preserve randomness for equal base stats
+    for (let j = tierValues.length - 1; j > 0; j--) {
+      const k = Math.floor(Math.random() * (j + 1))
+      const temp = tierValues[j]
+      tierValues[j] = tierValues[k]
+      tierValues[k] = temp
+    }
+
+    // Assign to stat keys
+    for (let j = 0; j < tierSize; j++) {
+      result[sorted[i + j].key] = tierValues[j]
+    }
+
+    i = tierEnd
+  }
+
+  return result
 }
 
 /**
