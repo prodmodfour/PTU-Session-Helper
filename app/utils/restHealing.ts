@@ -197,6 +197,21 @@ export function getRestHealingInfo(params: {
 }
 
 /**
+ * Check if a daily-frequency move is eligible for Extended Rest refresh.
+ * PTU Core p.252: "Daily-Frequency Moves are also regained during an
+ * Extended Rest, if the Move hasn't been used since the previous day."
+ *
+ * A move used today cannot be refreshed by tonight's Extended Rest.
+ * Only moves used before today (yesterday or earlier) are eligible.
+ */
+export function isDailyMoveRefreshable(lastUsedAt: string | null | undefined): boolean {
+  if (!lastUsedAt) return true // No usage record → eligible
+  const usedDate = new Date(lastUsedAt)
+  const today = new Date()
+  return usedDate.toDateString() !== today.toDateString()
+}
+
+/**
  * Calculate max Action Points for a trainer.
  * Per PTU Core (p221): Trainers have 5 AP + 1 more for every 5 Trainer Levels.
  * Level 1 = 5 AP, Level 5 = 6 AP, Level 10 = 7 AP, Level 15 = 8 AP.
@@ -206,11 +221,23 @@ export function calculateMaxAp(level: number): number {
 }
 
 /**
+ * Calculate available AP accounting for bound and drained AP.
+ * Per PTU Core (p221):
+ *   - Bound AP remains off-limits until the binding effect ends
+ *   - Drained AP remains unavailable until Extended Rest
+ *   - Total available = max AP - bound AP - drained AP
+ */
+export function calculateAvailableAp(maxAp: number, boundAp: number, drainedAp: number): number {
+  return Math.max(0, maxAp - boundAp - drainedAp)
+}
+
+/**
  * Calculate available AP after scene-end restoration.
  * Per PTU Core (p221): AP is completely regained at the end of each Scene.
  * Drained AP remains unavailable until Extended Rest.
+ * Bound AP remains off-limits until the binding effect ends.
  */
-export function calculateSceneEndAp(level: number, drainedAp: number): number {
+export function calculateSceneEndAp(level: number, drainedAp: number, boundAp: number = 0): number {
   const maxAp = calculateMaxAp(level)
-  return Math.max(0, maxAp - drainedAp)
+  return calculateAvailableAp(maxAp, boundAp, drainedAp)
 }

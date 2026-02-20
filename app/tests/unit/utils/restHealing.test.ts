@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getEffectiveMaxHp, calculateRestHealing } from '~/utils/restHealing'
+import { getEffectiveMaxHp, calculateRestHealing, isDailyMoveRefreshable, calculateAvailableAp } from '~/utils/restHealing'
 
 describe('getEffectiveMaxHp', () => {
   it('returns raw maxHp when injuries is 0', () => {
@@ -123,5 +123,54 @@ describe('calculateRestHealing', () => {
     })
     expect(result.canHeal).toBe(true)
     expect(result.hpHealed).toBe(1)
+  })
+})
+
+describe('isDailyMoveRefreshable', () => {
+  it('returns true when lastUsedAt is null (no usage record)', () => {
+    expect(isDailyMoveRefreshable(null)).toBe(true)
+  })
+
+  it('returns true when lastUsedAt is undefined', () => {
+    expect(isDailyMoveRefreshable(undefined)).toBe(true)
+  })
+
+  it('returns false when move was used today (same calendar day)', () => {
+    const now = new Date()
+    expect(isDailyMoveRefreshable(now.toISOString())).toBe(false)
+  })
+
+  it('returns true when move was used yesterday', () => {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    expect(isDailyMoveRefreshable(yesterday.toISOString())).toBe(true)
+  })
+
+  it('returns true when move was used several days ago', () => {
+    const lastWeek = new Date()
+    lastWeek.setDate(lastWeek.getDate() - 7)
+    expect(isDailyMoveRefreshable(lastWeek.toISOString())).toBe(true)
+  })
+})
+
+describe('calculateAvailableAp', () => {
+  it('returns max AP with no bound or drained AP', () => {
+    expect(calculateAvailableAp(5, 0, 0)).toBe(5)
+  })
+
+  it('subtracts bound AP from max', () => {
+    expect(calculateAvailableAp(7, 2, 0)).toBe(5)
+  })
+
+  it('subtracts drained AP from max', () => {
+    expect(calculateAvailableAp(7, 0, 3)).toBe(4)
+  })
+
+  it('subtracts both bound and drained AP', () => {
+    expect(calculateAvailableAp(8, 2, 3)).toBe(3)
+  })
+
+  it('floors at 0 when bound + drained exceeds max', () => {
+    expect(calculateAvailableAp(5, 3, 4)).toBe(0)
   })
 })

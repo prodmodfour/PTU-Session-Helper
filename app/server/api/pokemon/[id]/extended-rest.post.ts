@@ -3,7 +3,8 @@ import {
   calculateRestHealing,
   shouldResetDailyCounters,
   clearPersistentStatusConditions,
-  getStatusesToClear
+  getStatusesToClear,
+  isDailyMoveRefreshable
 } from '~/utils/restHealing'
 
 /**
@@ -70,17 +71,33 @@ export default defineEventHandler(async (event) => {
   const clearedStatuses = getStatusesToClear(statusConditions)
   const newStatusConditions = clearPersistentStatusConditions(statusConditions)
 
-  // Reset daily move usage
+  // Reset daily move usage (rolling window: PTU Core p.252)
+  // Daily-frequency moves are only refreshed if they haven't been used since the previous day.
+  // A move used today cannot be refreshed by tonight's Extended Rest.
   const moves = JSON.parse(pokemon.moves || '[]')
   const restoredMoves: string[] = []
+  const skippedMoves: string[] = []
 
   for (const move of moves) {
-    if (move.usedToday && move.usedToday > 0) {
-      restoredMoves.push(move.name)
+    const isDailyMove = move.frequency?.startsWith('Daily')
+
+    if (isDailyMove && move.usedToday && move.usedToday > 0) {
+      // Rolling window (PTU Core p.252): only refresh if not used today
+      if (isDailyMoveRefreshable(move.lastUsedAt)) {
+        restoredMoves.push(move.name)
+        move.usedToday = 0
+        move.lastUsedAt = undefined
+      } else {
+        skippedMoves.push(move.name)
+      }
+    } else if (!isDailyMove && move.usedToday && move.usedToday > 0) {
+      // Non-daily moves: reset usage counter (no rolling window applies)
       move.usedToday = 0
+      move.lastUsedAt = undefined
     }
-    // Also reset scene usage if frequency is daily
-    if (move.frequency?.startsWith('Daily') && move.usedThisScene) {
+
+    // Also reset scene usage if frequency is daily and the move was refreshed
+    if (isDailyMove && move.usedThisScene && !skippedMoves.includes(move.name)) {
       move.usedThisScene = 0
     }
   }
@@ -106,6 +123,7 @@ export default defineEventHandler(async (event) => {
       maxHp: updated.maxHp,
       clearedStatuses,
       restoredMoves,
+      skippedMoves,
       restMinutesToday: currentRestMinutes,
       restMinutesRemaining: Math.max(0, 480 - currentRestMinutes)
     }
