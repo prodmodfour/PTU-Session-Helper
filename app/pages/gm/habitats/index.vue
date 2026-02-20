@@ -79,9 +79,9 @@
       v-if="generatingFromTable"
       :table="generatingFromTable"
       :has-active-encounter="!!encounterStore.encounter"
-      :add-error="addError"
-      :adding-to-encounter="addingToEncounter"
-      @close="generatingFromTable = null; addError = null"
+      :add-error="encounterCreation.error.value"
+      :adding-to-encounter="encounterCreation.creating.value"
+      @close="generatingFromTable = null; encounterCreation.clearError()"
       @add-to-encounter="handleAddToEncounter"
     />
   </div>
@@ -100,11 +100,10 @@ useHead({
 
 const encounterTablesStore = useEncounterTablesStore()
 const encounterStore = useEncounterStore()
+const encounterCreation = useEncounterCreation()
 
 // State
 const showCreateModal = ref(false)
-const addingToEncounter = ref(false)
-const addError = ref<string | null>(null)
 const editingTable = ref<EncounterTable | null>(null)
 const deletingTable = ref<EncounterTable | null>(null)
 const generatingFromTable = ref<EncounterTable | null>(null)
@@ -183,24 +182,10 @@ const generateFromTable = (table: EncounterTable) => {
 }
 
 const handleAddToEncounter = async (pokemon: Array<{ speciesId: string; speciesName: string; level: number }>) => {
-  addingToEncounter.value = true
-  addError.value = null
-
-  try {
-    // Always create a fresh encounter
-    const tableName = generatingFromTable.value?.name || 'Wild Encounter'
-    await encounterStore.createEncounter(tableName, 'full_contact')
-
-    const added = await encounterStore.addWildPokemon(pokemon, 'enemies')
-
-    // Serve to group view automatically
-    await encounterStore.serveEncounter()
-
+  const tableName = generatingFromTable.value?.name || 'Wild Encounter'
+  const success = await encounterCreation.createWildEncounter(pokemon, tableName)
+  if (success) {
     generatingFromTable.value = null
-  } catch (e: any) {
-    addError.value = e.message || 'Failed to add Pokemon to encounter'
-  } finally {
-    addingToEncounter.value = false
   }
 }
 </script>
