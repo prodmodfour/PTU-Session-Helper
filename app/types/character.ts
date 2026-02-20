@@ -63,6 +63,8 @@ export interface Move {
   // Usage tracking (for frequency limits)
   usedThisScene?: number;
   usedToday?: number;
+  lastUsedAt?: string; // ISO timestamp of last use (for daily move rolling window)
+  lastTurnUsed?: number; // Round number when last used (for EOT tracking)
 
   // Contest info
   contestType?: string;
