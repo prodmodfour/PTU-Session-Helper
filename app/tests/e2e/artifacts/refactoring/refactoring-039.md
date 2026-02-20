@@ -6,7 +6,7 @@ categories:
 affected_files:
   - app/pages/gm/habitats/index.vue
 estimated_scope: small
-status: open
+status: resolved
 created_at: 2026-02-19T15:30:00
 found_by: code-review-048
 ---
@@ -58,8 +58,7 @@ Estimated commits: 1
 - refactoring-034 fixed the scene addition path; this is the encounter creation path in the same family of pages
 
 ## Resolution Log
-<!-- Developer fills this in after refactoring -->
-- Commits: ___
-- Files changed: ___
-- New files created: ___
-- Tests passing: ___
+- Commits: 337f6df
+- Files changed: app/pages/gm/habitats/index.vue
+- New files created: none
+- Tests passing: no regressions (behavioral equivalent — composable performs identical sequence)
