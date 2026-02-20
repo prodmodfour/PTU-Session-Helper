@@ -1,0 +1,131 @@
+/**
+ * PTU 1.05 Equipment Catalog
+ * Standard equipment items from 09-gear-and-items.md (p.286-295)
+ *
+ * Items are keyed by name. The GM can also equip custom items via the API
+ * by passing a full EquippedItem object rather than referencing a catalog entry.
+ */
+
+import type { EquippedItem, EquipmentSlot } from '~/types/character'
+
+export const EQUIPMENT_CATALOG: Record<string, EquippedItem> = {
+  // === Body Slot ===
+  'Light Armor': {
+    name: 'Light Armor',
+    slot: 'body',
+    damageReduction: 5,
+    cost: 8000,
+    description: 'Grants 5 Damage Reduction.',
+  },
+  'Heavy Armor': {
+    name: 'Heavy Armor',
+    slot: 'body',
+    damageReduction: 10,
+    speedDefaultCS: -1,
+    cost: 12000,
+    description: 'Grants 10 Damage Reduction. Speed default Combat Stage is -1.',
+  },
+  'Stealth Clothes': {
+    name: 'Stealth Clothes',
+    slot: 'body',
+    cost: 2000,
+    description: '+4 to Stealth Checks to remain unseen (max total +4).',
+  },
+
+  // === Head Slot ===
+  'Helmet': {
+    name: 'Helmet',
+    slot: 'head',
+    conditionalDR: { amount: 15, condition: 'Critical Hits only' },
+    cost: 2250,
+    description: '15 DR against Critical Hits. Resists Headbutt/Zen Headbutt flinch.',
+  },
+  'Dark Vision Goggles': {
+    name: 'Dark Vision Goggles',
+    slot: 'head',
+    cost: 1000,
+    description: 'Grants the Darkvision Capability while worn.',
+  },
+  'Gas Mask': {
+    name: 'Gas Mask',
+    slot: 'head',
+    cost: 1500,
+    description: 'Breathe through toxins/smoke. Immune to powder and gas moves.',
+  },
+
+  // === Off-Hand Slot ===
+  'Light Shield': {
+    name: 'Light Shield',
+    slot: 'offHand',
+    evasionBonus: 2,
+    canReady: true,
+    readiedBonuses: { evasionBonus: 4, damageReduction: 10, appliesSlowed: true },
+    cost: 3000,
+    description: '+2 Evasion. Readied: +4 Evasion, 10 DR, but Slowed.',
+  },
+  'Heavy Shield': {
+    name: 'Heavy Shield',
+    slot: 'offHand',
+    evasionBonus: 2,
+    canReady: true,
+    readiedBonuses: { evasionBonus: 6, damageReduction: 15, appliesSlowed: true },
+    cost: 4500,
+    description: '+2 Evasion. Readied: +6 Evasion, 15 DR, but Slowed.',
+  },
+
+  // === Feet Slot ===
+  'Running Shoes': {
+    name: 'Running Shoes',
+    slot: 'feet',
+    cost: 2000,
+    description: '+2 Athletics (max +3), +1 Overland Speed.',
+  },
+  'Snow Boots': {
+    name: 'Snow Boots',
+    slot: 'feet',
+    cost: 1500,
+    description: 'Naturewalk (Tundra), -1 Overland on ice/deep snow.',
+  },
+
+  // === Accessory Slot ===
+  'Focus (Attack)': {
+    name: 'Focus (Attack)',
+    slot: 'accessory',
+    statBonus: { stat: 'attack', value: 5 },
+    cost: 6000,
+    description: '+5 Attack (applied after Combat Stages).',
+  },
+  'Focus (Defense)': {
+    name: 'Focus (Defense)',
+    slot: 'accessory',
+    statBonus: { stat: 'defense', value: 5 },
+    cost: 6000,
+    description: '+5 Defense (applied after Combat Stages).',
+  },
+  'Focus (Special Attack)': {
+    name: 'Focus (Special Attack)',
+    slot: 'accessory',
+    statBonus: { stat: 'specialAttack', value: 5 },
+    cost: 6000,
+    description: '+5 Special Attack (applied after Combat Stages).',
+  },
+  'Focus (Special Defense)': {
+    name: 'Focus (Special Defense)',
+    slot: 'accessory',
+    statBonus: { stat: 'specialDefense', value: 5 },
+    cost: 6000,
+    description: '+5 Special Defense (applied after Combat Stages).',
+  },
+  'Focus (Speed)': {
+    name: 'Focus (Speed)',
+    slot: 'accessory',
+    statBonus: { stat: 'speed', value: 5 },
+    cost: 6000,
+    description: '+5 Speed (applied after Combat Stages).',
+  },
+}
+
+/** Valid equipment slot names */
+export const EQUIPMENT_SLOTS: readonly EquipmentSlot[] = [
+  'head', 'body', 'mainHand', 'offHand', 'feet', 'accessory'
+] as const
