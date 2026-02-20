@@ -13,6 +13,8 @@ interface EncounterRecord {
   name: string
   battleType: string
   weather: string | null
+  weatherDuration: number
+  weatherSource: string | null
   combatants: string
   currentRound: number
   currentTurnIndex: number
@@ -41,6 +43,8 @@ export interface ParsedEncounter {
   name: string
   battleType: string
   weather?: string | null
+  weatherDuration: number
+  weatherSource?: string | null
   combatants: Combatant[]
   currentRound: number
   currentTurnIndex: number
@@ -198,6 +202,8 @@ export function buildEncounterResponse(
     name: record.name,
     battleType: record.battleType,
     weather: record.weather ?? null,
+    weatherDuration: record.weatherDuration ?? 0,
+    weatherSource: record.weatherSource ?? null,
     combatants,
     currentRound: options?.currentRound ?? record.currentRound,
     currentTurnIndex: options?.currentTurnIndex ?? record.currentTurnIndex,
