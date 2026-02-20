@@ -482,7 +482,13 @@ git push
 If the branch has no upstream, use `git push -u origin <branch>`.
 
 ### Step E4: Process Pending Tickets
-If any domains have completed matrix + audit but tickets haven't been created (M2), process them now. Create all pending tickets before closing.
+Create all pending tickets before closing:
+- M2 tickets from completed matrix + audit domains
+- Bug tickets from any CRITICAL/HIGH audit items not yet ticketed
+- PTU-rule tickets from any reviewer findings not yet ticketed
+- Feature/UX tickets from any matrix MISSING items not yet ticketed
+
+Scan all artifact directories to ensure nothing was missed during the session.
 
 ### Step E5: Update State Files
 Write final state to both `dev-state.md` and `test-state.md` with:
