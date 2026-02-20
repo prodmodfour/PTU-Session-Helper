@@ -373,7 +373,10 @@ const nextTurn = async () => {
 }
 
 const handleSetWeather = async (weather: string | null, source: string) => {
+  const label = weather ? `Set Weather: ${weather}` : 'Cleared Weather'
+  encounterStore.captureSnapshot(label)
   await encounterStore.setWeather(weather, source as 'move' | 'ability' | 'manual')
+  refreshUndoRedoState()
   // Wait for Vue reactivity to process the store update
   await nextTick()
   // Broadcast weather change via WebSocket
