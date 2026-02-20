@@ -260,6 +260,48 @@ test.describe('P1: Take a Breather', () => {
     expect(combatant.tempConditions).toContain('Vulnerable')
   })
 
+  test('breather does NOT cure Cursed (volatile exception, PTU p.245)', async ({ request }) => {
+    const bulbasaurId = await createPokemon(request, bulbasaurSetup)
+    pokemonIds.push(bulbasaurId)
+    const charmanderId = await createPokemon(request, charmanderSetup)
+    pokemonIds.push(charmanderId)
+
+    encounterId = await createEncounter(request, 'Breather - Cursed Survives')
+    const bulbasaurCombatantId = await addCombatant(request, encounterId, bulbasaurId, 'players')
+    await addCombatant(request, encounterId, charmanderId, 'enemies')
+    await startEncounter(request, encounterId)
+
+    // Apply Cursed (volatile but excluded from breather) + Confused (volatile, should be cured)
+    await applyStatus(request, encounterId, bulbasaurCombatantId, {
+      add: ['Cursed', 'Confused']
+    })
+
+    // Verify pre-breather state: both conditions present
+    const encounterBefore = await getEncounter(request, encounterId)
+    const bulbasaurBefore = findCombatantByEntityId(encounterBefore, bulbasaurId)
+    expect(bulbasaurBefore.entity.statusConditions).toContain('Cursed')
+    expect(bulbasaurBefore.entity.statusConditions).toContain('Confused')
+
+    // Take a Breather
+    const { breatherResult } = await takeBreather(request, encounterId, bulbasaurCombatantId)
+
+    // Cursed must NOT appear in conditionsCured (it requires GM adjudication)
+    expect(breatherResult.conditionsCured).not.toContain('Cursed')
+
+    // Confused should be cured normally
+    expect(breatherResult.conditionsCured).toContain('Confused')
+
+    // Verify post-breather state via GET
+    const encounterAfter = await getEncounter(request, encounterId)
+    const bulbasaurAfter = findCombatantByEntityId(encounterAfter, bulbasaurId)
+
+    // Cursed must still be present
+    expect(bulbasaurAfter.entity.statusConditions).toContain('Cursed')
+
+    // Confused must be gone
+    expect(bulbasaurAfter.entity.statusConditions).not.toContain('Confused')
+  })
+
   test('breather is logged in move log', async ({ request }) => {
     const bulbasaurId = await createPokemon(request, bulbasaurSetup)
     pokemonIds.push(bulbasaurId)
