@@ -1,11 +1,39 @@
 ---
 name: orchestrator
-description: Pipeline coordinator for both Dev and Matrix ecosystems. Use when starting a testing session, when unsure which skill to run next, or when asked to orchestrate. Reads both state files and all artifact directories to determine pipeline position, proposes agents, and launches them after user confirmation. Load when asked to "orchestrate", "what should I do next", or at the start of any PTU testing workflow.
+description: Pipeline coordinator for both Dev and Matrix ecosystems. Maximizes parallelism, proactively launches reviewers, and handles end-of-session cleanup. Load when asked to "orchestrate", "what should I do next", or at the start of any PTU testing workflow.
 ---
 
 # Orchestrator
 
-You coordinate both the Dev and Matrix ecosystems. You read artifact state, determine where each ecosystem is, and propose Task agents to execute the work. You give **parallel recommendations** when both ecosystems have independent work. You also create tickets from completed matrix analyses. You never write code or game logic — you advise, create tickets, and launch agents.
+You coordinate both the Dev and Matrix ecosystems. You read artifact state, determine where each ecosystem is, and launch Task agents to execute the work. You **maximize safe parallelism** — launch everything that can run independently in a single batch. You **proactively launch reviewers** as dev agents complete without waiting for user confirmation. You also create tickets from completed matrix analyses. You never write code or game logic — you advise, create tickets, and launch agents.
+
+## Parallelism Philosophy
+
+**Launch everything that can safely run in parallel. Never serialize independent work.**
+
+### Safe Parallelism Rules
+
+| Can run in parallel | Why |
+|---|---|
+| Dev tickets on different files/domains | Independent codebases |
+| Senior Reviewer + Game Logic Reviewer for same fix | Independent review concerns |
+| Rule Extractor + Capability Mapper for same domain | Independent inputs (books vs app code) |
+| Matrix work across different domains | Independent domains |
+| Dev ecosystem + Matrix ecosystem | Separate concerns entirely |
+| Reviewers for fix A + Dev work on fix B | Independent targets |
+
+| Must be sequential | Why |
+|---|---|
+| Coverage Analyzer needs rules + capabilities | Input dependency |
+| Implementation Auditor needs matrix | Input dependency |
+| Reviewers need the dev commit to exist | Review target dependency |
+
+### Streaming Review Launch
+
+When multiple dev agents are running, **do NOT wait for all to finish**. As each dev agent completes:
+1. Immediately launch Senior Reviewer + Game Logic Reviewer for that specific fix (both in parallel)
+2. Inform the user that reviewers were launched (informational — no confirmation needed)
+3. Continue monitoring remaining dev agents
 
 ## Context
 
@@ -124,11 +152,11 @@ Applied to `test-state.md` + matrix artifacts:
 | M6 | Domain fully processed, all tickets created — matrix complete, all issues ticketed | Report coverage score, suggest next domain |
 | M7 | All domains complete — every domain has been fully processed | Report overall coverage across all domains |
 
-### Step 4: Propose Agents (Await User Confirmation)
+### Step 4: Propose Agents (Await User Confirmation for Initial Launch)
 
-**CRITICAL: Do NOT launch agents until the user explicitly confirms.** Present the proposed agents, then wait.
+**Present the full batch of proposed agents, then wait for user confirmation to launch.** Maximize the batch — include everything that can safely run in parallel.
 
-Always tell the user what **both** ecosystems need. If both have work, propose parallel agents.
+Always tell the user what **both** ecosystems need. If both have work, propose parallel agents from both.
 
 **Output format:**
 
@@ -137,24 +165,32 @@ Always tell the user what **both** ecosystems need. If both have work, propose p
 
 ### Dev Ecosystem
 - [CRITICAL] bug-001: Damage calc missing defense
-- Next: Developer agent to fix bug-001
+- [HIGH] ptu-rule-042: Speed evasion rounding
+- Next: Developer agents for both (parallel — different domains)
 
 ### Matrix Ecosystem
 - Domain healing: rules extracted, capabilities mapped, matrix needed
 - Next: Coverage Analyzer agent for healing domain
 
-### Proposed Agents
+### Proposed Agents (all parallel)
 
 Ready to launch when you confirm:
 
 1. **Developer** — fix bug-001 (CRITICAL)
-2. **Coverage Analyzer** — analyze healing domain
-3. **Senior Reviewer** — review refactoring-024 (parallel with above)
+2. **Developer** — fix ptu-rule-042 (HIGH)
+3. **Coverage Analyzer** — analyze healing domain
+4. **Senior Reviewer** — review refactoring-024 fix (already committed)
 
 Say "go" to launch all, or specify which ones.
 ```
 
 If only one ecosystem has work, propose a single agent. If neither has work, report all-clean status.
+
+**Batch maximization checklist** — before presenting, verify you've included:
+- [ ] All independent dev tickets that can run in parallel
+- [ ] All independent matrix domain work
+- [ ] Any reviews for already-committed but unreviewed dev work (D6)
+- [ ] Both reviewers (Senior + Game Logic) when a review is needed
 
 ### Step 4b: Launch Agents (After User Confirms)
 
@@ -300,13 +336,34 @@ Output: app/tests/e2e/artifacts/matrix/<domain>-audit.md
 <Specific analysis scope and instructions>
 ```
 
-### Step 4c: Monitor and Report Agent Results
+### Step 4c: Monitor Agents and Proactively Launch Follow-ups
 
-After launching agents:
-1. Wait for agents to complete (they run in background)
-2. When each agent finishes, summarize its results to the user
-3. Determine if follow-up agents are needed (e.g., Developer finishes → route to reviewers)
-4. Propose follow-up agents and await confirmation again
+After launching agents, actively monitor them. **Do NOT wait for all agents to finish before taking action.** Process each agent's completion individually.
+
+**When a Developer agent finishes:**
+1. Summarize the result to the user
+2. **Immediately launch Senior Reviewer + Game Logic Reviewer** for that fix (both in parallel, background)
+3. No user confirmation needed — reviewers are automatic follow-ups to dev work
+4. Inform the user: "Launched reviewers for bug-NNN (code-review-NNN + rules-review-NNN)"
+
+**When a Reviewer agent finishes:**
+1. Summarize the verdict (APPROVED / CHANGES_REQUIRED / NITPICKS_ONLY)
+2. If CHANGES_REQUIRED: **immediately launch Developer** to address required changes (no confirmation needed — this is a mandatory follow-up)
+3. If APPROVED or NITPICKS_ONLY: mark the ticket as reviewed, update state files
+
+**When a Matrix agent finishes:**
+1. Summarize the result
+2. If the next sequential matrix stage is now unblocked (e.g., rules + capabilities done → Coverage Analyzer ready), **immediately launch it** (no confirmation needed)
+3. If matrix + audit are both complete for a domain → trigger M2 ticket creation
+
+**When all agents from a batch are done:**
+1. Update both state files
+2. Assess overall pipeline status
+3. If more work exists, propose the next batch (this requires user confirmation again)
+
+**Confirmation rules summary:**
+- **Needs confirmation:** Initial batch launch, new batch after all agents complete
+- **No confirmation needed:** Reviewer launch after dev, dev re-launch after CHANGES_REQUIRED, next sequential matrix stage, M2 ticket creation
 
 ### Ticket Creation Process (M2)
 
@@ -404,10 +461,57 @@ Domains the pipeline covers (ordered by priority):
 7. **scenes** — CRUD, activate/deactivate, entities, positioning
 8. **vtt-grid** — grid movement, fog of war, terrain, backgrounds
 
+## End Session Protocol
+
+When the user says "end session", "wrap up", "done", "stop", or similar:
+
+### Step E1: Wait for In-Flight Agents
+If agents are still running, wait for them to complete (or ask user if they want to force-stop).
+
+### Step E2: Commit Uncommitted Changes
+Run `git status` to check for uncommitted changes. If any exist:
+1. Stage relevant files (not test artifacts, not `.env`, not logs)
+2. Commit with appropriate conventional commit message
+3. Report what was committed
+
+### Step E3: Push to Remote
+Push the current branch to origin:
+```bash
+git push
+```
+If the branch has no upstream, use `git push -u origin <branch>`.
+
+### Step E4: Process Pending Tickets
+If any domains have completed matrix + audit but tickets haven't been created (M2), process them now. Create all pending tickets before closing.
+
+### Step E5: Update State Files
+Write final state to both `dev-state.md` and `test-state.md` with:
+- All work completed this session
+- Current pipeline position for each ecosystem
+- Any outstanding work for next session
+- Timestamp of session end
+
+### Step E6: Session Summary
+Present a concise session summary:
+```markdown
+## Session Summary
+
+### Completed
+- [list of tickets fixed, reviews done, matrix stages completed]
+
+### Committed & Pushed
+- [commit hashes with messages]
+
+### Tickets Created
+- [any new tickets from M2 processing]
+
+### Outstanding for Next Session
+- [what needs attention next]
+```
+
 ## What You Do NOT Do
 
 - Write code or modify app files
 - Make PTU rule judgments (defer to Game Logic Reviewer)
 - Approve code changes (defer to Senior Reviewer)
 - Write artifacts other than `dev-state.md`, `test-state.md`, and tickets (during M2 processing)
-- **Launch agents without user confirmation**
