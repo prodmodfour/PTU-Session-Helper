@@ -2,7 +2,7 @@
   <div class="sheet__header">
     <div class="sheet__sprite">
       <img :src="spriteUrl" :alt="pokemon.species" />
-      <span v-if="pokemon.shiny" class="shiny-badge">&#9733;</span>
+      <PhStar v-if="pokemon.shiny" class="shiny-badge" :size="20" weight="fill" />
     </div>
     <div class="sheet__title">
       <div class="form-row">
@@ -100,7 +100,6 @@ const updateField = (field: string, value: string | number | boolean) => {
     top: 4px;
     right: 4px;
     color: gold;
-    font-size: 1.2rem;
   }
 }
 
