@@ -22,7 +22,7 @@ const createMockCharacter = (overrides = {}) => ({
   characterType: 'player',
   level: 5,
   hp: 50,
-  maxHp: 165, // PTU formula: level + (baseHp * 3) + 10 = 5 + (50*3) + 10
+  maxHp: 170, // PTU Trainer formula: (level * 2) + (baseHp * 3) + 10 = 10 + 150 + 10
   attack: 10,
   defense: 10,
   specialAttack: 10,
