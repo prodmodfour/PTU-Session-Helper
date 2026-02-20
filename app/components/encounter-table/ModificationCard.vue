@@ -186,8 +186,9 @@ const getEffectiveSpawnRange = (): string => {
   const range = DENSITY_RANGES[baseDensity]
   const multiplier = props.modification.densityMultiplier
 
-  const scaledMin = Math.max(1, Math.round(range.min * multiplier))
+  const rawMin = Math.max(1, Math.round(range.min * multiplier))
   const scaledMax = Math.min(MAX_SPAWN_COUNT, Math.round(range.max * multiplier))
+  const scaledMin = Math.min(rawMin, scaledMax)
 
   return `${scaledMin}-${scaledMax} Pokemon`
 }

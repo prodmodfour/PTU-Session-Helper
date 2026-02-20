@@ -109,8 +109,9 @@ export default defineEventHandler(async (event) => {
       const densityRange = DENSITY_RANGES[baseDensity] || DENSITY_RANGES.moderate
 
       // Apply modification multiplier — cap at the highest density tier max
-      const scaledMin = Math.max(1, Math.round(densityRange.min * densityMultiplier))
+      const rawMin = Math.max(1, Math.round(densityRange.min * densityMultiplier))
       const scaledMax = Math.min(MAX_SPAWN_COUNT, Math.round(densityRange.max * densityMultiplier))
+      const scaledMin = Math.min(rawMin, scaledMax)
 
       // Random count within scaled range
       count = Math.floor(Math.random() * (scaledMax - scaledMin + 1)) + scaledMin
