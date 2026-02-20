@@ -39,12 +39,12 @@
         <div class="form-row">
           <div class="form-group">
             <label>Name *</label>
-            <input v-model="humanForm.name" type="text" class="form-input" required />
+            <input v-model="creation.form.name" type="text" class="form-input" required />
           </div>
 
           <div class="form-group">
             <label>Character Type</label>
-            <select v-model="humanForm.characterType" class="form-select">
+            <select v-model="creation.form.characterType" class="form-select">
               <option value="player">Player Character</option>
               <option value="npc">NPC</option>
             </select>
@@ -54,49 +54,60 @@
         <div class="form-row">
           <div class="form-group">
             <label>Level</label>
-            <input v-model.number="humanForm.level" type="number" class="form-input" min="1" max="100" />
+            <input v-model.number="creation.form.level" type="number" class="form-input" min="1" max="100" />
           </div>
-          <div v-if="humanForm.characterType === 'npc'" class="form-group">
+          <div v-if="creation.form.characterType === 'npc'" class="form-group">
             <label>Location</label>
-            <input v-model="humanForm.location" type="text" class="form-input" placeholder="e.g., Mesagoza" />
+            <input v-model="creation.form.location" type="text" class="form-input" placeholder="e.g., Mesagoza" />
           </div>
         </div>
       </div>
 
       <div class="create-form__section">
-        <h3>Stats</h3>
+        <SkillBackgroundSection
+          :skills="creation.form.skills"
+          :background-name="creation.form.backgroundName"
+          :is-custom-background="creation.form.isCustomBackground"
+          :warnings="creation.skillWarnings.value"
+          @apply-background="creation.applyBackground"
+          @clear-background="creation.clearBackground"
+          @enable-custom-background="creation.enableCustomBackground"
+          @set-skill-rank="creation.setSkillRank"
+          @update:background-name="(name: string) => creation.form.backgroundName = name"
+        />
+      </div>
 
-        <div class="stats-grid">
-          <div class="form-group">
-            <label>HP</label>
-            <input v-model.number="humanForm.hp" type="number" class="form-input" min="1" />
-          </div>
-          <div class="form-group">
-            <label>Attack</label>
-            <input v-model.number="humanForm.attack" type="number" class="form-input" min="1" />
-          </div>
-          <div class="form-group">
-            <label>Defense</label>
-            <input v-model.number="humanForm.defense" type="number" class="form-input" min="1" />
-          </div>
-          <div class="form-group">
-            <label>Sp. Attack</label>
-            <input v-model.number="humanForm.specialAttack" type="number" class="form-input" min="1" />
-          </div>
-          <div class="form-group">
-            <label>Sp. Defense</label>
-            <input v-model.number="humanForm.specialDefense" type="number" class="form-input" min="1" />
-          </div>
-          <div class="form-group">
-            <label>Speed</label>
-            <input v-model.number="humanForm.speed" type="number" class="form-input" min="1" />
-          </div>
-        </div>
+      <div class="create-form__section">
+        <StatAllocationSection
+          :stat-points="creation.form.statPoints"
+          :computed-stats="creation.computedStats.value"
+          :stat-points-remaining="creation.statPointsRemaining.value"
+          :max-hp="creation.maxHp.value"
+          :evasions="creation.evasions.value"
+          :warnings="creation.statWarnings.value"
+          @increment="creation.incrementStat"
+          @decrement="creation.decrementStat"
+        />
       </div>
 
       <div class="create-form__section">
         <h3>Notes</h3>
-        <textarea v-model="humanForm.notes" class="form-input" rows="3" placeholder="Additional notes..."></textarea>
+        <textarea v-model="creation.form.notes" class="form-input" rows="3" placeholder="Additional notes..."></textarea>
+      </div>
+
+      <div v-if="creation.allWarnings.value.length" class="create-form__section create-form__section--warnings">
+        <h3>Validation Summary</h3>
+        <div class="validation-summary">
+          <div
+            v-for="(w, i) in creation.allWarnings.value"
+            :key="i"
+            class="validation-item"
+            :class="`validation-item--${w.severity}`"
+          >
+            <span class="validation-item__section">{{ w.section }}</span>
+            {{ w.message }}
+          </div>
+        </div>
       </div>
 
       <div class="create-form__actions">
@@ -242,22 +253,10 @@ const pokemonTypes: PokemonType[] = [
   'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel', 'Fairy'
 ]
 
-// Human form
-const humanForm = ref({
-  name: '',
-  characterType: 'npc' as 'player' | 'npc',
-  level: 1,
-  location: '',
-  hp: 10,
-  attack: 5,
-  defense: 5,
-  specialAttack: 5,
-  specialDefense: 5,
-  speed: 5,
-  notes: ''
-})
+// Human form via composable
+const creation = useCharacterCreation()
 
-// Pokemon form
+// Pokemon form (unchanged)
 const pokemonForm = ref({
   species: '',
   nickname: '',
@@ -279,28 +278,11 @@ const pokemonForm = ref({
 const createHuman = async () => {
   creating.value = true
   try {
-    const data = {
-      name: humanForm.value.name,
-      characterType: humanForm.value.characterType,
-      level: humanForm.value.level,
-      location: humanForm.value.location || undefined,
-      stats: {
-        hp: humanForm.value.hp,
-        attack: humanForm.value.attack,
-        defense: humanForm.value.defense,
-        specialAttack: humanForm.value.specialAttack,
-        specialDefense: humanForm.value.specialDefense,
-        speed: humanForm.value.speed
-      },
-      currentHp: humanForm.value.hp,
-      maxHp: humanForm.value.hp,
-      notes: humanForm.value.notes
-    }
-
+    const data = creation.buildCreatePayload()
     await libraryStore.createHuman(data)
     router.push('/gm/sheets')
   } catch (e) {
-    console.error('Failed to create human:', e)
+    alert('Failed to create human character. Check the console for details.')
   } finally {
     creating.value = false
   }
@@ -309,7 +291,7 @@ const createHuman = async () => {
 const createPokemon = async () => {
   creating.value = true
   try {
-    // PTU HP formula: Level + (HP Base × 3) + 10
+    // PTU HP formula: Level + (HP Base * 3) + 10
     const maxHp = pokemonForm.value.level + (pokemonForm.value.baseHp * 3) + 10
 
     const data = {
@@ -346,7 +328,7 @@ const createPokemon = async () => {
     await libraryStore.createPokemon(data)
     router.push('/gm/sheets')
   } catch (e) {
-    console.error('Failed to create pokemon:', e)
+    alert('Failed to create Pokemon. Check the console for details.')
   } finally {
     creating.value = false
   }
@@ -447,6 +429,14 @@ const createPokemon = async () => {
       background-clip: text;
       font-weight: 600;
     }
+
+    &--warnings {
+      h3 {
+        background: none;
+        -webkit-text-fill-color: $color-warning;
+        color: $color-warning;
+      }
+    }
   }
 
   &__actions {
@@ -473,6 +463,36 @@ const createPokemon = async () => {
 
   @media (max-width: 600px) {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.validation-summary {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.validation-item {
+  font-size: $font-size-sm;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+
+  &__section {
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-right: $spacing-xs;
+  }
+
+  &--warning {
+    background: rgba($color-warning, 0.1);
+    border: 1px solid rgba($color-warning, 0.3);
+    color: $color-warning;
+  }
+
+  &--info {
+    background: rgba($color-info, 0.1);
+    border: 1px solid rgba($color-info, 0.3);
+    color: $color-info;
   }
 }
 </style>
