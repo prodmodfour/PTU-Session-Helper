@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-062
 priority: P2
-status: in-progress
+status: resolved
 domain: vtt-grid
 matrix_source:
   rule_ids:

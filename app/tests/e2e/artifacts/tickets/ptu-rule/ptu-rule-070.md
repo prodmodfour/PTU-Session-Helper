@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-070
 priority: P2
-status: in-progress
+status: resolved
 domain: combat
 source: rules-review-070
 created_at: 2026-02-20

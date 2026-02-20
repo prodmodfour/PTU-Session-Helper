@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-071
 priority: P2
-status: in-progress
+status: resolved
 domain: scenes
 source: code-review-081
 created_at: 2026-02-20

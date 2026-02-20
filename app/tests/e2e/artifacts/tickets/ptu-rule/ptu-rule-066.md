@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-066
 priority: P2
-status: in-progress
+status: resolved
 domain: healing
 source: code-review-079
 created_at: 2026-02-20

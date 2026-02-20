@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-073
 priority: P3
-status: in-progress
+status: resolved
 domain: combat
 source: code-review-082
 created_at: 2026-02-20

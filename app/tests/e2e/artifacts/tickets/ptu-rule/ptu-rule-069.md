@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-069
 priority: P2
-status: in-progress
+status: resolved
 domain: combat
 source: code-review-077
 created_at: 2026-02-20

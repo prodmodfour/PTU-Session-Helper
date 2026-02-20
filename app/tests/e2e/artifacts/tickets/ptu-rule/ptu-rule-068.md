@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-068
 priority: P2
-status: in-progress
+status: resolved
 domain: combat
 source: rules-review-067, code-review-077
 created_at: 2026-02-20

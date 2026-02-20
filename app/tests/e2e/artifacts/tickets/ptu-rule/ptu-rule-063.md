@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-063
 type: ptu-rule
 priority: P2
-status: in-progress
+status: resolved
 source_ecosystem: dev
 target_ecosystem: dev
 created_by: game-logic-reviewer
