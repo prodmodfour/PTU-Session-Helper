@@ -57,13 +57,18 @@
                 'target-btn--ally': target.side === 'players' || target.side === 'allies',
                 'target-btn--enemy': target.side === 'enemies',
                 'target-btn--hit': accuracyResults[target.id]?.hit,
-                'target-btn--miss': accuracyResults[target.id] && !accuracyResults[target.id].hit
+                'target-btn--miss': accuracyResults[target.id] && !accuracyResults[target.id].hit,
+                'target-btn--out-of-range': !isTargetInRange(target.id)
               }"
-              @click="toggleTarget(target.id)"
+              :disabled="!isTargetInRange(target.id)"
+              @click="handleToggleTarget(target.id)"
             >
               <div class="target-btn__main">
                 <span class="target-btn__name">{{ getTargetName(target) }}</span>
-                <span class="target-btn__hp">{{ target.entity.currentHp }}/{{ target.entity.maxHp }}</span>
+                <span v-if="!isTargetInRange(target.id)" class="target-btn__range-info">
+                  {{ getOutOfRangeReason(target.id) }}
+                </span>
+                <span v-else class="target-btn__hp">{{ target.entity.currentHp }}/{{ target.entity.maxHp }}</span>
               </div>
               <!-- Accuracy result display -->
               <div v-if="selectedTargets.includes(target.id) && accuracyResults[target.id]" class="target-btn__accuracy">
@@ -250,6 +255,10 @@ const {
   hasRolledDamage,
   hasRolledAccuracy,
   accuracyResults,
+  // Range & LoS filtering
+  targetRangeStatus,
+  inRangeTargets,
+  outOfRangeTargets,
   // STAB
   hasSTAB,
   effectiveDB,
@@ -279,6 +288,22 @@ const {
   canConfirm,
   getConfirmData
 } = useMoveCalculation(moveRef, actorRef, targetsRef)
+
+// Helper to check if a target is in range
+const isTargetInRange = (targetId: string): boolean => {
+  return targetRangeStatus.value[targetId]?.inRange !== false
+}
+
+// Helper to get out-of-range reason for a target
+const getOutOfRangeReason = (targetId: string): string => {
+  return targetRangeStatus.value[targetId]?.reason ?? 'Out of range'
+}
+
+// Wrap toggleTarget to prevent selecting out-of-range targets
+const handleToggleTarget = (targetId: string) => {
+  if (!isTargetInRange(targetId)) return
+  toggleTarget(targetId)
+}
 
 // Use shared composable for name resolution
 const getTargetName = getCombatantName
@@ -481,6 +506,18 @@ const confirm = () => {
     opacity: 0.7;
   }
 
+  &--out-of-range {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: transparent;
+    background: rgba($color-text-muted, 0.05);
+
+    &:hover {
+      background: rgba($color-text-muted, 0.05);
+      border-color: transparent;
+    }
+  }
+
   &__name {
     font-weight: 500;
   }
@@ -488,6 +525,12 @@ const confirm = () => {
   &__hp {
     font-size: $font-size-sm;
     color: $color-text-muted;
+  }
+
+  &__range-info {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-style: italic;
   }
 
   &__accuracy {

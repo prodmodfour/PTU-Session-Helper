@@ -1,6 +1,7 @@
 import type { Move, Combatant, Pokemon } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
+import { useTerrainStore } from '~/stores/terrain'
 
 export interface TargetDamageCalc {
   targetId: string
@@ -59,12 +60,96 @@ export function useMoveCalculation(
 
   const { getCombatantNameById } = useCombatantDisplay()
 
+  const { parseRange, isInRange } = useRangeParser()
+  const terrainStore = useTerrainStore()
+
   // State
   const selectedTargets = ref<string[]>([])
   const damageRollResult = ref<DiceRollResult | null>(null)
   const hasRolledDamage = ref(false)
   const hasRolledAccuracy = ref(false)
   const accuracyResults = ref<Record<string, AccuracyResult>>({})
+
+  // =====================================
+  // Range & Line-of-Sight Filtering
+  // =====================================
+
+  const parsedMoveRange = computed(() => parseRange(move.value.range))
+
+  /**
+   * Blocking terrain check function for line-of-sight validation.
+   * Returns true if the cell at (x, y) contains blocking terrain.
+   */
+  const isBlockingTerrain = (x: number, y: number): boolean => {
+    return terrainStore.getTerrainAt(x, y) === 'blocking'
+  }
+
+  /**
+   * Determine whether each target is in range and has line of sight
+   * from the attacker. Returns a map of combatant ID -> { inRange, reason }.
+   *
+   * When positions are not available on the grid (non-VTT encounters),
+   * all targets are considered in range.
+   */
+  const targetRangeStatus = computed((): Record<string, { inRange: boolean; reason?: string }> => {
+    const status: Record<string, { inRange: boolean; reason?: string }> = {}
+    const actorPos = actor.value.position
+
+    for (const target of targets.value) {
+      // If actor has no position, all targets are in range (non-VTT encounter)
+      if (!actorPos) {
+        status[target.id] = { inRange: true }
+        continue
+      }
+
+      // If target has no position, consider in range (not placed on grid yet)
+      if (!target.position) {
+        status[target.id] = { inRange: true }
+        continue
+      }
+
+      const result = isInRange(
+        actorPos,
+        target.position,
+        parsedMoveRange.value,
+        isBlockingTerrain
+      )
+
+      if (result) {
+        status[target.id] = { inRange: true }
+      } else {
+        // Determine reason for out-of-range
+        // Check if it's a LoS issue by testing without blocking function
+        const inRangeWithoutLoS = isInRange(
+          actorPos,
+          target.position,
+          parsedMoveRange.value
+        )
+
+        if (inRangeWithoutLoS) {
+          status[target.id] = { inRange: false, reason: 'Blocked by terrain (no line of sight)' }
+        } else {
+          status[target.id] = { inRange: false, reason: 'Out of range' }
+        }
+      }
+    }
+
+    return status
+  })
+
+  /**
+   * Targets filtered to only those in range and with line of sight.
+   */
+  const inRangeTargets = computed((): Combatant[] => {
+    return targets.value.filter(t => targetRangeStatus.value[t.id]?.inRange !== false)
+  })
+
+  /**
+   * Targets that are out of range or blocked by terrain.
+   */
+  const outOfRangeTargets = computed((): Combatant[] => {
+    return targets.value.filter(t => targetRangeStatus.value[t.id]?.inRange === false)
+  })
 
   // =====================================
   // STAB Calculations
@@ -459,6 +544,12 @@ export function useMoveCalculation(
     hasRolledDamage,
     hasRolledAccuracy,
     accuracyResults,
+
+    // Range & LoS filtering
+    parsedMoveRange,
+    targetRangeStatus,
+    inRangeTargets,
+    outOfRangeTargets,
 
     // STAB
     actorTypes,
