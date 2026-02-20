@@ -3,7 +3,7 @@
 // Status conditions (PTU 1.05)
 export type StatusCondition =
   | 'Burned' | 'Frozen' | 'Paralyzed' | 'Poisoned' | 'Badly Poisoned'
-  | 'Asleep' | 'Confused' | 'Flinched' | 'Infatuated' | 'Cursed'
+  | 'Asleep' | 'Bad Sleep' | 'Confused' | 'Flinched' | 'Infatuated' | 'Cursed'
   | 'Disabled' | 'Enraged' | 'Suppressed'
   | 'Stuck' | 'Slowed' | 'Trapped' | 'Fainted'
   | 'Tripped' | 'Vulnerable';

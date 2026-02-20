@@ -9,8 +9,8 @@ export const PERSISTENT_CONDITIONS: StatusCondition[] = [
 ]
 
 export const VOLATILE_CONDITIONS: StatusCondition[] = [
-  'Asleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed', 'Disabled',
-  'Enraged', 'Suppressed'
+  'Asleep', 'Bad Sleep', 'Confused', 'Flinched', 'Infatuated', 'Cursed',
+  'Disabled', 'Enraged', 'Suppressed'
 ]
 
 export const OTHER_CONDITIONS: StatusCondition[] = [
@@ -34,6 +34,7 @@ export function getConditionClass(condition: StatusCondition): string {
     'Poisoned': 'condition--poison',
     'Badly Poisoned': 'condition--poison',
     'Asleep': 'condition--sleep',
+    'Bad Sleep': 'condition--sleep',
     'Confused': 'condition--confusion',
     'Fainted': 'condition--fainted',
     'Flinched': 'condition--flinch',
