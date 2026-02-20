@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-050
 priority: P3
-status: in-progress
+status: resolved
 domain: capture
 matrix_source:
   rule_id: capture-R020

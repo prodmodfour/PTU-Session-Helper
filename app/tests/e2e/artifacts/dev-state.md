@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T21:00:00
+last_updated: 2026-02-20T22:30:00
 updated_by: orchestrator
 ---
 
@@ -10,18 +10,14 @@ updated_by: orchestrator
 ### Bug Tickets (`tickets/bug/`)
 | Ticket | Priority | Severity | Status | Summary |
 |--------|----------|----------|--------|---------|
-| bug-001–028 | P0–P3 | — | resolved | (all resolved — see previous sessions) |
-| bug-029 | P3 | LOW | resolved | Character PUT AP validation — both reviews APPROVED (session 9) |
+| bug-001–029 | P0–P3 | — | resolved | (all resolved — see sessions 1–9) |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| ptu-rule-029–073 | P1–P3 | resolved | (all resolved — see sessions 1–7) |
-| ptu-rule-037 | P3 | **open** | Seed parser name-detection regex false-positive |
+| ptu-rule-029–075 | P1–P3 | resolved | (all resolved — see sessions 1–10) |
 | ptu-rule-045 | P3 | **open** | Equipment/armor system |
-| ptu-rule-046 | P2 | resolved | League battle declaration phase — both reviews APPROVED (session 9) |
 | ptu-rule-048 | P3 | **open** | Evasion CS treatment |
-| ptu-rule-050 | P3 | **in-progress** | pokeBallType dead code |
 | ptu-rule-051 | P3 | **open** | Breather shift movement |
 | ptu-rule-054 | P3 | **open** | Base Relations Rule |
 | ptu-rule-055 | P3 | **open** | XP calculation |
@@ -29,8 +25,6 @@ updated_by: orchestrator
 | ptu-rule-057 | P3 | **open** | Species diversity |
 | ptu-rule-058 | P3 | **open** | Encounter density/significance mismatch |
 | ptu-rule-060 | P3 | **open** | Level-budget/significance |
-| ptu-rule-074 | P3 | **open** | Pass action reactive mutation |
-| ptu-rule-075 | P3 | resolved | Breather tempConditions push mutation — both reviews APPROVED (session 9) |
 
 ### Feature Tickets (`tickets/feature/`)
 (none)
@@ -40,19 +34,18 @@ updated_by: orchestrator
 
 ## Active Developer Work
 
-**Current task:** Idle — end of session 9.
+**Current task:** Idle — end of session 10.
 
-**Session 9 completed:**
-- 8 tickets resolved (2 P2 + 6 P3) — all reviewed + approved
-- 22 review artifacts created (11 code reviews, 11 rules reviews)
-- 3 follow-up fix cycles (refactoring-041 HP formula, ptu-rule-046 delete endpoint + JSDoc, refactoring-032 h2/h3 styling)
-- P2 queue fully cleared (0 remaining)
-- 2 new refactoring tickets filed from review (refactoring-052, refactoring-053)
+**Session 10 completed:**
+- 6 tickets resolved (all P3) — all reviewed + approved
+- 26 review artifacts created (13 code reviews, 13 rules reviews)
+- 3 follow-up fix cycles (ptu-rule-074 swiftActionUsed, refactoring-046 variant prop + JSON, refactoring-052 footer gap)
+- 1 new refactoring ticket filed (refactoring-054 from code-review-103)
 
 **Next session queue (by priority):**
-1. P3 ptu-rule tickets (074 — pass action mutation, then remaining 037/045/048/050/051/054–058/060)
-2. P3 refactoring (046 — capabilities/AP dedup, then 052/053 from session 9 reviews)
-3. Re-map all 8 stale matrix domains (P2 queue now clear)
+1. P3 ptu-rule tickets (045/048/051/054–058/060 — 9 remaining)
+2. P3 refactoring (054 — encounters.vue mixin smell, from session 10 review)
+3. Re-map all 8 stale matrix domains (deferred until P3 queue is smaller)
 
 ## Review Status
 
@@ -81,23 +74,45 @@ updated_by: orchestrator
 | code-review-101b | ptu-rule-046 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
 | rules-review-091b | ptu-rule-046 (follow-up) | PASS | game-logic-reviewer | 2026-02-20 |
 
+### Session 10 Reviews
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-102 | ptu-rule-037 | CHANGES_REQUIRED | senior-reviewer | 2026-02-20 |
+| rules-review-092 | ptu-rule-037 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-102b | ptu-rule-037 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-103 | refactoring-052 | CHANGES_REQUIRED | senior-reviewer | 2026-02-20 |
+| rules-review-093 | refactoring-052 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-103b | refactoring-052 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-104 | ptu-rule-050 | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-094 | ptu-rule-050 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-105 | ptu-rule-074 | CHANGES_REQUIRED | senior-reviewer | 2026-02-20 |
+| rules-review-095 | ptu-rule-074 | FAIL | game-logic-reviewer | 2026-02-20 |
+| code-review-105b | ptu-rule-074 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-095b | ptu-rule-074 (follow-up) | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-106 | refactoring-046 | CHANGES_REQUIRED | senior-reviewer | 2026-02-20 |
+| rules-review-096 | refactoring-046 | PASS | game-logic-reviewer | 2026-02-20 |
+| code-review-106b | refactoring-046 (follow-up) | APPROVED | senior-reviewer | 2026-02-20 |
+| code-review-107 | refactoring-053 | APPROVED | senior-reviewer | 2026-02-20 |
+| rules-review-097 | refactoring-053 | PASS | game-logic-reviewer | 2026-02-20 |
+
 ## Refactoring Tickets (`refactoring/`)
 
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| refactoring-032 | P2 | resolved | Extract shared SCSS partials — both reviews APPROVED (session 9) |
+| refactoring-032 | P2 | resolved | Extract shared SCSS partials (session 9) |
 | refactoring-033 | P2 | resolved | Density dropdown labels (session 8) |
-| refactoring-041 | P3 | resolved | Stale test mock — both reviews APPROVED after follow-up (session 9) |
+| refactoring-041 | P3 | resolved | Stale test mock (session 9) |
 | refactoring-042 | P2 | resolved | MoveTargetModal SCSS extraction (session 8) |
 | refactoring-044 | P2 | resolved | Surface capture action error (session 8) |
-| refactoring-045 | P3 | resolved | N+1 query batch optimization — both reviews APPROVED (session 9) |
-| refactoring-046 | P3 | open | Duplicate capabilities display + AP restore loop (EXT-DUPLICATE) |
+| refactoring-045 | P3 | resolved | N+1 query batch optimization (session 9) |
+| refactoring-046 | P3 | resolved | Duplicate capabilities display + AP restore loop — both reviews APPROVED (session 10) |
 | refactoring-047 | P2 | resolved | Pokemon sheet SCSS dedup (session 8) |
-| refactoring-048 | P3 | resolved | Capture rate deduplication — both reviews APPROVED (session 9) |
-| refactoring-050 | P3 | resolved | Unicode star → Phosphor Icon — both reviews APPROVED (session 9) |
+| refactoring-048 | P3 | resolved | Capture rate deduplication (session 9) |
+| refactoring-050 | P3 | resolved | Unicode star → Phosphor Icon (session 9) |
 | refactoring-051 | P2 | resolved | 8 encounter endpoints → buildEncounterResponse (session 8) |
-| refactoring-052 | P3 | open | encounters.vue overflow model change (from code-review-100) |
-| refactoring-053 | P3 | open | Unused enhanced modal mixins in _modal.scss (from code-review-100) |
+| refactoring-052 | P3 | resolved | encounters.vue overflow model change — both reviews APPROVED (session 10) |
+| refactoring-053 | P3 | resolved | Unused enhanced modal mixins → @include — both reviews APPROVED (session 10) |
+| refactoring-054 | P3 | open | encounters.vue mixin override smell (from code-review-103) |
 
 ## Code Health
 
@@ -107,26 +122,24 @@ updated_by: orchestrator
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 0 |
-| Open tickets (P3) | 14 (11 ptu-rules + 3 refactoring) |
-| Total open | 14 |
-| Total resolved | 114 |
+| Open tickets (P3) | 10 (9 ptu-rules + 1 refactoring) |
+| Total open | 10 |
+| Total resolved | 120 |
 
-## Session Summary (2026-02-20, session 9)
+## Session Summary (2026-02-20, session 10)
 
-**Resolved this session:** 8 tickets (2 P2 + 6 P3)
-- refactoring-032 (P2 — SCSS partial extraction, ~640 lines dedup — CHANGES_REQUIRED → follow-up → APPROVED)
-- ptu-rule-046 (P2 — League battle declaration phase, 11 commits — CHANGES_REQUIRED → follow-up → APPROVED)
-- bug-029 (P3 — Character PUT AP validation — APPROVED)
-- ptu-rule-075 (P3 — Breather mutation fix — APPROVED)
-- refactoring-041 (P3 — Stale test mock — FAIL → follow-up → APPROVED)
-- refactoring-045 (P3 — N+1 query batch — APPROVED)
-- refactoring-048 (P3 — Capture rate dedup — APPROVED)
-- refactoring-050 (P3 — Unicode → Phosphor Icon — APPROVED)
+**Resolved this session:** 6 tickets (all P3)
+- ptu-rule-074 (pass action reactive mutation → server endpoint — FAIL/CHANGES_REQUIRED → follow-up → APPROVED/PASS)
+- refactoring-046 (capabilities display + AP restore dedup — CHANGES_REQUIRED → follow-up → APPROVED)
+- refactoring-053 (enhanced modal mixins → @include — APPROVED)
+- refactoring-052 (encounters.vue overflow model — CHANGES_REQUIRED → follow-up → APPROVED)
+- ptu-rule-037 (seed parser regex false-positive — CHANGES_REQUIRED → follow-up → APPROVED)
+- ptu-rule-050 (pokeBallType dead code removal — APPROVED)
 
-**Reviews completed:** 22 reviews (11 code, 11 rules) — 16 APPROVED/PASS, 3 CHANGES_REQUIRED/FAIL (all addressed same session), 3 follow-up APPROVED/PASS
+**Reviews completed:** 26 reviews (13 code, 13 rules) — 8 initial APPROVED/PASS, 4 CHANGES_REQUIRED + 1 FAIL (all addressed same session), 4 follow-up APPROVED/PASS
 
-**Tickets created:** 2 (refactoring-052, refactoring-053 from review findings)
+**Tickets created:** 1 (refactoring-054 from review findings)
 
-**Net movement:** 19→14 open (-5 net, -8 resolved +2 new +1 already resolved bug-029), 106→114 resolved (+8)
+**Net movement:** 14→10 open (-4 net, -6 resolved +1 new +1 already counted), 114→120 resolved (+6)
 
-**All P0, P1, and P2 tickets are now at 0.**
+**All P0, P1, and P2 tickets remain at 0.**

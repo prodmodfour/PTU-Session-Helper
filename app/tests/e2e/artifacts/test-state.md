@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T21:00:00
+last_updated: 2026-02-20T22:30:00
 updated_by: orchestrator
 ---
 
@@ -26,22 +26,18 @@ All 8 domains fully processed through M2 ticket creation. Matrix pipeline is **c
 
 ## Staleness Status
 
-All 8 domains are stale due to sessions 5–9 code changes. **P2 queue is now clear** — re-mapping is unblocked.
+All 8 domains are stale due to sessions 5–10 code changes. Re-mapping deferred until P3 dev queue is smaller.
 
-**Session 9 changes (8 tickets resolved):**
-- **combat:** ptu-rule-046 — League battle declaration phase (new feature, significant combat domain change — re-map needed)
-- **combat:** ptu-rule-075 — Breather immutability fix (no coverage impact)
-- **combat:** refactoring-032 — SCSS extraction in CombatantDetailsPanel (no coverage impact)
-- **capture:** refactoring-048 — Capture rate dedup (structural, no coverage impact)
-- **character-lifecycle:** bug-029 — AP validation in character PUT (minor coverage improvement)
-- **character-lifecycle:** refactoring-041 — Test mock fix (no coverage impact)
-- **healing:** refactoring-045 — N+1 query optimization in new-day + activate (no coverage impact)
-- **pokemon-lifecycle:** refactoring-050 — Shiny badge icon (no coverage impact)
-
-**Session 9 significantly impacts the combat domain** — League battle phases are a new feature that adds capabilities not in the current capability mapping.
+**Session 10 changes (6 tickets resolved):**
+- **combat:** ptu-rule-074 — New pass server endpoint (new capability to map)
+- **capture:** ptu-rule-050 — Removed dead pokeBallType parameter (minor capability change)
+- **character-lifecycle:** refactoring-046 — Extracted CapabilitiesDisplay.vue (structural, no coverage impact)
+- **scenes:** refactoring-046 — Extracted restoreSceneAp() service (structural, no coverage impact)
+- **combat/scenes/capture:** refactoring-052, refactoring-053 — SCSS-only changes (no coverage impact)
+- **pokemon-generation:** ptu-rule-037 — Seed parser skip list fix (no coverage impact)
 
 ## Recommended Next Steps
 
-1. **Re-map combat domain first** — ptu-rule-046 added League battle phases (new capabilities to map)
-2. Re-map remaining 7 domains (mostly structural changes, lower priority)
-3. Continue P3 ticket queue in Dev ecosystem
+1. Continue burning through P3 dev ticket queue (9 ptu-rule + 1 refactoring remaining)
+2. Re-map all 8 domains once P3 queue is clear or nearly clear
+3. Combat domain is most impacted — pass endpoint + League battle phases are new capabilities
