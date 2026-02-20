@@ -4,7 +4,7 @@ ticket_id: ptu-rule-055
 category: FEATURE_GAP
 scope: FULL
 domain: pokemon-lifecycle
-status: p0-complete
+status: p1-complete
 affected_files:
   - app/server/api/encounters/[id]/end.post.ts
   - app/server/services/encounter.service.ts
@@ -614,3 +614,39 @@ The distribute endpoint is idempotent in the sense that it adds XP to current va
 | **M3** (MEDIUM): Duplicated enrichment logic | Extracted `enrichDefeatedEnemies()` + `RawDefeatedEnemy` type into `experienceCalculation.ts`, updated both endpoints | 4dac196 |
 | **M2** (MEDIUM): Missing app-surface.md entries | Added xp-calculate and xp-distribute to encounters API section | 1df3717 |
 | **M1** (MEDIUM): Per-player validation gap | Added TODO comment documenting the pool-level vs per-player validation gap, deferred to P1 | c062fb0 |
+
+### P1 Implementation (2026-02-20)
+
+**Status:** Complete
+
+**Commits:** 5a388a4, 8119970, 79fc199, ebb1706, b078693, ad5c421
+
+**Files created/modified:**
+
+| Action | File | Notes |
+|--------|------|-------|
+| **EDIT** | `app/prisma/schema.prisma` | Added `xpDistributed Boolean @default(false)` to Encounter model |
+| **EDIT** | `app/server/services/encounter.service.ts` | Added `xpDistributed` to EncounterRecord, ParsedEncounter, and buildEncounterResponse |
+| **EDIT** | `app/types/encounter.ts` | Added optional `xpDistributed?: boolean` to Encounter type |
+| **EDIT** | `app/server/api/encounters/[id]/xp-distribute.post.ts` | Sets xpDistributed=true after successful distribution; updated TODO comment |
+| **EDIT** | `app/stores/encounter.ts` | Added `calculateXp()` and `distributeXp()` actions wrapping API endpoints |
+| **NEW** | `app/components/encounter/XpDistributionModal.vue` | Full post-combat XP distribution modal with per-player validation |
+| **EDIT** | `app/pages/gm/index.vue` | Replaced confirm() with XpDistributionModal when defeatedEnemies.length > 0 |
+
+**Features implemented:**
+- Defeated enemies list with species, level, type tags (Pokemon/Trainer)
+- Significance multiplier selector (preset dropdown + custom number input)
+- Player count (auto-detected from combatants, editable)
+- Boss encounter toggle
+- Live-updating XP per player calculation
+- Per-player distribution section with XP input fields per Pokemon
+- Per-player XP validation (prevents one player taking another's share — M1 fix from code-review-117)
+- Split Evenly button per player
+- Level-up preview inline
+- Results summary after distribution (species, XP gained, level changes, new moves/abilities/tutor points)
+- xpDistributed safety flag with warning banner on re-distribution
+- Skip XP and Apply XP flow both proceed to end encounter
+
+**Design deviations:**
+- Player count detected from combatant owners (props) rather than from API response to avoid double API call on mount
+- Modal uses Teleport to body (consistent with GMActionModal pattern in the codebase)

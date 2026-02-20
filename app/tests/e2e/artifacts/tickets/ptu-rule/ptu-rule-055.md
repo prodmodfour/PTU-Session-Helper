@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-055
 priority: P3
-status: p0-complete
+status: p1-complete
 design_spec: designs/design-xp-system-001.md
 domain: pokemon-lifecycle
 matrix_source:
@@ -25,4 +25,6 @@ No XP calculation or distribution system. The GM manually updates each Pokemon's
 
 ## Implementation Status
 
-**P0 complete (2026-02-20):** XP calculation utility, calculation preview API, distribution API, and damage.post.ts type field edit. P1 (UI modal) and P2 (level-up notifications) remain.
+**P0 complete (2026-02-20):** XP calculation utility, calculation preview API, distribution API, and damage.post.ts type field edit.
+
+**P1 complete (2026-02-20):** XpDistributionModal with full per-player validation, live XP calculation, level-up previews, results summary, xpDistributed safety flag, and end-encounter integration. P2 (level-up notifications) remains.
