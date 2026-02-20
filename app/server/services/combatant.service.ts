@@ -508,6 +508,7 @@ export function buildHumanEntityFromRecord(record: PrismaHumanRecord): HumanChar
     drainedAp: record.drainedAp,
     boundAp: record.boundAp,
     currentAp: record.currentAp,
+    equipment: record.equipment ? JSON.parse(record.equipment) : {},
     inventory: JSON.parse(record.inventory),
     money: record.money,
     avatarUrl: record.avatarUrl ?? undefined,
