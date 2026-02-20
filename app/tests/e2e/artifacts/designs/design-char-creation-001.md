@@ -201,8 +201,8 @@ export const SAMPLE_BACKGROUNDS: TrainerBackground[] = [
   {
     name: 'Hermit',
     description: 'You don\'t like people, and they tend to not like you.',
-    adeptSkill: 'Perception',
-    noviceSkill: 'Perception', // "Adept Education Skill, Novice Perception" — see note
+    adeptSkill: 'Occult Ed', // PTU: "Adept Education Skill" — player's choice; Occult Ed as default
+    noviceSkill: 'Perception',
     patheticSkills: ['Charm', 'Guile', 'Intuition']
   },
   {
@@ -874,7 +874,7 @@ pages/gm/create.vue
 - Background presets encode a single default for backgrounds with choice options (flagged for P1 enhancement)
 - Custom background mode provides Adept/Novice dropdowns and Pathetic checkboxes (max 3)
 - Validation is soft warnings only -- shown in summary section but never blocks form submission
-- Hermit background encodes `Perception` Adept / `Survival` Novice as default (PTU variant noted in comment)
+- Hermit background encodes `Occult Ed` Adept / `Perception` Novice per PTU Core p.14 (corrected in rules-review-108 fix)
 
 **Commits:**
 1. `feat: add PTU trainer skill constants and background presets`
@@ -883,3 +883,15 @@ pages/gm/create.vue
 4. `feat: add StatAllocationSection component for character creation`
 5. `feat: add SkillBackgroundSection component for character creation`
 6. `feat: integrate stat allocation and skill background into create page`
+
+### Rules Review 108 Fixes (2026-02-20)
+
+**Trigger:** rules-review-108 FAIL verdict on P0 implementation
+
+**Fixes applied:**
+1. **Hermit background** (`app/constants/trainerBackgrounds.ts`) -- Changed `adeptSkill` from `'Perception'` to `'Occult Ed'` and `noviceSkill` from `'Survival'` to `'Perception'` per PTU Core p.14: "Adept Education Skill, Novice Perception". Pathetic skills already correct.
+2. **Evasion cap** (`app/composables/useCharacterCreation.ts`) -- Added `Math.min(6, ...)` to all three evasion computations per PTU Core p.16: "You may never have more than +6 in a given Evasion from Combat Stats alone."
+
+**Commits:**
+7. `fix: correct Hermit background skill assignments per PTU Core p.14`
+8. `fix: cap evasion values at +6 per PTU Core p.16`
