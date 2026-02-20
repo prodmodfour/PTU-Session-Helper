@@ -12,7 +12,7 @@ affected_files:
   - app/pages/gm/encounter-tables.vue
   - app/components/group/CombatantDetailsPanel.vue
 estimated_scope: medium
-status: open
+status: resolved
 created_at: 2026-02-18T12:00:00
 ---
 
@@ -62,8 +62,13 @@ Estimated commits: 2-3
 - none
 
 ## Resolution Log
-<!-- Developer fills this in after refactoring -->
-- Commits: ___
-- Files changed: ___
-- New files created: ___
-- Tests passing: ___
+- Commits: 9bce538, abfe751, 3a3d093
+- Files changed: 20 files across 3 commits
+  - Finding 1 (type badge colors): `_pokemon-sheet.scss`, `PlayerLobbyView.vue`, `CombatantDetailsPanel.vue`
+  - Finding 2 (modal + btn-icon): `TableEditor.vue`, `ImportTableModal.vue`, `ModificationCard.vue`, `SaveTemplateModal.vue`, `LoadTemplateModal.vue`, `StartEncounterModal.vue`, `encounter-tables.vue`, `encounters.vue`, `encounter-tables/[id].vue`, `habitats/[id].vue`, `NewEncounterForm.vue`, `EncounterHeader.vue`, `VTTContainer.vue`, `gm.vue`
+  - Finding 3 (sheet styles): `pokemon/[id].vue`, `characters/[id].vue`
+  - Config: `nuxt.config.ts`
+- New files created:
+  - `app/assets/scss/_modal.scss` (modal overlay, modal container, btn-with-icon, btn-icon-img mixins)
+  - `app/assets/scss/_sheet.scss` (sheet-page, sheet-header, sheet-back-link, sheet-loading-error, sheet-card, sheet-tab-btn, sheet-tab-content, sheet-empty-state, sheet-form-row mixins)
+- Tests passing: yes (SCSS compiles cleanly; pre-existing type errors and missing SVG icon are unrelated)
