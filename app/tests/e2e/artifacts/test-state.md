@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-21T01:30:00
+last_updated: 2026-02-20T03:15:00
 updated_by: orchestrator
 ---
 
@@ -26,7 +26,9 @@ All 8 domains fully processed through M2 ticket creation. Matrix pipeline is **c
 
 ## Staleness Status
 
-Significant code changes this session across 7 domains:
+Significant code changes across sessions 5 and 6 in multiple domains:
+
+**Session 5 changes (existing staleness):**
 - **combat:** ptu-rule-044 (movement conditions), ptu-rule-059 (scene-frequency moves), ptu-rule-061 (weather duration)
 - **capture:** ptu-rule-049 (poison stacking fix, Bad Sleep)
 - **healing:** ptu-rule-052 (daily move rolling window), ptu-rule-053 (bound AP)
@@ -35,12 +37,17 @@ Significant code changes this session across 7 domains:
 - **pokemon-lifecycle:** refactoring-043 (page decomposition, no logic changes)
 - **scenes:** ptu-rule-061 (weather duration on encounters)
 
-All fixes are correctness improvements. Coverage scores would increase after re-mapping. Re-mapping is **optional** — recommend deferring until CHANGES_REQUIRED fixes are resolved.
+**Session 6 changes (new staleness):**
+- **combat:** ptu-rule-067 (Stuck=0), ptu-rule-068 (Speed CS additive), ptu-rule-069 (Sprint persistence), ptu-rule-070 (move frequency EOT/scene caps), ptu-rule-071 (weather undo/redo)
+- **healing:** ptu-rule-066 (new-day daily move counter reset)
+- **vtt-grid:** ptu-rule-067, 068 (movement modifiers rewritten)
+
+All fixes are correctness improvements. Coverage scores would increase after re-mapping. Re-mapping is **recommended** after session 6 reviews complete.
 
 ## Recommended Next Steps
 
-1. **Fix CHANGES_REQUIRED:** ptu-rule-067 (Stuck=0), ptu-rule-068 (Speed CS additive), ptu-rule-069 (Sprint persistence) → re-review VTT batch
-2. **P1 fix:** ptu-rule-065 (encounter end boundAp clearing)
-3. **Mark approved tickets resolved:** ptu-rule-049, 052, 053, 059, 061, 064, refactoring-043
-4. **Continue P2 queue:** remaining ptu-rule and refactoring tickets
-5. **Re-map when ready:** Capability Mapper + Coverage Analyzer for all stale domains
+1. **Review session 6 implementations** (7 tickets) — Senior Reviewer + Game Logic Reviewer
+2. **Address any CHANGES_REQUIRED** from reviews
+3. **Re-review VTT batch** (ptu-rule-044, 062, 063) — root causes (Stuck, Speed CS) now fixed
+4. **Re-map stale domains** when ready — all 8 domains have code changes since last capability mapping
+5. **Continue P2/P3 queue** — remaining ptu-rule and refactoring tickets
