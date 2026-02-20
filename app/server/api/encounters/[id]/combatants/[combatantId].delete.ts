@@ -23,9 +23,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Parse combatants
+  // Parse combatants and turn orders
   const combatants = JSON.parse(encounter.combatants || '[]')
   const turnOrder = JSON.parse(encounter.turnOrder || '[]')
+  const trainerTurnOrder = JSON.parse(encounter.trainerTurnOrder || '[]')
+  const pokemonTurnOrder = JSON.parse(encounter.pokemonTurnOrder || '[]')
 
   // Find and remove combatant
   const combatantIndex = combatants.findIndex((c: any) => c.id === combatantId)
@@ -39,10 +41,18 @@ export default defineEventHandler(async (event) => {
 
   combatants.splice(combatantIndex, 1)
 
-  // Remove from turn order
+  // Remove from all turn orders
   const turnOrderIndex = turnOrder.indexOf(combatantId)
   if (turnOrderIndex !== -1) {
     turnOrder.splice(turnOrderIndex, 1)
+  }
+  const trainerIdx = trainerTurnOrder.indexOf(combatantId)
+  if (trainerIdx !== -1) {
+    trainerTurnOrder.splice(trainerIdx, 1)
+  }
+  const pokemonIdx = pokemonTurnOrder.indexOf(combatantId)
+  if (pokemonIdx !== -1) {
+    pokemonTurnOrder.splice(pokemonIdx, 1)
   }
 
   // Adjust current turn index if needed
@@ -57,6 +67,8 @@ export default defineEventHandler(async (event) => {
     data: {
       combatants: JSON.stringify(combatants),
       turnOrder: JSON.stringify(turnOrder),
+      trainerTurnOrder: JSON.stringify(trainerTurnOrder),
+      pokemonTurnOrder: JSON.stringify(pokemonTurnOrder),
       currentTurnIndex
     }
   })
