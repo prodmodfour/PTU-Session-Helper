@@ -341,13 +341,15 @@ const defeatedEnemies = computed(() => props.encounter.defeatedEnemies)
 // Whether XP was already distributed
 const xpAlreadyDistributed = computed(() => props.encounter.xpDistributed === true)
 
-// Auto-detect player count from unique owners of player-side Pokemon
+// Auto-detect player count from unique owners of player-side Pokemon combatants
 const detectedPlayerCount = computed(() => {
-  if (!calculationResult.value) return 1
+  const playerPokemon = props.encounter.combatants.filter(
+    c => c.side === 'players' && c.type === 'pokemon'
+  )
   const ownerIds = new Set(
-    calculationResult.value.participatingPokemon
-      .filter(p => p.ownerId)
-      .map(p => p.ownerId)
+    playerPokemon
+      .map(c => (c.entity as { ownerId?: string }).ownerId)
+      .filter(Boolean)
   )
   return Math.max(1, ownerIds.size)
 })
@@ -553,9 +555,9 @@ watch(customMultiplier, () => {
 
 // Initial calculation on mount
 onMounted(async () => {
-  await recalculate()
-  // After first calculation, set detected player count
+  // Set detected player count before first API call to avoid double-fetch
   playerCount.value = detectedPlayerCount.value
+  await recalculate()
 })
 </script>
 
