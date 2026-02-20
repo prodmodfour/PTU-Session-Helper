@@ -11,10 +11,54 @@
         <span v-if="encounter.isServed" class="badge badge--green">
           <img src="/icons/phosphor/monitor.svg" alt="" class="badge-icon" /> Served to Group
         </span>
+
+        <!-- Weather Badge -->
+        <span v-if="encounter.weather" class="badge badge--weather" :title="weatherTooltip">
+          <img src="/icons/phosphor/cloud.svg" alt="" class="badge-icon" />
+          {{ weatherLabel }}
+          <span v-if="encounter.weatherDuration > 0" class="weather-counter">
+            ({{ encounter.weatherDuration }}r)
+          </span>
+          <span v-else-if="encounter.weatherSource === 'manual'" class="weather-counter">
+            (manual)
+          </span>
+        </span>
       </div>
     </div>
 
     <div class="encounter-header__actions">
+      <!-- Weather Control -->
+      <div class="weather-control">
+        <select
+          class="weather-select"
+          :value="encounter.weather ?? ''"
+          @change="handleWeatherChange"
+          title="Set weather condition"
+        >
+          <option value="">No Weather</option>
+          <option value="sunny">Sunny</option>
+          <option value="rain">Rain</option>
+          <option value="sandstorm">Sandstorm</option>
+          <option value="hail">Hail</option>
+          <option value="snow">Snow</option>
+          <option value="fog">Fog</option>
+          <option value="harsh_sunlight">Harsh Sunlight</option>
+          <option value="heavy_rain">Heavy Rain</option>
+          <option value="strong_winds">Strong Winds</option>
+        </select>
+        <select
+          v-if="encounter.weather"
+          class="weather-source-select"
+          :value="encounter.weatherSource ?? 'manual'"
+          @change="handleSourceChange"
+          title="Weather source (determines duration)"
+        >
+          <option value="manual">Manual</option>
+          <option value="move">Move (5 rounds)</option>
+          <option value="ability">Ability (5 rounds)</option>
+        </select>
+      </div>
+
       <!-- Serve/Unserve Buttons -->
       <button
         v-if="!encounter.isServed"
@@ -98,6 +142,18 @@
 <script setup lang="ts">
 import type { Encounter } from '~/types'
 
+const WEATHER_LABELS: Record<string, string> = {
+  sunny: 'Sunny',
+  rain: 'Rain',
+  sandstorm: 'Sandstorm',
+  hail: 'Hail',
+  snow: 'Snow',
+  fog: 'Fog',
+  harsh_sunlight: 'Harsh Sunlight',
+  heavy_rain: 'Heavy Rain',
+  strong_winds: 'Strong Winds'
+}
+
 interface UndoRedoState {
   canUndo: boolean
   canRedo: boolean
@@ -105,12 +161,12 @@ interface UndoRedoState {
   nextActionName: string | null
 }
 
-defineProps<{
+const props = defineProps<{
   encounter: Encounter
   undoRedoState: UndoRedoState
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   serve: []
   unserve: []
   undo: []
@@ -120,7 +176,35 @@ defineEmits<{
   end: []
   saveTemplate: []
   showHelp: []
+  setWeather: [weather: string | null, source: string]
 }>()
+
+const weatherLabel = computed(() => {
+  if (!props.encounter.weather) return ''
+  return WEATHER_LABELS[props.encounter.weather] ?? props.encounter.weather
+})
+
+const weatherTooltip = computed(() => {
+  if (!props.encounter.weather) return ''
+  const source = props.encounter.weatherSource ?? 'manual'
+  const duration = props.encounter.weatherDuration
+  if (duration > 0) {
+    return `${weatherLabel.value} - ${duration} round${duration === 1 ? '' : 's'} remaining (${source})`
+  }
+  return `${weatherLabel.value} - indefinite (${source})`
+})
+
+const handleWeatherChange = (event: Event) => {
+  const value = (event.target as HTMLSelectElement).value
+  const weather = value || null
+  const source = weather ? (props.encounter.weatherSource ?? 'manual') : 'manual'
+  emit('setWeather', weather, source)
+}
+
+const handleSourceChange = (event: Event) => {
+  const source = (event.target as HTMLSelectElement).value
+  emit('setWeather', props.encounter.weather ?? null, source)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -142,13 +226,49 @@ defineEmits<{
   &__meta {
     display: flex;
     gap: $spacing-sm;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   &__actions {
     display: flex;
     gap: $spacing-sm;
     align-items: center;
+    flex-wrap: wrap;
   }
+}
+
+.weather-control {
+  display: flex;
+  gap: $spacing-xs;
+  align-items: center;
+  padding-right: $spacing-sm;
+  border-right: 1px solid $glass-border;
+}
+
+.weather-select,
+.weather-source-select {
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: $font-size-xs;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+}
+
+.weather-source-select {
+  max-width: 130px;
+}
+
+.weather-counter {
+  font-size: $font-size-xs;
+  opacity: 0.8;
 }
 
 .undo-redo-group {
@@ -229,6 +349,11 @@ defineEmits<{
   &--green {
     background: linear-gradient(135deg, $color-success 0%, #34d399 100%);
     box-shadow: 0 0 8px rgba($color-success, 0.4);
+  }
+  &--weather {
+    background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(#29b6f6, 0.4);
   }
 }
 

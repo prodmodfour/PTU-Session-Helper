@@ -22,6 +22,7 @@
         @end="endEncounter"
         @save-template="showSaveTemplateModal = true"
         @show-help="showShortcutsHelp = true"
+        @set-weather="handleSetWeather"
       />
 
       <!-- View Tabs & Settings Row -->
@@ -363,6 +364,19 @@ const nextTurn = async () => {
   // Wait for Vue reactivity to process the store update
   await nextTick()
   // Broadcast the turn change via WebSocket
+  if (encounterStore.encounter) {
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  }
+}
+
+const handleSetWeather = async (weather: string | null, source: string) => {
+  await encounterStore.setWeather(weather, source as 'move' | 'ability' | 'manual')
+  // Wait for Vue reactivity to process the store update
+  await nextTick()
+  // Broadcast weather change via WebSocket
   if (encounterStore.encounter) {
     send({
       type: 'encounter_update',

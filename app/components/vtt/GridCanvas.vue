@@ -134,10 +134,16 @@ const visibleTokens = computed(() => {
   })
 })
 
+// Combatant lookup (used by movement composable and template)
+const getCombatant = (combatantId: string): Combatant | undefined => {
+  return props.combatants.find(c => c.id === combatantId)
+}
+
 // Movement composable
 const movement = useGridMovement({
   tokens: tokensRef,
-  getMovementSpeed: props.getMovementSpeed
+  getMovementSpeed: props.getMovementSpeed,
+  getCombatant
 })
 
 // Interaction composable (needs to be set up before rendering)
@@ -186,6 +192,7 @@ const rendering = useGridRendering({
   getBlockedCells: movement.getBlockedCells,
   calculateMoveDistance: movement.calculateMoveDistance,
   getTerrainCostAt: movement.getTerrainCostAt,
+  getTerrainCostForCombatant: movement.getTerrainCostForCombatant,
   isValidMove: movement.isValidMove
 })
 
@@ -206,11 +213,6 @@ const marqueePixelRect = computed(() => {
     height: `${height}px`,
   }
 })
-
-// Methods
-const getCombatant = (combatantId: string): Combatant | undefined => {
-  return props.combatants.find(c => c.id === combatantId)
-}
 
 // Event handlers (delegate to interaction composable)
 const handleWheel = interaction.handleWheel

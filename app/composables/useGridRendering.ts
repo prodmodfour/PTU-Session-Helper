@@ -29,6 +29,7 @@ interface UseGridRenderingOptions {
   getBlockedCells: (excludeCombatantId?: string) => GridPosition[]
   calculateMoveDistance: (from: GridPosition, to: GridPosition) => number
   getTerrainCostAt: (x: number, y: number) => number
+  getTerrainCostForCombatant?: (x: number, y: number, combatantId: string) => number
   isValidMove: (from: GridPosition, to: GridPosition, combatantId: string, gridWidth: number, gridHeight: number) => { valid: boolean; distance: number; blocked: boolean }
 }
 
@@ -337,8 +338,12 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     const speed = options.getSpeed(token.combatantId)
     const blocked = options.getBlockedCells(token.combatantId)
 
-    // Pass terrain cost getter if terrain is present
-    const terrainCostGetter = terrainStore.terrainCount > 0 ? options.getTerrainCostAt : undefined
+    // Pass combatant-aware terrain cost getter if terrain is present
+    const terrainCostGetter = terrainStore.terrainCount > 0
+      ? (options.getTerrainCostForCombatant
+        ? (x: number, y: number) => options.getTerrainCostForCombatant!(x, y, token.combatantId)
+        : options.getTerrainCostAt)
+      : undefined
     const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
 
     // Draw reachable cells with cyan tint
@@ -448,7 +453,11 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     if (token) {
       const speed = options.getSpeed(token.combatantId)
       const blocked = options.getBlockedCells(token.combatantId)
-      const terrainCostGetter = terrainStore.terrainCount > 0 ? options.getTerrainCostAt : undefined
+      const terrainCostGetter = terrainStore.terrainCount > 0
+        ? (options.getTerrainCostForCombatant
+          ? (x: number, y: number) => options.getTerrainCostForCombatant!(x, y, token.combatantId)
+          : options.getTerrainCostAt)
+        : undefined
       const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
 
       // Draw reachable cells with cyan tint
