@@ -35,6 +35,11 @@ export default defineEventHandler(async (event) => {
     let currentTurnIndex = encounter.currentTurnIndex
     let currentRound = encounter.currentRound
 
+    // Weather duration tracking
+    let weather = encounter.weather
+    let weatherDuration = encounter.weatherDuration ?? 0
+    let weatherSource = encounter.weatherSource
+
     // Mark current combatant as having acted
     const currentCombatantId = turnOrder[currentTurnIndex]
     const currentCombatant = combatants.find((c: any) => c.id === currentCombatantId)
@@ -59,6 +64,18 @@ export default defineEventHandler(async (event) => {
         c.shiftActionsRemaining = 1
         c.readyAction = null
       })
+
+      // Decrement weather duration at end of round (PTU: weather lasts N rounds)
+      // Only decrement if duration is tracked (> 0) and source is not 'manual'
+      if (weather && weatherDuration > 0 && weatherSource !== 'manual') {
+        weatherDuration--
+        if (weatherDuration <= 0) {
+          // Weather expires
+          weather = null
+          weatherDuration = 0
+          weatherSource = null
+        }
+      }
     }
 
     await prisma.encounter.update({
@@ -66,7 +83,10 @@ export default defineEventHandler(async (event) => {
       data: {
         currentTurnIndex,
         currentRound,
-        combatants: JSON.stringify(combatants)
+        combatants: JSON.stringify(combatants),
+        weather,
+        weatherDuration,
+        weatherSource
       }
     })
 
@@ -74,6 +94,9 @@ export default defineEventHandler(async (event) => {
       id: encounter.id,
       name: encounter.name,
       battleType: encounter.battleType,
+      weather,
+      weatherDuration,
+      weatherSource,
       combatants,
       currentRound,
       currentTurnIndex,

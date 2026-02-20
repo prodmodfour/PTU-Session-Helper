@@ -40,6 +40,8 @@ export default defineEventHandler(async (event) => {
       name: encounter.name,
       battleType: encounter.battleType,
       weather: encounter.weather ?? null,
+      weatherDuration: encounter.weatherDuration ?? 0,
+      weatherSource: encounter.weatherSource ?? null,
       combatants: [],
       currentRound: encounter.currentRound,
       currentTurnIndex: encounter.currentTurnIndex,
