@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-051
 priority: P3
-status: in-progress
+status: resolved
 domain: healing
 matrix_source:
   rule_id: healing-R019

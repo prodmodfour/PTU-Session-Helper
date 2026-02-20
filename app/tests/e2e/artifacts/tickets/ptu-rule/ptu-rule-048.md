@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-048
 priority: P3
-status: in-progress
+status: resolved
 domain: combat
 matrix_source:
   rule_id: combat-R010

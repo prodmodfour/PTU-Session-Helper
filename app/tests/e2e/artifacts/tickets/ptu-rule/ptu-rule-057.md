@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-057
 priority: P3
-status: in-progress
+status: resolved
 domain: encounter-tables
 matrix_source:
   rule_id: encounter-tables-R012

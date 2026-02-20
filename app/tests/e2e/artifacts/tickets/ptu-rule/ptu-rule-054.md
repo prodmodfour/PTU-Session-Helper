@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-054
 priority: P3
-status: in-progress
+status: resolved
 domain: pokemon-lifecycle
 matrix_source:
   rule_id: pokemon-lifecycle-R010

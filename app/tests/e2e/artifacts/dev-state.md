@@ -15,12 +15,13 @@ updated_by: orchestrator
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| ptu-rule-029–075 | P1–P3 | resolved | (all resolved — see sessions 1–11) |
+| ptu-rule-029–076 | P1–P3 | resolved | (all resolved — see sessions 1–11) |
 | ptu-rule-045 | P3 | **in-progress** | Equipment/armor system — design spec written (`design-equipment-001.md`) |
 | ptu-rule-055 | P3 | **in-progress** | XP calculation — design spec written (`design-xp-system-001.md`) |
 | ptu-rule-056 | P3 | **in-progress** | Character creation form — design spec written (`design-char-creation-001.md`) |
 | ptu-rule-058 | P3 | **in-progress** | Encounter density/significance — design spec written (`design-density-significance-001.md`) |
 | ptu-rule-060 | P3 | **in-progress** | Level-budget/significance — design spec written (`design-level-budget-001.md`) |
+| ptu-rule-076 | P3 | **open** | Breather endpoint missing `shiftActionUsed` (from rules-review-101) |
 
 ### Feature Tickets (`tickets/feature/`)
 (none)
@@ -131,6 +132,8 @@ updated_by: orchestrator
 | refactoring-052 | P3 | resolved | encounters.vue overflow model change (session 10) |
 | refactoring-053 | P3 | resolved | Unused enhanced modal mixins → @include (session 10) |
 | refactoring-054 | P3 | resolved | encounters.vue mixin override smell — both reviews APPROVED (session 11) |
+| refactoring-055 | P3 | open | `calculateEvasion` duplication in useCombat.ts + damageCalculation.ts (from code-review-112) |
+| refactoring-056 | P3 | open | No unit tests for encounter generation endpoint (from code-review-108) |
 
 ## Code Health
 
@@ -140,9 +143,9 @@ updated_by: orchestrator
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 0 |
-| Open tickets (P3) | 5 (5 ptu-rules with design specs, awaiting implementation) |
-| Total open | 5 |
-| Total resolved | 126 |
+| Open tickets (P3) | 8 (5 ptu-rules with designs + 1 ptu-rule open + 2 refactoring) |
+| Total open | 8 |
+| Total resolved | 128 |
 
 ## Session Summary (2026-02-20, session 11)
 
@@ -164,6 +167,8 @@ updated_by: orchestrator
 
 **Reviews completed:** 11 reviews (6 code, 5 rules) — 4 initial APPROVED/PASS, 1 CHANGES_REQUIRED (addressed same session), 1 APPROVED with inline fix
 
-**Net movement:** 10→5 open (-5 net, -5 resolved as fixes, 5 remaining with designs), 120→126 resolved (+6 including refactoring-054)
+**Tickets created:** 3 (refactoring-055 from code-review-112, ptu-rule-076 from rules-review-101, refactoring-056 from code-review-108)
+
+**Net movement:** 10→8 open (-2 net, -5 resolved as fixes, +3 new from reviews), 120→128 resolved (+8 including refactoring-054 + 4 fix tickets + design status updates)
 
 **All P0, P1, and P2 tickets remain at 0.**
