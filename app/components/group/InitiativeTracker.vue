@@ -1,6 +1,8 @@
 <template>
   <aside class="initiative-tracker" v-if="combatants.length > 0">
-    <h3 class="initiative-tracker__title">Initiative</h3>
+    <h3 class="initiative-tracker__title">
+      {{ phaseTitle }}
+    </h3>
     <div class="initiative-tracker__list">
       <div
         v-for="(combatant, index) in combatants"
@@ -44,10 +46,26 @@
 import type { Combatant, Pokemon } from '~/types'
 import { getEffectiveMaxHp } from '~/utils/restHealing'
 
-defineProps<{
+const PHASE_TITLES: Record<string, string> = {
+  trainer_declaration: 'Trainer Phase',
+  trainer_resolution: 'Trainer Resolution',
+  pokemon: 'Pokemon Phase'
+}
+
+const props = defineProps<{
   combatants: Combatant[]
   currentTurnId?: string
+  currentPhase?: string
 }>()
+
+const phaseTitle = computed(() => {
+  if (!props.currentPhase || props.currentPhase === 'pokemon') {
+    // For Full Contact or Pokemon phase, just show "Initiative"
+    if (!props.currentPhase) return 'Initiative'
+    return PHASE_TITLES[props.currentPhase] ?? 'Initiative'
+  }
+  return PHASE_TITLES[props.currentPhase] ?? 'Initiative'
+})
 
 const { getSpriteUrl } = usePokemonSprite()
 const { getCombatantName } = useCombatantDisplay()

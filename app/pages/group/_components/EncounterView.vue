@@ -38,6 +38,7 @@
         <InitiativeTracker
           :combatants="sortedCombatants"
           :current-turn-id="currentCombatant?.id"
+          :current-phase="encounter?.battleType === 'trainer' ? encounter?.currentPhase : undefined"
         />
 
         <!-- Grid View -->
