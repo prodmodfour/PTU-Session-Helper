@@ -240,7 +240,7 @@ export function useCharacterCreation() {
   )
 
   const skillWarnings = computed((): CreationWarning[] =>
-    validateSkillBackground(form.skills, form.level)
+    validateSkillBackground(form.skills, form.level, form.edges)
   )
 
   const classFeatureEdgeWarnings = computed((): CreationWarning[] =>

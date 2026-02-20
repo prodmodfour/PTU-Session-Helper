@@ -52,36 +52,44 @@ export function validateStatAllocation(
  * PTU Core p. 14:
  * - Exactly 1 Adept, 1 Novice, 3 Pathetic
  * - Remaining skills stay Untrained
+ *
+ * When Skill Edges are present, rank counts may differ from the
+ * background baseline. In that case, warnings are downgraded to
+ * informational severity with clarifying text.
  */
 export function validateSkillBackground(
   skills: Record<string, string>,
-  _level: number
+  _level: number,
+  edges: string[] = []
 ): CreationWarning[] {
   const warnings: CreationWarning[] = []
   const ranks = Object.values(skills)
   const adeptCount = ranks.filter(r => r === 'Adept').length
   const noviceCount = ranks.filter(r => r === 'Novice').length
   const patheticCount = ranks.filter(r => r === 'Pathetic').length
+  const hasSkillEdges = edges.some(e => e.startsWith('Skill Edge:'))
+  const skillEdgeSuffix = hasSkillEdges ? ', including Skill Edge modifications' : ''
+  const severity = hasSkillEdges ? 'info' as const : 'warning' as const
 
   if (adeptCount !== 1) {
     warnings.push({
       section: 'skills',
-      message: `Background should set exactly 1 skill to Adept (found ${adeptCount})`,
-      severity: 'warning'
+      message: `Background should set exactly 1 skill to Adept (found ${adeptCount}${skillEdgeSuffix})`,
+      severity
     })
   }
   if (noviceCount !== 1) {
     warnings.push({
       section: 'skills',
-      message: `Background should set exactly 1 skill to Novice (found ${noviceCount})`,
-      severity: 'warning'
+      message: `Background should set exactly 1 skill to Novice (found ${noviceCount}${skillEdgeSuffix})`,
+      severity
     })
   }
   if (patheticCount !== 3) {
     warnings.push({
       section: 'skills',
-      message: `Background should set exactly 3 skills to Pathetic (found ${patheticCount})`,
-      severity: 'warning'
+      message: `Background should set exactly 3 skills to Pathetic (found ${patheticCount}${skillEdgeSuffix})`,
+      severity
     })
   }
 
