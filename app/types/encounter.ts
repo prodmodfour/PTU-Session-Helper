@@ -98,6 +98,8 @@ export interface Encounter {
   name: string;
   battleType: BattleType;
   weather?: string | null;
+  weatherDuration: number; // Rounds remaining (0 = indefinite/manual)
+  weatherSource?: string | null; // 'move', 'ability', or 'manual'
 
   // Combatants
   combatants: Combatant[];
