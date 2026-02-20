@@ -1,10 +1,18 @@
 /**
  * Execute a move in combat and log it
+ *
+ * Enforces PTU move frequency restrictions:
+ * - Scene / Scene x2 / Scene x3: limited uses per scene
+ * - EOT (Every Other Turn): cannot use on consecutive rounds
+ * - Daily / Daily x2 / Daily x3: limited uses per day
+ * - At-Will: unlimited
  */
 import { prisma } from '~/server/utils/prisma'
 import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
 import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
 import { syncDamageToDatabase } from '~/server/services/entity-update.service'
+import { checkMoveFrequency, incrementMoveUsage } from '~/utils/moveFrequency'
+import type { Move } from '~/types/character'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -25,15 +33,30 @@ export default defineEventHandler(async (event) => {
     const actor = findCombatant(combatants, body.actorId)
     const actorName = getEntityName(actor)
 
-    // Find move
-    let move = null
+    // Find move on the actor's entity
+    let move: Move | null = null
+    let moveIndex = -1
     if (actor.type === 'pokemon') {
-      const pokemonEntity = actor.entity as { moves?: Array<{ id?: string; name: string; type?: string }> }
+      const pokemonEntity = actor.entity as { moves?: Move[] }
       if (pokemonEntity.moves) {
-        move = pokemonEntity.moves.find(m => m.id === body.moveId || m.name === body.moveId)
+        moveIndex = pokemonEntity.moves.findIndex(m => m.id === body.moveId || m.name === body.moveId)
+        if (moveIndex >= 0) {
+          move = pokemonEntity.moves[moveIndex]
+        }
       }
     }
     const moveName = move?.name || body.moveId || 'Unknown Move'
+
+    // Validate frequency restrictions (only for known moves with frequency data)
+    if (move && move.frequency) {
+      const frequencyCheck = checkMoveFrequency(move, record.currentRound)
+      if (!frequencyCheck.canUse) {
+        throw createError({
+          statusCode: 400,
+          message: `Cannot use ${moveName}: ${frequencyCheck.reason}`
+        })
+      }
+    }
 
     // Process targets with full PTU damage pipeline
     const dbUpdates: Promise<unknown>[] = []
@@ -79,6 +102,30 @@ export default defineEventHandler(async (event) => {
     }).filter(Boolean)
 
     // Execute all database updates for damaged targets
+    if (dbUpdates.length > 0) {
+      await Promise.all(dbUpdates)
+    }
+
+    // Increment move usage tracking (immutably update the move on the actor)
+    if (move && moveIndex >= 0 && actor.type === 'pokemon') {
+      const pokemonEntity = actor.entity as { moves: Move[] }
+      const updatedMove = incrementMoveUsage(move, record.currentRound)
+      pokemonEntity.moves = pokemonEntity.moves.map((m, i) =>
+        i === moveIndex ? updatedMove : m
+      )
+
+      // Sync updated moves to the Pokemon's database record
+      if (actor.entityId) {
+        dbUpdates.push(
+          prisma.pokemon.update({
+            where: { id: actor.entityId },
+            data: { moves: JSON.stringify(pokemonEntity.moves) }
+          })
+        )
+      }
+    }
+
+    // Execute any remaining database updates (move usage sync)
     if (dbUpdates.length > 0) {
       await Promise.all(dbUpdates)
     }
