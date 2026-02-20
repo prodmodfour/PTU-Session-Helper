@@ -5,7 +5,7 @@
  */
 
 import { prisma } from '~/server/utils/prisma'
-import { ALL_STATUS_CONDITIONS } from '~/constants/statusConditions'
+import { ALL_STATUS_CONDITIONS, PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } from '~/constants/statusConditions'
 import { getEffectiveMaxHp } from '~/utils/restHealing'
 import { v4 as uuidv4 } from 'uuid'
 import type {
@@ -150,9 +150,15 @@ export function applyDamageToEntity(
   entity.temporaryHp = damageResult.newTempHp
   entity.injuries = damageResult.newInjuries
 
-  // PTU p248: fainting clears all Persistent and Volatile status conditions
+  // PTU p248: "When a Pokemon becomes Fainted, they are automatically
+  // cured of all Persistent and Volatile Status Conditions."
+  // "Other" conditions (Stuck, Slowed, Trapped, Tripped, Vulnerable) are NOT cleared.
   if (damageResult.fainted) {
-    entity.statusConditions = ['Fainted']
+    const conditionsToClear = [...PERSISTENT_CONDITIONS, ...VOLATILE_CONDITIONS] as StatusCondition[]
+    const survivingConditions = (entity.statusConditions || []).filter(
+      (s: StatusCondition) => !conditionsToClear.includes(s)
+    )
+    entity.statusConditions = ['Fainted', ...survivingConditions]
   }
 }
 
