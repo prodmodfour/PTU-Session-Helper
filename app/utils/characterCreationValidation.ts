@@ -5,6 +5,8 @@
  * Reference: PTU Core Chapter 2 (pp. 12-18)
  */
 
+import { TOTAL_STAT_POINTS, MAX_POINTS_PER_STAT } from '~/constants/trainerStats'
+
 export interface CreationWarning {
   section: 'stats' | 'skills' | 'edges' | 'features' | 'classes'
   message: string
@@ -25,19 +27,19 @@ export function validateStatAllocation(
   const warnings: CreationWarning[] = []
   const total = Object.values(statPoints).reduce((s, v) => s + v, 0)
 
-  if (total !== 10 && level === 1) {
+  if (total !== TOTAL_STAT_POINTS && level === 1) {
     warnings.push({
       section: 'stats',
-      message: `Level 1 trainers should allocate exactly 10 stat points (currently ${total})`,
+      message: `Level 1 trainers should allocate exactly ${TOTAL_STAT_POINTS} stat points (currently ${total})`,
       severity: 'warning'
     })
   }
 
   for (const [stat, points] of Object.entries(statPoints)) {
-    if (points > 5 && level === 1) {
+    if (points > MAX_POINTS_PER_STAT && level === 1) {
       warnings.push({
         section: 'stats',
-        message: `${stat} has ${points} added points (max 5 per stat at level 1)`,
+        message: `${stat} has ${points} added points (max ${MAX_POINTS_PER_STAT} per stat at level 1)`,
         severity: 'warning'
       })
     }
