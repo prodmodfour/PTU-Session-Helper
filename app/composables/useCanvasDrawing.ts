@@ -282,6 +282,35 @@ export function useCanvasDrawing() {
           }
         }
         break
+
+      case 'earth':
+        // Draw downward arrow pattern for earth/underground terrain
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(centerX, (y + 1) * cellSize - 8)
+        ctx.lineTo(centerX, y * cellSize + 8)
+        ctx.moveTo(centerX - 5, (y + 1) * cellSize - 14)
+        ctx.lineTo(centerX, (y + 1) * cellSize - 8)
+        ctx.lineTo(centerX + 5, (y + 1) * cellSize - 14)
+        ctx.stroke()
+        break
+
+      case 'rough':
+        // Draw jagged line pattern for rough terrain
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        const roughY = centerY
+        ctx.moveTo(x * cellSize + 4, roughY)
+        ctx.lineTo(x * cellSize + cellSize * 0.2, roughY - 5)
+        ctx.lineTo(x * cellSize + cellSize * 0.35, roughY + 3)
+        ctx.lineTo(x * cellSize + cellSize * 0.5, roughY - 4)
+        ctx.lineTo(x * cellSize + cellSize * 0.65, roughY + 5)
+        ctx.lineTo(x * cellSize + cellSize * 0.8, roughY - 3)
+        ctx.lineTo((x + 1) * cellSize - 4, roughY)
+        ctx.stroke()
+        break
     }
 
     ctx.restore()

@@ -25,12 +25,14 @@ describe('terrain store', () => {
       expect(TERRAIN_COSTS.difficult).toBe(2)
       expect(TERRAIN_COSTS.blocking).toBe(Infinity)
       expect(TERRAIN_COSTS.water).toBe(2)
+      expect(TERRAIN_COSTS.earth).toBe(Infinity)
+      expect(TERRAIN_COSTS.rough).toBe(1)
       expect(TERRAIN_COSTS.hazard).toBe(1)
       expect(TERRAIN_COSTS.elevated).toBe(1)
     })
 
     it('should have colors defined for all terrain types', () => {
-      const terrainTypes = ['normal', 'difficult', 'blocking', 'water', 'hazard', 'elevated'] as const
+      const terrainTypes = ['normal', 'difficult', 'blocking', 'water', 'earth', 'rough', 'hazard', 'elevated'] as const
 
       terrainTypes.forEach(type => {
         expect(TERRAIN_COLORS[type]).toBeDefined()
@@ -130,6 +132,34 @@ describe('terrain store', () => {
 
       expect(store.getMovementCost(0, 0, true)).toBe(2)
     })
+
+    it('should return Infinity for earth without burrow', () => {
+      const store = useTerrainStore()
+      store.setTerrain(0, 0, 'earth')
+
+      expect(store.getMovementCost(0, 0, false, false)).toBe(Infinity)
+    })
+
+    it('should return Infinity for earth with default params (no burrow)', () => {
+      const store = useTerrainStore()
+      store.setTerrain(0, 0, 'earth')
+
+      expect(store.getMovementCost(0, 0)).toBe(Infinity)
+    })
+
+    it('should return 1 for earth with burrow', () => {
+      const store = useTerrainStore()
+      store.setTerrain(0, 0, 'earth')
+
+      expect(store.getMovementCost(0, 0, false, true)).toBe(1)
+    })
+
+    it('should return 1 for rough terrain', () => {
+      const store = useTerrainStore()
+      store.setTerrain(0, 0, 'rough')
+
+      expect(store.getMovementCost(0, 0)).toBe(1)
+    })
   })
 
   describe('isPassable', () => {
@@ -170,6 +200,27 @@ describe('terrain store', () => {
     it('should return true for hazard terrain', () => {
       const store = useTerrainStore()
       store.setTerrain(0, 0, 'hazard')
+
+      expect(store.isPassable(0, 0)).toBe(true)
+    })
+
+    it('should return false for earth without burrow', () => {
+      const store = useTerrainStore()
+      store.setTerrain(0, 0, 'earth')
+
+      expect(store.isPassable(0, 0)).toBe(false)
+    })
+
+    it('should return true for earth with burrow', () => {
+      const store = useTerrainStore()
+      store.setTerrain(0, 0, 'earth')
+
+      expect(store.isPassable(0, 0, false, true)).toBe(true)
+    })
+
+    it('should return true for rough terrain', () => {
+      const store = useTerrainStore()
+      store.setTerrain(0, 0, 'rough')
 
       expect(store.isPassable(0, 0)).toBe(true)
     })

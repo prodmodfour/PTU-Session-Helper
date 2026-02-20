@@ -43,11 +43,13 @@ export interface MovementSpeeds {
 // Terrain type for map cells
 export type TerrainType =
   | 'normal'
-  | 'difficult'    // 2x movement cost
+  | 'difficult'    // 2x movement cost (PTU: Slow Terrain)
   | 'blocking'     // Cannot pass
-  | 'water'        // Requires swim
-  | 'hazard'       // Damage on entry
-  | 'elevated';    // Height difference
+  | 'water'        // Requires swim (PTU: Underwater)
+  | 'earth'        // Requires burrow (PTU: Earth Terrain)
+  | 'rough'        // -2 accuracy penalty (PTU: Rough Terrain)
+  | 'hazard'       // Damage on entry (app-specific)
+  | 'elevated';    // Height difference (app-specific)
 
 // Terrain cell data
 export interface TerrainCell {

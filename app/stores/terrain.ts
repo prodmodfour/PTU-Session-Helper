@@ -19,6 +19,8 @@ export const TERRAIN_COSTS: Record<TerrainType, number> = {
   difficult: 2,
   blocking: Infinity,
   water: 2, // Requires swim capability, else blocking
+  earth: Infinity, // Requires burrow capability, else blocking
+  rough: 1, // Normal movement cost but -2 accuracy penalty when targeting through
   hazard: 1, // Normal cost but deals damage
   elevated: 1, // Normal cost but affects line of sight
 }
@@ -29,6 +31,8 @@ export const TERRAIN_COLORS: Record<TerrainType, { fill: string; stroke: string;
   difficult: { fill: 'rgba(139, 69, 19, 0.3)', stroke: 'rgba(139, 69, 19, 0.6)' }, // Brown
   blocking: { fill: 'rgba(64, 64, 64, 0.8)', stroke: 'rgba(32, 32, 32, 1)' }, // Dark gray
   water: { fill: 'rgba(30, 144, 255, 0.4)', stroke: 'rgba(30, 144, 255, 0.7)' }, // Blue
+  earth: { fill: 'rgba(139, 90, 43, 0.5)', stroke: 'rgba(101, 67, 33, 0.8)' }, // Dark brown
+  rough: { fill: 'rgba(189, 183, 107, 0.3)', stroke: 'rgba(189, 183, 107, 0.6)' }, // Dark khaki
   hazard: { fill: 'rgba(255, 69, 0, 0.3)', stroke: 'rgba(255, 69, 0, 0.6)' }, // Red-orange
   elevated: { fill: 'rgba(144, 238, 144, 0.3)', stroke: 'rgba(144, 238, 144, 0.6)' }, // Light green
 }
@@ -64,22 +68,26 @@ export const useTerrainStore = defineStore('terrain', {
     },
 
     // Get movement cost for a cell
-    getMovementCost: (state) => (x: number, y: number, canSwim: boolean = false): number => {
+    getMovementCost: (state) => (x: number, y: number, canSwim: boolean = false, canBurrow: boolean = false): number => {
       const terrain = state.cells.get(posToKey(x, y))?.type ?? state.defaultType
 
       if (terrain === 'water' && !canSwim) {
         return Infinity // Cannot pass water without swim
+      }
+      if (terrain === 'earth') {
+        return canBurrow ? 1 : Infinity // Normal cost with burrow, impassable without
       }
 
       return TERRAIN_COSTS[terrain]
     },
 
     // Check if cell is passable
-    isPassable: (state) => (x: number, y: number, canSwim: boolean = false): boolean => {
+    isPassable: (state) => (x: number, y: number, canSwim: boolean = false, canBurrow: boolean = false): boolean => {
       const terrain = state.cells.get(posToKey(x, y))?.type ?? state.defaultType
 
       if (terrain === 'blocking') return false
       if (terrain === 'water' && !canSwim) return false
+      if (terrain === 'earth' && !canBurrow) return false
 
       return true
     },

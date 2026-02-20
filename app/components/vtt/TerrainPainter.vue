@@ -150,10 +150,10 @@ const terrainTypes = [
   },
   {
     type: 'difficult' as TerrainType,
-    label: 'Difficult',
+    label: 'Slow',
     icon: '◇',
     color: TERRAIN_COLORS.difficult.fill,
-    description: 'Difficult terrain - 2x movement cost',
+    description: 'Slow terrain - 2x movement cost (PTU: Slow Terrain)',
     costLabel: '2x',
   },
   {
@@ -169,8 +169,24 @@ const terrainTypes = [
     label: 'Water',
     icon: '≈',
     color: TERRAIN_COLORS.water.fill,
-    description: 'Water - requires swim capability',
+    description: 'Underwater terrain - requires Swim capability',
     costLabel: '2x/∞',
+  },
+  {
+    type: 'earth' as TerrainType,
+    label: 'Earth',
+    icon: '⛏',
+    color: TERRAIN_COLORS.earth.fill,
+    description: 'Earth terrain - requires Burrow capability (PTU: Earth Terrain)',
+    costLabel: '∞/1x',
+  },
+  {
+    type: 'rough' as TerrainType,
+    label: 'Rough',
+    icon: '⌇',
+    color: TERRAIN_COLORS.rough.fill,
+    description: 'Rough terrain - -2 accuracy penalty when targeting through (PTU: Rough Terrain)',
+    costLabel: '1x/-2 acc',
   },
   {
     type: 'hazard' as TerrainType,
@@ -246,7 +262,7 @@ defineExpose({
 
   &__types {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: $spacing-xs;
   }
 
