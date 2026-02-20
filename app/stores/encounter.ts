@@ -349,6 +349,12 @@ export const useEncounterStore = defineStore('encounter', {
       if (data.weather !== undefined) {
         this.encounter.weather = data.weather
       }
+      if (data.weatherDuration !== undefined) {
+        this.encounter.weatherDuration = data.weatherDuration
+      }
+      if (data.weatherSource !== undefined) {
+        this.encounter.weatherSource = data.weatherSource
+      }
       this.encounter.currentRound = data.currentRound ?? this.encounter.currentRound
       this.encounter.currentTurnIndex = data.currentTurnIndex ?? this.encounter.currentTurnIndex
       this.encounter.isPaused = data.isPaused ?? this.encounter.isPaused
