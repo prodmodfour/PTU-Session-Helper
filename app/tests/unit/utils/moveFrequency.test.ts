@@ -420,6 +420,26 @@ describe('resetSceneUsage', () => {
     const result = resetSceneUsage(moves)
     expect(result).not.toBe(moves)
   })
+
+  it('preserves usedToday on Daily moves while resetting scene counters', () => {
+    const moves = [
+      makeMove({ frequency: 'Daily x2', usedToday: 1, usedThisScene: 1, lastTurnUsed: 3 }),
+      makeMove({ frequency: 'Daily x3', usedToday: 2, usedThisScene: 1, lastTurnUsed: 5 }),
+      makeMove({ frequency: 'Daily', usedToday: 1, usedThisScene: 0 })
+    ]
+    const result = resetSceneUsage(moves)
+
+    // usedToday must survive scene reset (daily budget carries across scenes)
+    expect(result[0].usedToday).toBe(1)
+    expect(result[1].usedToday).toBe(2)
+    expect(result[2].usedToday).toBe(1)
+
+    // Scene counters must be reset
+    expect(result[0].usedThisScene).toBe(0)
+    expect(result[1].usedThisScene).toBe(0)
+    expect(result[0].lastTurnUsed).toBe(0)
+    expect(result[1].lastTurnUsed).toBe(0)
+  })
 })
 
 describe('resetDailyUsage', () => {
