@@ -161,10 +161,12 @@ export function useGridMovement(options: UseGridMovementOptions) {
     // Speed Combat Stage modifier (-6 to +6): additive bonus/penalty
     // PTU 1.05 p.234: "bonus or penalty to all Movement Speeds equal to
     // half your current Speed Combat Stage value rounded down"
+    // Math.trunc rounds toward zero for symmetric positive/negative results:
+    // +5→+2, -5→-2, +1→0, -1→0 (PTU: "reduces movement equally")
     const speedStage = combatant.entity.stageModifiers?.speed ?? 0
     if (speedStage !== 0) {
       const clamped = Math.max(-6, Math.min(6, speedStage))
-      const stageBonus = Math.floor(clamped / 2)
+      const stageBonus = Math.trunc(clamped / 2)
       modifiedSpeed = modifiedSpeed + stageBonus
       // PTU 1.05 p.700: negative CS may never reduce movement below 2
       if (stageBonus < 0) {
