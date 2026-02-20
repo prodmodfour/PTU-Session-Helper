@@ -55,6 +55,7 @@ export interface CaptureAttemptResult {
 export function useCapture() {
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const warning = ref<string | null>(null)
 
   /**
    * Get the capture rate for a Pokemon by ID
@@ -233,6 +234,7 @@ export function useCapture() {
   }): Promise<CaptureAttemptResult | null> {
     loading.value = true
     error.value = null
+    warning.value = null
 
     try {
       const response = await $fetch<{ success: boolean; data: CaptureAttemptResult }>('/api/capture/attempt', {
@@ -259,7 +261,7 @@ export function useCapture() {
               }
             })
           } catch (actionError: any) {
-            console.error('Failed to consume standard action for capture:', actionError)
+            warning.value = 'Capture succeeded but standard action was not consumed — please adjust action economy manually'
           }
         }
         return response.data
@@ -289,6 +291,7 @@ export function useCapture() {
   return {
     loading: readonly(loading),
     error: readonly(error),
+    warning: readonly(warning),
     getCaptureRate,
     calculateCaptureRateLocal,
     attemptCapture,
