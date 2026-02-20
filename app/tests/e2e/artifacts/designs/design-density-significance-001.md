@@ -4,7 +4,7 @@ ticket_id: ptu-rule-058
 category: PTU_INCORRECT
 scope: FULL
 domain: encounter-tables
-status: ready
+status: p0-complete
 dependencies:
   - ptu-rule-055 (XP calculation system)
   - ptu-rule-060 (level-budget encounter creation)
@@ -565,3 +565,26 @@ The terrain store continues to handle spatial grid painting (movement costs, pas
 | `app/components/encounter/EnvironmentSelector.vue` | **New** -- preset picker for encounter creation |
 | `app/stores/encounter.ts` | Add environment preset management |
 | `app/utils/damageCalculation.ts` | Add optional `environmentModifiers` parameter for accuracy penalties |
+
+---
+
+## Implementation Log
+
+### P0 (Density Separation) -- 2026-02-20
+
+| Commit | Description | Files |
+|---|---|---|
+| `a5434db` | Replace `DENSITY_RANGES` with `DENSITY_SUGGESTIONS` in habitat types; set `MAX_SPAWN_COUNT = 20`; remove `densityMultiplier` from `TableModification` interface | `app/types/habitat.ts` |
+| `c2d3b4d` | Remove `calculateSpawnCount` function and `CalculateSpawnCountInput` type from encounter generation service | `app/server/services/encounter-generation.service.ts` |
+| `1343265` | Use direct `count` parameter in generate endpoint; remove density-to-count calculation and `densityMultiplier` from response meta | `app/server/api/encounter-tables/[id]/generate.post.ts` |
+| `c44853f` | Make `count` required in `generateFromTable`; remove `densityMultiplier` from meta types and modification method signatures | `app/stores/encounterTables.ts` |
+| `04c4a72` | Replace density-derived spawn display with explicit count spinner; show density suggestion as hint | `app/components/habitat/GenerateEncounterModal.vue` |
+| `dd41e1d` | Remove densityMultiplier editor and density presets from ModificationCard; remove `parentDensity` prop | `app/components/encounter-table/ModificationCard.vue` |
+| `e98b8e9` | Update density display across all UI to informational only; replace `DENSITY_RANGES` with `DENSITY_SUGGESTIONS` in EncounterTableModal, TableEditor, useTableEditor, EncounterTableCard, TableCard | 5 files |
+| `68be10d` | Remove `calculateSpawnCount` tests; add `DENSITY_SUGGESTIONS` constant tests and `MAX_SPAWN_COUNT` test; remove `densityMultiplier` from store test mocks | `app/tests/unit/services/encounterGeneration.test.ts`, `app/tests/unit/stores/encounterTables.test.ts` |
+
+**Additional files changed beyond design spec plan:**
+- `app/composables/useTableEditor.ts` -- replaced `getSpawnRange` with `getDensityDescription`; updated import from `DENSITY_RANGES` to `DENSITY_SUGGESTIONS`
+- `app/components/encounter-table/TableEditor.vue` -- updated density display to show description; removed `parentDensity` prop pass to ModificationCard; updated density options to use suggestions
+- `app/components/habitat/EncounterTableCard.vue` -- updated density label to show tier name instead of spawn range
+- `app/components/encounter-table/TableCard.vue` -- updated density label to show tier name instead of spawn range
