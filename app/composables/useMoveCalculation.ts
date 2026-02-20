@@ -1,6 +1,7 @@
-import type { Move, Combatant, Pokemon } from '~/types'
+import type { Move, Combatant, Pokemon, HumanCharacter } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
+import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { useTerrainStore } from '~/stores/terrain'
 
 export interface TargetDamageCalc {
@@ -197,7 +198,12 @@ export function useMoveCalculation(
     // stacking on top of stat-derived evasion. This is NOT a combat stage multiplier —
     // the actual combat stages on Def/SpDef/Speed already affect evasion via the
     // multiplier table applied to the stat before dividing by 5.
-    const evasionBonus = stages.evasion ?? 0
+    let evasionBonus = stages.evasion ?? 0
+    // Equipment evasion bonus (shields) stacks additively (PTU p.294)
+    if (target.type === 'human') {
+      const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
+      evasionBonus += equipBonuses.evasionBonus
+    }
 
     // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
     // Auto-select the highest applicable evasion (rational defender always picks best).
@@ -233,7 +239,12 @@ export function useMoveCalculation(
     const entity = target.entity
     const stages = getStageModifiers(entity)
     // Evasion bonus from moves/effects (additive, not a multiplier-based combat stage)
-    const evasionBonus = stages.evasion ?? 0
+    let evasionBonus = stages.evasion ?? 0
+    // Equipment evasion bonus (shields) stacks additively (PTU p.294)
+    if (target.type === 'human') {
+      const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
+      evasionBonus += equipBonuses.evasionBonus
+    }
 
     const speedStat = target.type === 'pokemon'
       ? getPokemonSpeedStat(entity)
@@ -333,16 +344,24 @@ export function useMoveCalculation(
 
     const stages = getStageModifiers(entity)
 
+    // Focus stat bonus for human attackers: +5 AFTER combat stages (PTU p.295)
+    let focusBonus = 0
+    if (actor.value.type === 'human') {
+      const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
+      const statKey = move.value.damageClass === 'Physical' ? 'attack' : 'specialAttack'
+      focusBonus = equipBonuses.statBonuses[statKey] ?? 0
+    }
+
     if (move.value.damageClass === 'Physical') {
       const baseStat = actor.value.type === 'pokemon'
         ? getPokemonAttackStat(entity)
         : getHumanStat(entity, 'attack')
-      return applyStageModifier(baseStat, stages.attack)
+      return applyStageModifier(baseStat, stages.attack) + focusBonus
     } else if (move.value.damageClass === 'Special') {
       const baseStat = actor.value.type === 'pokemon'
         ? getPokemonSpAtkStat(entity)
         : getHumanStat(entity, 'specialAttack')
-      return applyStageModifier(baseStat, stages.specialAttack)
+      return applyStageModifier(baseStat, stages.specialAttack) + focusBonus
     }
     return 0
   })
@@ -408,17 +427,35 @@ export function useMoveCalculation(
       const entity = target.entity
       const stages = getStageModifiers(entity)
 
+      // Focus defense bonus for human targets: +5 AFTER combat stages (PTU p.295)
+      let focusDefBonus = 0
+      let equipmentDR = 0
+      if (target.type === 'human') {
+        const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
+        const defKey = move.value.damageClass === 'Physical' ? 'defense' : 'specialDefense'
+        focusDefBonus = equipBonuses.statBonuses[defKey] ?? 0
+        equipmentDR = equipBonuses.damageReduction
+        // Helmet: +15 DR on critical hits only (PTU p.293)
+        if (isCriticalHit.value) {
+          for (const cdr of equipBonuses.conditionalDR) {
+            if (cdr.condition === 'Critical Hits only') {
+              equipmentDR += cdr.amount
+            }
+          }
+        }
+      }
+
       let defenseStat: number
       if (move.value.damageClass === 'Physical') {
         const baseStat = target.type === 'pokemon'
           ? getPokemonDefenseStat(entity)
           : getHumanStat(entity, 'defense')
-        defenseStat = applyStageModifier(baseStat, stages.defense)
+        defenseStat = applyStageModifier(baseStat, stages.defense) + focusDefBonus
       } else {
         const baseStat = target.type === 'pokemon'
           ? getPokemonSpDefStat(entity)
           : getHumanStat(entity, 'specialDefense')
-        defenseStat = applyStageModifier(baseStat, stages.specialDefense)
+        defenseStat = applyStageModifier(baseStat, stages.specialDefense) + focusDefBonus
       }
 
       let targetTypes: string[]
@@ -432,7 +469,8 @@ export function useMoveCalculation(
         ? getTypeEffectiveness(move.value.type, targetTypes)
         : 1
 
-      let damage = preDefenseTotal.value - defenseStat
+      // Subtract defense + equipment DR, then apply effectiveness
+      let damage = preDefenseTotal.value - defenseStat - equipmentDR
       damage = Math.max(1, damage)
       damage = Math.floor(damage * effectiveness)
       damage = Math.max(1, damage)
