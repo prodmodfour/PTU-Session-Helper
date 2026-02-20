@@ -48,9 +48,11 @@ Testable features, routes, and API endpoints for the PTU Session Helper.
 ## API Endpoint Groups
 
 ### Characters (`/api/characters`)
-CRUD + healing/rest actions.
+CRUD + healing/rest + equipment actions.
 - `GET/POST /api/characters` — list, create
 - `GET/PUT/DELETE /api/characters/:id` — read, update, delete
+- `GET /api/characters/:id/equipment` — current equipment slots + aggregate bonuses
+- `PUT /api/characters/:id/equipment` — equip/unequip items (Zod-validated)
 - `POST /api/characters/:id/rest` — 30-min rest
 - `POST /api/characters/:id/extended-rest` — 4h+ rest
 - `POST /api/characters/:id/pokemon-center` — full heal
