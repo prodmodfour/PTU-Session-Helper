@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
         const baseSpeed = tc.entityData?.stats?.speed ?? 5
         const baseDefense = tc.entityData?.stats?.defense ?? 5
         const baseSpDef = tc.entityData?.stats?.specialDefense ?? 5
-        const hpStat = tc.entityData?.stats?.hp ?? 0
+        const hpStat = tc.entityData?.stats?.hp ?? 10
         const maxHp = (level * 2) + (hpStat * 3) + 10
         const entityId = uuidv4()
 

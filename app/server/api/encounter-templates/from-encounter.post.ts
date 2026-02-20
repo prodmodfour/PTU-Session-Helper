@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
         name: c.entity.name ?? 'Unknown',
         characterType: c.entity.characterType ?? 'npc',
         level: c.entity.level ?? 1,
-        stats: c.entity.stats ?? { hp: 0, attack: 0, defense: 5, specialAttack: 0, specialDefense: 5, speed: 5 },
+        stats: c.entity.stats ?? { hp: 10, attack: 5, defense: 5, specialAttack: 5, specialDefense: 5, speed: 5 },
         trainerClasses: c.entity.trainerClasses ?? '[]'
       }) : null
     }))
