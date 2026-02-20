@@ -254,7 +254,7 @@ function parsePokedexContent(content: string): SpeciesRow[] {
       // optionally followed by a mixed-case form descriptor (e.g. "HOOPA Confined", "DEOXYS Attack Forme")
       if (line.length >= 3 && /^[A-Z][A-Z0-9\-\(\).:'É\u2019]+(?:\s+[A-Za-z0-9,%\s\-\(\).:'É\u2019]+)?$/.test(line) && !line.match(/^\d+$/)) {
         // Skip common non-Pokemon lines
-        if (['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST'].includes(line)) continue
+        if (['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST', 'HP:', 'HP'].includes(line)) continue
         pokemonName = line
           .replace(/\s+/g, ' ')
           .trim()

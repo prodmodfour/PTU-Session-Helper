@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-037
 type: ptu-rule
 priority: P3
-status: open
+status: in-progress
 source_ecosystem: dev
 target_ecosystem: dev
 created_by: senior-reviewer
@@ -40,6 +40,15 @@ if (['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST', 'H
 ```
 
 Or tighten the first regex group to exclude colon: `[A-Z][A-Z0-9\-\(\).'É\u2019]+` (remove `:` from the first character class). However, this would break `TYPE: NULL` which needs the colon. The skip list approach is safer.
+
+## Fix Log
+
+- **File:** `app/prisma/seed.ts`, line 257
+- **Change:** Added `'HP:'` and `'HP'` to the skip list in the name-detection loop
+- **Before:** `['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST']`
+- **After:** `['Contents', 'TM', 'HM', 'MOVE LIST', 'TUTOR MOVE LIST', 'EGG MOVE LIST', 'HP:', 'HP']`
+- **Verification:** Confirmed no Pokemon species is named "HP" or "HP:" across all 994 pokedex files. The only occurrences of `^HP:$` in pokedex files are stat-header lines (e.g., Oricorio forms) that appear after `Base Stats:`.
+- **Risk:** None. Only `HP:` and `HP` can false-positive among stat headers because the regex requires 2+ uppercase chars in the first group; `Attack:`, `Defense:`, `Speed:`, etc. start with a single uppercase letter followed by lowercase, so they never match.
 
 ## Source
 
