@@ -1,5 +1,5 @@
 import type { StatusCondition } from '~/types'
-import { PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } from '~/constants/statusConditions'
+import { calculateCaptureRate, getCaptureDescription } from '~/utils/captureRate'
 
 export interface CaptureRateData {
   species: string
@@ -96,123 +96,28 @@ export function useCapture() {
     isShiny?: boolean
     isLegendary?: boolean
   }): CaptureRateData {
-    const {
-      level,
-      currentHp,
-      maxHp,
-      evolutionStage = 1,
-      maxEvolutionStage = 3,
-      statusConditions = [],
-      injuries = 0,
-      isShiny = false,
-      isLegendary = false
-    } = params
-
-    const canBeCaptured = currentHp > 0
-    const hpPercentage = (currentHp / maxHp) * 100
-
-    // Base 100
-    const base = 100
-
-    // Level modifier
-    const levelModifier = -(level * 2)
-
-    // HP modifier
-    let hpModifier = 0
-    if (currentHp === 1) {
-      hpModifier = 30
-    } else if (hpPercentage <= 25) {
-      hpModifier = 15
-    } else if (hpPercentage <= 50) {
-      hpModifier = 0
-    } else if (hpPercentage <= 75) {
-      hpModifier = -15
-    } else {
-      hpModifier = -30
-    }
-
-    // Evolution modifier
-    const evolutionsRemaining = maxEvolutionStage - evolutionStage
-    let evolutionModifier = 0
-    if (evolutionsRemaining >= 2) {
-      evolutionModifier = 10
-    } else if (evolutionsRemaining === 0) {
-      evolutionModifier = -10
-    }
-
-    // Rarity
-    const shinyModifier = isShiny ? -10 : 0
-    const legendaryModifier = isLegendary ? -30 : 0
-
-    // Status conditions — use canonical lists from constants
-    const persistentConditions = PERSISTENT_CONDITIONS
-    const volatileConditions = VOLATILE_CONDITIONS
-
-    // Poisoned and Badly Poisoned are variants of the same affliction (PTU p.246);
-    // only one should contribute +10 to capture rate, never both.
-    let statusModifier = 0
-    let stuckModifier = 0
-    let slowModifier = 0
-    let hasPoisonBonus = false
-
-    for (const condition of statusConditions) {
-      if (persistentConditions.includes(condition)) {
-        if (condition === 'Poisoned' || condition === 'Badly Poisoned') {
-          if (!hasPoisonBonus) {
-            statusModifier += 10
-            hasPoisonBonus = true
-          }
-        } else {
-          statusModifier += 10
-        }
-      } else if (volatileConditions.includes(condition)) {
-        statusModifier += 5
-      }
-      if (condition === 'Stuck') {
-        stuckModifier += 10
-      }
-      if (condition === 'Slowed') {
-        slowModifier += 5
-      }
-    }
-
-    // Injuries
-    const injuryModifier = injuries * 5
-
-    // Total
-    const captureRate = base + levelModifier + hpModifier + evolutionModifier +
-      shinyModifier + legendaryModifier + statusModifier + injuryModifier +
-      stuckModifier + slowModifier
-
-    // Difficulty description
-    let difficulty = 'Nearly Impossible'
-    if (captureRate >= 80) difficulty = 'Very Easy'
-    else if (captureRate >= 60) difficulty = 'Easy'
-    else if (captureRate >= 40) difficulty = 'Moderate'
-    else if (captureRate >= 20) difficulty = 'Difficult'
-    else if (captureRate >= 1) difficulty = 'Very Difficult'
+    const result = calculateCaptureRate({
+      level: params.level,
+      currentHp: params.currentHp,
+      maxHp: params.maxHp,
+      evolutionStage: params.evolutionStage ?? 1,
+      maxEvolutionStage: params.maxEvolutionStage ?? 3,
+      statusConditions: params.statusConditions ?? [],
+      injuries: params.injuries ?? 0,
+      isShiny: params.isShiny ?? false,
+      isLegendary: params.isLegendary ?? false
+    })
 
     return {
       species: '',
-      level,
-      currentHp,
-      maxHp,
-      captureRate,
-      difficulty,
-      canBeCaptured,
-      hpPercentage: Math.round(hpPercentage),
-      breakdown: {
-        base,
-        levelModifier,
-        hpModifier,
-        evolutionModifier,
-        shinyModifier,
-        legendaryModifier,
-        statusModifier,
-        injuryModifier,
-        stuckModifier,
-        slowModifier
-      }
+      level: params.level,
+      currentHp: params.currentHp,
+      maxHp: params.maxHp,
+      captureRate: result.captureRate,
+      difficulty: getCaptureDescription(result.captureRate),
+      canBeCaptured: result.canBeCaptured,
+      hpPercentage: Math.round(result.hpPercentage),
+      breakdown: result.breakdown
     }
   }
 
