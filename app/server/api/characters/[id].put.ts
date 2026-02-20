@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { serializeCharacter } from '~/server/utils/serializers'
+import { calculateMaxAp } from '~/utils/restHealing'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -45,9 +46,31 @@ export default defineEventHandler(async (event) => {
     // Healing-related fields
     if (body.maxHp !== undefined) updateData.maxHp = body.maxHp
     if (body.injuries !== undefined) updateData.injuries = body.injuries
-    if (body.drainedAp !== undefined) updateData.drainedAp = body.drainedAp
-    if (body.boundAp !== undefined) updateData.boundAp = body.boundAp
-    if (body.currentAp !== undefined) updateData.currentAp = body.currentAp
+
+    // AP fields: clamp to non-negative integers, bounded by maxAp
+    const hasApUpdate = body.drainedAp !== undefined || body.boundAp !== undefined || body.currentAp !== undefined
+    if (hasApUpdate) {
+      const character = await prisma.humanCharacter.findUnique({
+        where: { id },
+        select: { level: true }
+      })
+      if (!character) {
+        throw createError({ statusCode: 404, message: 'Character not found' })
+      }
+      const level = body.level !== undefined ? body.level : character.level
+      const maxAp = calculateMaxAp(level)
+
+      if (body.drainedAp !== undefined) {
+        updateData.drainedAp = Math.min(maxAp, Math.max(0, Math.floor(body.drainedAp)))
+      }
+      if (body.boundAp !== undefined) {
+        updateData.boundAp = Math.min(maxAp, Math.max(0, Math.floor(body.boundAp)))
+      }
+      if (body.currentAp !== undefined) {
+        updateData.currentAp = Math.min(maxAp, Math.max(0, Math.floor(body.currentAp)))
+      }
+    }
+
     if (body.restMinutesToday !== undefined) updateData.restMinutesToday = body.restMinutesToday
     if (body.injuriesHealedToday !== undefined) updateData.injuriesHealedToday = body.injuriesHealedToday
     if (body.lastInjuryTime !== undefined) updateData.lastInjuryTime = body.lastInjuryTime ? new Date(body.lastInjuryTime) : null
@@ -61,6 +84,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, data: serializeCharacter(character) }
   } catch (error: any) {
+    if (error.statusCode) throw error
     throw createError({
       statusCode: 500,
       message: error.message || 'Failed to update character'
