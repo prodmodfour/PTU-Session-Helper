@@ -121,6 +121,17 @@ export const useEncounterCombatStore = defineStore('encounterCombat', {
       return response.data
     },
 
+    /**
+     * Sprint - Standard Action that adds +50% movement speed until next turn
+     */
+    async sprint(encounterId: string, combatantId: string) {
+      const response = await $fetch<{ data: Encounter }>(`/api/encounters/${encounterId}/sprint`, {
+        method: 'POST',
+        body: { combatantId }
+      })
+      return response.data
+    },
+
     // ===========================================
     // League Battle Phase Management
     // ===========================================
