@@ -211,6 +211,8 @@ export function incrementMoveUsage(move: Move, currentRound: number): Move {
   }
 
   // Track daily-frequency usage
+  // Note: usedThisScene is read by checkMoveFrequency for the Daily x2/x3
+  // per-scene cap (PTU p.337: Daily x2/x3 can only be used once per scene)
   if (isDailyFrequency(frequency)) {
     updates.usedToday = (move.usedToday ?? 0) + 1
     updates.usedThisScene = (move.usedThisScene ?? 0) + 1
