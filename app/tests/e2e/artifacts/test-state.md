@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-02-20T19:00:00
+last_updated: 2026-02-20T21:00:00
 updated_by: orchestrator
 ---
 
@@ -26,19 +26,22 @@ All 8 domains fully processed through M2 ticket creation. Matrix pipeline is **c
 
 ## Staleness Status
 
-All 8 domains are stale due to sessions 5, 6, 7, and 8 code changes.
+All 8 domains are stale due to sessions 5–9 code changes. **P2 queue is now clear** — re-mapping is unblocked.
 
-**Session 8 changes (5 refactoring tickets resolved):**
-- **combat/encounter:** refactoring-051 — 8 encounter endpoints migrated to `buildEncounterResponse()` (structural, no coverage impact)
-- **combat:** refactoring-042 — MoveTargetModal SCSS extraction (no coverage impact)
-- **capture:** refactoring-044 — capture action error surfacing via warning ref (minor coverage improvement)
-- **pokemon-lifecycle:** refactoring-047 — Pokemon sheet SCSS dedup (no coverage impact)
-- **encounter-tables:** refactoring-033 — density dropdown labels fixed (minor data-correctness improvement)
+**Session 9 changes (8 tickets resolved):**
+- **combat:** ptu-rule-046 — League battle declaration phase (new feature, significant combat domain change — re-map needed)
+- **combat:** ptu-rule-075 — Breather immutability fix (no coverage impact)
+- **combat:** refactoring-032 — SCSS extraction in CombatantDetailsPanel (no coverage impact)
+- **capture:** refactoring-048 — Capture rate dedup (structural, no coverage impact)
+- **character-lifecycle:** bug-029 — AP validation in character PUT (minor coverage improvement)
+- **character-lifecycle:** refactoring-041 — Test mock fix (no coverage impact)
+- **healing:** refactoring-045 — N+1 query optimization in new-day + activate (no coverage impact)
+- **pokemon-lifecycle:** refactoring-050 — Shiny badge icon (no coverage impact)
 
-Session 8 changes are primarily structural refactoring (SCSS, response construction). Coverage scores are unlikely to change significantly from re-mapping — defer re-mapping until the remaining P2 queue (refactoring-032, ptu-rule-046) is cleared.
+**Session 9 significantly impacts the combat domain** — League battle phases are a new feature that adds capabilities not in the current capability mapping.
 
 ## Recommended Next Steps
 
-1. Clear remaining P2 tickets (refactoring-032, ptu-rule-046)
-2. Re-map all 8 stale domains once P2 queue is empty
-3. Continue P3 ticket queue
+1. **Re-map combat domain first** — ptu-rule-046 added League battle phases (new capabilities to map)
+2. Re-map remaining 7 domains (mostly structural changes, lower priority)
+3. Continue P3 ticket queue in Dev ecosystem
