@@ -1,6 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { broadcastToGroup } from '~/server/utils/websocket'
-import { calculateSceneEndAp } from '~/utils/restHealing'
+import { restoreSceneAp } from '~/server/services/scene.service'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -20,46 +20,7 @@ export default defineEventHandler(async (event) => {
     })
 
     for (const activeScene of activeScenes) {
-      const characters: Array<{ characterId?: string; id?: string }> = JSON.parse(activeScene.characters || '[]')
-      const characterIds = characters
-        .map(c => c.characterId || c.id)
-        .filter((cid): cid is string => !!cid)
-
-      if (characterIds.length > 0) {
-        const dbCharacters = await prisma.humanCharacter.findMany({
-          where: { id: { in: characterIds } },
-          select: { id: true, level: true, drainedAp: true }
-        })
-
-        // Group by (level, drainedAp) so each group gets the same restoredAp
-        // This reduces N individual updates to G updateMany calls (G <= N)
-        const groupKey = (level: number, drainedAp: number) => `${level}:${drainedAp}`
-        const groups = new Map<string, { ids: string[]; restoredAp: number }>()
-
-        for (const char of dbCharacters) {
-          const key = groupKey(char.level, char.drainedAp)
-          const existing = groups.get(key)
-          if (existing) {
-            groups.set(key, { ...existing, ids: [...existing.ids, char.id] })
-          } else {
-            const restoredAp = calculateSceneEndAp(char.level, char.drainedAp)
-            groups.set(key, { ids: [char.id], restoredAp })
-          }
-        }
-
-        // Scene end: unbind all bound AP and restore to max minus drained
-        await prisma.$transaction(
-          [...groups.values()].map(({ ids, restoredAp }) =>
-            prisma.humanCharacter.updateMany({
-              where: { id: { in: ids } },
-              data: {
-                boundAp: 0,
-                currentAp: restoredAp
-              }
-            })
-          )
-        )
-      }
+      await restoreSceneAp(activeScene.characters)
     }
 
     // Deactivate all other scenes
