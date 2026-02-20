@@ -383,36 +383,16 @@ const selectManeuver = (maneuver: Maneuver) => {
 
 <style lang="scss" scoped>
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: $z-index-modal;
-  animation: fadeIn 0.2s ease-out;
+  @include modal-overlay-enhanced;
 }
 
 .gm-action-modal {
-  background: $glass-bg;
-  backdrop-filter: $glass-blur;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-xl;
-  width: 100%;
+  @include modal-container-enhanced;
   max-width: 600px;
   max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: $shadow-xl, 0 0 40px rgba($color-accent-violet, 0.15);
-  animation: slideUp 0.3s ease-out;
 
   &__header {
-    display: flex;
-    align-items: center;
     gap: $spacing-md;
-    padding: $spacing-lg;
-    border-bottom: 1px solid $glass-border;
     background: linear-gradient(135deg, rgba($color-accent-violet, 0.1) 0%, transparent 100%);
 
     .header-info {
@@ -470,12 +450,6 @@ const selectManeuver = (maneuver: Maneuver) => {
       flex-direction: column;
       gap: $spacing-xs;
     }
-  }
-
-  &__body {
-    flex: 1;
-    overflow-y: auto;
-    padding: $spacing-lg;
   }
 }
 
@@ -806,19 +780,4 @@ const selectManeuver = (maneuver: Maneuver) => {
   border-radius: $border-radius-md;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 </style>

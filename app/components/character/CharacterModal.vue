@@ -297,60 +297,21 @@ const save = () => {
 }
 
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: $z-index-modal;
-  animation: fadeIn 0.2s ease-out;
+  @include modal-overlay-enhanced;
 }
 
 .modal {
-  background: $glass-bg;
-  backdrop-filter: $glass-blur;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-xl;
-  width: 100%;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: $shadow-xl, 0 0 40px rgba($color-accent-violet, 0.15);
-  animation: slideUp 0.3s ease-out;
+  @include modal-container-enhanced;
 
   &--fullsheet {
     max-width: 900px;
   }
 
   &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $spacing-lg;
-    border-bottom: 1px solid $glass-border;
     background: linear-gradient(135deg, rgba($color-accent-violet, 0.1) 0%, transparent 100%);
-
-    h2 {
-      margin: 0;
-      color: $color-text;
-      font-weight: 600;
-    }
-  }
-
-  &__body {
-    flex: 1;
-    overflow-y: auto;
-    padding: $spacing-lg;
   }
 
   &__footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: $spacing-md;
-    padding: $spacing-lg;
-    border-top: 1px solid $glass-border;
     background: rgba($color-bg-primary, 0.5);
   }
 }
@@ -493,19 +454,4 @@ const save = () => {
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 </style>
