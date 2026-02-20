@@ -64,7 +64,7 @@
     </div>
 
     <!-- Derived Trainer Capabilities (computed from skills + weight) -->
-    <CapabilitiesDisplay :derived-stats="derivedStats" />
+    <CapabilitiesDisplay :derived-stats="derivedStats" variant="bordered" />
   </div>
 </template>
 

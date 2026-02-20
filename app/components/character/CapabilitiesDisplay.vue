@@ -1,5 +1,5 @@
 <template>
-  <div class="capabilities-section">
+  <div :class="['capabilities-section', `capabilities-section--${variant}`]">
     <h4 class="section-label">Capabilities</h4>
     <div class="capabilities-grid">
       <div class="capability-block">
@@ -37,9 +37,12 @@
 <script setup lang="ts">
 import type { TrainerDerivedStats } from '~/utils/trainerDerivedStats'
 
-defineProps<{
+withDefaults(defineProps<{
   derivedStats: TrainerDerivedStats
-}>()
+  variant?: 'default' | 'bordered'
+}>(), {
+  variant: 'default'
+})
 </script>
 
 <style lang="scss" scoped>
@@ -68,6 +71,11 @@ defineProps<{
   border-radius: $border-radius-sm;
   padding: $spacing-sm;
   text-align: center;
+
+  .capabilities-section--bordered & {
+    background: $color-bg-tertiary;
+    border: 1px solid $border-color-default;
+  }
 
   label {
     display: block;
