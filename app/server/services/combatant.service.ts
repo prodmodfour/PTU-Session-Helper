@@ -583,11 +583,16 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
   const initiative = effectiveSpeed + initiativeBonus
 
   // Set initial speed CS to equipment default for Heavy Armor wearers (PTU p.293)
-  // Must be done before returning so the combatant entity reflects the penalty
-  if (equipmentSpeedDefaultCS !== 0) {
-    const currentStages = entity.stageModifiers ?? createDefaultStageModifiers()
-    entity.stageModifiers = { ...currentStages, speed: equipmentSpeedDefaultCS }
-  }
+  // Create a copy to avoid mutating the input entity parameter
+  const combatantEntity = equipmentSpeedDefaultCS !== 0
+    ? {
+        ...entity,
+        stageModifiers: {
+          ...(entity.stageModifiers ?? createDefaultStageModifiers()),
+          speed: equipmentSpeedDefaultCS
+        }
+      }
+    : entity
 
   return {
     id: uuidv4(),
@@ -613,6 +618,6 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
     speedEvasion: initialEvasion(stats.speed || 0) + equipmentEvasionBonus,
     position,
     tokenSize,
-    entity
+    entity: combatantEntity
   }
 }
