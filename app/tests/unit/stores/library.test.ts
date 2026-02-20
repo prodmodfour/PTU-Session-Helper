@@ -31,6 +31,7 @@ const createMockHuman = (overrides = {}) => ({
   lastInjuryTime: null,
   injuriesHealedToday: 0,
   drainedAp: 0,
+  currentAp: 5,
   avatarUrl: undefined,
   isInLibrary: true,
   notes: undefined,
