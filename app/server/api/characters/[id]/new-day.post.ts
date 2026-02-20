@@ -1,4 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
+import { calculateMaxAp } from '~/utils/restHealing'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -23,12 +24,15 @@ export default defineEventHandler(async (event) => {
     }
 
     // Reset daily healing counters (including drained AP for trainers)
+    // New day clears drained AP, so currentAp goes back to full maxAp
+    const maxAp = calculateMaxAp(character.level)
     const updated = await prisma.humanCharacter.update({
       where: { id },
       data: {
         restMinutesToday: 0,
         injuriesHealedToday: 0,
         drainedAp: 0,
+        currentAp: maxAp,
         lastRestReset: new Date()
       }
     })
@@ -40,6 +44,7 @@ export default defineEventHandler(async (event) => {
         restMinutesToday: updated.restMinutesToday,
         injuriesHealedToday: updated.injuriesHealedToday,
         drainedAp: updated.drainedAp,
+        currentAp: updated.currentAp,
         lastRestReset: updated.lastRestReset
       }
     }

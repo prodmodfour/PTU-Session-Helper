@@ -64,6 +64,7 @@ export default defineEventHandler(async (event) => {
   if (method === 'drain_ap') {
     // Drain 2 AP to heal 1 injury
     const newDrainedAp = character.drainedAp + 2
+    const newCurrentAp = Math.max(0, character.currentAp - 2)
     const newInjuries = character.injuries - 1
 
     const updated = await prisma.humanCharacter.update({
@@ -71,6 +72,7 @@ export default defineEventHandler(async (event) => {
       data: {
         injuries: newInjuries,
         drainedAp: newDrainedAp,
+        currentAp: newCurrentAp,
         injuriesHealedToday: injuriesHealedToday + 1,
         lastRestReset: new Date(),
         ...(newInjuries === 0 ? { lastInjuryTime: null } : {})
@@ -84,6 +86,7 @@ export default defineEventHandler(async (event) => {
         injuriesHealed: 1,
         injuries: updated.injuries,
         drainedAp: updated.drainedAp,
+        currentAp: updated.currentAp,
         injuriesHealedToday: injuriesHealedToday + 1
       }
     }

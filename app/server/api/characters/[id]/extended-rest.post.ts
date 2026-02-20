@@ -3,7 +3,8 @@ import {
   calculateRestHealing,
   shouldResetDailyCounters,
   clearPersistentStatusConditions,
-  getStatusesToClear
+  getStatusesToClear,
+  calculateMaxAp
 } from '~/utils/restHealing'
 
 /**
@@ -70,8 +71,9 @@ export default defineEventHandler(async (event) => {
   const clearedStatuses = getStatusesToClear(statusConditions)
   const newStatusConditions = clearPersistentStatusConditions(statusConditions)
 
-  // Restore drained AP
+  // Restore drained AP and set currentAp to full max
   const apRestored = character.drainedAp
+  const maxAp = calculateMaxAp(character.level)
 
   const updated = await prisma.humanCharacter.update({
     where: { id },
@@ -81,7 +83,8 @@ export default defineEventHandler(async (event) => {
       injuriesHealedToday,
       lastRestReset: new Date(),
       statusConditions: JSON.stringify(newStatusConditions),
-      drainedAp: 0 // Restore all drained AP
+      drainedAp: 0, // Restore all drained AP
+      currentAp: maxAp // Full AP pool since drained is now 0
     }
   })
 
