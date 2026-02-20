@@ -3,6 +3,12 @@ import type { RangeType, ParsedRange, GridPosition, TerrainType } from '~/types'
 // Terrain cost function type
 export type TerrainCostGetter = (x: number, y: number) => number
 
+// Token footprint for multi-cell range calculations
+export interface TokenFootprint {
+  position: GridPosition
+  size: number // 1 = 1x1, 2 = 2x2, 3 = 3x3, 4 = 4x4
+}
+
 /**
  * PTU Range Parser
  *
@@ -147,6 +153,86 @@ export function useRangeParser() {
   }
 
   /**
+   * Get all cells occupied by a token.
+   * A token at (x, y) with size s occupies cells from (x, y) to (x+s-1, y+s-1).
+   */
+  function getOccupiedCells(token: TokenFootprint): GridPosition[] {
+    const cells: GridPosition[] = []
+    for (let dx = 0; dx < token.size; dx++) {
+      for (let dy = 0; dy < token.size; dy++) {
+        cells.push({ x: token.position.x + dx, y: token.position.y + dy })
+      }
+    }
+    return cells
+  }
+
+  /**
+   * Calculate minimum Chebyshev distance between two multi-cell tokens.
+   *
+   * PTU Rule: Range is measured from the nearest occupied cell of the
+   * attacker to the nearest occupied cell of the target.
+   *
+   * For single-cell tokens (size=1), this is equivalent to standard Chebyshev distance.
+   */
+  function chebyshevDistanceTokens(
+    a: TokenFootprint,
+    b: TokenFootprint
+  ): number {
+    // Optimization: compute using rectangle-to-rectangle Chebyshev distance
+    // instead of iterating all cell pairs.
+    //
+    // Token A occupies [ax, ax+as-1] x [ay, ay+as-1]
+    // Token B occupies [bx, bx+bs-1] x [by, by+bs-1]
+    //
+    // Minimum distance on each axis is the gap between the two intervals
+    // (0 if overlapping).
+    const aRight = a.position.x + a.size - 1
+    const aBottom = a.position.y + a.size - 1
+    const bRight = b.position.x + b.size - 1
+    const bBottom = b.position.y + b.size - 1
+
+    const gapX = Math.max(0, a.position.x - bRight, b.position.x - aRight)
+    const gapY = Math.max(0, a.position.y - bBottom, b.position.y - aBottom)
+
+    return Math.max(gapX, gapY)
+  }
+
+  /**
+   * Find the closest pair of cells between two tokens (for LoS tracing).
+   * Returns the pair of cells (one from each token) that have the minimum
+   * Chebyshev distance between them.
+   */
+  function closestCellPair(
+    a: TokenFootprint,
+    b: TokenFootprint
+  ): { from: GridPosition; to: GridPosition } {
+    // For single-cell tokens, just return positions directly
+    if (a.size === 1 && b.size === 1) {
+      return { from: a.position, to: b.position }
+    }
+
+    const aCells = getOccupiedCells(a)
+    const bCells = getOccupiedCells(b)
+
+    let bestDist = Infinity
+    let bestFrom = a.position
+    let bestTo = b.position
+
+    for (const ac of aCells) {
+      for (const bc of bCells) {
+        const dist = Math.max(Math.abs(ac.x - bc.x), Math.abs(ac.y - bc.y))
+        if (dist < bestDist) {
+          bestDist = dist
+          bestFrom = ac
+          bestTo = bc
+        }
+      }
+    }
+
+    return { from: bestFrom, to: bestTo }
+  }
+
+  /**
    * Check if there is an unobstructed line of sight between two grid positions.
    * Uses Bresenham's line algorithm to trace cells along the path.
    *
@@ -204,6 +290,10 @@ export function useRangeParser() {
   /**
    * Check if a target position is within range of an attacker.
    *
+   * Supports multi-cell tokens via optional attackerSize and targetSize params.
+   * PTU Rule: Range for multi-cell tokens is measured from the nearest occupied
+   * cell of the attacker to the nearest cell of the target.
+   *
    * When an isBlockingFn is provided, also checks line of sight —
    * blocking terrain between attacker and target prevents targeting
    * per PTU rules.
@@ -212,11 +302,19 @@ export function useRangeParser() {
     attacker: GridPosition,
     target: GridPosition,
     parsedRange: RangeParseResult,
-    isBlockingFn?: (x: number, y: number) => boolean
+    isBlockingFn?: (x: number, y: number) => boolean,
+    attackerSize: number = 1,
+    targetSize: number = 1
   ): boolean {
-    // Self only affects user
+    // Self only affects user — for multi-cell, check if target overlaps attacker footprint
     if (parsedRange.type === 'self') {
-      return attacker.x === target.x && attacker.y === target.y
+      if (attackerSize === 1 && targetSize === 1) {
+        return attacker.x === target.x && attacker.y === target.y
+      }
+      // Multi-cell self: target cell must overlap attacker footprint
+      const attackerFootprint = { position: attacker, size: attackerSize }
+      const targetFootprint = { position: target, size: targetSize }
+      return chebyshevDistanceTokens(attackerFootprint, targetFootprint) === 0
     }
 
     // Field affects everyone
@@ -224,21 +322,24 @@ export function useRangeParser() {
       return true
     }
 
-    // Calculate Chebyshev distance (PTU standard)
-    const distance = Math.max(
-      Math.abs(target.x - attacker.x),
-      Math.abs(target.y - attacker.y)
-    )
+    // Build footprints for multi-cell distance calculation
+    const attackerFootprint: TokenFootprint = { position: attacker, size: attackerSize }
+    const targetFootprint: TokenFootprint = { position: target, size: targetSize }
 
-    // Cardinally adjacent - only orthogonal
+    // Calculate Chebyshev distance between nearest cells (PTU standard)
+    const distance = chebyshevDistanceTokens(attackerFootprint, targetFootprint)
+
+    // Cardinally adjacent - only orthogonal between nearest cells
     if (parsedRange.type === 'cardinally-adjacent') {
-      const dx = Math.abs(target.x - attacker.x)
-      const dy = Math.abs(target.y - attacker.y)
-      const isAdjacent = (dx === 1 && dy === 0) || (dx === 0 && dy === 1)
-      if (!isAdjacent) return false
-      // Check LoS even for adjacent (wall between adjacent cells blocks targeting)
+      if (distance !== 1) return false
+      // Check that adjacency is cardinal (not diagonal)
+      const { from: nearFrom, to: nearTo } = closestCellPair(attackerFootprint, targetFootprint)
+      const dx = Math.abs(nearTo.x - nearFrom.x)
+      const dy = Math.abs(nearTo.y - nearFrom.y)
+      const isCardinal = (dx === 1 && dy === 0) || (dx === 0 && dy === 1)
+      if (!isCardinal) return false
       if (isBlockingFn) {
-        return hasLineOfSight(attacker, target, isBlockingFn)
+        return hasLineOfSight(nearFrom, nearTo, isBlockingFn)
       }
       return true
     }
@@ -252,9 +353,10 @@ export function useRangeParser() {
       return false
     }
 
-    // Check line of sight if blocking function provided
+    // Check line of sight between closest cells if blocking function provided
     if (isBlockingFn) {
-      return hasLineOfSight(attacker, target, isBlockingFn)
+      const { from: losFrom, to: losTo } = closestCellPair(attackerFootprint, targetFootprint)
+      return hasLineOfSight(losFrom, losTo, isBlockingFn)
     }
 
     return true
@@ -661,6 +763,9 @@ export function useRangeParser() {
     parseRange,
     isInRange,
     hasLineOfSight,
+    getOccupiedCells,
+    chebyshevDistanceTokens,
+    closestCellPair,
     getAffectedCells,
     getMovementRangeCells,
     calculateMoveCost,
