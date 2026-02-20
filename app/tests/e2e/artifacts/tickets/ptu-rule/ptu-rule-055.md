@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-055
 priority: P3
-status: in-progress
+status: p0-complete
 design_spec: designs/design-xp-system-001.md
 domain: pokemon-lifecycle
 matrix_source:
@@ -22,3 +22,7 @@ Per PTU Core: after combat, XP is calculated based on opponent levels and distri
 ## Actual Behavior
 
 No XP calculation or distribution system. The GM manually updates each Pokemon's experience field.
+
+## Implementation Status
+
+**P0 complete (2026-02-20):** XP calculation utility, calculation preview API, distribution API, and damage.post.ts type field edit. P1 (UI modal) and P2 (level-up notifications) remain.

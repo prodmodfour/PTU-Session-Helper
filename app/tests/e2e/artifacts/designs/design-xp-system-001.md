@@ -4,7 +4,7 @@ ticket_id: ptu-rule-055
 category: FEATURE_GAP
 scope: FULL
 domain: pokemon-lifecycle
-status: draft
+status: p0-complete
 affected_files:
   - app/server/api/encounters/[id]/end.post.ts
   - app/server/services/encounter.service.ts
@@ -577,3 +577,27 @@ The distribute endpoint is idempotent in the sense that it adds XP to current va
 | **NEW** | `app/components/encounter/LevelUpNotification.vue` | Level-up results display |
 | **NEW** | `app/server/api/pokemon/[id]/add-experience.post.ts` | Standalone XP add endpoint (for training, manual GM grants) |
 | **EDIT** | `app/components/encounter/XpDistributionModal.vue` | Show level-up results after distribution |
+
+---
+
+## Implementation Log
+
+### P0 Implementation (2026-02-20)
+
+**Status:** Complete
+
+**Files created/modified:**
+
+| Action | File | Notes |
+|--------|------|-------|
+| **NEW** | `app/utils/experienceCalculation.ts` | Pure functions + EXPERIENCE_CHART. Reuses existing `checkLevelUp()` from `levelUpCheck.ts` for per-level event details instead of duplicating logic. |
+| **NEW** | `app/server/api/encounters/[id]/xp-calculate.post.ts` | Read-only preview endpoint. Returns breakdown + participating player-side Pokemon list with owner names. |
+| **NEW** | `app/server/api/encounters/[id]/xp-distribute.post.ts` | Write endpoint. Recalculates XP server-side to verify client values. Updates experience, level, tutorPoints in DB. |
+| **EDIT** | `app/server/api/encounters/[id]/damage.post.ts` | Added `type: combatant.type` to defeatedEnemies push (line 62). |
+| **EDIT** | `app/types/encounter.ts` | Made `type` optional on `defeatedEnemies` for backwards compatibility with pre-existing entries. |
+| **EDIT** | `app/server/services/encounter.service.ts` | Updated `defeatedEnemies` type signatures in ParsedEncounter, buildEncounterResponse, saveEncounterCombatants. |
+
+**Design deviations:**
+- `calculateLevelUps()` returns `Omit<XpApplicationResult, 'pokemonId' | 'species'>` instead of full `XpApplicationResult` since it's a pure function that doesn't know the Pokemon identity. The API endpoint adds `pokemonId` and `species` when building the result.
+- Reuses existing `checkLevelUp()` and `summarizeLevelUps()` from `levelUpCheck.ts` rather than reimplementing level-up detection, then maps the result to the `LevelUpEvent` type defined in the design.
+- `trainerEnemyIds` supports index-based string IDs (e.g., "0", "1") for backwards compatibility with legacy entries that lack the `type` field.
