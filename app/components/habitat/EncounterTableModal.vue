@@ -70,10 +70,9 @@
               class="form-select"
               data-testid="table-density-select"
             >
-              <option value="sparse">Sparse (1-2 Pokemon)</option>
-              <option value="moderate">Moderate (2-4 Pokemon)</option>
-              <option value="dense">Dense (4-6 Pokemon)</option>
-              <option value="abundant">Abundant (6-8 Pokemon)</option>
+              <option v-for="opt in densityOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
             </select>
             <p class="form-hint">Controls how many Pokemon spawn when generating encounters</p>
           </div>
@@ -223,7 +222,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EncounterTable, EncounterTableEntry, DensityTier } from '~/types'
+import { DENSITY_RANGES, type EncounterTable, type EncounterTableEntry, type DensityTier } from '~/types'
 
 const props = defineProps<{
   table?: EncounterTable | null
@@ -235,6 +234,11 @@ const emit = defineEmits<{
 }>()
 
 const encounterTablesStore = useEncounterTablesStore()
+
+const densityOptions = Object.entries(DENSITY_RANGES).map(([tier, range]) => ({
+  value: tier as DensityTier,
+  label: `${tier.charAt(0).toUpperCase() + tier.slice(1)} (${range.min}-${range.max} Pokemon)`,
+}))
 
 // Form state
 const form = reactive({
