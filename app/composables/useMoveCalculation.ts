@@ -43,7 +43,8 @@ export function useMoveCalculation(
   const {
     applyStageModifier,
     calculatePhysicalEvasion,
-    calculateSpecialEvasion
+    calculateSpecialEvasion,
+    calculateSpeedEvasion
   } = useCombat()
 
   const {
@@ -52,6 +53,7 @@ export function useMoveCalculation(
     getPokemonSpAtkStat,
     getPokemonDefenseStat,
     getPokemonSpDefStat,
+    getPokemonSpeedStat,
     getHumanStat
   } = useEntityStats()
 
@@ -104,16 +106,25 @@ export function useMoveCalculation(
     const stages = getStageModifiers(entity)
     const evasionBonus = stages.evasion ?? 0
 
+    // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
+    // Auto-select the highest applicable evasion (rational defender always picks best).
+    const speedStat = target.type === 'pokemon'
+      ? getPokemonSpeedStat(entity)
+      : getHumanStat(entity, 'speed')
+    const speedEvasion = calculateSpeedEvasion(speedStat, stages.speed, evasionBonus)
+
     if (move.value.damageClass === 'Physical') {
       const defStat = target.type === 'pokemon'
         ? getPokemonDefenseStat(entity)
         : getHumanStat(entity, 'defense')
-      return calculatePhysicalEvasion(defStat, stages.defense, evasionBonus)
+      const physEvasion = calculatePhysicalEvasion(defStat, stages.defense, evasionBonus)
+      return Math.max(physEvasion, speedEvasion)
     } else {
       const spDefStat = target.type === 'pokemon'
         ? getPokemonSpDefStat(entity)
         : getHumanStat(entity, 'specialDefense')
-      return calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus)
+      const specEvasion = calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus)
+      return Math.max(specEvasion, speedEvasion)
     }
   }
 

@@ -191,8 +191,10 @@ export default defineEventHandler(async (event) => {
     const specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage, evasionBonus)
     const speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage, evasionBonus)
 
-    // Physical moves use Physical Evasion, Special moves use Special Evasion
-    const applicableEvasion = move.damageClass === 'Physical' ? physicalEvasion : specialEvasion
+    // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
+    // Auto-select the highest applicable evasion (rational defender always picks best).
+    const matchingEvasion = move.damageClass === 'Physical' ? physicalEvasion : specialEvasion
+    const applicableEvasion = Math.max(matchingEvasion, speedEvasion)
     const effectiveEvasion = Math.min(9, applicableEvasion)
 
     const moveAC = move.ac ?? 0

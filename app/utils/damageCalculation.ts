@@ -120,7 +120,7 @@ export interface AccuracyCalcResult {
   specialEvasion: number
   /** Dynamic evasion from stage-modified Speed: min(6, floor(modifiedSpeed / 5)) */
   speedEvasion: number
-  /** Physical or Special evasion based on the move's damage class */
+  /** Best evasion for the defender: max(damage-class-matching evasion, Speed Evasion) per PTU p.234 */
   applicableEvasion: number
   /** min(9, applicableEvasion) — PTU cap on total evasion applied to one check */
   effectiveEvasion: number
