@@ -1,4 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
+import { buildEncounterResponse } from '~/server/services/encounter.service'
 
 export default defineEventHandler(async (event) => {
   const encounterId = getRouterParam(event, 'id')
@@ -73,14 +74,7 @@ export default defineEventHandler(async (event) => {
     }
   })
 
-  // Parse response
-  const parsedEncounter = {
-    ...updatedEncounter,
-    combatants: JSON.parse(updatedEncounter.combatants || '[]'),
-    turnOrder: JSON.parse(updatedEncounter.turnOrder || '[]'),
-    moveLog: JSON.parse(updatedEncounter.moveLog || '[]'),
-    defeatedEnemies: JSON.parse(updatedEncounter.defeatedEnemies || '[]')
-  }
+  const response = buildEncounterResponse(updatedEncounter, combatants)
 
-  return { data: parsedEncounter }
+  return { data: response }
 })
