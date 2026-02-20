@@ -183,6 +183,52 @@ describe('checkMoveFrequency', () => {
       expect(result.canUse).toBe(true)
       expect(result.remainingSceneUses).toBe(1)
     })
+
+    // PTU p.337: Scene x2/x3 enforce EOT between uses
+    it('blocks Scene x2 move on consecutive turn (EOT restriction)', () => {
+      const move = makeMove({ frequency: 'Scene x2', usedThisScene: 1, lastTurnUsed: 3 })
+      const result = checkMoveFrequency(move, 4)
+      expect(result.canUse).toBe(false)
+      expect(result.reason).toContain('EOT restriction')
+      expect(result.reason).toContain('round 3')
+      expect(result.remainingSceneUses).toBe(1)
+    })
+
+    it('allows Scene x2 move after skipping a turn', () => {
+      const move = makeMove({ frequency: 'Scene x2', usedThisScene: 1, lastTurnUsed: 3 })
+      const result = checkMoveFrequency(move, 5)
+      expect(result.canUse).toBe(true)
+      expect(result.remainingSceneUses).toBe(1)
+    })
+
+    it('blocks Scene x3 move on same turn it was used', () => {
+      const move = makeMove({ frequency: 'Scene x3', usedThisScene: 1, lastTurnUsed: 5 })
+      const result = checkMoveFrequency(move, 5)
+      expect(result.canUse).toBe(false)
+      expect(result.reason).toContain('EOT restriction')
+    })
+
+    it('allows Scene x3 move two rounds after last use', () => {
+      const move = makeMove({ frequency: 'Scene x3', usedThisScene: 1, lastTurnUsed: 3 })
+      const result = checkMoveFrequency(move, 5)
+      expect(result.canUse).toBe(true)
+      expect(result.remainingSceneUses).toBe(2)
+    })
+
+    it('does not apply EOT restriction to Scene x1 (only 1 use, implicitly safe)', () => {
+      // Scene x1 can only be used once, so EOT doesn't matter — no consecutive usage possible
+      const move = makeMove({ frequency: 'Scene', usedThisScene: 0, lastTurnUsed: 3 })
+      const result = checkMoveFrequency(move, 4)
+      expect(result.canUse).toBe(true)
+    })
+
+    it('prioritizes exhaustion over EOT for Scene x2', () => {
+      // All uses spent AND on consecutive turn — exhaustion reason should take priority
+      const move = makeMove({ frequency: 'Scene x2', usedThisScene: 2, lastTurnUsed: 3 })
+      const result = checkMoveFrequency(move, 4)
+      expect(result.canUse).toBe(false)
+      expect(result.reason).toContain('2/2 times this scene')
+    })
   })
 
   describe('Daily-frequency moves', () => {
@@ -210,6 +256,52 @@ describe('checkMoveFrequency', () => {
       const move = makeMove({ frequency: 'Daily x3', usedToday: 3 })
       const result = checkMoveFrequency(move, 1)
       expect(result.canUse).toBe(false)
+    })
+
+    // PTU p.337: Daily x2/x3 can only be used once per scene
+    it('blocks Daily x2 move already used this scene', () => {
+      const move = makeMove({ frequency: 'Daily x2', usedToday: 1, usedThisScene: 1 })
+      const result = checkMoveFrequency(move, 1)
+      expect(result.canUse).toBe(false)
+      expect(result.reason).toContain('1 use per scene limit')
+      expect(result.remainingDailyUses).toBe(1)
+    })
+
+    it('allows Daily x2 move in a new scene after previous scene usage', () => {
+      // usedToday: 1 (from previous scene), usedThisScene: 0 (reset by next-scene)
+      const move = makeMove({ frequency: 'Daily x2', usedToday: 1, usedThisScene: 0 })
+      const result = checkMoveFrequency(move, 1)
+      expect(result.canUse).toBe(true)
+      expect(result.remainingDailyUses).toBe(1)
+    })
+
+    it('blocks Daily x3 move already used this scene', () => {
+      const move = makeMove({ frequency: 'Daily x3', usedToday: 1, usedThisScene: 1 })
+      const result = checkMoveFrequency(move, 1)
+      expect(result.canUse).toBe(false)
+      expect(result.reason).toContain('1 use per scene limit')
+    })
+
+    it('allows Daily x3 with 2 daily uses but 0 scene uses (new scene)', () => {
+      const move = makeMove({ frequency: 'Daily x3', usedToday: 2, usedThisScene: 0 })
+      const result = checkMoveFrequency(move, 1)
+      expect(result.canUse).toBe(true)
+      expect(result.remainingDailyUses).toBe(1)
+    })
+
+    it('does not apply per-scene cap to Daily x1 (only 1 daily use, implicitly safe)', () => {
+      // Daily x1 is capped at 1 total use per day — per-scene restriction is redundant
+      const move = makeMove({ frequency: 'Daily', usedToday: 0, usedThisScene: 0 })
+      const result = checkMoveFrequency(move, 1)
+      expect(result.canUse).toBe(true)
+    })
+
+    it('prioritizes daily exhaustion over per-scene cap for Daily x2', () => {
+      // Both daily uses spent AND used this scene — daily exhaustion should take priority
+      const move = makeMove({ frequency: 'Daily x2', usedToday: 2, usedThisScene: 1 })
+      const result = checkMoveFrequency(move, 1)
+      expect(result.canUse).toBe(false)
+      expect(result.reason).toContain('2/2 times today')
     })
   })
 })
@@ -242,6 +334,27 @@ describe('incrementMoveUsage', () => {
     const move = makeMove({ frequency: 'Scene x2', usedThisScene: 1 })
     const result = incrementMoveUsage(move, 1)
     expect(result.usedThisScene).toBe(2)
+  })
+
+  it('sets lastTurnUsed for Scene x2 moves (EOT tracking)', () => {
+    const move = makeMove({ frequency: 'Scene x2', usedThisScene: 0 })
+    const result = incrementMoveUsage(move, 4)
+    expect(result.lastTurnUsed).toBe(4)
+    expect(result.usedThisScene).toBe(1)
+  })
+
+  it('sets lastTurnUsed for Scene x3 moves (EOT tracking)', () => {
+    const move = makeMove({ frequency: 'Scene x3', usedThisScene: 1 })
+    const result = incrementMoveUsage(move, 7)
+    expect(result.lastTurnUsed).toBe(7)
+    expect(result.usedThisScene).toBe(2)
+  })
+
+  it('does not set lastTurnUsed for Scene x1 moves', () => {
+    const move = makeMove({ frequency: 'Scene', usedThisScene: 0 })
+    const result = incrementMoveUsage(move, 3)
+    expect(result.lastTurnUsed).toBeUndefined()
+    expect(result.usedThisScene).toBe(1)
   })
 
   it('handles undefined usedThisScene as 0', () => {
