@@ -601,3 +601,16 @@ The distribute endpoint is idempotent in the sense that it adds XP to current va
 - `calculateLevelUps()` returns `Omit<XpApplicationResult, 'pokemonId' | 'species'>` instead of full `XpApplicationResult` since it's a pure function that doesn't know the Pokemon identity. The API endpoint adds `pokemonId` and `species` when building the result.
 - Reuses existing `checkLevelUp()` and `summarizeLevelUps()` from `levelUpCheck.ts` rather than reimplementing level-up detection, then maps the result to the `LevelUpEvent` type defined in the design.
 - `trainerEnemyIds` supports index-based string IDs (e.g., "0", "1") for backwards compatibility with legacy entries that lack the `type` field.
+
+### P0 Post-Review Fixes (2026-02-20)
+
+**Review:** code-review-117 (CHANGES_REQUIRED)
+
+**Commits:** ff36de0, 4dac196, 1df3717, c062fb0
+
+| Issue | Fix | Commit |
+|-------|-----|--------|
+| **H1** (HIGH): Duplicate pokemonId race condition | Added deduplication guard at start of validation — rejects 400 if same pokemonId appears twice in distribution array | ff36de0 |
+| **M3** (MEDIUM): Duplicated enrichment logic | Extracted `enrichDefeatedEnemies()` + `RawDefeatedEnemy` type into `experienceCalculation.ts`, updated both endpoints | 4dac196 |
+| **M2** (MEDIUM): Missing app-surface.md entries | Added xp-calculate and xp-distribute to encounters API section | 1df3717 |
+| **M1** (MEDIUM): Per-player validation gap | Added TODO comment documenting the pool-level vs per-player validation gap, deferred to P1 | c062fb0 |
