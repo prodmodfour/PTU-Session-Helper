@@ -456,68 +456,13 @@ const addChange = async () => {
   filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(2000%) hue-rotate(340deg);
 }
 
-// Modal styles
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  @include modal-overlay-base;
 }
 
 .modal {
-  background: $color-bg-secondary;
-  border-radius: $border-radius-lg;
-  border: 1px solid $glass-border;
-  width: 100%;
+  @include modal-container-base;
   max-width: 450px;
-  max-height: 90vh;
-  overflow: hidden;
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $spacing-md $spacing-lg;
-    border-bottom: 1px solid $glass-border;
-
-    h3 {
-      margin: 0;
-      color: $color-text;
-      font-size: 1rem;
-    }
-  }
-
-  &__close {
-    background: none;
-    border: none;
-    color: $color-text-muted;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-
-    &:hover {
-      color: $color-text;
-    }
-  }
-
-  &__body {
-    padding: $spacing-lg;
-  }
-
-  &__footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: $spacing-sm;
-    padding: $spacing-md $spacing-lg;
-    border-top: 1px solid $glass-border;
-  }
 }
 
 .form-group {

@@ -332,9 +332,7 @@ const handleSourceChange = (event: Event) => {
 }
 
 .btn--with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
+  @include btn-with-icon;
 }
 
 .btn--ghost {

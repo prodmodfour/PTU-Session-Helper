@@ -213,19 +213,13 @@ const handleAdvanceDay = async () => {
 
   &__group-btn {
     .btn-icon {
-      width: 18px;
-      height: 18px;
-      filter: brightness(0) invert(1);
-      opacity: 0.9;
+      @include btn-icon-img(18px);
     }
   }
 
   &__day-btn {
     .btn-icon {
-      width: 18px;
-      height: 18px;
-      filter: brightness(0) invert(1);
-      opacity: 0.9;
+      @include btn-icon-img(18px);
     }
   }
 }

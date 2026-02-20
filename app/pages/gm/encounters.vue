@@ -493,51 +493,14 @@ const confirmDelete = async () => {
   }
 }
 
-// Modal styles
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  @include modal-overlay-base;
 }
 
 .modal {
+  @include modal-container-base;
   background: $color-bg-primary;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-lg;
   width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow: auto;
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $spacing-md $spacing-lg;
-    border-bottom: 1px solid $glass-border;
-
-    h2 {
-      margin: 0;
-      font-size: 1.25rem;
-      color: $color-text;
-    }
-  }
-
-  &__body {
-    padding: $spacing-lg;
-  }
-
-  &__footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: $spacing-md;
-    padding: $spacing-md $spacing-lg;
-    border-top: 1px solid $glass-border;
-  }
 }
 
 .form-group {

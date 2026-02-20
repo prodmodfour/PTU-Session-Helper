@@ -231,36 +231,21 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  @include modal-overlay-base;
 }
 
 .modal {
-  background: $color-bg-secondary;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-lg;
+  @include modal-container-base;
   width: 90%;
   max-width: 600px;
   max-height: 85vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 
   &--wide {
     max-width: 700px;
   }
 
   &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: $spacing-lg;
-    border-bottom: 1px solid $glass-border;
 
     h2 {
       margin: 0;
@@ -269,31 +254,17 @@ onMounted(() => {
   }
 
   &__close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: $color-text-muted;
     padding: $spacing-xs;
-    line-height: 1;
-
-    &:hover {
-      color: $color-text;
-    }
   }
 
   &__body {
-    padding: $spacing-lg;
-    overflow-y: auto;
     flex: 1;
   }
 
   &__footer {
-    display: flex;
     justify-content: space-between;
     align-items: center;
     padding: $spacing-lg;
-    border-top: 1px solid $glass-border;
     background: $color-bg-tertiary;
   }
 }

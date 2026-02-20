@@ -403,16 +403,11 @@ defineExpose({
 }
 
 .btn-svg {
-  width: 14px;
-  height: 14px;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
+  @include btn-icon-img(14px);
 }
 
 .btn--with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
+  @include btn-with-icon;
 }
 
 .vtt-grid-wrapper {

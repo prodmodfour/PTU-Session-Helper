@@ -30,15 +30,10 @@ const generateEncounter = () => {
 
 <style lang="scss" scoped>
 .btn--with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
+  @include btn-with-icon;
 }
 
 .btn-icon {
-  width: 16px;
-  height: 16px;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
+  @include btn-icon-img;
 }
 </style>
