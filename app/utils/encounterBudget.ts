@@ -2,7 +2,7 @@
  * PTU 1.05 Encounter Budget Calculator
  *
  * Level Budget formula (Core p.473):
- * - Multiply the average Pokemon Level of PCs by 2 = baseline XP per player
+ * - Multiply the average Pokemon Level of PCs by 2 = level budget per player
  * - Multiply baseline by number of trainers = total level budget
  *
  * XP Calculation (Core p.460):
@@ -28,8 +28,8 @@ export interface BudgetCalcInput {
 export interface BudgetCalcResult {
   /** Total level budget available to spend on enemies */
   totalBudget: number
-  /** Baseline XP drop per player (before significance) */
-  baselineXpPerPlayer: number
+  /** Level budget per player: averagePokemonLevel * 2 */
+  levelBudgetPerPlayer: number
   breakdown: {
     averagePokemonLevel: number
     playerCount: number
@@ -135,7 +135,7 @@ export function calculateEncounterBudget(input: BudgetCalcInput): BudgetCalcResu
 
   return {
     totalBudget,
-    baselineXpPerPlayer: baselinePerPlayer,
+    levelBudgetPerPlayer: baselinePerPlayer,
     breakdown: {
       averagePokemonLevel: avgLevel,
       playerCount: players,
