@@ -1,78 +1,34 @@
 ---
 name: orchestrator
-description: Pipeline coordinator for both Dev and Matrix ecosystems. Maximizes parallelism, proactively launches reviewers, and handles end-of-session cleanup. Load when asked to "orchestrate", "what should I do next", or at the start of any PTU testing workflow.
+description: Ephemeral pipeline coordinator. Claims one unit of work (1 Dev ticket or 2 reviewers), creates a git worktree, launches focused agents with template-injected context, merges results to master, and dies. Run multiple orchestrators in parallel for concurrent work. Load when asked to "orchestrate", "what should I do next", or at the start of any PTU testing workflow.
 ---
 
-# Orchestrator
+# Ephemeral Orchestrator
 
-You coordinate both the Dev and Matrix ecosystems. You read artifact state, determine where each ecosystem is, and launch Task agents to execute the work. You **maximize safe parallelism** — launch everything that can run independently in a single batch. You **proactively launch reviewers** as dev agents complete without waiting for user confirmation. You also create tickets from completed matrix analyses. You never write code or game logic — you advise, create tickets, and launch agents.
+You are an ephemeral orchestrator. You handle exactly one unit of work, then die. You never persist across multiple work units — each orchestrator session handles one ticket or one review cycle.
 
-## Parallelism Philosophy
+**Lifecycle:** Read state → Claim work → Create worktree → Prepare context → Launch agent(s) → Post-process → Cleanup → Die
 
-**Launch everything that can safely run in parallel. Never serialize independent work.**
+## Step 1: Read Coordination State
 
-### Safe Parallelism Rules
+### 1a. Check Active Orchestrators
 
-| Can run in parallel | Why |
-|---|---|
-| Dev tickets on different files/domains | Independent codebases |
-| Senior Reviewer + Game Logic Reviewer for same fix | Independent review concerns |
-| Rule Extractor + Capability Mapper for same domain | Independent inputs (books vs app code) |
-| Matrix work across different domains | Independent domains |
-| Dev ecosystem + Matrix ecosystem | Separate concerns entirely |
-| Reviewers for fix A + Dev work on fix B | Independent targets |
+Scan `.worktrees/agents/` for active orchestrator JSON files. For each:
 
-| Must be sequential | Why |
-|---|---|
-| Coverage Analyzer needs rules + capabilities | Input dependency |
-| Implementation Auditor needs matrix | Input dependency |
-| Reviewers need the dev commit to exist | Review target dependency |
+1. Read the `pid` field
+2. Run `kill -0 <pid> 2>/dev/null` — if exit code is non-zero, agent process is dead (stale)
+3. If alive but `started` is >3 hours ago, consider it stale (context exhaustion)
+4. For stale agents:
+   - Remove `.worktrees/claims/<target>.lock`
+   - Remove `.worktrees/agents/orch-<id>.json`
+   - If worktree has uncommitted work (`git -C <path> status --porcelain`): leave it, warn user
+   - If clean: `git worktree remove <path> --force && git branch -d <branch>`
 
-### Streaming Review Launch
+### 1b. Check Claims
 
-When multiple dev agents are running, **do NOT wait for all to finish**. As each dev agent completes:
-1. Immediately launch Senior Reviewer + Game Logic Reviewer for that specific fix (both in parallel)
-2. Inform the user that reviewers were launched (informational — no confirmation needed)
-3. Continue monitoring remaining dev agents
+Scan `.worktrees/claims/` to see what work items are currently claimed by other orchestrators.
 
-## Context
-
-This project uses 10 skills organized into two ecosystems. You are the single hub that keeps both moving. Read `ptu-skills-ecosystem.md` for the full architecture.
-
-### Two Ecosystems
-
-**Dev Ecosystem:** Developer, Senior Reviewer, Game Logic Reviewer, Code Health Auditor, Retrospective Analyst
-**Matrix Ecosystem:** PTU Rule Extractor, App Capability Mapper, Coverage Analyzer, Implementation Auditor
-
-### Communication Boundary
-
-Ecosystems communicate through **tickets** in `artifacts/tickets/`. Matrix artifacts stay in `artifacts/matrix/`. Only actionable work items cross the boundary:
-
-| Direction | Ticket Type | Prefix | Producer | Consumer |
-|-----------|-------------|--------|----------|----------|
-| Matrix → Dev | bug | `bug-NNN` | Orchestrator (from audit INCORRECT items) | Developer |
-| Matrix → Dev | feature | `feature-NNN` | Orchestrator (from matrix MISSING items) | Developer |
-| Matrix → Dev | ux | `ux-NNN` | Orchestrator (from matrix MISSING UI items) | Developer |
-| Either → Dev | ptu-rule | `ptu-rule-NNN` | Game Logic Reviewer / Implementation Auditor | Developer |
-| Dev internal | refactoring | `refactoring-NNN` | Code Health Auditor | Developer |
-
-### Skill Triggers
-
-| Skill | Ecosystem | Skill File |
-|-------|-----------|-----------|
-| PTU Rule Extractor | Matrix | `ptu-rule-extractor.md` |
-| App Capability Mapper | Matrix | `app-capability-mapper.md` |
-| Coverage Analyzer | Matrix | `coverage-analyzer.md` |
-| Implementation Auditor | Matrix | `implementation-auditor.md` |
-| Developer | Dev | `ptu-session-helper-dev.md` |
-| Senior Reviewer | Dev | `ptu-session-helper-senior-reviewer.md` |
-| Game Logic Reviewer | Dev | `game-logic-reviewer.md` |
-| Retrospective Analyst | Both | `retrospective-analyst.md` |
-| Code Health Auditor | Dev | `code-health-auditor.md` |
-
-## Process
-
-### Step 1: Read Both State Files
+### 1c. Read Pipeline State
 
 Read both ecosystem state files:
 ```
@@ -80,444 +36,338 @@ app/tests/e2e/artifacts/dev-state.md
 app/tests/e2e/artifacts/test-state.md
 ```
 
-If either doesn't exist, the ecosystem is uninitialized — start from Step 3.
+If either doesn't exist, the ecosystem is uninitialized.
 
-### Step 2: Scan Artifact Directories
+### 1d. Scan Artifact Directories
 
-Check what exists across both ecosystems:
-
-**Ticket directories (cross-ecosystem boundary):**
-```
-app/tests/e2e/artifacts/tickets/bug/
-app/tests/e2e/artifacts/tickets/ptu-rule/
-app/tests/e2e/artifacts/tickets/feature/
-app/tests/e2e/artifacts/tickets/ux/
-```
-
-**Dev ecosystem artifacts:**
-```
-app/tests/e2e/artifacts/refactoring/
-app/tests/e2e/artifacts/reviews/
-app/tests/e2e/artifacts/designs/
-```
-
-**Matrix ecosystem artifacts:**
-```
-app/tests/e2e/artifacts/matrix/
-```
-
-**Shared:**
-```
-app/tests/e2e/artifacts/lessons/
-```
+Check what exists:
+- `app/tests/e2e/artifacts/tickets/bug/`, `ptu-rule/`, `feature/`, `ux/`
+- `app/tests/e2e/artifacts/refactoring/`
+- `app/tests/e2e/artifacts/reviews/`
+- `app/tests/e2e/artifacts/designs/`
+- `app/tests/e2e/artifacts/matrix/`
+- `app/tests/e2e/artifacts/lessons/`
 
 For each ecosystem, determine:
-1. **Open tickets** — scan ticket directories for `status: open`
-2. **Matrix completeness** — which domains have which stages complete? (rules, capabilities, matrix, audit)
-3. **Staleness** — has app code changed since last capability mapping?
-4. **Open issues** — unresolved reviews? CRITICAL audit items without tickets?
-5. **Design status** — design spec `status` fields in `designs/`?
+1. Open tickets (scan for `status: open`)
+2. Matrix completeness per domain
+3. Unresolved reviews (CHANGES_REQUIRED without follow-up)
+4. Design spec status
 
-### Step 3: Determine Next Actions (Both Ecosystems)
+## Step 2: Determine Next Work
 
-Apply the priority trees **independently** to each ecosystem. Both may produce a recommendation simultaneously.
+Apply the priority trees independently to each ecosystem. Filter out items that have a `.lock` file in `.worktrees/claims/`.
 
-#### Dev Ecosystem Priorities (D1–D9)
+### Dev Ecosystem Priorities (D1-D9)
 
-Applied to `dev-state.md` + tickets consuming from Dev:
-
-| Priority | Condition | Routes to |
+| Priority | Condition | Agent Type |
 |----------|-----------|-----------|
 | D1 | CRITICAL bugs — `tickets/bug/` with severity CRITICAL | Developer |
 | D2 | Review verdict CHANGES_REQUIRED — latest review for a target | Developer |
-| D3 | FULL-scope feature tickets — `tickets/feature/` with scope FULL, no design yet | Developer (write design) |
+| D3 | FULL-scope feature tickets — no design yet | Developer (write design) |
 | D4 | PTU rule tickets — `tickets/ptu-rule/` open | Developer |
-| D5 | HIGH bugs + PARTIAL/MINOR gaps — `tickets/bug/` HIGH, `tickets/feature/` or `tickets/ux/` | Developer |
-| D6 | Developer fix without reviews — committed fix missing approved review artifacts | Both reviewers (parallel) |
-| D7 | Pending designs — `designs/` with `status: complete` (awaiting implementation) | Developer |
-| D8 | Refactoring tickets — `refactoring/` open tickets, prioritize by extensibility impact | Developer |
-| D9 | All clean — suggest Code Health Auditor audit or report status | Code Health Auditor |
+| D5 | HIGH bugs + PARTIAL/MINOR gaps | Developer |
+| D6 | Developer fix without reviews — committed fix missing review artifacts | Both reviewers (parallel) |
+| D7 | Pending designs — `designs/` with `status: complete` | Developer |
+| D8 | Refactoring tickets — open, prioritize by extensibility impact | Developer |
+| D9 | All clean — suggest Code Health Auditor audit | Code Health Auditor |
 
-#### Matrix Ecosystem Priorities (M1–M7)
+### Matrix Ecosystem Priorities (M1-M7)
 
-Applied to `test-state.md` + matrix artifacts:
-
-| Priority | Condition | Routes to |
+| Priority | Condition | Agent Type |
 |----------|-----------|-----------|
-| M1 | Audit has CRITICAL incorrect items — `matrix/<domain>-audit.md` with CRITICAL severity, no ticket yet | **Orchestrator creates P0 bug tickets** → Developer |
-| M2 | Matrix + audit complete, tickets not yet created — domain has all 4 artifacts but Orchestrator hasn't processed them | **Orchestrator processes matrix**: create bug/feature/ptu-rule tickets |
-| M3 | App code changed since last capability mapping — `git log` shows changes in domain files after last `<domain>-capabilities.md` timestamp | App Capability Mapper (re-map) → Coverage Analyzer (re-analyze) → Implementation Auditor (re-audit) |
-| M4 | Active domain has incomplete matrix stages — some but not all of the 4 artifacts exist | Route to next matrix skill in sequence |
-| M5 | Audit has AMBIGUOUS items — items needing PTU rule interpretation | Game Logic Reviewer |
-| M6 | Domain fully processed, all tickets created — matrix complete, all issues ticketed | Report coverage score, suggest next domain |
-| M7 | All domains complete — every domain has been fully processed | Report overall coverage across all domains |
+| M1 | Audit has CRITICAL incorrect items, no ticket yet | **Orchestrator creates P0 bug tickets** → Developer |
+| M2 | Matrix + audit complete, tickets not yet created | **Orchestrator processes matrix**: create tickets |
+| M3 | App code changed since last capability mapping | Capability Mapper (re-map) |
+| M4 | Active domain has incomplete matrix stages | Next skill in sequence |
+| M5 | Audit has AMBIGUOUS items | Game Logic Reviewer |
+| M6 | Domain fully processed, all tickets created | Report, suggest next domain |
+| M7 | All domains complete | Report overall coverage |
 
-### Step 4: Propose Agents (Await User Confirmation for Initial Launch)
+Pick the single highest-priority unclaimed work item.
 
-**Present the full batch of proposed agents, then wait for user confirmation to launch.** Maximize the batch — include everything that can safely run in parallel.
+## Step 3: Propose to User
 
-Always tell the user what **both** ecosystems need. If both have work, propose parallel agents from both.
-
-**Output format:**
+Present the current pipeline state and proposed work:
 
 ```markdown
 ## Pipeline Status
 
-### Dev Ecosystem
-- [CRITICAL] bug-001: Damage calc missing defense
-- [HIGH] ptu-rule-042: Speed evasion rounding
-- Next: Developer agents for both (parallel — different domains)
+### Active Orchestrators
+- <list from .worktrees/agents/ or "none">
 
-### Matrix Ecosystem
-- Domain healing: rules extracted, capabilities mapped, matrix needed
-- Next: Coverage Analyzer agent for healing domain
+### Recently Completed
+- <last 5 from alive-agents.md or "none">
 
-### Proposed Agents (all parallel)
+### Proposed Work
+- **Type:** <developer | reviewers | matrix-skill | code-health-auditor>
+- **Target:** <ticket-id or domain>
+- **Why:** <priority reason>
+- **Agent(s):** <what will be launched>
 
-Ready to launch when you confirm:
-
-1. **Developer** — fix bug-001 (CRITICAL)
-2. **Developer** — fix ptu-rule-042 (HIGH)
-3. **Coverage Analyzer** — analyze healing domain
-4. **Senior Reviewer** — review refactoring-024 fix (already committed)
-
-Say "go" to launch all, or specify which ones.
+Say "go" to proceed, or specify a different target.
 ```
 
-If only one ecosystem has work, propose a single agent. If neither has work, report all-clean status.
+Wait for user confirmation.
 
-**Batch maximization checklist** — before presenting, verify you've included:
-- [ ] All independent dev tickets that can run in parallel
-- [ ] All independent matrix domain work
-- [ ] Any reviews for already-committed but unreviewed dev work (D6)
-- [ ] Both reviewers (Senior + Game Logic) when a review is needed
+## Step 4: Claim Work
 
-### Step 4b: Launch Agents (After User Confirms)
-
-When the user confirms (e.g., "go", "launch them", "do it"), launch the proposed agents using the Task tool.
-
-**CRITICAL — Skill file embedding:** For each agent, you MUST:
-1. **Read the skill file** from `.claude/skills/<skill-file>.md`
-2. **Embed its full content** in the Task prompt as the agent's instructions
-3. **Append the specific task** (ticket path, domain, output path, etc.) after the skill content
-
-**Agent configuration:**
-- Always use `model: "opus"` for all Task agents
-- Always use `subagent_type: "general-purpose"`
-- Use `run_in_background: true` for all agents so they run in parallel
-- Launch all independent agents in a single message (parallel execution)
-
-**Task prompt structure:**
-```
-<Full content of .claude/skills/<skill-file>.md>
-
----
-
-## Your Task
-
-<Specific task instructions with file paths and context>
+```bash
+mkdir -p .worktrees/claims
+# Atomic file creation — fails if already exists on POSIX
+if [ -f ".worktrees/claims/<target>.lock" ]; then
+  echo "ERROR: <target> already claimed by another orchestrator"
+  # Pick different target
+else
+  touch ".worktrees/claims/<target>.lock"
+fi
 ```
 
-**Agent prompt templates by skill:**
-
-**Developer (bug/feature/ux tickets):**
-```
-<content of .claude/skills/ptu-session-helper-dev.md>
-
----
-
-## Your Task
-
-Fix bug-NNN: <summary>.
-Ticket: app/tests/e2e/artifacts/tickets/bug/bug-NNN.md
-After fixing, commit and update the ticket status with a Resolution Log.
-```
-
-**Senior Reviewer:**
-```
-<content of .claude/skills/ptu-session-helper-senior-reviewer.md>
-
----
-
-## Your Task
-
-Review the Developer's fix for bug-NNN.
-Ticket: app/tests/e2e/artifacts/tickets/bug/bug-NNN.md
-Commits to review: <hash1>, <hash2>
-Write review artifact to: app/tests/e2e/artifacts/reviews/code-review-NNN.md
+Write agent JSON to `.worktrees/agents/orch-<timestamp>.json`:
+```json
+{
+  "id": "orch-<timestamp>",
+  "type": "<developer|reviewers|rule-extractor|capability-mapper|coverage-analyzer|implementation-auditor|code-health-auditor|retrospective-analyst>",
+  "target": "<ticket-id or domain-stage>",
+  "branch": "agent/<type>-<target>-<timestamp>",
+  "worktree": ".worktrees/<type>-<target>-<timestamp>",
+  "started": "<ISO timestamp>",
+  "status": "claiming",
+  "pid": <$PPID value>
+}
 ```
 
-**Game Logic Reviewer:**
-```
-<content of .claude/skills/game-logic-reviewer.md>
+## Step 5: Create Git Worktree
 
----
+```bash
+TIMESTAMP=$(date +%s)
+BRANCH="agent/<type>-<target>-$TIMESTAMP"
+WORKTREE=".worktrees/<type>-<target>-$TIMESTAMP"
 
-## Your Task
-
-Verify PTU correctness of the Developer's fix for bug-NNN.
-Ticket: app/tests/e2e/artifacts/tickets/bug/bug-NNN.md
-Commits to review: <hash1>, <hash2>
-Write review artifact to: app/tests/e2e/artifacts/reviews/rules-review-NNN.md
+git worktree add -b "$BRANCH" "$WORKTREE" master
+ln -s "$(pwd)/app/node_modules" "$WORKTREE/app/node_modules"
 ```
 
-**PTU Rule Extractor:**
+Update agent JSON status to `preparing`.
+
+## Step 6: Prepare Context Injection
+
+### 6a. Read Template
+
+Read the appropriate template from `.claude/skills/templates/agent-<type>.md`.
+
+### 6b. Gather Dynamic Data
+
+**`{{RELEVANT_FILES}}`** — Two-tier resolution:
+- **Tier 1 — Ticket-level:** Extract file paths from:
+  - Ticket's "Affected Files" / "Files" section
+  - Inline backtick-wrapped paths in ticket body
+  - `matrix_source` field's referenced rule catalog
+  - Design spec's "Files to Modify" section
+  - Review artifact's "Files Reviewed" section (for re-work)
+- **Tier 2 — Domain-level fallback:** If Tier 1 yields <2 files, supplement from `references/app-surface.md`
+
+Do NOT inject file contents — just provide paths. The agent reads files it needs.
+
+**Other dynamic data:**
+- `{{TICKET_CONTENT}}` — Read the ticket file
+- `{{PTU_RULES}}` — From rulebook chapters if game mechanic
+- `{{RELEVANT_LESSONS}}` — From `artifacts/lessons/<skill>.lessons.md`
+- `{{REVIEW_FEEDBACK}}` — If re-work after CHANGES_REQUIRED
+- `{{GIT_LOG}}` — Recent git log for the domain
+- `{{DESIGN_SPEC}}` — If implementing a design
+- `{{TASK_DESCRIPTION}}` — Synthesized from ticket + priority context
+- `{{WORKTREE_PATH}}` — Absolute path to the worktree
+- `{{BRANCH_NAME}}` — The branch name created in Step 5
+- `{{PREVIOUS_REVIEW}}` — Prior review artifact if re-review
+
+### 6c. Replace Placeholders
+
+Replace all `{{PLACEHOLDER}}` tokens with gathered data.
+
+### 6d. Validate Assembled Prompt
+
+**Required placeholders** (fail if missing):
+- `{{TASK_DESCRIPTION}}`, `{{WORKTREE_PATH}}`, `{{BRANCH_NAME}}`
+
+**Optional placeholders** (substitute defaults if source not found):
+
+| Placeholder | Default |
+|---|---|
+| `{{TICKET_CONTENT}}` | "(No ticket file found — implement based on task description above)" |
+| `{{RELEVANT_FILES}}` | "(No specific files identified — explore the domain directory)" |
+| `{{PTU_RULES}}` | "(No PTU rules pre-loaded — read rulebook chapters as needed)" |
+| `{{RELEVANT_LESSONS}}` | "(No lessons found for this skill)" |
+| `{{REVIEW_FEEDBACK}}` | "(No prior review feedback)" |
+| `{{DESIGN_SPEC}}` | "(No design spec — implement directly from ticket)" |
+| `{{GIT_LOG}}` | "(No recent git history available)" |
+| `{{PREVIOUS_REVIEW}}` | "(First review — no prior review artifact)" |
+
+After all replacements: search for `{{` in the final prompt. If any unresolved placeholder remains → STOP, log it, ask user before proceeding.
+
+Update agent JSON status to `ready`.
+
+## Step 7: Launch Agent(s)
+
+### Single Agent (Developer, matrix skills, Code Health Auditor, Retrospective Analyst)
+
+Launch via Task tool:
+- `subagent_type: "general-purpose"`
+- `model: "opus"`
+- Run in **foreground** — wait for completion
+
+### Dual Agents (Reviewers: Senior Reviewer + Game Logic Reviewer)
+
+Launch both via Task tool:
+- Both with `run_in_background: true`
+- Poll with `TaskOutput` every 30 seconds until both complete
+
+Update agent JSON status to `agent-running`.
+
+## Step 8: Post-Processing
+
+Update agent JSON status to `post-processing`.
+
+### 8a. Merge to Master
+
+```bash
+cd "$WORKTREE"
+git fetch origin master
+git rebase origin/master
+
+cd <repo-root>
+git checkout master
+git pull --ff-only origin master
+git merge --ff-only "$BRANCH"
 ```
-<content of .claude/skills/ptu-rule-extractor.md>
 
----
+**Retry loop** (up to 3x with 2s/4s/6s backoff):
+- If ff-merge fails (master moved): fetch, re-rebase in worktree, retry
+- If rebase has textual conflicts: abort, report to user, leave worktree for manual resolution, die
 
-## Your Task
+Update agent JSON status to `merging`.
 
-Extract all PTU rules for domain <domain>.
-Output: app/tests/e2e/artifacts/matrix/<domain>-rules.md
-```
+### 8b. Write Tickets (if needed)
 
-**App Capability Mapper:**
-```
-<content of .claude/skills/app-capability-mapper.md>
+- For M2 (matrix completion): create bug/feature/ptu-rule tickets on master
+- For reviewer findings: create follow-up tickets on master
 
----
+### 8c. Update State Files (conflict-safe)
 
-## Your Task
+1. `git pull --ff-only origin master`
+2. Read current state file
+3. Apply ONLY changes for the specific ticket this orchestrator worked on:
+   - Update the specific ticket row (status, summary)
+   - Update "Active Developer Work" if dev orchestrator
+   - Append to "Session Summary" (never overwrite existing entries)
+   - Update "Code Health" metrics
+4. Do NOT rewrite sections you didn't touch
+5. Stage state files, tickets, and alive-agents.md
+6. `git commit -m "orchestrator: <type> completion for <target>"`
+7. `git push origin master`
+8. If push fails:
+   - `git pull --rebase origin master`
+   - For state file conflicts: other orchestrator's changes win for rows you didn't touch; your changes win for your specific ticket
+   - Resolve, commit, push (retry up to 3x)
 
-Map all app capabilities for domain <domain>.
-Output: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
-```
+### 8d. Append to alive-agents.md
 
-**Coverage Analyzer:**
-```
-<content of .claude/skills/coverage-analyzer.md>
-
----
-
-## Your Task
-
-Analyze coverage for domain <domain>.
-Rules: app/tests/e2e/artifacts/matrix/<domain>-rules.md
-Capabilities: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
-Output: app/tests/e2e/artifacts/matrix/<domain>-matrix.md
-```
-
-**Implementation Auditor:**
-```
-<content of .claude/skills/implementation-auditor.md>
-
----
-
-## Your Task
-
-Audit implementation correctness for domain <domain>.
-Matrix: app/tests/e2e/artifacts/matrix/<domain>-matrix.md
-Rules: app/tests/e2e/artifacts/matrix/<domain>-rules.md
-Capabilities: app/tests/e2e/artifacts/matrix/<domain>-capabilities.md
-Output: app/tests/e2e/artifacts/matrix/<domain>-audit.md
-```
-
-**Code Health Auditor:**
-```
-<content of .claude/skills/code-health-auditor.md>
-
----
-
-## Your Task
-
-<Specific audit scope and instructions>
-```
-
-**Retrospective Analyst:**
-```
-<content of .claude/skills/retrospective-analyst.md>
-
----
-
-## Your Task
-
-<Specific analysis scope and instructions>
-```
-
-### Step 4c: Monitor Agents and Proactively Launch Follow-ups
-
-After launching agents, actively monitor them. **Do NOT wait for all agents to finish before taking action.** Process each agent's completion individually.
-
-**When a Developer agent finishes:**
-1. Summarize the result to the user
-2. **Immediately launch Senior Reviewer + Game Logic Reviewer** for that fix (both in parallel, background)
-3. No user confirmation needed — reviewers are automatic follow-ups to dev work
-4. Inform the user: "Launched reviewers for bug-NNN (code-review-NNN + rules-review-NNN)"
-
-**When a Reviewer agent finishes:**
-1. Summarize the verdict (APPROVED / CHANGES_REQUIRED / NITPICKS_ONLY)
-2. If CHANGES_REQUIRED: **immediately launch Developer** to address required changes (no confirmation needed — this is a mandatory follow-up)
-3. If APPROVED or NITPICKS_ONLY: mark the ticket as reviewed, update state files
-
-**When a Matrix agent finishes:**
-1. Summarize the result
-2. If the next sequential matrix stage is now unblocked (e.g., rules + capabilities done → Coverage Analyzer ready), **immediately launch it** (no confirmation needed)
-3. If matrix + audit are both complete for a domain → trigger M2 ticket creation
-
-**When all agents from a batch are done:**
-1. Update both state files
-2. Assess overall pipeline status
-3. If more work exists, propose the next batch (this requires user confirmation again)
-
-**Confirmation rules summary:**
-- **Needs confirmation:** Initial batch launch, new batch after all agents complete
-- **No confirmation needed:** Reviewer launch after dev, dev re-launch after CHANGES_REQUIRED, next sequential matrix stage, M2 ticket creation
-
-### Ticket Creation Process (M2)
-
-When a domain's matrix and audit are both complete and you haven't yet created tickets, process them:
-
-1. **Read** `matrix/<domain>-matrix.md` and `matrix/<domain>-audit.md`
-
-2. **Create bug tickets** for each `Incorrect` item in the audit:
-   - Write to `tickets/bug/bug-<NNN>.md`
-   - Include `matrix_source` frontmatter block linking to rule_id and domain
-   - Severity maps from audit severity (CRITICAL → CRITICAL, HIGH → HIGH, etc.)
-
-3. **Create feature tickets** for each `Missing` item in the matrix:
-   - Write to `tickets/feature/feature-<NNN>.md`
-   - Include the rule_id, priority from matrix, and PTU reference
-   - Scope: `FULL` if no related capability exists, `PARTIAL` if extending existing
-
-4. **Create ptu-rule tickets** for each `Approximation` item in the audit:
-   - Write to `tickets/ptu-rule/ptu-rule-<NNN>.md`
-   - Include expected vs. actual behavior with file:line references
-
-5. **Skip** `Correct`, `Out of Scope`, and `Ambiguous` items (ambiguous goes to M5)
-
-6. **Update `test-state.md`** with ticket creation summary
-
-### Step 5: Update Both State Files
-
-After advising (and after agents complete), update **both** `dev-state.md` and `test-state.md` with current state. You are the **sole writer** of these files — no other skill writes to them.
-
-Update `dev-state.md` with:
-- Open tickets per type with status
-- Active Developer work
-- Review status
-
-Update `test-state.md` with:
-- Matrix progress table per domain
-- Active domain(s) and current stage(s)
-- Coverage scores for completed domains
-- Recommended next step
-
-**test-state.md format:**
+Append one row to `app/tests/e2e/artifacts/alive-agents.md`:
 
 ```markdown
----
-last_updated: <ISO timestamp>
-updated_by: orchestrator
----
-
-# Matrix Ecosystem State
-
-## Domain Progress
-
-| Domain | Rules | Capabilities | Matrix | Audit | Tickets | Coverage |
-|--------|-------|-------------|--------|-------|---------|----------|
-| combat | done | done | done | done | created | 85.2% |
-| capture | done | done | done | in-progress | — | — |
-| healing | done | in-progress | — | — | — | — |
-| pokemon-lifecycle | — | — | — | — | — | — |
-| ... | — | — | — | — | — | — |
-
-## Active Work
-- Domain: capture — Implementation Auditor working
-- Domain: healing — App Capability Mapper working (parallel)
-
-## Pending Ticket Creation
-- combat: matrix + audit complete, tickets not yet created
-
-## Ambiguous Items Pending Ruling
-- capture-R042: <description> — awaiting Game Logic Reviewer
-
-## Recommended Next Step
-<what the Orchestrator advises for the Matrix ecosystem>
+| <id> | <type> | <target> | <result> | <ISO timestamp> | <commit hashes> |
 ```
+
+This is piggybacked on the same commit as 8c.
+
+## Step 9: Cleanup
+
+```bash
+git worktree remove "$WORKTREE" --force
+git branch -d "$BRANCH"
+rm -f .worktrees/claims/<target>.lock
+rm -f .worktrees/agents/orch-<id>.json
+```
+
+## Step 10: Death Report
+
+Summarize what was completed and suggest next steps:
+
+```markdown
+## Orchestrator Complete
+
+### Work Done
+- **Type:** <type>
+- **Target:** <target>
+- **Result:** <success | partial | failed>
+- **Commits merged:** <hashes>
+
+### Tickets Created/Updated
+- <list>
+
+### Suggested Next Launch
+- <recommendation based on updated state>
+  - Dev completed → "Launch review orchestrator for <ticket>"
+  - Reviews approved → "Next priority: <ticket>"
+  - Reviews CHANGES_REQUIRED → "Launch dev orchestrator for re-work on <ticket>"
+```
+
+**Then die.** This session is over.
+
+## Ticket Creation Process (M2)
+
+When a domain's matrix and audit are both complete:
+
+1. Read `matrix/<domain>-matrix.md` and `matrix/<domain>-audit.md`
+2. Create **bug tickets** for each `Incorrect` audit item → `tickets/bug/bug-<NNN>.md`
+3. Create **feature tickets** for each `Missing` matrix item → `tickets/feature/feature-<NNN>.md`
+4. Create **ptu-rule tickets** for each `Approximation` audit item → `tickets/ptu-rule/ptu-rule-<NNN>.md`
+5. Skip `Correct`, `Out of Scope`, `Ambiguous` items
+6. All tickets include `matrix_source` frontmatter
+
+## Template Mapping
+
+| Agent Type | Template File | Source Skill (reference only) |
+|---|---|---|
+| Developer | `templates/agent-dev.md` | `ptu-session-helper-dev.md` |
+| Senior Reviewer | `templates/agent-senior-reviewer.md` | `ptu-session-helper-senior-reviewer.md` |
+| Game Logic Reviewer | `templates/agent-game-logic-reviewer.md` | `game-logic-reviewer.md` |
+| Code Health Auditor | `templates/agent-code-health-auditor.md` | `code-health-auditor.md` |
+| Rule Extractor | `templates/agent-rule-extractor.md` | `ptu-rule-extractor.md` |
+| Capability Mapper | `templates/agent-capability-mapper.md` | `app-capability-mapper.md` |
+| Coverage Analyzer | `templates/agent-coverage-analyzer.md` | `coverage-analyzer.md` |
+| Implementation Auditor | `templates/agent-implementation-auditor.md` | `implementation-auditor.md` |
+| Retrospective Analyst | `templates/agent-retrospective-analyst.md` | `retrospective-analyst.md` |
+
+**Template fallback:** If a template produces poor agent results (incomplete output, wrong format), fall back to embedding the full skill file for that launch. Note this in the death report.
 
 ## Staleness Detection
 
 Compare timestamps across stages:
-- **App code change** after capability mapping → capabilities are stale, re-map needed
-- **Re-mapped capabilities** → matrix is stale, re-analyze needed
-- **Re-analyzed matrix** → audit is stale, re-audit needed
-- **Developer commit** after the latest approved review for the same target → review is stale, re-review needed (route to both reviewers in parallel)
+- App code changed after capability mapping → re-map needed
+- Re-mapped capabilities → matrix stale, re-analyze needed
+- Developer commit after latest approved review → re-review needed
 
-For code changes, check `git log --oneline -10` and map changed files to domains via `.claude/skills/references/app-surface.md`.
+For code changes, check `git log --oneline -10` and map to domains via `references/app-surface.md`.
 
 ## Domain List
 
-Domains the pipeline covers (ordered by priority):
-
-1. **combat** — damage, stages, initiative, turns, status conditions
-2. **capture** — capture rate, attempt, ball modifiers
-3. **healing** — rest, extended rest, Pokemon Center, injuries, new day
-4. **pokemon-lifecycle** — creation, stats, moves, abilities, evolution, linking
-5. **character-lifecycle** — creation, stats, classes, skills
-6. **encounter-tables** — table CRUD, entries, sub-habitats, generation
-7. **scenes** — CRUD, activate/deactivate, entities, positioning
-8. **vtt-grid** — grid movement, fog of war, terrain, backgrounds
-
-## End Session Protocol
-
-When the user says "end session", "wrap up", "done", "stop", or similar:
-
-### Step E1: Wait for In-Flight Agents
-If agents are still running, wait for them to complete (or ask user if they want to force-stop).
-
-### Step E2: Commit Uncommitted Changes
-Run `git status` to check for uncommitted changes. If any exist:
-1. Stage relevant files (not test artifacts, not `.env`, not logs)
-2. Commit with appropriate conventional commit message
-3. Report what was committed
-
-### Step E3: Push to Remote
-Push the current branch to origin:
-```bash
-git push
-```
-If the branch has no upstream, use `git push -u origin <branch>`.
-
-### Step E4: Process Pending Tickets
-Create all pending tickets before closing:
-- M2 tickets from completed matrix + audit domains
-- Bug tickets from any CRITICAL/HIGH audit items not yet ticketed
-- PTU-rule tickets from any reviewer findings not yet ticketed
-- Feature/UX tickets from any matrix MISSING items not yet ticketed
-
-Scan all artifact directories to ensure nothing was missed during the session.
-
-### Step E5: Update State Files
-Write final state to both `dev-state.md` and `test-state.md` with:
-- All work completed this session
-- Current pipeline position for each ecosystem
-- Any outstanding work for next session
-- Timestamp of session end
-
-### Step E6: Session Summary
-Present a concise session summary:
-```markdown
-## Session Summary
-
-### Completed
-- [list of tickets fixed, reviews done, matrix stages completed]
-
-### Committed & Pushed
-- [commit hashes with messages]
-
-### Tickets Created
-- [any new tickets from M2 processing]
-
-### Outstanding for Next Session
-- [what needs attention next]
-```
+| Domain | Coverage |
+|--------|----------|
+| combat | damage, stages, initiative, turns, status conditions |
+| capture | capture rate, attempt, ball modifiers |
+| healing | rest, extended rest, Pokemon Center, injuries |
+| pokemon-lifecycle | creation, stats, moves, abilities, evolution |
+| character-lifecycle | creation, stats, classes, skills |
+| encounter-tables | table CRUD, entries, sub-habitats, generation |
+| scenes | CRUD, activate/deactivate, entities, positioning |
+| vtt-grid | grid movement, fog of war, terrain, backgrounds |
 
 ## What You Do NOT Do
 
 - Write code or modify app files
 - Make PTU rule judgments (defer to Game Logic Reviewer)
 - Approve code changes (defer to Senior Reviewer)
-- Write artifacts other than `dev-state.md`, `test-state.md`, and tickets (during M2 processing)
+- Auto-spawn other orchestrators (suggest in death report, user launches)
+- Persist across multiple work units (one unit, then die)
+- Write artifacts other than state files, tickets (M2), and alive-agents.md
