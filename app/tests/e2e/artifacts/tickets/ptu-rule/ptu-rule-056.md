@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-056
 priority: P3
-status: p1-complete
+status: in-progress
 design_spec: designs/design-char-creation-001.md
 domain: character-lifecycle
 matrix_source:
@@ -38,3 +38,27 @@ The manual creation form is a minimal stub. Full character data can only be ente
 
 **M4 — Validation uses shared stat constants** (`68e33d7`)
 - `validateStatAllocation()` now imports `TOTAL_STAT_POINTS` and `MAX_POINTS_PER_STAT` from `trainerStats.ts` instead of hardcoding `10` and `5`.
+
+### P2 Implementation (2026-02-21)
+
+**Biography fields in composable** (`5b0ab14`)
+- Added age, gender, height, weight, backgroundStory, personality, goals, money to `useCharacterCreation` form state
+- Wired all biography fields through `buildCreatePayload()`
+- Default starting money: 5000 per PTU p.17
+- Background story takes precedence over preset name for the DB `background` field
+
+**BiographySection.vue component** (`67fd068`)
+- New collapsible section component with age, gender, height (cm with ft/in display), weight (kg with lbs and PTU weight class), background story, personality, goals, money
+- All fields optional/nullable. Section toggle controlled via props/emits
+- Unit conversion helpers: cmToFeetInches, kgToLbs, computeWeightClass
+
+**CreateMode type and section completion tracking** (`f8bd6c1`)
+- Added `CreateMode` ('quick'|'full') type export and `SectionCompletion` interface
+- Added `sectionCompletion` computed with per-section indicators for basicInfo, background, edges, classes, stats, biography
+
+**Quick-Create/Full-Create mode toggle in create.vue** (`2c898c4`)
+- Restructured create.vue with Quick Create (minimal: name, type, level, raw stats, notes) and Full Create (multi-section PTU-compliant form)
+- Mode toggle with lightbulb/books icons
+- Full Create includes section progress bar, all P0/P1/P2 sections, BiographySection
+- Biography auto-expands for PCs, collapses for NPCs
+- Create button always enabled (no hard validation blocks)

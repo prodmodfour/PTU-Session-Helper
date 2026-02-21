@@ -4,7 +4,7 @@ ticket_id: ptu-rule-056
 category: FEATURE_GAP
 scope: FULL
 domain: character-lifecycle
-status: p1-complete
+status: implemented
 affected_files:
   - app/pages/gm/create.vue
   - app/server/api/characters/index.post.ts
@@ -931,3 +931,40 @@ pages/gm/create.vue
 12. `295d4dd` -- `feat: add ClassFeatureSection component for character creation`
 13. `a2c638a` -- `feat: add EdgeSelectionSection component for character creation`
 14. `4a0eb0c` -- `feat: integrate class, feature, and edge sections into create page`
+
+### P1 Review Fixes (2026-02-20)
+
+**Trigger:** code-review-121 findings
+
+**Fixes applied:**
+- H1: Skill Edge removal now reverts skill rank (`f29b845`)
+- H2: Skill background validation clarified for Skill Edges (`c95a237`)
+- M1: Dead `skillEdgeError` code removed (`f8d7854`)
+- M4: Validation uses shared stat constants (`68e33d7`)
+
+### P2 Implementation (2026-02-21)
+
+**Status:** Complete
+
+**Files created:**
+- `app/components/create/BiographySection.vue` -- Collapsible section with age, gender, height (cm+ft/in), weight (kg+lbs+WC), background story, personality, goals, money. Unit conversion helpers.
+
+**Files modified:**
+- `app/composables/useCharacterCreation.ts` -- Added biography form fields (age, gender, height, weight, backgroundStory, personality, goals, money), DEFAULT_STARTING_MONEY constant, sectionCompletion computed, CreateMode/SectionCompletion type exports, wired biography into buildCreatePayload()
+- `app/pages/gm/create.vue` -- Restructured into Quick Create / Full Create mode toggle, integrated BiographySection, added section progress indicators, separate quickForm for minimal NPC creation, biography auto-expand for PCs
+
+**Design decisions:**
+- Quick Create is a separate form with its own `quickForm` ref -- does not share state with the Full Create composable (keeps forms independent, prevents data bleed)
+- Quick Create sends raw stats directly to the API (no point allocation), matching the original minimal form behavior
+- Full Create shows a section progress bar at the top with per-section completion indicators (checkmark vs dot)
+- BiographySection is collapsible: expanded by default for Player Characters, collapsed for NPCs (via watch on characterType)
+- Money defaults to 5000 (PTU p.17 level 1 starting funds), editable
+- Background story field takes precedence over background preset name for the DB `background` field in buildCreatePayload
+- Weight class display uses PTU weight class ranges (WC 1-6) for trainer reference
+- Height/weight show inline unit conversions (cm to ft/in, kg to lbs)
+
+**Commits:**
+15. `5b0ab14` -- `feat: add biography fields to useCharacterCreation composable`
+16. `67fd068` -- `feat: add BiographySection.vue for character creation`
+17. `f8bd6c1` -- `feat: add CreateMode type and section completion tracking`
+18. `2c898c4` -- `feat: add Quick-Create/Full-Create mode toggle with BiographySection`
