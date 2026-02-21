@@ -567,19 +567,25 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
     ? (entity as Pokemon).currentStats
     : (entity as HumanCharacter).stats
 
-  // Equipment bonuses for human combatants (shields for evasion, heavy armor for speed)
+  // Equipment bonuses for human combatants (shields for evasion, heavy armor for speed, focus for stats)
   let equipmentEvasionBonus = 0
   let equipmentSpeedDefaultCS = 0
+  let equipmentStatBonuses: Record<string, number> = {}
   if (entityType === 'human') {
     const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
     equipmentEvasionBonus = equipBonuses.evasionBonus
     equipmentSpeedDefaultCS = equipBonuses.speedDefaultCS
+    equipmentStatBonuses = equipBonuses.statBonuses
   }
 
+  // Focus stat bonus for speed (PTU p.295): +5 applied after combat stages
+  const focusSpeedBonus = equipmentStatBonuses.speed ?? 0
+
   // Heavy Armor sets speed default CS to -1 (PTU p.293), affecting initiative
+  // Focus (Speed) adds +5 after combat stages (PTU p.295), also affecting initiative
   const effectiveSpeed = equipmentSpeedDefaultCS !== 0
-    ? applyStageModifier(stats.speed, equipmentSpeedDefaultCS)
-    : stats.speed
+    ? applyStageModifier(stats.speed, equipmentSpeedDefaultCS) + focusSpeedBonus
+    : stats.speed + focusSpeedBonus
   const initiative = effectiveSpeed + initiativeBonus
 
   // Set initial speed CS to equipment default for Heavy Armor wearers (PTU p.293)
@@ -613,9 +619,9 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
       isHolding: false
     },
     injuries: { count: 0, sources: [] },
-    physicalEvasion: initialEvasion(stats.defense || 0) + equipmentEvasionBonus,
-    specialEvasion: initialEvasion(stats.specialDefense || 0) + equipmentEvasionBonus,
-    speedEvasion: initialEvasion(stats.speed || 0) + equipmentEvasionBonus,
+    physicalEvasion: initialEvasion((stats.defense || 0) + (equipmentStatBonuses.defense ?? 0)) + equipmentEvasionBonus,
+    specialEvasion: initialEvasion((stats.specialDefense || 0) + (equipmentStatBonuses.specialDefense ?? 0)) + equipmentEvasionBonus,
+    speedEvasion: initialEvasion((stats.speed || 0) + focusSpeedBonus) + equipmentEvasionBonus,
     position,
     tokenSize,
     entity: combatantEntity
