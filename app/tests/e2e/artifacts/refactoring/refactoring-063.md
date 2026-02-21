@@ -1,11 +1,13 @@
 ---
 ticket_id: refactoring-063
 priority: P4
-status: open
+status: resolved
 category: EXT-DUPLICATE
 source: code-review-123 (M2) + rules-review-113 (M2)
 created_at: 2026-02-21
 created_by: slave-collector (plan-20260221-063148)
+resolved_at: 2026-02-21
+resolved_by: slave/1-dev-058-fix
 ---
 
 ## Summary
@@ -27,3 +29,11 @@ Significance preset utilities are duplicated across `SignificancePanel.vue` and 
 ## Impact
 
 Low — this is a code hygiene issue. The duplication creates a maintenance risk where one component's labels or logic could drift from the other. The fix is small (extract + import) and improves consistency.
+
+## Resolution Log
+
+- **2d6831b** `refactor: extract resolvePresetFromMultiplier and preset labels to experienceCalculation.ts`
+  - Moved `resolvePresetFromMultiplier()` to `app/utils/experienceCalculation.ts`
+  - Added `SIGNIFICANCE_PRESET_LABELS` map with canonical friendly labels
+  - Updated `SignificancePanel.vue` and `XpDistributionModal.vue` to import shared utilities
+  - Both components now display identical preset labels

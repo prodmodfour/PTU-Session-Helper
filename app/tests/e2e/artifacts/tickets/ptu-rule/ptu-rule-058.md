@@ -39,3 +39,16 @@ Added `significanceMultiplier` persistence on Encounter model (Prisma column + t
 
 **Commits:** `ee1a0bd`, `353f342`, `de4339e`, `478b91e`, `ece9de3`, `0dcafb3`, `7c51539`, `645e8e4`, `9c1ddad`, `391eeb4`, `34299b1`
 **Files (11):** `schema.prisma`, `encounter.ts` (type), `encounter.service.ts`, `significance.put.ts` (new), `[id].put.ts`, `index.get.ts`, `encounter.ts` (store), `_significance-panel.scss` (new), `SignificancePanel.vue` (new), `gm/index.vue`, `XpDistributionModal.vue`
+
+### P1 Fix (code-review-123 CHANGES_REQUIRED) -- 2026-02-21
+
+Six issues from code-review-123 resolved:
+- **C1:** Added NaN/empty guards for v-model.number refs (customMultiplier, playerCount, difficultyAdjustment) in SignificancePanel
+- **H1:** Added null guard to defeatedEnemies watcher in SignificancePanel
+- **H2:** Added WebSocket broadcast after setSignificance succeeds
+- **M1:** Updated app-surface.md with PUT significance endpoint and encounter components
+- **M2:** Extracted resolvePresetFromMultiplier + SIGNIFICANCE_PRESET_LABELS to experienceCalculation.ts (resolves refactoring-063)
+- **M3:** Fixed significance fallback from ?? 2 to ?? 1.0 in XpDistributionModal
+
+**Commits:** `2d6831b`, `fabb4e5`, `93713fa`, `d3e89b2`, `52206fb`, `c73d0ec`
+**Files (4):** `experienceCalculation.ts`, `SignificancePanel.vue`, `XpDistributionModal.vue`, `app-surface.md`
