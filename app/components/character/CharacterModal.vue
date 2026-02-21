@@ -181,6 +181,13 @@
                 v-if="activeTab === 'skills'"
                 :skills="humanData.skills"
               />
+              <HumanEquipmentTab
+                v-if="activeTab === 'equipment'"
+                :character-id="humanData.id"
+                :equipment="localEquipment"
+                :is-in-encounter="isInEncounter"
+                @equipment-changed="onEquipmentChanged"
+              />
               <HumanPokemonTab
                 v-if="activeTab === 'pokemon'"
                 :pokemon="humanData.pokemon"
@@ -217,6 +224,7 @@
 
 <script setup lang="ts">
 import type { Pokemon, HumanCharacter } from '~/types'
+import type { EquipmentSlots } from '~/types/character'
 
 const props = defineProps<{
   character: Pokemon | HumanCharacter
@@ -264,6 +272,7 @@ const humanTabs = [
   { id: 'stats', label: 'Stats' },
   { id: 'classes', label: 'Classes' },
   { id: 'skills', label: 'Skills' },
+  { id: 'equipment', label: 'Equipment' },
   { id: 'pokemon', label: 'Pokemon' },
   { id: 'notes', label: 'Notes' }
 ]
@@ -287,6 +296,28 @@ watch(() => props.character, () => {
 const save = () => {
   emit('save', editData.value)
 }
+
+// Equipment state (tracked locally for reactivity on equip/unequip)
+const localEquipment = ref<EquipmentSlots>({})
+
+watch(() => props.character, () => {
+  if (!isPokemon.value) {
+    localEquipment.value = { ...(humanData.value.equipment ?? {}) }
+  }
+}, { immediate: true })
+
+const onEquipmentChanged = (equipment: EquipmentSlots) => {
+  localEquipment.value = equipment
+}
+
+// Check if the character is in an active encounter
+const encounterStore = useEncounterStore()
+const isInEncounter = computed(() => {
+  if (!encounterStore.encounter?.isActive) return false
+  return encounterStore.encounter.combatants.some(
+    c => c.entityId === props.character.id
+  )
+})
 </script>
 
 <style lang="scss" scoped>
