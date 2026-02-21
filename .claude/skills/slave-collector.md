@@ -149,19 +149,59 @@ git commit -m "orchestrator: collect-slaves for plan-<plan_id>"
 
 Only stage files that actually changed.
 
-## Step 6: Write Follow-Up Tickets
+## Step 6: File Follow-Up Tickets
 
-### 6a. Reviews with CHANGES_REQUIRED
+After merging, **read every review artifact and dev ticket** produced by the merged slaves. Identify ticketable issues and file them. This is NOT optional — the collector is the last entity that sees these artifacts before they go cold.
+
+### 6a. Scan All Merged Review Artifacts
+
+For each review artifact (code-review-*, rules-review-*) merged in Step 4:
+1. Read the full artifact
+2. Identify issues that are NOT part of the CHANGES_REQUIRED fix cycle (those get fixed by the developer responding to the review — not ticketed separately)
+3. Issues that ARE ticketable:
+   - **MEDIUM/LOW code issues** flagged as "code hygiene" or "future cleanup" (→ `refactoring/refactoring-NNN.md`)
+   - **New PTU rule gaps** discovered during review (→ `tickets/ptu-rule/ptu-rule-NNN.md`)
+   - **New bugs** discovered during review (→ `tickets/bug/bug-NNN.md`)
+   - **UX concerns** noted by reviewers (→ `tickets/ux/ux-NNN.md`)
+
+### 6b. Scan All Dev Slave Artifacts
+
+For each developer slave's output:
+1. Check the slave status file for any `notes` or `issues_discovered` fields
+2. Check any ticket artifacts the slave updated (e.g., fix logs that mention "also noticed X")
+3. File tickets for any side-discoveries
+
+### 6c. Ticket Filing Format
+
+For each ticketable issue:
+1. Determine the next ticket number for that category (check existing files in the target directory)
+2. Write the ticket in the standard format (frontmatter + Summary + Affected Files + Suggested Fix + Impact)
+3. Set `source:` to the review/artifact that identified the issue
+4. Set `created_by: slave-collector (plan-<plan_id>)`
+5. Commit all new tickets as part of the state update commit (Step 5d) or as a separate commit
+
+### 6d. Reviews with CHANGES_REQUIRED
 
 If any reviewer slave produced a verdict of `CHANGES_REQUIRED`:
 - The review artifacts are already merged (from Step 4)
+- The C/H issues are NOT separate tickets — they are the fix cycle for the target
 - Note in the final report that re-work is needed for those targets
 
-### 6b. M2 Ticket Creation Conditions
+### 6e. M2 Ticket Creation Conditions
 
 If any matrix slave completed and the domain now has matrix + audit both done:
 - Check if tickets have already been created for that domain
 - If not, note in the final report: "Domain <X> ready for M2 ticket creation. Run `/create_slave_plan` to include this."
+
+### 6f. Report Filed Tickets
+
+List all filed tickets in the final report:
+```markdown
+### Tickets Filed
+| Ticket | Category | Source | Summary |
+|--------|----------|--------|---------|
+| refactoring-063 | EXT-DUPLICATE | code-review-123 M2 + rules-review-113 M2 | Extract shared significance preset utilities |
+```
 
 ## Step 7: Cleanup
 

@@ -97,6 +97,7 @@ updated_by: slave-collector (plan-20260221-063148)
 | refactoring-060 | P4 | open | Count clamping test coverage (from code-review-122) |
 | refactoring-061 | P4 | open | CSS duplication in create components (from code-review-121) |
 | refactoring-062 | P4 | open | buildCombatantFromEntity test coverage (from code-review-120b) |
+| refactoring-063 | P4 | open | Extract shared significance preset utilities (from code-review-123 M2 + rules-review-113 M2) |
 
 ## Code Health
 
@@ -107,8 +108,8 @@ updated_by: slave-collector (plan-20260221-063148)
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 0 |
 | Open tickets (P3) | 9 (5 ptu-rules in-progress + 4 open ptu-rules) |
-| Open tickets (P4) | 4 (refactoring-059, 060, 061, 062) |
-| Total open | 13 |
+| Open tickets (P4) | 5 (refactoring-059, 060, 061, 062, 063) |
+| Total open | 14 |
 | Total resolved | 138 |
 
 ## Session Summary (2026-02-20, session 13)
