@@ -222,6 +222,7 @@ export default defineEventHandler(async (event) => {
     // Part 1: Stat-derived evasion uses combat stage MULTIPLIER on the stat (floor(modified/5))
     // Part 2: Evasion bonus from moves/effects is ADDITIVE, stacking on top
     // Part 3: Equipment evasion bonus (shields) stacks additively with move/effect evasion (PTU p.294)
+    // Part 4: Focus stat bonuses (+5 to stat) applied after combat stages (PTU p.295)
     const targetEvasion = getEntityEvasionStats(target)
     const targetStages = target.entity.stageModifiers
     let evasionBonus = targetStages?.evasion ?? 0
@@ -229,9 +230,13 @@ export default defineEventHandler(async (event) => {
     if (targetEquipBonuses) {
       evasionBonus += targetEquipBonuses.evasionBonus
     }
-    const physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage, evasionBonus)
-    const specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage, evasionBonus)
-    const speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage, evasionBonus)
+    // Focus stat bonuses for evasion: +5 to stat after combat stages (PTU p.295)
+    const focusDefBonus = targetEquipBonuses?.statBonuses.defense ?? 0
+    const focusSpDefBonus = targetEquipBonuses?.statBonuses.specialDefense ?? 0
+    const focusSpeedBonus = targetEquipBonuses?.statBonuses.speed ?? 0
+    const physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage, evasionBonus, focusDefBonus)
+    const specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage, evasionBonus, focusSpDefBonus)
+    const speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage, evasionBonus, focusSpeedBonus)
 
     // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
     // Auto-select the highest applicable evasion (rational defender always picks best).
