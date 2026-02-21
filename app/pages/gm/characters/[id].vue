@@ -188,6 +188,17 @@
           <p v-else class="empty-state">No skills recorded</p>
         </div>
 
+        <!-- Equipment Tab -->
+        <div v-if="activeTab === 'equipment'" class="tab-content">
+          <HumanEquipmentTab
+            v-if="character"
+            :character-id="character.id"
+            :equipment="localEquipment"
+            :is-in-encounter="isCharacterInEncounter"
+            @equipment-changed="onEquipmentChanged"
+          />
+        </div>
+
         <!-- Pokemon Tab -->
         <div v-if="activeTab === 'pokemon'" class="tab-content">
           <div v-if="character.pokemon?.length" class="pokemon-team">
@@ -243,6 +254,7 @@
 
 <script setup lang="ts">
 import type { HumanCharacter } from '~/types'
+import type { EquipmentSlots } from '~/types/character'
 import { computeTrainerDerivedStats } from '~/utils/trainerDerivedStats'
 
 definePageMeta({
@@ -264,6 +276,28 @@ const isEditing = ref(false)
 const saving = ref(false)
 const editData = ref<Partial<HumanCharacter>>({})
 const activeTab = ref('stats')
+
+// Equipment state (tracked locally for reactivity on equip/unequip)
+const localEquipment = ref<EquipmentSlots>({})
+
+watch(character, (char) => {
+  if (char) {
+    localEquipment.value = { ...(char.equipment ?? {}) }
+  }
+}, { immediate: true })
+
+const onEquipmentChanged = (equipment: EquipmentSlots) => {
+  localEquipment.value = equipment
+}
+
+// Check if character is in an active encounter
+const encounterStore = useEncounterStore()
+const isCharacterInEncounter = computed(() => {
+  if (!encounterStore.encounter?.isActive || !character.value) return false
+  return encounterStore.encounter.combatants.some(
+    c => c.entityId === character.value!.id
+  )
+})
 
 // Derived trainer capabilities (computed from skills + weight)
 const derivedStats = computed(() =>
@@ -311,6 +345,7 @@ const humanTabs = [
   { id: 'stats', label: 'Stats' },
   { id: 'classes', label: 'Classes' },
   { id: 'skills', label: 'Skills' },
+  { id: 'equipment', label: 'Equipment' },
   { id: 'pokemon', label: 'Pokemon' },
   { id: 'healing', label: 'Healing' },
   { id: 'notes', label: 'Notes' }
