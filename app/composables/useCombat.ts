@@ -47,16 +47,16 @@ export function useCombat() {
   // PTU Evasion — canonical implementation in ~/utils/damageCalculation.ts
   // Wrappers below provide semantic aliases for the three evasion types.
 
-  const calculatePhysicalEvasion = (defense: number, defenseStages: number = 0, evasionBonus: number = 0): number => {
-    return calculateEvasion(defense, defenseStages, evasionBonus)
+  const calculatePhysicalEvasion = (defense: number, defenseStages: number = 0, evasionBonus: number = 0, statBonus: number = 0): number => {
+    return calculateEvasion(defense, defenseStages, evasionBonus, statBonus)
   }
 
-  const calculateSpecialEvasion = (spDef: number, spDefStages: number = 0, evasionBonus: number = 0): number => {
-    return calculateEvasion(spDef, spDefStages, evasionBonus)
+  const calculateSpecialEvasion = (spDef: number, spDefStages: number = 0, evasionBonus: number = 0, statBonus: number = 0): number => {
+    return calculateEvasion(spDef, spDefStages, evasionBonus, statBonus)
   }
 
-  const calculateSpeedEvasion = (speed: number, speedStages: number = 0, evasionBonus: number = 0): number => {
-    return calculateEvasion(speed, speedStages, evasionBonus)
+  const calculateSpeedEvasion = (speed: number, speedStages: number = 0, evasionBonus: number = 0, statBonus: number = 0): number => {
+    return calculateEvasion(speed, speedStages, evasionBonus, statBonus)
   }
 
   // ===========================================
