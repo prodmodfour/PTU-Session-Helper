@@ -122,6 +122,7 @@
         :scene-name="scene.name"
         :pokemon-count="scene.pokemon.length"
         :character-count="scene.characters.length"
+        :budget-info="budgetInfo"
         @close="showStartEncounterModal = false"
         @confirm="handleStartEncounter"
       />
@@ -139,6 +140,7 @@ import {
   PhSword
 } from '@phosphor-icons/vue'
 import type { Scene, ScenePokemon, SceneCharacter, SceneGroup, ScenePosition } from '~/types/scene'
+import { analyzeEncounterBudget } from '~/utils/encounterBudget'
 
 definePageMeta({
   layout: 'gm'
@@ -208,6 +210,45 @@ const charactersWithPokemon = computed(() => {
         }))
     }))
     .filter(char => char.pokemon.length > 0)
+})
+
+// Budget info for StartEncounterModal (PTU p.473)
+const budgetInfo = computed(() => {
+  if (!scene.value) return undefined
+  if (scene.value.pokemon.length === 0 || scene.value.characters.length === 0) return undefined
+
+  // Get character IDs in the scene (these are the player trainers)
+  const sceneCharIds = scene.value.characters.map(c => c.characterId)
+  const playerCount = sceneCharIds.length
+
+  // Gather owned Pokemon levels from library data for scene characters
+  const ownedPokemonLevels = allPokemon.value
+    .filter(p => p.ownerId && sceneCharIds.includes(p.ownerId))
+    .map(p => p.level)
+
+  if (ownedPokemonLevels.length === 0) return undefined
+
+  const averagePokemonLevel = Math.round(
+    ownedPokemonLevels.reduce((sum, lv) => sum + lv, 0) / ownedPokemonLevels.length
+  )
+
+  // Scene wild Pokemon are treated as enemies (no trainers among wild Pokemon)
+  const enemies = scene.value.pokemon.map(p => ({
+    level: p.level,
+    isTrainer: false
+  }))
+
+  const analysis = analyzeEncounterBudget(
+    { averagePokemonLevel, playerCount },
+    enemies
+  )
+
+  return {
+    totalBudget: analysis.budget.totalBudget,
+    totalEnemyLevels: analysis.totalEnemyLevels,
+    effectiveEnemyLevels: analysis.effectiveEnemyLevels,
+    difficulty: analysis.difficulty
+  }
 })
 
 // Fetch scene on mount
