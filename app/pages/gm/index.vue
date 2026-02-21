@@ -77,8 +77,14 @@
           @addCombatant="showAddCombatant"
         />
 
-        <!-- Move Log -->
-        <CombatLogPanel :move-log="moveLog" />
+        <!-- Sidebar: Move Log + Significance Panel -->
+        <div class="encounter-sidebar">
+          <CombatLogPanel :move-log="moveLog" />
+          <SignificancePanel
+            :encounter="encounter"
+            @open-xp-modal="showXpModal = true"
+          />
+        </div>
       </div>
     </div>
 
@@ -561,6 +567,12 @@ const removeCombatant = async (combatantId: string) => {
   @media (max-width: 1200px) {
     grid-template-columns: 1fr;
   }
+}
+
+.encounter-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
 }
 
 .grid-view-panel {
