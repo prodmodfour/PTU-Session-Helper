@@ -22,7 +22,8 @@ export function useEncounterBudget() {
     const encounter = encounterStore.encounter
     if (!encounter) return null
 
-    const playerCombatants = encounter.combatants.filter(c => c.side === 'players')
+    // PTU p.460: "Divide by the number of Players -- not the number of Pokemon"
+    const playerCombatants = encounter.combatants.filter(c => c.side === 'players' && c.type === 'human')
     const enemies = encounter.combatants
       .filter(c => c.side === 'enemies')
       .map(c => ({
