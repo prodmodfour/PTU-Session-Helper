@@ -131,25 +131,7 @@ const handleConfirm = () => {
   font-weight: 600;
   text-transform: capitalize;
 
-  &--trivial {
-    color: #9e9e9e;
-  }
-
-  &--easy {
-    color: $color-success;
-  }
-
-  &--balanced {
-    color: $color-info;
-  }
-
-  &--hard {
-    color: $color-warning;
-  }
-
-  &--deadly {
-    color: $color-danger;
-  }
+  @include difficulty-text-colors('&');
 }
 
 .battle-type-options {

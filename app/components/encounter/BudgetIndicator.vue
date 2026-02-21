@@ -70,25 +70,7 @@ const difficultyLabel = computed(() => {
     border-radius: $border-radius-full;
     transition: width $transition-normal;
 
-    .budget-indicator--trivial & {
-      background: rgba(158, 158, 158, 0.6);
-    }
-
-    .budget-indicator--easy & {
-      background: $color-success;
-    }
-
-    .budget-indicator--balanced & {
-      background: $color-info;
-    }
-
-    .budget-indicator--hard & {
-      background: $color-warning;
-    }
-
-    .budget-indicator--deadly & {
-      background: $color-danger;
-    }
+    @include difficulty-bg-colors('.budget-indicator');
   }
 
   &__overflow {
@@ -131,24 +113,6 @@ const difficultyLabel = computed(() => {
   letter-spacing: 0.05em;
   font-size: $font-size-xs;
 
-  &--trivial {
-    color: #9e9e9e;
-  }
-
-  &--easy {
-    color: $color-success;
-  }
-
-  &--balanced {
-    color: $color-info;
-  }
-
-  &--hard {
-    color: $color-warning;
-  }
-
-  &--deadly {
-    color: $color-danger;
-  }
+  @include difficulty-text-colors('&');
 }
 </style>
