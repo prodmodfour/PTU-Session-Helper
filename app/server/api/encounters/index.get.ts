@@ -33,7 +33,9 @@ export default defineEventHandler(async () => {
       } as GridConfig,
       sceneNumber: 1,
       moveLog: JSON.parse(e.moveLog),
-      defeatedEnemies: JSON.parse(e.defeatedEnemies)
+      defeatedEnemies: JSON.parse(e.defeatedEnemies),
+      xpDistributed: e.xpDistributed ?? false,
+      significanceMultiplier: e.significanceMultiplier ?? 1.0
     }))
 
     return { success: true, data: parsed }
