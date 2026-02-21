@@ -4,7 +4,7 @@ ticket_id: ptu-rule-055
 category: FEATURE_GAP
 scope: FULL
 domain: pokemon-lifecycle
-status: p1-complete
+status: implemented
 affected_files:
   - app/server/api/encounters/[id]/end.post.ts
   - app/server/services/encounter.service.ts
@@ -650,3 +650,22 @@ The distribute endpoint is idempotent in the sense that it adds XP to current va
 **Design deviations:**
 - Player count detected from combatant owners (props) rather than from API response to avoid double API call on mount
 - Modal uses Teleport to body (consistent with GMActionModal pattern in the codebase)
+
+### P2 Implementation (2026-02-21)
+
+**Status:** Complete
+
+**Commits:** 253e3cb, f4bf446, 1735d09
+
+**Files created/modified:**
+
+| Action | File | Notes |
+|--------|------|-------|
+| **NEW** | `app/components/encounter/LevelUpNotification.vue` | Level-up results display showing per-Pokemon: stat points, tutor points, new moves, ability milestones, evolution eligibility. Transforms `XpApplicationResult[]` into display-friendly format. |
+| **NEW** | `app/assets/scss/components/_level-up-notification.scss` | SCSS partial for LevelUpNotification with color-coded detail items (teal=stat, violet=tutor, green=move, pink=ability, amber=evolution). |
+| **NEW** | `app/server/api/pokemon/[id]/add-experience.post.ts` | Standalone XP add endpoint accepting `{ amount: number }`. Loads Pokemon + learnset, calculates level-ups, updates DB (experience, level, tutorPoints), returns `XpApplicationResult`. |
+| **EDIT** | `app/components/encounter/XpDistributionModal.vue` | Added `hasLevelUps` computed and `LevelUpNotification` component in results phase, displayed conditionally after XP distribution when any Pokemon gained levels. |
+
+**Design deviations:**
+- LevelUpNotification is rendered inside the XpDistributionModal results section (below results-total, above footer) rather than as a separate modal/overlay — keeps the flow unified in one modal.
+- Evolution eligibility shows as a notification ("Evolution may be available at Level X!") rather than a detailed evolution path, since SpeciesData does not encode evolution conditions and the GM must consult the Pokedex entry manually.
