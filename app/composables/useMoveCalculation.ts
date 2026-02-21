@@ -199,10 +199,16 @@ export function useMoveCalculation(
     // the actual combat stages on Def/SpDef/Speed already affect evasion via the
     // multiplier table applied to the stat before dividing by 5.
     let evasionBonus = stages.evasion ?? 0
-    // Equipment evasion bonus (shields) stacks additively (PTU p.294)
+    // Equipment evasion bonus (shields) and Focus stat bonuses (PTU p.294-295)
+    let focusDefBonus = 0
+    let focusSpDefBonus = 0
+    let focusSpeedBonus = 0
     if (target.type === 'human') {
       const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
       evasionBonus += equipBonuses.evasionBonus
+      focusDefBonus = equipBonuses.statBonuses.defense ?? 0
+      focusSpDefBonus = equipBonuses.statBonuses.specialDefense ?? 0
+      focusSpeedBonus = equipBonuses.statBonuses.speed ?? 0
     }
 
     // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
@@ -210,19 +216,19 @@ export function useMoveCalculation(
     const speedStat = target.type === 'pokemon'
       ? getPokemonSpeedStat(entity)
       : getHumanStat(entity, 'speed')
-    const speedEvasion = calculateSpeedEvasion(speedStat, stages.speed, evasionBonus)
+    const speedEvasion = calculateSpeedEvasion(speedStat, stages.speed, evasionBonus, focusSpeedBonus)
 
     if (move.value.damageClass === 'Physical') {
       const defStat = target.type === 'pokemon'
         ? getPokemonDefenseStat(entity)
         : getHumanStat(entity, 'defense')
-      const physEvasion = calculatePhysicalEvasion(defStat, stages.defense, evasionBonus)
+      const physEvasion = calculatePhysicalEvasion(defStat, stages.defense, evasionBonus, focusDefBonus)
       return Math.max(physEvasion, speedEvasion)
     } else {
       const spDefStat = target.type === 'pokemon'
         ? getPokemonSpDefStat(entity)
         : getHumanStat(entity, 'specialDefense')
-      const specEvasion = calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus)
+      const specEvasion = calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus, focusSpDefBonus)
       return Math.max(specEvasion, speedEvasion)
     }
   }
@@ -240,28 +246,34 @@ export function useMoveCalculation(
     const stages = getStageModifiers(entity)
     // Evasion bonus from moves/effects (additive, not a multiplier-based combat stage)
     let evasionBonus = stages.evasion ?? 0
-    // Equipment evasion bonus (shields) stacks additively (PTU p.294)
+    // Equipment evasion bonus (shields) and Focus stat bonuses (PTU p.294-295)
+    let focusDefBonus = 0
+    let focusSpDefBonus = 0
+    let focusSpeedBonus = 0
     if (target.type === 'human') {
       const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
       evasionBonus += equipBonuses.evasionBonus
+      focusDefBonus = equipBonuses.statBonuses.defense ?? 0
+      focusSpDefBonus = equipBonuses.statBonuses.specialDefense ?? 0
+      focusSpeedBonus = equipBonuses.statBonuses.speed ?? 0
     }
 
     const speedStat = target.type === 'pokemon'
       ? getPokemonSpeedStat(entity)
       : getHumanStat(entity, 'speed')
-    const speedEvasion = calculateSpeedEvasion(speedStat, stages.speed, evasionBonus)
+    const speedEvasion = calculateSpeedEvasion(speedStat, stages.speed, evasionBonus, focusSpeedBonus)
 
     if (move.value.damageClass === 'Physical') {
       const defStat = target.type === 'pokemon'
         ? getPokemonDefenseStat(entity)
         : getHumanStat(entity, 'defense')
-      const physEvasion = calculatePhysicalEvasion(defStat, stages.defense, evasionBonus)
+      const physEvasion = calculatePhysicalEvasion(defStat, stages.defense, evasionBonus, focusDefBonus)
       return speedEvasion > physEvasion ? 'Speed Evasion' : 'Phys Evasion'
     } else {
       const spDefStat = target.type === 'pokemon'
         ? getPokemonSpDefStat(entity)
         : getHumanStat(entity, 'specialDefense')
-      const specEvasion = calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus)
+      const specEvasion = calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus, focusSpDefBonus)
       return speedEvasion > specEvasion ? 'Speed Evasion' : 'Spec Evasion'
     }
   }
