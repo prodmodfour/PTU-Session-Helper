@@ -99,8 +99,11 @@ CRUD + extensive combat actions.
 - `GET/PUT /api/encounters/:id/terrain` — terrain state
 - `POST /api/encounters/:id/breather` — mid-combat rest
 - `POST /api/encounters/:id/wild-spawn` — spawn wild Pokemon
+- `PUT /api/encounters/:id/significance` — set GM significance multiplier
 - `POST /api/encounters/:id/xp-calculate` — preview XP calculation (read-only breakdown + participating Pokemon)
 - `POST /api/encounters/:id/xp-distribute` — apply XP to Pokemon (updates experience, level, tutorPoints)
+
+**Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon).
 
 ### Encounter Templates (`/api/encounter-templates`)
 Full CRUD + save-from/load-to encounter.
