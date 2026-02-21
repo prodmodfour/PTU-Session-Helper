@@ -99,9 +99,10 @@ export { TYPE_CHART, NET_EFFECTIVENESS, getTypeEffectiveness, getEffectivenessLa
  * Evasion from other sources, but does not increase the Accuracy of an enemy's
  * Moves." The +9 cap on accuracy checks is enforced in calculateAccuracyThreshold.
  */
-export function calculateEvasion(baseStat: number, combatStage: number = 0, evasionBonus: number = 0): number {
-  // Part 1: Combat stage multiplier applied to stat, then derive evasion
-  const statEvasion = Math.min(6, Math.floor(applyStageModifier(baseStat, combatStage) / 5))
+export function calculateEvasion(baseStat: number, combatStage: number = 0, evasionBonus: number = 0, statBonus: number = 0): number {
+  // Part 1: Combat stage multiplier applied to stat, then add flat stat bonus (Focus items, PTU p.295),
+  // then derive evasion. Focus grants "+5 Bonus to a Stat" applied after combat stages.
+  const statEvasion = Math.min(6, Math.floor((applyStageModifier(baseStat, combatStage) + statBonus) / 5))
   // Part 2: Bonus evasion from moves/effects stacks additively on top
   // Negative evasion can erase stat-derived evasion but total never goes below 0
   return Math.max(0, statEvasion + evasionBonus)
