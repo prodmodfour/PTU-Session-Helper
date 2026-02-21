@@ -213,8 +213,9 @@ model Encounter {
   moveLog       String   @default("[]") // JSON array
 
   // XP tracking
-  defeatedEnemies String @default("[]") // JSON array
-  xpDistributed   Boolean @default(false) // Safety flag: true after XP has been distributed
+  defeatedEnemies        String  @default("[]") // JSON array
+  xpDistributed          Boolean @default(false) // Safety flag: true after XP has been distributed
+  significanceMultiplier Float   @default(1.0) // PTU significance multiplier for XP calculation (Core p.460)
 
   // Timestamps
   createdAt     DateTime @default(now())
