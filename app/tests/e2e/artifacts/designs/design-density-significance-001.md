@@ -4,7 +4,7 @@ ticket_id: ptu-rule-058
 category: PTU_INCORRECT
 scope: FULL
 domain: encounter-tables
-status: p0-complete
+status: p1-complete
 dependencies:
   - ptu-rule-055 (XP calculation system)
   - ptu-rule-060 (level-budget encounter creation)
@@ -588,3 +588,23 @@ The terrain store continues to handle spatial grid painting (movement costs, pas
 - `app/components/encounter-table/TableEditor.vue` -- updated density display to show description; removed `parentDensity` prop pass to ModificationCard; updated density options to use suggestions
 - `app/components/habitat/EncounterTableCard.vue` -- updated density label to show tier name instead of spawn range
 - `app/components/encounter-table/TableCard.vue` -- updated density label to show tier name instead of spawn range
+
+### P1 (Significance Multiplier + XP UI) -- 2026-02-21
+
+| Commit | Description | Files |
+|---|---|---|
+| `ee1a0bd` | Add `significanceMultiplier Float @default(1.0)` to Encounter model | `app/prisma/schema.prisma` |
+| `353f342` | Add `significanceMultiplier: number` to Encounter type interface | `app/types/encounter.ts` |
+| `de4339e` | Include significanceMultiplier in encounter serialization and WebSocket sync | `app/server/services/encounter.service.ts` |
+| `478b91e` | Add PUT `/api/encounters/:id/significance` endpoint (0.5-10 range validation) | `app/server/api/encounters/[id]/significance.put.ts` (new) |
+| `ece9de3` | Add `setSignificance` action to encounter store | `app/stores/encounter.ts` |
+| `0dcafb3` | Add SCSS partial for SignificancePanel | `app/assets/scss/components/_significance-panel.scss` (new) |
+| `7c51539` | Add SignificancePanel component (preset selector, difficulty slider, XP breakdown, boss toggle) | `app/components/encounter/SignificancePanel.vue` (new) |
+| `645e8e4` | Integrate SignificancePanel into GM encounter sidebar | `app/pages/gm/index.vue` |
+| `9c1ddad` | Default XpDistributionModal to encounter's persisted significance | `app/components/encounter/XpDistributionModal.vue` |
+| `391eeb4` | Include significanceMultiplier in encounter PUT (undo/redo path) | `app/server/api/encounters/[id].put.ts` |
+| `34299b1` | Include significanceMultiplier and xpDistributed in encounter list endpoint | `app/server/api/encounters/index.get.ts` |
+
+**Design vs actual:**
+- `xp.get.ts` endpoint was not needed — `xp-calculate.post.ts` from ptu-rule-055 already provides the same functionality
+- SignificancePanel calls the existing `xp-calculate.post.ts` endpoint for live XP preview

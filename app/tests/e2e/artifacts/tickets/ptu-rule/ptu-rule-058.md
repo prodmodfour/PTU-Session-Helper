@@ -32,3 +32,10 @@ Density is used as a spawn count multiplier. Environmental effects are generic V
 Density tier is now a descriptive label only. Spawn count is an explicit parameter in the generation flow. `DENSITY_RANGES` replaced with `DENSITY_SUGGESTIONS` (informational hints). `calculateSpawnCount` removed. `densityMultiplier` removed from TypeScript interface and UI (DB column preserved for backward compat). All unit tests updated and passing (65 tests across 2 files).
 
 **Commits:** `a5434db`, `c2d3b4d`, `1343265`, `c44853f`, `04c4a72`, `dd41e1d`, `e98b8e9`, `68be10d`
+
+### P1 (Significance Multiplier + XP UI) -- 2026-02-21
+
+Added `significanceMultiplier` persistence on Encounter model (Prisma column + type + serialization). New PUT endpoint `/api/encounters/:id/significance` with 0.5-10 range validation. SignificancePanel component in GM encounter sidebar with preset selector (PTU-labeled tiers), difficulty adjustment slider (-1.5 to +1.5), live XP breakdown, player count input, and boss encounter toggle. Store action `setSignificance()` with WebSocket sync. XpDistributionModal now defaults to encounter's persisted significance. Undo/redo and encounter list endpoints updated to include the field.
+
+**Commits:** `ee1a0bd`, `353f342`, `de4339e`, `478b91e`, `ece9de3`, `0dcafb3`, `7c51539`, `645e8e4`, `9c1ddad`, `391eeb4`, `34299b1`
+**Files (11):** `schema.prisma`, `encounter.ts` (type), `encounter.service.ts`, `significance.put.ts` (new), `[id].put.ts`, `index.get.ts`, `encounter.ts` (store), `_significance-panel.scss` (new), `SignificancePanel.vue` (new), `gm/index.vue`, `XpDistributionModal.vue`
