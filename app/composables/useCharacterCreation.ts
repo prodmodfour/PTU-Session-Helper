@@ -24,6 +24,8 @@ const STARTING_EDGES = 4
 /** Default starting money for level 1 trainers (PTU Core p. 17) */
 const DEFAULT_STARTING_MONEY = 5000
 
+export type CreateMode = 'quick' | 'full'
+
 export interface StatPoints {
   hp: number
   attack: number
@@ -31,6 +33,13 @@ export interface StatPoints {
   specialAttack: number
   specialDefense: number
   speed: number
+}
+
+export interface SectionCompletion {
+  label: string
+  complete: boolean
+  /** Count of filled items (e.g. "2/4 edges") or empty string */
+  detail: string
 }
 
 export function useCharacterCreation() {
@@ -264,6 +273,51 @@ export function useCharacterCreation() {
     ...classFeatureEdgeWarnings.value
   ])
 
+  // --- Section Completion (for Full Create mode indicators) ---
+  const sectionCompletion = computed((): Record<string, SectionCompletion> => {
+    const hasBackground = Boolean(form.backgroundName || form.isCustomBackground)
+    const skillsWithRanks = Object.values(form.skills).filter(r => r !== 'Untrained').length
+
+    return {
+      basicInfo: {
+        label: 'Basic Info',
+        complete: Boolean(form.name),
+        detail: form.name ? '' : 'Name required'
+      },
+      background: {
+        label: 'Background & Skills',
+        complete: hasBackground && skillsWithRanks >= 5,
+        detail: hasBackground ? `${skillsWithRanks} skills set` : 'No background'
+      },
+      edges: {
+        label: 'Edges',
+        complete: form.edges.length === STARTING_EDGES,
+        detail: `${form.edges.length}/${STARTING_EDGES}`
+      },
+      classes: {
+        label: 'Classes & Features',
+        complete: form.trainerClasses.length > 0 && allFeatures.value.length > 0,
+        detail: `${form.trainerClasses.length} classes, ${allFeatures.value.length} features`
+      },
+      stats: {
+        label: 'Combat Stats',
+        complete: statPointsRemaining.value === 0,
+        detail: `${statPointsUsed.value}/${TOTAL_STAT_POINTS} points`
+      },
+      biography: {
+        label: 'Biography',
+        complete: Boolean(form.backgroundStory || form.personality || form.goals),
+        detail: [
+          form.age != null ? 'age' : '',
+          form.gender ? 'gender' : '',
+          form.backgroundStory ? 'story' : '',
+          form.personality ? 'personality' : '',
+          form.goals ? 'goals' : ''
+        ].filter(Boolean).join(', ') || 'Optional'
+      }
+    }
+  })
+
   // --- API Payload ---
   function buildCreatePayload() {
     // Background story takes precedence over preset name for the DB field
@@ -322,6 +376,8 @@ export function useCharacterCreation() {
     addEdge,
     removeEdge,
     addSkillEdge,
+    // Section completion
+    sectionCompletion,
     // Validation
     statWarnings,
     skillWarnings,
