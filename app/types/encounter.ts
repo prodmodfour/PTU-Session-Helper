@@ -134,6 +134,9 @@ export interface Encounter {
 
   // Safety flag: true after XP has been distributed for this encounter
   xpDistributed?: boolean;
+
+  // PTU significance multiplier for XP calculation (Core p.460)
+  significanceMultiplier: number;
 }
 
 // Movement preview for broadcasting to group view
