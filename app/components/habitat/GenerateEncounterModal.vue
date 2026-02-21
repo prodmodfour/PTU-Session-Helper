@@ -20,6 +20,21 @@
           </div>
         </div>
 
+        <!-- Budget Guide -->
+        <div v-if="partyContext" class="budget-guide">
+          <div class="budget-guide__header">
+            <PhScales :size="16" />
+            <h4>Budget Guide</h4>
+          </div>
+          <p class="budget-guide__formula">
+            Lv.{{ partyContext.averagePokemonLevel }} x 2 x {{ partyContext.playerCount }} players = <strong>{{ budgetTotal }}</strong> levels
+          </p>
+          <BudgetIndicator
+            v-if="budgetAnalysis"
+            :analysis="budgetAnalysis"
+          />
+        </div>
+
         <!-- Generation Options -->
         <div class="form-section">
           <div class="form-group">
@@ -241,6 +256,9 @@
 <script setup lang="ts">
 import type { EncounterTable, ResolvedTableEntry, DensityTier } from '~/types'
 import { DENSITY_SUGGESTIONS, MAX_SPAWN_COUNT } from '~/types'
+import { PhScales } from '@phosphor-icons/vue'
+import { calculateEncounterBudget, analyzeEncounterBudget } from '~/utils/encounterBudget'
+import type { BudgetAnalysis } from '~/utils/encounterBudget'
 
 const props = defineProps<{
   table: EncounterTable
@@ -248,6 +266,7 @@ const props = defineProps<{
   addError?: string | null
   addingToEncounter?: boolean
   scenes?: Array<{ id: string; name: string }>
+  partyContext?: { averagePokemonLevel: number; playerCount: number }
 }>()
 
 const emit = defineEmits<{
@@ -312,6 +331,22 @@ const totalWeight = computed(() => {
 // Density suggestion for the current table (informational hint)
 const densitySuggestion = computed(() => {
   return DENSITY_SUGGESTIONS[props.table.density] ?? DENSITY_SUGGESTIONS.moderate
+})
+
+// Budget calculations (only active when partyContext is provided)
+const budgetTotal = computed((): number => {
+  if (!props.partyContext) return 0
+  const result = calculateEncounterBudget(props.partyContext)
+  return result.totalBudget
+})
+
+const budgetAnalysis = computed((): BudgetAnalysis | null => {
+  if (!props.partyContext || generatedPokemon.value.length === 0) return null
+  const enemies = generatedPokemon.value.map(p => ({
+    level: p.level,
+    isTrainer: false
+  }))
+  return analyzeEncounterBudget(props.partyContext, enemies)
 })
 
 // Methods
@@ -498,6 +533,37 @@ watch(() => props.table, (newTable) => {
         background: rgba(244, 67, 54, 0.2);
         color: #ef5350;
       }
+    }
+  }
+}
+
+.budget-guide {
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+  border: 1px solid rgba($color-info, 0.2);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
+    color: $color-info;
+
+    h4 {
+      margin: 0;
+      font-size: $font-size-sm;
+    }
+  }
+
+  &__formula {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin: 0 0 $spacing-sm 0;
+
+    strong {
+      color: $color-text;
     }
   }
 }
