@@ -315,9 +315,20 @@ const phase = ref<'configure' | 'results'>('configure')
 // Guard flag: suppress watcher-triggered recalculations during initialization
 const initialized = ref(false)
 
-// Configuration state
-const selectedPreset = ref<SignificancePreset | 'custom'>('average')
-const customMultiplier = ref(2)
+// Resolve the initial preset from the encounter's persisted significance
+const resolvePresetFromMultiplier = (multiplier: number): SignificancePreset | 'custom' => {
+  for (const [key, value] of Object.entries(SIGNIFICANCE_PRESETS)) {
+    if (value === multiplier) return key as SignificancePreset
+  }
+  return 'custom'
+}
+
+// Configuration state — default from the encounter's persisted significance
+const persistedSignificance = props.encounter.significanceMultiplier ?? 2
+const selectedPreset = ref<SignificancePreset | 'custom'>(
+  resolvePresetFromMultiplier(persistedSignificance)
+)
+const customMultiplier = ref(persistedSignificance)
 const isBossEncounter = ref(false)
 const isCalculating = ref(false)
 const isDistributing = ref(false)
