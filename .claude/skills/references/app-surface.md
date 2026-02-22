@@ -18,7 +18,7 @@ Testable features, routes, and API endpoints for the PTU Session Helper.
 | `/gm` | `pages/gm/index.vue` | Encounter management — create, run, control encounters (VTT grid + list) |
 | `/gm/sheets` | `pages/gm/sheets.vue` | Character/Pokemon library — browse, filter, search, grouped by location |
 | `/gm/create` | `pages/gm/create.vue` | Create Human Character or Pokemon |
-| `/gm/characters/:id` | `pages/gm/characters/[id].vue` | Human character sheet — Stats, Classes, Skills, Pokemon, Healing, Notes tabs |
+| `/gm/characters/:id` | `pages/gm/characters/[id].vue` | Human character sheet — Stats, Classes, Skills, Equipment, Pokemon, Healing, Notes tabs |
 | `/gm/pokemon/:id` | `pages/gm/pokemon/[id].vue` | Pokemon sheet — Stats, Moves, Abilities, Capabilities, Skills, Healing, Notes tabs |
 | `/gm/encounters` | `pages/gm/encounters.vue` | Encounter template library — CRUD templates |
 | `/gm/encounter-tables` | `pages/gm/encounter-tables.vue` | Encounter tables list — create, import/export, generate |
@@ -60,6 +60,8 @@ CRUD + healing/rest + equipment actions.
 - `POST /api/characters/:id/new-day` — reset daily limits
 - `GET /api/characters/players` — player characters only
 - `POST /api/characters/import-csv` — CSV import
+
+**Key equipment components:** `HumanEquipmentTab.vue` (equipment slot management — equip/unequip/custom items, catalog dropdown, combat bonuses summary), `EquipmentCatalogBrowser.vue` (modal catalog browser with slot filtering, search, and direct equip-to-character). Constants in `constants/equipment.ts` (catalog, slot labels, stat labels). Bonuses utility in `utils/equipmentBonuses.ts`.
 
 ### Pokemon (`/api/pokemon`)
 CRUD + link/unlink + healing/rest + bulk.
