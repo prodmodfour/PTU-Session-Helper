@@ -36,7 +36,22 @@ The density tier system controls spawn count but has no connection to level-base
 | C1 (generate) | `65e5b77` | Add manual party input to GenerateEncounterModal budget guide |
 | H1 | `05f5847` | Update `app-surface.md` with budget system files |
 
-### Files Changed
+## Fix Log (P0 Re-review Fixes — code-review-130)
+
+| Issue | Commit | Description |
+|-------|--------|-------------|
+| C2 | `6654e05` | Add `difficulty-bg-colors-ancestor` mixin for ancestor-context selectors; fix BudgetIndicator fill bar |
+| M3 | `9bed26f` | Extract BudgetGuide.vue from GenerateEncounterModal.vue (834 → 690 lines) |
+| M4 | `e80fb27` | Filter budgetInfo playerCount to PC trainers only (PTU p.473) |
+
+### Files Changed (Re-review)
+- `app/assets/scss/_difficulty.scss` — added `difficulty-bg-colors-ancestor` mixin variant
+- `app/components/encounter/BudgetIndicator.vue` — use ancestor mixin for fill bar
+- `app/components/habitat/BudgetGuide.vue` — new component (extracted from GenerateEncounterModal)
+- `app/components/habitat/GenerateEncounterModal.vue` — replaced inline budget guide with BudgetGuide component
+- `app/pages/gm/scenes/[id].vue` — filter playerCount and ownedPokemonLevels to PC characters only
+
+### Files Changed (Original)
 - `app/utils/encounterBudget.ts` — renamed field + JSDoc
 - `app/composables/useEncounterBudget.ts` — human-only player filter
 - `app/assets/scss/_variables.scss` — added `$color-neutral`
