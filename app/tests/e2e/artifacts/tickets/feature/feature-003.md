@@ -77,3 +77,25 @@ Functional scaffolding exists at `/player` — encounter display with combatant 
 - Mobile-first with 320px minimum width, bottom tab navigation
 - `PlayerActionRequest` typed WebSocket message for player-to-GM action requests
 - No authentication (localStorage character picker with `ptu_player_identity` key)
+
+### Track B: Infrastructure / Remote Access (Design Phase)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-22 | (infra slave) | Design spec: `design-player-view-infra-001.md` -- Cloudflare Tunnel for remote access, PWA offline cache, JSON export/import, data sync model, conflict resolution |
+
+### Track C: Integration (Design Phase)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-22 | fc2c7f2 | Design spec: `design-player-view-integration-001.md` -- WebSocket protocol expansion (10 new message types), Group View control (GM-approved tab changes), VTT grid for players (tap-to-request-move), scene view, state sync architecture, cross-track integration. 10 new files + 10 modified files across P0/P1/P2. |
+
+**Design decisions made:**
+- All player-to-GM communication uses `requestId` tracking for response routing via server-side `pendingRequests` map
+- Group View tab changes require GM approval (except auto-switch on encounter serve / scene activate)
+- VTT grid reuses `GridCanvas.vue` with `playerMode` prop -- no token drag, tap-to-request-move model
+- Scene view is read-only, pushed to player on connect and on activation
+- Server-authoritative eventual consistency -- no CRDTs, turn-based combat is inherently sequential
+- 45-second keepalive prevents Cloudflare Tunnel 100-second idle timeout
+- REST fallback endpoint for action requests during WS disconnection
+- `pendingRequests` map entries auto-expire after 60 seconds
