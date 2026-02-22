@@ -217,7 +217,7 @@ During combat, when it is the player's trainer's turn, a "Switch Pokemon" button
 3. Sends a `player_action` WebSocket message to the GM with `{ action: 'switch_pokemon', pokemonId }`.
 4. The GM's app receives the request and can approve/execute it.
 
-**Important:** Switching Pokemon is a Standard Action in PTU. The player view sends the *request*; the GM executes it using the existing encounter management tools.
+**Important:** A full Pokemon Switch (recall + release as one action) is a Standard Action in PTU. Individual Recall or Release actions are each a Shift Action. Switching out a Fainted Pokemon is also a Shift Action. The player view sends the *request*; the GM executes it using the existing encounter management tools and determines the correct action economy.
 
 ---
 
@@ -261,7 +261,7 @@ The full PTU action set for players, mapped to the existing backend:
 | Struggle | Standard | `encounterStore.executeMove(id, 'struggle', targets)` | Button + target selector |
 | Pass Turn | N/A | `encounterStore.nextTurn()` or `encounterCombatStore.pass()` | Confirmation button |
 | Use Item | Standard | Player request via WS (GM executes) | Item picker from inventory |
-| Switch Pokemon | Standard | Player request via WS (GM executes) | Pokemon team selector |
+| Switch Pokemon | Standard (full switch) / Shift (recall or release individually, or fainted) | Player request via WS (GM executes) | Pokemon team selector |
 | Combat Maneuver | Varies | Player request via WS (GM executes) | Maneuver grid |
 
 ### 4.3 Action Execution Model
