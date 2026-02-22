@@ -62,3 +62,25 @@ The manual creation form is a minimal stub. Full character data can only be ente
 - Full Create includes section progress bar, all P0/P1/P2 sections, BiographySection
 - Biography auto-expands for PCs, collapses for NPCs
 - Create button always enabled (no hard validation blocks)
+
+### P2 Follow-up Fixes (2026-02-22, code-review-129)
+
+**H1 — cmToFeetInches() rounding bug** (`3374668`)
+- Added inches===12 guard so 182cm displays as 6'0" instead of 5'12"
+
+**H2 — computeWeightClass() wrong scale** (`d8c63eb`)
+- Replaced Pokemon weight class scale (WC 1-6 in kg) with PTU Trainer scale (WC 3/4/5 in lbs)
+
+**M1 — parseOptionalInt() rejects negative values** (`8c0279f`)
+- Added `parsed < 1` guard to treat zero/negative input as null
+
+**M2 — Magic number in section completion** (`c8d4edd`)
+- Simplified background section completion to just `hasBackground` (removed `skillsWithRanks >= 5` threshold; validation warnings already cover skill counts)
+
+**M3 — Quick Create money field** (`a34c2f4`)
+- PCs now get DEFAULT_STARTING_MONEY (5000); NPCs stay at 0
+- Exported DEFAULT_STARTING_MONEY from composable for reuse
+
+**C1 — Extract QuickCreateForm.vue** (`06dca93`)
+- Moved Quick Create form template, state, and submission logic into `components/create/QuickCreateForm.vue`
+- create.vue reduced from 869 to 756 lines (under 800-line limit)
