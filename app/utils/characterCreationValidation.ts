@@ -85,7 +85,7 @@ export function validateStatAllocation(
  */
 export function validateSkillBackground(
   skills: Record<string, string>,
-  _level: number,
+  level: number,
   edges: string[] = []
 ): CreationWarning[] {
   const warnings: CreationWarning[] = []
@@ -97,6 +97,7 @@ export function validateSkillBackground(
   const skillEdgeSuffix = hasSkillEdges ? ', including Skill Edge modifications' : ''
   const severity = hasSkillEdges ? 'info' as const : 'warning' as const
 
+  // Background baseline validation (always applies regardless of level)
   if (adeptCount !== 1) {
     warnings.push({
       section: 'skills',
@@ -116,6 +117,32 @@ export function validateSkillBackground(
       section: 'skills',
       message: `Background should set exactly 3 skills to Pathetic (found ${patheticCount}${skillEdgeSuffix})`,
       severity
+    })
+  }
+
+  // Skill rank cap validation based on level
+  const maxRank = getMaxSkillRankForLevel(level)
+  const overCapSkills: string[] = []
+  for (const [skill, rank] of Object.entries(skills)) {
+    if (isSkillRankAboveCap(rank, level)) {
+      overCapSkills.push(`${skill} (${rank})`)
+    }
+  }
+
+  if (overCapSkills.length > 0) {
+    warnings.push({
+      section: 'skills',
+      message: `Skills exceed rank cap for level ${level} (max ${maxRank}): ${overCapSkills.join(', ')}`,
+      severity: 'warning'
+    })
+  }
+
+  // Informational: show skill rank cap at the current level
+  if (level > 1) {
+    warnings.push({
+      section: 'skills',
+      message: `Level ${level} skill rank cap: ${maxRank}. Bonus Skill Edges from milestones: ${level >= 2 ? 'Lv2' : ''}${level >= 6 ? ', Lv6' : ''}${level >= 12 ? ', Lv12' : ''} (cannot raise to the newly unlocked rank).`,
+      severity: 'info'
     })
   }
 
