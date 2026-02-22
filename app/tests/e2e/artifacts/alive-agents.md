@@ -28,3 +28,11 @@
 | plan-20260222-204629/slave-6 | developer | feature-002-design | success | 2026-02-22T21:15:00Z | d5db98e |
 | plan-20260222-204629/slave-7 | developer | feature-003-track-a-design | success | 2026-02-22T21:45:00Z | 6c2f74c, fa72709, 5a13d5e, 7c5f5bf, 534e737 |
 | plan-20260222-204629/slave-8 | developer | feature-003-track-b-design | success | 2026-02-22T21:20:00Z | 85ea07b, 97167f6, a30fe3d, 28c9cc7, 0135dd4 |
+| plan-20260222-214423/slave-1 | developer | ptu-rule-060-fix | success | 2026-02-22T22:00:00Z | 3f362c7, e0d2e23, d613c6d, da0f7da |
+| plan-20260222-214423/slave-2 | reviewers | ptu-rule-058+055-rereview | success | 2026-02-22T22:21:00Z | 605d483, a6de29b |
+| plan-20260222-214423/slave-3 | reviewers | ptu-rule-045-rereview | APPROVED | 2026-02-22T22:05:00Z | c56ef65, 0c7d24f |
+| plan-20260222-214423/slave-4 | reviewers | ptu-rule-056-rereview | CHANGES_REQUIRED | 2026-02-22T22:18:00Z | 0b04ddc, c1d8139 |
+| plan-20260222-214423/slave-5 | developer | ptu-rule-078 | success | 2026-02-22T21:55:15Z | b56535b, 270e429, cc3f6ca, 6c1af5f, 006a8e4 |
+| plan-20260222-214423/slave-6 | developer | ptu-rule-079 | success | 2026-02-22T21:52:30Z | d0ab030, 126879e |
+| plan-20260222-214423/slave-7 | developer | ptu-rule-080 | success | 2026-02-22T22:00:00Z | 9a4b92c, fb5ac76, 76f944b, 5607f5c, 3029b96, cfcc129 |
+| plan-20260222-214423/slave-8 | developer | feature-003-track-c | success | 2026-02-22T22:07:00Z | 6250402, f52849b |

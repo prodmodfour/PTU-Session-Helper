@@ -53,9 +53,16 @@ All 8 domains are stale due to sessions 5–13 code changes. Re-mapping is now u
 - **pokemon-lifecycle:** ptu-rule-055 P2 — LevelUpNotification.vue, add-experience endpoint, XpDistributionModal level-up integration
 - **character-lifecycle:** ptu-rule-056 P2 — BiographySection.vue, useCharacterCreation biography fields, gm/create.vue quick/full-create mode toggle
 
+## Session 16 Changes (additional staleness)
+
+- **combat:** ptu-rule-079 fix — Helmet conditional DR now stacks with manual DR override in calculate-damage endpoint
+- **character-lifecycle:** ptu-rule-078 fix — Corrected ~28 trainer class associatedSkills in trainerClasses.ts
+- **character-lifecycle:** ptu-rule-080 fix — Level-aware stat allocation, skill rank caps, edges/features validation in characterCreationValidation.ts, trainerStats.ts, useCharacterCreation.ts, create.vue
+- **encounter-tables:** ptu-rule-060 P0 fixes — SCSS mixin ancestor selector, BudgetGuide extraction from GenerateEncounterModal, PC-only player count filter in scenes page
+
 ## Recommended Next Steps
 
-1. Re-map all 8 domains — sessions 12-14 added major new capabilities across combat, pokemon-lifecycle, character-lifecycle, encounter-tables
-2. Fix ptu-rule-058 P1 issues from code-review-123 (CHANGES_REQUIRED)
-3. Continue P2 implementations: 045 (equipment UI), 055 (level-up notifications), 056 (biographical fields)
-4. Review ptu-rule-060 P0 and ptu-rule-077 fix
+1. Re-map all 8 domains — sessions 12-16 added major new capabilities across combat, pokemon-lifecycle, character-lifecycle, encounter-tables
+2. Fix ptu-rule-056 P2 issues from code-review-133 (CHANGES_REQUIRED — scoped CSS, type safety)
+3. Review ptu-rule-060 P0 fixes, ptu-rule-078, ptu-rule-079, ptu-rule-080
+4. Continue ptu-rule-060 P1+ tiers
