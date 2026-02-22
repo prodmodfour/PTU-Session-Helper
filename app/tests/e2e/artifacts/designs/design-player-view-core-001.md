@@ -327,7 +327,7 @@ const struggleMove: Move = {
   ac: 4,
   damageBase: 4,
   range: 'Melee',
-  effect: 'Typeless. The user loses 1/4th of their max HP.'
+  effect: 'Normal Type. AC 4, DB 4, Melee, Physical. No STAB. Does not count as a Move. Expert+ Combat Skill: AC 3, DB 5.'
 }
 ```
 
