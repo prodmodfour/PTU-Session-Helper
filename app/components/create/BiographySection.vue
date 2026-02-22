@@ -161,12 +161,12 @@ defineEmits<{
   'update:money': [value: number]
 }>()
 
-/** Parse an input event to an optional integer (null if empty) */
+/** Parse an input event to an optional positive integer (null if empty or invalid) */
 function parseOptionalInt(event: Event): number | null {
   const value = (event.target as HTMLInputElement).value
   if (!value) return null
   const parsed = parseInt(value, 10)
-  return isNaN(parsed) ? null : parsed
+  return isNaN(parsed) || parsed < 1 ? null : parsed
 }
 
 /** Parse an input event to an integer, falling back to a default */
