@@ -101,7 +101,7 @@
             <span class="xp-summary__value">{{ calculationResult?.breakdown.multipliedXp ?? 0 }}</span>
           </div>
           <div v-if="!isBossEncounter" class="xp-summary__row">
-            <span class="xp-summary__label">/ {{ playerCount }} players</span>
+            <span class="xp-summary__label">/ {{ safePlayerCount }} players</span>
             <span class="xp-summary__value">{{ calculationResult?.totalXpPerPlayer ?? 0 }}</span>
           </div>
           <div class="xp-summary__row xp-summary__row--total">
@@ -374,9 +374,13 @@ const detectedPlayerCount = computed(() => {
 
 const playerCount = ref(1)
 
+// NaN-safe accessors — Vue 3.4+ v-model.number returns '' when input is cleared
+const safeCustomMultiplier = computed(() => Number(customMultiplier.value) || 1.0)
+const safePlayerCount = computed(() => Math.max(1, Number(playerCount.value) || 1))
+
 // Effective significance multiplier
 const effectiveMultiplier = computed(() => {
-  if (selectedPreset.value === 'custom') return customMultiplier.value
+  if (selectedPreset.value === 'custom') return safeCustomMultiplier.value
   return SIGNIFICANCE_PRESETS[selectedPreset.value]
 })
 
@@ -484,7 +488,7 @@ const recalculate = async () => {
   try {
     const result = await encounterStore.calculateXp({
       significanceMultiplier: effectiveMultiplier.value,
-      playerCount: playerCount.value,
+      playerCount: safePlayerCount.value,
       isBossEncounter: isBossEncounter.value
     })
 
@@ -526,7 +530,7 @@ const handleApply = async () => {
 
     const result = await encounterStore.distributeXp({
       significanceMultiplier: effectiveMultiplier.value,
-      playerCount: playerCount.value,
+      playerCount: safePlayerCount.value,
       isBossEncounter: isBossEncounter.value,
       distribution
     })
