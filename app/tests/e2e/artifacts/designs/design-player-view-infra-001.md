@@ -755,14 +755,10 @@ Running the app on a VPS (DigitalOcean, Hetzner, etc.) would solve remote access
 - Defeats the "run it at home" simplicity
 
 ### 2. Database Replication (CouchDB/PouchDB)
-Replacing SQLite with CouchDB and using PouchDB for client-side sync would give automatic bidirectional replication. But:
-- Massive migration effort (14 Prisma models, 106 endpoints)
-- CouchDB is heavy infrastructure for a hobby tool
-- The data model doesn't benefit from document-style storage
-- Overkill -- only player data needs offline access, not the entire DB
+CouchDB + PouchDB would give automatic bidirectional replication, but requires migrating 14 Prisma models and 106 endpoints. Overkill -- only player data needs offline access, not the entire DB.
 
 ### 3. Tailscale as Primary Solution
-Covered in the comparison matrix. Best security, worst player experience (requires app install). Could be offered as an advanced option in documentation for groups that prefer it.
+Covered in the comparison matrix. Best security, worst player experience (requires app install).
 
 ### 4. WebRTC for P2P Data Sync
 Peer-to-peer data sync without a server. But:
@@ -776,16 +772,6 @@ Export character data to a Git repo that players pull from. But:
 - Requires Git knowledge (non-starter for casual players)
 - No real-time capability
 - Conflict resolution in Git is developer-level work
-
----
-
-## Implementation Log
-
-*(Updated as implementation proceeds)*
-
-| Date | Phase | Commit | Description |
-|------|-------|--------|-------------|
-| | | | |
 
 ---
 
@@ -803,9 +789,7 @@ Export character data to a Git repo that players pull from. But:
 
 ---
 
-## Resolution Log
-
-*(Populated after each phase completes)*
+## Tracking
 
 | Phase | Status | Commit Range | Notes |
 |-------|--------|-------------|-------|
