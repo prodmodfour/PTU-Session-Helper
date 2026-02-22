@@ -59,15 +59,15 @@ export const TRAINER_CLASSES: TrainerClassDef[] = [
 
   // --- Specialist Team ---
   { name: 'Stat Ace', category: 'Specialist Team', associatedSkills: ['Command', 'Focus'], description: 'Specializes in a Combat Stat', isBranching: true },
-  { name: 'Style Expert', category: 'Specialist Team', associatedSkills: ['Charm', 'Intuition'], description: 'Specializes in a Contest Stat', isBranching: true },
-  { name: 'Type Ace', category: 'Specialist Team', associatedSkills: ['Command', 'Pokemon Ed'], description: 'Specializes in a Pokemon Type', isBranching: true },
+  { name: 'Style Expert', category: 'Specialist Team', associatedSkills: ['Charm', 'Command', 'Guile', 'Intimidate', 'Intuition'], description: 'Specializes in a Contest Stat', isBranching: true },
+  { name: 'Type Ace', category: 'Specialist Team', associatedSkills: [], description: 'Specializes in a Pokemon Type (skills vary by chosen type)', isBranching: true },
 
   // --- Professional ---
-  { name: 'Chef', category: 'Professional', associatedSkills: ['Intuition', 'Survival'], description: 'Feeds and heals allies with cooking' },
+  { name: 'Chef', category: 'Professional', associatedSkills: ['Intuition'], description: 'Feeds and heals allies with cooking' },
   { name: 'Chronicler', category: 'Professional', associatedSkills: ['Perception'], description: 'Observes and records everything' },
-  { name: 'Fashionista', category: 'Professional', associatedSkills: ['Charm'], description: 'Personal style with Accessories' },
-  { name: 'Researcher', category: 'Professional', associatedSkills: ['General Ed', 'Medicine Ed', 'Technology Ed', 'Pokemon Ed'], description: 'Academic specialist with Fields of Study', isBranching: true },
-  { name: 'Survivalist', category: 'Professional', associatedSkills: ['Athletics', 'Survival'], description: 'Master of wilderness terrains' },
+  { name: 'Fashionista', category: 'Professional', associatedSkills: ['Charm', 'Command', 'Guile', 'Intimidate', 'Intuition'], description: 'Personal style with Accessories' },
+  { name: 'Researcher', category: 'Professional', associatedSkills: ['General Ed', 'Medicine Ed', 'Occult Ed', 'Pokemon Ed', 'Technology Ed', 'Survival'], description: 'Academic specialist with Fields of Study', isBranching: true },
+  { name: 'Survivalist', category: 'Professional', associatedSkills: ['Survival'], description: 'Master of wilderness terrains' },
 
   // --- Fighter ---
   { name: 'Athlete', category: 'Fighter', associatedSkills: ['Athletics', 'Acrobatics'], description: 'Physically fit Trainer combatant' },
