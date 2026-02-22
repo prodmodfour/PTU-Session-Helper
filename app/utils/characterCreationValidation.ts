@@ -5,7 +5,15 @@
  * Reference: PTU Core Chapter 2 (pp. 12-18)
  */
 
-import { TOTAL_STAT_POINTS, MAX_POINTS_PER_STAT } from '~/constants/trainerStats'
+import {
+  TOTAL_STAT_POINTS,
+  MAX_POINTS_PER_STAT,
+  getStatPointsForLevel,
+  getMaxSkillRankForLevel,
+  isSkillRankAboveCap,
+  getExpectedEdgesForLevel,
+  getExpectedFeaturesForLevel
+} from '~/constants/trainerStats'
 
 export interface CreationWarning {
   section: 'stats' | 'skills' | 'edges' | 'features' | 'classes'
@@ -16,9 +24,9 @@ export interface CreationWarning {
 /**
  * Validate stat point allocation against PTU rules.
  *
- * PTU Core p. 15:
- * - 10 points to distribute among combat stats
- * - Max 5 points in any single stat
+ * PTU Core p. 15, 19:
+ * - Level 1: 10 points to distribute, max 5 per stat
+ * - Each level grants +1 stat point (no per-stat cap beyond level 1)
  */
 export function validateStatAllocation(
   statPoints: Record<string, number>,
@@ -26,23 +34,39 @@ export function validateStatAllocation(
 ): CreationWarning[] {
   const warnings: CreationWarning[] = []
   const total = Object.values(statPoints).reduce((s, v) => s + v, 0)
+  const expectedPoints = getStatPointsForLevel(level)
 
-  if (total !== TOTAL_STAT_POINTS && level === 1) {
+  if (total !== expectedPoints) {
+    const levelLabel = level === 1
+      ? `Level 1 trainers should allocate exactly ${expectedPoints} stat points`
+      : `Level ${level} trainers have ${expectedPoints} stat points to distribute (${TOTAL_STAT_POINTS} base + ${level - 1} from leveling)`
     warnings.push({
       section: 'stats',
-      message: `Level 1 trainers should allocate exactly ${TOTAL_STAT_POINTS} stat points (currently ${total})`,
+      message: `${levelLabel} (currently ${total})`,
       severity: 'warning'
     })
   }
 
-  for (const [stat, points] of Object.entries(statPoints)) {
-    if (points > MAX_POINTS_PER_STAT && level === 1) {
-      warnings.push({
-        section: 'stats',
-        message: `${stat} has ${points} added points (max ${MAX_POINTS_PER_STAT} per stat at level 1)`,
-        severity: 'warning'
-      })
+  // Per-stat cap only applies at level 1 (PTU Core p. 15)
+  if (level === 1) {
+    for (const [stat, points] of Object.entries(statPoints)) {
+      if (points > MAX_POINTS_PER_STAT) {
+        warnings.push({
+          section: 'stats',
+          message: `${stat} has ${points} added points (max ${MAX_POINTS_PER_STAT} per stat at level 1)`,
+          severity: 'warning'
+        })
+      }
     }
+  }
+
+  // Informational message about stat point budget for higher-level characters
+  if (level > 1) {
+    warnings.push({
+      section: 'stats',
+      message: `Level ${level} trainer: ${expectedPoints} base stat points available. Milestone bonuses (Atk/SpAtk points from Amateur/Capable/Veteran/Elite/Champion) are not included -- add them manually if applicable.`,
+      severity: 'info'
+    })
   }
 
   return warnings
