@@ -81,15 +81,15 @@ export const TRAINER_CLASSES: TrainerClassDef[] = [
   { name: 'Tumbler', category: 'Fighter', associatedSkills: ['Acrobatics'], description: 'Agile close-range fighter' },
 
   // --- Supernatural ---
-  { name: 'Aura Guardian', category: 'Supernatural', associatedSkills: ['Intuition', 'Focus'], description: 'Aura-powered combat' },
-  { name: 'Channeler', category: 'Supernatural', associatedSkills: ['Intuition', 'Charm'], description: 'Emotional Pokemon bond' },
-  { name: 'Hex Maniac', category: 'Supernatural', associatedSkills: ['Occult Ed', 'Focus'], description: 'Curses and hexes' },
-  { name: 'Ninja', category: 'Supernatural', associatedSkills: ['Stealth', 'Acrobatics'], description: 'Illusions and stealth techniques' },
-  { name: 'Oracle', category: 'Supernatural', associatedSkills: ['Occult Ed', 'Intuition'], description: 'Visions and foresight' },
-  { name: 'Sage', category: 'Supernatural', associatedSkills: ['Occult Ed', 'Focus'], description: 'Blessings and wards' },
+  { name: 'Aura Guardian', category: 'Supernatural', associatedSkills: ['Intuition'], description: 'Aura-powered combat' },
+  { name: 'Channeler', category: 'Supernatural', associatedSkills: ['Intuition'], description: 'Emotional Pokemon bond' },
+  { name: 'Hex Maniac', category: 'Supernatural', associatedSkills: ['Occult Ed'], description: 'Curses and hexes' },
+  { name: 'Ninja', category: 'Supernatural', associatedSkills: ['Combat', 'Stealth'], description: 'Illusions and stealth techniques' },
+  { name: 'Oracle', category: 'Supernatural', associatedSkills: ['Intuition', 'Perception'], description: 'Visions and foresight' },
+  { name: 'Sage', category: 'Supernatural', associatedSkills: ['Occult Ed'], description: 'Blessings and wards' },
   { name: 'Telekinetic', category: 'Supernatural', associatedSkills: ['Focus'], description: 'Move objects with the mind' },
   { name: 'Telepath', category: 'Supernatural', associatedSkills: ['Focus', 'Intuition'], description: 'Read and influence minds' },
-  { name: 'Warper', category: 'Supernatural', associatedSkills: ['Occult Ed', 'Focus'], description: 'Teleportation powers' }
+  { name: 'Warper', category: 'Supernatural', associatedSkills: ['Focus', 'Guile'], description: 'Teleportation powers' }
 ]
 
 /** Get trainer classes grouped by category */
