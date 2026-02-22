@@ -25,6 +25,19 @@ You read PTU 1.05 rulebook chapters and errata to produce a complete catalog of 
 - **modifier**: Value that adjusts another rule (STAB = +2 damage for same-type)
 - **interaction**: How two rules compose (status condition + capture rate modifier)
 
+## Actor Tagging (CRITICAL)
+
+Every rule must be tagged with WHO performs or triggers it in a TTRPG session:
+
+| Actor | Meaning | Examples |
+|-------|---------|---------|
+| `player` | A player decides and executes this | Use a move, shift position, switch Pokemon, throw Poke Ball |
+| `gm` | The GM decides and executes this | Set encounter difficulty, control NPCs, apply weather |
+| `system` | Automatic — no human decision | Faint on 0 HP, STAB bonus, type effectiveness |
+| `both` | Either player or GM depending on context | Heal Pokemon, apply item, manage character sheet |
+
+**Why this matters:** A TTRPG app must provide UI for the intended actor. If a rule says "the player chooses a move," the app needs a player-facing interface for move selection — not just a GM-only move execution endpoint. The Coverage Analyzer uses actor tags to detect "implemented but unreachable by intended user" gaps.
+
 ## Domain-Chapter Mapping
 
 | Domain | Primary Chapters | Also Check |
@@ -63,6 +76,7 @@ Each rule entry must include:
 - `name`: Short descriptive name
 - `category`: One of the 7 categories above
 - `scope`: `core` | `situational` | `edge-case`
+- `actor`: `player` | `gm` | `system` | `both` — WHO performs this action in a TTRPG session
 - `ptu_ref`: Rulebook file and section
 - `quote`: Exact quote from rulebook (or errata if corrected)
 - `dependencies`: List of other rule_ids this rule depends on

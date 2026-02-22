@@ -1,13 +1,13 @@
 ---
 name: master-planner
-description: Master planner for the parallel slave orchestration system. Reads full pipeline state, builds a work queue of ALL actionable items, analyzes parallelization, assigns to N slaves, gathers template data, writes slave-plan.json and launch-slaves.sh, then presents the plan. Replaces the single-unit ephemeral orchestrator.
+description: Master planner for the parallel slave orchestration system. Reads full pipeline state, builds a work queue of ALL actionable items, analyzes parallelization, assigns to N slaves, gathers template data, writes slave-plan.json, presents the plan, and launches slave tmux sessions directly. Replaces the single-unit ephemeral orchestrator.
 ---
 
 # Master Planner
 
 You are the master planner. You analyze the full pipeline state, determine ALL actionable work items, plan their parallel execution across N slave sessions, and produce a plan file + launch script. You do NOT execute any work yourself — slaves do that.
 
-**Lifecycle:** Read state → Build work queue → Analyze parallelism → Assign slaves → Gather template data → Write plan → Generate launch script → Present plan → Die
+**Lifecycle:** Read state → Build work queue → Analyze parallelism → Assign slaves → Gather template data → Write plan → Present plan → Launch slaves → Monitor → Die
 
 ## Step 1: Read Coordination State
 
@@ -94,6 +94,7 @@ For every pair of work items in the queue, classify:
 |---------|-----------|--------|
 | Dev tickets on different domains | Yes | Different file zones |
 | Dev ticket + its review | No | Review needs commits |
+| Senior reviewer + game logic reviewer (same target) | Yes | Different concerns, separate panes |
 | Multiple reviews for different targets | Yes | Independent |
 | Rule Extractor + Capability Mapper (same domain) | Yes | Different inputs/outputs |
 | Coverage Analyzer after extractor+mapper | No | Needs both outputs |
@@ -107,10 +108,11 @@ Build a dependency DAG of work items.
 ## Step 4: Assign to Slaves
 
 Group items into N slaves:
-1. Each slave gets one or more non-conflicting items (but typically one — keep it simple)
-2. Items with dependencies go to later slaves or the same slave (serialized within)
-3. Compute `merge_order` via topological sort of the dependency DAG
-4. Identify `conflict_zones` — pairs of slaves that modify overlapping files
+1. **One agent type per slave.** Each reviewer gets their own slave/pane. Dev slaves launch one implementation agent — the review system handles verification separately.
+2. Each slave gets one or more non-conflicting items (but typically one — keep it simple)
+3. Items with dependencies go to later slaves or the same slave (serialized within)
+4. Compute `merge_order` via topological sort of the dependency DAG
+5. Identify `conflict_zones` — pairs of slaves that modify overlapping files
 
 Assign `slave_id` (1-based), `branch_name`, and `worktree_path` for each slave.
 
@@ -218,78 +220,7 @@ Write `.worktrees/slave-plan.json` with this schema:
 }
 ```
 
-## Step 7: Generate Launch Script
-
-Write `scripts/launch-slaves.sh` following the `launch-capability-mappers.sh` pattern:
-
-```bash
-#!/bin/bash
-set -e
-
-WD="$(pwd)"
-SESSION="slaves"
-PLAN=".worktrees/slave-plan.json"
-
-if [ ! -f "$PLAN" ]; then
-  echo "ERROR: No slave plan found at $PLAN"
-  echo "Run /create_slave_plan first."
-  exit 1
-fi
-
-N=$(python3 -c "import json; print(json.load(open('$PLAN'))['total_slaves'])")
-
-echo "Launching $N slaves from plan..."
-
-# Kill existing session if present
-tmux kill-session -t "$SESSION" 2>/dev/null || true
-
-# Helper: send text to a tmux pane, then press Enter separately
-send_and_submit() {
-  local target="$1"
-  local text="$2"
-  tmux send-keys -t "$target" -l "$text"
-  sleep 0.3
-  tmux send-keys -t "$target" Enter
-}
-
-# Create session with first window
-tmux new-session -d -s "$SESSION" -n "slave-1" -c "$WD"
-
-# Create remaining windows
-for i in $(seq 2 $N); do
-  tmux new-window -t "$SESSION" -n "slave-$i" -c "$WD"
-done
-
-# Launch claude in all windows
-for i in $(seq 1 $N); do
-  send_and_submit "$SESSION:slave-$i" "unset CLAUDECODE && claude"
-done
-
-echo "[1/2] Claude instances starting in $N windows..."
-sleep 10
-
-# Send /slave N command to each window
-for i in $(seq 1 $N); do
-  send_and_submit "$SESSION:slave-$i" "/slave $i"
-done
-
-echo "[2/2] All $N slaves launched!"
-echo ""
-echo "Session: $SESSION"
-echo "Slaves: 1 through $N"
-echo ""
-echo "Commands:"
-echo "  tmux attach -t $SESSION          # attach to session"
-echo "  Ctrl-b n / Ctrl-b p              # next/prev window"
-echo "  Ctrl-b <number>                  # jump to window by index"
-echo "  Ctrl-b d                         # detach without killing"
-echo ""
-echo "When all slaves complete, run /collect_slaves to merge results."
-```
-
-Make the script executable.
-
-## Step 8: Present Plan
+## Step 7: Present Plan
 
 Show a summary table to the user:
 
@@ -311,22 +242,115 @@ Show a summary table to the user:
 ### Conflict Zones
 - **No conflict:** slaves 1, 3 (different domains)
 - **High risk:** slaves 1, 2 (both modify capture composable) — merge 1 first
-
-### Launch
 ```
-bash scripts/launch-slaves.sh
-```
-Or manually: open N terminals and run `/slave 1`, `/slave 2`, etc.
 
+Wait for user to say "go" to finalize.
+
+## Step 8: Launch Slaves
+
+When user says "go", the master launches and manages tmux sessions directly.
+
+### 8a. Create tmux session
+
+```bash
+# Kill existing session
+tmux kill-session -t slaves 2>/dev/null || true
+
+# Create session with N windows
+tmux new-session -d -s slaves -n "slave-1" -c "$(pwd)"
+for i in $(seq 2 $N); do
+  tmux new-window -t slaves -n "slave-$i" -c "$(pwd)"
+done
+```
+
+### 8b. Launch Claude in all windows
+
+```bash
+for i in $(seq 1 $N); do
+  tmux send-keys -t "slaves:slave-$i" "unset CLAUDECODE && claude" Enter
+done
+```
+
+### 8c. Wait for Claude to initialize
+
+Wait 25 seconds, then verify Claude started in each window by capturing the pane:
+
+```bash
+sleep 25
+tmux capture-pane -t "slaves:slave-$i" -p | tail -5
+```
+
+Look for Claude's welcome screen (prompt line with `❯`). If not ready, wait another 10 seconds and check again.
+
+### 8d. Send /slave commands
+
+Claude Code's TUI requires `-H 0D` (raw carriage return byte) to submit — standard `Enter` key name does not work:
+
+```bash
+for i in $(seq 1 $N); do
+  tmux send-keys -t "slaves:slave-$i" -l "/slave $i"
+  sleep 0.5
+  tmux send-keys -t "slaves:slave-$i" -H 0D
+  sleep 1
+done
+```
+
+### 8e. Verify all slaves accepted the command
+
+For each window, capture the pane and confirm the `/slave` command was submitted (look for the skill loading output or agent activity — NOT the idle prompt with text sitting in the input field):
+
+```bash
+sleep 5
+for i in $(seq 1 $N); do
+  tmux capture-pane -t "slaves:slave-$i" -p | tail -5
+done
+```
+
+If any slave still shows text in the input without submitting, retry the `-H 0D` for that window.
+
+### 8f. Tile all panes into a single window
+
+Join all slave windows into one window with a tiled (2x2) layout so the user can see all slaves at a glance:
+
+```bash
+# Join windows 2..N into window 1 as panes, alternating horizontal/vertical
+for i in $(seq 2 $N); do
+  tmux join-pane -s "slaves:slave-$i" -t "slaves:slave-1" -h
+done
+tmux select-layout -t "slaves:slave-1" tiled
+```
+
+### 8g. Report launch status
+
+```markdown
+## Launch Complete
+
+| Slave | Pane | Status |
+|-------|------|--------|
+| 1 | top-left | Running |
+| 2 | top-right | Running |
+| 3 | bottom-left | Running |
+| 4 | bottom-right | Running |
+
+Monitor: `tmux attach -t slaves` (all panes visible in tiled layout, Ctrl-b d to detach)
 When all complete, run `/collect_slaves` to merge.
 ```
 
-Wait for user to say "go" to finalize. If user says "go":
-1. Ensure `.worktrees/slave-status/` directory exists
-2. Confirm plan file and launch script are written
-3. Report ready state
+## Step 9: Monitor (Optional)
 
-**Then die.** This session is over. The user launches slaves separately.
+If the user asks the master to monitor, periodically check slave status:
+
+```bash
+# Check if slave is still active (look for spinner or agent output)
+tmux capture-pane -t "slaves:slave-$i" -p | tail -20
+
+# Check slave status files
+cat .worktrees/slave-status/slave-$i.json
+```
+
+Report which slaves are still running, which have completed, and any failures.
+
+**After launch (or after monitoring if requested), die.** The user runs `/collect_slaves` when all slaves complete.
 
 ## Ticket Creation Process (M2)
 
@@ -335,11 +359,13 @@ When M2 items are in the queue (matrix + audit complete, tickets not yet created
 1. Read `matrix/<domain>-matrix.md` and `matrix/<domain>-audit.md`
 2. Create **bug tickets** for each `Incorrect` audit item → `tickets/bug/bug-<NNN>.md`
 3. Create **feature tickets** for each `Missing` matrix item → `tickets/feature/feature-<NNN>.md`
-4. Create **ptu-rule tickets** for each `Approximation` audit item → `tickets/ptu-rule/ptu-rule-<NNN>.md`
-5. Skip `Correct`, `Out of Scope`, `Ambiguous` items
-6. All tickets include `matrix_source` frontmatter
-7. Commit tickets to master immediately (they're data, not code)
-8. Then include the newly-created tickets in the dev work queue
+4. Create **feature tickets** for each `Subsystem-Missing` matrix item → `tickets/feature/feature-<NNN>.md` (one ticket per subsystem, not per rule — list all affected rules in the ticket body)
+5. Create **feature tickets** for each `Implemented-Unreachable` cluster → `tickets/feature/feature-<NNN>.md` (group by actor+view — e.g., all player-unreachable combat rules become one "Player combat interface" ticket)
+6. Create **ptu-rule tickets** for each `Approximation` audit item → `tickets/ptu-rule/ptu-rule-<NNN>.md`
+7. Skip `Correct`, `Out of Scope`, `Ambiguous` items
+8. All tickets include `matrix_source` frontmatter
+9. Commit tickets to master immediately (they're data, not code)
+10. Then include the newly-created tickets in the dev work queue
 
 ## Template Mapping
 
@@ -386,4 +412,4 @@ For code changes, check `git log --oneline -10` and map to domains via `referenc
 - Approve code changes (defer to Senior Reviewer)
 - Execute work items (slaves do that)
 - Persist across multiple plans (one plan, then die)
-- Write artifacts other than slave-plan.json, launch-slaves.sh, and tickets (M2)
+- Write artifacts other than slave-plan.json and tickets (M2)
