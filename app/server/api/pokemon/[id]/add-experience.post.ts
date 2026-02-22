@@ -37,6 +37,13 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  if (body.amount > MAX_EXPERIENCE) {
+    throw createError({
+      statusCode: 400,
+      message: `amount must not exceed ${MAX_EXPERIENCE} (max total XP for level 100)`
+    })
+  }
+
   try {
     // Load the Pokemon
     const pokemon = await prisma.pokemon.findUnique({
