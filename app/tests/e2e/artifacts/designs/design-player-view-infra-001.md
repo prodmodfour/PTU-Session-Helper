@@ -583,12 +583,6 @@ credentials-file: /home/gm/.cloudflared/<tunnel-id>.json
 ingress:
   - hostname: ptu.example.com
     service: http://localhost:3000
-    originRequest:
-      # WebSocket support
-      noTLSVerify: true
-      connectTimeout: 30s
-      # Keep WebSocket connections alive
-      tcpKeepAlive: 30s
   - service: http_status:404
 ```
 
