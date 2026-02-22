@@ -194,18 +194,18 @@ function kgToLbs(kg: number): string {
 }
 
 /**
- * Compute PTU weight class from kg.
- * PTU weight classes (from Pokedex entries):
- * WC 1: 0-10 kg, WC 2: 10-25 kg, WC 3: 25-50 kg,
- * WC 4: 50-100 kg, WC 5: 100-200 kg, WC 6: 200+ kg
+ * Compute PTU Trainer weight class from kg.
+ * Trainer weight classes differ from Pokemon weight classes (PTU Core p. 16):
+ * WC 3: up to 110 lbs (49.9 kg)
+ * WC 4: 111-220 lbs (50.3-99.8 kg)
+ * WC 5: 221+ lbs (100.2+ kg)
+ * Trainers only use WC 3, 4, or 5. Below 55 lbs defaults to WC 3.
  */
 function computeWeightClass(kg: number): number {
-  if (kg <= 10) return 1
-  if (kg <= 25) return 2
-  if (kg <= 50) return 3
-  if (kg <= 100) return 4
-  if (kg <= 200) return 5
-  return 6
+  const lbs = kg * 2.20462
+  if (lbs <= 110) return 3
+  if (lbs <= 220) return 4
+  return 5
 }
 </script>
 
