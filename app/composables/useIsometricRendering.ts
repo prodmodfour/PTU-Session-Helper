@@ -17,7 +17,6 @@ interface UseIsometricRenderingOptions {
   panOffset: Ref<{ x: number; y: number }>
   cameraAngle: Ref<CameraAngle>
   isRotating: Ref<boolean>
-  rotationProgress: Ref<number>
 }
 
 /**

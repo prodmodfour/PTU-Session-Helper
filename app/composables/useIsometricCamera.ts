@@ -1,22 +1,19 @@
 import type { CameraAngle } from '~/types'
 import { useIsometricCameraStore } from '~/stores/isometricCamera'
 
-const ROTATION_DURATION_MS = 300
-
 /**
  * Camera composable for the isometric grid.
- * Manages camera angle rotation with smooth animation, zoom, and pan.
- * Wraps the Pinia store and adds local animation/pan state.
+ * Manages camera angle rotation, zoom, and pan.
+ * Wraps the Pinia store and adds local pan state.
+ *
+ * P0 uses instant rotation snapping. Smooth animated rotation
+ * (eased interpolation between angles) is deferred to P1/P2.
  */
 export function useIsometricCamera() {
   const store = useIsometricCameraStore()
 
   // Local pan offset (not synced via WebSocket — each view pans independently)
   const panOffset = ref({ x: 0, y: 0 })
-
-  // Animation interpolation value (0 to 1 during rotation)
-  const rotationProgress = ref(0)
-  let animationFrameId: number | null = null
 
   /**
    * Current camera angle (reactive, from store).
@@ -29,60 +26,26 @@ export function useIsometricCamera() {
   const zoom = computed(() => store.zoom)
 
   /**
-   * Whether a rotation animation is in progress.
+   * Whether a rotation is in progress (always false in P0 instant-snap mode).
    */
   const isRotating = computed(() => store.isRotating)
 
   /**
-   * Rotate camera 90 degrees clockwise with animation.
+   * Rotate camera 90 degrees clockwise (instant snap).
    */
   const rotateClockwise = () => {
     if (store.isRotating) return
     store.rotateClockwise()
-    animateRotation()
+    store.completeRotation()
   }
 
   /**
-   * Rotate camera 90 degrees counter-clockwise with animation.
+   * Rotate camera 90 degrees counter-clockwise (instant snap).
    */
   const rotateCounterClockwise = () => {
     if (store.isRotating) return
     store.rotateCounterClockwise()
-    animateRotation()
-  }
-
-  /**
-   * Run the rotation animation over ROTATION_DURATION_MS.
-   * On completion, snaps to the target angle.
-   */
-  const animateRotation = () => {
-    rotationProgress.value = 0
-    const startTime = performance.now()
-
-    const tick = (now: number) => {
-      const elapsed = now - startTime
-      const progress = Math.min(elapsed / ROTATION_DURATION_MS, 1)
-      rotationProgress.value = easeInOutCubic(progress)
-
-      if (progress < 1) {
-        animationFrameId = requestAnimationFrame(tick)
-      } else {
-        rotationProgress.value = 0
-        store.completeRotation()
-        animationFrameId = null
-      }
-    }
-
-    animationFrameId = requestAnimationFrame(tick)
-  }
-
-  /**
-   * Cubic ease-in-out for smooth rotation.
-   */
-  const easeInOutCubic = (t: number): number => {
-    return t < 0.5
-      ? 4 * t * t * t
-      : 1 - Math.pow(-2 * t + 2, 3) / 2
+    store.completeRotation()
   }
 
   /**
@@ -121,21 +84,10 @@ export function useIsometricCamera() {
     store.setAngle(angle)
   }
 
-  /**
-   * Cleanup animation frame on unmount.
-   */
-  onUnmounted(() => {
-    if (animationFrameId !== null) {
-      cancelAnimationFrame(animationFrameId)
-      animationFrameId = null
-    }
-  })
-
   return {
     cameraAngle,
     zoom,
     isRotating,
-    rotationProgress,
     panOffset,
     rotateClockwise,
     rotateCounterClockwise,

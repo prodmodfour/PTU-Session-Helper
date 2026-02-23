@@ -103,8 +103,7 @@ const rendering = useIsometricRendering({
   zoom: camera.zoom,
   panOffset: camera.panOffset,
   cameraAngle: camera.cameraAngle,
-  isRotating: camera.isRotating,
-  rotationProgress: camera.rotationProgress
+  isRotating: camera.isRotating
 })
 
 // Initialize camera angle from config on mount
@@ -225,13 +224,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
 watch(() => camera.isRotating.value, (rotating) => {
   if (!rotating) {
     // Rotation completed, do a final render
-    rendering.scheduleRender()
-  }
-})
-
-// Continuous render during rotation animation
-watch(() => camera.rotationProgress.value, () => {
-  if (camera.isRotating.value) {
     rendering.scheduleRender()
   }
 })
