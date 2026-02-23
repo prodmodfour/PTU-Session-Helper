@@ -91,8 +91,8 @@ const camera = useIsometricCamera()
 // Initialize camera angle from config
 const configRef = computed(() => props.config)
 
-// Projection (for screenToWorld in mouse handlers)
-const { screenToWorld } = useIsometricProjection()
+// Projection (for screenToWorld and getGridOriginOffset in mouse handlers)
+const { screenToWorld, getGridOriginOffset } = useIsometricProjection()
 
 // Rendering
 const rendering = useIsometricRendering({
@@ -178,7 +178,7 @@ const updateHoveredCell = (event: MouseEvent) => {
   const { cellSize, width: gridW, height: gridH } = config
 
   // Reverse the camera transform: pan offset -> zoom -> grid origin offset
-  const { ox, oy } = useIsometricProjection().getGridOriginOffset(
+  const { ox, oy } = getGridOriginOffset(
     gridW, gridH, cellSize, camera.cameraAngle.value
   )
 
