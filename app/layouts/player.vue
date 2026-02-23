@@ -28,9 +28,7 @@
     z-index: 1;
   }
 
-  // Optimized for 4K TV display
-  @media (min-width: 3000px) {
-    font-size: 1.5rem;
-  }
+  // Mobile-first: no 4K scaling for player view
+  // (players use phones, not TVs)
 }
 </style>

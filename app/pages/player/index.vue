@@ -1,105 +1,73 @@
 <template>
   <div class="player-view">
-    <!-- No Active Encounter -->
-    <div v-if="!encounter || !encounter.isActive" class="player-view__waiting">
-      <div class="waiting-content">
-        <h1>PTU Session Helper</h1>
-        <p>Waiting for encounter to start...</p>
-        <div class="waiting-spinner"></div>
-      </div>
-    </div>
+    <!-- Identity Picker (overlay when not identified) -->
+    <PlayerIdentityPicker
+      v-if="!isIdentified"
+      @select="handleSelectCharacter"
+    />
 
-    <!-- Active Encounter -->
-    <div v-else class="player-view__active">
-      <!-- Header -->
-      <header class="player-header">
-        <div class="player-header__info">
-          <h1>{{ encounter.name }}</h1>
-          <span class="round-badge">Round {{ encounter.currentRound }}</span>
+    <!-- Main Player View (when identified) -->
+    <template v-if="isIdentified">
+      <!-- Top Bar -->
+      <header class="player-top-bar">
+        <div class="player-top-bar__info">
+          <span class="player-top-bar__name">{{ characterName }}</span>
+          <span
+            class="player-top-bar__status"
+            :class="isConnected ? 'player-top-bar__status--connected' : 'player-top-bar__status--disconnected'"
+          ></span>
         </div>
-        <div class="player-header__turn" v-if="currentCombatant">
-          <span class="turn-label">Current Turn:</span>
-          <span class="turn-name">{{ getCombatantName(currentCombatant) }}</span>
-        </div>
+        <button class="player-top-bar__switch" @click="handleSwitchCharacter">
+          <PhSwap :size="18" />
+        </button>
       </header>
 
-      <!-- Main Content -->
-      <main class="player-main">
-        <!-- All Combatants -->
-        <div class="combatants-display">
-          <!-- Players Section -->
-          <section class="combatant-section combatant-section--players">
-            <h2>Players</h2>
-            <div class="combatant-grid">
-              <PlayerCombatantCard
-                v-for="combatant in playerCombatants"
-                :key="combatant.id"
-                :combatant="combatant"
-                :is-current-turn="combatant.id === currentCombatant?.id"
-                :show-details="combatant.side === 'players'"
-                @use-move="handleUseMove"
-              />
-            </div>
-          </section>
+      <!-- Loading State -->
+      <div v-if="loading" class="player-loading">
+        <div class="player-spinner"></div>
+        <p>Loading character data...</p>
+      </div>
 
-          <!-- Allies Section (if any) -->
-          <section v-if="allyCombatants.length > 0" class="combatant-section combatant-section--allies">
-            <h2>Allies</h2>
-            <div class="combatant-grid">
-              <PlayerCombatantCard
-                v-for="combatant in allyCombatants"
-                :key="combatant.id"
-                :combatant="combatant"
-                :is-current-turn="combatant.id === currentCombatant?.id"
-                :show-details="false"
-              />
-            </div>
-          </section>
+      <!-- Error State -->
+      <div v-else-if="error" class="player-error">
+        <PhWarningCircle :size="48" />
+        <p>{{ error }}</p>
+        <button class="btn btn--primary" @click="refreshCharacterData">
+          Retry
+        </button>
+      </div>
 
-          <!-- Enemies Section -->
-          <section class="combatant-section combatant-section--enemies">
-            <h2>Enemies</h2>
-            <div class="combatant-grid">
-              <PlayerCombatantCard
-                v-for="combatant in enemyCombatants"
-                :key="combatant.id"
-                :combatant="combatant"
-                :is-current-turn="combatant.id === currentCombatant?.id"
-                :show-details="false"
-              />
-            </div>
-          </section>
-        </div>
-
-        <!-- Current Turn Actions (for player turns) -->
-        <aside v-if="isPlayerTurn && currentCombatant" class="actions-panel">
-          <h2>Actions</h2>
-          <PlayerActionPanel
-            :combatant="currentCombatant"
-            :available-targets="availableTargets"
-            @use-move="handleUseMove"
-            @pass-turn="handlePassTurn"
-          />
-        </aside>
+      <!-- Tab Content -->
+      <main v-else-if="character" class="player-content">
+        <PlayerCharacterSheet
+          v-if="activeTab === 'character'"
+          :character="character"
+        />
+        <PlayerPokemonTeam
+          v-else-if="activeTab === 'team'"
+          :pokemon="pokemon"
+          :active-pokemon-id="character.activePokemonId"
+        />
+        <PlayerEncounterView
+          v-else-if="activeTab === 'encounter'"
+          :my-character-id="character.id"
+          :my-pokemon-ids="pokemonIds"
+        />
       </main>
-    </div>
 
-    <!-- Move Selection Modal -->
-    <MoveTargetModal
-      v-if="selectedMove"
-      :move="selectedMove"
-      :actor="currentCombatant!"
-      :targets="availableTargets"
-      @confirm="confirmMove"
-      @cancel="selectedMove = null"
-    />
+      <!-- Bottom Navigation -->
+      <PlayerNavBar
+        :active-tab="activeTab"
+        :has-active-encounter="hasActiveEncounter"
+        @change="activeTab = $event"
+      />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Move } from '~/types'
-
-const { getCombatantName } = useCombatantDisplay()
+import { PhSwap, PhWarningCircle } from '@phosphor-icons/vue'
+import type { PlayerTab } from '~/components/player/PlayerNavBar.vue'
 
 definePageMeta({
   layout: 'player'
@@ -109,8 +77,34 @@ useHead({
   title: 'PTU - Player View'
 })
 
+// Identity management
+const {
+  isIdentified,
+  character,
+  pokemon,
+  loading,
+  error,
+  restoreIdentity,
+  selectCharacter,
+  clearIdentity,
+  refreshCharacterData
+} = usePlayerIdentity()
+
+const playerStore = usePlayerIdentityStore()
 const encounterStore = useEncounterStore()
 const { isConnected, identify, joinEncounter } = useWebSocket()
+
+// Active tab
+const activeTab = ref<PlayerTab>('character')
+
+// Character name for top bar
+const characterName = computed(() => playerStore.characterName ?? 'Player')
+
+// Pokemon IDs for visibility checks
+const pokemonIds = computed(() => playerStore.pokemonIds)
+
+// Active encounter detection
+const hasActiveEncounter = computed(() => encounterStore.encounter?.isActive ?? false)
 
 // Poll for active encounters
 let pollInterval: ReturnType<typeof setInterval> | null = null
@@ -118,290 +112,198 @@ let pollInterval: ReturnType<typeof setInterval> | null = null
 const checkForActiveEncounter = async () => {
   try {
     const response = await $fetch<{ data: any[] }>('/api/encounters')
-    const activeEncounter = response.data?.find(e => e.isActive)
+    const activeEncounter = response.data?.find((e: any) => e.isActive)
 
     if (activeEncounter) {
-      // Stop polling once we find an active encounter
       if (pollInterval) {
         clearInterval(pollInterval)
         pollInterval = null
       }
 
-      // Load the full encounter into the store
       await encounterStore.loadEncounter(activeEncounter.id)
 
-      // Identify as player and join the encounter via WebSocket
-      if (isConnected.value) {
-        identify('player', activeEncounter.id)
+      if (isConnected.value && playerStore.characterId) {
+        identify('player', activeEncounter.id, playerStore.characterId)
         joinEncounter(activeEncounter.id)
       }
     }
-  } catch (error) {
-    console.error('Failed to fetch encounters:', error)
+  } catch {
+    // Silently continue polling
   }
 }
 
-// Fetch active encounter on mount
-onMounted(async () => {
-  await checkForActiveEncounter()
+// Handle character selection
+const handleSelectCharacter = async (characterId: string, characterName: string) => {
+  try {
+    await selectCharacter(characterId, characterName)
 
-  // If no active encounter found, poll every 2 seconds
-  if (!encounterStore.encounter?.isActive) {
-    pollInterval = setInterval(checkForActiveEncounter, 2000)
+    // Identify as player via WebSocket
+    if (isConnected.value) {
+      identify('player', encounterStore.encounter?.id, characterId)
+    }
+
+    // Start polling for encounters
+    await checkForActiveEncounter()
+    if (!encounterStore.encounter?.isActive) {
+      pollInterval = setInterval(checkForActiveEncounter, 3000)
+    }
+  } catch (err: any) {
+    alert('Failed to select character: ' + (err.message || 'Unknown error'))
+  }
+}
+
+// Handle character switch
+const handleSwitchCharacter = () => {
+  clearIdentity()
+  encounterStore.clearEncounter()
+  activeTab.value = 'character'
+}
+
+// Initialize on mount
+onMounted(async () => {
+  const restored = await restoreIdentity()
+
+  if (restored && playerStore.characterId) {
+    // Re-identify on WebSocket connection
+    if (isConnected.value) {
+      identify('player', undefined, playerStore.characterId)
+    }
+
+    // Check for active encounters
+    await checkForActiveEncounter()
+    if (!encounterStore.encounter?.isActive) {
+      pollInterval = setInterval(checkForActiveEncounter, 3000)
+    }
   }
 })
 
-// Cleanup on unmount
+// Watch for WebSocket reconnection
+watch(isConnected, (connected) => {
+  if (connected && playerStore.characterId) {
+    identify('player', encounterStore.encounter?.id, playerStore.characterId)
+    if (encounterStore.encounter?.id) {
+      joinEncounter(encounterStore.encounter.id)
+    }
+  }
+})
+
+// Cleanup
 onUnmounted(() => {
   if (pollInterval) {
     clearInterval(pollInterval)
     pollInterval = null
   }
 })
-
-// Watch for WebSocket connection to join encounter
-watch(isConnected, (connected) => {
-  if (connected && encounterStore.encounter?.id) {
-    identify('player', encounterStore.encounter.id)
-    joinEncounter(encounterStore.encounter.id)
-  }
-})
-
-// Computed
-const encounter = computed(() => encounterStore.encounter)
-const currentCombatant = computed(() => encounterStore.currentCombatant)
-const playerCombatants = computed(() => encounterStore.playerCombatants)
-const allyCombatants = computed(() => encounterStore.allyCombatants)
-const enemyCombatants = computed(() => encounterStore.enemyCombatants)
-
-const isPlayerTurn = computed(() => {
-  return currentCombatant.value?.side === 'players'
-})
-
-const availableTargets = computed(() => {
-  return encounter.value?.combatants ?? []
-})
-
-// Move selection
-const selectedMove = ref<Move | null>(null)
-
-// Actions
-const handleUseMove = (move: Move) => {
-  selectedMove.value = move
-}
-
-const confirmMove = async (targetIds: string[], damage?: number) => {
-  if (!currentCombatant.value || !selectedMove.value) return
-
-  await encounterStore.executeMove(
-    currentCombatant.value.id,
-    selectedMove.value.id,
-    targetIds,
-    damage
-  )
-
-  selectedMove.value = null
-}
-
-const handlePassTurn = async () => {
-  await encounterStore.nextTurn()
-}
 </script>
 
 <style lang="scss" scoped>
 .player-view {
   min-height: 100vh;
-  background: $gradient-bg-radial;
+  display: flex;
+  flex-direction: column;
+}
 
-  &__waiting {
+.player-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 $spacing-md;
+  background: rgba($color-bg-primary, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid $border-color-default;
+  position: sticky;
+  top: 0;
+  z-index: $z-index-sticky;
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &--connected {
+      background: $color-success;
+      box-shadow: 0 0 4px rgba($color-success, 0.5);
+    }
+
+    &--disconnected {
+      background: $color-danger;
+    }
+  }
+
+  &__switch {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-  }
-
-  &__active {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-}
-
-.waiting-content {
-  text-align: center;
-
-  h1 {
-    font-size: 4rem;
-    margin-bottom: $spacing-md;
-    background: $gradient-sv-primary;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 700;
-  }
-
-  p {
-    font-size: $font-size-xl;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
     color: $color-text-muted;
-    margin-bottom: $spacing-xl;
+    cursor: pointer;
+    border-radius: $border-radius-md;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $color-bg-hover;
+      color: $color-text;
+    }
   }
 }
 
-.waiting-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid $glass-border;
+.player-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.player-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-md;
+  padding: $spacing-xxl $spacing-md;
+  color: $color-text-muted;
+  flex: 1;
+}
+
+.player-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $glass-border;
   border-top-color: $color-accent-scarlet;
   border-radius: 50%;
-  margin: 0 auto;
   animation: spin 1s linear infinite;
-  box-shadow: $shadow-glow-scarlet;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.player-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: $spacing-lg $spacing-xl;
-  background: rgba($color-bg-primary, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 2px solid transparent;
-  background-image: linear-gradient(rgba($color-bg-primary, 0.95), rgba($color-bg-primary, 0.95)),
-                    $gradient-sv-cool;
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-
-  &__info {
-    display: flex;
-    align-items: center;
-    gap: $spacing-lg;
-
-    h1 {
-      font-size: $font-size-xxl;
-      margin: 0;
-      color: $color-text;
-      font-weight: 600;
-    }
-  }
-
-  &__turn {
-    display: flex;
-    align-items: center;
-    gap: $spacing-md;
-    font-size: $font-size-xl;
-  }
-}
-
-.round-badge {
-  background: $gradient-sv-cool;
-  padding: $spacing-sm $spacing-md;
-  border-radius: $border-radius-md;
-  font-weight: 700;
-  font-size: $font-size-lg;
-  box-shadow: $shadow-glow-scarlet;
-}
-
-.turn-label {
-  color: $color-text-muted;
-}
-
-.turn-name {
-  background: $gradient-sv-cool;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: 700;
-}
-
-.player-main {
-  flex: 1;
-  display: flex;
-  gap: $spacing-xl;
-  padding: $spacing-xl;
-
-  @media (max-width: 1400px) {
-    flex-direction: column;
-  }
-}
-
-.combatants-display {
-  flex: 1;
+.player-error {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xl;
-}
-
-.combatant-section {
-  h2 {
-    font-size: $font-size-xl;
-    margin-bottom: $spacing-md;
-    padding-left: $spacing-md;
-    border-left: 4px solid;
-    font-weight: 600;
-  }
-
-  &--players h2 {
-    border-color: $color-accent-scarlet;
-    color: $color-accent-scarlet;
-  }
-
-  &--allies h2 {
-    border-color: $color-success;
-    color: $color-success;
-  }
-
-  &--enemies h2 {
-    border-color: $color-accent-scarlet;
-    color: $color-accent-scarlet;
-  }
-}
-
-.combatant-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: $spacing-lg;
-
-  // 4K optimization
-  @media (min-width: 3000px) {
-    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-    gap: $spacing-xl;
-  }
-}
-
-.actions-panel {
-  width: 400px;
-  background: $glass-bg;
-  backdrop-filter: $glass-blur;
-  border: 1px solid $glass-border;
-  border-radius: $border-radius-xl;
-  padding: $spacing-xl;
-  height: fit-content;
-  position: sticky;
-  top: $spacing-xl;
-  box-shadow: $shadow-lg;
-
-  h2 {
-    margin-bottom: $spacing-lg;
-    background: $gradient-sv-cool;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 600;
-  }
-
-  @media (max-width: 1400px) {
-    width: 100%;
-    position: static;
-  }
-
-  // 4K optimization
-  @media (min-width: 3000px) {
-    width: 600px;
-    padding: $spacing-xxl;
-  }
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-xxl $spacing-md;
+  color: $color-danger;
+  text-align: center;
+  flex: 1;
 }
 </style>
