@@ -80,8 +80,8 @@
         >
           <div class="avatar-circle">
             <img
-              v-if="character.avatarUrl"
-              :src="character.avatarUrl"
+              v-if="getTrainerSpriteUrl(character.avatarUrl)"
+              :src="getTrainerSpriteUrl(character.avatarUrl)!"
               :alt="character.name"
               class="avatar-image"
             />
@@ -111,6 +111,7 @@ const weatherClass = computed(() => {
 })
 
 const { getSpriteUrl } = usePokemonSprite()
+const { getTrainerSpriteUrl } = useTrainerSprite()
 
 // Helper functions
 function getGroupMemberCount(groupId: string): number {
@@ -426,7 +427,8 @@ function getGroupMemberCount(groupId: string): number {
     .avatar-image {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      image-rendering: pixelated;
     }
   }
 

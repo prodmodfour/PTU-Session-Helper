@@ -41,7 +41,7 @@
             @click="emit('add-character', char)"
           >
             <div class="add-item__avatar">
-              <img v-if="char.avatarUrl" :src="char.avatarUrl" :alt="char.name" />
+              <img v-if="getTrainerSpriteUrl(char.avatarUrl)" :src="getTrainerSpriteUrl(char.avatarUrl)!" :alt="char.name" />
               <PhUser v-else :size="20" />
             </div>
             <div class="add-item__info">
@@ -125,6 +125,8 @@ const emit = defineEmits<{
   'add-pokemon': [species: string, level: number]
   'toggle-collapse': []
 }>()
+
+const { getTrainerSpriteUrl } = useTrainerSprite()
 
 const activeTab = ref<'characters' | 'pokemon'>('characters')
 const species = ref('')
@@ -254,7 +256,8 @@ const addPokemon = () => {
     img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      image-rendering: pixelated;
     }
   }
 
