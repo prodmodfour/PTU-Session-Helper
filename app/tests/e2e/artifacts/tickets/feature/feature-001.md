@@ -51,6 +51,7 @@ See `design-trainer-sprites-001.md` for the full design document.
 | 2026-02-22 | Design spec written | `design-trainer-sprites-001.md` covering sprite source, composable, picker component, and 17 integration points |
 | 2026-02-23 | P0 implementation | Branch `slave/6-dev-feature-001-p0-20260223-085530` |
 | 2026-02-23 | P0 fix cycle | Branch `slave/1-dev-feature-001-fix-20260223-104924` — code-review-143 CHANGES_REQUIRED fixes (C1, M1, M2, M3). H1 deferred to refactoring-075 |
+| 2026-02-23 | P0 fix cycle 2 | Branch `slave/3-dev-feature-001-fix-20260223-130041` — code-review-146 M1 fix: add avatarBroken reset watchers in 3 reused components |
 
 ### P0 Commits
 
@@ -73,3 +74,11 @@ See `design-trainer-sprites-001.md` for the full design document.
 | `e1c2562` | fix: standardize avatar error handling to reactive null-out pattern |
 | `ae3ac24` | fix: replace pokemon-placeholder fallback with reactive null-out for human avatars |
 | `cca2210` | docs: add trainer sprite files to app-surface.md |
+
+### P0 Fix Cycle 2 Commits (code-review-146 M1)
+
+| Hash | Message |
+|------|---------|
+| `48d55fc` | fix: reset avatarBroken when combatant changes in CombatantDetailsPanel |
+| `c6aeb4d` | fix: reset avatarBroken on route param change in character sheet page |
+| `1cd884d` | fix: reset avatarBroken when character prop changes in CharacterModal |
