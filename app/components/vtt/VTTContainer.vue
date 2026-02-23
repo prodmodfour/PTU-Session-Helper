@@ -63,6 +63,21 @@
       @hide-all="hideAllFog"
     />
 
+    <!-- Elevation Toolbar (GM Only, Isometric Mode) -->
+    <ElevationToolbar
+      v-if="config.enabled && config.isometric && isGm"
+      :enabled="elevationEnabled"
+      :mode="elevationMode"
+      :current-level="currentElevationLevel"
+      :max-elevation="config.maxElevation ?? 5"
+      :selected-token-name="selectedElevationTokenName"
+      :selected-token-elevation="selectedElevationTokenElev"
+      @toggle="elevationEnabled = !elevationEnabled"
+      @set-mode="setElevationMode"
+      @increase="increaseElevation"
+      @decrease="decreaseElevation"
+    />
+
     <!-- Grid Settings Panel -->
     <GridSettingsPanel
       v-if="showSettings && isGm"
@@ -89,6 +104,7 @@
         :is-gm="isGm"
         :show-zoom-controls="true"
         :show-coordinates="true"
+        :show-movement-range="true"
         @token-move="handleTokenMove"
         @token-select="handleTokenSelect"
         @cell-click="handleCellClick"
@@ -262,6 +278,58 @@ const tokens = computed((): TokenData[] => {
 const selectedCombatant = computed(() => {
   if (!selectedTokenId.value) return null
   return props.combatants.find(c => c.id === selectedTokenId.value)
+})
+
+// Elevation toolbar state
+import type { ElevationMode } from '~/components/vtt/ElevationToolbar.vue'
+const elevationEnabled = ref(false)
+const elevationMode = ref<ElevationMode>('token')
+const currentElevationLevel = ref(1)
+
+const setElevationMode = (mode: ElevationMode) => {
+  elevationMode.value = mode
+}
+
+const increaseElevation = () => {
+  const max = props.config.maxElevation ?? 5
+  currentElevationLevel.value = Math.min(max, currentElevationLevel.value + 1)
+
+  // If in token mode and a token is selected, raise its elevation
+  if (elevationMode.value === 'token' && isometricCanvasRef.value) {
+    const selectedId = isometricCanvasRef.value.selectedTokenId
+    if (selectedId) {
+      isometricCanvasRef.value.raiseToken(selectedId)
+    }
+  }
+}
+
+const decreaseElevation = () => {
+  currentElevationLevel.value = Math.max(0, currentElevationLevel.value - 1)
+
+  // If in token mode and a token is selected, lower its elevation
+  if (elevationMode.value === 'token' && isometricCanvasRef.value) {
+    const selectedId = isometricCanvasRef.value.selectedTokenId
+    if (selectedId) {
+      isometricCanvasRef.value.lowerToken(selectedId)
+    }
+  }
+}
+
+// Selected token info for elevation toolbar
+const selectedElevationTokenName = computed(() => {
+  if (!isometricCanvasRef.value) return undefined
+  const selectedId = isometricCanvasRef.value.selectedTokenId
+  if (!selectedId) return undefined
+  const combatant = props.combatants.find(c => c.id === selectedId)
+  if (!combatant) return undefined
+  return getCombatantName(combatant)
+})
+
+const selectedElevationTokenElev = computed(() => {
+  if (!isometricCanvasRef.value) return undefined
+  const selectedId = isometricCanvasRef.value.selectedTokenId
+  if (!selectedId) return undefined
+  return isometricCanvasRef.value.getTokenElevation(selectedId)
 })
 
 // Methods
