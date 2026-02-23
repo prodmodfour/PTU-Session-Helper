@@ -4,7 +4,7 @@ ticket_id: ptu-rule-060
 category: FEATURE_GAP
 scope: NEW_FEATURE
 domain: scenes
-status: open
+status: p1-complete
 dependencies:
   - ptu-rule-055  # Post-combat XP calculation (significance multiplier consumed here)
   - ptu-rule-058  # Density/significance conceptual mismatch (density reinterpretation)
@@ -657,3 +657,23 @@ Addressed code-review-124 (CHANGES_REQUIRED) and rules-review-114 HIGH-1:
 | `05f5847` | H1: Updated `app-surface.md` with budget system files |
 
 P0 status: **complete** (all review issues addressed).
+
+### P0 — Re-review Fix (2026-02-23)
+
+| Commit | Fix |
+|--------|-----|
+| `5d17b5f` | C1: Fixed `characterType === 'pc'` to `'player'` (code-review-134 / rules-review-124) |
+
+### P1 — Significance Multiplier (2026-02-23)
+
+Commits: `5597a83`, `7423d69`, `67123c1`, `0f1919a`, `cb182fd`, `b2966fc`
+
+Steps 6-9 from design spec implemented:
+- Prisma: added `significanceTier` column (migration needed post-merge)
+- Types: extended Encounter interface/service with significanceTier
+- StartEncounterModal: significance tier radio selector (5 PTU presets)
+- GenerateEncounterModal: compact significance selector (defaults to insignificant for wild)
+- APIs: POST/PUT encounters accept and persist significanceTier
+- Store/composable/pages: full pipeline from modal selection to DB persistence
+
+P1 status: **complete** (ready for review).

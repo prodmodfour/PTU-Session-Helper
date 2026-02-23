@@ -51,6 +51,40 @@ The density tier system controls spawn count but has no connection to level-base
 - `app/components/habitat/GenerateEncounterModal.vue` — replaced inline budget guide with BudgetGuide component
 - `app/pages/gm/scenes/[id].vue` — filter playerCount and ownedPokemonLevels to PC characters only
 
+## Fix Log (P0 Re-re-review Fixes — code-review-134 / rules-review-124)
+
+| Issue | Commit | Description |
+|-------|--------|-------------|
+| C1 | `5d17b5f` | Fix `characterType === 'pc'` to `'player'` in scene budget computed |
+
+## Fix Log (P1 — Significance Multiplier)
+
+| Step | Commit | Description |
+|------|--------|-------------|
+| Prisma | `5597a83` | Add `significanceTier` column to Encounter model (migration needed post-merge) |
+| Types | `7423d69` | Add `significanceTier` to Encounter interface, EncounterRecord, ParsedEncounter, response builder |
+| UI (scene) | `67123c1` | Add significance tier radio selector to StartEncounterModal |
+| UI (generate) | `0f1919a` | Add compact significance selector to GenerateEncounterModal (default: insignificant) |
+| APIs + store | `cb182fd` | Wire significanceTier through POST/PUT encounter APIs, store, composable, and 3 parent pages |
+| Scene wire | `b2966fc` | Pass significance from scenes/[id].vue to createFromScene |
+
+### P1 Files Changed
+- `app/prisma/schema.prisma` — added `significanceTier` field to Encounter
+- `app/types/encounter.ts` — extended Encounter interface with `significanceTier`
+- `app/server/services/encounter.service.ts` — added `significanceTier` to record/parsed types and response builder
+- `app/components/scene/StartEncounterModal.vue` — significance tier radio selector, emit with confirm
+- `app/components/habitat/GenerateEncounterModal.vue` — compact significance selector, emit with addToEncounter
+- `app/server/api/encounters/index.post.ts` — accept significanceMultiplier and significanceTier
+- `app/server/api/encounters/from-scene.post.ts` — accept significance fields
+- `app/server/api/encounters/[id].put.ts` — persist significanceTier
+- `app/server/api/encounters/[id]/significance.put.ts` — accept and return significanceTier
+- `app/stores/encounter.ts` — createEncounter/createFromScene/setSignificance accept significance; WebSocket sync
+- `app/composables/useEncounterCreation.ts` — pass significance to createWildEncounter
+- `app/pages/gm/encounter-tables.vue` — forward significance from modal
+- `app/pages/gm/habitats/[id].vue` — forward significance from modal
+- `app/pages/gm/habitats/index.vue` — forward significance from modal
+- `app/pages/gm/scenes/[id].vue` — fix C1 bug + pass significance to createFromScene
+
 ### Files Changed (Original)
 - `app/utils/encounterBudget.ts` — renamed field + JSDoc
 - `app/composables/useEncounterBudget.ts` — human-only player filter

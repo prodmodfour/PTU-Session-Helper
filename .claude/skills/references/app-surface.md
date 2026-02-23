@@ -102,13 +102,15 @@ CRUD + extensive combat actions.
 - `GET/PUT /api/encounters/:id/terrain` — terrain state
 - `POST /api/encounters/:id/breather` — mid-combat rest
 - `POST /api/encounters/:id/wild-spawn` — spawn wild Pokemon
-- `PUT /api/encounters/:id/significance` — set GM significance multiplier
+- `PUT /api/encounters/:id/significance` — set GM significance multiplier + tier
 - `POST /api/encounters/:id/xp-calculate` — preview XP calculation (read-only breakdown + participating Pokemon)
 - `POST /api/encounters/:id/xp-distribute` — apply XP to Pokemon (updates experience, level, tutorPoints)
 
 **Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio).
 
-**Budget system:** `utils/encounterBudget.ts` (pure PTU level budget calculator — budget formula, difficulty assessment, XP calculation), `composables/useEncounterBudget.ts` (reactive wrapper for active encounter budget analysis).
+**Budget system:** `utils/encounterBudget.ts` (pure PTU level budget calculator — budget formula, difficulty assessment, XP calculation, SIGNIFICANCE_PRESETS), `composables/useEncounterBudget.ts` (reactive wrapper for active encounter budget analysis).
+
+**Significance on Encounter model:** `significanceMultiplier` (Float, default 1.0) + `significanceTier` (String, default "insignificant"). Set at encounter creation via StartEncounterModal/GenerateEncounterModal. Editable mid-encounter via significance.put endpoint.
 
 ### Encounter Templates (`/api/encounter-templates`)
 Full CRUD + save-from/load-to encounter.
