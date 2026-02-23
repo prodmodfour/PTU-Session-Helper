@@ -3,11 +3,11 @@
     ref="containerRef"
     class="isometric-canvas-container"
     data-testid="isometric-canvas-container"
-    @wheel.prevent="handleWheel"
-    @mousedown="handleMouseDown"
-    @mousemove="handleMouseMove"
-    @mouseup="handleMouseUp"
-    @mouseleave="handleMouseUp"
+    @wheel.prevent="interaction.handleWheel"
+    @mousedown="interaction.handleMouseDown"
+    @mousemove="interaction.handleMouseMove"
+    @mouseup="interaction.handleMouseUp"
+    @mouseleave="onMouseLeave"
     @contextmenu.prevent
   >
     <canvas
@@ -20,8 +20,8 @@
     <CameraControls
       :angle="camera.cameraAngle.value"
       :is-rotating="camera.isRotating.value"
-      @rotate-cw="camera.rotateClockwise"
-      @rotate-ccw="camera.rotateCounterClockwise"
+      @rotate-cw="onRotateCw"
+      @rotate-ccw="onRotateCcw"
     />
 
     <!-- Zoom Controls (bottom-right) -->
@@ -33,10 +33,11 @@
       @reset="camera.resetView"
     />
 
-    <!-- Coordinate Display -->
+    <!-- Coordinate Display (with elevation) -->
     <CoordinateDisplay
       v-if="showCoordinates"
-      :cell="hoveredCell"
+      :cell="interaction.hoveredCell.value"
+      :elevation="hoveredElevation"
     />
   </div>
 </template>
@@ -45,7 +46,10 @@
 import type { GridConfig, GridPosition, CameraAngle, Combatant, MovementPreview } from '~/types'
 import { useIsometricCamera } from '~/composables/useIsometricCamera'
 import { useIsometricRendering } from '~/composables/useIsometricRendering'
-import { useIsometricProjection } from '~/composables/useIsometricProjection'
+import { useIsometricInteraction } from '~/composables/useIsometricInteraction'
+import { useGridMovement, calculateElevationCost } from '~/composables/useGridMovement'
+import { useElevation } from '~/composables/useElevation'
+import { useRangeParser } from '~/composables/useRangeParser'
 
 interface TokenData {
   combatantId: string
@@ -78,24 +82,74 @@ const emit = defineEmits<{
 const containerRef = ref<HTMLDivElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
-// Hover state
-const hoveredCell = ref<GridPosition | null>(null)
-
-// Panning state
-let isPanning = false
-let lastPanX = 0
-let lastPanY = 0
-
 // Camera
 const camera = useIsometricCamera()
-
-// Initialize camera angle from config
 const configRef = computed(() => props.config)
+const tokensRef = computed(() => props.tokens)
+const combatantsRef = computed(() => props.combatants)
+const currentTurnIdRef = computed(() => props.currentTurnId)
+const isGmRef = computed(() => props.isGm ?? false)
 
-// Projection (for screenToWorld and getGridOriginOffset in mouse handlers)
-const { screenToWorld, getGridOriginOffset } = useIsometricProjection()
+// Elevation management
+const maxElevationRef = computed(() => props.config.maxElevation ?? 5)
+const elevation = useElevation({
+  maxElevation: maxElevationRef,
+  getCombatant: (id: string) => props.combatants.find(c => c.id === id),
+})
 
-// Rendering
+// Movement system (elevation-aware)
+const movement = useGridMovement({
+  tokens: tokensRef,
+  getMovementSpeed: props.getMovementSpeed,
+  getCombatant: (id: string) => props.combatants.find(c => c.id === id),
+  getTokenElevation: (id: string) => elevation.getTokenElevation(id),
+  getTerrainElevation: (x: number, y: number) => elevation.getTerrainElevation(x, y),
+})
+
+// Movement preview state
+const movementPreview = ref<MovementPreview | null>(null)
+
+// Movement range cells (computed from selected token)
+const { getMovementRangeCells } = useRangeParser()
+const movementRangeCells = computed<GridPosition[]>(() => {
+  if (!props.showMovementRange) return []
+  const selectedId = interaction.selectedTokenId.value
+  if (!selectedId) return []
+
+  const token = props.tokens.find(t => t.combatantId === selectedId)
+  if (!token) return []
+
+  const speed = movement.getSpeed(selectedId)
+  const blockedCells = movement.getBlockedCells(selectedId)
+  const terrainCostGetter = movement.getTerrainCostGetter(selectedId)
+
+  // Build elevation cost getter bound to this combatant
+  const combatant = props.combatants.find(c => c.id === selectedId)
+  const elevationCostGetter = (fromZ: number, toZ: number) =>
+    calculateElevationCost(fromZ, toZ, combatant)
+
+  const originElev = elevation.getTokenElevation(selectedId)
+
+  return getMovementRangeCells(
+    token.position,
+    speed,
+    blockedCells,
+    terrainCostGetter,
+    elevationCostGetter,
+    (x: number, y: number) => elevation.getTerrainElevation(x, y),
+    originElev
+  )
+})
+
+// Token data with elevation for renderer
+const tokensWithElevation = computed(() => {
+  return props.tokens.map(t => ({
+    ...t,
+    elevation: elevation.getTokenElevation(t.combatantId),
+  }))
+})
+
+// Rendering (P1: pass tokens, combatants, hover, selection, movement data)
 const rendering = useIsometricRendering({
   canvasRef,
   containerRef,
@@ -103,7 +157,53 @@ const rendering = useIsometricRendering({
   zoom: camera.zoom,
   panOffset: camera.panOffset,
   cameraAngle: camera.cameraAngle,
-  isRotating: camera.isRotating
+  isRotating: camera.isRotating,
+  tokens: tokensWithElevation,
+  combatants: combatantsRef,
+  currentTurnId: currentTurnIdRef,
+  selectedTokenId: computed(() => interaction.selectedTokenId.value),
+  hoveredCell: computed(() => interaction.hoveredCell.value),
+  movingTokenId: computed(() => interaction.movingTokenId.value),
+  movementPreview: computed(() => props.externalMovementPreview ?? movementPreview.value),
+  movementRangeCells,
+  getTokenElevation: (id: string) => elevation.getTokenElevation(id),
+})
+
+// Interaction composable (wires mouse events to grid logic)
+const interaction = useIsometricInteraction({
+  containerRef,
+  config: configRef,
+  tokens: tokensWithElevation,
+  zoom: camera.zoom,
+  panOffset: camera.panOffset,
+  cameraAngle: camera.cameraAngle,
+  isGm: isGmRef,
+  render: () => rendering.scheduleRender(),
+  isValidMove: movement.isValidMove,
+  getSpeed: movement.getSpeed,
+  onTokenMove: (combatantId: string, position: GridPosition) => {
+    emit('tokenMove', combatantId, position)
+  },
+  onTokenSelect: (combatantId: string | null) => {
+    emit('tokenSelect', combatantId)
+  },
+  onCellClick: (position: GridPosition) => {
+    emit('cellClick', position)
+  },
+  onMultiSelect: (combatantIds: string[]) => {
+    emit('multiSelect', combatantIds)
+  },
+  onMovementPreviewChange: (preview: MovementPreview | null) => {
+    movementPreview.value = preview
+    emit('movementPreviewChange', preview)
+  },
+})
+
+// Hovered cell elevation (for CoordinateDisplay)
+const hoveredElevation = computed(() => {
+  const cell = interaction.hoveredCell.value
+  if (!cell) return 0
+  return elevation.getTerrainElevation(cell.x, cell.y)
 })
 
 // Initialize camera angle from config on mount
@@ -113,117 +213,55 @@ watch(() => props.config.cameraAngle, (newAngle) => {
   }
 }, { immediate: true })
 
-// Mouse handlers
-const handleWheel = (event: WheelEvent) => {
-  if (event.deltaY < 0) {
-    camera.zoomIn()
-  } else {
-    camera.zoomOut()
-  }
+// Camera rotation handlers (trigger re-render)
+const onRotateCw = () => {
+  camera.rotateClockwise()
   rendering.scheduleRender()
 }
 
-const handleMouseDown = (event: MouseEvent) => {
-  // Right click or middle click = pan
-  if (event.button === 1 || event.button === 2) {
-    isPanning = true
-    lastPanX = event.clientX
-    lastPanY = event.clientY
-    event.preventDefault()
-    return
-  }
-
-  // Left click = pan (for now in P0, interaction will be added in P1)
-  if (event.button === 0) {
-    isPanning = true
-    lastPanX = event.clientX
-    lastPanY = event.clientY
-  }
+const onRotateCcw = () => {
+  camera.rotateCounterClockwise()
+  rendering.scheduleRender()
 }
 
-const handleMouseMove = (event: MouseEvent) => {
-  if (isPanning) {
-    const dx = event.clientX - lastPanX
-    const dy = event.clientY - lastPanY
-    camera.panOffset.value = {
-      x: camera.panOffset.value.x + dx,
-      y: camera.panOffset.value.y + dy
-    }
-    lastPanX = event.clientX
-    lastPanY = event.clientY
-    rendering.scheduleRender()
-    return
-  }
-
-  // Update hovered cell
-  updateHoveredCell(event)
-}
-
-const handleMouseUp = () => {
-  isPanning = false
+const onMouseLeave = (event: MouseEvent) => {
+  interaction.handleMouseUp(event)
 }
 
 /**
- * Convert mouse screen position to grid cell coordinates.
- */
-const updateHoveredCell = (event: MouseEvent) => {
-  const container = containerRef.value
-  if (!container) return
-
-  const rect = container.getBoundingClientRect()
-  const mouseX = event.clientX - rect.left
-  const mouseY = event.clientY - rect.top
-
-  const config = props.config
-  const { cellSize, width: gridW, height: gridH } = config
-
-  // Reverse the camera transform: pan offset -> zoom -> grid origin offset
-  const { ox, oy } = getGridOriginOffset(
-    gridW, gridH, cellSize, camera.cameraAngle.value
-  )
-
-  const worldX = (mouseX - camera.panOffset.value.x) / camera.zoom.value - ox
-  const worldY = (mouseY - camera.panOffset.value.y) / camera.zoom.value - oy
-
-  const cell = screenToWorld(
-    worldX, worldY,
-    camera.cameraAngle.value,
-    gridW, gridH,
-    cellSize,
-    0
-  )
-
-  // Only update if within grid bounds
-  if (cell.x >= 0 && cell.x < gridW && cell.y >= 0 && cell.y < gridH) {
-    hoveredCell.value = { x: cell.x, y: cell.y }
-  } else {
-    hoveredCell.value = null
-  }
-}
-
-/**
- * Handle keyboard events for camera rotation.
+ * Handle keyboard events for camera rotation and interaction shortcuts.
  */
 const handleKeyDown = (event: KeyboardEvent) => {
-  // Ignore if typing in an input
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
 
+  // Camera rotation: Q/E
   switch (event.key.toLowerCase()) {
     case 'q':
       camera.rotateCounterClockwise()
       rendering.scheduleRender()
-      break
+      return
     case 'e':
+      // Only handle 'e' for camera rotation if fog is not enabled
+      // (useGridInteraction uses 'e' for fog explore tool)
       camera.rotateClockwise()
       rendering.scheduleRender()
-      break
+      return
   }
+
+  // Delegate other keys to interaction composable
+  interaction.handleKeyDown(event)
 }
 
-// Watch for rotation animation progress to trigger re-renders
+// Apply default elevations for flying Pokemon
+watch(() => props.combatants, (combatants) => {
+  for (const combatant of combatants) {
+    elevation.applyDefaultElevation(combatant.id)
+  }
+}, { immediate: true, deep: true })
+
+// Watch for rotation completion
 watch(() => camera.isRotating.value, (rotating) => {
   if (!rotating) {
-    // Rotation completed, do a final render
     rendering.scheduleRender()
   }
 })
@@ -252,12 +290,26 @@ watch(() => props.tokens, () => {
   rendering.scheduleRender()
 }, { deep: true })
 
+watch(() => props.combatants, () => {
+  rendering.scheduleRender()
+}, { deep: true })
+
 // Expose methods for parent
 defineExpose({
   zoomIn: camera.zoomIn,
   zoomOut: camera.zoomOut,
   resetView: camera.resetView,
   render: rendering.render,
+  // Elevation API for ElevationToolbar
+  getTokenElevation: elevation.getTokenElevation,
+  setTokenElevation: elevation.setTokenElevation,
+  raiseToken: elevation.raiseToken,
+  lowerToken: elevation.lowerToken,
+  raiseTerrainAt: elevation.raiseTerrainAt,
+  lowerTerrainAt: elevation.lowerTerrainAt,
+  brushElevation: elevation.brushElevation,
+  setBrushElevation: elevation.setBrushElevation,
+  selectedTokenId: interaction.selectedTokenId,
 })
 </script>
 
