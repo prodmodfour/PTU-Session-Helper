@@ -47,6 +47,30 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Validate isometric fields if provided
+    if (body.cameraAngle !== undefined && ![0, 1, 2, 3].includes(body.cameraAngle)) {
+      throw createError({
+        statusCode: 400,
+        message: 'Camera angle must be 0, 1, 2, or 3'
+      })
+    }
+
+    if (body.maxElevation !== undefined && (
+      !Number.isInteger(body.maxElevation) || body.maxElevation < 1 || body.maxElevation > 10
+    )) {
+      throw createError({
+        statusCode: 400,
+        message: 'Max elevation must be an integer between 1 and 10'
+      })
+    }
+
+    if (body.isometric !== undefined && typeof body.isometric !== 'boolean') {
+      throw createError({
+        statusCode: 400,
+        message: 'Isometric must be a boolean'
+      })
+    }
+
     // Update grid config
     const updated = await prisma.encounter.update({
       where: { id },
