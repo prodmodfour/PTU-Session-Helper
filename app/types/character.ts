@@ -202,6 +202,7 @@ export interface QuickCreatePayload {
   characterType: CharacterType
   level: number
   location?: string
+  avatarUrl?: string
   stats: Stats
   maxHp: number
   currentHp: number

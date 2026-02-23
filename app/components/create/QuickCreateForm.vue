@@ -28,6 +28,34 @@
           <input v-model="localForm.location" type="text" class="form-input" placeholder="e.g., Mesagoza" />
         </div>
       </div>
+
+      <!-- Trainer Sprite -->
+      <div class="form-group">
+        <label>Trainer Sprite</label>
+        <div class="sprite-preview">
+          <div class="sprite-preview__avatar" @click="showSpritePicker = true">
+            <img
+              v-if="resolvedAvatarUrl"
+              :src="resolvedAvatarUrl"
+              alt="Selected sprite"
+              class="sprite-preview__img"
+              @error="handleAvatarError"
+            />
+            <span v-else class="sprite-preview__placeholder">
+              {{ localForm.name ? localForm.name.charAt(0).toUpperCase() : '?' }}
+            </span>
+          </div>
+          <button type="button" class="btn btn--sm btn--secondary" @click="showSpritePicker = true">
+            Choose Sprite
+          </button>
+        </div>
+      </div>
+
+      <TrainerSpritePicker
+        v-model="localForm.avatarUrl"
+        :show="showSpritePicker"
+        @close="showSpritePicker = false"
+      />
     </div>
 
     <div class="create-form__section">
@@ -87,11 +115,16 @@ const emit = defineEmits<{
   submit: [payload: QuickCreatePayload]
 }>()
 
+const { getTrainerSpriteUrl } = useTrainerSprite()
+
+const showSpritePicker = ref(false)
+
 const localForm = reactive({
   name: '',
   characterType: 'npc' as CharacterType,
   level: 1,
   location: '',
+  avatarUrl: null as string | null,
   hp: 10,
   attack: 5,
   defense: 5,
@@ -100,6 +133,13 @@ const localForm = reactive({
   speed: 5,
   notes: ''
 })
+
+const resolvedAvatarUrl = computed(() => getTrainerSpriteUrl(localForm.avatarUrl))
+
+const handleAvatarError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+}
 
 /** Build and emit the creation payload */
 function handleSubmit(): void {
@@ -118,6 +158,7 @@ function handleSubmit(): void {
     characterType: localForm.characterType,
     level,
     location: localForm.location || undefined,
+    avatarUrl: localForm.avatarUrl || undefined,
     stats: {
       hp: hpStat,
       attack: localForm.attack,
@@ -142,6 +183,46 @@ function handleSubmit(): void {
 
   @media (max-width: 600px) {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.sprite-preview {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  &__avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    background: linear-gradient(135deg, $color-bg-tertiary 0%, $color-bg-secondary 100%);
+    border: 2px solid $border-color-default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color $transition-fast;
+
+    &:hover {
+      border-color: $color-accent-teal;
+    }
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  &__placeholder {
+    font-size: $font-size-xl;
+    font-weight: 700;
+    background: $gradient-sv-cool;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 </style>

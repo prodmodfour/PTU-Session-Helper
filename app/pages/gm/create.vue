@@ -122,6 +122,34 @@
               <input v-model="creation.form.location" type="text" class="form-input" placeholder="e.g., Mesagoza" />
             </div>
           </div>
+
+          <!-- Trainer Sprite -->
+          <div class="form-group">
+            <label>Trainer Sprite</label>
+            <div class="sprite-preview">
+              <div class="sprite-preview__avatar" @click="showFullCreateSpritePicker = true">
+                <img
+                  v-if="fullCreateResolvedAvatar"
+                  :src="fullCreateResolvedAvatar"
+                  alt="Selected sprite"
+                  class="sprite-preview__img"
+                  @error="handleFullCreateAvatarError"
+                />
+                <span v-else class="sprite-preview__placeholder">
+                  {{ creation.form.name ? creation.form.name.charAt(0).toUpperCase() : '?' }}
+                </span>
+              </div>
+              <button type="button" class="btn btn--sm btn--secondary" @click="showFullCreateSpritePicker = true">
+                Choose Sprite
+              </button>
+            </div>
+          </div>
+
+          <TrainerSpritePicker
+            v-model="creation.form.avatarUrl"
+            :show="showFullCreateSpritePicker"
+            @close="showFullCreateSpritePicker = false"
+          />
         </div>
 
         <!-- Section 2: Background & Skills -->
@@ -370,6 +398,7 @@ useHead({
 
 const router = useRouter()
 const libraryStore = useLibraryStore()
+const { getTrainerSpriteUrl } = useTrainerSprite()
 
 const createType = ref<'human' | 'pokemon'>('human')
 const humanCreateMode = ref<CreateMode>('quick')
@@ -377,6 +406,14 @@ const creating = ref(false)
 
 /** Biography section expanded state — expanded for PCs, collapsed for NPCs by default */
 const biographyExpanded = ref(false)
+
+/** Full Create sprite picker state */
+const showFullCreateSpritePicker = ref(false)
+const fullCreateResolvedAvatar = computed(() => getTrainerSpriteUrl(creation.form.avatarUrl))
+const handleFullCreateAvatarError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+}
 
 const pokemonTypes: PokemonType[] = [
   'Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice',
@@ -682,6 +719,46 @@ const createPokemon = async () => {
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
+}
+
+.sprite-preview {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  &__avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    background: linear-gradient(135deg, $color-bg-tertiary 0%, $color-bg-secondary 100%);
+    border: 2px solid $border-color-default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color $transition-fast;
+
+    &:hover {
+      border-color: $color-accent-teal;
+    }
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  &__placeholder {
+    font-size: $font-size-xl;
+    font-weight: 700;
+    background: $gradient-sv-cool;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
 
 .validation-item {

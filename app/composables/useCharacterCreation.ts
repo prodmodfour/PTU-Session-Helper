@@ -59,6 +59,7 @@ export function useCharacterCreation() {
     characterType: 'npc' as CharacterType,
     level: 1,
     location: '',
+    avatarUrl: null as string | null,
     // Background
     backgroundPreset: null as TrainerBackground | null,
     backgroundName: '',
@@ -341,6 +342,7 @@ export function useCharacterCreation() {
       characterType: form.characterType,
       level: form.level,
       location: form.location || undefined,
+      avatarUrl: form.avatarUrl || undefined,
       stats: computedStats.value,
       maxHp: maxHp.value,
       currentHp: maxHp.value,
