@@ -63,6 +63,8 @@ CRUD + healing/rest + equipment actions.
 
 **Key equipment components:** `HumanEquipmentTab.vue` (equipment slot management — equip/unequip/custom items, catalog dropdown, combat bonuses summary), `EquipmentCatalogBrowser.vue` (modal catalog browser with slot filtering, search, and direct equip-to-character). Constants in `constants/equipment.ts` (catalog, slot labels, stat labels). Bonuses utility in `utils/equipmentBonuses.ts`.
 
+**Trainer sprites:** `constants/trainerSprites.ts` (180 curated B2W2 sprites organized into 9 categories), `composables/useTrainerSprite.ts` (avatar URL resolution from sprite key to Showdown CDN URL), `components/character/TrainerSpritePicker.vue` (modal grid picker with category filter tabs and search).
+
 ### Pokemon (`/api/pokemon`)
 CRUD + link/unlink + healing/rest + bulk.
 - `GET/POST /api/pokemon` — list, create
