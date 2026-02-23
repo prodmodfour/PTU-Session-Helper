@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-23T11:30:00
-updated_by: slave-collector (plan-20260223-104924)
+last_updated: 2026-02-23T12:45:00
+updated_by: slave-collector (plan-20260223-122250)
 ---
 
 # Dev Ecosystem State
@@ -31,9 +31,9 @@ updated_by: slave-collector (plan-20260223-104924)
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
 |--------|----------|--------|---------|-------------------|
-| feature-001 | P3 | **P0-fixed** | B2W2 trainer sprites — P0 fix cycle complete (6 commits: C1+M1-M3 from code-review-143). Needs re-review | single-phase |
-| feature-002 | P2 | **P0-APPROVED** | 3D isometric grid — P0 APPROVED. code-review-145 APPROVED, rules-review-135 APPROVED. Ready for P1 | multi-phase |
-| feature-003 | P1 | **P0-APPROVED** | Player View — P0 Track A APPROVED. code-review-144 APPROVED (M1 non-blocking → refactoring-076), rules-review-134 APPROVED. Ready for P1 | multi-phase-parallel |
+| feature-001 | P3 | **P0-CHANGES_REQUIRED** | B2W2 trainer sprites — P0 fix cycle re-reviewed. code-review-146 CHANGES_REQUIRED (M1: avatarBroken not reset on entity change in 3 files), rules-review-136 APPROVED. Needs fix cycle | single-phase |
+| feature-002 | P2 | **P1-implemented** | 3D isometric grid — P1 implemented (11 commits: interaction, depth sorting, elevation, token rendering). Needs review | multi-phase |
+| feature-003 | P1 | **P1-implemented** | Player View — P1 Track A implemented (4 commits: usePlayerCombat, PlayerCombatActions, PlayerEncounterView). Needs review | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -43,22 +43,29 @@ updated_by: slave-collector (plan-20260223-104924)
 
 ## Active Developer Work
 
-**Current task:** Slave collection for plan-20260223-104924 completed — 3 slaves merged (10 commits total).
+**Current task:** Slave collection for plan-20260223-122250 completed — 3 slaves merged (17 commits total).
 
-**Session 21 (2026-02-23):**
-- feature-001 P0 fix cycle complete (slave-1, 6 commits) — C1 defineProps crash, M1 deliberate-invocation comments, M2 avatar error handling standardization (12 files), M3 app-surface update from code-review-143. Needs re-review
-- feature-003 P0 Track A re-review APPROVED (slave-2) — code-review-144 APPROVED (M1 non-blocking: 1px font regression → refactoring-076), rules-review-134 APPROVED
-- feature-002 P0 re-review APPROVED (slave-3) — code-review-145 APPROVED, rules-review-135 APPROVED
+**Session 22 (2026-02-23):**
+- feature-003 P1 Track A implemented (slave-1, 4 commits) — usePlayerCombat composable, PlayerCombatActions component, PlayerEncounterView integration, unused import cleanup. Needs review
+- feature-002 P1 implemented (slave-2, 11 commits) — useDepthSorting, useIsometricInteraction, useElevation, ElevationToolbar, token rendering, elevation-aware movement, 3D A* pathfinding, IsometricCanvas wiring, CoordinateDisplay elevation, VTTContainer toolbar, VTTToken isometric mode. Needs review
+- feature-001 P0 fix cycle re-reviewed (slave-3) — code-review-146 CHANGES_REQUIRED (M1: avatarBroken not reset on entity change in CombatantDetailsPanel, CharacterModal, gm/characters/[id].vue), rules-review-136 APPROVED
 
 **Next actions (by priority):**
-1. **Implement** feature-003 P1 Track A (player view remaining tiers — P0 APPROVED)
-2. **Implement** feature-002 P1 (isometric token interaction + movement — P0 APPROVED)
-3. **Re-review** feature-001 P0 fix cycle (6 commits from code-review-143 fixes)
-4. feature-003 P1 Track B/C (after P1 Track A)
-5. feature-001 P1 (after re-review passes — if multi-tier)
-6. ptu-rule-081 P4, ptu-rule-082 P4
+1. **Review** feature-003 P1 Track A (4 commits — player combat actions)
+2. **Review** feature-002 P1 (11 commits — isometric interaction + elevation)
+3. **Fix cycle** feature-001 P0 (M1: add avatarBroken reset watchers in 3 files from code-review-146)
+4. feature-003 P1 Track B/C (after P1 Track A review)
+5. feature-002 P2 (after P1 review)
+6. feature-001 P1 (after fix cycle passes)
+7. ptu-rule-081 P4, ptu-rule-082 P4
 
 ## Review Status
+
+### Session 22 Reviews
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-146 | feature-001 P0 fix cycle re-review | CHANGES_REQUIRED | senior-reviewer | 2026-02-23 |
+| rules-review-136 | feature-001 P0 fix cycle re-review | APPROVED | game-logic-reviewer | 2026-02-23 |
 
 ### Session 21 Reviews
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -184,9 +191,9 @@ updated_by: slave-collector (plan-20260223-104924)
 |--------|-------|
 | Last audited | 2026-02-18T12:00:00 |
 | Open tickets (P0) | 0 |
-| Open tickets (P1) | 1 (feature-003 — P0-APPROVED, ready for P1) |
-| Open tickets (P2) | 1 (feature-002 — P0-APPROVED, ready for P1) |
-| Open tickets (P3) | 1 (feature-001 — P0-fixed, needs re-review) |
+| Open tickets (P1) | 1 (feature-003 — P1-implemented, needs review) |
+| Open tickets (P2) | 1 (feature-002 — P1-implemented, needs review) |
+| Open tickets (P3) | 1 (feature-001 — P0-CHANGES_REQUIRED, needs fix cycle) |
 | Open tickets (P4) | 20 (refactoring-059–076 excl resolved + ptu-rule-081, 082 + ux-001, 002) |
 | Total open | 23 |
 | Total resolved | 150 |
@@ -365,3 +372,17 @@ updated_by: slave-collector (plan-20260223-104924)
 **Net movement:** 22→23 open (+1 net: +1 new refactoring ticket)
 
 **All P0 tickets remain at 0. feature-003 and feature-002 are now APPROVED and ready for P1 implementation.**
+
+## Session Summary (2026-02-23, session 22 — plan-20260223-122250)
+
+**Slave collection plan-20260223-122250:** 3 slaves merged (17 commits total, 0 conflicts)
+- **slave-1** (developer): feature-003 P1 Track A — 4 commits (usePlayerCombat composable with turn detection/action execution/WS player_action, PlayerCombatActions component with move list/target selector/shift/struggle/pass/maneuvers/items/switch, PlayerEncounterView integration, unused import cleanup)
+- **slave-2** (developer): feature-002 P1 — 11 commits (useDepthSorting composable, useIsometricInteraction composable, useElevation composable, ElevationToolbar component, token rendering + movement preview in isometric renderer, elevation-aware movement in useGridMovement, 3D A* pathfinding in useRangeParser, IsometricCanvas wiring, CoordinateDisplay elevation, VTTContainer toolbar, VTTToken isometric mode + elevation badge)
+- **slave-3** (reviewers): feature-001 P0 fix cycle re-review — code-review-146 CHANGES_REQUIRED (M1: avatarBroken ref not reset when entity changes in CombatantDetailsPanel, CharacterModal, gm/characters/[id].vue — stale ref causes letter-initial fallback for valid avatars) + rules-review-136 APPROVED (no game logic regression)
+
+**Tickets filed:** 0
+**Tickets resolved:** 0
+**Reviews completed:** 2 artifacts (code-review-146, rules-review-136)
+**Net movement:** 23→23 open (no change — P1 implementations need review, feature-001 needs another fix cycle)
+
+**All P0 tickets remain at 0.**
