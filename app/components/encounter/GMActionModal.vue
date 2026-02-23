@@ -16,6 +16,7 @@
               :src="resolvedHumanAvatarUrl"
               :alt="displayName"
               class="header-info__avatar-img"
+              @error="handleAvatarError"
             />
             <span v-else>{{ displayName.charAt(0) }}</span>
           </div>
@@ -274,10 +275,15 @@ const otherConditions = OTHER_CONDITIONS
 
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
 
+const avatarBroken = ref(false)
 const resolvedHumanAvatarUrl = computed(() => {
-  if (isPokemon.value) return null
+  if (isPokemon.value || avatarBroken.value) return null
   return getTrainerSpriteUrl((props.combatant.entity as HumanCharacter).avatarUrl)
 })
+
+const handleAvatarError = () => {
+  avatarBroken.value = true
+}
 
 // Provide default turnState if not present
 const turnState = computed(() => props.combatant.turnState ?? {

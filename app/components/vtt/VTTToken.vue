@@ -107,12 +107,14 @@ const level = computed(() => {
   return entity.value.level
 })
 
+const avatarBroken = ref(false)
 const avatarUrl = computed(() => {
   if (!entity.value) return null
   if (isPokemon.value) {
     const pokemon = entity.value as Pokemon
     return getSpriteUrl(pokemon.species, pokemon.shiny)
   }
+  if (avatarBroken.value) return null
   return getTrainerSpriteUrl((entity.value as HumanCharacter).avatarUrl)
 })
 
@@ -141,8 +143,12 @@ const hpColorClass = computed(() => {
 
 // Methods
 const handleSpriteError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.src = '/images/pokemon-placeholder.svg'
+  if (isPokemon.value) {
+    const img = event.target as HTMLImageElement
+    img.src = '/images/pokemon-placeholder.svg'
+  } else {
+    avatarBroken.value = true
+  }
 }
 
 const handleClick = (event: MouseEvent) => {

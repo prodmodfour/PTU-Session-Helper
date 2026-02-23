@@ -23,13 +23,14 @@
           class="initiative-entry__sprite"
           @error="handleSpriteError($event)"
         />
+        <!-- deliberate: lightweight function in v-for, no per-item computed available -->
         <div v-else class="initiative-entry__avatar">
           <img
-            v-if="getTrainerSpriteUrl((combatant.entity as HumanCharacter).avatarUrl)"
+            v-if="getTrainerSpriteUrl((combatant.entity as HumanCharacter).avatarUrl) && !brokenAvatars.has(combatant.id)"
             :src="getTrainerSpriteUrl((combatant.entity as HumanCharacter).avatarUrl)!"
             :alt="getCombatantName(combatant)"
             class="initiative-entry__avatar-img"
-            @error="handleSpriteError($event)"
+            @error="handleAvatarError(combatant.id)"
           />
           <span v-else>{{ getCombatantName(combatant).charAt(0) }}</span>
         </div>
@@ -81,6 +82,11 @@ const { getCombatantName } = useCombatantDisplay()
 const handleSpriteError = (event: Event) => {
   const img = event.target as HTMLImageElement
   img.src = '/images/pokemon-placeholder.svg'
+}
+
+const brokenAvatars = ref<Set<string>>(new Set())
+const handleAvatarError = (combatantId: string) => {
+  brokenAvatars.value = new Set([...brokenAvatars.value, combatantId])
 }
 
 const getCombatantEffectiveMax = (combatant: Combatant): number => {

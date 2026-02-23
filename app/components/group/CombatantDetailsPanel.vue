@@ -17,7 +17,7 @@
           :src="resolvedHumanAvatarUrl"
           :alt="combatantName"
           class="combatant-details__avatar-img"
-          @error="handleSpriteError($event)"
+          @error="handleAvatarError"
         />
         <span v-else>{{ combatantName.charAt(0) }}</span>
       </div>
@@ -196,10 +196,15 @@ const handleSpriteError = (event: Event) => {
   img.src = '/images/pokemon-placeholder.svg'
 }
 
+const avatarBroken = ref(false)
 const resolvedHumanAvatarUrl = computed(() => {
-  if (!props.combatant || props.combatant.type === 'pokemon') return null
+  if (!props.combatant || props.combatant.type === 'pokemon' || avatarBroken.value) return null
   return getTrainerSpriteUrl((props.combatant.entity as HumanCharacter).avatarUrl)
 })
+
+const handleAvatarError = () => {
+  avatarBroken.value = true
+}
 
 // Computed
 const combatantName = computed(() => {
