@@ -41,6 +41,21 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
   // Render loop state
   let renderScheduled = false
 
+  // Cached depth-sorted cell array. Rebuilt only when cameraAngle, gridW, or gridH change.
+  const sortedCells = computed(() => {
+    const { width: gridW, height: gridH } = options.config.value
+    const angle = options.cameraAngle.value
+    const cells: Array<{ x: number; y: number; depth: number }> = []
+    for (let y = 0; y < gridH; y++) {
+      for (let x = 0; x < gridW; x++) {
+        const { rx, ry } = rotateCoords(x, y, angle, gridW, gridH)
+        cells.push({ x, y, depth: rx + ry })
+      }
+    }
+    cells.sort((a, b) => a.depth - b.depth)
+    return cells
+  })
+
   /**
    * Load background image from config.
    */
@@ -171,6 +186,7 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
   /**
    * Draw the isometric grid: diamond-shaped cells with optional coordinate labels.
    * Cells are drawn in depth order (back to front) for proper visual layering.
+   * Uses the cached sortedCells array to avoid re-sorting every frame.
    */
   const drawIsometricGrid = (
     ctx: CanvasRenderingContext2D,
@@ -178,18 +194,7 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
     angle: CameraAngle
   ) => {
     const { cellSize, width: gridW, height: gridH } = config
-
-    // Draw cells in depth order (back to front)
-    // For angle 0, depth increases with x+y, so iterate accordingly
-    // We iterate all cells and sort by depth (simple approach for P0)
-    const cells: Array<{ x: number; y: number; depth: number }> = []
-    for (let y = 0; y < gridH; y++) {
-      for (let x = 0; x < gridW; x++) {
-        const { rx, ry } = rotateCoords(x, y, angle, gridW, gridH)
-        cells.push({ x, y, depth: rx + ry })
-      }
-    }
-    cells.sort((a, b) => a.depth - b.depth)
+    const cells = sortedCells.value
 
     for (const cell of cells) {
       drawDiamondCell(ctx, cell.x, cell.y, 0, angle, gridW, gridH, cellSize)
