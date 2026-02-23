@@ -14,84 +14,116 @@ commits_reviewed:
   - 9d56757
   - 3393ffd
   - 309ca83
-mechanics_verified:
-  - trainer-hp-formula
-  - combat-logic-isolation
-  - capture-logic-isolation
-  - stat-calculation-isolation
-  - avatar-data-passthrough
+files_reviewed:
+  - app/constants/trainerSprites.ts
+  - app/composables/useTrainerSprite.ts
+  - app/components/character/TrainerSpritePicker.vue
+  - app/components/character/HumanCard.vue
+  - app/components/character/CharacterModal.vue
+  - app/components/encounter/CombatantCard.vue
+  - app/components/encounter/PlayerCombatantCard.vue
+  - app/components/encounter/GroupCombatantCard.vue
+  - app/components/encounter/AddCombatantModal.vue
+  - app/components/encounter/GMActionModal.vue
+  - app/components/vtt/VTTToken.vue
+  - app/components/group/PlayerLobbyView.vue
+  - app/components/group/InitiativeTracker.vue
+  - app/components/group/CombatantDetailsPanel.vue
+  - app/components/scene/SceneCanvas.vue
+  - app/components/scene/SceneAddPanel.vue
+  - app/pages/gm/characters/[id].vue
+  - app/pages/gm/create.vue
+  - app/pages/group/_components/SceneView.vue
+  - app/components/create/QuickCreateForm.vue
+  - app/composables/useCharacterCreation.ts
+  - app/types/character.ts
 verdict: APPROVED
 issues_found:
   critical: 0
   high: 0
   medium: 0
-ptu_refs:
-  - core/04-trainers.md#trainer-hp
 reviewed_at: 2026-02-23T10:15:00Z
 follows_up: null
 ---
 
-## Mechanics Verified
+## Review Scope
 
-### Trainer HP Formula
-- **Rule:** "Trainer HP = Level x 2 + (HP Stat x 3) + 10" (`core/04-trainers.md#trainer-hp`)
-- **Implementation:** `QuickCreateForm.vue:149` — `const maxHp = level * 2 + hpStat * 3 + 10` — unchanged by this feature. The only addition on the adjacent line is `avatarUrl: localForm.avatarUrl || undefined` which is pure data passthrough.
-- **Status:** CORRECT
+Rules review for feature-001 P0 (B2W2 Trainer Sprites). The scope is to verify that trainer sprite rendering is purely cosmetic and that no game mechanics (combat, stats, capture, rest, healing, initiative, movement, damage, status conditions, equipment) were inadvertently modified in the 19 modified files.
 
-### Combat Logic Isolation
-- **Rule:** All combat mechanics (damage, stages, initiative, maneuvers, turn tracking) must remain untouched by cosmetic changes.
-- **Implementation:** Verified via `git diff --stat` that zero core game logic files were modified:
-  - `composables/useCombat.ts` — NOT MODIFIED
-  - `composables/useCapture.ts` — NOT MODIFIED
-  - `composables/useMoveCalculation.ts` — NOT MODIFIED
-  - `composables/useEntityStats.ts` — NOT MODIFIED
-  - `composables/useRestHealing.ts` — NOT MODIFIED
-  - `utils/captureRate.ts` — NOT MODIFIED
-  - `utils/diceRoller.ts` — NOT MODIFIED
-  - `utils/restHealing.ts` — NOT MODIFIED
-  - `constants/combatManeuvers.ts` — NOT MODIFIED
-  - `constants/statusConditions.ts` — NOT MODIFIED
-  - `server/services/combatant.service.ts` — NOT MODIFIED
-  - `server/services/pokemon-generator.service.ts` — NOT MODIFIED
-- **Status:** CORRECT
+## Methodology
 
-### Capture Logic Isolation
-- **Rule:** Capture rate formula (base 100, level/HP/evolution/status modifiers) must not be affected.
-- **Implementation:** `CombatantCard.vue` imports `useCapture()` and calls `calculateCaptureRateLocal` — these lines are entirely untouched in the diff. The only changes in `CombatantCard.vue` are (1) adding the `useTrainerSprite()` import and (2) wrapping the existing `avatarUrl` computed through `getTrainerSpriteUrl()`. The capture calculation path is unaffected.
-- **Status:** CORRECT
+Each of the 19 modified files was read in full. The diff for each was analyzed to confirm that only avatar/sprite rendering code was added or changed, and that no game logic functions, computed properties, emits, or API calls related to PTU mechanics were altered.
 
-### Stat Calculation Isolation
-- **Rule:** Stat computation (base + level-up + nature), evasion (`floor(calculatedStat / 5)`), and combat stage multipliers must remain untouched.
-- **Implementation:** `useCharacterCreation.ts` changes are limited to two lines: adding `avatarUrl: null` to the form defaults and `avatarUrl: form.avatarUrl || undefined` to the payload builder. The HP formula (`maxHp`), stat computation (`computedStats`), and evasion calculation (`evasions`) are all untouched.
-- **Status:** CORRECT
+## File-by-File Verification
 
-### Avatar Data Passthrough
-- **Rule:** The `avatarUrl` field on `HumanCharacter` is a cosmetic string — it must not interact with any game formula.
-- **Implementation:** Across all 22 files:
-  - **3 new files** (`trainerSprites.ts`, `useTrainerSprite.ts`, `TrainerSpritePicker.vue`): Pure UI/presentation code. The composable maps sprite keys to CDN URLs. No game calculations.
-  - **19 modified files**: Every change follows the same pattern — replace direct `avatarUrl` references with `getTrainerSpriteUrl(avatarUrl)` for display purposes only. No changes to `emit()` payloads carrying game data. No changes to API call bodies. No changes to store actions or mutations that process combat/stat/capture data.
-  - **Type change** (`character.ts`): Added `avatarUrl?: string` to `QuickCreatePayload` — an additive optional field that carries through to the existing DB column. No impact on `Stats`, `HumanCharacter`, or any combat-related interface.
-  - **SCSS changes**: `object-fit: cover` changed to `object-fit: contain` + `image-rendering: pixelated` on avatar images — purely visual rendering. Added `overflow: hidden` on a few avatar containers — purely visual clipping.
-- **Status:** CORRECT
+### Combat Components (6 files)
 
-## Summary
+**CombatantCard.vue** — Changes limited to: (1) importing `useTrainerSprite`, (2) adding `avatarUrl` computed that calls `getTrainerSpriteUrl`, (3) template change to show sprite image in the avatar div. All combat logic untouched: damage/heal emits, stage modifiers, status conditions, capture rate calculation, initiative display, HP controls, turn state. The `calculateCaptureRateLocal` call and its parameters are identical to pre-PR code.
 
-This is a purely cosmetic feature — B2W2 trainer sprites for NPC/player avatars. The implementation is clean and well-isolated:
+**PlayerCombatantCard.vue** — Same pattern: import + computed + template. Health bar calculation (`getHealthPercentage`, `getHealthStatus`), status conditions, fainted check, turn indicator all unchanged.
 
-1. **Zero game logic files touched.** All 12 core mechanics files (composables, utils, constants, server services) have zero changes.
-2. **All 19 modified files** follow an identical, minimal pattern: import `useTrainerSprite`, wrap existing `avatarUrl` reads through `getTrainerSpriteUrl()` for display, and add avatar error handling. No game formulas, combat logic, or stat calculations were altered.
-3. **The `useCharacterCreation.ts` changes** add only `avatarUrl` passthrough (2 lines) without touching HP computation, stat allocation, evasion, or any other game mechanic.
-4. **The `QuickCreatePayload` type extension** is additive (optional field) and does not affect existing fields or any consuming logic.
-5. **The `QuickCreateForm.vue` HP formula** at line 149 (`level * 2 + hpStat * 3 + 10`) is confirmed untouched and correct per PTU rules.
+**GroupCombatantCard.vue** — Same pattern. Health bar, status, fainted, 4K media queries all unchanged.
 
-## Rulings
+**GMActionModal.vue** — Added trainer sprite rendering in the header section. All move execution logic, maneuver handling, status condition add/remove, frequency checking (`checkMoveFrequency`), struggle move definition, turn state tracking completely untouched. The Struggle move still has correct PTU values (DB 4, AC 4, Typeless, At-Will).
 
-No PTU rule violations found. The feature is entirely cosmetic and correctly isolated from all game mechanics.
+**AddCombatantModal.vue** — Changed avatar display in human entity list. Selection logic, initiative bonus input, `confirmAdd` emit all unchanged. No combat logic exists in this component.
+
+**CombatantDetailsPanel.vue** — Added trainer sprite rendering in header. All game logic verified untouched: `getEffectiveMaxHp` (injury-adjusted HP), HP percentage calculation, stat display (`getStatValue`), combat stage formatting (with correct EVA+ label for evasion bonus), move/ability display, status condition rendering, frequency formatting.
+
+### VTT Component (1 file)
+
+**VTTToken.vue** — Changed `avatarUrl` computed to use `getTrainerSpriteUrl` for human characters instead of returning null. Token positioning, HP bar calculation, fainted state, click handling, size badge all unchanged. No movement or grid logic was modified.
+
+### Group View Components (3 files)
+
+**PlayerLobbyView.vue** — Added trainer sprite in player card avatar area. Pokemon team rendering, HP bar classes (`getHpClassFromPercent`), type pips all unchanged. No game logic exists in this component.
+
+**InitiativeTracker.vue** — Added trainer sprite rendering for human combatants in the initiative list. Initiative ordering, phase title logic (`PHASE_TITLES` map), HP percentage and class calculations (`getEffectiveMaxHp`, injury-aware), `getCombatantName` all unchanged.
+
+**SceneView.vue** — Added trainer sprite rendering for character avatars in the group view scene. Weather overlay, group member counting, sprite positioning all unchanged. No game logic exists in this component.
+
+### Scene Components (2 files)
+
+**SceneCanvas.vue** — Changed character avatar rendering to show trainer sprites. All drag-and-drop logic (sprite dragging, group dragging, resize handles), hit-test calculations, position clamping, group drop detection untouched.
+
+**SceneAddPanel.vue** — Changed character list avatar to show trainer sprites. Add-character and add-pokemon emit logic unchanged.
+
+### Character Lifecycle (5 files)
+
+**CharacterModal.vue** — Added trainer sprite picker for editing, resolved avatar URL for display. Save logic (`emit('save', editData.value)`), equipment tracking, WebSocket broadcast for encounter equipment changes, encounter membership check all unchanged.
+
+**HumanCard.vue** — Changed avatar rendering to use resolved sprite URL. No game logic exists in this component (it is a display card with a NuxtLink).
+
+**gm/characters/[id].vue** — Added trainer sprite picker in edit mode, resolved avatar URL. All game logic untouched: `loadCharacter` API call, `saveChanges` via `libraryStore.updateHuman`, equipment state tracking, WebSocket broadcast, encounter membership check, derived trainer capabilities (`computeTrainerDerivedStats`).
+
+**gm/create.vue** — Added trainer sprite picker to both Quick Create and Full Create forms. Full Create composable usage unchanged. Pokemon creation form and its PTU HP formula (`Level + (HP Base * 3) + 10`) unchanged. Quick Create payload building unchanged (the `QuickCreatePayload` type was extended with optional `avatarUrl` which is purely cosmetic data).
+
+**QuickCreateForm.vue** — Added sprite picker and avatar preview. The `handleSubmit` function still builds the correct payload with PTU trainer HP formula (`Level * 2 + HP Stat * 3 + 10`), correct money logic (PCs get standard starting money, NPCs get 0), and all stat fields. The `avatarUrl` field is passed through as an optional cosmetic property.
+
+### Type & Composable Files (2 files)
+
+**character.ts** — Added `avatarUrl?: string` to `QuickCreatePayload`. No stat, combat, or mechanic interfaces were modified. `HumanCharacter` already had `avatarUrl?: string` (line 265).
+
+**useCharacterCreation.ts** — Added `avatarUrl: null as string | null` to the form reactive object. The `buildCreatePayload` function passes it through as `avatarUrl: form.avatarUrl || undefined`. No stat calculation, skill validation, background application, edge logic, or HP formula was modified.
+
+## PTU Mechanics Integrity Check
+
+| Mechanic | Status | Notes |
+|----------|--------|-------|
+| HP calculation | Unchanged | Trainer: `Level * 2 + HP Stat * 3 + 10`. Pokemon: `Level + (Base HP * 3) + 10` |
+| Damage application | Unchanged | CombatantCard emit pattern identical |
+| Capture rate | Unchanged | `calculateCaptureRateLocal` parameters and display unchanged |
+| Initiative | Unchanged | Sorting, rolloff display, phase titles all intact |
+| Combat stages | Unchanged | -6 to +6 range, stat name formatting (EVA+ distinction) intact |
+| Status conditions | Unchanged | Persistent/volatile/other categories, add/remove logic intact |
+| Move frequency | Unchanged | `checkMoveFrequency` call and exhaustion display intact |
+| Equipment | Unchanged | Equip/unequip, WebSocket broadcast, encounter check intact |
+| Rest/healing | Unchanged | `getEffectiveMaxHp` (injury-aware) intact in all HP displays |
+| Evasions | Unchanged | `floor(stat / 5)` capped at +6, composable logic intact |
+| Maneuvers | Unchanged | ManeuverGrid integration and emit pattern intact |
 
 ## Verdict
 
-**APPROVED** — No game logic was modified, added, or removed. All PTU mechanics remain correct and untouched. The trainer sprite system is a pure presentation layer that reads existing `avatarUrl` data and resolves it to CDN URLs for display.
+**APPROVED**
 
-## Required Changes
-
-None.
+All changes are strictly cosmetic (avatar rendering). No PTU game mechanics, formulas, or logic were modified in any of the 19 files. The trainer sprite system is a pure display layer that reads the existing `avatarUrl` field and resolves it to a Showdown CDN URL.
