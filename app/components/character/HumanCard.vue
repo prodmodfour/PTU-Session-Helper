@@ -56,18 +56,21 @@
 import { PhMapPin } from '@phosphor-icons/vue'
 import type { HumanCharacter } from '~/types'
 
-defineProps<{
+const props = defineProps<{
   human: HumanCharacter
 }>()
 
 const { getSpriteUrl } = usePokemonSprite()
 const { getTrainerSpriteUrl } = useTrainerSprite()
 
-const resolvedAvatarUrl = computed(() => getTrainerSpriteUrl(props.human.avatarUrl ?? null))
+const avatarBroken = ref(false)
+const resolvedAvatarUrl = computed(() => {
+  if (avatarBroken.value) return null
+  return getTrainerSpriteUrl(props.human.avatarUrl ?? null)
+})
 
-const handleAvatarError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.style.display = 'none'
+const handleAvatarError = () => {
+  avatarBroken.value = true
 }
 
 const handleSpriteError = (event: Event) => {
