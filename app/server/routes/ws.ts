@@ -88,11 +88,14 @@ export default defineWebSocketHandler({
 
       switch (event.type) {
         case 'identify':
-          // Client identifies as GM or group
+          // Client identifies as GM, group, or player
           if (clientInfo) {
-            const data = event.data as { role?: 'gm' | 'group'; encounterId?: string }
+            const data = event.data as { role?: 'gm' | 'group' | 'player'; encounterId?: string; characterId?: string }
             clientInfo.role = data.role || 'group'
             clientInfo.encounterId = data.encounterId
+            if (data.role === 'player' && data.characterId) {
+              clientInfo.characterId = data.characterId
+            }
 
             // If group client, send current tab state
             if (clientInfo.role === 'group') {
@@ -189,15 +192,15 @@ export default defineWebSocketHandler({
           break
 
         case 'player_action':
-          // Group submitting an action (for GM to see)
-          if (clientInfo?.role === 'group' && clientInfo.encounterId) {
-            // Forward to GM(s)
-            const groupEncounterId = clientInfo.encounterId
+          // Player or group submitting an action (for GM to see)
+          if ((clientInfo?.role === 'player' || clientInfo?.role === 'group') && clientInfo.encounterId) {
+            // Forward to GM(s) in the same encounter
+            const actionEncounterId = clientInfo.encounterId
             for (const [otherPeer, otherInfo] of peers) {
               if (
                 otherPeer !== peer &&
                 otherInfo.role === 'gm' &&
-                otherInfo.encounterId === groupEncounterId
+                otherInfo.encounterId === actionEncounterId
               ) {
                 safeSend(otherPeer, JSON.stringify(event))
               }

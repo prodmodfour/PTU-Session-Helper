@@ -147,8 +147,8 @@ export function useWebSocket() {
     }
   }
 
-  const identify = (role: 'gm' | 'group' | 'player', encounterId?: string) => {
-    send({ type: 'identify', data: { role, encounterId } })
+  const identify = (role: 'gm' | 'group' | 'player', encounterId?: string, characterId?: string) => {
+    send({ type: 'identify', data: { role, encounterId, characterId } })
   }
 
   const joinEncounter = (encounterId: string) => {

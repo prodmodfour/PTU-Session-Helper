@@ -6,8 +6,9 @@ interface WebSocketEvent {
 }
 
 interface ClientInfo {
-  role: 'gm' | 'group'
+  role: 'gm' | 'group' | 'player'
   encounterId?: string
+  characterId?: string
 }
 
 // Store connected peers with their info - shared across ws handler and API routes

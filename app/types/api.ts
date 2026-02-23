@@ -18,7 +18,7 @@ export interface ApiResponse<T> {
 export type WebSocketEvent =
   // Connection & identity
   | { type: 'connected'; data: { peerId: string } }
-  | { type: 'identify'; data: { role: 'gm' | 'group' | 'player'; encounterId?: string } }
+  | { type: 'identify'; data: { role: 'gm' | 'group' | 'player'; encounterId?: string; characterId?: string } }
   | { type: 'join_encounter'; data: { encounterId: string } }
   | { type: 'leave_encounter'; data: null }
   | { type: 'sync_request'; data: null }
@@ -38,7 +38,7 @@ export type WebSocketEvent =
   | { type: 'combatant_removed'; data: { combatantId: string } }
   // Entity events
   | { type: 'character_update'; data: Pokemon | HumanCharacter }
-  | { type: 'player_action'; data: { playerId: string; action: string; targetId?: string; moveId?: string } }
+  | { type: 'player_action'; data: PlayerActionRequest }
   // Tab events
   | { type: 'tab_change'; data: { tab: string; sceneId?: string | null } }
   | { type: 'tab_state'; data: { tab: string; sceneId?: string | null } }
@@ -60,3 +60,18 @@ export type WebSocketEvent =
   | { type: 'serve_map'; data: ServedMap }
   | { type: 'clear_map'; data: null }
   | { type: 'clear_wild_spawn'; data: null };
+
+// Player action requests (player -> GM via server)
+export interface PlayerActionRequest {
+  playerId: string;
+  playerName: string;
+  action: 'use_move' | 'shift' | 'struggle' | 'pass' | 'use_item' | 'switch_pokemon' | 'maneuver';
+  moveId?: string;
+  moveName?: string;
+  targetIds?: string[];
+  itemId?: string;
+  itemName?: string;
+  pokemonId?: string;
+  maneuverId?: string;
+  maneuverName?: string;
+}
