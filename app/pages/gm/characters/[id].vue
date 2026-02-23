@@ -356,8 +356,9 @@ onMounted(async () => {
   await loadCharacter()
 })
 
-// Watch for route param changes
+// Watch for route param changes — reset avatar state since Nuxt reuses the page component
 watch(characterId, async () => {
+  avatarBroken.value = false
   await loadCharacter()
 })
 
