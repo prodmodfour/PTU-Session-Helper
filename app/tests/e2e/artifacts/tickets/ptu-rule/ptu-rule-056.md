@@ -84,3 +84,16 @@ The manual creation form is a minimal stub. Full character data can only be ente
 **C1 — Extract QuickCreateForm.vue** (`06dca93`)
 - Moved Quick Create form template, state, and submission logic into `components/create/QuickCreateForm.vue`
 - create.vue reduced from 869 to 756 lines (under 800-line limit)
+
+### P2 Follow-up Fixes (2026-02-23, code-review-133)
+
+**H1 — Scoped CSS inheritance regression** (`27ffffd`)
+- `.create-form`, `.create-form__section`, `.create-form__actions`, and `.form-row` styles were trapped in create.vue's `<style scoped>` block, unreachable by QuickCreateForm.vue child component
+- Extracted shared styles into `app/assets/scss/_create-form.scss` global partial
+- Registered partial in `nuxt.config.ts` SCSS preprocessor imports
+- Removed duplicate style definitions from create.vue scoped block
+
+**M1 — Type safety regression in QuickCreateForm emit** (`1180c9c`)
+- Added `QuickCreatePayload` interface to `app/types/character.ts` with exact field shapes (name, characterType, level, stats, maxHp, currentHp, money, optional location/notes)
+- Replaced `Record<string, unknown>` emit type in QuickCreateForm.vue with `QuickCreatePayload`
+- Updated `createHumanQuick` handler in create.vue to accept `QuickCreatePayload`
