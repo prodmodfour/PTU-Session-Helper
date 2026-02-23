@@ -1,6 +1,6 @@
 import type { Combatant, Move, Pokemon, HumanCharacter } from '~/types'
 import type { PlayerActionRequest } from '~/types/api'
-import type { MoveFrequency, TurnPhase } from '~/types/combat'
+import type { TurnPhase } from '~/types/combat'
 
 /**
  * Composable for player combat action logic.
@@ -14,7 +14,6 @@ export function usePlayerCombat() {
   const encounterStore = useEncounterStore()
   const playerStore = usePlayerIdentityStore()
   const { send } = useWebSocket()
-  const { getCombatantName } = useCombatantDisplay()
 
   // =============================================
   // Turn Detection
@@ -282,11 +281,6 @@ export function usePlayerCombat() {
    * Sends a player_action WebSocket message for GM approval.
    */
   const requestSwitchPokemon = (pokemonId: string): void => {
-    const pokemon = playerStore.pokemon.find(p => p.id === pokemonId)
-    const pokemonName = pokemon
-      ? (pokemon.nickname || pokemon.species)
-      : 'Unknown'
-
     const request: PlayerActionRequest = {
       ...buildBaseRequest(),
       action: 'switch_pokemon',
