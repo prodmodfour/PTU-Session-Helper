@@ -134,6 +134,13 @@ export function useIsometricProjection() {
   /**
    * Get the four corner points of an isometric diamond tile in screen space.
    * Returns points in order: top, right, bottom, left (clockwise from top).
+   *
+   * The diamond for cell (x, y) has its corners at the grid intersection
+   * points of the four adjacent cells:
+   *   Top:    worldToScreen(x, y)
+   *   Right:  worldToScreen(x+1, y)
+   *   Bottom: worldToScreen(x+1, y+1)
+   *   Left:   worldToScreen(x, y+1)
    */
   const getTileDiamondPoints = (
     gridX: number,
@@ -144,21 +151,16 @@ export function useIsometricProjection() {
     gridH: number,
     cellSize: number
   ): { top: { x: number; y: number }; right: { x: number; y: number }; bottom: { x: number; y: number }; left: { x: number; y: number } } => {
-    const tileHalfW = cellSize
-    const tileHalfH = cellSize / 2
-
-    // Center of the tile
-    const center = worldToScreen(gridX, gridY, elevation, angle, gridW, gridH, cellSize)
-    // worldToScreen gives the position based on grid intersection —
-    // shift to tile center by adding half-tile offset
-    const cx = center.px + tileHalfW  // Shift right by half the adjacent tile
-    const cy = center.py + tileHalfH  // Shift down by half the adjacent tile
+    const top = worldToScreen(gridX, gridY, elevation, angle, gridW, gridH, cellSize)
+    const right = worldToScreen(gridX + 1, gridY, elevation, angle, gridW, gridH, cellSize)
+    const bottom = worldToScreen(gridX + 1, gridY + 1, elevation, angle, gridW, gridH, cellSize)
+    const left = worldToScreen(gridX, gridY + 1, elevation, angle, gridW, gridH, cellSize)
 
     return {
-      top: { x: cx, y: cy - tileHalfH },
-      right: { x: cx + tileHalfW, y: cy },
-      bottom: { x: cx, y: cy + tileHalfH },
-      left: { x: cx - tileHalfW, y: cy }
+      top: { x: top.px, y: top.py },
+      right: { x: right.px, y: right.py },
+      bottom: { x: bottom.px, y: bottom.py },
+      left: { x: left.px, y: left.py }
     }
   }
 

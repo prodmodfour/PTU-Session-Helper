@@ -31,6 +31,7 @@ interface UseIsometricRenderingOptions {
 export function useIsometricRendering(options: UseIsometricRenderingOptions) {
   const {
     worldToScreen,
+    rotateCoords,
     getTileDiamondPoints,
     getGridOriginOffset
   } = useIsometricProjection()
@@ -185,7 +186,7 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
     const cells: Array<{ x: number; y: number; depth: number }> = []
     for (let y = 0; y < gridH; y++) {
       for (let x = 0; x < gridW; x++) {
-        const { rx, ry } = useIsometricProjection().rotateCoords(x, y, angle, gridW, gridH)
+        const { rx, ry } = rotateCoords(x, y, angle, gridW, gridH)
         cells.push({ x, y, depth: rx + ry })
       }
     }
@@ -232,10 +233,11 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
     ctx.closePath()
     ctx.stroke()
 
-    // Coordinate label (only at low zoom / large cells to avoid clutter)
+    // Coordinate label (only at large cells to avoid clutter)
     if (cellSize >= 30) {
-      const centerX = (diamond.top.x + diamond.bottom.x) / 2
-      const centerY = (diamond.top.y + diamond.bottom.y) / 2
+      // Center of diamond = average of all 4 corners
+      const centerX = (diamond.top.x + diamond.right.x + diamond.bottom.x + diamond.left.x) / 4
+      const centerY = (diamond.top.y + diamond.right.y + diamond.bottom.y + diamond.left.y) / 4
 
       ctx.fillStyle = LABEL_COLOR
       ctx.font = `${LABEL_FONT_SIZE}px sans-serif`
