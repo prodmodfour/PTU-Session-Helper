@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CharacterType } from '~/types/character'
+import type { CharacterType, QuickCreatePayload } from '~/types/character'
 import { DEFAULT_STARTING_MONEY } from '~/composables/useCharacterCreation'
 
 interface Props {
@@ -84,7 +84,7 @@ interface Props {
 defineProps<Props>()
 
 const emit = defineEmits<{
-  submit: [payload: Record<string, unknown>]
+  submit: [payload: QuickCreatePayload]
 }>()
 
 const localForm = reactive({

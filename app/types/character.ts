@@ -196,6 +196,19 @@ export interface Pokemon {
   notes?: string;
 }
 
+// Quick Create payload — the subset of fields emitted by QuickCreateForm.vue
+export interface QuickCreatePayload {
+  name: string
+  characterType: CharacterType
+  level: number
+  location?: string
+  stats: Stats
+  maxHp: number
+  currentHp: number
+  money: number
+  notes?: string
+}
+
 // Human character (trainer/NPC)
 export interface HumanCharacter {
   id: string;

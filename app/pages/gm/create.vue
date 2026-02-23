@@ -355,7 +355,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PokemonType } from '~/types'
+import type { PokemonType, QuickCreatePayload } from '~/types'
 import type { PtuSkillName } from '~/constants/trainerSkills'
 import type { CreateMode } from '~/composables/useCharacterCreation'
 import { getStatPointsForLevel } from '~/constants/trainerStats'
@@ -420,7 +420,7 @@ const pokemonForm = ref({
 })
 
 /** Quick Create submission — receives pre-built payload from QuickCreateForm */
-const createHumanQuick = async (payload: Record<string, unknown>) => {
+const createHumanQuick = async (payload: QuickCreatePayload) => {
   creating.value = true
   try {
     await libraryStore.createHuman(payload)
