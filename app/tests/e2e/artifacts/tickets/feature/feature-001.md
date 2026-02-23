@@ -1,7 +1,7 @@
 ---
 ticket_id: feature-001
 priority: P3
-status: design-complete
+status: in-progress
 domain: character-lifecycle
 source: product-roadmap
 created_by: user
@@ -49,3 +49,16 @@ See `design-trainer-sprites-001.md` for the full design document.
 | Date | Action | Details |
 |------|--------|---------|
 | 2026-02-22 | Design spec written | `design-trainer-sprites-001.md` covering sprite source, composable, picker component, and 17 integration points |
+| 2026-02-23 | P0 implementation | Branch `slave/6-dev-feature-001-p0-20260223-085530` |
+
+### P0 Commits
+
+| Hash | Message |
+|------|---------|
+| `7f9dd1f` | feat: add trainer sprite catalog with 180 curated sprites |
+| `0a9c67d` | feat: add useTrainerSprite composable for avatar URL resolution |
+| `d78d29d` | feat: add TrainerSpritePicker modal component |
+| `86ce748` | feat: integrate TrainerSpritePicker into character creation forms |
+| `76fb481` | feat: integrate TrainerSpritePicker into character editing views |
+| `9d56757` | feat: update avatar rendering to use trainer sprite resolution |
+| `3393ffd` | feat: update remaining avatar displays to use trainer sprite resolution |

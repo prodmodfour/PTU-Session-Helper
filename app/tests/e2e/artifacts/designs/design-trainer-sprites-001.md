@@ -4,7 +4,7 @@ ticket_id: feature-001
 category: FEATURE_GAP
 scope: SINGLE_PHASE
 domain: character-lifecycle
-status: design-complete
+status: implemented
 affected_files:
   - app/components/character/HumanCard.vue
   - app/components/character/CharacterModal.vue
@@ -448,14 +448,14 @@ Update `GMActionModal.vue`, `InitiativeTracker.vue`, and `CombatantDetailsPanel.
 
 ## Implementation Log
 
-(Updated as implementation progresses)
+Branch: `slave/6-dev-feature-001-p0-20260223-085530`
 
 | Step | Status | Commit | Notes |
 |------|--------|--------|-------|
-| 1. Constants file | pending | - | - |
-| 2. Composable | pending | - | - |
-| 3. Picker component | pending | - | - |
-| 4. Creation integration | pending | - | - |
-| 5. Editing integration | pending | - | - |
-| 6. Rendering updates | pending | - | - |
-| 7. Missing avatar support | pending | - | - |
+| 1. Constants file | done | `7f9dd1f` | 180 curated sprites across 9 categories |
+| 2. Composable | done | `0a9c67d` | `getTrainerSpriteUrl()` with key/URL/null handling |
+| 3. Picker component | done | `d78d29d` | Modal grid with category tabs, search, clear/confirm |
+| 4. Creation integration | done | `86ce748` | Quick Create and Full Create forms in `gm/create.vue` |
+| 5. Editing integration | done | `76fb481` | Character sheet `[id].vue` and `CharacterModal.vue` |
+| 6. Rendering updates | done | `9d56757` | 11 components updated to resolve sprite keys via composable |
+| 7. Remaining renders | done | `3393ffd` | SceneAddPanel.vue and group SceneView.vue; LobbyView.vue delegates to PlayerLobbyView (no direct avatar render) |
