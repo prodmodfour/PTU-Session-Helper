@@ -3,6 +3,13 @@ import type { RangeType, ParsedRange, GridPosition, TerrainType } from '~/types'
 // Terrain cost function type
 export type TerrainCostGetter = (x: number, y: number) => number
 
+// Elevation cost function type for 3D pathfinding
+// Returns the movement cost for transitioning between two elevation levels.
+export type ElevationCostGetter = (fromZ: number, toZ: number) => number
+
+// Terrain elevation getter: returns the ground elevation at a grid position.
+export type TerrainElevationGetter = (x: number, y: number) => number
+
 // Token footprint for multi-cell range calculations
 export interface TokenFootprint {
   position: GridPosition
@@ -467,36 +474,45 @@ export function useRangeParser() {
    * Get movement range visualization cells with terrain cost support
    *
    * Uses flood-fill algorithm to find all reachable cells within movement budget,
-   * accounting for terrain movement costs and PTU diagonal rules.
+   * accounting for terrain movement costs, elevation costs, and PTU diagonal rules.
    *
    * PTU Diagonal Rules: First diagonal costs 1m, second costs 2m, alternating.
+   * Elevation Cost: 1 MP per level of elevation change (additive to XY movement).
+   * Flying Pokemon ignore elevation cost within Sky speed range.
    *
    * @param origin - Starting position
    * @param speed - Movement speed (movement points available)
    * @param blockedCells - Cells blocked by other tokens
    * @param getTerrainCost - Optional function to get terrain movement cost at a position
+   * @param getElevationCost - Optional function to get elevation transition cost
+   * @param getTerrainElevation - Optional function to get ground elevation at a position
+   * @param originElevation - Starting elevation level (default 0)
    */
   function getMovementRangeCells(
     origin: GridPosition,
     speed: number,
     blockedCells: GridPosition[] = [],
-    getTerrainCost?: TerrainCostGetter
+    getTerrainCost?: TerrainCostGetter,
+    getElevationCost?: ElevationCostGetter,
+    getTerrainElevation?: TerrainElevationGetter,
+    originElevation: number = 0
   ): GridPosition[] {
     const reachable: GridPosition[] = []
     const blockedSet = new Set(blockedCells.map(c => `${c.x},${c.y}`))
 
     // Cost map: stores the minimum cost to reach each cell
-    // We track both cost and diagonal parity (0 = next diagonal costs 1, 1 = next costs 2)
-    const costMap = new Map<string, { cost: number; diagonalParity: number }>()
+    // We track cost, diagonal parity, and current elevation
+    const costMap = new Map<string, { cost: number; diagonalParity: number; elevation: number }>()
     const startKey = `${origin.x},${origin.y}`
-    costMap.set(startKey, { cost: 0, diagonalParity: 0 })
+    costMap.set(startKey, { cost: 0, diagonalParity: 0, elevation: originElevation })
 
     // Priority queue for Dijkstra-like exploration
-    // Each entry: [x, y, costToReach, diagonalParity]
-    const queue: Array<[number, number, number, number]> = [[origin.x, origin.y, 0, 0]]
+    // Each entry: [x, y, costToReach, diagonalParity, currentElevation]
+    const queue: Array<[number, number, number, number, number]> = [
+      [origin.x, origin.y, 0, 0, originElevation]
+    ]
 
     // 8 directions for movement (including diagonals)
-    // Mark which are diagonal moves
     const directions: Array<[number, number, boolean]> = [
       [-1, -1, true], [-1, 0, false], [-1, 1, true],
       [0, -1, false], /* origin */ [0, 1, false],
@@ -506,7 +522,7 @@ export function useRangeParser() {
     while (queue.length > 0) {
       // Sort by cost (lowest first) - simple priority queue
       queue.sort((a, b) => a[2] - b[2])
-      const [x, y, currentCost, currentParity] = queue.shift()!
+      const [x, y, currentCost, currentParity, currentElev] = queue.shift()!
 
       // Skip if we've already found a cheaper path to this cell
       const cellKey = `${x},${y}`
@@ -534,20 +550,25 @@ export function useRangeParser() {
           continue
         }
 
-        // Calculate movement cost based on PTU diagonal rules
+        // Calculate XY movement cost based on PTU diagonal rules
         let baseCost: number
         let newParity: number
         if (isDiagonal) {
-          // Diagonal: alternates 1, 2, 1, 2...
           baseCost = currentParity === 0 ? 1 : 2
-          newParity = 1 - currentParity // Toggle parity
+          newParity = 1 - currentParity
         } else {
-          // Straight: always costs 1
           baseCost = 1
-          newParity = currentParity // Parity unchanged for straight moves
+          newParity = currentParity
         }
 
-        const moveCost = baseCost * terrainMultiplier
+        let moveCost = baseCost * terrainMultiplier
+
+        // Calculate elevation cost for this step
+        const neighborElev = getTerrainElevation ? getTerrainElevation(nx, ny) : 0
+        if (getElevationCost && currentElev !== neighborElev) {
+          moveCost += getElevationCost(currentElev, neighborElev)
+        }
+
         const totalCost = currentCost + moveCost
 
         // Skip if exceeds movement budget
@@ -562,18 +583,21 @@ export function useRangeParser() {
         }
 
         // Record this path
-        costMap.set(neighborKey, { cost: totalCost, diagonalParity: newParity })
+        costMap.set(neighborKey, { cost: totalCost, diagonalParity: newParity, elevation: neighborElev })
 
-        // Add to reachable if not the origin
+        // Add to reachable if not the origin (include elevation in result)
         if (nx !== origin.x || ny !== origin.y) {
           const existingIndex = reachable.findIndex(c => c.x === nx && c.y === ny)
           if (existingIndex === -1) {
-            reachable.push({ x: nx, y: ny })
+            reachable.push({ x: nx, y: ny, z: neighborElev })
+          } else {
+            // Update with elevation info
+            reachable[existingIndex] = { x: nx, y: ny, z: neighborElev }
           }
         }
 
         // Add to queue for further exploration
-        queue.push([nx, ny, totalCost, newParity])
+        queue.push([nx, ny, totalCost, newParity, neighborElev])
       }
     }
 
@@ -637,14 +661,28 @@ export function useRangeParser() {
   }
 
   /**
-   * Calculate the actual path cost between two points through terrain
-   * Uses A* pathfinding with PTU diagonal rules
+   * Calculate the actual path cost between two points through terrain.
+   * Uses A* pathfinding with PTU diagonal rules.
+   *
+   * When elevation getters are provided, the heuristic includes |dz| and
+   * each step adds the elevation transition cost.
+   *
+   * @param from - Start position
+   * @param to - Destination position
+   * @param blockedCells - Cells occupied by other tokens
+   * @param getTerrainCost - Optional terrain cost multiplier function
+   * @param getElevationCost - Optional elevation transition cost function
+   * @param getTerrainElevation - Optional ground elevation lookup
+   * @param fromElevation - Starting elevation (default 0)
    */
   function calculatePathCost(
     from: GridPosition,
     to: GridPosition,
     blockedCells: GridPosition[] = [],
-    getTerrainCost?: TerrainCostGetter
+    getTerrainCost?: TerrainCostGetter,
+    getElevationCost?: ElevationCostGetter,
+    getTerrainElevation?: TerrainElevationGetter,
+    fromElevation: number = 0
   ): { cost: number; path: GridPosition[] } | null {
     const blockedSet = new Set(blockedCells.map(c => `${c.x},${c.y}`))
     const destKey = `${to.x},${to.y}`
@@ -662,27 +700,34 @@ export function useRangeParser() {
       }
     }
 
-    // A* pathfinding with diagonal parity tracking
-    // State includes position and diagonal parity
-    const openSet = new Map<string, { x: number; y: number; g: number; f: number; parity: number; parent: string | null }>()
-    const closedSet = new Set<string>()
+    const toElev = getTerrainElevation ? getTerrainElevation(to.x, to.y) : 0
 
-    const startKey = `${from.x},${from.y}`
-    // Heuristic: use minimum possible cost (all diagonals at 1.5 average)
-    const heuristic = (x: number, y: number) => {
+    // Heuristic: chebyshev(dx, dy) + |dz| for admissible 3D estimate
+    const heuristic = (x: number, y: number, z: number) => {
       const dx = Math.abs(to.x - x)
       const dy = Math.abs(to.y - y)
       const diagonals = Math.min(dx, dy)
       const straights = Math.abs(dx - dy)
-      return diagonals + Math.floor(diagonals / 2) + straights
+      const xyCost = diagonals + Math.floor(diagonals / 2) + straights
+      const dz = getElevationCost ? Math.abs(toElev - z) : 0
+      return xyCost + dz
     }
 
+    // A* state includes position, diagonal parity, and elevation
+    const openSet = new Map<string, {
+      x: number; y: number; g: number; f: number;
+      parity: number; elevation: number; parent: string | null
+    }>()
+    const closedSet = new Set<string>()
+
+    const startKey = `${from.x},${from.y}`
     openSet.set(startKey, {
       x: from.x,
       y: from.y,
       g: 0,
-      f: heuristic(from.x, from.y),
+      f: heuristic(from.x, from.y, fromElevation),
       parity: 0,
+      elevation: fromElevation,
       parent: null,
     })
 
@@ -694,7 +739,7 @@ export function useRangeParser() {
 
     while (openSet.size > 0) {
       // Find node with lowest f score
-      let current: { key: string; node: { x: number; y: number; g: number; f: number; parity: number; parent: string | null } } | null = null
+      let current: { key: string; node: typeof openSet extends Map<string, infer V> ? V : never } | null = null
       for (const [key, node] of openSet) {
         if (!current || node.f < current.node.f) {
           current = { key, node }
@@ -728,7 +773,7 @@ export function useRangeParser() {
         const terrainMultiplier = getTerrainCost ? getTerrainCost(nx, ny) : 1
         if (!isFinite(terrainMultiplier)) continue
 
-        // Calculate move cost with PTU diagonal rules
+        // PTU diagonal rules for XY cost
         let baseCost: number
         let newParity: number
         if (isDiagonal) {
@@ -739,8 +784,16 @@ export function useRangeParser() {
           newParity = current.node.parity
         }
 
-        const g = current.node.g + baseCost * terrainMultiplier
-        const f = g + heuristic(nx, ny)
+        let stepCost = baseCost * terrainMultiplier
+
+        // Add elevation cost for the transition
+        const neighborElev = getTerrainElevation ? getTerrainElevation(nx, ny) : 0
+        if (getElevationCost && current.node.elevation !== neighborElev) {
+          stepCost += getElevationCost(current.node.elevation, neighborElev)
+        }
+
+        const g = current.node.g + stepCost
+        const f = g + heuristic(nx, ny, neighborElev)
 
         const existing = openSet.get(neighborKey)
         if (!existing || g < existing.g) {
@@ -750,6 +803,7 @@ export function useRangeParser() {
             g,
             f,
             parity: newParity,
+            elevation: neighborElev,
             parent: current.key,
           })
         }
