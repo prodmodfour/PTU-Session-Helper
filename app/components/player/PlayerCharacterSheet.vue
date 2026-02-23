@@ -196,8 +196,9 @@
 
 <script setup lang="ts">
 import { PhCaretDown } from '@phosphor-icons/vue'
-import type { HumanCharacter, EquippedItem } from '~/types'
+import type { HumanCharacter, EquippedItem, EquipmentSlots } from '~/types'
 import { calculateEvasion } from '~/utils/damageCalculation'
+import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 
 const props = defineProps<{
   character: HumanCharacter
@@ -244,16 +245,27 @@ const statEntries = computed(() => {
   ]
 })
 
-// Evasions (use calculated stats per PTU rules)
-const physEvasion = computed(() =>
-  calculateEvasion(props.character.stats.defense, props.character.stageModifiers.defense ?? 0)
+// Equipment combat bonuses (evasion, stat bonuses from Focus items, etc.)
+const equipBonuses = computed(() =>
+  computeEquipmentBonuses((props.character.equipment ?? {}) as EquipmentSlots)
 )
-const specEvasion = computed(() =>
-  calculateEvasion(props.character.stats.specialDefense, props.character.stageModifiers.specialDefense ?? 0)
-)
-const spdEvasion = computed(() =>
-  calculateEvasion(props.character.stats.speed, props.character.stageModifiers.speed ?? 0)
-)
+
+// Evasions (use calculated stats per PTU rules, with equipment bonuses)
+const physEvasion = computed(() => {
+  const { evasionBonus, statBonuses } = equipBonuses.value
+  const defBonus = statBonuses.defense ?? 0
+  return calculateEvasion(props.character.stats.defense, props.character.stageModifiers.defense ?? 0, evasionBonus, defBonus)
+})
+const specEvasion = computed(() => {
+  const { evasionBonus, statBonuses } = equipBonuses.value
+  const spDefBonus = statBonuses.specialDefense ?? 0
+  return calculateEvasion(props.character.stats.specialDefense, props.character.stageModifiers.specialDefense ?? 0, evasionBonus, spDefBonus)
+})
+const spdEvasion = computed(() => {
+  const { evasionBonus, statBonuses } = equipBonuses.value
+  const spdBonus = statBonuses.speed ?? 0
+  return calculateEvasion(props.character.stats.speed, props.character.stageModifiers.speed ?? 0, evasionBonus, spdBonus)
+})
 
 // Skills sorted alphabetically
 const sortedSkills = computed((): [string, string][] => {
