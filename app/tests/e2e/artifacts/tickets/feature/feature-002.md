@@ -35,6 +35,31 @@ Replace the current 2D flat Canvas grid with a 3D isometric grid supporting Z-ax
 | Date | Action | Details |
 |------|--------|---------|
 | 2026-02-23 | P0 implemented | 11 commits on slave/2-dev-feature-002-p0-20260223-083000 |
+| 2026-02-23 | P0 code-review-140 fixes | 8 commits on slave/2-dev-feature-002-fix-20260223-095000 |
+
+### P0 Fix Cycle (code-review-140)
+
+| Commit | Issue | Description |
+|--------|-------|-------------|
+| 91ae123 | C1 | fix: add isometric fields to EncounterRecord interface, remove all as-any casts |
+| 5ff32c8 | H1 | fix: add server-side validation for isometric grid fields |
+| 0e60ba6 | H2 | fix: propagate isometric fields through encounter template endpoints |
+| d64341b | H3 | fix: replace anonymous contextmenu listener with Vue template directive |
+| 07a7319 | H4 | fix: correct bounding box off-by-one in getGridOriginOffset |
+| d4b5948 | M1 | refactor: remove dead rotation animation infrastructure |
+| aaa3b7c | M2 | perf: cache depth-sorted cell array in useIsometricRendering |
+| e87c5e5 | M3 | perf: combine fill and stroke into single canvas path in drawDiamondCell |
+
+### P0 Fix Cycle Files Changed
+
+- `app/server/services/encounter.service.ts` (C1: added fields to EncounterRecord, removed as-any casts)
+- `app/server/api/encounters/[id]/grid-config.put.ts` (C1: removed as-any casts; H1: added validation)
+- `app/server/api/encounter-templates/from-encounter.post.ts` (H2: copy isometric fields to template)
+- `app/server/api/encounter-templates/[id]/load.post.ts` (H2: include isometric fields from template)
+- `app/components/vtt/IsometricCanvas.vue` (H3: contextmenu directive; M1: removed rotationProgress watcher)
+- `app/composables/useIsometricProjection.ts` (H4: fixed bounding box corners)
+- `app/composables/useIsometricCamera.ts` (M1: removed animation infrastructure)
+- `app/composables/useIsometricRendering.ts` (M1: removed rotationProgress option; M2: cached sorted cells; M3: single path fill+stroke)
 
 ### P0 Commits
 
