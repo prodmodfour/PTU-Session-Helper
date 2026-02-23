@@ -204,7 +204,10 @@ export function buildEncounterResponse(
     width: record.gridWidth,
     height: record.gridHeight,
     cellSize: record.gridCellSize,
-    background: record.gridBackground ?? undefined
+    background: record.gridBackground ?? undefined,
+    isometric: (record as any).gridIsometric ?? false,
+    cameraAngle: ((record as any).gridCameraAngle ?? 0) as 0 | 1 | 2 | 3,
+    maxElevation: (record as any).gridMaxElevation ?? 5
   } : null
 
   return {

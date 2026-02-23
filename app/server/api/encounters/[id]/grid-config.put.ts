@@ -56,6 +56,9 @@ export default defineEventHandler(async (event) => {
         gridHeight: body.height ?? encounter.gridHeight,
         gridCellSize: body.cellSize ?? encounter.gridCellSize,
         gridBackground: body.background !== undefined ? body.background : encounter.gridBackground,
+        gridIsometric: body.isometric ?? (encounter as any).gridIsometric ?? false,
+        gridCameraAngle: body.cameraAngle ?? (encounter as any).gridCameraAngle ?? 0,
+        gridMaxElevation: body.maxElevation ?? (encounter as any).gridMaxElevation ?? 5,
       }
     })
 
@@ -65,6 +68,9 @@ export default defineEventHandler(async (event) => {
       height: updated.gridHeight,
       cellSize: updated.gridCellSize,
       background: updated.gridBackground ?? undefined,
+      isometric: (updated as any).gridIsometric ?? false,
+      cameraAngle: ((updated as any).gridCameraAngle ?? 0) as 0 | 1 | 2 | 3,
+      maxElevation: (updated as any).gridMaxElevation ?? 5,
     }
 
     return {

@@ -216,6 +216,9 @@ const localConfig = ref<GridConfig>({
   height: props.config.height,
   cellSize: props.config.cellSize,
   background: props.config.background,
+  isometric: props.config.isometric ?? false,
+  cameraAngle: props.config.cameraAngle ?? 0,
+  maxElevation: props.config.maxElevation ?? 5,
 })
 
 // Computed
@@ -258,6 +261,9 @@ const resetSettings = () => {
     height: DEFAULT_SETTINGS.defaultGridHeight,
     cellSize: DEFAULT_SETTINGS.defaultCellSize,
     background: undefined,
+    isometric: false,
+    cameraAngle: 0,
+    maxElevation: 5,
   }
 }
 

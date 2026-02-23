@@ -201,6 +201,11 @@ model Encounter {
   gridCellSize  Int      @default(40) // pixels
   gridBackground String? // URL to background image
 
+  // Isometric grid settings
+  gridIsometric    Boolean @default(false)
+  gridCameraAngle  Int     @default(0)  // 0-3 cardinal angles
+  gridMaxElevation Int     @default(5)
+
   // Fog of War state (JSON: { cells: [key, state][], defaultState: string })
   fogOfWarEnabled Boolean @default(false)
   fogOfWarState   String  @default("{}") // JSON object for fog state persistence
@@ -412,6 +417,11 @@ model EncounterTemplate {
   gridWidth     Int?
   gridHeight    Int?
   gridCellSize  Int?
+
+  // Optional isometric grid configuration
+  gridIsometric    Boolean?
+  gridCameraAngle  Int?
+  gridMaxElevation Int?
 
   // Organization
   category      String?
