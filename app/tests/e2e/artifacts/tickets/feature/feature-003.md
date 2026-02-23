@@ -1,7 +1,7 @@
 ---
 ticket_id: feature-003
 priority: P1
-status: in-progress
+status: in-progress  # P0 implemented, P1/P2 pending
 domain: player-view
 source: product-roadmap
 created_by: user
@@ -77,6 +77,42 @@ Functional scaffolding exists at `/player` — encounter display with combatant 
 - Mobile-first with 320px minimum width, bottom tab navigation
 - `PlayerActionRequest` typed WebSocket message for player-to-GM action requests
 - No authentication (localStorage character picker with `ptu_player_identity` key)
+
+### Track A: Core Player View (P0 Implementation)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-23 | ce124f4 | Pinia store: `playerIdentity.ts` — characterId, character, pokemon, loading, error state |
+| 2026-02-23 | a70fcc5 | API endpoint: `GET /api/characters/:id/player-view` — full character + Pokemon join |
+| 2026-02-23 | 31b5fb8 | Composable: `usePlayerIdentity.ts` — localStorage persistence, data fetching |
+| 2026-02-23 | 9ac4838 | WebSocket: player role in ClientInfo, identify with characterId, player_action forwarding |
+| 2026-02-23 | a4ec5ee | Component: `PlayerIdentityPicker.vue` — character selection overlay |
+| 2026-02-23 | 82ef31b | Component: `PlayerNavBar.vue` — bottom tab navigation (Character/Team/Encounter) |
+| 2026-02-23 | 78bb919 | Component: `PlayerCharacterSheet.vue` — read-only stats, skills, features, equipment, inventory |
+| 2026-02-23 | 8829400 | Components: `PlayerPokemonTeam.vue`, `PlayerPokemonCard.vue`, `PlayerMoveList.vue` |
+| 2026-02-23 | fde1abf | Components: `PlayerEncounterView.vue`, `PlayerCombatantInfo.vue` — visibility-aware |
+| 2026-02-23 | 54549ca | Page rewrite: `player/index.vue` — identity, tabs, WS sync, encounter polling |
+
+**Files created (11):**
+- `app/stores/playerIdentity.ts`
+- `app/composables/usePlayerIdentity.ts`
+- `app/server/api/characters/[id]/player-view.get.ts`
+- `app/components/player/PlayerIdentityPicker.vue`
+- `app/components/player/PlayerNavBar.vue`
+- `app/components/player/PlayerCharacterSheet.vue`
+- `app/components/player/PlayerPokemonTeam.vue`
+- `app/components/player/PlayerPokemonCard.vue`
+- `app/components/player/PlayerMoveList.vue`
+- `app/components/player/PlayerEncounterView.vue`
+- `app/components/player/PlayerCombatantInfo.vue`
+
+**Files modified (6):**
+- `app/pages/player/index.vue` (complete rewrite)
+- `app/layouts/player.vue` (removed 4K scaling)
+- `app/server/utils/websocket.ts` (added 'player' to ClientInfo.role)
+- `app/server/routes/ws.ts` (player role in identify, player_action handler)
+- `app/composables/useWebSocket.ts` (characterId in identify())
+- `app/types/api.ts` (PlayerActionRequest, characterId in identify)
 
 ### Track B: Infrastructure / Remote Access (Design Phase)
 

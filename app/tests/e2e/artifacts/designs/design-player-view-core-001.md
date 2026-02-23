@@ -5,7 +5,7 @@ category: FEATURE
 scope: FULL
 domain: player-view
 track: A (Core)
-status: designed
+status: p0-implemented
 parallel_tracks:
   - "Track B: Infrastructure/Remote Access (separate slave)"
   - "Track C: Integration (depends on A+B, future)"
@@ -781,10 +781,24 @@ interface PlayerActionRequest {
 
 ## Implementation Log
 
-(Not yet implemented. Will be updated per phase.)
-
 | Phase | Date | Commit | Status |
 |-------|------|--------|--------|
-| P0 | - | - | Pending |
+| P0 | 2026-02-23 | ce124f4..54549ca (10 commits) | Implemented |
 | P1 | - | - | Pending |
 | P2 | - | - | Pending |
+
+### P0 Implementation Details (2026-02-23)
+
+10 commits implementing player identity, character sheet, Pokemon team, encounter view, WebSocket updates, and page rewrite. 11 new files, 6 modified files. All P0 acceptance criteria addressed:
+
+- Character picker loads all player characters from `/api/characters/players`
+- Selection persists in localStorage key `ptu_player_identity`
+- Page refresh restores identity without re-picking
+- Character tab: read-only sheet with collapsible stats, combat info, skills, features, equipment, inventory
+- Team tab: expandable Pokemon cards with sprite, types, HP, stats, moves, abilities, capabilities
+- Encounter tab: combatants by side, turn indicator, round number, "Your Turn" highlight
+- Enemy HP shown as percentage only; own/allied HP shown as exact values
+- WebSocket identifies as `player` role with `characterId`
+- Encounter polling (3s) with auto-join on WebSocket
+- "Switch Character" button returns to picker
+- Mobile-first layout with 320px minimum width support
