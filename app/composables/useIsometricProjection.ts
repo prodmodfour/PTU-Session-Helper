@@ -175,13 +175,14 @@ export function useIsometricProjection() {
     cellSize: number,
     angle: CameraAngle
   ): { ox: number; oy: number } => {
-    // Calculate bounding box of the isometric grid
-    // Check all four corners of the grid to find min/max screen positions
+    // Calculate bounding box of the isometric grid.
+    // Use full grid extent (gridW, gridH) rather than (gridW-1, gridH-1) because
+    // the last row/column of diamond tiles extends to the (gridW, gridH) intersection point.
     const corners = [
       worldToScreen(0, 0, 0, angle, gridW, gridH, cellSize),
-      worldToScreen(gridW - 1, 0, 0, angle, gridW, gridH, cellSize),
-      worldToScreen(0, gridH - 1, 0, angle, gridW, gridH, cellSize),
-      worldToScreen(gridW - 1, gridH - 1, 0, angle, gridW, gridH, cellSize)
+      worldToScreen(gridW, 0, 0, angle, gridW, gridH, cellSize),
+      worldToScreen(0, gridH, 0, angle, gridW, gridH, cellSize),
+      worldToScreen(gridW, gridH, 0, angle, gridW, gridH, cellSize)
     ]
 
     const minPx = Math.min(...corners.map(c => c.px))
