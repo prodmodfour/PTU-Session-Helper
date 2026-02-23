@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-23T09:30:00
-updated_by: slave-collector (plan-20260223-085530)
+last_updated: 2026-02-23T10:20:00
+updated_by: slave-collector (plan-20260223-095000)
 ---
 
 # Matrix Ecosystem State
@@ -74,10 +74,16 @@ All 8 domains are stale due to sessions 5–13 code changes. Re-mapping is now u
 - **encounter-tables:** ptu-rule-060 reviewed APPROVED — no code changes, but capabilities are now verified
 - **character-lifecycle:** ptu-rule-078 reviewed APPROVED — no code changes, but capabilities are now verified
 
+## Session 20 Changes (additional staleness)
+
+- **player-view:** feature-003 P0 fix cycle — PlayerTab type to types/player.ts, shared _player-view.scss, $player-nav-clearance variable, evasion bonus fix, WS character_update listener, polling backoff, aria-label, inline error
+- **vtt-grid:** feature-002 P0 fix cycle — EncounterRecord isometric fields, server-side validation, template endpoint propagation, contextmenu Vue directive, bounding box fix, dead animation removal, sorted cell cache, canvas path optimization
+- **character-lifecycle:** feature-001 P0 reviewed — code-review-143 CHANGES_REQUIRED, rules-review-133 APPROVED (no code changes, just review artifacts)
+
 ## Recommended Next Steps
 
-1. Re-map all 8 domains + add player-view domain — sessions 12-19 added major new capabilities
-2. Fix feature-003 P0 C1+H1-H3 from code-review-139 (WS listener, SCSS, evasion, polling)
-3. Fix feature-002 P0 C1+H1-H4 from code-review-140 (type safety, validation, templates, bounding box)
-4. Review feature-001 P0 (trainer sprites — 8 commits, 24 files)
-5. Continue feature P1 tiers after P0 fix cycles pass
+1. Re-map all 8 domains + add player-view domain — sessions 12-20 added major new capabilities
+2. Re-review feature-003 P0 fix cycle (9 commits from code-review-139 fixes)
+3. Re-review feature-002 P0 fix cycle (9 commits from code-review-140 fixes)
+4. Fix feature-001 P0 C1+M1-M3 from code-review-143 (props crash, double invocation, avatar error handling, app-surface)
+5. Continue feature P1 tiers after re-reviews pass

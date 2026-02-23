@@ -52,3 +52,6 @@
 | plan-20260223-085530/slave-2 | reviewers | feature-002-p0-review | CHANGES_REQUIRED | 2026-02-23T09:08:00Z | af38721, 48f08bc |
 | plan-20260223-085530/slave-3 | reviewers | ptu-rule-060-p1-review | APPROVED | 2026-02-23T09:10:30Z | 6998005, 7b8c0f6 |
 | plan-20260223-085530/slave-4 | reviewers | ptu-rule-078-fix-review | APPROVED | 2026-02-23T09:03:30Z | 4115f09, 40c1f8b |
+| plan-20260223-095000/slave-1 | developer | feature-003-p0-fix | success | 2026-02-23T10:11:00Z | 2340554, 818f479, b8bc03c, 41c25f8, 37f80d5, 430f96a, dc1f21e, 698e479, c04921c |
+| plan-20260223-095000/slave-2 | developer | feature-002-p0-fix | success | 2026-02-23T10:07:00Z | 91ae123, 5ff32c8, 0e60ba6, d64341b, 07a7319, d4b5948, aaa3b7c, e87c5e5, 352575d |
+| plan-20260223-095000/slave-3 | reviewers | feature-001-p0-review | CHANGES_REQUIRED | 2026-02-23T10:12:00Z | 2470daf, 27d880d |

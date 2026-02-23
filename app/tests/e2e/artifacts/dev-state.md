@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-23T09:30:00
-updated_by: slave-collector (plan-20260223-085530)
+last_updated: 2026-02-23T10:20:00
+updated_by: slave-collector (plan-20260223-095000)
 ---
 
 # Dev Ecosystem State
@@ -31,9 +31,9 @@ updated_by: slave-collector (plan-20260223-085530)
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
 |--------|----------|--------|---------|-------------------|
-| feature-001 | P3 | **P0-implemented** | B2W2 trainer sprites — P0 implemented (180-sprite catalog, picker modal, composable, 17 integration points). Needs review | single-phase |
-| feature-002 | P2 | **P0-CHANGES_REQUIRED** | 3D isometric grid — P0 reviewed: code-review-140 CHANGES_REQUIRED (C1: `as any` casts, H1-H4), rules-review-130 APPROVED. Needs fix cycle | multi-phase |
-| feature-003 | P1 | **P0-CHANGES_REQUIRED** | Player View — P0 Track A reviewed: code-review-139 CHANGES_REQUIRED (C1: missing WS listener, H1-H3), rules-review-129 APPROVED. Needs fix cycle | multi-phase-parallel |
+| feature-001 | P3 | **P0-CHANGES_REQUIRED** | B2W2 trainer sprites — P0 reviewed: code-review-143 CHANGES_REQUIRED (C1: props crash, H1: file size, M1-M3), rules-review-133 APPROVED. Needs fix cycle | single-phase |
+| feature-002 | P2 | **P0-fixed** | 3D isometric grid — P0 fix cycle complete (9 commits: C1+H1-H4+M1-M3 from code-review-140). Needs re-review | multi-phase |
+| feature-003 | P1 | **P0-fixed** | Player View — P0 Track A fix cycle complete (9 commits: C1+H1-H3+M1-M4 from code-review-139). Needs re-review | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -43,22 +43,19 @@ updated_by: slave-collector (plan-20260223-085530)
 
 ## Active Developer Work
 
-**Current task:** Slave collection for plan-20260223-085530 completed — 6 slaves merged (18 commits total).
+**Current task:** Slave collection for plan-20260223-095000 completed — 3 slaves merged (20 commits total).
 
-**Session 19 (2026-02-23):**
-- ptu-rule-056 H1 fixed (slave-5, 2 commits) — moved `_create-form.scss` from `additionalData` to `css` array → **resolved**
-- feature-001 P0 implemented (slave-6, 8 commits) — 180-sprite catalog, useTrainerSprite composable, TrainerSpritePicker modal, 17 integration points
-- feature-003 P0 reviewed (slave-1, 2 commits) — code-review-139 CHANGES_REQUIRED (C1+H1-H3+M1-M4), rules-review-129 APPROVED
-- feature-002 P0 reviewed (slave-2, 2 commits) — code-review-140 CHANGES_REQUIRED (C1+H1-H4+M1-M3), rules-review-130 APPROVED
-- ptu-rule-060 C1+P1 reviewed (slave-3, 2 commits) — code-review-141 APPROVED (M1/M2), rules-review-131 APPROVED → **resolved**
-- ptu-rule-078 fix reviewed (slave-4, 2 commits) — code-review-142 APPROVED, rules-review-132 APPROVED → **resolved**
+**Session 20 (2026-02-23):**
+- feature-003 P0 fix cycle complete (slave-1, 9 commits) — C1 WS listener, H1 SCSS extraction, H2 evasion bonus, H3 polling backoff, M1-M4 from code-review-139. Needs re-review
+- feature-002 P0 fix cycle complete (slave-2, 9 commits) — C1 EncounterRecord type safety, H1-H4 validation/templates/cleanup/bounding-box, M1-M3 from code-review-140. Needs re-review
+- feature-001 P0 reviewed (slave-3, 2 commits) — code-review-143 CHANGES_REQUIRED (C1: props crash, H1: file size, M1-M3), rules-review-133 APPROVED
 
 **Next actions (by priority):**
-1. **Fix** feature-003 P0 C1+H1-H3 from code-review-139 (WS listener, SCSS duplication, evasion bonus, polling backoff)
-2. **Fix** feature-002 P0 C1+H1-H4 from code-review-140 (`as any` casts, server validation, template endpoints, contextmenu cleanup, bounding box)
-3. **Review** feature-001 P0 (8 commits, trainer sprites)
-4. feature-003 P1 Track A (remaining tiers — after fix cycle)
-5. feature-002 P1 (token interaction + movement — after fix cycle)
+1. **Re-review** feature-003 P0 fix cycle (9 commits from code-review-139 fixes)
+2. **Re-review** feature-002 P0 fix cycle (9 commits from code-review-140 fixes)
+3. **Fix** feature-001 P0 C1+M1-M3 from code-review-143 (props crash, double invocation, avatar error handling, app-surface)
+4. feature-003 P1 Track A (remaining tiers — after re-review passes)
+5. feature-002 P1 (token interaction + movement — after re-review passes)
 6. ptu-rule-060 P2 (budget warnings)
 7. ptu-rule-081 P4, ptu-rule-082 P4
 
@@ -67,6 +64,8 @@ updated_by: slave-collector (plan-20260223-085530)
 ### Session 19 Reviews
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
+| code-review-143 | feature-001 P0 trainer sprites | CHANGES_REQUIRED | senior-reviewer | 2026-02-23 |
+| rules-review-133 | feature-001 P0 trainer sprites | APPROVED | game-logic-reviewer | 2026-02-23 |
 | code-review-139 | feature-003 P0 Track A | CHANGES_REQUIRED | senior-reviewer | 2026-02-23 |
 | rules-review-129 | feature-003 P0 Track A | APPROVED | game-logic-reviewer | 2026-02-23 |
 | code-review-140 | feature-002 P0 isometric grid | CHANGES_REQUIRED | senior-reviewer | 2026-02-23 |
@@ -169,6 +168,7 @@ updated_by: slave-collector (plan-20260223-085530)
 | refactoring-072 | P4 | open | Replace `tier: string` with `SignificanceTier` in store/composable signatures (from code-review-141 M1) |
 | refactoring-073 | P4 | open | Add server-side validation for significanceTier string values (from code-review-141 M2) |
 | refactoring-074 | P4 | open | Consolidate duplicate SIGNIFICANCE_PRESETS arrays (from rules-review-131 observation) |
+| refactoring-075 | P4 | open | Extract CombatantConditionsSection from GMActionModal.vue (803 lines, from code-review-143 H1) |
 
 ## Code Health
 
@@ -176,11 +176,11 @@ updated_by: slave-collector (plan-20260223-085530)
 |--------|-------|
 | Last audited | 2026-02-18T12:00:00 |
 | Open tickets (P0) | 0 |
-| Open tickets (P1) | 1 (feature-003 — P0-CHANGES_REQUIRED, needs fix cycle) |
-| Open tickets (P2) | 1 (feature-002 — P0-CHANGES_REQUIRED, needs fix cycle) |
-| Open tickets (P3) | 1 (feature-001 — P0-implemented, needs review) |
-| Open tickets (P4) | 18 (refactoring-059–074 excl resolved + ptu-rule-081, 082 + ux-001, 002) |
-| Total open | 21 |
+| Open tickets (P1) | 1 (feature-003 — P0-fixed, needs re-review) |
+| Open tickets (P2) | 1 (feature-002 — P0-fixed, needs re-review) |
+| Open tickets (P3) | 1 (feature-001 — P0-CHANGES_REQUIRED, needs fix cycle) |
+| Open tickets (P4) | 19 (refactoring-059–075 excl resolved + ptu-rule-081, 082 + ux-001, 002) |
+| Total open | 22 |
 | Total resolved | 150 |
 
 ## Session Summary (2026-02-20, session 13)
@@ -327,5 +327,19 @@ updated_by: slave-collector (plan-20260223-085530)
 **Tickets resolved:** 3 (ptu-rule-056, ptu-rule-060, ptu-rule-078)
 **Reviews completed:** 8 artifacts (code-review-139–142, rules-review-129–132)
 **Net movement:** 20→21 open (+1 net: -3 resolved + 4 new tickets)
+
+**All P0 tickets remain at 0.**
+
+## Session Summary (2026-02-23, session 20 — plan-20260223-095000)
+
+**Slave collection plan-20260223-095000:** 3 slaves merged (20 commits total, 0 conflicts)
+- **slave-1** (developer): feature-003 P0 fix cycle — 9 commits (PlayerTab type extraction, SCSS shared file, nav clearance variable, evasion bonus fix, WS character_update listener, polling backoff, aria-label, alert→inline error, ticket update)
+- **slave-2** (developer): feature-002 P0 fix cycle — 9 commits (EncounterRecord type safety, isometric field validation, template endpoint propagation, contextmenu directive, bounding box fix, dead animation removal, sorted cell cache, canvas path optimization, ticket update)
+- **slave-3** (reviewers): feature-001 P0 review — code-review-143 CHANGES_REQUIRED (C1: props crash, H1: file size >800, M1-M3) + rules-review-133 APPROVED
+
+**Tickets filed:** 1 (refactoring-075 — GMActionModal.vue extraction from code-review-143 H1)
+**Tickets resolved:** 0
+**Reviews completed:** 2 artifacts (code-review-143, rules-review-133)
+**Net movement:** 21→22 open (+1 net: +1 new refactoring ticket)
 
 **All P0 tickets remain at 0.**
