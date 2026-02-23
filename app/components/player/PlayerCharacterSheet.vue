@@ -15,14 +15,14 @@
         </div>
       </div>
       <div class="player-sheet__hp-bar">
-        <div class="hp-bar-track">
+        <div class="player-hp-bar-track">
           <div
-            class="hp-bar-fill"
+            class="player-hp-bar-fill"
             :class="hpColorClass"
             :style="{ width: hpPercent + '%' }"
           ></div>
         </div>
-        <span class="hp-bar-label">{{ character.currentHp }} / {{ character.maxHp }} HP</span>
+        <span class="player-hp-bar-label">{{ character.currentHp }} / {{ character.maxHp }} HP</span>
       </div>
     </section>
 
@@ -33,13 +33,13 @@
         <PhCaretDown :size="16" :class="{ 'rotated': !openSections.stats }" />
       </button>
       <div v-if="openSections.stats" class="player-sheet__stats-grid">
-        <div v-for="stat in statEntries" :key="stat.key" class="stat-cell">
-          <span class="stat-cell__label">{{ stat.label }}</span>
-          <span class="stat-cell__value">{{ stat.value }}</span>
+        <div v-for="stat in statEntries" :key="stat.key" class="player-stat-cell">
+          <span class="player-stat-cell__label">{{ stat.label }}</span>
+          <span class="player-stat-cell__value">{{ stat.value }}</span>
           <span
             v-if="stat.stage !== 0"
-            class="stat-cell__stage"
-            :class="stat.stage > 0 ? 'stat-cell__stage--positive' : 'stat-cell__stage--negative'"
+            class="player-stat-cell__stage"
+            :class="stat.stage > 0 ? 'player-stat-cell__stage--positive' : 'player-stat-cell__stage--negative'"
           >
             {{ stat.stage > 0 ? '+' : '' }}{{ stat.stage }}
           </span>
@@ -93,7 +93,7 @@
             <span
               v-for="status in character.statusConditions"
               :key="status.name"
-              class="status-badge"
+              class="player-status-badge"
             >
               {{ status.name }}
             </span>
@@ -225,9 +225,9 @@ const hpPercent = computed(() => {
 
 const hpColorClass = computed(() => {
   const pct = hpPercent.value
-  if (pct > 50) return 'hp-bar-fill--healthy'
-  if (pct > 25) return 'hp-bar-fill--warning'
-  return 'hp-bar-fill--critical'
+  if (pct > 50) return 'player-hp-bar-fill--healthy'
+  if (pct > 25) return 'player-hp-bar-fill--warning'
+  return 'player-hp-bar-fill--critical'
 })
 
 // Stats
@@ -344,6 +344,10 @@ const equipmentSlots = computed(() => {
     display: flex;
     flex-direction: column;
     gap: 4px;
+
+    :deep(.player-hp-bar-label) {
+      text-align: right;
+    }
   }
 
   &__section {
@@ -390,6 +394,11 @@ const equipmentSlots = computed(() => {
     @media (max-width: 320px) {
       grid-template-columns: repeat(2, 1fr);
     }
+
+    // Character sheet uses larger stat values than default
+    :deep(.player-stat-cell__value) {
+      font-size: $font-size-md;
+    }
   }
 
   &__combat {
@@ -424,61 +433,6 @@ const equipmentSlots = computed(() => {
     gap: 2px;
     max-height: 300px;
     overflow-y: auto;
-  }
-}
-
-// HP bar
-.hp-bar-track {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: $border-radius-full;
-  overflow: hidden;
-}
-
-.hp-bar-fill {
-  height: 100%;
-  border-radius: $border-radius-full;
-  transition: width $transition-normal;
-
-  &--healthy { background: $color-success; }
-  &--warning { background: $color-warning; }
-  &--critical { background: $color-danger; }
-}
-
-.hp-bar-label {
-  font-size: $font-size-xs;
-  color: $color-text-muted;
-  text-align: right;
-}
-
-// Stats
-.stat-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: $spacing-xs;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-
-  &__label {
-    font-size: 10px;
-    color: $color-text-muted;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  &__value {
-    font-size: $font-size-md;
-    font-weight: 700;
-    color: $color-text;
-  }
-
-  &__stage {
-    font-size: 10px;
-    font-weight: 600;
-
-    &--positive { color: $color-success; }
-    &--negative { color: $color-danger; }
   }
 }
 
@@ -524,15 +478,6 @@ const equipmentSlots = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-xs;
-}
-
-.status-badge {
-  padding: 2px $spacing-xs;
-  background: rgba($color-accent-scarlet, 0.2);
-  border: 1px solid rgba($color-accent-scarlet, 0.4);
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  color: $color-accent-pink;
 }
 
 // Skills

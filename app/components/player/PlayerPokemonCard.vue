@@ -32,14 +32,14 @@
           <span class="pokemon-card__level">Lv. {{ pokemon.level }}</span>
         </div>
         <div class="pokemon-card__hp">
-          <div class="hp-bar-track">
+          <div class="player-hp-bar-track">
             <div
-              class="hp-bar-fill"
+              class="player-hp-bar-fill"
               :class="hpColorClass"
               :style="{ width: hpPercent + '%' }"
             ></div>
           </div>
-          <span class="hp-bar-label">{{ pokemon.currentHp }} / {{ pokemon.maxHp }}</span>
+          <span class="player-hp-bar-label">{{ pokemon.currentHp }} / {{ pokemon.maxHp }}</span>
         </div>
       </div>
       <PhCaretDown :size="16" class="pokemon-card__caret" :class="{ 'rotated': !expanded }" />
@@ -52,7 +52,7 @@
         <span
           v-for="status in pokemon.statusConditions"
           :key="status.name"
-          class="status-badge"
+          class="player-status-badge"
         >
           {{ status.name }}
         </span>
@@ -66,13 +66,13 @@
 
       <!-- Stats -->
       <div class="pokemon-card__stats">
-        <div v-for="stat in statEntries" :key="stat.key" class="stat-cell">
-          <span class="stat-cell__label">{{ stat.label }}</span>
-          <span class="stat-cell__value">{{ stat.value }}</span>
+        <div v-for="stat in statEntries" :key="stat.key" class="player-stat-cell">
+          <span class="player-stat-cell__label">{{ stat.label }}</span>
+          <span class="player-stat-cell__value">{{ stat.value }}</span>
           <span
             v-if="stat.stage !== 0"
-            class="stat-cell__stage"
-            :class="stat.stage > 0 ? 'stat-cell__stage--positive' : 'stat-cell__stage--negative'"
+            class="player-stat-cell__stage"
+            :class="stat.stage > 0 ? 'player-stat-cell__stage--positive' : 'player-stat-cell__stage--negative'"
           >
             {{ stat.stage > 0 ? '+' : '' }}{{ stat.stage }}
           </span>
@@ -159,9 +159,9 @@ const hpPercent = computed(() => {
 
 const hpColorClass = computed(() => {
   const pct = hpPercent.value
-  if (pct > 50) return 'hp-bar-fill--healthy'
-  if (pct > 25) return 'hp-bar-fill--warning'
-  return 'hp-bar-fill--critical'
+  if (pct > 50) return 'player-hp-bar-fill--healthy'
+  if (pct > 25) return 'player-hp-bar-fill--warning'
+  return 'player-hp-bar-fill--critical'
 })
 
 const statEntries = computed(() => {
@@ -348,45 +348,6 @@ const statEntries = computed(() => {
   font-weight: 600;
 }
 
-.stat-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: $spacing-xs;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-
-  &__label {
-    font-size: 9px;
-    color: $color-text-muted;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  &__value {
-    font-size: $font-size-sm;
-    font-weight: 700;
-    color: $color-text;
-  }
-
-  &__stage {
-    font-size: 9px;
-    font-weight: 600;
-
-    &--positive { color: $color-success; }
-    &--negative { color: $color-danger; }
-  }
-}
-
-.status-badge {
-  padding: 2px $spacing-xs;
-  background: rgba($color-accent-scarlet, 0.2);
-  border: 1px solid rgba($color-accent-scarlet, 0.4);
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  color: $color-accent-pink;
-}
-
 .ability-row {
   padding: $spacing-xs;
   background: $color-bg-tertiary;
@@ -405,28 +366,16 @@ const statEntries = computed(() => {
   }
 }
 
-.hp-bar-track {
-  flex: 1;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: $border-radius-full;
-  overflow: hidden;
-}
+// HP bar size overrides for compact card layout
+.pokemon-card__hp {
+  :deep(.player-hp-bar-track) {
+    flex: 1;
+    height: 6px;
+  }
 
-.hp-bar-fill {
-  height: 100%;
-  border-radius: $border-radius-full;
-  transition: width $transition-normal;
-
-  &--healthy { background: $color-success; }
-  &--warning { background: $color-warning; }
-  &--critical { background: $color-danger; }
-}
-
-.hp-bar-label {
-  font-size: 10px;
-  color: $color-text-muted;
-  white-space: nowrap;
+  :deep(.player-hp-bar-label) {
+    font-size: 10px;
+  }
 }
 
 .cap-grid {
@@ -461,25 +410,4 @@ const statEntries = computed(() => {
   }
 }
 
-// Type badge colors
-.type {
-  &--normal { background: $type-normal; }
-  &--fire { background: $type-fire; }
-  &--water { background: $type-water; }
-  &--electric { background: $type-electric; color: #333; }
-  &--grass { background: $type-grass; }
-  &--ice { background: $type-ice; color: #333; }
-  &--fighting { background: $type-fighting; }
-  &--poison { background: $type-poison; }
-  &--ground { background: $type-ground; color: #333; }
-  &--flying { background: $type-flying; }
-  &--psychic { background: $type-psychic; }
-  &--bug { background: $type-bug; }
-  &--rock { background: $type-rock; }
-  &--ghost { background: $type-ghost; }
-  &--dragon { background: $type-dragon; }
-  &--dark { background: $type-dark; }
-  &--steel { background: $type-steel; color: #333; }
-  &--fairy { background: $type-fairy; color: #333; }
-}
 </style>

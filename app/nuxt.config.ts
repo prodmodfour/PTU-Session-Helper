@@ -15,7 +15,7 @@ export default defineNuxtConfig({
     },
   ],
 
-  css: ['~/assets/scss/main.scss', '~/assets/scss/_create-form.scss'],
+  css: ['~/assets/scss/main.scss', '~/assets/scss/_create-form.scss', '~/assets/scss/components/_player-view.scss'],
 
   app: {
     head: {

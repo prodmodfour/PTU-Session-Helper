@@ -157,25 +157,4 @@ const toggleMove = (moveId: string) => {
   padding: $spacing-sm;
 }
 
-// Type colors
-.type {
-  &--normal { background: $type-normal; }
-  &--fire { background: $type-fire; }
-  &--water { background: $type-water; }
-  &--electric { background: $type-electric; color: #333; }
-  &--grass { background: $type-grass; }
-  &--ice { background: $type-ice; color: #333; }
-  &--fighting { background: $type-fighting; }
-  &--poison { background: $type-poison; }
-  &--ground { background: $type-ground; color: #333; }
-  &--flying { background: $type-flying; }
-  &--psychic { background: $type-psychic; }
-  &--bug { background: $type-bug; }
-  &--rock { background: $type-rock; }
-  &--ghost { background: $type-ghost; }
-  &--dragon { background: $type-dragon; }
-  &--dark { background: $type-dark; }
-  &--steel { background: $type-steel; color: #333; }
-  &--fairy { background: $type-fairy; color: #333; }
-}
 </style>

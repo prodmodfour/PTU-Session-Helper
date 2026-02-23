@@ -39,14 +39,14 @@
 
       <!-- HP Bar -->
       <div class="player-combatant__hp">
-        <div class="hp-bar-track">
+        <div class="player-hp-bar-track">
           <div
-            class="hp-bar-fill"
+            class="player-hp-bar-fill"
             :class="hpColorClass"
             :style="{ width: hpPercent + '%' }"
           ></div>
         </div>
-        <span class="hp-bar-label">
+        <span class="player-hp-bar-label">
           <template v-if="visibility.showExactHp">
             {{ currentHp }} / {{ maxHp }}
           </template>
@@ -61,7 +61,7 @@
         <span
           v-for="status in statusConditions"
           :key="status.name"
-          class="status-badge"
+          class="player-status-badge"
         >
           {{ status.name }}
         </span>
@@ -126,9 +126,9 @@ const hpPercent = computed(() => {
 })
 
 const hpColorClass = computed(() => {
-  if (hpPercent.value > 50) return 'hp-bar-fill--healthy'
-  if (hpPercent.value > 25) return 'hp-bar-fill--warning'
-  return 'hp-bar-fill--critical'
+  if (hpPercent.value > 50) return 'player-hp-bar-fill--healthy'
+  if (hpPercent.value > 25) return 'player-hp-bar-fill--warning'
+  return 'player-hp-bar-fill--critical'
 })
 
 const statusConditions = computed((): StatusCondition[] => {
@@ -285,60 +285,26 @@ const visibility = computed(() => {
   50% { opacity: 0.6; }
 }
 
-.hp-bar-track {
-  flex: 1;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: $border-radius-full;
-  overflow: hidden;
+// HP bar size overrides for compact combatant layout
+.player-combatant__hp {
+  :deep(.player-hp-bar-track) {
+    flex: 1;
+    height: 5px;
+  }
+
+  :deep(.player-hp-bar-label) {
+    font-size: 10px;
+    min-width: 40px;
+    text-align: right;
+  }
 }
 
-.hp-bar-fill {
-  height: 100%;
-  border-radius: $border-radius-full;
-  transition: width $transition-normal;
-
-  &--healthy { background: $color-success; }
-  &--warning { background: $color-warning; }
-  &--critical { background: $color-danger; }
-}
-
-.hp-bar-label {
-  font-size: 10px;
-  color: $color-text-muted;
-  white-space: nowrap;
-  min-width: 40px;
-  text-align: right;
-}
-
-.status-badge {
-  padding: 1px $spacing-xs;
-  background: rgba($color-accent-scarlet, 0.2);
-  border: 1px solid rgba($color-accent-scarlet, 0.4);
-  border-radius: 2px;
-  font-size: 9px;
-  color: $color-accent-pink;
-}
-
-// Type badge colors
-.type {
-  &--normal { background: $type-normal; }
-  &--fire { background: $type-fire; }
-  &--water { background: $type-water; }
-  &--electric { background: $type-electric; color: #333; }
-  &--grass { background: $type-grass; }
-  &--ice { background: $type-ice; color: #333; }
-  &--fighting { background: $type-fighting; }
-  &--poison { background: $type-poison; }
-  &--ground { background: $type-ground; color: #333; }
-  &--flying { background: $type-flying; }
-  &--psychic { background: $type-psychic; }
-  &--bug { background: $type-bug; }
-  &--rock { background: $type-rock; }
-  &--ghost { background: $type-ghost; }
-  &--dragon { background: $type-dragon; }
-  &--dark { background: $type-dark; }
-  &--steel { background: $type-steel; color: #333; }
-  &--fairy { background: $type-fairy; color: #333; }
+// Status badge size override for compact combatant layout
+.player-combatant__statuses {
+  :deep(.player-status-badge) {
+    padding: 1px $spacing-xs;
+    border-radius: 2px;
+    font-size: 9px;
+  }
 }
 </style>
