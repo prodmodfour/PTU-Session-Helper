@@ -145,6 +145,9 @@ export default defineEventHandler(async (event) => {
         gridHeight: template.gridHeight ?? 15,
         gridCellSize: template.gridCellSize ?? 40,
         gridBackground: null,
+        gridIsometric: template.gridIsometric ?? false,
+        gridCameraAngle: template.gridCameraAngle ?? 0,
+        gridMaxElevation: template.gridMaxElevation ?? 5,
         moveLog: '[]',
         defeatedEnemies: '[]'
       }
@@ -173,7 +176,10 @@ export default defineEventHandler(async (event) => {
         width: encounter.gridWidth,
         height: encounter.gridHeight,
         cellSize: encounter.gridCellSize,
-        background: encounter.gridBackground ?? undefined
+        background: encounter.gridBackground ?? undefined,
+        isometric: encounter.gridIsometric ?? false,
+        cameraAngle: (encounter.gridCameraAngle ?? 0) as 0 | 1 | 2 | 3,
+        maxElevation: encounter.gridMaxElevation ?? 5
       } as GridConfig,
       sceneNumber: 1,
       moveLog: [],

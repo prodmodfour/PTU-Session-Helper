@@ -80,6 +80,9 @@ export default defineEventHandler(async (event) => {
         gridWidth: encounter.gridEnabled ? encounter.gridWidth : null,
         gridHeight: encounter.gridEnabled ? encounter.gridHeight : null,
         gridCellSize: encounter.gridEnabled ? encounter.gridCellSize : null,
+        gridIsometric: encounter.gridEnabled ? encounter.gridIsometric : null,
+        gridCameraAngle: encounter.gridEnabled ? encounter.gridCameraAngle : null,
+        gridMaxElevation: encounter.gridEnabled ? encounter.gridMaxElevation : null,
         category: body.category ?? null,
         tags: JSON.stringify(body.tags ?? [])
       }
@@ -94,7 +97,10 @@ export default defineEventHandler(async (event) => {
       gridConfig: template.gridWidth ? {
         width: template.gridWidth,
         height: template.gridHeight,
-        cellSize: template.gridCellSize
+        cellSize: template.gridCellSize,
+        isometric: template.gridIsometric ?? false,
+        cameraAngle: template.gridCameraAngle ?? 0,
+        maxElevation: template.gridMaxElevation ?? 5
       } : null,
       category: template.category,
       tags: JSON.parse(template.tags),
