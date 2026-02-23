@@ -46,6 +46,11 @@
     <div v-if="token.size > 1" class="vtt-token__size-badge">
       {{ token.size }}×{{ token.size }}
     </div>
+
+    <!-- Elevation Badge -->
+    <div v-if="elevation && elevation > 0" class="vtt-token__elevation-badge">
+      Z{{ elevation }}
+    </div>
   </div>
 </template>
 
@@ -69,6 +74,14 @@ const props = defineProps<{
   isSelected?: boolean
   isMultiSelected?: boolean
   isGm?: boolean
+  /** When true, token uses isometric screen coordinates for positioning */
+  isometricMode?: boolean
+  /** Screen X position from isometric projection (used when isometricMode is true) */
+  isoScreenX?: number
+  /** Screen Y position from isometric projection (used when isometricMode is true) */
+  isoScreenY?: number
+  /** Token elevation level (displayed as badge) */
+  elevation?: number
 }>()
 
 const emit = defineEmits<{
@@ -79,6 +92,19 @@ const emit = defineEmits<{
 // Computed
 const tokenStyle = computed(() => {
   const size = props.cellSize * props.token.size
+
+  if (props.isometricMode && props.isoScreenX !== undefined && props.isoScreenY !== undefined) {
+    // Isometric mode: position using pre-computed screen coordinates
+    // Token is centered on the isometric diamond position
+    return {
+      left: `${props.isoScreenX - size / 2}px`,
+      top: `${props.isoScreenY - size}px`,
+      width: `${size}px`,
+      height: `${size}px`,
+    }
+  }
+
+  // Default 2D grid positioning
   return {
     left: `${props.token.position.x * props.cellSize}px`,
     top: `${props.token.position.y * props.cellSize}px`,
@@ -305,6 +331,18 @@ const handleClick = (event: MouseEvent) => {
   border-radius: 3px;
   font-size: 8px;
   color: $color-text-muted;
+}
+
+.vtt-token__elevation-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  color: $color-accent-teal;
 }
 
 </style>
