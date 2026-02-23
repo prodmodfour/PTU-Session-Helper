@@ -1,6 +1,9 @@
 <template>
   <div v-if="cell" class="coordinate-display">
     {{ cell.x }}, {{ cell.y }}
+    <span v-if="elevation !== undefined && elevation > 0" class="coordinate-display__elevation">
+      Z{{ elevation }}
+    </span>
     <template v-if="mode !== 'none'">
       <span class="coordinate-display__mode">| {{ mode }}</span>
       <span v-if="distance && distance > 0" class="coordinate-display__distance">
@@ -18,6 +21,7 @@ defineProps<{
   cell: GridPosition | null
   mode?: MeasurementMode
   distance?: number
+  elevation?: number
 }>()
 </script>
 
@@ -38,6 +42,12 @@ defineProps<{
 
   &__mode {
     color: $color-accent-teal;
+  }
+
+  &__elevation {
+    color: $color-accent-teal;
+    font-weight: 600;
+    margin-left: 4px;
   }
 
   &__distance {
