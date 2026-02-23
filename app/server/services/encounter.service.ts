@@ -40,6 +40,9 @@ interface EncounterRecord {
   fogOfWarState: string
   terrainEnabled: boolean
   terrainState: string
+  gridIsometric: boolean
+  gridCameraAngle: number
+  gridMaxElevation: number
   createdAt: Date
   updatedAt: Date
 }
@@ -205,9 +208,9 @@ export function buildEncounterResponse(
     height: record.gridHeight,
     cellSize: record.gridCellSize,
     background: record.gridBackground ?? undefined,
-    isometric: (record as any).gridIsometric ?? false,
-    cameraAngle: ((record as any).gridCameraAngle ?? 0) as 0 | 1 | 2 | 3,
-    maxElevation: (record as any).gridMaxElevation ?? 5
+    isometric: record.gridIsometric ?? false,
+    cameraAngle: (record.gridCameraAngle ?? 0) as 0 | 1 | 2 | 3,
+    maxElevation: record.gridMaxElevation ?? 5
   } : null
 
   return {
