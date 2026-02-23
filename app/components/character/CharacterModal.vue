@@ -317,9 +317,10 @@ onMounted(() => {
   editData.value = { ...props.character }
 })
 
-// Reset tab when character changes
+// Reset tab and avatar state when character changes
 watch(() => props.character, () => {
   activeTab.value = 'stats'
+  avatarBroken.value = false
   editData.value = { ...props.character }
 })
 
