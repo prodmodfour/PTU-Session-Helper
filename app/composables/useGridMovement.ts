@@ -1,6 +1,7 @@
 import type { GridPosition, Combatant, Pokemon } from '~/types'
 import { useTerrainStore } from '~/stores/terrain'
 import { useRangeParser, type TerrainCostGetter } from '~/composables/useRangeParser'
+import type { ElevationCostGetter, TerrainElevationGetter } from '~/composables/usePathfinding'
 import { combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed } from '~/utils/combatantCapabilities'
 
 interface TokenData {
@@ -250,8 +251,26 @@ export function useGridMovement(options: UseGridMovementOptions) {
   }
 
   /**
+   * Build an elevation cost getter bound to a specific combatant.
+   * Returns undefined if elevation callbacks are not configured.
+   * Flying Pokemon (Sky speed > 0) get reduced elevation cost within their Sky speed range.
+   */
+  const getElevationCostGetter = (combatantId: string): ElevationCostGetter | undefined => {
+    if (!options.getTokenElevation || !options.getTerrainElevation) return undefined
+    const combatant = findCombatant(combatantId)
+    return (fromZ: number, toZ: number) => calculateElevationCost(fromZ, toZ, combatant)
+  }
+
+  /**
+   * Get terrain elevation getter, or undefined if not configured.
+   */
+  const getTerrainElevationGetter = (): TerrainElevationGetter | undefined => {
+    return options.getTerrainElevation
+  }
+
+  /**
    * Calculate the terrain-aware path cost between two positions.
-   * Uses A* pathfinding with PTU diagonal rules and terrain costs.
+   * Uses A* pathfinding with PTU diagonal rules, terrain costs, and elevation.
    * Returns the cost and path, or null if no valid path exists.
    */
   const calculateTerrainAwarePathCost = (
@@ -261,7 +280,15 @@ export function useGridMovement(options: UseGridMovementOptions) {
   ): { cost: number; path: GridPosition[] } | null => {
     const blockedCells = getBlockedCells(combatantId)
     const terrainCostGetter = getTerrainCostGetter(combatantId)
-    return calculatePathCost(from, to, blockedCells, terrainCostGetter)
+    const elevCostGetter = getElevationCostGetter(combatantId)
+    const terrainElevGetter = getTerrainElevationGetter()
+    const fromElev = options.getTokenElevation
+      ? options.getTokenElevation(combatantId)
+      : 0
+    return calculatePathCost(
+      from, to, blockedCells, terrainCostGetter,
+      elevCostGetter, terrainElevGetter, fromElev
+    )
   }
 
   /**
@@ -300,43 +327,41 @@ export function useGridMovement(options: UseGridMovementOptions) {
       }
     }
 
-    // Calculate elevation cost (if elevation callbacks are provided)
-    let elevCost = 0
-    if (options.getTokenElevation && options.getTerrainElevation) {
-      const fromZ = options.getTokenElevation(combatantId)
-      const toZ = options.getTerrainElevation(toPos.x, toPos.y)
-      const combatant = findCombatant(combatantId)
-      elevCost = calculateElevationCost(fromZ, toZ, combatant)
-    }
-
+    // Build elevation-aware cost getters for A* pathfinding
+    const elevCostGetter = getElevationCostGetter(combatantId)
+    const terrainElevGetter = getTerrainElevationGetter()
+    const fromElev = options.getTokenElevation
+      ? options.getTokenElevation(combatantId)
+      : 0
     const terrainCostGetter = getTerrainCostGetter(combatantId)
 
-    if (terrainCostGetter) {
-      // Terrain-aware: use A* pathfinding
-      const pathResult = calculatePathCost(fromPos, toPos, blockedCells, terrainCostGetter)
+    if (terrainCostGetter || elevCostGetter) {
+      // Terrain-aware and/or elevation-aware: use A* pathfinding
+      const pathResult = calculatePathCost(
+        fromPos, toPos, blockedCells, terrainCostGetter,
+        elevCostGetter, terrainElevGetter, fromElev
+      )
       if (!pathResult) {
         // No valid path (terrain blocks all routes)
         const geometricDistance = calculateMoveDistance(fromPos, toPos)
         return {
           valid: false,
-          distance: geometricDistance + elevCost,
+          distance: geometricDistance,
           blocked: true // Effectively blocked by terrain
         }
       }
-      const totalCost = pathResult.cost + elevCost
       return {
-        valid: totalCost > 0 && totalCost <= speed,
-        distance: totalCost,
+        valid: pathResult.cost > 0 && pathResult.cost <= speed,
+        distance: pathResult.cost,
         blocked: false
       }
     }
 
-    // No terrain: fast geometric check + elevation cost
+    // No terrain, no elevation: fast geometric check
     const distance = calculateMoveDistance(fromPos, toPos)
-    const totalDistance = distance + elevCost
     return {
-      valid: totalDistance > 0 && totalDistance <= speed,
-      distance: totalDistance,
+      valid: distance > 0 && distance <= speed,
+      distance,
       blocked: false
     }
   }
