@@ -1,9 +1,14 @@
 import { peers, safeSend } from '~/server/utils/websocket'
+import { registerPendingRequest } from '~/server/utils/pendingRequests'
 
 /**
  * REST fallback for player action requests.
  * Forwards the action to GM via server-side WebSocket broadcast.
  * Used when the player's WebSocket is momentarily disconnected.
+ *
+ * Registers requestId -> playerId in the shared pendingRequests map
+ * so that GM acknowledgments (player_action_ack) can be routed back
+ * to the originating player via WebSocket.
  *
  * POST /api/player/action-request
  * Body: { playerId, playerName, action, requestId, ... }
@@ -16,6 +21,11 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       message: 'Missing required fields: playerId, action'
     })
+  }
+
+  // Register in pendingRequests so GM ack can be routed back to this player
+  if (body.requestId && body.playerId) {
+    registerPendingRequest(body.requestId, body.playerId)
   }
 
   // Build the WebSocket event to forward to GM

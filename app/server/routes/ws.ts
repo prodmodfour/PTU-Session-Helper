@@ -7,42 +7,14 @@ import {
   broadcastToGroup,
   broadcastToGroupAndPlayers
 } from '~/server/utils/websocket'
+import {
+  registerPendingRequest,
+  consumePendingRequest
+} from '~/server/utils/pendingRequests'
 
 interface WebSocketEvent {
   type: string
   data: unknown
-}
-
-// =============================================
-// Pending Requests Map (requestId -> characterId)
-// Routes GM responses back to the originating player.
-// TTL of 60s prevents unbounded growth.
-// =============================================
-
-const PENDING_REQUEST_TTL_MS = 60_000
-
-interface PendingEntry {
-  characterId: string
-  createdAt: number
-}
-
-const pendingRequests = new Map<string, PendingEntry>()
-
-function cleanupPendingRequests() {
-  const now = Date.now()
-  for (const [requestId, entry] of pendingRequests) {
-    if (now - entry.createdAt > PENDING_REQUEST_TTL_MS) {
-      pendingRequests.delete(requestId)
-    }
-  }
-}
-
-// Run cleanup every 30 seconds
-const cleanupInterval = setInterval(cleanupPendingRequests, 30_000)
-
-// Ensure cleanup stops if the process shuts down
-if (typeof process !== 'undefined' && process.on) {
-  process.on('beforeExit', () => clearInterval(cleanupInterval))
 }
 
 // =============================================
@@ -53,10 +25,7 @@ if (typeof process !== 'undefined' && process.on) {
 function forwardToGm(encounterId: string | null, event: WebSocketEvent, excludePeer: Parameters<typeof safeSend>[0]) {
   const data = event.data as { requestId?: string; playerId?: string }
   if (data.requestId && data.playerId) {
-    pendingRequests.set(data.requestId, {
-      characterId: data.playerId,
-      createdAt: Date.now()
-    })
+    registerPendingRequest(data.requestId, data.playerId)
   }
 
   const message = JSON.stringify(event)
@@ -73,16 +42,15 @@ function forwardToGm(encounterId: string | null, event: WebSocketEvent, excludeP
 // =============================================
 
 function routeToPlayer(requestId: string, event: WebSocketEvent) {
-  const entry = pendingRequests.get(requestId)
-  if (!entry) return
+  const characterId = consumePendingRequest(requestId)
+  if (!characterId) return
 
   const message = JSON.stringify(event)
   for (const [otherPeer, otherInfo] of peers) {
-    if (otherInfo.role === 'player' && otherInfo.characterId === entry.characterId) {
+    if (otherInfo.role === 'player' && otherInfo.characterId === characterId) {
       safeSend(otherPeer, message)
     }
   }
-  pendingRequests.delete(requestId)
 }
 
 // =============================================
