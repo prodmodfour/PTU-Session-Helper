@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-24T20:00:00
-updated_by: slave-collector (plan-20260224-173734)
+last_updated: 2026-02-24T20:30:00
+updated_by: slave-collector (plan-20260224-200000)
 ---
 
 # Dev Ecosystem State
@@ -33,8 +33,8 @@ updated_by: slave-collector (plan-20260224-173734)
 | Ticket | Priority | Status | Summary | Design Complexity |
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
-| feature-002 | P2 | **P2-fix-applied-needs-rereview** | 3D isometric grid — P2 fix cycle complete (8 commits: C1+H1-H3+M1-M3 from code-review-154). Needs re-review | multi-phase |
-| feature-003 | P1 | **Track-B/C-fix-applied-needs-rereview** | Player View — Track B P0 fix cycle complete (9 commits from code-review-152). Track C P0 fix cycle complete (9 commits from code-review-153). Both need re-review | multi-phase-parallel |
+| feature-002 | P2 | **P2-fix-cycle-2-needed** | 3D isometric grid — P2 re-review: code-review-157 CHANGES_REQUIRED (H-NEW: drag painting elevation not passed in handleMouseMove), rules-review-147 APPROVED. One-line fix needed | multi-phase |
+| feature-003 | P1 | **Track-B/C-P0-APPROVED** | Player View — Track B P0 APPROVED (code-review-155 + rules-review-145). Track C P0 APPROVED (code-review-156 + rules-review-146). All fix cycles complete. Ready for P1 tracks | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -44,21 +44,30 @@ updated_by: slave-collector (plan-20260224-173734)
 
 ## Active Developer Work
 
-**Current task:** Slave collection for plan-20260224-173734 completed — 3 slaves merged (26 commits total).
+**Current task:** Slave collection for plan-20260224-200000 completed — 3 reviewer slaves merged (6 commits total).
 
-**Session 28 (2026-02-24):**
-- feature-003 Track B P0 fix cycle complete — 9 commits by slave-1 (all 8 code-review-152 issues resolved)
-- feature-003 Track C P0 fix cycle complete — 9 commits by slave-2 (all 7 code-review-153 issues resolved)
-- feature-002 P2 fix cycle complete — 8 commits by slave-3 (all 7 code-review-154 issues resolved)
+**Session 29 (2026-02-24):**
+- feature-003 Track B P0 re-review — code-review-155 APPROVED + rules-review-145 APPROVED → **Track B P0 complete**
+- feature-003 Track C P0 re-review — code-review-156 APPROVED + rules-review-146 APPROVED → **Track C P0 complete**
+- feature-002 P2 re-review — code-review-157 CHANGES_REQUIRED (H-NEW: drag painting elevation in handleMouseMove) + rules-review-147 APPROVED → **needs one-line fix**
 
 **Next actions (by priority):**
-1. **Re-review** feature-003 Track B P0 fix cycle (code review + rules review)
-2. **Re-review** feature-003 Track C P0 fix cycle (code review + rules review)
-3. **Re-review** feature-002 P2 fix cycle (code review + rules review)
-4. If all re-reviews APPROVED → feature-003 Track B/C P0 complete, feature-002 P2 complete → advance to P1/P3 or close
-5. ptu-rule-081 P4, ptu-rule-082 P4, ptu-rule-083 P4
+1. **Fix** feature-002 P2 H-NEW (one-line: pass `terrainPaintElevation` to `applyTool` in drag handler at `useIsometricInteraction.ts:477`)
+2. **Re-review** feature-002 P2 fix cycle 2 after fix
+3. **Implement** feature-003 Track B P1 + Track C P1 (both P0 tracks now APPROVED)
+4. ptu-rule-081 P4, ptu-rule-082 P4, ptu-rule-083 P4
 
 ## Review Status
+
+### Session 29 Reviews (plan-20260224-200000)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-155 | feature-003 Track B P0 re-review | APPROVED | senior-reviewer | 2026-02-24 |
+| rules-review-145 | feature-003 Track B P0 re-review | APPROVED | game-logic-reviewer | 2026-02-24 |
+| code-review-156 | feature-003 Track C P0 re-review | APPROVED | senior-reviewer | 2026-02-24 |
+| rules-review-146 | feature-003 Track C P0 re-review | APPROVED | game-logic-reviewer | 2026-02-24 |
+| code-review-157 | feature-002 P2 re-review | CHANGES_REQUIRED | senior-reviewer | 2026-02-24 |
+| rules-review-147 | feature-002 P2 re-review | APPROVED | game-logic-reviewer | 2026-02-24 |
 
 ### Session 27 Reviews (plan-20260224-171113)
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -224,8 +233,8 @@ updated_by: slave-collector (plan-20260224-173734)
 |--------|-------|
 | Last audited | 2026-02-18T12:00:00 |
 | Open tickets (P0) | 0 |
-| Open tickets (P1) | 1 (feature-003 — Track B/C P0 fix cycle applied, needs re-review) |
-| Open tickets (P2) | 1 (feature-002 — P2 fix cycle applied, needs re-review) |
+| Open tickets (P1) | 1 (feature-003 — Track B/C P0 APPROVED, ready for P1 tracks) |
+| Open tickets (P2) | 1 (feature-002 — P2 re-review CHANGES_REQUIRED, one-line fix needed) |
 | Open tickets (P3) | 0 |
 | Open tickets (P4) | 16 (refactoring-059–078 excl 6 resolved + ptu-rule-081, 082, 083 + ux-001, 002) |
 | Total open | 18 |
@@ -490,6 +499,20 @@ updated_by: slave-collector (plan-20260224-173734)
 **Net movement:** 18→18 open (no change — fix cycles applied, awaiting re-review)
 
 **All P0 tickets remain at 0.**
+
+## Session Summary (2026-02-24, session 29 — plan-20260224-200000)
+
+**Slave collection plan-20260224-200000:** 3 reviewer slaves merged (6 commits total, 0 conflicts)
+- **slave-1** (reviewers): feature-003 Track B P0 re-review — code-review-155 APPROVED (0C, 0H, 0M) + rules-review-145 APPROVED (0 issues) → **Track B P0 complete**
+- **slave-2** (reviewers): feature-003 Track C P0 re-review — code-review-156 APPROVED (0C, 0H, 0M) + rules-review-146 APPROVED (0 issues) → **Track C P0 complete**
+- **slave-3** (reviewers): feature-002 P2 re-review — code-review-157 CHANGES_REQUIRED (0C, 1H: drag painting elevation omitted in handleMouseMove, 0M) + rules-review-147 APPROVED (0 issues, all 9 mechanics correct)
+
+**Tickets filed:** 0 (H-NEW is a fix cycle issue, not a separate ticket. No side-discoveries.)
+**Tickets resolved:** 0
+**Reviews completed:** 6 artifacts (code-review-155–157, rules-review-145–147)
+**Net movement:** 18→18 open (no change — feature-003 Track B/C P0 APPROVED but ticket remains open for P1, feature-002 needs one more fix cycle)
+
+**All P0 tickets remain at 0. feature-003 Track B/C P0 are now APPROVED. feature-002 P2 needs one-line fix for drag painting elevation.**
 
 ## Session Summary (2026-02-23, session 22 — plan-20260223-122250)
 

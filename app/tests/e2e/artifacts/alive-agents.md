@@ -81,3 +81,6 @@
 | plan-20260224-173734/slave-1 | developer | feature-003-track-b-fix | success | 2026-02-24T17:54:00Z | 689cb48, aa25732, cb56759, 4cfb11b, b38c2e6, 606d725, 3e1f82d, 723ff37, d0028f1 |
 | plan-20260224-173734/slave-2 | developer | feature-003-track-c-fix | success | 2026-02-24T17:52:00Z | 351044d, f7fe05e, a60801e, f790503, 42ddbce, 4abfcea, f3e93b2, a183103, f11acfd |
 | plan-20260224-173734/slave-3 | developer | feature-002-p2-fix | success | 2026-02-24T17:48:00Z | 5fcd6ce, 6fcaa06, cacda1a, 1823f5b, a866d87, f9e0b1e, 8c03d71, 9b184d6 |
+| plan-20260224-200000/slave-1 | reviewers | feature-003-track-b-rereview | APPROVED | 2026-02-24T20:07:30Z | 0e6874f, feac250 |
+| plan-20260224-200000/slave-2 | reviewers | feature-003-track-c-rereview | APPROVED | 2026-02-24T20:18:00Z | 048bddd, 211fa2e |
+| plan-20260224-200000/slave-3 | reviewers | feature-002-p2-rereview | CHANGES_REQUIRED | 2026-02-24T20:08:30Z | 2d20259, 2721236 |
