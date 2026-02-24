@@ -15,7 +15,7 @@ const pokemonImportSchema = z.object({
   moves: z.array(z.object({
     id: z.string(),
     name: z.string()
-  }).passthrough()).optional()
+  })).optional()
 })
 
 const importPayloadSchema = z.object({
@@ -27,7 +27,7 @@ const importPayloadSchema = z.object({
     personality: z.string().nullable().optional(),
     goals: z.string().nullable().optional(),
     notes: z.string().nullable().optional()
-  }).passthrough(),
+  }),
   pokemon: z.array(pokemonImportSchema).optional()
 })
 
