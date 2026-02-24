@@ -122,6 +122,12 @@ CRUD + extensive combat actions.
 
 **Significance on Encounter model:** `significanceMultiplier` (Float, default 1.0) + `significanceTier` (String, default "insignificant"). Set at encounter creation via StartEncounterModal/GenerateEncounterModal. Editable mid-encounter via significance.put endpoint.
 
+**VTT Grid composables:** `useRangeParser.ts` (range parsing, LoS, AoE), `usePathfinding.ts` (A* pathfinding with elevation, movement range flood-fill, movement validation), `useGridMovement.ts` (terrain-aware movement, speed modifiers), `useGridInteraction.ts` (2D grid interaction), `useGridRendering.ts` (2D grid rendering), `useCanvasRendering.ts` (canvas setup), `useCanvasDrawing.ts` (2D drawing primitives), `useTerrainPersistence.ts` (terrain save/load), `useIsometricProjection.ts` (isometric math), `useIsometricCamera.ts` (camera rotation/zoom), `useIsometricRendering.ts` (isometric grid + token rendering), `useIsometricInteraction.ts` (isometric click/hover/drag), `useDepthSorting.ts` (painter's algorithm depth ordering), `useElevation.ts` (token/terrain elevation state + flying defaults).
+
+**VTT Grid components:** `VTTContainer.vue` (2D/isometric mode switch), `GridCanvas.vue` (2D canvas), `IsometricCanvas.vue` (isometric canvas + elevation wiring), `CameraControls.vue` (rotation buttons), `ElevationToolbar.vue` (token/terrain elevation editing toolbar), `VTTToken.vue` (token display), `ZoomControls.vue`, `CoordinateDisplay.vue`, `GridSettingsPanel.vue`, `FogToolbar.vue`, `TerrainToolbar.vue`.
+
+**VTT Grid utilities:** `utils/combatantCapabilities.ts` (shared combatantCanFly, getSkySpeed, combatantCanSwim, combatantCanBurrow).
+
 ### Encounter Templates (`/api/encounter-templates`)
 Full CRUD + save-from/load-to encounter.
 - `GET/POST /api/encounter-templates` — list, create
