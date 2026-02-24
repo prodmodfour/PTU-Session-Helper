@@ -5,7 +5,23 @@
       <span class="group-grid-size">{{ config.width }}×{{ config.height }}</span>
     </div>
     <div class="group-grid-wrapper">
+      <!-- Isometric mode: use IsometricCanvas (read-only) -->
+      <IsometricCanvas
+        v-if="config.isometric"
+        ref="isometricCanvasRef"
+        :config="config"
+        :tokens="tokens"
+        :combatants="combatants"
+        :current-turn-id="currentTurnId"
+        :is-gm="false"
+        :show-zoom-controls="true"
+        :show-coordinates="true"
+        :external-movement-preview="movementPreview"
+      />
+
+      <!-- Standard 2D mode: use GridCanvas -->
       <GridCanvas
+        v-else
         ref="gridCanvasRef"
         :config="config"
         :tokens="tokens"
@@ -23,6 +39,7 @@
 <script setup lang="ts">
 import type { GridConfig, GridPosition, Combatant, MovementPreview } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
+import IsometricCanvas from '~/components/vtt/IsometricCanvas.vue'
 
 interface TokenData {
   combatantId: string
@@ -39,6 +56,12 @@ const props = defineProps<{
 
 // Refs
 const gridCanvasRef = ref<InstanceType<typeof GridCanvas> | null>(null)
+const isometricCanvasRef = ref<InstanceType<typeof IsometricCanvas> | null>(null)
+
+// Active canvas ref (whichever mode is active)
+const activeCanvasRef = computed(() => {
+  return props.config.isometric ? isometricCanvasRef.value : gridCanvasRef.value
+})
 
 // Computed
 const tokens = computed((): TokenData[] => {
@@ -53,7 +76,7 @@ const tokens = computed((): TokenData[] => {
 
 // Expose methods
 defineExpose({
-  resetView: () => gridCanvasRef.value?.resetView(),
+  resetView: () => activeCanvasRef.value?.resetView(),
 })
 </script>
 
