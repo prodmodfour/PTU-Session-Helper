@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType } from '~/types'
 import type { XpCalculationResult, XpApplicationResult } from '~/utils/experienceCalculation'
+import type { SignificanceTier } from '~/utils/encounterBudget'
 
 // History composable for undo/redo
 let historyComposable: ReturnType<typeof useEncounterHistory> | null = null
@@ -114,7 +115,7 @@ export const useEncounterStore = defineStore('encounter', {
       name: string,
       battleType: 'trainer' | 'full_contact',
       weather?: string | null,
-      significance?: { multiplier: number; tier: string }
+      significance?: { multiplier: number; tier: SignificanceTier }
     ) {
       this.loading = true
       this.error = null
@@ -145,7 +146,7 @@ export const useEncounterStore = defineStore('encounter', {
     async createFromScene(
       sceneId: string,
       battleType: 'trainer' | 'full_contact',
-      significance?: { multiplier: number; tier: string }
+      significance?: { multiplier: number; tier: SignificanceTier }
     ) {
       this.loading = true
       this.error = null
@@ -641,7 +642,7 @@ export const useEncounterStore = defineStore('encounter', {
     // ===========================================
 
     /** Persist the GM-set significance multiplier on the encounter */
-    async setSignificance(encounterId: string, significanceMultiplier: number, significanceTier?: string) {
+    async setSignificance(encounterId: string, significanceMultiplier: number, significanceTier?: SignificanceTier) {
       try {
         await $fetch(`/api/encounters/${encounterId}/significance`, {
           method: 'PUT',
@@ -653,7 +654,7 @@ export const useEncounterStore = defineStore('encounter', {
           this.encounter = {
             ...this.encounter,
             significanceMultiplier,
-            ...(significanceTier && { significanceTier: significanceTier as any })
+            ...(significanceTier && { significanceTier })
           }
         }
       } catch (e: any) {

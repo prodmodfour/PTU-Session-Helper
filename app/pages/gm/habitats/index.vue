@@ -89,6 +89,7 @@
 
 <script setup lang="ts">
 import type { EncounterTable } from '~/types'
+import type { SignificanceTier } from '~/utils/encounterBudget'
 
 definePageMeta({
   layout: 'gm'
@@ -183,7 +184,7 @@ const generateFromTable = (table: EncounterTable) => {
 
 const handleAddToEncounter = async (
   pokemon: Array<{ speciesId: string; speciesName: string; level: number }>,
-  significance?: { multiplier: number; tier: string }
+  significance?: { multiplier: number; tier: SignificanceTier }
 ) => {
   const tableName = generatingFromTable.value?.name || 'Wild Encounter'
   const success = await encounterCreation.createWildEncounter(pokemon, tableName, significance)

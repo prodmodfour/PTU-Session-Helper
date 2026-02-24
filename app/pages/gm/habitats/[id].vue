@@ -42,6 +42,8 @@
 </template>
 
 <script setup lang="ts">
+import type { SignificanceTier } from '~/utils/encounterBudget'
+
 definePageMeta({
   layout: 'gm'
 })
@@ -77,7 +79,7 @@ const handleAddToScene = async (sceneId: string, pokemon: Array<{ speciesId: str
 
 const handleAddToEncounter = async (
   pokemon: Array<{ speciesId: string; speciesName: string; level: number }>,
-  significance?: { multiplier: number; tier: string }
+  significance?: { multiplier: number; tier: SignificanceTier }
 ) => {
   const tableName = tablesStore.getTableById(tableId.value)?.name || 'Wild Encounter'
   const success = await encounterCreation.createWildEncounter(pokemon, tableName, significance)

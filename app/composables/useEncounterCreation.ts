@@ -3,6 +3,8 @@
  * Encapsulates: create encounter or add to scene workflows with error handling.
  * Used by encounter-tables list page and habitat editor page.
  */
+import type { SignificanceTier } from '~/utils/encounterBudget'
+
 export function useEncounterCreation() {
   const encounterStore = useEncounterStore()
   const router = useRouter()
@@ -13,7 +15,7 @@ export function useEncounterCreation() {
   const createWildEncounter = async (
     pokemon: Array<{ speciesId: string; speciesName: string; level: number }>,
     tableName: string,
-    significance?: { multiplier: number; tier: string }
+    significance?: { multiplier: number; tier: SignificanceTier }
   ): Promise<boolean> => {
     if (pokemon.length === 0) {
       error.value = 'No Pokemon to add'
