@@ -14,7 +14,7 @@ export function usePlayerWebSocket() {
   const { isConnected, identify, joinEncounter, send, onMessage } = useWebSocket()
   const playerStore = usePlayerIdentityStore()
   const encounterStore = useEncounterStore()
-  const { handleSceneSync, handleSceneDeactivated, activeScene } = usePlayerScene()
+  const { handleSceneSync, handleSceneDeactivated, fetchActiveScene, activeScene } = usePlayerScene()
 
   // Pending action requests: requestId -> { resolve, reject, timestamp }
   const pendingActions = ref<Map<string, {
@@ -116,39 +116,26 @@ export function usePlayerWebSocket() {
         handleActionAck(message.data as PlayerActionAck)
         break
 
-      case 'scene_activated': {
-        // scene_activated carries full scene data, map to SceneSyncPayload shape
-        const sceneData = (message.data as { scene: { id: string; name: string; description?: string | null; locationName?: string | null; locationImage?: string | null; weather?: string | null; isActive: boolean; characters: Array<{ id: string; characterId: string; name: string }>; pokemon: Array<{ id: string; species: string; nickname?: string | null }>; groups: Array<{ id: string; name: string }> } })
-        if (sceneData.scene) {
-          handleSceneSync({
-            scene: {
-              id: sceneData.scene.id,
-              name: sceneData.scene.name,
-              description: sceneData.scene.description ?? null,
-              locationName: sceneData.scene.locationName ?? null,
-              locationImage: sceneData.scene.locationImage ?? null,
-              weather: sceneData.scene.weather ?? null,
-              isActive: sceneData.scene.isActive,
-              characters: sceneData.scene.characters.map(c => ({
-                id: c.characterId ?? c.id,
-                name: c.name,
-                isPlayerCharacter: true
-              })),
-              pokemon: sceneData.scene.pokemon.map(p => ({
-                id: p.id,
-                nickname: p.nickname ?? null,
-                species: p.species,
-                ownerId: null
-              })),
-              groups: sceneData.scene.groups.map(g => ({
-                id: g.id,
-                name: g.name
-              }))
-            }
-          })
-        }
+      case 'scene_activated':
+        // Fetch fresh scene data from REST to get correct isPlayerCharacter
+        // values and pokemon ownership (scene_activated payload lacks enrichment)
+        fetchActiveScene()
         break
-      }
+
+      // Granular scene events — refresh the full scene from REST rather than
+      // attempting incremental patching, which keeps the code simple and ensures
+      // the player view stays consistent with the GM's scene state.
+      case 'scene_update':
+      case 'scene_character_added':
+      case 'scene_character_removed':
+      case 'scene_pokemon_added':
+      case 'scene_pokemon_removed':
+      case 'scene_group_created':
+      case 'scene_group_updated':
+      case 'scene_group_deleted':
+      case 'scene_positions_updated':
+        fetchActiveScene()
+        break
     }
   }
 
