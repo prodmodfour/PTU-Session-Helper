@@ -39,6 +39,29 @@ Replace the current 2D flat Canvas grid with a 3D isometric grid supporting Z-ax
 | 2026-02-23 | P1 implemented | 10 commits on slave/2-dev-feature-002-p1 |
 | 2026-02-23 | P1 code-review-148 fixes | 8 commits on slave/2-dev-feature-002-p1-fix-20260223-141341 |
 | 2026-02-24 | P2 implemented | 8 commits on slave/3-dev-feature-002-p2-20260224-171710 |
+| 2026-02-24 | P2 code-review-154 fixes | 7 commits on slave/3-dev-feature-002-p2-fix-20260224-173734 |
+
+### P2 Fix Cycle (code-review-154)
+
+| Commit | Issue | Description |
+|--------|-------|-------------|
+| 2843435 | C1 | fix: use terrain elevation for 3D distance computation in isometric mode |
+| 46ef2d2 | H1 | fix: wire elevation level into terrain painting flow |
+| f25a625 | H2 | fix: mount TerrainPainter component in VTTContainer for isometric mode |
+| e5dd935 | H3 | docs: document camera angle correctness for terrain side face rendering |
+| 3a0ebc0 | M1 | docs: add useIsometricOverlays and TerrainPainter to app-surface |
+| 927d5bd | M2 | perf: narrow deep watchers in IsometricCanvas to rendering-relevant state |
+| e987ed5 | M3 | fix: derive side face color from terrain type instead of hardcoded black |
+
+### P2 Fix Cycle Files Changed
+
+**Modified files (5):**
+- `app/components/vtt/VTTContainer.vue` (C1: terrain elevation 3D distance; H2: mount TerrainPainter)
+- `app/components/vtt/IsometricCanvas.vue` (C1: expose getTerrainElevation; H1: pass brushElevation to interaction; M2: narrow watchers)
+- `app/stores/terrain.ts` (H1: applyTool accepts elevation parameter)
+- `app/composables/useIsometricInteraction.ts` (H1: pass terrain paint elevation to applyTool)
+- `app/composables/useIsometricOverlays.ts` (H3: camera angle doc comment; M3: terrain-derived side face colors)
+- `.claude/skills/references/app-surface.md` (M1: add useIsometricOverlays and TerrainPainter)
 
 ### P1 Fix Cycle (code-review-148)
 
