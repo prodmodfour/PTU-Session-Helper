@@ -34,5 +34,8 @@ export * from './scene';
 // Player view types
 export * from './player';
 
+// Player sync types (Track C WebSocket protocol)
+export * from './player-sync';
+
 // Type guards
 export * from './guards';
