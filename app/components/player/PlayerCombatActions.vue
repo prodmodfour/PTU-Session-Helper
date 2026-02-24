@@ -261,10 +261,15 @@
       </div>
     </div>
 
-    <!-- Request Sent Toast -->
+    <!-- Toast Notification (success/error) -->
     <Transition name="toast">
-      <div v-if="toastMessage" class="combat-actions__toast">
-        <PhCheckCircle :size="16" />
+      <div
+        v-if="toastMessage"
+        class="combat-actions__toast"
+        :class="`combat-actions__toast--${toastSeverity}`"
+      >
+        <PhCheckCircle v-if="toastSeverity === 'success'" :size="16" />
+        <PhWarningCircle v-else :size="16" />
         {{ toastMessage }}
       </div>
     </Transition>
@@ -330,8 +335,9 @@ const targetSelectorTitle = ref('')
 const pendingMoveId = ref<string | null>(null)
 const pendingAction = ref<'move' | 'struggle' | null>(null)
 
-// Toast message for request confirmation
+// Toast message for request confirmation and error feedback
 const toastMessage = ref<string | null>(null)
+const toastSeverity = ref<'success' | 'error'>('success')
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
 const combatManeuvers = COMBAT_MANEUVERS
@@ -379,7 +385,7 @@ const confirmTargetSelection = async () => {
       await useStruggle(selectedTargetIds.value)
     }
   } catch (err: any) {
-    alert('Action failed: ' + (err.message || 'Unknown error'))
+    showToast('Action failed: ' + (err.message || 'Unknown error'), 'error')
   }
 
   resetTargetSelector()
@@ -402,7 +408,7 @@ const handleShift = async () => {
   try {
     await useShiftAction()
   } catch (err: any) {
-    alert('Shift failed: ' + (err.message || 'Unknown error'))
+    showToast('Shift failed: ' + (err.message || 'Unknown error'), 'error')
   }
 }
 
@@ -415,7 +421,7 @@ const confirmPassTurn = async () => {
   try {
     await passTurn()
   } catch (err: any) {
-    alert('Pass turn failed: ' + (err.message || 'Unknown error'))
+    showToast('Pass turn failed: ' + (err.message || 'Unknown error'), 'error')
   }
 }
 
@@ -423,12 +429,13 @@ const confirmPassTurn = async () => {
 // Request Handlers (GM Approval)
 // =============================================
 
-const showToast = (message: string) => {
+const showToast = (message: string, severity: 'success' | 'error' = 'success') => {
   toastMessage.value = message
+  toastSeverity.value = severity
   if (toastTimer) clearTimeout(toastTimer)
   toastTimer = setTimeout(() => {
     toastMessage.value = null
-  }, 2500)
+  }, severity === 'error' ? 4000 : 2500)
 }
 
 const handleRequestItem = (itemId: string, itemName: string) => {
