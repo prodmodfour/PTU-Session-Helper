@@ -80,6 +80,14 @@
       @decrease="decreaseElevation"
     />
 
+    <!-- Terrain Painter (GM Only, Isometric Mode) -->
+    <TerrainPainter
+      v-if="config.enabled && config.isometric && isGm"
+      ref="terrainPainterRef"
+      :is-isometric="true"
+      :max-elevation="config.maxElevation ?? 5"
+    />
+
     <!-- Grid Settings Panel -->
     <GridSettingsPanel
       v-if="showSettings && isGm"
@@ -164,6 +172,7 @@ import type { GridConfig, GridPosition, Combatant, MovementPreview } from '~/typ
 import { DEFAULT_SETTINGS } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
 import IsometricCanvas from '~/components/vtt/IsometricCanvas.vue'
+import TerrainPainter from '~/components/vtt/TerrainPainter.vue'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore, type MeasurementMode } from '~/stores/measurement'
 import { useFogOfWarStore, type FogOfWarState } from '~/stores/fogOfWar'
@@ -244,6 +253,7 @@ onUnmounted(() => {
 // Refs
 const gridCanvasRef = ref<InstanceType<typeof GridCanvas> | null>(null)
 const isometricCanvasRef = ref<InstanceType<typeof IsometricCanvas> | null>(null)
+const terrainPainterRef = ref<InstanceType<typeof TerrainPainter> | null>(null)
 
 // Active canvas ref (whichever mode is active)
 const activeCanvasRef = computed(() => {
@@ -485,6 +495,16 @@ const removeBackground = () => {
 watch(() => props.config, (newConfig) => {
   localConfig.value = { ...newConfig }
 }, { deep: true })
+
+// Sync TerrainPainter elevation level to IsometricCanvas brush elevation
+watch(
+  () => terrainPainterRef.value?.elevationLevel,
+  (newLevel) => {
+    if (newLevel !== undefined && isometricCanvasRef.value) {
+      isometricCanvasRef.value.setBrushElevation(newLevel)
+    }
+  }
+)
 
 // Expose methods
 defineExpose({
