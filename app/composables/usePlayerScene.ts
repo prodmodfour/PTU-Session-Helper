@@ -65,11 +65,13 @@ export function usePlayerScene() {
           id: string
           characterId: string
           name: string
+          isPlayerCharacter?: boolean
         }>
         pokemon: Array<{
           id: string
           species: string
           nickname?: string | null
+          ownerId?: string | null
         }>
         groups: Array<{
           id: string
@@ -77,7 +79,7 @@ export function usePlayerScene() {
         }>
       }
 
-      // REST response has full scene data — map to player view
+      // REST response includes enriched isPlayerCharacter and ownerId from DB
       activeScene.value = {
         id: scene.id,
         name: scene.name,
@@ -89,13 +91,13 @@ export function usePlayerScene() {
         characters: scene.characters.map(c => ({
           id: c.characterId ?? c.id,
           name: c.name,
-          isPlayerCharacter: true // Cannot determine from REST; assume visible characters are PCs
+          isPlayerCharacter: c.isPlayerCharacter ?? false
         })),
         pokemon: scene.pokemon.map(p => ({
           id: p.id,
           nickname: p.nickname ?? null,
           species: p.species,
-          ownerId: null // Not available from REST active endpoint
+          ownerId: p.ownerId ?? null
         })),
         groups: scene.groups.map(g => ({
           id: g.id,
