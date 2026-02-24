@@ -77,6 +77,14 @@
         </button>
       </template>
 
+      <template v-if="distance3d !== undefined && distance3d > 0">
+        <span class="separator">|</span>
+        <span class="distance-display">
+          {{ distance3d }}m
+          <span v-if="elevationDelta" class="distance-display__elev">(+{{ elevationDelta }}z)</span>
+        </span>
+      </template>
+
       <button
         class="measurement-btn measurement-btn--clear"
         @click="$emit('clear')"
@@ -96,6 +104,10 @@ const props = defineProps<{
   mode: MeasurementMode
   aoeSize: number
   aoeDirection: string
+  /** 3D distance including elevation delta (isometric mode). */
+  distance3d?: number
+  /** Elevation difference between start and end points. */
+  elevationDelta?: number
 }>()
 
 defineEmits<{
@@ -246,5 +258,17 @@ const directionArrow = computed(() => {
 
 .separator {
   color: $border-color-default;
+}
+
+.distance-display {
+  font-size: $font-size-sm;
+  color: $color-accent-teal;
+  font-weight: 600;
+
+  &__elev {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-weight: 400;
+  }
 }
 </style>

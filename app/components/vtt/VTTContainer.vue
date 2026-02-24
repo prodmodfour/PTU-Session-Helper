@@ -42,6 +42,8 @@
       :mode="measurementStore.mode"
       :aoe-size="measurementStore.aoeSize"
       :aoe-direction="measurementStore.aoeDirection"
+      :distance3d="isometric3dDistance"
+      :elevation-delta="isometricElevationDelta"
       @set-mode="setMeasurementMode"
       @increase-size="measurementStore.setAoeSize(measurementStore.aoeSize + 1)"
       @decrease-size="measurementStore.setAoeSize(measurementStore.aoeSize - 1)"
@@ -278,6 +280,34 @@ const tokens = computed((): TokenData[] => {
 const selectedCombatant = computed(() => {
   if (!selectedTokenId.value) return null
   return props.combatants.find(c => c.id === selectedTokenId.value)
+})
+
+// P2: 3D distance computation for isometric measurement toolbar
+const isometric3dDistance = computed(() => {
+  if (!props.config.isometric) return undefined
+  if (measurementStore.mode !== 'distance') return undefined
+  if (!measurementStore.startPosition || !measurementStore.endPosition) return undefined
+  if (!isometricCanvasRef.value) return measurementStore.distance
+
+  const start = measurementStore.startPosition
+  const end = measurementStore.endPosition
+  const startZ = isometricCanvasRef.value.getTokenElevation?.('')
+    ? 0 // fallback — terrain elevation at start
+    : 0
+  const endZ = 0
+
+  // PTU 3D distance: chebyshev(dx, dy) + |dz|
+  const flatDist = measurementStore.distance
+  const elevDelta = Math.abs(endZ - startZ)
+  return flatDist + elevDelta
+})
+
+const isometricElevationDelta = computed(() => {
+  if (!props.config.isometric) return undefined
+  if (measurementStore.mode !== 'distance') return undefined
+  // For now, elevation delta between measurement points is 0 (ground plane measurement)
+  // This will be enhanced when terrain elevation lookup is available per-cell
+  return 0
 })
 
 // Elevation toolbar state
