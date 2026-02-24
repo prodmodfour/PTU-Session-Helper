@@ -18,7 +18,7 @@ Replace the current 2D flat Canvas grid with a 3D isometric grid supporting Z-ax
 
 - **P0: Rendering Engine + Basic Grid** (implemented)
 - **P1: Token Interaction + Movement** (implemented, fix cycle complete)
-- **P2: Feature Parity (Fog, Terrain, Measurement)** (pending)
+- **P2: Feature Parity (Fog, Terrain, Measurement)** (implemented)
 
 ## P0 Acceptance Criteria
 
@@ -38,6 +38,7 @@ Replace the current 2D flat Canvas grid with a 3D isometric grid supporting Z-ax
 | 2026-02-23 | P0 code-review-140 fixes | 8 commits on slave/2-dev-feature-002-fix-20260223-095000 |
 | 2026-02-23 | P1 implemented | 10 commits on slave/2-dev-feature-002-p1 |
 | 2026-02-23 | P1 code-review-148 fixes | 8 commits on slave/2-dev-feature-002-p1-fix-20260223-141341 |
+| 2026-02-24 | P2 implemented | 8 commits on slave/3-dev-feature-002-p2-20260224-171710 |
 
 ### P1 Fix Cycle (code-review-148)
 
@@ -89,6 +90,35 @@ Replace the current 2D flat Canvas grid with a 3D isometric grid supporting Z-ax
 - `app/composables/useIsometricProjection.ts` (H4: fixed bounding box corners)
 - `app/composables/useIsometricCamera.ts` (M1: removed animation infrastructure)
 - `app/composables/useIsometricRendering.ts` (M1: removed rotationProgress option; M2: cached sorted cells; M3: single path fill+stroke)
+
+### P2 Commits
+
+| Commit | Description |
+|--------|-------------|
+| 382e681 | feat: add isometric overlay rendering for fog, terrain, and measurement |
+| 6bd433b | feat: add R key for measurement direction cycling in isometric mode |
+| 364db48 | feat: add isometric rendering to GroupGridCanvas with camera sync |
+| 29c7ac2 | feat: show full elevation and measurement info in isometric coordinate display |
+| 297e433 | feat: add 3D distance display to MeasurementToolbar in isometric mode |
+| 25886fc | feat: add camera angle selector to isometric grid settings |
+| 30f0325 | feat: add elevation brush option to TerrainPainter for isometric mode |
+| 8392597 | feat: add terrain elevation rendering with 3D side faces |
+
+### P2 Files Changed
+
+**New files (1):**
+- `app/composables/useIsometricOverlays.ts` (478 lines) — fog, terrain, measurement rendering as isometric diamond overlays
+
+**Modified files (8):**
+- `app/composables/useIsometricRendering.ts` — delegated P2 overlays to useIsometricOverlays, added overlay options interface
+- `app/composables/useIsometricInteraction.ts` — added R key for measurement direction cycling
+- `app/components/vtt/IsometricCanvas.vue` — wired fog/terrain/measurement stores, added state change watchers
+- `app/components/vtt/GroupGridCanvas.vue` — added IsometricCanvas for isometric group view with camera sync
+- `app/components/vtt/CoordinateDisplay.vue` — added isIsometric prop for full elevation display
+- `app/components/vtt/MeasurementToolbar.vue` — added 3D distance and elevation delta display
+- `app/components/vtt/GridSettingsPanel.vue` — added camera angle selector dropdown
+- `app/components/vtt/TerrainPainter.vue` — added elevation brush option for isometric mode
+- `app/components/vtt/VTTContainer.vue` — wired 3D distance props to MeasurementToolbar
 
 ### P0 Commits
 
