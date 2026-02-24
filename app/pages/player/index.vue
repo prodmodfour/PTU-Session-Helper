@@ -103,7 +103,7 @@ const playerStore = usePlayerIdentityStore()
 const encounterStore = useEncounterStore()
 
 // Single WebSocket connection via usePlayerWebSocket (scene sync, action tracking, identity)
-const { isConnected, identify, joinEncounter, onMessage, send, activeScene: playerActiveScene } = usePlayerWebSocket()
+const { isConnected, identify, joinEncounter, send, activeScene: playerActiveScene } = usePlayerWebSocket()
 
 // Provide the shared send function for child composables (usePlayerCombat)
 provide(PLAYER_WS_SEND_KEY, send)
