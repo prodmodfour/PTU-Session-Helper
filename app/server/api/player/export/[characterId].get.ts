@@ -1,5 +1,11 @@
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { prisma } from '~/server/utils/prisma'
 import { serializeCharacter, serializePokemon } from '~/server/utils/serializers'
+
+// Read version from package.json once at startup
+const packageJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf-8'))
+const APP_VERSION: string = packageJson.version || '0.0.0'
 
 /**
  * GET /api/player/export/:characterId
@@ -39,7 +45,7 @@ export default defineEventHandler(async (event) => {
       data: {
         exportVersion: 1,
         exportedAt: new Date().toISOString(),
-        appVersion: '1.0.0',
+        appVersion: APP_VERSION,
         character: {
           ...serializedCharacter,
           pokemon: undefined
