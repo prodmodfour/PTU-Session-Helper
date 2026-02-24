@@ -227,6 +227,13 @@ export function useIsometricOverlays(options: IsometricOverlayOptions) {
   /**
    * Draw side faces for elevated terrain (gives visual depth to raised ground).
    * Draws the visible side faces of the isometric "box" between ground and elevated level.
+   *
+   * Camera angle correctness: These two faces (right->bottom and left->bottom) are
+   * always the camera-facing faces regardless of rotation angle. This works because
+   * getTileDiamondPoints calls worldToScreen which applies rotateCoords internally.
+   * The diamond's "bottom" point always has the highest depth (closest to viewer),
+   * so the right->bottom and left->bottom edges are always the two visible sides.
+   * No camera-angle-aware face selection is needed.
    */
   const drawTerrainSideFaces = (
     ctx: CanvasRenderingContext2D,
