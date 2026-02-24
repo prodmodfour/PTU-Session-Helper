@@ -6,7 +6,7 @@
       class="player-nav-bar__tab"
       :class="{
         'player-nav-bar__tab--active': activeTab === tab.id,
-        'player-nav-bar__tab--badge': tab.id === 'encounter' && hasActiveEncounter
+        'player-nav-bar__tab--badge': (tab.id === 'encounter' && hasActiveEncounter) || (tab.id === 'scene' && hasActiveScene)
       }"
       :aria-label="tab.label"
       :aria-current="activeTab === tab.id ? 'page' : undefined"
@@ -19,12 +19,13 @@
 </template>
 
 <script setup lang="ts">
-import { PhUser, PhPawPrint, PhSword } from '@phosphor-icons/vue'
+import { PhUser, PhPawPrint, PhSword, PhMapPin } from '@phosphor-icons/vue'
 import type { PlayerTab } from '~/types/player'
 
 defineProps<{
   activeTab: PlayerTab
   hasActiveEncounter?: boolean
+  hasActiveScene?: boolean
 }>()
 
 defineEmits<{
@@ -34,7 +35,8 @@ defineEmits<{
 const tabs = [
   { id: 'character' as PlayerTab, label: 'Character', icon: PhUser },
   { id: 'team' as PlayerTab, label: 'Team', icon: PhPawPrint },
-  { id: 'encounter' as PlayerTab, label: 'Encounter', icon: PhSword }
+  { id: 'encounter' as PlayerTab, label: 'Encounter', icon: PhSword },
+  { id: 'scene' as PlayerTab, label: 'Scene', icon: PhMapPin }
 ]
 </script>
 

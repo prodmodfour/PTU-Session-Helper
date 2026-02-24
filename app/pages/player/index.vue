@@ -57,12 +57,17 @@
           :my-character-id="character.id"
           :my-pokemon-ids="pokemonIds"
         />
+        <PlayerSceneView
+          v-else-if="activeTab === 'scene'"
+          :scene="playerActiveScene"
+        />
       </main>
 
       <!-- Bottom Navigation -->
       <PlayerNavBar
         :active-tab="activeTab"
         :has-active-encounter="hasActiveEncounter"
+        :has-active-scene="hasActiveScene"
         @change="activeTab = $event"
       />
     </template>
@@ -98,6 +103,9 @@ const playerStore = usePlayerIdentityStore()
 const encounterStore = useEncounterStore()
 const { isConnected, identify, joinEncounter, onMessage } = useWebSocket()
 
+// Player WebSocket orchestration (scene sync, action tracking)
+const { activeScene: playerActiveScene } = usePlayerWebSocket()
+
 // Active tab
 const activeTab = ref<PlayerTab>('character')
 
@@ -112,6 +120,9 @@ const pokemonIds = computed(() => playerStore.pokemonIds)
 
 // Active encounter detection
 const hasActiveEncounter = computed(() => encounterStore.encounter?.isActive ?? false)
+
+// Active scene detection (from WebSocket-pushed scene data)
+const hasActiveScene = computed(() => playerActiveScene.value !== null)
 
 // Poll for active encounters with backoff on failure
 const POLL_BASE_INTERVAL = 3000
