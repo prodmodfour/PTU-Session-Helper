@@ -76,6 +76,38 @@ export function notifyMoveExecuted(encounterId: string, moveData: unknown) {
   })
 }
 
+// Player-related broadcasts
+
+// Broadcast to all player-role clients in a specific encounter
+export function broadcastToPlayers(encounterId: string, event: WebSocketEvent) {
+  const message = JSON.stringify(event)
+  for (const [peer, info] of peers) {
+    if (info.role === 'player' && info.encounterId === encounterId) {
+      safeSend(peer, message)
+    }
+  }
+}
+
+// Send to a specific player by characterId
+export function sendToPlayer(characterId: string, event: WebSocketEvent) {
+  const message = JSON.stringify(event)
+  for (const [peer, info] of peers) {
+    if (info.role === 'player' && info.characterId === characterId) {
+      safeSend(peer, message)
+    }
+  }
+}
+
+// Broadcast to both group and player clients (e.g. scene events)
+export function broadcastToGroupAndPlayers(eventType: string, data: unknown) {
+  const message = JSON.stringify({ type: eventType, data })
+  for (const [peer, info] of peers) {
+    if (info.role === 'group' || info.role === 'player') {
+      safeSend(peer, message)
+    }
+  }
+}
+
 // Scene-related broadcasts
 export function notifySceneUpdate(sceneId: string, scene: unknown) {
   broadcastToGroup('scene_update', { sceneId, scene })
