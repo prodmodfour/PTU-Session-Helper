@@ -20,6 +20,8 @@ interface UseIsometricInteractionOptions {
   panOffset: Ref<{ x: number; y: number }>
   cameraAngle: Ref<CameraAngle>
   isGm: Ref<boolean>
+  // Terrain painting elevation (from elevation brush UI)
+  terrainPaintElevation?: Ref<number>
   // Callbacks
   render: () => void
   isValidMove: (
@@ -333,7 +335,7 @@ export function useIsometricInteraction(options: UseIsometricInteractionOptions)
         if (isInBounds(gridPos)) {
           isTerrainPainting.value = true
           lastTerrainCell.value = gridPos
-          terrainStore.applyTool(gridPos.x, gridPos.y)
+          terrainStore.applyTool(gridPos.x, gridPos.y, options.terrainPaintElevation?.value ?? 0)
           options.render()
           return
         }

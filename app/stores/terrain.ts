@@ -148,14 +148,14 @@ export const useTerrainStore = defineStore('terrain', {
     },
 
     // Apply paint tool at position (uses current paintMode and brushSize)
-    applyTool(x: number, y: number) {
+    applyTool(x: number, y: number, elevation: number = 0) {
       const radius = this.brushSize - 1
 
       for (let dx = -radius; dx <= radius; dx++) {
         for (let dy = -radius; dy <= radius; dy++) {
           // Use Chebyshev distance for brush shape
           if (Math.max(Math.abs(dx), Math.abs(dy)) <= radius) {
-            this.setTerrain(x + dx, y + dy, this.paintMode)
+            this.setTerrain(x + dx, y + dy, this.paintMode, elevation)
           }
         }
       }

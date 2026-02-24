@@ -203,6 +203,7 @@ const interaction = useIsometricInteraction({
   panOffset: camera.panOffset,
   cameraAngle: camera.cameraAngle,
   isGm: isGmRef,
+  terrainPaintElevation: elevation.brushElevation,
   render: () => rendering.scheduleRender(),
   isValidMove: movement.isValidMove,
   getSpeed: movement.getSpeed,
