@@ -9,7 +9,7 @@ import { ALL_STATUS_CONDITIONS, PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } fro
 import { getEffectiveMaxHp } from '~/utils/restHealing'
 import { v4 as uuidv4 } from 'uuid'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
-import { applyStageModifier } from '~/utils/damageCalculation'
+import { applyStageModifier, calculateEvasion } from '~/utils/damageCalculation'
 import type {
   StatusCondition, StageModifiers, Combatant,
   Pokemon, HumanCharacter, CombatSide, GridPosition
@@ -619,9 +619,9 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
       isHolding: false
     },
     injuries: { count: 0, sources: [] },
-    physicalEvasion: initialEvasion((stats.defense || 0) + (equipmentStatBonuses.defense ?? 0)) + equipmentEvasionBonus,
-    specialEvasion: initialEvasion((stats.specialDefense || 0) + (equipmentStatBonuses.specialDefense ?? 0)) + equipmentEvasionBonus,
-    speedEvasion: initialEvasion((stats.speed || 0) + focusSpeedBonus) + equipmentEvasionBonus,
+    physicalEvasion: calculateEvasion(stats.defense || 0, 0, equipmentEvasionBonus, equipmentStatBonuses.defense ?? 0),
+    specialEvasion: calculateEvasion(stats.specialDefense || 0, 0, equipmentEvasionBonus, equipmentStatBonuses.specialDefense ?? 0),
+    speedEvasion: calculateEvasion(stats.speed || 0, 0, equipmentEvasionBonus, focusSpeedBonus),
     position,
     tokenSize,
     entity: combatantEntity
