@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
+import { validateSignificanceTier } from '~/server/utils/significance-validation'
 import type { Combatant } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -12,6 +13,9 @@ export default defineEventHandler(async (event) => {
       message: 'Encounter ID is required'
     })
   }
+
+  // Validate significance tier if provided
+  validateSignificanceTier(body.significanceTier)
 
   try {
     // Update the encounter with the full state

@@ -9,6 +9,7 @@ import { generateAndCreatePokemon, buildPokemonCombatant } from '~/server/servic
 import { sizeToTokenSize, buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
 import { buildHumanEntityFromRecord, buildCombatantFromEntity } from '~/server/services/combatant.service'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
+import { validateSignificanceTier } from '~/server/utils/significance-validation'
 import type { Combatant } from '~/types'
 
 interface ScenePokemonEntry {
@@ -33,6 +34,9 @@ export default defineEventHandler(async (event) => {
   if (!sceneId) {
     throw createError({ statusCode: 400, message: 'sceneId is required' })
   }
+
+  // Validate significance tier if provided
+  validateSignificanceTier(significanceTier)
 
   try {
     // Fetch the scene

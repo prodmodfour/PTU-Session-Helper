@@ -1,9 +1,13 @@
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
+import { validateSignificanceTier } from '~/server/utils/significance-validation'
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
+
+    // Validate significance tier if provided
+    validateSignificanceTier(body.significanceTier)
 
     const encounter = await prisma.encounter.create({
       data: {

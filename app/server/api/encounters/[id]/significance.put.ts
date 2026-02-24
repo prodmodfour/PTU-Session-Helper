@@ -6,6 +6,7 @@
  * the narrative significance of the encounter.
  */
 import { prisma } from '~/server/utils/prisma'
+import { validateSignificanceTier } from '~/server/utils/significance-validation'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -29,6 +30,9 @@ export default defineEventHandler(async (event) => {
       message: 'significanceMultiplier must be a number between 0.5 and 10'
     })
   }
+
+  // Validate significance tier if provided
+  validateSignificanceTier(body.significanceTier)
 
   try {
     const encounter = await prisma.encounter.findUnique({
