@@ -223,3 +223,30 @@ Functional scaffolding exists at `/player` — encounter display with combatant 
 - 45-second keepalive prevents Cloudflare Tunnel 100-second idle timeout
 - REST fallback endpoint for action requests during WS disconnection
 - `pendingRequests` map entries auto-expire after 60 seconds
+
+### Track C: Integration (P0 Fix Cycle — code-review-153)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-24 | 44fe569 | C1: Eliminate multiple WebSocket connections per player client — usePlayerWebSocket is single WS owner, provide/inject for usePlayerCombat |
+| 2026-02-24 | eb34b2a | H1: Extract pendingRequests to shared server utility — REST fallback now registers for ack routing |
+| 2026-02-24 | ad3f8e9 | H2+M1: Handle granular scene events in player WS handler — fetchActiveScene on 10 event types |
+| 2026-02-24 | 6c3a6e6 | H3: Consolidate identification logic into usePlayerWebSocket — remove 3 duplicate identify calls |
+| 2026-02-24 | a2bc642 | M1: Enrich /api/scenes/active with isPlayerCharacter and ownerId from DB |
+| 2026-02-24 | 2c05e01 | M2: Implement handleCharacterUpdate in usePlayerWebSocket, remove duplicate listener |
+| 2026-02-24 | 071174d | M3: Update app-surface.md with Track C files and WebSocket event types |
+
+**Files created (1):**
+- `app/server/utils/pendingRequests.ts`
+
+**Files modified (7):**
+- `app/composables/usePlayerWebSocket.ts` (C1: expose WS utilities; H2: granular scene handlers; M1: fetchActiveScene for scene_activated; M2: implement handleCharacterUpdate)
+- `app/composables/usePlayerCombat.ts` (C1: inject send via provide/inject instead of direct useWebSocket)
+- `app/composables/usePlayerScene.ts` (M1: consume enriched isPlayerCharacter/ownerId from REST)
+- `app/pages/player/index.vue` (C1: use single WS from usePlayerWebSocket; H3: remove duplicate identify; M2: remove duplicate character_update listener)
+- `app/server/routes/ws.ts` (H1: use shared pendingRequests utility)
+- `app/server/api/player/action-request.post.ts` (H1: register in pendingRequests)
+- `app/server/api/scenes/active.get.ts` (M1: enrich with isPlayerCharacter and ownerId)
+- `.claude/skills/references/app-surface.md` (M3: new files and events)
+
+**All 7 issues from code-review-153 resolved:** 1 CRITICAL, 3 HIGH, 3 MEDIUM.
