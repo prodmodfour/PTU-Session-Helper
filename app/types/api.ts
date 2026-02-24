@@ -6,6 +6,19 @@ import type { Pokemon, HumanCharacter } from './character';
 import type { Encounter, Combatant, MoveLogEntry, MovementPreview } from './encounter';
 import type { Scene, ScenePosition, SceneCharacter, ScenePokemon, SceneGroup } from './scene';
 import type { ServedMap } from '~/stores/groupView';
+import type {
+  PlayerActionRequest as PlayerActionRequestSync,
+  PlayerActionAck,
+  PlayerTurnNotification,
+  PlayerMoveRequest,
+  PlayerMoveResponse,
+  GroupViewRequest,
+  GroupViewResponse,
+  SceneSyncPayload
+} from './player-sync';
+
+// Re-export PlayerActionRequest so existing imports from '~/types/api' still work
+export type PlayerActionRequest = PlayerActionRequestSync;
 
 // API response wrapper
 export interface ApiResponse<T> {
@@ -59,19 +72,18 @@ export type WebSocketEvent =
   // Map & spawn events
   | { type: 'serve_map'; data: ServedMap }
   | { type: 'clear_map'; data: null }
-  | { type: 'clear_wild_spawn'; data: null };
-
-// Player action requests (player -> GM via server)
-export interface PlayerActionRequest {
-  playerId: string;
-  playerName: string;
-  action: 'use_move' | 'shift' | 'struggle' | 'pass' | 'use_item' | 'switch_pokemon' | 'maneuver';
-  moveId?: string;
-  moveName?: string;
-  targetIds?: string[];
-  itemId?: string;
-  itemName?: string;
-  pokemonId?: string;
-  maneuverId?: string;
-  maneuverName?: string;
-}
+  | { type: 'clear_wild_spawn'; data: null }
+  // Keepalive (prevents Cloudflare Tunnel 100s idle timeout)
+  | { type: 'keepalive'; data: { timestamp: number } }
+  | { type: 'keepalive_ack'; data: { timestamp: number } }
+  // Player action protocol (Track C)
+  | { type: 'player_action_ack'; data: PlayerActionAck }
+  | { type: 'player_turn_notify'; data: PlayerTurnNotification }
+  | { type: 'player_move_request'; data: PlayerMoveRequest }
+  | { type: 'player_move_response'; data: PlayerMoveResponse }
+  // Group view control (Track C)
+  | { type: 'group_view_request'; data: GroupViewRequest }
+  | { type: 'group_view_response'; data: GroupViewResponse }
+  // Scene sync (Track C)
+  | { type: 'scene_sync'; data: SceneSyncPayload }
+  | { type: 'scene_request'; data: { sceneId?: string } };
