@@ -2,7 +2,7 @@
 ticket_id: refactoring-067
 category: CODE-HYGIENE
 priority: P4
-status: open
+status: resolved
 domain: combat
 source: rules-review-115 M1
 created_by: slave-collector (plan-20260221-071325)
@@ -28,3 +28,9 @@ Either:
 ## Impact
 
 - **Low risk:** No current callers. Potential future confusion if someone reaches for this function instead of using the server-computed initiative.
+
+## Resolution Log
+
+- **Commit:** cb55d65
+- **Files changed:** `app/composables/useCombat.ts`
+- **Fix:** Removed the dead `calculateInitiative()` function (definition + export). Confirmed zero callers in the codebase -- actual initiative is computed in `buildCombatantFromEntity()` on the server side which correctly handles Focus Speed bonus and Heavy Armor default CS.
