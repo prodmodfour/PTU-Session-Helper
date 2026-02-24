@@ -192,11 +192,7 @@ const handleSelectCharacter = async (characterId: string, characterName: string)
 
   try {
     await selectCharacter(characterId, characterName)
-
-    // Identify as player via WebSocket
-    if (isConnected.value) {
-      identify('player', encounterStore.encounter?.id, characterId)
-    }
+    // usePlayerWebSocket watches characterId and auto-identifies on change
 
     // Start polling for encounters
     await checkForActiveEncounter()
@@ -232,27 +228,13 @@ onMounted(async () => {
   })
 
   const restored = await restoreIdentity()
+  // usePlayerWebSocket watches characterId + isConnected and auto-identifies
 
   if (restored && playerStore.characterId) {
-    // Re-identify on WebSocket connection
-    if (isConnected.value) {
-      identify('player', undefined, playerStore.characterId)
-    }
-
     // Check for active encounters
     await checkForActiveEncounter()
     if (!encounterStore.encounter?.isActive) {
       pollInterval = setInterval(checkForActiveEncounter, POLL_BASE_INTERVAL)
-    }
-  }
-})
-
-// Watch for WebSocket reconnection
-watch(isConnected, (connected) => {
-  if (connected && playerStore.characterId) {
-    identify('player', encounterStore.encounter?.id, playerStore.characterId)
-    if (encounterStore.encounter?.id) {
-      joinEncounter(encounterStore.encounter.id)
     }
   }
 })
