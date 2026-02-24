@@ -620,6 +620,13 @@ export function useIsometricInteraction(options: UseIsometricInteractionOptions)
       options.render()
       return
     }
+
+    // R - Cycle measurement direction (for cone, line, close blast)
+    if (event.key === 'r' || event.key === 'R') {
+      measurementStore.cycleDirection()
+      options.render()
+      return
+    }
   }
 
   return {
