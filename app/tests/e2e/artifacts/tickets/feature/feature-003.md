@@ -146,6 +146,39 @@ Functional scaffolding exists at `/player` — encounter display with combatant 
 
 **All 8 issues from code-review-139 resolved:** 1 CRITICAL, 3 HIGH, 4 MEDIUM.
 
+### Track A: Core Player View (P1 Implementation)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-23 | (P1 Track A) | Composable: `usePlayerCombat.ts` — turn detection, action execution, move availability, league battle phases |
+| 2026-02-23 | (P1 Track A) | Component: `PlayerCombatActions.vue` — full combat action panel with moves, shift, struggle, pass, item/switch/maneuver requests, target selection |
+
+### Track A: Core Player View (P1 Fix Cycle — code-review-147)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-24 | af5ee4f | C1+MEDIUM-001: Add canBeCommanded check for league battles, fix Struggle comment |
+| 2026-02-24 | 867e189 | H1: Extract PlayerCombatActions SCSS to `_player-combat-actions.scss` (1028→469 lines) |
+| 2026-02-24 | 58673d8 | M2: Replace alert() with severity-aware toast notifications |
+| 2026-02-24 | 7a512e7 | M1: Use usePlayerCombat composable for isMyTurn in PlayerEncounterView |
+| 2026-02-24 | f8931ab | M3: Delete dead PlayerActionPanel.vue |
+| 2026-02-24 | b7b81c5 | H2: Add player view components and composables to app-surface.md |
+
+**Files created (1):**
+- `app/assets/scss/components/_player-combat-actions.scss`
+
+**Files modified (5):**
+- `app/composables/usePlayerCombat.ts` (C1: canBeCommanded, MEDIUM-001: Struggle comment)
+- `app/components/player/PlayerCombatActions.vue` (C1: disable moves/struggle, H1: SCSS extraction, M2: toast)
+- `app/components/player/PlayerEncounterView.vue` (M1: use composable isMyTurn)
+- `app/nuxt.config.ts` (H1: register _player-combat-actions.scss)
+- `.claude/skills/references/app-surface.md` (H2: player view entries)
+
+**Files deleted (1):**
+- `app/components/encounter/PlayerActionPanel.vue` (M3: dead code)
+
+**All 7 issues from code-review-147 + rules-review-137 resolved:** 1 CRITICAL, 2 HIGH, 3 MEDIUM, 1 rules MEDIUM.
+
 ### Track B: Infrastructure / Remote Access (Design Phase)
 
 | Date | Commit | Description |
