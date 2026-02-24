@@ -4,7 +4,8 @@ import {
   safeSend,
   broadcast,
   broadcastToEncounter,
-  broadcastToGroup
+  broadcastToGroup,
+  broadcastToGroupAndPlayers
 } from '~/server/utils/websocket'
 
 interface WebSocketEvent {
@@ -12,7 +13,82 @@ interface WebSocketEvent {
   data: unknown
 }
 
-// Send full encounter state
+// =============================================
+// Pending Requests Map (requestId -> characterId)
+// Routes GM responses back to the originating player.
+// TTL of 60s prevents unbounded growth.
+// =============================================
+
+const PENDING_REQUEST_TTL_MS = 60_000
+
+interface PendingEntry {
+  characterId: string
+  createdAt: number
+}
+
+const pendingRequests = new Map<string, PendingEntry>()
+
+function cleanupPendingRequests() {
+  const now = Date.now()
+  for (const [requestId, entry] of pendingRequests) {
+    if (now - entry.createdAt > PENDING_REQUEST_TTL_MS) {
+      pendingRequests.delete(requestId)
+    }
+  }
+}
+
+// Run cleanup every 30 seconds
+const cleanupInterval = setInterval(cleanupPendingRequests, 30_000)
+
+// Ensure cleanup stops if the process shuts down
+if (typeof process !== 'undefined' && process.on) {
+  process.on('beforeExit', () => clearInterval(cleanupInterval))
+}
+
+// =============================================
+// Helper: Forward event to GM(s) in an encounter
+// Registers requestId -> characterId for response routing.
+// =============================================
+
+function forwardToGm(encounterId: string | null, event: WebSocketEvent, excludePeer: Parameters<typeof safeSend>[0]) {
+  const data = event.data as { requestId?: string; playerId?: string }
+  if (data.requestId && data.playerId) {
+    pendingRequests.set(data.requestId, {
+      characterId: data.playerId,
+      createdAt: Date.now()
+    })
+  }
+
+  const message = JSON.stringify(event)
+  for (const [otherPeer, otherInfo] of peers) {
+    if (otherPeer === excludePeer || otherInfo.role !== 'gm') continue
+    if (encounterId && otherInfo.encounterId !== encounterId) continue
+    safeSend(otherPeer, message)
+  }
+}
+
+// =============================================
+// Helper: Route response to a player by requestId
+// Looks up pendingRequests, sends to matching player, deletes entry.
+// =============================================
+
+function routeToPlayer(requestId: string, event: WebSocketEvent) {
+  const entry = pendingRequests.get(requestId)
+  if (!entry) return
+
+  const message = JSON.stringify(event)
+  for (const [otherPeer, otherInfo] of peers) {
+    if (otherInfo.role === 'player' && otherInfo.characterId === entry.characterId) {
+      safeSend(otherPeer, message)
+    }
+  }
+  pendingRequests.delete(requestId)
+}
+
+// =============================================
+// Helper: Send full encounter state
+// =============================================
+
 async function sendEncounterState(peer: Parameters<typeof safeSend>[0], encounterId: string) {
   try {
     const encounter = await prisma.encounter.findUnique({
@@ -48,7 +124,10 @@ async function sendEncounterState(peer: Parameters<typeof safeSend>[0], encounte
   }
 }
 
-// Send current tab state to a peer
+// =============================================
+// Helper: Send current tab state to a peer
+// =============================================
+
 async function sendTabState(peer: Parameters<typeof safeSend>[0]) {
   try {
     const state = await prisma.groupViewState.findUnique({
@@ -68,6 +147,89 @@ async function sendTabState(peer: Parameters<typeof safeSend>[0]) {
     // Failed to send tab state
   }
 }
+
+// =============================================
+// Helper: Send active scene to a player peer
+// Queries DB for the active scene, sends scene_sync message.
+// =============================================
+
+async function sendActiveScene(peer: Parameters<typeof safeSend>[0]) {
+  try {
+    const scene = await prisma.scene.findFirst({
+      where: { isActive: true }
+    })
+
+    if (!scene) return
+
+    const characters = JSON.parse(scene.characters) as Array<{
+      id: string; characterId: string; name: string; groupId?: string | null
+    }>
+    const pokemon = JSON.parse(scene.pokemon) as Array<{
+      id: string; species: string; nickname?: string | null; groupId?: string | null
+    }>
+    const groups = JSON.parse(scene.groups) as Array<{
+      id: string; name: string
+    }>
+
+    // Look up which characters are player characters vs NPCs
+    const characterIds = characters.map(c => c.characterId)
+    const dbCharacters = characterIds.length > 0
+      ? await prisma.humanCharacter.findMany({
+          where: { id: { in: characterIds } },
+          select: { id: true, isPlayerCharacter: true }
+        })
+      : []
+    const pcSet = new Set(dbCharacters.filter(c => c.isPlayerCharacter).map(c => c.id))
+
+    // Look up pokemon owners
+    const pokemonIds = pokemon.map(p => p.id)
+    const dbPokemon = pokemonIds.length > 0
+      ? await prisma.pokemon.findMany({
+          where: { id: { in: pokemonIds } },
+          select: { id: true, ownerId: true }
+        })
+      : []
+    const ownerMap = new Map(dbPokemon.map(p => [p.id, p.ownerId]))
+
+    const payload = {
+      scene: {
+        id: scene.id,
+        name: scene.name,
+        description: scene.description,
+        locationName: scene.locationName,
+        locationImage: scene.locationImage,
+        weather: scene.weather,
+        isActive: scene.isActive,
+        characters: characters.map(c => ({
+          id: c.characterId,
+          name: c.name,
+          isPlayerCharacter: pcSet.has(c.characterId)
+        })),
+        pokemon: pokemon.map(p => ({
+          id: p.id,
+          nickname: p.nickname ?? null,
+          species: p.species,
+          ownerId: ownerMap.get(p.id) ?? null
+        })),
+        groups: groups.map(g => ({
+          id: g.id,
+          name: g.name
+        }))
+      }
+    }
+
+    safeSend(peer, JSON.stringify({
+      type: 'scene_sync',
+      data: payload
+    }))
+  } catch {
+    // Failed to send active scene - peer may have disconnected
+  }
+}
+
+// =============================================
+// WebSocket Handler
+// =============================================
 
 export default defineWebSocketHandler({
   open(peer) {
@@ -101,7 +263,20 @@ export default defineWebSocketHandler({
             if (clientInfo.role === 'group') {
               sendTabState(peer)
             }
+
+            // If player client, send active scene
+            if (clientInfo.role === 'player') {
+              sendActiveScene(peer)
+            }
           }
+          break
+
+        case 'keepalive':
+          // Respond with keepalive_ack to prevent tunnel idle timeout
+          safeSend(peer, JSON.stringify({
+            type: 'keepalive_ack',
+            data: { timestamp: Date.now() }
+          }))
           break
 
         case 'join_encounter':
@@ -132,6 +307,13 @@ export default defineWebSocketHandler({
           // Client requesting tab state
           if (clientInfo?.role === 'group') {
             sendTabState(peer)
+          }
+          break
+
+        case 'scene_request':
+          // Player requesting current active scene
+          if (clientInfo?.role === 'player') {
+            sendActiveScene(peer)
           }
           break
 
@@ -194,16 +376,16 @@ export default defineWebSocketHandler({
         case 'player_action':
           // Player or group submitting an action (for GM to see)
           if ((clientInfo?.role === 'player' || clientInfo?.role === 'group') && clientInfo.encounterId) {
-            // Forward to GM(s) in the same encounter
-            const actionEncounterId = clientInfo.encounterId
-            for (const [otherPeer, otherInfo] of peers) {
-              if (
-                otherPeer !== peer &&
-                otherInfo.role === 'gm' &&
-                otherInfo.encounterId === actionEncounterId
-              ) {
-                safeSend(otherPeer, JSON.stringify(event))
-              }
+            forwardToGm(clientInfo.encounterId, event, peer)
+          }
+          break
+
+        case 'player_action_ack':
+          // GM acknowledging a player action — route to originating player
+          if (clientInfo?.role === 'gm') {
+            const data = event.data as { requestId?: string }
+            if (data.requestId) {
+              routeToPlayer(data.requestId, event)
             }
           }
           break
@@ -261,9 +443,9 @@ export default defineWebSocketHandler({
           break
 
         case 'scene_update':
-          // Scene data changed, broadcast to group views
+          // Scene data changed, broadcast to group and player views
           if (clientInfo?.role === 'gm') {
-            broadcastToGroup(event.type, event.data)
+            broadcastToGroupAndPlayers(event.type, event.data)
           }
           break
       }
