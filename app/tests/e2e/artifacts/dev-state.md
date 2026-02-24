@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-24T18:00:00
-updated_by: slave-collector (plan-20260224-171710)
+last_updated: 2026-02-24T19:00:00
+updated_by: slave-collector (plan-20260224-171113)
 ---
 
 # Dev Ecosystem State
@@ -27,13 +27,14 @@ updated_by: slave-collector (plan-20260224-171710)
 | ptu-rule-080 | P3 | **resolved** | Higher-level char creation validation — fix applied, code-review-137 APPROVED (M1/M2 → refactoring-070, 071), rules-review-127 APPROVED |
 | ptu-rule-081 | P4 | **open** | Multiple Focus items not explicitly prevented (from rules-review-115 M2) |
 | ptu-rule-082 | P4 | **open** | Pokemon maxHp not auto-updated on level-up (from rules-review-118) |
+| ptu-rule-083 | P4 | **open** | Measurement store uses Chebyshev distance instead of PTU alternating diagonal (from rules-review-144 RULING-1) |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
-| feature-002 | P2 | **P2-implemented** | 3D isometric grid — P2 implemented (fog, terrain, measurement, background, group view). Needs review | multi-phase |
-| feature-003 | P1 | **P1-Track-B/C-implemented** | Player View — Track B P0 (export/import + server address) + Track C P0 (WS protocol + scene view) implemented. Needs review | multi-phase-parallel |
+| feature-002 | P2 | **P2-CHANGES_REQUIRED** | 3D isometric grid — P2 reviewed: code-review-154 CHANGES_REQUIRED (C1: broken 3D distance, H1-H3: elevation brush/side faces), rules-review-144 APPROVED | multi-phase |
+| feature-003 | P1 | **Track-B/C-CHANGES_REQUIRED** | Player View — Track B P0: code-review-152 CHANGES_REQUIRED (C1: .passthrough(), H1-H3), rules-review-142 APPROVED. Track C P0: code-review-153 CHANGES_REQUIRED (C1: multiple WS connections, H1-H3), rules-review-143 APPROVED | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -43,19 +44,32 @@ updated_by: slave-collector (plan-20260224-171710)
 
 ## Active Developer Work
 
-**Current task:** Slave collection for plan-20260224-171710 completed — 3 slaves merged (28 commits total).
+**Current task:** Slave collection for plan-20260224-171113 completed — 5 slaves merged (16 commits total).
 
-**Session 26 (2026-02-24):**
-- feature-003 Track B P0 implemented — JSON export/import endpoints + composable + UI buttons + GM server address display (7 commits)
-- feature-003 Track C P0 implemented — WS protocol expansion (keepalive, player identify with characterId, scene sync, pendingRequests routing), scene view composable+component, REST fallback endpoint (12 commits)
-- feature-002 P2 implemented — isometric fog of war, terrain painting, all 5 measurement modes, background map, group view rendering, grid settings (9 commits)
+**Session 27 (2026-02-24):**
+- refactoring-065, 066, 067 resolved (combat evasion cluster) — 4 commits by slave-4
+- refactoring-072, 073, 074 resolved (significance type safety cluster) — 6 commits by slave-5
+- feature-003 Track B P0 reviewed — code-review-152 CHANGES_REQUIRED, rules-review-142 APPROVED
+- feature-003 Track C P0 reviewed — code-review-153 CHANGES_REQUIRED, rules-review-143 APPROVED
+- feature-002 P2 reviewed — code-review-154 CHANGES_REQUIRED, rules-review-144 APPROVED
 
 **Next actions (by priority):**
-1. **Review** feature-003 Track B P0 + Track C P0 (code review + rules review)
-2. **Review** feature-002 P2 (code review + rules review)
-3. ptu-rule-081 P4, ptu-rule-082 P4
+1. **Fix cycle** feature-003 Track B P0 (C1 .passthrough, H1-H3, M1-M4 from code-review-152)
+2. **Fix cycle** feature-003 Track C P0 (C1 multiple WS, H1-H3, M1-M3 from code-review-153)
+3. **Fix cycle** feature-002 P2 (C1 broken 3D distance, H1-H3, M1-M3 from code-review-154)
+4. ptu-rule-081 P4, ptu-rule-082 P4, ptu-rule-083 P4
 
 ## Review Status
+
+### Session 27 Reviews (plan-20260224-171113)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-152 | feature-003 Track B P0 | CHANGES_REQUIRED | senior-reviewer | 2026-02-24 |
+| rules-review-142 | feature-003 Track B P0 | APPROVED | game-logic-reviewer | 2026-02-24 |
+| code-review-153 | feature-003 Track C P0 | CHANGES_REQUIRED | senior-reviewer | 2026-02-24 |
+| rules-review-143 | feature-003 Track C P0 | APPROVED | game-logic-reviewer | 2026-02-24 |
+| code-review-154 | feature-002 P2 | CHANGES_REQUIRED | senior-reviewer | 2026-02-24 |
+| rules-review-144 | feature-002 P2 | APPROVED | game-logic-reviewer | 2026-02-24 |
 
 ### Session 25 Reviews
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -190,16 +204,16 @@ updated_by: slave-collector (plan-20260224-171710)
 | refactoring-062 | P4 | open | buildCombatantFromEntity test coverage (from code-review-120b) |
 | refactoring-063 | P4 | **resolved** | Extract shared significance preset utilities (from code-review-123 M2 + rules-review-113 M2) — resolved by slave-1 |
 | refactoring-064 | P4 | **resolved** | Extract shared difficulty color styles (from code-review-124 H2) — resolved by slave-1 (plan-20260221-215717) |
-| refactoring-065 | P4 | open | Extract shared evasion computation helper in useMoveCalculation (from code-review-125 M1) |
-| refactoring-066 | P4 | open | Use calculateEvasion for initial evasion in combatant builder (from code-review-125 M2) |
-| refactoring-067 | P4 | open | Dead calculateInitiative in useCombat missing Focus bonus (from rules-review-115 M1) |
+| refactoring-065 | P4 | **resolved** | Extract shared evasion computation helper in useMoveCalculation — resolved by slave-4 (plan-20260224-171113) |
+| refactoring-066 | P4 | **resolved** | Use calculateEvasion for initial evasion in combatant builder — resolved by slave-4 (plan-20260224-171113) |
+| refactoring-067 | P4 | **resolved** | Dead calculateInitiative removed from useCombat — resolved by slave-4 (plan-20260224-171113) |
 | refactoring-068 | P4 | open | Equipment dropdown uses DOM manipulation instead of reactive ref (from code-review-127 M2) |
 | refactoring-069 | P4 | open | SLOT_ICONS duplicated between HumanEquipmentTab and EquipmentCatalogBrowser (from code-review-132 M1) |
 | refactoring-070 | P4 | open | Unused `props` assignment in StatAllocationSection.vue (from code-review-137 M1) |
 | refactoring-071 | P4 | open | MAX_FEATURES cap not level-aware in useCharacterCreation.ts (from code-review-137 M2) |
-| refactoring-072 | P4 | open | Replace `tier: string` with `SignificanceTier` in store/composable signatures (from code-review-141 M1) |
-| refactoring-073 | P4 | open | Add server-side validation for significanceTier string values (from code-review-141 M2) |
-| refactoring-074 | P4 | open | Consolidate duplicate SIGNIFICANCE_PRESETS arrays (from rules-review-131 observation) |
+| refactoring-072 | P4 | **resolved** | Replace `tier: string` with `SignificanceTier` — resolved by slave-5 (plan-20260224-171113) |
+| refactoring-073 | P4 | **resolved** | Add server-side validation for significanceTier — resolved by slave-5 (plan-20260224-171113) |
+| refactoring-074 | P4 | **resolved** | Consolidate duplicate SIGNIFICANCE_PRESETS — resolved by slave-5 (plan-20260224-171113) |
 | refactoring-075 | P4 | **resolved** | Extract CombatantConditionsSection from GMActionModal.vue (803→~670 lines) — resolved by slave-3 (plan-20260224-162105) |
 | refactoring-076 | P4 | open | Restore 9px font-size for PokemonCard stat cell labels (from code-review-144 M1) |
 | refactoring-077 | P4 | open | Move TerrainCostGetter type to shared types file (from code-review-151 M2 note) |
@@ -214,9 +228,9 @@ updated_by: slave-collector (plan-20260224-171710)
 | Open tickets (P1) | 1 (feature-003 — Track B/C P0 implemented, needs review) |
 | Open tickets (P2) | 1 (feature-002 — P2 implemented, needs review) |
 | Open tickets (P3) | 0 |
-| Open tickets (P4) | 21 (refactoring-059–078 excl resolved + ptu-rule-081, 082 + ux-001, 002) |
-| Total open | 23 |
-| Total resolved | 152 |
+| Open tickets (P4) | 16 (refactoring-059–078 excl 6 resolved + ptu-rule-081, 082, 083 + ux-001, 002) |
+| Total open | 18 |
+| Total resolved | 158 |
 
 ## Session Summary (2026-02-20, session 13)
 
@@ -445,6 +459,22 @@ updated_by: slave-collector (plan-20260224-171710)
 **Tickets filed:** 0
 **Tickets resolved:** 0
 **Net movement:** 23→23 open (no change — all work was new implementations needing review)
+
+**All P0 tickets remain at 0.**
+
+## Session Summary (2026-02-24, session 27 — plan-20260224-171113)
+
+**Slave collection plan-20260224-171113:** 5 slaves merged (16 commits total, 0 conflicts)
+- **slave-4** (developer): refactoring-065+066+067 — 4 commits (shared evasion computation helper, calculateEvasion for initial evasion, removed dead calculateInitiative, ticket resolution docs)
+- **slave-5** (developer): refactoring-072+073+074 — 6 commits (SignificanceTier typed params, server-side significance validation utility, consolidated SIGNIFICANCE_PRESETS, ticket resolution docs)
+- **slave-1** (reviewers): feature-003 Track B P0 — code-review-152 CHANGES_REQUIRED (C1: .passthrough() on Zod schemas, H1: click-outside, H2: non-transactional import, H3: misleading count) + rules-review-142 APPROVED
+- **slave-2** (reviewers): feature-003 Track C P0 — code-review-153 CHANGES_REQUIRED (C1: multiple WS connections, H1: REST fallback ack, H2: stale scene, H3: duplicate identification) + rules-review-143 APPROVED
+- **slave-3** (reviewers): feature-002 P2 — code-review-154 CHANGES_REQUIRED (C1: broken 3D distance, H1: elevation brush disconnected, H2: TerrainPainter not mounted, H3: side face camera angle) + rules-review-144 APPROVED
+
+**Tickets filed:** 1 (ptu-rule-083 — measurement store Chebyshev distance from rules-review-144 RULING-1)
+**Tickets resolved:** 6 (refactoring-065, 066, 067, 072, 073, 074)
+**Reviews completed:** 6 artifacts (code-review-152–154, rules-review-142–144)
+**Net movement:** 23→18 open (-5 net: -6 resolved + 1 new ticket)
 
 **All P0 tickets remain at 0.**
 
