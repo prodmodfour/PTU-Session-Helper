@@ -17,7 +17,7 @@ Replace the current 2D flat Canvas grid with a 3D isometric grid supporting Z-ax
 ## Phases
 
 - **P0: Rendering Engine + Basic Grid** (implemented)
-- **P1: Token Interaction + Movement** (pending)
+- **P1: Token Interaction + Movement** (implemented, fix cycle complete)
 - **P2: Feature Parity (Fog, Terrain, Measurement)** (pending)
 
 ## P0 Acceptance Criteria
@@ -36,6 +36,35 @@ Replace the current 2D flat Canvas grid with a 3D isometric grid supporting Z-ax
 |------|--------|---------|
 | 2026-02-23 | P0 implemented | 11 commits on slave/2-dev-feature-002-p0-20260223-083000 |
 | 2026-02-23 | P0 code-review-140 fixes | 8 commits on slave/2-dev-feature-002-fix-20260223-095000 |
+| 2026-02-23 | P1 implemented | 10 commits on slave/2-dev-feature-002-p1 |
+| 2026-02-23 | P1 code-review-148 fixes | 8 commits on slave/2-dev-feature-002-p1-fix-20260223-141341 |
+
+### P1 Fix Cycle (code-review-148)
+
+| Commit | Issue | Description |
+|--------|-------|-------------|
+| b79aa84 | H2 | refactor: extract combatantCanFly and getSkySpeed to shared utility |
+| 5c5fe68 | M2+C1 | refactor: extract pathfinding from useRangeParser into usePathfinding (fixes admissible heuristic) |
+| d3cbb0e | C2 | fix: pass elevation cost to A* pathfinding in isValidMove |
+| 5d71f46 | H1+H3 | fix: sprite cache re-render on load and bounded memory growth |
+| 3a4d6fd | M3 | perf: watch combatant IDs only for default elevation assignment |
+| d19e3bb | M4 | fix: use diamond-shaped hit detection for isometric token picking |
+| f593a32 | M5 | fix: movement preview arrow uses terrain elevation at destination |
+| 65f41b3 | M1 | docs: add VTT grid composables, components, and utilities to app-surface |
+
+### P1 Fix Cycle Files Changed
+
+**New files (2):**
+- `app/utils/combatantCapabilities.ts` (H2: shared combatant capability functions)
+- `app/composables/usePathfinding.ts` (M2: extracted pathfinding with admissible heuristic fix)
+
+**Modified files (6):**
+- `app/composables/useGridMovement.ts` (C2: elevation-aware A* calls; H2: import shared utils)
+- `app/composables/useElevation.ts` (H2: import shared utils)
+- `app/composables/useRangeParser.ts` (M2: delegate to usePathfinding, re-export for compat)
+- `app/composables/useIsometricRendering.ts` (H1: scheduleRender on sprite load; H3: cache eviction; M5: terrain elevation for preview arrow)
+- `app/composables/useIsometricInteraction.ts` (M4: diamond-shaped point-in-polygon hit test)
+- `app/components/vtt/IsometricCanvas.vue` (H3: clearSpriteCache on unmount; M3: shallow combatant watcher; M5: pass getTerrainElevation)
 
 ### P0 Fix Cycle (code-review-140)
 
