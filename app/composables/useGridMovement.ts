@@ -1,6 +1,7 @@
 import type { GridPosition, Combatant, Pokemon } from '~/types'
 import { useTerrainStore } from '~/stores/terrain'
 import { useRangeParser, type TerrainCostGetter } from '~/composables/useRangeParser'
+import { combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed } from '~/utils/combatantCapabilities'
 
 interface TokenData {
   combatantId: string
@@ -19,53 +20,6 @@ interface UseGridMovementOptions {
 }
 
 const DEFAULT_MOVEMENT_SPEED = 5
-
-/**
- * Check whether a combatant has Swim capability (swim speed > 0).
- * Pokemon have capabilities.swim; humans default to 0 (no swim).
- */
-function combatantCanSwim(combatant: Combatant): boolean {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return (pokemon.capabilities?.swim ?? 0) > 0
-  }
-  return false
-}
-
-/**
- * Check whether a combatant has Burrow capability (burrow speed > 0).
- * Pokemon have capabilities.burrow; humans default to 0 (no burrow).
- */
-function combatantCanBurrow(combatant: Combatant): boolean {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return (pokemon.capabilities?.burrow ?? 0) > 0
-  }
-  return false
-}
-
-/**
- * Check whether a combatant has Sky capability (sky speed > 0).
- * Flying Pokemon ignore elevation cost within their Sky speed range.
- */
-function combatantCanFly(combatant: Combatant): boolean {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return (pokemon.capabilities?.sky ?? 0) > 0
-  }
-  return false
-}
-
-/**
- * Get a combatant's Sky speed. Returns 0 for non-flying combatants.
- */
-function getSkySpeed(combatant: Combatant): number {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.capabilities?.sky ?? 0
-  }
-  return 0
-}
 
 /**
  * Calculate the elevation change cost between two Z-levels.

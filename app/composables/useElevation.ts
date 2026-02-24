@@ -1,5 +1,6 @@
-import type { GridPosition, Combatant, Pokemon } from '~/types'
+import type { GridPosition, Combatant } from '~/types'
 import { useTerrainStore } from '~/stores/terrain'
+import { combatantCanFly, getSkySpeed } from '~/utils/combatantCapabilities'
 
 /**
  * Elevation state for a single token.
@@ -15,30 +16,6 @@ export interface TokenElevation {
 interface UseElevationOptions {
   maxElevation: Ref<number>
   getCombatant?: (combatantId: string) => Combatant | undefined
-}
-
-/**
- * Check if a combatant has Sky capability (sky speed > 0).
- * Only Pokemon have capabilities.sky; humans default to 0.
- */
-function combatantCanFly(combatant: Combatant): boolean {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return (pokemon.capabilities?.sky ?? 0) > 0
-  }
-  return false
-}
-
-/**
- * Get a combatant's Sky speed for default elevation calculation.
- * Returns 0 for non-flying combatants.
- */
-function getSkySpeed(combatant: Combatant): number {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.capabilities?.sky ?? 0
-  }
-  return 0
 }
 
 /**
