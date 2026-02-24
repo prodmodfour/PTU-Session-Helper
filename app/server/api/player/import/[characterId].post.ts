@@ -133,14 +133,6 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Apply character updates if any
-    if (Object.keys(characterUpdate).length > 0) {
-      await prisma.humanCharacter.update({
-        where: { id: characterId },
-        data: characterUpdate
-      })
-    }
-
     // --- Pokemon field updates ---
     const pokemonUpdates: Array<{ id: string; data: Record<string, unknown> }> = []
 
@@ -241,13 +233,22 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Apply Pokemon updates in a transaction
-    if (pokemonUpdates.length > 0) {
-      await prisma.$transaction(
-        pokemonUpdates.map(({ id, data }) =>
-          prisma.pokemon.update({ where: { id }, data })
-        )
-      )
+    // Apply all updates in a single transaction for atomicity
+    const hasCharacterUpdates = Object.keys(characterUpdate).length > 0
+    const hasPokemonUpdates = pokemonUpdates.length > 0
+
+    if (hasCharacterUpdates || hasPokemonUpdates) {
+      await prisma.$transaction(async (tx) => {
+        if (hasCharacterUpdates) {
+          await tx.humanCharacter.update({
+            where: { id: characterId },
+            data: characterUpdate
+          })
+        }
+        for (const { id, data } of pokemonUpdates) {
+          await tx.pokemon.update({ where: { id }, data })
+        }
+      })
     }
 
     // Re-fetch the updated character for response
