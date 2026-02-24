@@ -43,7 +43,15 @@ Testable features, routes, and API endpoints for the PTU Session Helper.
 
 | Route | Purpose |
 |-------|---------|
-| `/player` | Shows active encounter, combatants by side, action panel for player turns |
+| `/player` | Character picker, character sheet, Pokemon team, encounter with combat actions |
+
+**Key player components:** `PlayerIdentityPicker.vue` (character selection overlay), `PlayerNavBar.vue` (bottom tab navigation — Character/Team/Encounter), `PlayerCharacterSheet.vue` (read-only stats, skills, features, equipment, inventory), `PlayerPokemonTeam.vue` + `PlayerPokemonCard.vue` + `PlayerMoveList.vue` (team display), `PlayerEncounterView.vue` (encounter state with combatant cards by side), `PlayerCombatantInfo.vue` (visibility-aware combatant display — exact HP for own, percentage for enemies), `PlayerCombatActions.vue` (full PTU combat action panel — moves, shift, struggle, pass, item/switch/maneuver requests).
+
+**Key player composables:** `usePlayerIdentity.ts` (localStorage persistence, character data fetching), `usePlayerCombat.ts` (turn detection, action execution, move availability, target helpers, league battle phase awareness, canBeCommanded check).
+
+**Player stores:** `playerIdentity` (characterId, character, pokemon, loading, error).
+
+**Player types:** `types/player.ts` (PlayerTab), `types/api.ts` (PlayerActionRequest).
 
 ## API Endpoint Groups
 
