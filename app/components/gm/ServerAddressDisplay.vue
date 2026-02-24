@@ -1,5 +1,5 @@
 <template>
-  <div class="server-address">
+  <div ref="containerRef" class="server-address">
     <button
       class="server-address__toggle"
       :title="expanded ? 'Hide server address' : 'Show server address for players'"
@@ -60,6 +60,7 @@ interface ServerAddress {
   url: string
 }
 
+const containerRef = ref<HTMLElement | null>(null)
 const expanded = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -114,15 +115,28 @@ const copyToClipboard = async (url: string) => {
   }
 }
 
-// Fetch on first expand
+// Click-outside handler to dismiss the panel
+const handleClickOutside = (event: MouseEvent) => {
+  if (!containerRef.value) return
+  if (!containerRef.value.contains(event.target as Node)) {
+    expanded.value = false
+  }
+}
+
 watch(expanded, (isExpanded) => {
-  if (isExpanded && addresses.value.length === 0 && !loading.value) {
-    fetchServerInfo()
+  if (isExpanded) {
+    if (addresses.value.length === 0 && !loading.value) {
+      fetchServerInfo()
+    }
+    document.addEventListener('click', handleClickOutside, true)
+  } else {
+    document.removeEventListener('click', handleClickOutside, true)
   }
 })
 
 onUnmounted(() => {
   if (copyTimeout) clearTimeout(copyTimeout)
+  document.removeEventListener('click', handleClickOutside, true)
 })
 </script>
 
