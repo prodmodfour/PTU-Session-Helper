@@ -185,6 +185,29 @@ Functional scaffolding exists at `/player` — encounter display with combatant 
 |------|--------|-------------|
 | 2026-02-22 | (infra slave) | Design spec: `design-player-view-infra-001.md` -- Cloudflare Tunnel for remote access, PWA offline cache, JSON export/import, data sync model, conflict resolution |
 
+### Track B: Infrastructure / Remote Access (P0 Fix Cycle — code-review-152)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-24 | 689cb48 | C1: Remove `.passthrough()` from import Zod schemas — use default strip behavior for defense-in-depth |
+| 2026-02-24 | aa25732 | H1: Add click-outside handler to ServerAddressDisplay panel — capture-phase listener with cleanup |
+| 2026-02-24 | cb56759 | H2: Wrap character + Pokemon import updates in single `prisma.$transaction()` |
+| 2026-02-24 | 4cfb11b | H3: Separate character fields and Pokemon counts in import response — clearer UI message |
+| 2026-02-24 | b38c2e6 | M1: Rename `importResult` to `operationResult` in export/import composable |
+| 2026-02-24 | 606d725 | M3: Read `appVersion` from package.json instead of hardcoded string |
+| 2026-02-24 | 3e1f82d | M4: Refetch server addresses every time LAN panel is expanded |
+| 2026-02-24 | 723ff37 | M2: Add Track B P0 endpoints, composable, and component to app-surface.md |
+
+**Files modified (5):**
+- `app/server/api/player/import/[characterId].post.ts` (C1, H2, H3)
+- `app/server/api/player/export/[characterId].get.ts` (M3)
+- `app/components/gm/ServerAddressDisplay.vue` (H1, M4)
+- `app/composables/useCharacterExportImport.ts` (H3, M1)
+- `app/components/player/PlayerCharacterSheet.vue` (M1)
+- `.claude/skills/references/app-surface.md` (M2)
+
+**All 8 issues from code-review-152 resolved:** 1 CRITICAL, 3 HIGH, 4 MEDIUM.
+
 ### Track C: Integration (Design Phase)
 
 | Date | Commit | Description |
