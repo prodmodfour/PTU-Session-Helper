@@ -32,6 +32,7 @@ interface IsometricOverlayOptions {
   // Terrain
   getTerrainType?: (x: number, y: number) => TerrainType
   terrainColors?: Record<TerrainType, { fill: string; stroke: string }>
+  getTerrainElevation?: (x: number, y: number) => number
   // Measurement
   measurementMode?: Ref<MeasurementMode>
   measurementCells?: Ref<GridPosition[]>
@@ -193,11 +194,16 @@ export function useIsometricOverlays(options: IsometricOverlayOptions) {
       const terrainColor = options.terrainColors[terrain]
       if (!terrainColor) continue
 
-      // Fill diamond with terrain color
-      drawFilledDiamond(ctx, cell.x, cell.y, 0, angle, gridW, gridH, cellSize, terrainColor.fill)
+      // Get terrain elevation (raised/lowered ground)
+      const elev = options.getTerrainElevation
+        ? options.getTerrainElevation(cell.x, cell.y)
+        : 0
+
+      // Fill diamond with terrain color at terrain elevation
+      drawFilledDiamond(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, terrainColor.fill)
 
       // Draw terrain border
-      const diamond = getTileDiamondPoints(cell.x, cell.y, 0, angle, gridW, gridH, cellSize)
+      const diamond = getTileDiamondPoints(cell.x, cell.y, elev, angle, gridW, gridH, cellSize)
       ctx.beginPath()
       ctx.moveTo(diamond.top.x, diamond.top.y)
       ctx.lineTo(diamond.right.x, diamond.right.y)
@@ -208,9 +214,55 @@ export function useIsometricOverlays(options: IsometricOverlayOptions) {
       ctx.lineWidth = 1
       ctx.stroke()
 
-      // Draw terrain pattern
-      drawIsometricTerrainPattern(ctx, cell.x, cell.y, terrain, angle, gridW, gridH, cellSize)
+      // Draw stacked side faces for elevated terrain (visual height indicator)
+      if (elev > 0) {
+        drawTerrainSideFaces(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, terrainColor.stroke)
+      }
+
+      // Draw terrain pattern at elevation
+      drawIsometricTerrainPattern(ctx, cell.x, cell.y, terrain, angle, gridW, gridH, cellSize, elev)
     }
+  }
+
+  /**
+   * Draw side faces for elevated terrain (gives visual depth to raised ground).
+   * Draws the visible side faces of the isometric "box" between ground and elevated level.
+   */
+  const drawTerrainSideFaces = (
+    ctx: CanvasRenderingContext2D,
+    gridX: number, gridY: number,
+    elevation: number,
+    angle: CameraAngle,
+    gridW: number, gridH: number, cellSize: number,
+    strokeColor: string
+  ) => {
+    const topDiamond = getTileDiamondPoints(gridX, gridY, elevation, angle, gridW, gridH, cellSize)
+    const bottomDiamond = getTileDiamondPoints(gridX, gridY, 0, angle, gridW, gridH, cellSize)
+
+    // Draw the two visible side faces (right and left from camera perspective)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'
+    ctx.strokeStyle = strokeColor
+    ctx.lineWidth = 1
+
+    // Right face: top.right -> bottom.right -> bottom.bottom -> top.bottom
+    ctx.beginPath()
+    ctx.moveTo(topDiamond.right.x, topDiamond.right.y)
+    ctx.lineTo(bottomDiamond.right.x, bottomDiamond.right.y)
+    ctx.lineTo(bottomDiamond.bottom.x, bottomDiamond.bottom.y)
+    ctx.lineTo(topDiamond.bottom.x, topDiamond.bottom.y)
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
+
+    // Left face: top.left -> bottom.left -> bottom.bottom -> top.bottom
+    ctx.beginPath()
+    ctx.moveTo(topDiamond.left.x, topDiamond.left.y)
+    ctx.lineTo(bottomDiamond.left.x, bottomDiamond.left.y)
+    ctx.lineTo(bottomDiamond.bottom.x, bottomDiamond.bottom.y)
+    ctx.lineTo(topDiamond.bottom.x, topDiamond.bottom.y)
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
   }
 
   /**
@@ -221,9 +273,10 @@ export function useIsometricOverlays(options: IsometricOverlayOptions) {
     gridX: number, gridY: number,
     terrain: TerrainType,
     angle: CameraAngle,
-    gridW: number, gridH: number, cellSize: number
+    gridW: number, gridH: number, cellSize: number,
+    elevation: number = 0
   ) => {
-    const diamond = getTileDiamondPoints(gridX, gridY, 0, angle, gridW, gridH, cellSize)
+    const diamond = getTileDiamondPoints(gridX, gridY, elevation, angle, gridW, gridH, cellSize)
     const cx = (diamond.top.x + diamond.right.x + diamond.bottom.x + diamond.left.x) / 4
     const cy = (diamond.top.y + diamond.right.y + diamond.bottom.y + diamond.left.y) / 4
 

@@ -132,6 +132,7 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
     fogEnabled: options.fogEnabled,
     getTerrainType: options.getTerrainType,
     terrainColors: options.terrainColors,
+    getTerrainElevation: options.getTerrainElevation,
     measurementMode: options.measurementMode,
     measurementCells: options.measurementCells,
     measurementOrigin: options.measurementOrigin,
