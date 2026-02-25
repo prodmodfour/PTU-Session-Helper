@@ -43,8 +43,8 @@
       </nav>
 
       <div class="gm-header__actions">
-        <!-- Server Address for Players -->
-        <ServerAddressDisplay />
+        <!-- Connection Info for Players (LAN + Tunnel URLs) -->
+        <SessionUrlDisplay />
 
         <!-- Group View Tab Selector -->
         <div class="tab-selector">
