@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-082
 priority: P4
-status: open
+status: in-progress
 domain: pokemon-lifecycle
 source: rules-review-118 (MEDIUM observation)
 created_by: slave-collector (plan-20260221-215717)
@@ -36,6 +36,13 @@ This applies only the level component of the HP formula. The HP stat component (
 ## Impact
 
 Low urgency — the GM can manually update maxHp after leveling. But it causes a correctness gap where displayed HP is wrong between XP distribution and manual sheet update.
+
+## Resolution Log
+
+- **edae0b5** — `fix: update maxHp when Pokemon levels up via XP endpoints`
+  - `app/server/api/encounters/[id]/xp-distribute.post.ts` — Added `maxHp` to Prisma select; increments `maxHp` by `levelsGained` when > 0
+  - `app/server/api/pokemon/[id]/add-experience.post.ts` — Added `maxHp` to Prisma select; increments `maxHp` by `levelsGained` when > 0
+  - Duplicate code path check: Only two automated level-up paths exist (xp-distribute, add-experience). Manual PUT `/api/pokemon/:id` allows direct maxHp/level editing by GM — no change needed there.
 
 ## Notes
 
