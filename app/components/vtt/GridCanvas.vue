@@ -270,8 +270,10 @@ const handleMouseDown = (event: MouseEvent): void => {
 
     if (gridX >= 0 && gridX < props.config.width && gridY >= 0 && gridY < props.config.height) {
       // Check if clicking on a token (handled by token click handler)
+      // Multi-cell tokens occupy position.x..position.x+size-1 on each axis
       const clickedToken = props.tokens.find(t =>
-        t.position.x === gridX && t.position.y === gridY
+        gridX >= t.position.x && gridX < t.position.x + t.size &&
+        gridY >= t.position.y && gridY < t.position.y + t.size
       )
       if (!clickedToken) {
         emit('playerCellClick', { x: gridX, y: gridY })
