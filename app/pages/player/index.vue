@@ -69,18 +69,45 @@
           v-else-if="activeTab === 'encounter'"
           :my-character-id="character.id"
           :my-pokemon-ids="pokemonIds"
+          :send="send"
+          :on-message="onMessage"
         />
-        <PlayerSceneView
-          v-else-if="activeTab === 'scene'"
-          :scene="playerActiveScene"
-        />
+        <template v-else-if="activeTab === 'scene'">
+          <PlayerGroupControl
+            :current-tab="groupViewTab"
+            :send="send"
+            :on-message="onMessage"
+          />
+          <PlayerSceneView :scene="playerActiveScene" />
+        </template>
       </main>
+
+      <!-- Action Ack Toast (fixed overlay) -->
+      <Transition name="fade">
+        <div
+          v-if="lastActionAck"
+          class="player-toast"
+          :class="lastActionAck.status === 'accepted' ? 'player-toast--success' : 'player-toast--error'"
+        >
+          {{ lastActionAck.status === 'accepted' ? 'Action accepted' : 'Action rejected' }}
+          <span v-if="lastActionAck.reason" class="player-toast__reason">{{ lastActionAck.reason }}</span>
+        </div>
+      </Transition>
+
+      <!-- Turn Notification Flash (fixed overlay) -->
+      <Transition name="fade">
+        <div v-if="turnNotification" class="player-turn-flash">
+          <PhLightningSlash :size="24" />
+          <span>Your turn! {{ turnNotification.combatantName }}</span>
+        </div>
+      </Transition>
 
       <!-- Bottom Navigation -->
       <PlayerNavBar
         :active-tab="activeTab"
         :has-active-encounter="hasActiveEncounter"
         :has-active-scene="hasActiveScene"
+        :has-pending-requests="pendingActionCount > 0"
         @change="activeTab = $event"
       />
     </template>
@@ -88,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhSwap, PhWarningCircle } from '@phosphor-icons/vue'
+import { PhSwap, PhWarningCircle, PhLightningSlash } from '@phosphor-icons/vue'
 import type { PlayerTab } from '~/types/player'
 
 definePageMeta({
@@ -127,11 +154,21 @@ const {
   joinEncounter,
   send,
   resetAndReconnect,
-  activeScene: playerActiveScene
+  onMessage,
+  activeScene: playerActiveScene,
+  lastActionAck,
+  turnNotification,
+  pendingActionCount
 } = usePlayerWebSocket()
 
 // Provide the shared send function for child composables (usePlayerCombat)
 provide(PLAYER_WS_SEND_KEY, send)
+
+// Reconnect recovery
+useStateSync({ isConnected, send, identify, joinEncounter })
+
+// Group View tab state (fetched from server for display in PlayerGroupControl)
+const groupViewTab = ref('lobby')
 
 // Active tab
 const activeTab = ref<PlayerTab>('character')
@@ -150,6 +187,24 @@ const hasActiveEncounter = computed(() => encounterStore.encounter?.isActive ?? 
 
 // Active scene detection (from WebSocket-pushed scene data)
 const hasActiveScene = computed(() => playerActiveScene.value !== null)
+
+// Auto-switch to encounter tab when turn notification arrives
+watch(turnNotification, (notification) => {
+  if (notification) {
+    activeTab.value = 'encounter'
+  }
+})
+
+// Track group view tab state via WebSocket
+let removeTabListener: (() => void) | null = null
+onMounted(() => {
+  removeTabListener = onMessage((msg) => {
+    if (msg.type === 'tab_state' || msg.type === 'tab_change') {
+      const data = msg.data as { tab?: string; activeTab?: string }
+      groupViewTab.value = data.tab ?? data.activeTab ?? 'lobby'
+    }
+  })
+})
 
 // Poll for active encounters with backoff on failure
 const POLL_BASE_INTERVAL = 3000
@@ -257,6 +312,10 @@ onUnmounted(() => {
   if (pollInterval) {
     clearInterval(pollInterval)
     pollInterval = null
+  }
+  if (removeTabListener) {
+    removeTabListener()
+    removeTabListener = null
   }
 })
 </script>
@@ -399,5 +458,70 @@ onUnmounted(() => {
       background: rgba(currentColor, 0.1);
     }
   }
+}
+
+.player-toast {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: $z-index-toast;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-md;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  &--success {
+    background: rgba($color-success, 0.9);
+    color: white;
+  }
+
+  &--error {
+    background: rgba($color-danger, 0.9);
+    color: white;
+  }
+
+  &__reason {
+    font-weight: 400;
+    opacity: 0.85;
+  }
+}
+
+.player-turn-flash {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: $z-index-toast;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-md;
+  background: rgba($color-accent-scarlet, 0.95);
+  color: white;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  box-shadow: 0 4px 16px rgba($color-accent-scarlet, 0.4);
+  animation: flash-pulse 0.5s ease-in-out 3;
+}
+
+@keyframes flash-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

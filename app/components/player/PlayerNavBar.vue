@@ -6,7 +6,7 @@
       class="player-nav-bar__tab"
       :class="{
         'player-nav-bar__tab--active': activeTab === tab.id,
-        'player-nav-bar__tab--badge': (tab.id === 'encounter' && hasActiveEncounter) || (tab.id === 'scene' && hasActiveScene)
+        'player-nav-bar__tab--badge': (tab.id === 'encounter' && (hasActiveEncounter || hasPendingRequests)) || (tab.id === 'scene' && hasActiveScene)
       }"
       :aria-label="tab.label"
       :aria-current="activeTab === tab.id ? 'page' : undefined"
@@ -26,6 +26,7 @@ defineProps<{
   activeTab: PlayerTab
   hasActiveEncounter?: boolean
   hasActiveScene?: boolean
+  hasPendingRequests?: boolean
 }>()
 
 defineEmits<{

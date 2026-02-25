@@ -26,6 +26,15 @@
       <!-- Combat Action Panel (shown when it is the player's turn) -->
       <PlayerCombatActions v-if="isMyTurn" />
 
+      <!-- VTT Grid (player mode) -->
+      <PlayerGridView
+        v-if="gridEnabled"
+        :character-id="myCharacterId"
+        :pokemon-ids="myPokemonIds"
+        :send="send"
+        :on-message="onMessage"
+      />
+
       <!-- Combatants by Side -->
       <div class="encounter-sides">
         <!-- Players -->
@@ -79,10 +88,13 @@
 
 <script setup lang="ts">
 import { PhSword } from '@phosphor-icons/vue'
+import type { WebSocketEvent } from '~/types'
 
 const props = defineProps<{
   myCharacterId: string
   myPokemonIds: string[]
+  send: (event: WebSocketEvent) => void
+  onMessage: (listener: (msg: WebSocketEvent) => void) => (() => void)
 }>()
 
 const encounterStore = useEncounterStore()
@@ -90,6 +102,7 @@ const { getCombatantName } = useCombatantDisplay()
 const { isMyTurn, currentCombatant } = usePlayerCombat()
 
 const encounter = computed(() => encounterStore.encounter)
+const gridEnabled = computed(() => encounterStore.encounter?.gridConfig?.enabled ?? false)
 const playerCombatants = computed(() => encounterStore.playerCombatants)
 const allyCombatants = computed(() => encounterStore.allyCombatants)
 const enemyCombatants = computed(() => encounterStore.enemyCombatants)
