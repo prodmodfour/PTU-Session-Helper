@@ -7,8 +7,8 @@
  * tutorPoints).
  *
  * Stat points from leveling are NOT auto-applied — the GM/player must
- * manually allocate them. This endpoint only updates experience, level,
- * and tutor points.
+ * manually allocate them. This endpoint updates experience, level,
+ * tutor points, and maxHp (level component only, per PTU Core p.198).
  *
  * PTU Core p.460 (XP calculation), p.202-203 (level-up effects).
  */
@@ -127,7 +127,8 @@ export default defineEventHandler(async (event) => {
         species: true,
         level: true,
         experience: true,
-        tutorPoints: true
+        tutorPoints: true,
+        maxHp: true
       }
     })
 
@@ -184,6 +185,11 @@ export default defineEventHandler(async (event) => {
       // Cap experience at max
       const cappedExperience = Math.min(levelResult.newExperience, MAX_EXPERIENCE)
 
+      // PTU Core p.198: maxHp = Level + (HP * 3) + 10
+      // When leveling up, the level component increases by 1 per level gained.
+      // The HP stat component only changes when stat points are allocated manually.
+      const maxHpIncrease = levelResult.levelsGained
+
       // Update Pokemon record in DB
       updatePromises.push(
         prisma.pokemon.update({
@@ -191,7 +197,8 @@ export default defineEventHandler(async (event) => {
           data: {
             experience: cappedExperience,
             level: levelResult.newLevel,
-            tutorPoints: pokemon.tutorPoints + tutorPointsGained
+            tutorPoints: pokemon.tutorPoints + tutorPointsGained,
+            ...(maxHpIncrease > 0 ? { maxHp: pokemon.maxHp + maxHpIncrease } : {})
           }
         })
       )

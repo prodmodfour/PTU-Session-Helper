@@ -53,7 +53,8 @@ export default defineEventHandler(async (event) => {
         species: true,
         level: true,
         experience: true,
-        tutorPoints: true
+        tutorPoints: true,
+        maxHp: true
       }
     })
 
@@ -95,13 +96,19 @@ export default defineEventHandler(async (event) => {
     // Cap experience at max
     const cappedExperience = Math.min(levelResult.newExperience, MAX_EXPERIENCE)
 
+    // PTU Core p.198: maxHp = Level + (HP * 3) + 10
+    // When leveling up, the level component increases by 1 per level gained.
+    // The HP stat component only changes when stat points are allocated manually.
+    const maxHpIncrease = levelResult.levelsGained
+
     // Update Pokemon record in DB
     await prisma.pokemon.update({
       where: { id },
       data: {
         experience: cappedExperience,
         level: levelResult.newLevel,
-        tutorPoints: pokemon.tutorPoints + tutorPointsGained
+        tutorPoints: pokemon.tutorPoints + tutorPointsGained,
+        ...(maxHpIncrease > 0 ? { maxHp: pokemon.maxHp + maxHpIncrease } : {})
       }
     })
 
