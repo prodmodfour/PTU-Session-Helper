@@ -410,7 +410,7 @@ export default defineWebSocketHandler({
           break
 
         case 'serve_encounter':
-          // GM serves an encounter to group views
+          // GM serves an encounter to group and player views
           if (clientInfo?.role === 'gm') {
             const data = event.data as { encounterId: string }
             if (data.encounterId) {
@@ -418,13 +418,14 @@ export default defineWebSocketHandler({
                 type: 'encounter_served',
                 data: event.data
               }, peer)
-              // Also broadcast to all group clients not in a specific encounter
+              // Also broadcast to all group and player clients not in a specific encounter
+              const servedMsg = JSON.stringify({
+                type: 'encounter_served',
+                data: event.data
+              })
               for (const [otherPeer, otherInfo] of peers) {
-                if (otherPeer !== peer && otherInfo.role === 'group') {
-                  safeSend(otherPeer, JSON.stringify({
-                    type: 'encounter_served',
-                    data: event.data
-                  }))
+                if (otherPeer !== peer && (otherInfo.role === 'group' || otherInfo.role === 'player')) {
+                  safeSend(otherPeer, servedMsg)
                 }
               }
             }
@@ -436,13 +437,14 @@ export default defineWebSocketHandler({
           if (clientInfo?.role === 'gm') {
             const data = event.data as { encounterId?: string }
             if (data.encounterId) {
-              // Broadcast to all group clients
+              // Broadcast to all group and player clients
+              const unservedMsg = JSON.stringify({
+                type: 'encounter_unserved',
+                data: event.data
+              })
               for (const [otherPeer, otherInfo] of peers) {
-                if (otherPeer !== peer && otherInfo.role === 'group') {
-                  safeSend(otherPeer, JSON.stringify({
-                    type: 'encounter_unserved',
-                    data: event.data
-                  }))
+                if (otherPeer !== peer && (otherInfo.role === 'group' || otherInfo.role === 'player')) {
+                  safeSend(otherPeer, unservedMsg)
                 }
               }
             }
