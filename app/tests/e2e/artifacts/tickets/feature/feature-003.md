@@ -250,3 +250,24 @@ Functional scaffolding exists at `/player` — encounter display with combatant 
 - `.claude/skills/references/app-surface.md` (M3: new files and events)
 
 **All 7 issues from code-review-153 resolved:** 1 CRITICAL, 3 HIGH, 3 MEDIUM.
+
+### Track B: Infrastructure / Remote Access (P1 Fix Cycle -- code-review-158)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-25 | 76b2cc8 | M2: Extract `getConnectionType()` to `app/utils/connectionType.ts` — shared localhost/lan/tunnel detection |
+| 2026-02-25 | 348da35 | C1+H1: Fix WS race in `resetAndReconnect()` — CONNECTING guard + handler nulling before close + LAN misclassification fix via shared utility |
+| 2026-02-25 | dad1106 | M2: Refactor `ConnectionStatus.vue` to use shared `getConnectionType()` |
+| 2026-02-25 | 58df654 | M1+M3: Add TODO comments for QR code (ux-003) and deprecated execCommand (refactoring-079) |
+| 2026-02-25 | 24e1f16 | H2: Add tunnel endpoints, SessionUrlDisplay, ConnectionStatus, connectionType utility to app-surface.md |
+
+**Files created (1):**
+- `app/utils/connectionType.ts`
+
+**Files modified (4):**
+- `app/composables/useWebSocket.ts` (C1: CONNECTING guard + handler nulling; H1: use getConnectionType())
+- `app/components/player/ConnectionStatus.vue` (M2: use shared getConnectionType())
+- `app/components/gm/SessionUrlDisplay.vue` (M1: QR TODO; M3: execCommand TODO)
+- `.claude/skills/references/app-surface.md` (H2: tunnel endpoints, new components, utility)
+
+**All 6 issues from code-review-158 resolved:** 1 CRITICAL, 2 HIGH, 3 MEDIUM.
