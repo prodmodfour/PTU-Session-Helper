@@ -29,7 +29,9 @@ Testable features, routes, and API endpoints for the PTU Session Helper.
 | `/gm/scenes/:id` | `pages/gm/scenes/[id].vue` | Scene editor — drag-and-drop canvas, groups, weather, habitats |
 | `/gm/map` | `pages/gm/map.vue` | Region map — display and serve to Group View |
 
-**GM layout components:** `ServerAddressDisplay.vue` (LAN address panel in GM header — shows server IP/port for player connections, click-outside dismiss, clipboard copy).
+**GM layout components:** `ServerAddressDisplay.vue` (LAN address panel in GM header — shows server IP/port for player connections, click-outside dismiss, clipboard copy), `SessionUrlDisplay.vue` (combined tunnel + LAN URL panel — tunnel URL CRUD, LAN address list, clipboard copy with deprecated-execCommand fallback for non-HTTPS).
+
+**Player connection components:** `ConnectionStatus.vue` (connection indicator dot with expandable details — connection type, state, latency, reconnect progress, retry button).
 
 ### Group View (`/group`) — TV/projector display
 
@@ -52,6 +54,8 @@ Testable features, routes, and API endpoints for the PTU Session Helper.
 **Key player composables:** `usePlayerIdentity.ts` (localStorage persistence, character data fetching), `usePlayerCombat.ts` (turn detection, action execution, move availability, target helpers, league battle phase awareness, canBeCommanded check, WebSocket send via provide/inject), `useCharacterExportImport.ts` (JSON export download, import file upload with conflict detection feedback), `usePlayerWebSocket.ts` (single WebSocket connection owner for player page — scene sync, character updates, action ack routing, auto-identification on connect/reconnect), `usePlayerScene.ts` (player scene state — receives scene_sync via WS, REST fallback via fetchActiveScene, maps to PlayerSceneData).
 
 **Player stores:** `playerIdentity` (characterId, character, pokemon, loading, error).
+
+**Connection utilities:** `utils/connectionType.ts` (shared `getConnectionType()` — returns 'localhost' | 'lan' | 'tunnel' based on hostname, used by useWebSocket.ts and ConnectionStatus.vue).
 
 **Player types:** `types/player.ts` (PlayerTab), `types/api.ts` (PlayerActionRequest, WebSocketEvent), `types/player-sync.ts` (PlayerActionRequest, PlayerActionAck, PlayerTurnNotification, PlayerMoveRequest, PlayerMoveResponse, GroupViewRequest, GroupViewResponse, SceneSyncPayload).
 
@@ -187,6 +191,8 @@ Export/import for offline character management.
 
 ### Settings (`/api/settings`)
 - `GET /api/settings/server-info` — LAN network addresses, port, primary URL for player connections
+- `GET /api/settings/tunnel` — get configured Cloudflare Tunnel URL
+- `PUT /api/settings/tunnel` — set or clear Cloudflare Tunnel URL (Zod-validated)
 
 ### Utilities
 - `GET /api/species` — species list (search/autocomplete)
