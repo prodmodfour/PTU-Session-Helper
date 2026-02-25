@@ -31,15 +31,19 @@ export const useMeasurementStore = defineStore('measurement', {
   }),
 
   getters: {
-    // Calculate distance between start and end positions (Chebyshev distance for PTU)
+    // Calculate distance between start and end positions using PTU alternating diagonal rule
     distance: (state): number => {
       if (!state.startPosition || !state.endPosition) return 0
 
       const dx = Math.abs(state.endPosition.x - state.startPosition.x)
       const dy = Math.abs(state.endPosition.y - state.startPosition.y)
 
-      // PTU uses Chebyshev distance (diagonal = 1)
-      return Math.max(dx, dy)
+      // PTU alternating diagonal: 1m, 2m, 1m, 2m...
+      // diagonalCost = diagonals + floor(diagonals / 2)
+      const diagonals = Math.min(dx, dy)
+      const straights = Math.abs(dx - dy)
+      const diagonalCost = diagonals + Math.floor(diagonals / 2)
+      return diagonalCost + straights
     },
 
     // Get affected cells based on current measurement mode

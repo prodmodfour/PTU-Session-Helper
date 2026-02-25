@@ -309,7 +309,10 @@ const isometric3dDistance = computed(() => {
   const dz = Math.abs(endZ - startZ)
 
   // 3D Euclidean distance for elevation-aware measurement
-  const flatDist = Math.max(dx, dy) // Chebyshev for XY plane
+  // PTU alternating diagonal: 1m, 2m, 1m, 2m...
+  const diagonals = Math.min(dx, dy)
+  const straights = Math.abs(dx - dy)
+  const flatDist = diagonals + Math.floor(diagonals / 2) + straights
   return Math.round(Math.sqrt(flatDist * flatDist + dz * dz) * 10) / 10
 })
 

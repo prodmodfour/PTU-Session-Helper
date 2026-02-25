@@ -124,8 +124,10 @@ const handleCellClick = (position: GridPosition): void => {
 
   const dx = Math.abs(position.x - combatant.position.x)
   const dy = Math.abs(position.y - combatant.position.y)
-  // PTU diagonal: alternating 1m/2m, simplified as Chebyshev
-  const distance = Math.max(dx, dy)
+  // PTU alternating diagonal: 1m, 2m, 1m, 2m...
+  const diagonals = Math.min(dx, dy)
+  const straights = Math.abs(dx - dy)
+  const distance = diagonals + Math.floor(diagonals / 2) + straights
 
   setMoveTarget(position, distance)
 }
