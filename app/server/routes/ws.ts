@@ -232,9 +232,10 @@ export default defineWebSocketHandler({
               sendTabState(peer)
             }
 
-            // If player client, send active scene
+            // If player client, send active scene and current tab state
             if (clientInfo.role === 'player') {
               sendActiveScene(peer)
+              sendTabState(peer)
             }
           }
           break
@@ -272,8 +273,8 @@ export default defineWebSocketHandler({
           break
 
         case 'tab_sync_request':
-          // Client requesting tab state
-          if (clientInfo?.role === 'group') {
+          // Client requesting tab state (group and player clients)
+          if (clientInfo?.role === 'group' || clientInfo?.role === 'player') {
             sendTabState(peer)
           }
           break

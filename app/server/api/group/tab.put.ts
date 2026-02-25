@@ -1,5 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
-import { broadcastToGroup } from '~/server/utils/websocket'
+import { broadcastToGroupAndPlayers } from '~/server/utils/websocket'
 
 const validTabs = ['lobby', 'scene', 'encounter', 'map'] as const
 
@@ -28,8 +28,8 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    // Broadcast tab change to all group clients
-    broadcastToGroup('tab_change', {
+    // Broadcast tab change to all group and player clients
+    broadcastToGroupAndPlayers('tab_change', {
       tab: state.activeTab,
       sceneId: state.activeSceneId
     })
