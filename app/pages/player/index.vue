@@ -97,7 +97,7 @@
       <!-- Turn Notification Flash (fixed overlay) -->
       <Transition name="fade">
         <div v-if="turnNotification" class="player-turn-flash">
-          <PhLightningSlash :size="24" />
+          <PhLightning :size="24" />
           <span>Your turn! {{ turnNotification.combatantName }}</span>
         </div>
       </Transition>
@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhSwap, PhWarningCircle, PhLightningSlash } from '@phosphor-icons/vue'
+import { PhSwap, PhWarningCircle, PhLightning } from '@phosphor-icons/vue'
 import type { PlayerTab } from '~/types/player'
 
 definePageMeta({
