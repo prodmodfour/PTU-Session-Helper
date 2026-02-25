@@ -358,6 +358,56 @@ export default defineWebSocketHandler({
           }
           break
 
+        case 'group_view_request':
+          // Player requesting a Group View tab change — forward to GM for approval
+          if (clientInfo?.role === 'player') {
+            forwardToGm(null, event, peer)
+          }
+          break
+
+        case 'group_view_response':
+          // GM responding to a group view change request — route to requesting player
+          if (clientInfo?.role === 'gm') {
+            const data = event.data as { requestId?: string }
+            if (data.requestId) {
+              routeToPlayer(data.requestId, event)
+            }
+          }
+          break
+
+        case 'player_move_request':
+          // Player requesting a token move on the VTT grid — forward to GM
+          if (clientInfo?.role === 'player' && clientInfo.encounterId) {
+            forwardToGm(clientInfo.encounterId, event, peer)
+          }
+          break
+
+        case 'player_move_response':
+          // GM responding to a player move request — route to requesting player
+          if (clientInfo?.role === 'gm') {
+            const data = event.data as { requestId?: string }
+            if (data.requestId) {
+              routeToPlayer(data.requestId, event)
+            }
+          }
+          break
+
+        case 'player_turn_notify':
+          // GM notifying a specific player that it is their turn
+          // Route to the player identified by combatantId's owner
+          if (clientInfo?.role === 'gm') {
+            const data = event.data as { playerId?: string }
+            if (data.playerId) {
+              const message = JSON.stringify(event)
+              for (const [otherPeer, otherInfo] of peers) {
+                if (otherInfo.role === 'player' && otherInfo.characterId === data.playerId) {
+                  safeSend(otherPeer, message)
+                }
+              }
+            }
+          }
+          break
+
         case 'serve_encounter':
           // GM serves an encounter to group views
           if (clientInfo?.role === 'gm') {

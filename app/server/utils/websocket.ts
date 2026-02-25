@@ -76,6 +76,18 @@ export function notifyMoveExecuted(encounterId: string, moveData: unknown) {
   })
 }
 
+// GM-related broadcasts
+
+// Broadcast to all GM-role clients (optionally scoped to an encounter)
+export function broadcastToGm(event: WebSocketEvent, encounterId?: string) {
+  const message = JSON.stringify(event)
+  for (const [peer, info] of peers) {
+    if (info.role !== 'gm') continue
+    if (encounterId && info.encounterId !== encounterId) continue
+    safeSend(peer, message)
+  }
+}
+
 // Player-related broadcasts
 
 // Broadcast to all player-role clients in a specific encounter

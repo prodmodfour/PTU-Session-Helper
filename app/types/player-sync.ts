@@ -52,6 +52,7 @@ export interface PlayerActionAck {
  * Triggers vibration, visual flash, and auto-switch to Encounter tab.
  */
 export interface PlayerTurnNotification {
+  playerId: string
   combatantId: string
   combatantName: string
   combatantType: 'trainer' | 'pokemon'
