@@ -1,5 +1,10 @@
 import type { WebSocketEvent } from '~/types'
-import type { PlayerActionRequest, PlayerActionAck, SceneSyncPayload } from '~/types/player-sync'
+import type {
+  PlayerActionRequest,
+  PlayerActionAck,
+  PlayerTurnNotification,
+  SceneSyncPayload
+} from '~/types/player-sync'
 
 /**
  * Orchestrates all player-specific WebSocket behavior.
@@ -37,6 +42,13 @@ export function usePlayerWebSocket() {
   }>>(new Map())
 
   const ACTION_TIMEOUT_MS = 60_000
+
+  // Action acknowledgment notifications (for toast display)
+  const lastActionAck = ref<PlayerActionAck | null>(null)
+
+  // Turn notification state (for visual flash + tab switch)
+  const turnNotification = ref<PlayerTurnNotification | null>(null)
+  const TURN_NOTIFY_DURATION_MS = 5_000
 
   /**
    * Generate a unique request ID for action tracking.
@@ -86,9 +98,19 @@ export function usePlayerWebSocket() {
   }
 
   /**
-   * Handle incoming player_action_ack — resolve the matching pending action.
+   * Handle incoming player_action_ack — resolve the matching pending action
+   * and set the toast notification state.
    */
   const handleActionAck = (ack: PlayerActionAck): void => {
+    // Set toast state for UI display
+    lastActionAck.value = { ...ack }
+    setTimeout(() => {
+      if (lastActionAck.value?.requestId === ack.requestId) {
+        lastActionAck.value = null
+      }
+    }, 4000)
+
+    // Resolve the pending promise
     const pending = pendingActions.value.get(ack.requestId)
     if (!pending) return
 
@@ -97,6 +119,26 @@ export function usePlayerWebSocket() {
     pendingActions.value = cleaned
 
     pending.resolve(ack)
+  }
+
+  /**
+   * Handle player_turn_notify — trigger vibration, visual flash,
+   * and expose state for the page to auto-switch to Encounter tab.
+   */
+  const handleTurnNotify = (notification: PlayerTurnNotification): void => {
+    turnNotification.value = { ...notification }
+
+    // Haptic feedback (mobile)
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200])
+    }
+
+    // Auto-clear after 5 seconds
+    setTimeout(() => {
+      if (turnNotification.value?.combatantId === notification.combatantId) {
+        turnNotification.value = null
+      }
+    }, TURN_NOTIFY_DURATION_MS)
   }
 
   /**
@@ -128,6 +170,10 @@ export function usePlayerWebSocket() {
 
       case 'player_action_ack':
         handleActionAck(message.data as PlayerActionAck)
+        break
+
+      case 'player_turn_notify':
+        handleTurnNotify(message.data as PlayerTurnNotification)
         break
 
       case 'character_update':
@@ -206,6 +252,10 @@ export function usePlayerWebSocket() {
     activeScene,
     sendAction,
     generateRequestId,
-    pendingActionCount: computed(() => pendingActions.value.size)
+    pendingActionCount: computed(() => pendingActions.value.size),
+    // Action acknowledgment (for toast display)
+    lastActionAck: readonly(lastActionAck),
+    // Turn notification (for tab switch + visual flash)
+    turnNotification: readonly(turnNotification)
   }
 }
