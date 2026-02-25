@@ -2,7 +2,8 @@ import type { WebSocketEvent, Encounter, Pokemon, HumanCharacter, MoveLogEntry, 
 import { isPokemon } from '~/types'
 
 // WebSocket configuration constants
-const MAX_RECONNECT_ATTEMPTS = 5
+const MAX_RECONNECT_ATTEMPTS_LOCAL = 5
+const MAX_RECONNECT_ATTEMPTS_TUNNEL = 10
 const BASE_RECONNECT_DELAY_MS = 1000
 const MAX_RECONNECT_DELAY_MS = 30000
 const KEEPALIVE_INTERVAL_MS = 45_000
@@ -12,13 +13,27 @@ const getEncounterStore = () => useEncounterStore()
 const getLibraryStore = () => useLibraryStore()
 const getGroupViewStore = () => useGroupViewStore()
 
+/**
+ * Determine if the current connection is through a tunnel (non-localhost).
+ * Tunnel connections get more reconnect attempts since recovery may take longer.
+ */
+const isTunnelConnection = (): boolean => {
+  if (typeof window === 'undefined') return false
+  const hostname = window.location.hostname
+  return hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '::1'
+}
+
 export function useWebSocket() {
 
   let ws: WebSocket | null = null
   let keepaliveTimer: ReturnType<typeof setInterval> | null = null
+  let lastKeepaliveSent = 0
   const isConnected = ref(false)
+  const isReconnecting = ref(false)
   const reconnectAttempts = ref(0)
+  const maxReconnectAttempts = ref(MAX_RECONNECT_ATTEMPTS_LOCAL)
   const lastError = ref<string | null>(null)
+  const latencyMs = ref<number | null>(null)
   const movementPreview = ref<MovementPreview | null>(null)
   const messageListeners = new Set<(message: WebSocketEvent) => void>()
 
@@ -31,9 +46,10 @@ export function useWebSocket() {
     stopKeepalive()
     keepaliveTimer = setInterval(() => {
       if (ws?.readyState === WebSocket.OPEN) {
+        lastKeepaliveSent = Date.now()
         ws.send(JSON.stringify({
           type: 'keepalive',
-          data: { timestamp: Date.now() }
+          data: { timestamp: lastKeepaliveSent }
         }))
       }
     }, KEEPALIVE_INTERVAL_MS)
@@ -51,6 +67,11 @@ export function useWebSocket() {
       return
     }
 
+    // Set max reconnect attempts based on connection type
+    maxReconnectAttempts.value = isTunnelConnection()
+      ? MAX_RECONNECT_ATTEMPTS_TUNNEL
+      : MAX_RECONNECT_ATTEMPTS_LOCAL
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/ws`
 
@@ -59,6 +80,7 @@ export function useWebSocket() {
 
       ws.onopen = () => {
         isConnected.value = true
+        isReconnecting.value = false
         reconnectAttempts.value = 0
         lastError.value = null
         startKeepalive()
@@ -103,10 +125,13 @@ export function useWebSocket() {
   }
 
   const attemptReconnect = () => {
-    if (reconnectAttempts.value >= MAX_RECONNECT_ATTEMPTS) {
+    if (reconnectAttempts.value >= maxReconnectAttempts.value) {
+      isReconnecting.value = false
       lastError.value = 'Max reconnect attempts reached'
       return
     }
+
+    isReconnecting.value = true
 
     const delay = Math.min(
       BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempts.value),
@@ -117,6 +142,19 @@ export function useWebSocket() {
     setTimeout(() => {
       connect()
     }, delay)
+  }
+
+  /**
+   * Manually reset reconnection state and attempt a fresh connection.
+   * Useful for "Retry" buttons after max reconnect attempts are exhausted.
+   */
+  const resetAndReconnect = () => {
+    reconnectAttempts.value = 0
+    isReconnecting.value = false
+    lastError.value = null
+    latencyMs.value = null
+    disconnect()
+    connect()
   }
 
   const handleMessage = (message: WebSocketEvent) => {
@@ -180,7 +218,10 @@ export function useWebSocket() {
         break
 
       case 'keepalive_ack':
-        // Server acknowledged keepalive — connection is alive
+        // Calculate round-trip latency from keepalive
+        if (lastKeepaliveSent > 0) {
+          latencyMs.value = Date.now() - lastKeepaliveSent
+        }
         break
     }
   }
@@ -241,10 +282,15 @@ export function useWebSocket() {
 
   return {
     isConnected: readonly(isConnected),
+    isReconnecting: readonly(isReconnecting),
+    reconnectAttempt: readonly(reconnectAttempts),
+    maxReconnectAttempts: readonly(maxReconnectAttempts),
     lastError: readonly(lastError),
+    latencyMs: readonly(latencyMs),
     movementPreview: readonly(movementPreview),
     connect,
     disconnect,
+    resetAndReconnect,
     send,
     onMessage,
     identify,

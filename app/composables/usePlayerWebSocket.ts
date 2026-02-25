@@ -11,7 +11,18 @@ import type { PlayerActionRequest, PlayerActionAck, SceneSyncPayload } from '~/t
  * - Manages pending action request tracking
  */
 export function usePlayerWebSocket() {
-  const { isConnected, identify, joinEncounter, send, onMessage } = useWebSocket()
+  const {
+    isConnected,
+    isReconnecting,
+    reconnectAttempt,
+    maxReconnectAttempts,
+    latencyMs,
+    identify,
+    joinEncounter,
+    send,
+    onMessage,
+    resetAndReconnect
+  } = useWebSocket()
   const playerStore = usePlayerIdentityStore()
   const encounterStore = useEncounterStore()
   const { refreshCharacterData } = usePlayerIdentity()
@@ -180,10 +191,15 @@ export function usePlayerWebSocket() {
   return {
     // Expose underlying WebSocket utilities so the page uses a single connection
     isConnected,
+    isReconnecting,
+    reconnectAttempt,
+    maxReconnectAttempts,
+    latencyMs,
     identify,
     joinEncounter,
     onMessage,
     send,
+    resetAndReconnect,
     // Player-specific state
     activeScene,
     sendAction,
