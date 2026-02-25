@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-24T20:30:00
-updated_by: slave-collector (plan-20260224-200000)
+last_updated: 2026-02-25T13:00:00
+updated_by: slave-collector (plan-20260224-210000)
 ---
 
 # Dev Ecosystem State
@@ -34,7 +34,7 @@ updated_by: slave-collector (plan-20260224-200000)
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-fix-cycle-2-applied** | 3D isometric grid — P2 fix cycle 2 applied (52ca518: pass terrainPaintElevation to drag handler). Ready for re-review | multi-phase |
-| feature-003 | P1 | **Track-B/C-P0-APPROVED** | Player View — Track B P0 APPROVED (code-review-155 + rules-review-145). Track C P0 APPROVED (code-review-156 + rules-review-146). All fix cycles complete. Ready for P1 tracks | multi-phase-parallel |
+| feature-003 | P1 | **Track-B-P1+Track-C-P1-implemented** | Player View — Track B P1 implemented (8 commits: tunnel config, SessionUrlDisplay, ConnectionStatus, enhanced reconnection). Track C P1 implemented (9 commits: group view control, player VTT grid, action ack, state sync). Both need review | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -44,14 +44,16 @@ updated_by: slave-collector (plan-20260224-200000)
 
 ## Active Developer Work
 
-**Current task:** feature-002 P2 fix cycle 2 applied (1 commit). Ready for re-review.
+**Current task:** feature-003 Track B P1 + Track C P1 implemented. feature-002 P2 fix cycle 2 applied. All three need review.
 
 **Session 30 (2026-02-25):**
 - feature-002 P2 fix cycle 2 — 52ca518: pass `terrainPaintElevation` to `applyTool` in drag handler at `useIsometricInteraction.ts:477` → **fix applied, ready for re-review**
+- feature-003 Track B P1 — 8 commits (9e0e740..a04aedc): tunnelUrl AppSettings field, GET/PUT tunnel endpoints, SessionUrlDisplay with copy-to-clipboard, enhanced WS reconnection (10 attempts for non-localhost), ConnectionStatus component, reconnect banner, route rules for tunnel, REMOTE_ACCESS_SETUP.md docs → **implemented, needs review**
+- feature-003 Track C P1 — 9 commits (fda245d..6661d43): WS handlers for group_view/player_move/turn_notify, PlayerGroupControl component, usePlayerGridView composable, GridCanvas+VTTToken player mode, PlayerGridView+PlayerMoveRequest components, action ack toast + turn notify, useStateSync composable, player page wiring → **implemented, needs review**
 
 **Next actions (by priority):**
-1. **Re-review** feature-002 P2 fix cycle 2 (code-review + rules-review)
-2. **Implement** feature-003 Track B P1 + Track C P1 (both P0 tracks now APPROVED)
+1. **Review** feature-003 Track B P1 + Track C P1 (code-review + rules-review)
+2. **Re-review** feature-002 P2 fix cycle 2 (code-review + rules-review)
 3. ptu-rule-081 P4, ptu-rule-082 P4, ptu-rule-083 P4
 
 ## Review Status
@@ -230,7 +232,7 @@ updated_by: slave-collector (plan-20260224-200000)
 |--------|-------|
 | Last audited | 2026-02-18T12:00:00 |
 | Open tickets (P0) | 0 |
-| Open tickets (P1) | 1 (feature-003 — Track B/C P0 APPROVED, ready for P1 tracks) |
+| Open tickets (P1) | 1 (feature-003 — Track B/C P1 implemented, needs review) |
 | Open tickets (P2) | 1 (feature-002 — P2 fix cycle 2 applied, awaiting re-review) |
 | Open tickets (P3) | 0 |
 | Open tickets (P4) | 16 (refactoring-059–078 excl 6 resolved + ptu-rule-081, 082, 083 + ux-001, 002) |
@@ -510,6 +512,21 @@ updated_by: slave-collector (plan-20260224-200000)
 **Net movement:** 18→18 open (no change — feature-003 Track B/C P0 APPROVED but ticket remains open for P1, feature-002 needs one more fix cycle)
 
 **All P0 tickets remain at 0. feature-003 Track B/C P0 are now APPROVED. feature-002 P2 needs one-line fix for drag painting elevation.**
+
+## Session Summary (2026-02-25, session 30 — plan-20260224-210000)
+
+**Slave collection plan-20260224-210000:** 3 developer slaves merged (19 commits total, 1 conflict resolved in `app/pages/player/index.vue`)
+- **slave-1** (developer): feature-002 P2 fix cycle 2 — 2 commits (pass terrainPaintElevation to drag handler, resolution log + dev-state update)
+- **slave-2** (developer): feature-003 Track B P1 — 8 commits (tunnelUrl AppSettings field, GET/PUT tunnel endpoints, SessionUrlDisplay component, enhanced WS reconnection, ConnectionStatus component + reconnect banner, route rules + HMR config, REMOTE_ACCESS_SETUP.md, click handler fix)
+- **slave-3** (developer): feature-003 Track C P1 — 9 commits (P1 WS handlers, PlayerGroupControl, usePlayerGridView, GridCanvas/VTTToken player mode, PlayerGridView + PlayerMoveRequest, action ack toast + turn notify, useStateSync, player page wiring, PhLightning icon fix)
+
+**Conflict resolved:** Slaves 2 and 3 both modified `app/pages/player/index.vue` — slave-2 added reconnection exports/styles, slave-3 added P1 feature exports/styles. Both sides kept (additive merge).
+
+**Tickets filed:** 0 (no side-discoveries — all work was implementations)
+**Tickets resolved:** 0 (all implementations need review before resolution)
+**Net movement:** 18→18 open (no change — implementations need review)
+
+**All P0 tickets remain at 0.**
 
 ## Session Summary (2026-02-23, session 22 — plan-20260223-122250)
 
