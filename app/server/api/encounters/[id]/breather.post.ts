@@ -8,10 +8,10 @@
 import { prisma } from '~/server/utils/prisma'
 import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
-import { createDefaultStageModifiers } from '~/server/services/combatant.service'
+import { createDefaultStageModifiers, reapplyActiveStatusCsEffects } from '~/server/services/combatant.service'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
-import type { StatusCondition, HumanCharacter } from '~/types'
+import type { StatusCondition, StageSource, HumanCharacter } from '~/types'
 
 // Take a Breather cures all volatile conditions + Slowed and Stuck (PTU 1.05 p.245)
 // Exception: Cursed requires the curse source to be KO'd or >12m away (p.245).
@@ -22,6 +22,25 @@ const BREATHER_CURED_CONDITIONS: StatusCondition[] = [
   'Slowed',
   'Stuck'
 ]
+
+/**
+ * Build descriptive notes for the breather move log entry.
+ */
+function buildBreatherNotes(
+  result: { tempHpRemoved: number; conditionsCured: string[] },
+  reappliedSources: StageSource[]
+): string {
+  const parts = [
+    `Reset stages, removed ${result.tempHpRemoved} temp HP`,
+    `cured: ${result.conditionsCured.join(', ') || 'none'}`
+  ]
+  if (reappliedSources.length > 0) {
+    const sourceDescs = reappliedSources.map(s => `${s.source} (${s.value >= 0 ? '+' : ''}${s.value} ${s.stat})`)
+    parts.push(`re-applied CS: ${sourceDescs.join(', ')}`)
+  }
+  parts.push('SHIFT REQUIRED: Move away from all enemies using full movement.')
+  return parts.join('. ')
+}
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -68,8 +87,9 @@ export default defineEventHandler(async (event) => {
     const hadStages = Object.entries(stages).some(
       ([key, val]) => val !== (defaultStages[key as keyof typeof defaultStages] ?? 0)
     )
+    // Always reset stages to defaults (needed for stageSources cleanup even if values happen to match)
+    entity.stageModifiers = { ...defaultStages }
     if (hadStages) {
-      entity.stageModifiers = defaultStages
       result.stagesReset = true
     }
 
@@ -92,6 +112,11 @@ export default defineEventHandler(async (event) => {
     }
 
     entity.statusConditions = remainingStatuses
+
+    // Re-apply CS effects from surviving status conditions (decree-005)
+    // Burn/Paralysis/Poison are persistent and survive Take a Breather.
+    // Their inherent CS effects must be re-applied after the stage reset.
+    reapplyActiveStatusCsEffects(combatant)
 
     // Apply Tripped and Vulnerable (temporary until next turn)
     if (!combatant.tempConditions) {
@@ -131,7 +156,7 @@ export default defineEventHandler(async (event) => {
       actorName: entityName,
       moveName: 'Take a Breather',
       targets: [],
-      notes: `Reset stages, removed ${result.tempHpRemoved} temp HP, cured: ${result.conditionsCured.join(', ') || 'none'}. SHIFT REQUIRED: Move away from all enemies using full movement.`
+      notes: buildBreatherNotes(result, combatant.stageSources || [])
     })
 
     await prisma.encounter.update({
