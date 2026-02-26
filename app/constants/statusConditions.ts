@@ -24,6 +24,15 @@ export const ALL_STATUS_CONDITIONS: StatusCondition[] = [
 ]
 
 /**
+ * Conditions that set evasion to 0.
+ * PTU p.246 (Frozen), p.247 (Asleep, Vulnerable):
+ * "Evasion becomes 0" / "The target's evasion becomes 0"
+ */
+export const ZERO_EVASION_CONDITIONS: StatusCondition[] = [
+  'Vulnerable', 'Frozen', 'Asleep'
+]
+
+/**
  * Get CSS class for a status condition
  */
 export function getConditionClass(condition: StatusCondition): string {

@@ -219,25 +219,41 @@ export default defineEventHandler(async (event) => {
       defenseBonus,
     })
 
-    // Compute dynamic evasion from target's stage-modified stats (PTU p.234)
-    // Part 1: Stat-derived evasion uses combat stage MULTIPLIER on the stat (floor(modified/5))
-    // Part 2: Evasion bonus from moves/effects is ADDITIVE, stacking on top
-    // Part 3: Equipment evasion bonus (shields) stacks additively with move/effect evasion (PTU p.294)
-    // Part 4: Focus stat bonuses (+5 to stat) applied after combat stages (PTU p.295)
-    const targetEvasion = getEntityEvasionStats(target)
-    const targetStages = target.entity.stageModifiers
-    let evasionBonus = targetStages?.evasion ?? 0
-    // Add equipment evasion bonus for human targets (shields — PTU p.294)
-    if (targetEquipBonuses) {
-      evasionBonus += targetEquipBonuses.evasionBonus
+    // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0
+    const targetConditions: string[] = target.entity.statusConditions ?? []
+    const hasZeroEvasionCondition = targetConditions.some(
+      (c) => c === 'Vulnerable' || c === 'Frozen' || c === 'Asleep'
+    )
+
+    let physicalEvasion: number
+    let specialEvasion: number
+    let speedEvasion: number
+
+    if (hasZeroEvasionCondition) {
+      physicalEvasion = 0
+      specialEvasion = 0
+      speedEvasion = 0
+    } else {
+      // Compute dynamic evasion from target's stage-modified stats (PTU p.234)
+      // Part 1: Stat-derived evasion uses combat stage MULTIPLIER on the stat (floor(modified/5))
+      // Part 2: Evasion bonus from moves/effects is ADDITIVE, stacking on top
+      // Part 3: Equipment evasion bonus (shields) stacks additively with move/effect evasion (PTU p.294)
+      // Part 4: Focus stat bonuses (+5 to stat) applied after combat stages (PTU p.295)
+      const targetEvasion = getEntityEvasionStats(target)
+      const targetStages = target.entity.stageModifiers
+      let evasionBonus = targetStages?.evasion ?? 0
+      // Add equipment evasion bonus for human targets (shields — PTU p.294)
+      if (targetEquipBonuses) {
+        evasionBonus += targetEquipBonuses.evasionBonus
+      }
+      // Focus stat bonuses for evasion: +5 to stat after combat stages (PTU p.295)
+      const focusDefBonus = targetEquipBonuses?.statBonuses.defense ?? 0
+      const focusSpDefBonus = targetEquipBonuses?.statBonuses.specialDefense ?? 0
+      const focusSpeedBonus = targetEquipBonuses?.statBonuses.speed ?? 0
+      physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage, evasionBonus, focusDefBonus)
+      specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage, evasionBonus, focusSpDefBonus)
+      speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage, evasionBonus, focusSpeedBonus)
     }
-    // Focus stat bonuses for evasion: +5 to stat after combat stages (PTU p.295)
-    const focusDefBonus = targetEquipBonuses?.statBonuses.defense ?? 0
-    const focusSpDefBonus = targetEquipBonuses?.statBonuses.specialDefense ?? 0
-    const focusSpeedBonus = targetEquipBonuses?.statBonuses.speed ?? 0
-    const physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage, evasionBonus, focusDefBonus)
-    const specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage, evasionBonus, focusSpDefBonus)
-    const speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage, evasionBonus, focusSpeedBonus)
 
     // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
     // Auto-select the highest applicable evasion (rational defender always picks best).

@@ -1,4 +1,4 @@
-import type { Move, Combatant, Pokemon, HumanCharacter, GridPosition } from '~/types'
+import type { Move, Combatant, Pokemon, HumanCharacter, GridPosition, StatusCondition } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
@@ -343,6 +343,15 @@ export function useMoveCalculation(
     speed: number
   } => {
     const entity = target.entity
+
+    // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0
+    const hasZeroEvasionCondition = entity.statusConditions?.some(
+      (c: StatusCondition) => c === 'Vulnerable' || c === 'Frozen' || c === 'Asleep'
+    )
+    if (hasZeroEvasionCondition) {
+      return { physical: 0, special: 0, speed: 0 }
+    }
+
     const stages = getStageModifiers(entity)
 
     let evasionBonus = stages.evasion ?? 0
