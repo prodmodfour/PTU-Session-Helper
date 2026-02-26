@@ -706,4 +706,115 @@ const equipmentSlots = computed(() => {
   text-align: center;
   padding: $spacing-sm;
 }
+
+// 4K scaling
+@media (min-width: $breakpoint-4k) {
+  .player-sheet {
+    padding: $spacing-4k-md;
+    gap: $spacing-4k-sm;
+
+    &__header {
+      padding: $spacing-4k-md;
+    }
+
+    &__avatar {
+      width: 72px;
+      height: 72px;
+      min-width: 72px;
+
+      span {
+        font-size: $font-size-4k-lg;
+      }
+    }
+
+    &__name {
+      font-size: $font-size-4k-lg;
+    }
+
+    &__level {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__classes {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__section-header {
+      padding: $spacing-4k-sm $spacing-4k-md;
+      font-size: $font-size-4k-sm;
+    }
+
+    &__stats-grid {
+      padding: 0 $spacing-4k-sm $spacing-4k-sm;
+    }
+
+    &__combat {
+      padding: 0 $spacing-4k-md $spacing-4k-sm;
+    }
+
+    &__skills {
+      padding: 0 $spacing-4k-md $spacing-4k-sm;
+    }
+
+    &__list {
+      padding: $spacing-4k-sm $spacing-4k-md;
+    }
+
+    &__equipment {
+      padding: 0 $spacing-4k-md $spacing-4k-sm;
+    }
+
+    &__inventory {
+      padding: 0 $spacing-4k-md $spacing-4k-sm;
+    }
+  }
+
+  .combat-item {
+    &__label {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__value {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .skill-row {
+    &__name {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__rank {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .tag {
+    font-size: $font-size-4k-sm;
+  }
+
+  .equipment-slot {
+    &__label {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__value {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .inventory-row {
+    &__name {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__qty {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .empty-text {
+    font-size: $font-size-4k-sm;
+  }
+}
 </style>

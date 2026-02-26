@@ -309,4 +309,56 @@ const visibility = computed(() => {
     font-size: 9px;
   }
 }
+
+// 4K scaling
+@media (min-width: $breakpoint-4k) {
+  .player-combatant {
+    padding: $spacing-4k-sm;
+    gap: $spacing-4k-sm;
+
+    &__sprite {
+      width: 60px;
+      height: 60px;
+      min-width: 60px;
+    }
+
+    &__avatar {
+      width: 60px;
+      height: 60px;
+      min-width: 60px;
+
+      span {
+        font-size: $font-size-4k-sm;
+      }
+    }
+
+    &__name {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__turn-badge {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__type {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__injuries {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .player-combatant__hp {
+    :deep(.player-hp-bar-label) {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .player-combatant__statuses {
+    :deep(.player-status-badge) {
+      font-size: $font-size-4k-sm;
+    }
+  }
+}
 </style>

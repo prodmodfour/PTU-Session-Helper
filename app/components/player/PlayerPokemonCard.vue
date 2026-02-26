@@ -415,4 +415,68 @@ const statEntries = computed(() => {
   }
 }
 
+// 4K scaling
+@media (min-width: $breakpoint-4k) {
+  .pokemon-card {
+    &__summary {
+      padding: $spacing-4k-sm $spacing-4k-md;
+      min-height: 96px;
+    }
+
+    &__sprite {
+      width: 72px;
+      height: 72px;
+      min-width: 72px;
+    }
+
+    &__name {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__active-badge {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__type {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__level {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__details {
+      padding: $spacing-4k-sm $spacing-4k-md $spacing-4k-md;
+    }
+
+    &__held-item {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .detail-label {
+    font-size: $font-size-4k-sm;
+  }
+
+  .ability-row {
+    &__name {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__effect {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .cap-item {
+    &__label {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__value {
+      font-size: $font-size-4k-sm;
+    }
+  }
+}
+
 </style>

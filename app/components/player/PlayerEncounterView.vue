@@ -243,4 +243,45 @@ watch(currentCombatant, (combatant) => {
     gap: $spacing-xs;
   }
 }
+
+// 4K scaling
+@media (min-width: $breakpoint-4k) {
+  .player-encounter {
+    padding: $spacing-4k-md;
+  }
+
+  .encounter-waiting {
+    padding: $spacing-4k-xl $spacing-4k-md;
+
+    p {
+      font-size: $font-size-4k-md;
+    }
+
+    &__hint {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .encounter-header {
+    padding: $spacing-4k-md;
+
+    &__name {
+      font-size: $font-size-4k-md;
+    }
+
+    &__round {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__turn {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .encounter-side {
+    &__title {
+      font-size: $font-size-4k-sm;
+    }
+  }
+}
 </style>
