@@ -428,7 +428,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
 
       // Show "Out of range", "Blocked", or "Impassable" message if invalid
       if (!moveResult.valid) {
-        const message = moveResult.blocked ? 'Blocked' : 'Out of range'
+        const message = moveResult.blocked ? 'Occupied' : 'Out of range'
         drawMessageLabel(ctx, {
           x: endX,
           y: labelY - 20,
