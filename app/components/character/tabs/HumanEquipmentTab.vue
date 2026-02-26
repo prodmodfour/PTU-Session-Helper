@@ -27,9 +27,10 @@
         <!-- Empty slot: dropdown selector -->
         <div v-else class="slot-empty">
           <select
+            v-model="slotSelections[slotDef.key]"
             class="slot-select"
             :disabled="saving"
-            @change="onSelectItem(slotDef.key, $event)"
+            @change="onSelectItem(slotDef.key)"
           >
             <option value="">-- Empty --</option>
             <option
@@ -178,6 +179,16 @@ const customForm = ref({
   description: ''
 })
 
+// Reactive dropdown selections per slot (replaces direct DOM manipulation)
+const slotSelections = ref<Record<EquipmentSlot, string>>({
+  head: '',
+  body: '',
+  mainHand: '',
+  offHand: '',
+  feet: '',
+  accessory: ''
+})
+
 const slotDefinitions = EQUIPMENT_SLOTS.map(key => ({
   key,
   label: SLOT_LABELS[key],
@@ -222,12 +233,15 @@ async function equipItem(slot: EquipmentSlot, item: EquippedItem) {
       body: { slots: { [slot]: item } }
     })
     if (response.success) {
+      // Reset dropdown only on success
+      slotSelections.value = { ...slotSelections.value, [slot]: '' }
       emit('equipment-changed', response.data.slots)
       if (props.isInEncounter) {
         emit('equipment-changed-in-encounter', response.data.slots)
       }
     }
   } catch (error: any) {
+    // On failure, leave dropdown at selected value so user can retry
     alert(`Failed to equip ${item.name}: ${error.data?.message || error.message || 'Unknown error'}`)
   } finally {
     saving.value = false
@@ -254,14 +268,13 @@ async function unequipSlot(slot: EquipmentSlot) {
   }
 }
 
-function onSelectItem(slot: EquipmentSlot, event: Event) {
-  const value = (event.target as HTMLSelectElement).value
+function onSelectItem(slot: EquipmentSlot) {
+  const value = slotSelections.value[slot]
   if (!value) return
 
-  // Reset select to empty after selection
-  ;(event.target as HTMLSelectElement).value = ''
-
   if (value === '__custom__') {
+    // Reset dropdown immediately for custom (form takes over)
+    slotSelections.value = { ...slotSelections.value, [slot]: '' }
     customSlot.value = slot
     customForm.value = { name: '', damageReduction: 0, evasionBonus: 0, speedDefaultCS: 0, description: '' }
     return
@@ -269,6 +282,7 @@ function onSelectItem(slot: EquipmentSlot, event: Event) {
 
   const catalogItem = EQUIPMENT_CATALOG[value]
   if (catalogItem) {
+    // equipItem resets dropdown on success, leaves it on failure
     equipItem(slot, catalogItem)
   }
 }
