@@ -88,13 +88,14 @@ export function useEncounterActions(options: EncounterActionsOptions) {
       refreshUndoRedoState()
       await broadcastUpdate()
     } catch (error: unknown) {
-      // Decree-012: type immunity rejection — re-throw with immunity data for UI handling
-      const fetchError = error as { statusCode?: number; data?: { data?: { immune?: Array<{ status: string; immuneType: string }> } } }
+      // Decree-012: type immunity rejection — show informative alert
+      const fetchError = error as { statusCode?: number; data?: { message?: string } }
       if (fetchError.statusCode === 409) {
-        throw error
+        const msg = fetchError.data?.message || 'Type immunity prevents this status condition'
+        alert(`Status blocked: ${msg}\n\nUse the Status Conditions modal and "Force Apply (GM Override)" to bypass.`)
+        return
       }
-      // Re-throw other errors
-      throw error
+      alert(`Failed to update status conditions for ${name}`)
     }
   }
 
