@@ -7,6 +7,7 @@
 import { loadEncounter, findCombatant } from '~/server/services/encounter.service'
 import { calculateDamage, calculateEvasion, calculateAccuracyThreshold } from '~/utils/damageCalculation'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
+import { ZERO_EVASION_CONDITIONS } from '~/constants/statusConditions'
 import type { AccuracyCalcResult } from '~/utils/damageCalculation'
 import type { Pokemon, HumanCharacter, Move } from '~/types'
 
@@ -222,7 +223,7 @@ export default defineEventHandler(async (event) => {
     // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0
     const targetConditions: string[] = target.entity.statusConditions ?? []
     const hasZeroEvasionCondition = targetConditions.some(
-      (c) => c === 'Vulnerable' || c === 'Frozen' || c === 'Asleep'
+      (c) => (ZERO_EVASION_CONDITIONS as readonly string[]).includes(c)
     )
 
     let physicalEvasion: number

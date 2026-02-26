@@ -1,4 +1,5 @@
 import type { Move, Combatant, Pokemon, HumanCharacter, GridPosition, StatusCondition } from '~/types'
+import { ZERO_EVASION_CONDITIONS } from '~/constants/statusConditions'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
@@ -346,7 +347,7 @@ export function useMoveCalculation(
 
     // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0
     const hasZeroEvasionCondition = entity.statusConditions?.some(
-      (c: StatusCondition) => c === 'Vulnerable' || c === 'Frozen' || c === 'Asleep'
+      (c: StatusCondition) => ZERO_EVASION_CONDITIONS.includes(c)
     )
     if (hasZeroEvasionCondition) {
       return { physical: 0, special: 0, speed: 0 }
