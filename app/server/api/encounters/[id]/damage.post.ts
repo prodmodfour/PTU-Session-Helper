@@ -3,7 +3,7 @@
  */
 import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
 import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
-import { syncDamageToDatabase } from '~/server/services/entity-update.service'
+import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -49,6 +49,13 @@ export default defineEventHandler(async (event) => {
       entity.statusConditions || [],
       damageResult.injuryGained
     )
+
+    // Sync reversed stageModifiers when fainted (decree-005: status CS effects are
+    // reversed on faint by applyDamageToEntity, but syncDamageToDatabase doesn't
+    // include stageModifiers — sync them separately)
+    if (damageResult.fainted && entity.stageModifiers) {
+      await syncStagesToDatabase(combatant, entity.stageModifiers)
+    }
 
     // Track defeated enemies for XP
     let defeatedEnemies = JSON.parse(record.defeatedEnemies)

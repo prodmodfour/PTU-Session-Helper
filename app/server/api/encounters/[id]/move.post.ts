@@ -10,7 +10,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
 import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
-import { syncDamageToDatabase } from '~/server/services/entity-update.service'
+import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkMoveFrequency, incrementMoveUsage } from '~/utils/moveFrequency'
 import type { Move } from '~/types/character'
 
@@ -90,6 +90,12 @@ export default defineEventHandler(async (event) => {
           entity.statusConditions || [],
           damageResult.injuryGained
         ))
+
+        // Sync reversed stageModifiers when fainted (decree-005: status CS effects
+        // are reversed on faint, but syncDamageToDatabase doesn't include stageModifiers)
+        if (damageResult.fainted && entity.stageModifiers) {
+          dbUpdates.push(syncStagesToDatabase(target, entity.stageModifiers))
+        }
       }
 
       return {
