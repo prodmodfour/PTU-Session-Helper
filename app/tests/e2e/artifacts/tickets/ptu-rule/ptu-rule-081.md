@@ -1,7 +1,7 @@
 ---
 ticket_id: ptu-rule-081
 priority: P4
-status: open
+status: in-progress
 domain: combat
 source: rules-review-115 M2
 created_by: slave-collector (plan-20260221-071325)
@@ -31,3 +31,11 @@ Either:
 ## Impact
 
 - **Edge case:** The equipment slot system (one item per slot) makes this unlikely, but the equipment catalog could contain Focus items for different slots. Relies on GM discipline rather than code enforcement currently.
+
+## Resolution Log
+
+- **Commit:** `0387a94` — `fix: enforce single Focus item limit per PTU p.295 (ptu-rule-081)`
+- **Files changed:**
+  - `app/utils/equipmentBonuses.ts` — added `focusApplied` boolean flag; only the first item with `statBonus` is applied, subsequent Focus items are skipped
+- **Approach:** Option 1 from Suggested Fix. Added a guard in `computeEquipmentBonuses()` that tracks whether a Focus bonus has already been applied. The first `statBonus` item in the iteration is applied; any subsequent ones are silently ignored.
+- **Duplicate code path check:** Searched for `statBonus`, `equipmentBonuses`, and `computeEquipment` across `app/` — `computeEquipmentBonuses()` is the single source of truth for all equipment bonus computation. No duplicate logic exists elsewhere.
