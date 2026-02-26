@@ -411,6 +411,7 @@ export const useEncounterStore = defineStore('encounter', {
           // Update existing combatant in place
           const existing = this.encounter.combatants[existingIndex]
           existing.initiative = incomingCombatant.initiative
+          existing.hasActed = incomingCombatant.hasActed
           existing.side = incomingCombatant.side
           existing.position = incomingCombatant.position
           existing.turnState = incomingCombatant.turnState
