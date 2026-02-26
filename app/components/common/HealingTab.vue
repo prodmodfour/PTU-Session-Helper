@@ -63,14 +63,26 @@
       </div>
 
       <div class="healing-action">
-        <h4>Extended Rest (4+ hours)</h4>
+        <h4>Extended Rest (4–8 hours)</h4>
         <p>{{ extendedRestDescription }}</p>
+        <div class="healing-action__duration">
+          <label class="healing-action__duration-label" for="extended-rest-duration">Duration (hours)</label>
+          <input
+            id="extended-rest-duration"
+            v-model.number="extendedRestDuration"
+            type="number"
+            class="healing-action__duration-input"
+            min="4"
+            max="8"
+            step="1"
+          />
+        </div>
         <button
           class="btn btn--primary"
           :disabled="healingLoading"
           @click="handleExtendedRest"
         >
-          {{ healingLoading ? 'Resting...' : 'Extended Rest' }}
+          {{ healingLoading ? 'Resting...' : `Extended Rest (${extendedRestDuration}h)` }}
         </button>
       </div>
 
@@ -140,6 +152,7 @@ const emit = defineEmits<{
 
 const { rest, extendedRest, pokemonCenter, healInjury, newDay, getHealingInfo, formatRestTime, loading: healingLoading } = useRestHealing()
 const lastHealingResult = ref<{ success: boolean; message: string } | null>(null)
+const extendedRestDuration = ref(4)
 
 const currentHp = computed(() => props.entity.currentHp)
 const maxHp = computed(() => props.entity.maxHp)
@@ -163,9 +176,9 @@ const healingInfo = computed(() => {
 
 const extendedRestDescription = computed(() => {
   if (props.entityType === 'character') {
-    return 'Heal HP for 4 hours, clear persistent status conditions, restore drained AP.'
+    return 'Heal HP over the chosen duration, clear persistent status conditions, restore drained AP. Each 30 min heals 1/16th max HP. Subject to daily 8h cap.'
   }
-  return 'Heal HP for 4 hours, clear persistent status conditions (Burned, Frozen, Paralyzed, Poisoned), restore daily moves.'
+  return 'Heal HP over the chosen duration, clear persistent status conditions (Burned, Frozen, Paralyzed, Poisoned), restore daily moves. Each 30 min heals 1/16th max HP. Subject to daily 8h cap.'
 })
 
 const pokemonCenterDescription = computed(() => {
@@ -195,7 +208,8 @@ const handleRest = async () => {
 }
 
 const handleExtendedRest = async () => {
-  const result = await extendedRest(props.entityType, props.entityId)
+  const duration = Math.min(8, Math.max(4, extendedRestDuration.value || 4))
+  const result = await extendedRest(props.entityType, props.entityId, duration)
   await applyResult(result)
 }
 
@@ -297,6 +311,35 @@ const handleNewDay = async () => {
 
   .btn {
     width: 100%;
+  }
+
+  &__duration {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+  }
+
+  &__duration-label {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    white-space: nowrap;
+  }
+
+  &__duration-input {
+    width: 64px;
+    padding: $spacing-xs $spacing-sm;
+    background: $color-bg-tertiary;
+    border: 1px solid $border-color-default;
+    border-radius: $border-radius-sm;
+    color: $color-text;
+    font-size: $font-size-sm;
+    text-align: center;
+
+    &:focus {
+      outline: none;
+      border-color: $color-accent-teal;
+    }
   }
 }
 
