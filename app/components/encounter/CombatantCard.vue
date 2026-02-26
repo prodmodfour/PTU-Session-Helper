@@ -182,6 +182,7 @@
       v-if="showStatusModal"
       :combatant-name="displayName"
       :current-statuses="statusConditions"
+      :entity-types="pokemonTypes as string[]"
       @close="showStatusModal = false"
       @save="handleStatusSave"
     />
@@ -203,7 +204,7 @@ const emit = defineEmits<{
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   remove: [combatantId: string]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]
-  status: [combatantId: string, add: StatusCondition[], remove: StatusCondition[]]
+  status: [combatantId: string, add: StatusCondition[], remove: StatusCondition[], override: boolean]
   openActions: [combatantId: string]
 }>()
 
@@ -333,9 +334,9 @@ const handleStagesSave = (changes: Partial<StageModifiers>, absolute: boolean) =
   emit('stages', props.combatant.id, changes, absolute)
 }
 
-const handleStatusSave = (add: StatusCondition[], remove: StatusCondition[]) => {
+const handleStatusSave = (add: StatusCondition[], remove: StatusCondition[], override: boolean) => {
   if (add.length > 0 || remove.length > 0) {
-    emit('status', props.combatant.id, add, remove)
+    emit('status', props.combatant.id, add, remove, override)
   }
 }
 
