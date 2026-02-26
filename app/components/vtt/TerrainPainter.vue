@@ -13,12 +13,12 @@
     </div>
 
     <div v-if="terrainStore.enabled" class="terrain-painter__tools">
-      <!-- Terrain Type Selector -->
+      <!-- Base Terrain Type Selector -->
       <div class="terrain-painter__section">
-        <label>Paint Mode</label>
+        <label>Base Terrain</label>
         <div class="terrain-painter__types">
           <button
-            v-for="terrain in terrainTypes"
+            v-for="terrain in baseTerrainTypes"
             :key="terrain.type"
             class="terrain-btn"
             :class="{ active: terrainStore.paintMode === terrain.type }"
@@ -28,6 +28,37 @@
           >
             <span class="terrain-btn__icon">{{ terrain.icon }}</span>
             <span class="terrain-btn__label">{{ terrain.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Movement Flags (multi-tag per decree-010) -->
+      <div class="terrain-painter__section">
+        <label>Movement Flags</label>
+        <div class="terrain-painter__flags">
+          <button
+            class="flag-btn"
+            :class="{ active: terrainStore.paintFlags.rough }"
+            @click="terrainStore.togglePaintFlag('rough')"
+            title="Rough: -2 accuracy penalty (PTU p.231)"
+          >
+            <span class="flag-btn__icon">
+              <PhCrosshairSimple :size="14" />
+            </span>
+            <span class="flag-btn__label">Rough</span>
+            <span class="flag-btn__hint">-2 acc</span>
+          </button>
+          <button
+            class="flag-btn"
+            :class="{ active: terrainStore.paintFlags.slow }"
+            @click="terrainStore.togglePaintFlag('slow')"
+            title="Slow: 2x movement cost (PTU p.231)"
+          >
+            <span class="flag-btn__icon">
+              <PhHourglass :size="14" />
+            </span>
+            <span class="flag-btn__label">Slow</span>
+            <span class="flag-btn__hint">2x cost</span>
           </button>
         </div>
       </div>
@@ -107,6 +138,14 @@
         </div>
       </div>
 
+      <!-- Paint Preview -->
+      <div class="terrain-painter__preview">
+        <span class="terrain-painter__preview-label">Painting:</span>
+        <span class="terrain-painter__preview-value">
+          {{ currentPaintDescription }}
+        </span>
+      </div>
+
       <!-- Actions -->
       <div class="terrain-painter__actions">
         <button
@@ -125,14 +164,14 @@
     <!-- Legend (always visible) -->
     <div class="terrain-painter__legend">
       <div
-        v-for="terrain in terrainTypes"
-        :key="terrain.type"
+        v-for="item in legendItems"
+        :key="item.label"
         class="legend-item"
-        :style="{ '--terrain-color': terrain.color }"
+        :style="{ '--terrain-color': item.color }"
       >
         <span class="legend-swatch"></span>
-        <span class="legend-label">{{ terrain.label }}</span>
-        <span class="legend-cost">{{ terrain.costLabel }}</span>
+        <span class="legend-label">{{ item.label }}</span>
+        <span class="legend-cost">{{ item.costLabel }}</span>
       </div>
     </div>
 
@@ -145,7 +184,8 @@
 </template>
 
 <script setup lang="ts">
-import { useTerrainStore, TERRAIN_COLORS } from '~/stores/terrain'
+import { PhCrosshairSimple, PhHourglass } from '@phosphor-icons/vue'
+import { useTerrainStore, TERRAIN_COLORS, FLAG_COLORS } from '~/stores/terrain'
 import type { TerrainType } from '~/types'
 
 const props = defineProps<{
@@ -163,23 +203,14 @@ const toolMode = ref<'paint' | 'erase' | 'line' | 'fill'>('paint')
 // Elevation level for terrain painting (isometric mode)
 const elevationLevel = ref(0)
 
-// Terrain type definitions with UI metadata
-const terrainTypes = [
+// Base terrain type definitions (no longer includes 'difficult' or 'rough' — those are flags now)
+const baseTerrainTypes = [
   {
     type: 'normal' as TerrainType,
     label: 'Normal',
     icon: '○',
     color: 'rgba(200, 200, 200, 0.5)',
     description: 'Normal terrain - standard movement',
-    costLabel: '1x',
-  },
-  {
-    type: 'difficult' as TerrainType,
-    label: 'Slow',
-    icon: '◇',
-    color: TERRAIN_COLORS.difficult.fill,
-    description: 'Slow terrain - 2x movement cost (PTU: Slow Terrain)',
-    costLabel: '2x',
   },
   {
     type: 'blocking' as TerrainType,
@@ -187,31 +218,20 @@ const terrainTypes = [
     icon: '■',
     color: TERRAIN_COLORS.blocking.fill,
     description: 'Blocking terrain - impassable',
-    costLabel: '∞',
   },
   {
     type: 'water' as TerrainType,
     label: 'Water',
     icon: '≈',
     color: TERRAIN_COLORS.water.fill,
-    description: 'Underwater terrain - requires Swim capability',
-    costLabel: '2x/∞',
+    description: 'Water terrain - requires Swim capability (cost 1)',
   },
   {
     type: 'earth' as TerrainType,
     label: 'Earth',
     icon: '⛏',
     color: TERRAIN_COLORS.earth.fill,
-    description: 'Earth terrain - requires Burrow capability (PTU: Earth Terrain)',
-    costLabel: '∞/1x',
-  },
-  {
-    type: 'rough' as TerrainType,
-    label: 'Rough',
-    icon: '⌇',
-    color: TERRAIN_COLORS.rough.fill,
-    description: 'Rough terrain - -2 accuracy penalty when targeting through (PTU: Rough Terrain)',
-    costLabel: '1x/-2 acc',
+    description: 'Earth terrain - requires Burrow capability',
   },
   {
     type: 'hazard' as TerrainType,
@@ -219,7 +239,6 @@ const terrainTypes = [
     icon: '⚠',
     color: TERRAIN_COLORS.hazard.fill,
     description: 'Hazard - deals damage on entry',
-    costLabel: '1x+dmg',
   },
   {
     type: 'elevated' as TerrainType,
@@ -227,9 +246,31 @@ const terrainTypes = [
     icon: '△',
     color: TERRAIN_COLORS.elevated.fill,
     description: 'Elevated terrain - height advantage',
-    costLabel: '1x',
   },
 ]
+
+// Combined legend items (base types + flags)
+const legendItems = [
+  { label: 'Normal', color: 'rgba(200, 200, 200, 0.5)', costLabel: '1x' },
+  { label: 'Blocking', color: TERRAIN_COLORS.blocking.fill, costLabel: '∞' },
+  { label: 'Water', color: TERRAIN_COLORS.water.fill, costLabel: '1x/∞' },
+  { label: 'Earth', color: TERRAIN_COLORS.earth.fill, costLabel: '∞/1x' },
+  { label: 'Hazard', color: TERRAIN_COLORS.hazard.fill, costLabel: '1x+dmg' },
+  { label: 'Elevated', color: TERRAIN_COLORS.elevated.fill, costLabel: '1x' },
+  { label: 'Rough', color: FLAG_COLORS.rough.fill, costLabel: '-2 acc' },
+  { label: 'Slow', color: FLAG_COLORS.slow.fill, costLabel: '2x cost' },
+]
+
+// Description of what will be painted
+const currentPaintDescription = computed(() => {
+  const typeName = baseTerrainTypes.find(t => t.type === terrainStore.paintMode)?.label ?? terrainStore.paintMode
+  const flagNames: string[] = []
+  if (terrainStore.paintFlags.rough) flagNames.push('Rough')
+  if (terrainStore.paintFlags.slow) flagNames.push('Slow')
+
+  if (flagNames.length === 0) return typeName
+  return `${typeName} + ${flagNames.join(' + ')}`
+})
 
 // Brush preview style
 const brushPreviewStyle = computed(() => ({
@@ -288,7 +329,12 @@ defineExpose({
 
   &__types {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-xs;
+  }
+
+  &__flags {
+    display: flex;
     gap: $spacing-xs;
   }
 
@@ -321,6 +367,25 @@ defineExpose({
       background: $color-accent-teal;
       border-radius: 1px;
     }
+  }
+
+  &__preview {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-xs;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+  }
+
+  &__preview-label {
+    color: $color-text-muted;
+  }
+
+  &__preview-value {
+    color: $color-accent-teal;
+    font-weight: 600;
   }
 
   &__actions {
@@ -448,6 +513,47 @@ defineExpose({
     font-size: 0.6rem;
     color: $color-text-muted;
     text-transform: uppercase;
+  }
+}
+
+.flag-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border: 2px solid transparent;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: $color-accent-teal;
+  }
+
+  &.active {
+    border-color: $color-accent-teal;
+    background: rgba($color-accent-teal, 0.15);
+  }
+
+  &__icon {
+    color: $color-text-muted;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 0.65rem;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  &__hint {
+    font-size: 0.55rem;
+    color: $color-text-muted;
+    opacity: 0.7;
   }
 }
 
