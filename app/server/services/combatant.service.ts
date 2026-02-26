@@ -758,3 +758,37 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
 
   return combatant
 }
+
+// ============================================
+// INITIATIVE RECALCULATION (decree-006)
+// ============================================
+
+/**
+ * Recalculate a combatant's initiative based on their current CS-modified Speed stat.
+ * PTU p.227: "Initiative is simply their Speed Stat."
+ * Per decree-006: dynamically reorder initiative when Speed CS changes.
+ *
+ * Mirrors the logic in buildCombatantFromEntity but uses the combatant's
+ * current speed CS instead of the initial equipment default.
+ *
+ * Returns the new initiative value (does NOT mutate the combatant).
+ */
+export function calculateCurrentInitiative(combatant: Combatant): number {
+  const entity = combatant.entity
+  const speedCS = entity.stageModifiers?.speed ?? 0
+
+  const baseSpeed = combatant.type === 'pokemon'
+    ? (entity as Pokemon).currentStats.speed
+    : (entity as HumanCharacter).stats.speed
+
+  // For humans, check for focus speed bonus (PTU p.295: +5 applied after CS)
+  let focusSpeedBonus = 0
+  if (combatant.type === 'human') {
+    const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
+    focusSpeedBonus = equipBonuses.statBonuses.speed ?? 0
+  }
+
+  const effectiveSpeed = applyStageModifier(baseSpeed, speedCS) + focusSpeedBonus
+
+  return effectiveSpeed + combatant.initiativeBonus
+}
