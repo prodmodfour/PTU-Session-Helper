@@ -129,3 +129,8 @@
 | plan-20260226-093739/slave-2 | reviewers | refactoring-083+ux-007 | APPROVED | 2026-02-26T10:08:00Z | 92815a8, e9f7b3e, d9f87f4 |
 | plan-20260226-093739/slave-3 | matrix | capability-remap-group-a | success | 2026-02-26T10:20:00Z | 3532676, 4481e03, e9539c7, 4cb7f1d |
 | plan-20260226-093739/slave-4 | matrix | capability-remap-group-b | success | 2026-02-26T10:02:00Z | 2f91dbf, fa26547, 372db04, a57a4da, 315f3b3 |
+| plan-20260226-115023/slave-1 | reviewers | feature-003-track-a-p2-rereview | CHANGES_REQUIRED | 2026-02-26T12:05:00Z | aff420b |
+| plan-20260226-115023/slave-2 | matrix | coverage-analyzer-groupA | success | 2026-02-26T12:15:00Z | c81919a, 2c6fc20, 4029743, f72188c |
+| plan-20260226-115023/slave-3 | matrix | coverage-analyzer-groupB | success | 2026-02-26T12:11:00Z | 612e9c30, 82a8b123, d80607c1, b5f8df1a |
+| plan-20260226-115023/slave-4 | developer | refactoring-062 | success | 2026-02-26T12:04:00Z | 1f42648, 7dfa954 |
+| plan-20260226-115023/slave-5 | developer | player-view-p4-cluster | success | 2026-02-26T12:08:30Z | 356402d, 6b8073f, 4eb4654 |

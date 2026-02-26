@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T15:30:00
-updated_by: slave-collector (plan-20260226-093739)
+last_updated: 2026-02-26T18:00:00
+updated_by: slave-collector (plan-20260226-115023)
 ---
 
 # Dev Ecosystem State
@@ -36,7 +36,7 @@ updated_by: slave-collector (plan-20260226-093739)
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
-| feature-003 | P1 | **Track-A-P2-fix-done-needs-review + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 fix cycle complete (4 commits: H1 long-press flag, M1 toast offset, M2 4K queries, M3 surface doc). Needs re-review. Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
+| feature-003 | P1 | **Track-A-P2-CHANGES_REQUIRED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 re-review done: code-review-181 CHANGES_REQUIRED (M1: CharacterSheet 820 lines > 800 limit, M2: .list-subheader missing 4K override). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -52,10 +52,17 @@ updated_by: slave-collector (plan-20260226-093739)
 
 ## Active Developer Work
 
-**Current task:** Session 39 collection complete. All 4 slaves merged (16 commits). feature-003 Track A P2 fix cycle done (4 commits: H1 long-press flag, M1 toast offset, M2 4K queries, M3 surface doc — needs re-review). refactoring-083 re-review APPROVED (code-review-179). ux-007 review APPROVED (code-review-180 + rules-review-158). All 9 capability domains re-mapped (combat, capture, healing, pokemon-lifecycle, character-lifecycle, encounter-tables, scenes, vtt-grid, player-view).
+**Current task:** Session 40 collection complete. All 5 slaves merged (14 commits). feature-003 Track A P2 re-review: code-review-181 CHANGES_REQUIRED (M1: CharacterSheet 820 lines, M2: .list-subheader missing 4K). refactoring-062 resolved (30 combatant builder tests). refactoring-076/079/084 resolved (P4 player-view cluster). All 8 matrix domains re-analyzed with fresh capabilities.
+
+**Session 40 (2026-02-26, plan-20260226-115023):**
+- slave-1 (reviewers): feature-003 Track A P2 re-review — code-review-181 **CHANGES_REQUIRED** (M1: PlayerCharacterSheet 820 lines > 800 limit after 4K SCSS, M2: .list-subheader missing 4K override). H1+M1+M3 from code-review-177 resolved correctly
+- slave-2 (matrix): coverage-analyzer-groupA — re-analyzed combat, capture, healing, pokemon-lifecycle matrices with fresh capabilities → **all 4 domains updated**
+- slave-3 (matrix): coverage-analyzer-groupB — re-analyzed character-lifecycle, encounter-tables, scenes, vtt-grid matrices with fresh capabilities → **all 4 domains updated**
+- slave-4 (developer): refactoring-062 — 30 unit tests for buildCombatantFromEntity() across 8 describe blocks, all passing → **resolved**
+- slave-5 (developer): P4 player-view cluster — refactoring-084 (entries already present), refactoring-076 (:deep() 9px override), refactoring-079 (select-to-copy fallback) → **all 3 resolved**
 
 **Session 39 (2026-02-26, plan-20260226-093739):**
-- slave-1 (developer): feature-003 Track A P2 fix cycle — 4 commits: H1 long-press flag to prevent synthesized click, M1 toast offset to avoid turn-flash overlap, M2 4K media queries for 4 player components, M3 app-surface.md entries for PlayerSkeleton + useHapticFeedback → **resolved, needs re-review**
+- slave-1 (developer): feature-003 Track A P2 fix cycle — 4 commits: H1 long-press flag to prevent synthesized click, M1 toast offset to avoid turn-flash overlap, M2 4K media queries for 4 player components, M3 app-surface.md entries for PlayerSkeleton + useHapticFeedback → **resolved, re-reviewed in session 40**
 - slave-2 (reviewers): refactoring-083 re-review + ux-007 first review — code-review-179 **APPROVED** (XpDistributionModal 798 lines, functional equivalence verified). code-review-180 **APPROVED** (surgical 1-line fix). rules-review-158 **APPROVED** (PTU self-awareness principle verified)
 - slave-3 (matrix): capability-remap-group-a — re-mapped combat, capture, healing, pokemon-lifecycle → **all 4 domains updated**
 - slave-4 (matrix): capability-remap-group-b — re-mapped character-lifecycle, encounter-tables, scenes, vtt-grid + NEW player-view first-time mapping → **all 5 domains updated**
@@ -116,11 +123,16 @@ updated_by: slave-collector (plan-20260226-093739)
 - Tickets filed: refactoring-080 (diagonal formula duplication), ux-005 (currentHp on level-up)
 
 **Next actions (by priority):**
-1. **Re-review** feature-003 Track A P2 fix cycle (P1 — 4 commits: long-press flag, toast offset, 4K queries, surface doc)
-2. **Re-map remaining matrix steps** — all 9 domains capabilities now fresh, run Coverage Analyzer + Implementation Auditor to update coverage scores
-3. Remaining open: ux-002 P4, ux-006 P4, ux-008 P4, refactoring-060/062/076/078/079
+1. **Fix** feature-003 Track A P2 CHANGES_REQUIRED (M1+M2: extract PlayerCharacterSheet SCSS, add .list-subheader 4K override)
+2. **Re-run Implementation Auditor** — all 8 matrix domains now have fresh coverage matrices, need audit step to update scores
+3. Remaining open: ux-002 P4, ux-006 P4, ux-008 P4, refactoring-060/078
 
 ## Review Status
+
+### Session 40 Reviews (plan-20260226-115023)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-181 | feature-003 Track A P2 re-review (fix cycle) | CHANGES_REQUIRED (M1: 820 lines > 800, M2: .list-subheader missing 4K) | senior-reviewer | 2026-02-26 |
 
 ### Session 39 Reviews (plan-20260226-093739)
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -342,7 +354,7 @@ updated_by: slave-collector (plan-20260226-093739)
 | refactoring-059 | P4 | **resolved** | densityMultiplier removed from 5 encounter-tables API endpoints — resolved by slave-5 (plan-20260226-073726) |
 | refactoring-060 | P4 | open | Count clamping test coverage (from code-review-122) |
 | refactoring-061 | P4 | **resolved** | CSS duplication extracted to _create-form-shared.scss partial, applied to 4 components — resolved by slave-4 (plan-20260226-073726) |
-| refactoring-062 | P4 | open | buildCombatantFromEntity test coverage (from code-review-120b) |
+| refactoring-062 | P4 | **resolved** | buildCombatantFromEntity test coverage — 30 tests across 8 describe blocks, all passing. Resolved by slave-4 (plan-20260226-115023) |
 | refactoring-063 | P4 | **resolved** | Extract shared significance preset utilities (from code-review-123 M2 + rules-review-113 M2) — resolved by slave-1 |
 | refactoring-064 | P4 | **resolved** | Extract shared difficulty color styles (from code-review-124 H2) — resolved by slave-1 (plan-20260221-215717) |
 | refactoring-065 | P4 | **resolved** | Extract shared evasion computation helper in useMoveCalculation — resolved by slave-4 (plan-20260224-171113) |
@@ -356,10 +368,10 @@ updated_by: slave-collector (plan-20260226-093739)
 | refactoring-073 | P4 | **resolved** | Add server-side validation for significanceTier — resolved by slave-5 (plan-20260224-171113) |
 | refactoring-074 | P4 | **resolved** | Consolidate duplicate SIGNIFICANCE_PRESETS — resolved by slave-5 (plan-20260224-171113) |
 | refactoring-075 | P4 | **resolved** | Extract CombatantConditionsSection from GMActionModal.vue (803→~670 lines) — resolved by slave-3 (plan-20260224-162105) |
-| refactoring-076 | P4 | open | Restore 9px font-size for PokemonCard stat cell labels (from code-review-144 M1) |
+| refactoring-076 | P4 | **resolved** | Restore 9px font-size for PokemonCard stat cell labels — :deep() overrides added. Resolved by slave-5 (plan-20260226-115023) |
 | refactoring-077 | P4 | **resolved** | TerrainCostGetter/ElevationCostGetter types moved to shared types/vtt.ts — resolved by slave-5 (plan-20260226-073726) |
 | refactoring-078 | P4 | open | Add elevation parameters to validateMovement for unit tests (from code-review-151 regression check note) |
-| refactoring-079 | P4 | open | Replace deprecated document.execCommand('copy') in SessionUrlDisplay (from code-review-158 M3) |
+| refactoring-079 | P4 | **resolved** | Replace deprecated execCommand copy — select-to-copy fallback with readonly input. Resolved by slave-5 (plan-20260226-115023) |
 | refactoring-080 | P4 | **resolved** | ptuDiagonalDistance extracted to utils/gridDistance.ts, 6 inline implementations replaced — resolved by slave-5 (plan-20260226-070756) |
 | refactoring-081 | P1 | **APPROVED** | SCSS unit incompatibility in _player-view.scss — calc() fix. code-review-164 APPROVED |
 | refactoring-082 | P4 | **resolved** | Touch handlers extracted to useTouchInteraction composable, used by both useGridInteraction (630 lines) and useIsometricInteraction (691 lines) — resolved by slave-3 (plan-20260226-070756) |
