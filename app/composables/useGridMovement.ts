@@ -1,7 +1,6 @@
-import type { GridPosition, Combatant, Pokemon } from '~/types'
+import type { GridPosition, Combatant, Pokemon, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
 import { useTerrainStore } from '~/stores/terrain'
-import { useRangeParser, type TerrainCostGetter } from '~/composables/useRangeParser'
-import type { ElevationCostGetter, TerrainElevationGetter } from '~/composables/usePathfinding'
+import { useRangeParser } from '~/composables/useRangeParser'
 import { combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed } from '~/utils/combatantCapabilities'
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
 

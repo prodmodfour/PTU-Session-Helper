@@ -1,13 +1,5 @@
-import type { GridPosition } from '~/types'
-import type { TerrainCostGetter } from '~/composables/useRangeParser'
+import type { GridPosition, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
-
-// Elevation cost function type for 3D pathfinding
-// Returns the movement cost for transitioning between two elevation levels.
-export type ElevationCostGetter = (fromZ: number, toZ: number) => number
-
-// Terrain elevation getter: returns the ground elevation at a grid position.
-export type TerrainElevationGetter = (x: number, y: number) => number
 
 /**
  * Pathfinding composable for PTU grid movement.

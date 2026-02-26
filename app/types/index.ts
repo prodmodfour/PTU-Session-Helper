@@ -37,5 +37,8 @@ export * from './player';
 // Player sync types (Track C WebSocket protocol)
 export * from './player-sync';
 
+// VTT pathfinding function types
+export * from './vtt';
+
 // Type guards
 export * from './guards';

@@ -1,11 +1,8 @@
-import type { RangeType, ParsedRange, GridPosition, TerrainType } from '~/types'
+import type { RangeType, ParsedRange, GridPosition, TerrainType, TerrainCostGetter } from '~/types'
 import { usePathfinding } from '~/composables/usePathfinding'
 
-// Terrain cost function type
-export type TerrainCostGetter = (x: number, y: number) => number
-
-// Re-export elevation types from usePathfinding for backwards compatibility
-export type { ElevationCostGetter, TerrainElevationGetter } from '~/composables/usePathfinding'
+// Re-export VTT pathfinding types for backwards compatibility
+export type { TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
 
 // Token footprint for multi-cell range calculations
 export interface TokenFootprint {
