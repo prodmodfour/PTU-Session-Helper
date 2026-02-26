@@ -11,7 +11,7 @@ import {
  * Apply extended rest (4+ hours) to a human character
  * - Heals HP for 8 rest periods (4 hours of 30-min rests)
  * - Clears all persistent status conditions
- * - Restores drained AP
+ * - Restores drained AP (bound AP preserved per decree-016)
  */
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -71,9 +71,8 @@ export default defineEventHandler(async (event) => {
   const clearedStatuses = getStatusesToClear(statusConditions)
   const newStatusConditions = clearPersistentStatusConditions(statusConditions)
 
-  // Restore drained AP and clear bound AP, set currentAp to full max
+  // Restore drained AP only — Bound AP persists until binding effect ends (decree-016)
   const apRestored = character.drainedAp
-  const boundApCleared = character.boundAp
   const maxAp = calculateMaxAp(character.level)
 
   const updated = await prisma.humanCharacter.update({
@@ -85,8 +84,7 @@ export default defineEventHandler(async (event) => {
       lastRestReset: new Date(),
       statusConditions: JSON.stringify(newStatusConditions),
       drainedAp: 0, // Restore all drained AP
-      boundAp: 0, // Clear all bound AP (binding effects end)
-      currentAp: maxAp // Full AP pool since drained and bound are now 0
+      currentAp: maxAp - character.boundAp // Bound AP remains off-limits (decree-016)
     }
   })
 
@@ -99,7 +97,7 @@ export default defineEventHandler(async (event) => {
       maxHp: updated.maxHp,
       clearedStatuses,
       apRestored,
-      boundApCleared,
+      boundAp: updated.boundAp,
       restMinutesToday: currentRestMinutes,
       restMinutesRemaining: Math.max(0, 480 - currentRestMinutes)
     }
