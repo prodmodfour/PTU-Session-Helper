@@ -29,7 +29,6 @@ interface UseGridRenderingOptions {
   getMaxPossibleSpeed?: (combatantId: string) => number
   buildSpeedAveragingFn?: (combatantId: string) => (terrainTypes: Set<string>) => number
   getTerrainTypeAt?: (x: number, y: number) => string
-  getBlockedCells: (excludeCombatantId?: string) => GridPosition[]
   calculateMoveDistance: (from: GridPosition, to: GridPosition) => number
   getTerrainCostAt: (x: number, y: number) => number
   getTerrainCostForCombatant?: (x: number, y: number, combatantId: string) => number
@@ -378,7 +377,8 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     if (!token) return
 
     const { cellSize } = options.config.value
-    const blocked = options.getBlockedCells(token.combatantId)
+    // Per decree-003: tokens never block movement — pass empty blocked list
+    const blocked: GridPosition[] = []
 
     // Build combatant-aware terrain cost getter
     const terrainCostGetter = terrainStore.terrainCount > 0
@@ -522,7 +522,8 @@ export function useGridRendering(options: UseGridRenderingOptions) {
 
     // Draw movement range grid if token exists
     if (token) {
-      const blocked = options.getBlockedCells(token.combatantId)
+      // Per decree-003: tokens never block movement — pass empty blocked list
+    const blocked: GridPosition[] = []
       const terrainCostGetter = terrainStore.terrainCount > 0
         ? (options.getTerrainCostForCombatant
           ? (x: number, y: number) => options.getTerrainCostForCombatant!(x, y, token.combatantId)

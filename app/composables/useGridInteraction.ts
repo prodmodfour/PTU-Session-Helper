@@ -26,7 +26,6 @@ interface UseGridInteractionOptions {
   render: () => void
   calculateMoveDistance: (from: GridPosition, to: GridPosition) => number
   getSpeed: (combatantId: string) => number
-  getBlockedCells: (excludeCombatantId?: string) => GridPosition[]
   isValidMove: (from: GridPosition, to: GridPosition, combatantId: string, gridWidth: number, gridHeight: number) => { valid: boolean; distance: number; blocked: boolean }
   // Emitters
   onTokenMove: (combatantId: string, position: GridPosition) => void

@@ -134,7 +134,8 @@ const movementRangeCells = computed<GridPosition[]>(() => {
   const token = props.tokens.find(t => t.combatantId === selectedId)
   if (!token) return []
 
-  const blockedCells = movement.getBlockedCells(selectedId)
+  // Per decree-003: tokens never block movement — empty blocked list
+  const blockedCells: GridPosition[] = []
   const terrainCostGetter = movement.getTerrainCostGetter(selectedId)
 
   // Build elevation cost getter bound to this combatant

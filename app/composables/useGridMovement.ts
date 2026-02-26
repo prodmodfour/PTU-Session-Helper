@@ -294,22 +294,6 @@ export function useGridMovement(options: UseGridMovementOptions) {
   }
 
   /**
-   * Get blocked cells for pathfinding purposes.
-   *
-   * Per decree-003 (PTU p.231): All tokens are passable — no token blocks
-   * movement. Enemy-occupied squares count as rough terrain (accuracy
-   * penalty only, no movement cost increase). Tokens cannot stack
-   * (destination check handled separately by getOccupiedCells).
-   *
-   * Returns an empty array — no cells are blocked by tokens.
-   * Terrain blocking (walls, water, etc.) is handled by the terrain
-   * cost getter, not by this function.
-   */
-  const getBlockedCells = (_excludeCombatantId?: string): GridPosition[] => {
-    return []
-  }
-
-  /**
    * Get all cells occupied by other tokens (for no-stacking destination check).
    *
    * Per decree-003: Movement cannot end on any occupied square.
@@ -569,7 +553,6 @@ export function useGridMovement(options: UseGridMovementOptions) {
     getAveragedSpeedForPath,
     buildSpeedAveragingFn,
     getTerrainTypeAt,
-    getBlockedCells,
     getOccupiedCells,
     getEnemyOccupiedCells,
     getTerrainCostAt,
