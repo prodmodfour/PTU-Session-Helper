@@ -122,8 +122,9 @@ export function useElevation(options: UseElevationOptions) {
     const clamped = Math.max(0, Math.min(options.maxElevation.value, Math.round(elevation)))
     const cell = terrainStore.getCellAt(x, y)
     const terrainType = cell?.type ?? 'normal'
+    const flags = cell?.flags
     const note = cell?.note
-    terrainStore.setTerrain(x, y, terrainType, clamped, note)
+    terrainStore.setTerrain(x, y, terrainType, flags, clamped, note)
   }
 
   /**
