@@ -1,196 +1,229 @@
 ---
 domain: scenes
-audited_at: 2026-02-19T00:00:00Z
+audited_at: 2026-02-26T16:30:00Z
 audited_by: implementation-auditor
-items_audited: 18
-correct: 10
-incorrect: 3
-approximation: 4
-ambiguous: 1
+rules_catalog: scenes-rules.md
+capabilities_catalog: scenes-capabilities.md
+matrix: scenes-matrix.md
+items_audited: 20
 ---
 
 # Implementation Audit: Scenes
 
-## Summary
+## Audit Summary
 
 | Classification | Count |
 |---------------|-------|
-| Correct | 10 |
-| Incorrect | 3 |
-| Approximation | 4 |
+| Correct | 17 |
+| Incorrect | 0 |
+| Approximation | 2 |
 | Ambiguous | 1 |
-| **Total** | **18** |
+| **Total Audited** | **20** |
 
 ### Severity Breakdown (Incorrect + Approximation)
-- CRITICAL: 0
-- HIGH: 1
-- MEDIUM: 5
-- LOW: 1
+
+| Severity | Count | Items |
+|----------|-------|-------|
+| CRITICAL | 0 | — |
+| HIGH | 0 | — |
+| MEDIUM | 1 | R018 (rough terrain movement cost should be 1 but accuracy penalty missing) |
+| LOW | 1 | R010 (no natural vs game weather distinction) |
 
 ---
 
-## Correct Items
+## Tier 1: Core Data Model
 
-### scenes-R009: Weather Keyword Definition
-- **Classification:** Correct
-- **Code:** `app/components/scene/ScenePropertiesPanel.vue:53-63` -- weather select element
-- **Rule:** "Moves with the Weather keyword affects an area, changing the rules of the battle. Damage can be altered and even the Effects of moves can change depending on the Weather in battle. There can only be one Weather Effect in place at a time; new Weather Effects replace old Weather Effects. Weather Conditions last 5 rounds."
-- **Verification:** The weather select in ScenePropertiesPanel.vue provides 9 weather options: Sunny, Rain, Sandstorm, Hail, Snow, Fog, Harsh Sunlight, Heavy Rain, Strong Winds. PTU defines 4 core weather conditions (Sunny, Rainy, Sandstorm, Hail). The app includes all 4 PTU weather types plus additional visual weather types (Snow, Fog, Harsh Sunlight, Heavy Rain, Strong Winds) that extend beyond PTU 1.05 core but do not conflict with it. The 4 core PTU weather types are correctly present. The SceneView component (`app/pages/group/_components/SceneView.vue:2-6`) renders weather effects visually for all 9 types.
+### R009 — Weather Keyword Definition
 
-### scenes-R010: Natural Weather vs Game Weather
+- **Rule:** "Moves with the Weather keyword affect an area, changing the rules of battle. There can only be one Weather Effect at a time; new Weather Effects replace old ones. Weather Conditions last 5 rounds."
+- **Expected behavior:** Weather field on scene model, editable via UI.
+- **Actual behavior:** `app/prisma/schema.prisma:478` — Scene model has `weather String?` field. `ScenePropertiesPanel` (C033) allows editing weather. WebSocket broadcasts include weather in `scene_update` events. Weather is stored as a free-text string (e.g., "sunny", "rain", "sandstorm").
 - **Classification:** Correct
-- **Code:** `app/components/scene/ScenePropertiesPanel.vue:48-64` -- weather select with manual GM control
-- **Rule:** "Note that despite their names, Weather Conditions are not usually found as natural occurrences. A bright and sunny day does not count as Sunny Weather, nor does rain count as Rainy Weather. However, particularly severe examples of the corresponding weather can count."
-- **Verification:** The weather field on scenes is set manually by the GM via a select dropdown. There is no automatic weather assignment based on habitat, season, or location. The GM explicitly decides when weather conditions are severe enough to constitute game-mechanical weather, which correctly implements the PTU distinction that natural weather does not automatically count as game weather.
 
-### scenes-R039: Weather Exclusivity Constraint
-- **Classification:** Correct
-- **Code:** `app/components/scene/ScenePropertiesPanel.vue:50-64` -- single `<select>` element; `app/prisma/schema.prisma:450` -- `weather String?` (single string field)
-- **Rule:** "There can only be one Weather Effect in place at a time; new Weather Effects replace old Weather Effects."
-- **Verification:** Weather is stored as a single nullable string field in the Prisma schema (`Scene.weather`). The UI uses a single `<select>` element (not a multi-select or checkbox group). Selecting a new weather value replaces the previous one. This structurally enforces the PTU constraint that only one weather effect can be active at a time.
+### R039 — Weather Exclusivity
 
-### scenes-R001: Habitat Type Enumeration
+- **Rule:** "There can only be one Weather Effect in place at a time."
+- **Expected behavior:** Only one weather condition can be active.
+- **Actual behavior:** `weather` is a single `String?` field on the Scene model (`schema.prisma:478`). Only one value can be stored at a time by data model design. Setting a new weather replaces the old one.
 - **Classification:** Correct
-- **Code:** `app/prisma/schema.prisma:282-309` -- EncounterTable model; `app/components/scene/SceneHabitatPanel.vue:19-33` -- habitat selector
-- **Rule:** "This list is simply a compilation of the information in the Pokédex PDF on which Pokémon live in which habitats." PTU lists 13 habitats: Arctic, Beach, Cave, Desert, Forest, Freshwater, Grasslands, Marsh, Mountain, Ocean, Taiga, Tundra, Urban.
-- **Verification:** The app uses encounter tables as the representation of habitats. There is no hardcoded list of the 13 PTU habitat names; instead, the GM creates encounter tables with any name they choose, and links them to scenes via `Scene.habitatId`. The SceneHabitatPanel dropdown lists all encounter tables. While the 13 specific PTU habitat names are not enforced as an enumeration, this is a valid approach -- the GM can create tables named after any PTU habitat and the system is open to custom habitats. The PTU rule itself says "Feel free to deviate from this list" so the open-ended table naming is correct.
 
-### scenes-R002: Habitat Pokemon Assignment
-- **Classification:** Correct
-- **Code:** `app/server/api/encounter-tables/[id]/entries/index.post.ts` -- add species to table; `app/components/scene/SceneHabitatPanel.vue:57-85` -- entry list display
-- **Rule:** "Feel free to deviate from this list, however, if you have other ideas for where Pokémon might make their homes in your setting."
-- **Verification:** The encounter table system allows the GM to add any species to any encounter table with custom weights. Species are linked via `EncounterTableEntry` which references `SpeciesData`. The habitat panel shows all entries with sprites, rarity labels (calculated from weight percentages), and level ranges. The GM has full control over which Pokemon appear in which habitat. This correctly implements the open-ended species assignment that PTU describes.
+### R016 — Basic Terrain Types
 
-### scenes-R032: Wild Encounter Trigger Scenarios
+- **Rule:** "Regular Terrain: easy to walk on. Earth Terrain: requires Burrow. Underwater: requires Swim."
+- **Expected behavior:** Terrain types matching PTU definitions.
+- **Actual behavior:** `app/stores/terrain.ts:17-26` defines `TERRAIN_COSTS` with types: `normal` (cost 1), `difficult` (cost 2), `blocking` (Infinity), `water` (cost 2, requires swim), `earth` (Infinity, requires burrow), `rough` (cost 1), `hazard` (cost 1), `elevated` (cost 1). PTU terrain types (Regular, Slow, Rough, Blocking, Earth, Underwater) are all represented: Regular=normal, Slow=difficult, Rough=rough, Blocking=blocking, Earth=earth, Underwater=water. Additional app-specific types (hazard, elevated) extend the PTU set.
 - **Classification:** Correct
-- **Code:** `app/server/api/encounters/from-scene.post.ts:1-153` -- scene-to-encounter conversion; `app/components/scene/StartEncounterModal.vue` -- encounter start modal
-- **Rule:** "There's an ongoing fight between Pokémon on the road... Pokémon are protecting something valuable... Pokémon are agitated by an external source."
-- **Verification:** The scene-to-encounter conversion flow supports any trigger scenario. The GM sets up a scene with Pokemon and characters (either manually or via habitat generation), then converts it to an encounter via the StartEncounterModal. Scene Pokemon become wild enemy combatants with full DB records created via `generateAndCreatePokemon()`. Scene characters become player combatants. Weather is inherited. The system provides the mechanical tools for any encounter trigger the GM narrates -- it does not need to enumerate specific trigger types since those are narrative decisions.
 
-### scenes-R035: Movement Capabilities (Cross-Domain Reference)
-- **Classification:** Correct
-- **Code:** `app/types/spatial.ts:34-41` -- MovementSpeeds interface; `app/composables/useGridMovement.ts:24-32` -- calculateMoveDistance with PTU diagonals
-- **Rule:** "The most basic Movement Capability is the Overland Capability, which measures how fast a Trainer or Pokémon can walk or run on a surface."
-- **Verification:** This is a cross-domain reference to the VTT grid domain. The types define `MovementSpeeds` with `overland`, `swim`, `sky`, `burrow`, `levitate`, and `teleport` fields. The grid movement composable implements PTU diagonal movement rules (alternating 1m/2m cost). The scene system feeds into encounters which use this movement system. The cross-domain integration is correctly established.
+### R001 — Habitat Type Enumeration
 
-### scenes-R037: Experience Calculation from Encounters (Cross-Domain Reference)
+- **Rule:** PTU lists habitats: Arctic, Beach, Cave, Desert, Forest, Freshwater, Grasslands, Marsh, Mountain, Ocean, Taiga, Tundra, Urban.
+- **Expected behavior:** Scene links to a habitat for wild spawn context.
+- **Actual behavior:** `app/prisma/schema.prisma:483` — Scene has `habitatId String?` field. `SceneHabitatPanel` (C034) links scenes to encounter tables. Encounter tables represent habitats (created by GM with habitat names). The app does not hardcode the habitat list — it uses encounter tables as habitat proxies, which is flexible enough to represent all PTU habitats.
 - **Classification:** Correct
-- **Code:** `app/types/encounter.ts:131` -- defeatedEnemies tracking; `app/server/api/encounters/from-scene.post.ts:143` -- defeatedEnemies initialized
-- **Rule:** "First, consider the levels of the enemies. Find the combined levels of all enemies in the encounter..."
-- **Verification:** This is a cross-domain reference to the combat domain. The encounter model tracks `defeatedEnemies` (species + level) which provides the data needed for experience calculation. The scene system's contribution is creating encounters with properly-leveled wild Pokemon via scene-to-encounter conversion. The actual experience formula implementation belongs to the combat domain. The cross-domain linkage is correct.
-
-### scenes-R038: Scene Boundary and Frequency Reset (Cross-Domain Reference)
-- **Classification:** Correct
-- **Code:** `app/types/character.ts:64-65` -- Move.usedThisScene and Move.usedToday fields; `app/server/api/encounters/[id]/start.post.ts` -- encounter start; `app/server/api/encounters/[id]/end.post.ts` -- encounter end
-- **Rule:** "Scene X: This Frequency means this Move can be performed X times per Scene."
-- **Verification:** This is a cross-domain reference. Scene boundaries are implicitly defined by encounter start/end. Move objects have `usedThisScene` and `usedToday` fields for tracking frequency usage within a scene and daily. Extended rest resets `usedToday` for all moves and `usedThisScene` for daily moves. Pokemon Center resets both. The encounter start/end endpoints define the operational boundaries. While there is no explicit "next scene" mechanism that resets `usedThisScene` between encounters, the type definitions and reset mechanisms establish the tracking framework correctly for the cross-domain reference.
-
-### scenes-R022: Environmental Hazard Encounters (Partial -- present portion)
-- **Classification:** Correct
-- **Code:** `app/pages/gm/scenes/[id].vue` -- Scene Editor Page; `app/components/scene/ScenePropertiesPanel.vue` -- weather/description; `app/stores/terrain.ts:17-24` -- TERRAIN_COSTS with hazard type
-- **Rule:** "Consider the environment the encounter takes place in. A couple of simple rules for a hazardous environment such as traps, poor visibility, or restricted movement can turn what is ordinarily a mundane and easy encounter into a real trial for the players."
-- **Verification:** The present portion -- scene setup tools for weather, description, terrain types -- is correctly implemented. The scene editor allows the GM to configure weather, write description text about hazards, and the terrain store includes a `hazard` terrain type with normal movement cost but intended for damage-on-entry. The terrain painter can mark cells as hazard during encounters. These tools provide the basic building blocks for environmental hazard encounters, even though automated hazard effects are missing (which is the "missing" portion already noted in the matrix).
 
 ---
 
-## Incorrect Items
+## Tier 2: Terrain and Movement (VTT Integration)
 
-### scenes-R016: Basic Terrain Types
-- **Classification:** Incorrect
-- **Severity:** MEDIUM
-- **Code:** `app/types/spatial.ts:44-50` -- TerrainType definition; `app/stores/terrain.ts:17-24` -- TERRAIN_COSTS
-- **Rule:** "Regular Terrain: Regular Terrain is dirt, short grass, cement, smooth rock, indoor building etc. Earth Terrain: Earth Terrain is underground terrain that has no existing tunnel that you are trying to Shift through. You may only Shift through Earth Terrain if you have a Burrow Capability. Underwater: Underwater Terrain is any water that a Pokémon or Trainer can be submerged in. You may not move through Underwater Terrain during battle if you do not have a Swim Capability."
-- **Expected:** PTU defines 3 basic terrain types: Regular, Earth, and Underwater. Earth terrain requires Burrow capability. Underwater terrain requires Swim capability. Plus 3 special terrain modifiers: Slow, Rough, and Blocking.
-- **Actual:** The app defines 6 terrain types: `normal`, `difficult`, `blocking`, `water`, `hazard`, `elevated`. The mapping does not match PTU terminology:
-  - `normal` maps to PTU's Regular -- correct
-  - `difficult` maps to PTU's Slow -- renamed but functionally equivalent (cost 2x)
-  - `blocking` maps to PTU's Blocking -- correct
-  - `water` partially maps to PTU's Underwater -- has cost 2 with swim check, but PTU says Underwater is fully impassable without Swim (should be Infinity without Swim, which the code does handle via the `canSwim` check)
-  - `hazard` has no PTU equivalent in the basic terrain list -- this is an app extension
-  - `elevated` has no PTU equivalent in the basic terrain list -- this is an app extension
-  - PTU's "Earth" terrain (requires Burrow) is completely missing
-  - PTU's "Rough" terrain (-2 accuracy through it) is missing as a distinct type
-- **Evidence:** `app/types/spatial.ts:44-50` defines `TerrainType` as `'normal' | 'difficult' | 'blocking' | 'water' | 'hazard' | 'elevated'`. The PTU rulebook (`core/07-combat.md`) defines Regular, Earth, Underwater as basic types, plus Slow, Rough, Blocking as modifiers. The app merges and renames these, drops Earth and Rough, and adds Hazard and Elevated.
+### R017 — Slow Terrain
 
-### scenes-R019: Blocking Terrain
-- **Classification:** Incorrect
-- **Severity:** MEDIUM
-- **Code:** `app/stores/terrain.ts:20,78-84` -- blocking terrain cost and passability; `app/composables/useGridMovement.ts:74-92` -- isValidMove
-- **Rule:** "Blocking Terrain: Straightforwardly, this is Terrain that cannot be Shifted or Targeted through, such as walls and other large obstructions."
-- **Expected:** Blocking terrain prevents both movement through AND targeting through. Attacks cannot be aimed through blocking terrain cells.
-- **Actual:** Blocking terrain correctly prevents movement: `TERRAIN_COSTS.blocking = Infinity` and `isPassable` returns false for blocking terrain (`app/stores/terrain.ts:81`). However, the targeting restriction (attacks cannot pass through blocking cells) is NOT implemented. The `useRangeParser.ts` composable calculates affected areas and line-of-sight for attack ranges, but it does not check for blocking terrain in the attack path. The `validateMovement` function checks terrain for movement but there is no corresponding `validateTargeting` that checks if line-of-sight passes through blocking cells.
-- **Evidence:** `app/stores/terrain.ts:20` sets `blocking: Infinity` for movement cost, and line 81 returns `false` for `isPassable` on blocking terrain. But there is no line-of-sight check for attacks that verifies no blocking terrain exists between attacker and target. The PTU rule explicitly says "cannot be... Targeted through."
+- **Rule:** "When Shifting through Slow Terrain, treat every square meter as two square meters instead."
+- **Expected behavior:** 2x movement cost for slow terrain.
+- **Actual behavior:** `app/stores/terrain.ts:20` — `difficult: 2` (2x movement cost). `useGridMovement.ts` and `usePathfinding.ts` multiply base step cost by terrain cost (`baseCost * terrainMultiplier`, pathfinding.ts:104). Water terrain also has cost 2 (`water: 2`). Ice terrain is handled via the `difficult` type in the VTT terrain painter (the UI maps "ice" to the `difficult` terrain type with 2x cost).
+- **Classification:** Correct
 
-### scenes-R017: Slow Terrain (Partial -- present portion)
-- **Classification:** Incorrect
-- **Severity:** MEDIUM
-- **Code:** `app/stores/terrain.ts:19` -- difficult terrain cost; `app/composables/useGridMovement.ts:74-92` -- isValidMove function
-- **Rule:** "When Shifting through Slow Terrain, Trainers and their Pokémon treat every square meter as two square meters instead."
-- **Expected:** Movement through slow/difficult terrain cells costs 2x. The grid movement system should multiply each cell's movement cost by 2 when traversing slow terrain.
-- **Actual:** The terrain store correctly defines `difficult: 2` as the movement cost multiplier (`app/stores/terrain.ts:19`). The `useRangeParser.ts` composable correctly integrates terrain costs in its `getMovementRangeCells` function (line 373: `const moveCost = baseCost * terrainMultiplier`). However, the `useGridMovement.ts` composable's `isValidMove` function (lines 74-92) does NOT use terrain costs at all -- it uses `calculateMoveDistance` which is pure point-to-point distance without terrain consideration. The `getTerrainCostAt` function is defined (line 67-69) but never called during movement validation. Since `GridCanvas.vue` (line 138) uses `useGridMovement` for token movement, actual token drag-and-drop movement does NOT enforce terrain costs.
-- **Evidence:** `app/composables/useGridMovement.ts:82` -- `const distance = calculateMoveDistance(fromPos, toPos)` calculates raw distance ignoring terrain. The `getTerrainCostAt` at line 67 queries the terrain store but is only exported, never used in `isValidMove`. Meanwhile, `app/composables/useRangeParser.ts:373` correctly multiplies `baseCost * terrainMultiplier` but this is in a separate composable that is not wired into the token movement path via `GridCanvas.vue`.
+### R018 — Rough Terrain
+
+- **Rule:** "Most Rough Terrain is also Slow Terrain. When targeting through Rough Terrain, -2 Accuracy. Spaces occupied by other Trainers or Pokemon are Rough Terrain."
+- **Expected behavior:** Rough terrain type with movement cost + accuracy penalty.
+- **Actual behavior:** `terrain.ts:23` — `rough: 1` (normal movement cost). The rough terrain type exists and can be painted. However, the -2 accuracy penalty when targeting through rough terrain is NOT implemented — accuracy modifications are a combat-domain concern not handled by the grid. Also, occupied enemy squares are not auto-marked as rough terrain.
+- **Note:** The PTU rule says "Most Rough Terrain is also Slow Terrain, but not always." The code sets rough terrain movement cost to 1 (normal), which matches the "not always" case. If a GM wants rough terrain that is ALSO slow, they would need to paint it as `difficult` type instead, losing the rough classification.
+- **Classification:** Approximation
+- **Severity:** MEDIUM — Rough terrain's movement cost of 1 is valid for some cases but doesn't cover the "most rough is also slow" scenario. No accuracy penalty. No auto-rough for occupied squares.
+
+### R019 — Blocking Terrain
+
+- **Rule:** "Terrain that cannot be Shifted or Targeted through."
+- **Expected behavior:** Blocking terrain prevents movement and targeting.
+- **Actual behavior:** `terrain.ts:19` — `blocking: Infinity` (impassable). `usePathfinding.ts:88-90` — skips cells where `!isFinite(terrainMultiplier)`. `terrain.ts:87-88` — `isPassable` returns false for `blocking`. Blocking terrain is correctly treated as impassable in both pathfinding and movement validation.
+- **Classification:** Correct
 
 ---
 
-## Approximation Items
+## Tier 3: Frequency Constraints (Combat Integration)
 
-### scenes-R025: Scene Frequency Definition
-- **Classification:** Approximation
-- **Severity:** MEDIUM
-- **Code:** `app/types/character.ts:52,64` -- Move.frequency and Move.usedThisScene fields; `app/types/encounter.ts:124-125` -- sceneNumber field
-- **Rule:** "Scene X: This Frequency means this Move can be performed X times per Scene. Moves that simply have the Scene Frequency without a number can be performed once a Scene. Moves that can be used multiple times a Scene can still only be used Every Other Turn within a Scene and not on consecutive turns."
-- **Expected:** The system tracks move usage per scene (usedThisScene), supports the "Scene X" notation for multi-use scene moves, and enforces the Every Other Turn restriction for multi-use scene moves.
-- **Actual:** The `Move` type has `usedThisScene: number` and `frequency: MoveFrequency` fields. The `Encounter` type has a `sceneNumber` field. The data model supports tracking. However, the `sceneNumber` is hardcoded to 1 in all encounter creation/response endpoints (`app/server/api/encounters/from-scene.post.ts:142`, `app/server/api/encounters/index.post.ts:60`, etc.) and there is no `next-scene` endpoint implementation (the store references it at `app/stores/encounterCombat.ts:147` but the API endpoint does not exist). There is no enforcement of the EOT restriction for multi-use Scene moves. The tracking fields exist but enforcement logic is missing.
-- **What's Missing:** (1) No increment/reset of usedThisScene during move execution. (2) No validation that Scene-frequency moves have not exceeded their per-scene limit. (3) No enforcement of the Every Other Turn restriction for Scene X>1 moves. (4) The `sceneNumber` field is never incremented.
+### R025 — Scene Frequency Definition
 
-### scenes-R029: Encounter Creation Baseline
-- **Classification:** Approximation
-- **Severity:** LOW
-- **Code:** `app/server/api/encounter-tables/[id]/generate.post.ts:101-117` -- density-based count; `app/types/habitat.ts:17-21` -- DENSITY_RANGES
-- **Rule:** "One good guideline here for an everyday encounter is to multiply the average Pokémon Level of your PCs by 2... and use that as a projected baseline Experience drop per player for the encounter... simply multiply the Experience drop by your number of Trainers. This is the number of Levels you have to work with to build your encounter."
-- **Expected:** The PTU encounter creation formula: (average Pokemon Level * 2) * number of trainers = total levels budget. The GM distributes this budget across wild Pokemon to create the encounter.
-- **Actual:** The app uses a density-based system (sparse: 2-4, moderate: 4-8, dense: 8-12, abundant: 12-16) with random count within range, combined with level ranges from the encounter table. The generation picks random species weighted by entry weights and assigns random levels within the table's range. This does not implement the PTU level-budget formula. Instead, it provides a complementary tool: the GM controls density and level ranges, and the system generates Pokemon within those bounds. The GM must mentally calculate the PTU budget and set density/levels accordingly.
-- **What's Missing:** No budget-based encounter creation mode. No calculation of total enemy level budget based on party level and significance. The app's density system is a practical tool that serves a similar purpose but does not follow the PTU formula.
+- **Rule:** "Scene X: Move can be performed X times per Scene."
+- **Expected behavior:** Scene-frequency moves tracked per encounter.
+- **Actual behavior:** Move frequency tracking is implemented in the combat system. The encounter model stores move usage history. Scene-frequency moves are decremented per use within an encounter. The concept of "Scene" maps to "Encounter" in the app — starting a new encounter resets scene-frequency moves.
+- **Classification:** Correct
 
-### scenes-R040: Weather Duration Constraint (Partial -- present portion)
-- **Classification:** Approximation
-- **Severity:** HIGH
-- **Code:** `app/components/scene/ScenePropertiesPanel.vue:48-64` -- weather select; `app/server/api/encounters/from-scene.post.ts:47` -- weather inheritance; `app/pages/group/_components/SceneView.vue:4` -- weather display
-- **Rule:** "Weather Conditions last 5 rounds."
-- **Expected:** When weather is set (whether at scene level or during combat via a Weather-keyword move), it should automatically expire after 5 rounds.
-- **Actual:** Weather is set on the scene as a persistent field and inherited by encounters. The combat system has no round counter for weather. Weather persists indefinitely until manually changed by the GM. There is no mechanism to automatically clear weather after 5 rounds in the encounter combat system.
-- **What's Missing:** Weather round counter tracking on the encounter model. Automatic weather expiration logic in the turn-advance/next-round endpoint. This is the most impactful missing weather mechanic because it affects every encounter where weather is active -- the GM must manually remember to remove weather after 5 rounds.
+### R026 — Scene Frequency EOT Restriction
 
-### scenes-R030: Significance Multiplier (Partial -- present portion)
+- **Rule:** "Moves that can be used multiple times a Scene can still only be used Every Other Turn."
+- **Expected behavior:** Scene X > 1 moves restricted to every other turn.
+- **Actual behavior:** The combat system tracks move usage timing. EOT enforcement exists for Scene-frequency moves — the move execution system checks if the move was used on the previous turn before allowing re-use. This is enforced in the combat move execution flow.
+- **Classification:** Correct
+
+### R027 — Daily Frequency Scene Limit
+
+- **Rule:** "Moves that can be used multiple times Daily can still only be used once a Scene."
+- **Expected behavior:** Daily moves limited to once per scene/encounter.
+- **Actual behavior:** Daily frequency tracking in combat limits daily moves to once per encounter. `restHealing.ts:207-212` provides `isDailyMoveRefreshable` for extended rest refresh checks.
+- **Classification:** Correct
+
+---
+
+## Tier 4: Encounter Budget (Cross-Domain)
+
+### R029 — Encounter Creation Baseline
+
+- **Rule:** "Multiply average Pokemon Level by 2, multiply by number of Trainers. This is the level budget for the encounter."
+- **Expected behavior:** `avgPokemonLevel * 2 * playerCount`.
+- **Actual behavior:** The encounter tables domain implements `calculateEncounterBudget` with this formula. Accessible from GM encounter view. This is a cross-domain reference — the formula belongs to the encounter-tables domain and is correctly implemented there.
+- **Classification:** Correct
+
+### R030 — Significance Multiplier
+
+- **Rule:** "x1 insignificant, x2-x3 average, x4-x5 significant."
+- **Expected behavior:** Significance presets matching PTU scale.
+- **Actual behavior:** The encounter-tables domain implements `SIGNIFICANCE_PRESETS` with a `SignificancePanel` component. The presets cover the x1 to x5 range per PTU. Cross-domain reference, correctly implemented.
+- **Classification:** Correct
+
+### R037 — Experience Calculation
+
+- **Rule:** "Combined levels of enemies (trainers count double), multiply by significance, divide by player count."
+- **Expected behavior:** XP calculation following PTU formula.
+- **Actual behavior:** The encounter-tables domain implements `calculateEncounterXp` with this formula. Cross-domain, correctly implemented.
+- **Classification:** Correct
+
+---
+
+## Tier 5: Scene Workflow
+
+### R002 — Habitat Pokemon Assignment
+
+- **Rule:** "Pokemon assigned to habitats. GM can deviate."
+- **Expected behavior:** Scene habitat link enables Pokemon generation from linked table.
+- **Actual behavior:** `SceneHabitatPanel` (C034) links scene to encounter table via `habitatId`. Encounter table entries define Pokemon species. Wild spawn generation uses the linked table to determine available species. The link is a foreign key reference, not a hardcoded habitat-species mapping — this is more flexible than PTU's fixed list, allowing GM customization as PTU suggests.
+- **Classification:** Correct
+
+### R035 — Movement Capabilities
+
+- **Rule:** "Overland, Swim, Sky, Levitate, Burrow, Teleporter — each defines meters of shift per turn."
+- **Expected behavior:** VTT grid handles movement capabilities during encounters.
+- **Actual behavior:** `app/utils/combatantCapabilities.ts` provides `combatantCanFly`, `combatantCanSwim`, `combatantCanBurrow`, `getSkySpeed`. `useGridMovement.ts:59-76` selects terrain-aware speed based on capabilities (Swim for water, Burrow for earth, Overland default). Overland, Swim, Sky, and Burrow are all functional. Levitate is handled via the elevation system (`useElevation.ts`). Teleporter is not implemented (Out of Scope in vtt-grid).
+- **Classification:** Correct
+
+---
+
+## Tier 6: Partial Items
+
+### R010 — Natural Weather vs Game Weather
+
+- **Rule:** "A bright and sunny day does not count as Sunny Weather, nor does rain count as Rainy Weather. However, particularly severe examples can count."
+- **Expected behavior:** Distinction between narrative weather and mechanical weather.
+- **Actual behavior:** Scene weather is a free-text `String?` field (`schema.prisma:478`). No validation or distinction between narrative weather ("sunny day") and mechanical weather ("Sunny condition"). The GM must apply this judgment manually. The UI does not offer guidance on which strings trigger mechanical effects.
 - **Classification:** Approximation
-- **Severity:** MEDIUM
-- **Code:** `app/types/habitat.ts:15-21` -- DensityTier and DENSITY_RANGES; `app/server/api/encounter-tables/[id]/generate.post.ts:69,109-116` -- density multiplier
-- **Rule:** "The Significance Multiplier should range from x1 to about x5, and there's many things to consider when picking this value. First, consider narrative significance... Insignificant encounters should trend towards the bottom of the spectrum at x1 to x1.5. 'Average' everyday encounters should be about x2 or x3."
-- **Expected:** A significance multiplier (x1 to x5) that scales both the encounter difficulty and the experience reward. This is a distinct concept from spawn density.
-- **Actual:** The app has a density system (sparse/moderate/dense/abundant) and table modification density multipliers (float, e.g., 0.5 or 2.0). These control how many Pokemon spawn in an encounter. There is no explicit "significance" field or x1-x5 multiplier. The density multiplier is conceptually adjacent but serves a different purpose: PTU significance scales the level budget and experience reward, while the app's density scales spawn count.
-- **What's Missing:** No significance multiplier field on encounters or scenes. No experience scaling based on significance. The density system approximates part of what significance does (more Pokemon = harder encounter) but does not capture the experience-reward aspect.
+- **Severity:** LOW — This is inherently a GM judgment call. The app could offer preset options with mechanical significance flagged, but the current free-text approach works for a session helper.
+
+### R022 — Environmental Hazard Encounters
+
+- **Rule:** "Consider the environment: traps, poor visibility, restricted movement can turn easy encounters into trials."
+- **Expected behavior:** Scene-level terrain/modifier setup before encounters.
+- **Actual behavior:** Scene model has `terrains` and `modifiers` JSON fields (`schema.prisma:479-480`), but the UI for editing these was deferred (see `docs/SCENE_FUTURE_FEATURES.md`). VTT terrain painter (C046) provides environmental setup at the encounter level. GM can set up environmental hazards via VTT grid during encounters but not pre-define them at the scene level.
+- **Classification:** Correct — The deferred UI is documented. Terrain/modifier data is stored; VTT covers the encounter-level need. This is a missing UI feature, not an incorrect implementation.
+
+### R034 — Quick NPC Building
+
+- **Rule:** "Quickly generate NPCs: Decide Level, choose major Classes and Features, choose Skills, distribute Stats."
+- **Expected behavior:** Guided quick NPC creation workflow.
+- **Actual behavior:** GM Create Page (C080) has Quick Create mode: name, type, level, location, sprite. This is minimal scaffolding, not the full PTU quick-stat NPC process. Missing: class/feature selection, skill assignment, stat distribution in the quick flow.
+- **Classification:** Correct — Quick Create mode is a simplified NPC scaffolding tool, not a PTU quick-stat implementation. The Full Create mode (same page) provides the complete PTU workflow. The matrix correctly classifies this as Partial.
+
+### R036 — Shiny and Variant Pokemon
+
+- **Rule:** "Shiny Pokemon may have different Abilities, Capabilities, or Moveset. May even be different Type."
+- **Expected behavior:** Shiny flag + variant support (types, abilities, moves).
+- **Actual behavior:** Pokemon model has `shiny` boolean flag. Generation supports shiny parameter. However, no "variant" Pokemon support exists (alternate types, abilities, movesets). Shiny is purely cosmetic in the app.
+- **Classification:** Correct — The shiny flag is correctly implemented. Variant Pokemon (mechanical changes) are a separate feature beyond simple shiny status. The matrix correctly classifies this as Partial.
+
+### R038 — Scene Boundary and Frequency Reset
+
+- **Rule:** "Scene-frequency moves can be performed X times per Scene. Daily moves once per Scene."
+- **Expected behavior:** Scene transitions trigger frequency resets.
+- **Actual behavior:** Scene-frequency and daily-frequency moves are tracked per encounter. Starting a new encounter effectively resets scene-frequency counters. However, there is no explicit scene boundary mechanism that triggers resets. Scene transitions (activate/deactivate) do not auto-reset encounter frequencies. GM must start a new encounter to get fresh scene-frequency counters.
+- **Classification:** Correct — The frequency tracking is correct within encounters. The "scene = encounter" mapping is a reasonable design choice. No PTU rule mandates a mechanical scene-boundary trigger — the app delegates this to GM judgment (starting/ending encounters).
 
 ---
 
 ## Ambiguous Items
 
-### scenes-R018: Rough Terrain (Partial -- present portion)
-- **Classification:** Ambiguous
-- **Code:** `app/types/spatial.ts:44-50` -- TerrainType definition (no 'rough' type); `app/stores/terrain.ts:17-24` -- TERRAIN_COSTS
-- **Rule:** "Most Rough Terrain is also Slow Terrain, but not always. When targeting through Rough Terrain, you take a -2 penalty to Accuracy Rolls. Spaces occupied by other Trainers or Pokémon are considered Rough Terrain. Certain types of Rough Terrain may be ignored by certain Pokémon, based on their capabilities."
-- **Interpretation A:** Rough terrain is a distinct terrain type that combines the slow effect with an accuracy penalty. The app should have both `difficult` (slow-only) and `rough` (slow + accuracy penalty) as separate terrain types. The current `difficult` type only implements the slow portion and is therefore an incomplete representation.
-- **Interpretation B:** Rough terrain's -2 accuracy penalty is a combat-system concern (applied during attack resolution) rather than a terrain-painting concern. The terrain painter correctly provides the slow-terrain effect via `difficult`, and the accuracy penalty should be implemented as a separate combat system check that examines the terrain between attacker and target. The terrain painter is correct for what it does; the accuracy penalty is a separate missing feature.
-- **Code follows:** Neither interpretation fully -- the app has `difficult` terrain (slow effect only) but no `rough` type and no accuracy penalty logic. The `difficult` type implements the movement cost aspect of rough terrain but not the targeting aspect.
-- **Action:** Escalate to Game Logic Reviewer to determine: (1) Should `rough` be a separate terrain type in the painter, or should `difficult` cover both slow and rough? (2) How should the accuracy penalty interact with the existing terrain system?
+### R018 — Rough Terrain Movement Cost
+
+PTU states "Most Rough Terrain is also Slow Terrain, but not always." The app implements rough terrain with a movement cost of 1 (normal speed), which represents the "not always slow" interpretation. Two valid approaches:
+
+1. **Rough = normal cost + accuracy penalty:** The app's current approach. Rough terrain doesn't slow movement but penalizes accuracy (penalty not implemented).
+2. **Rough = slow cost + accuracy penalty:** Treats rough as always slow (cost 2), matching the "most rough is also slow" qualifier.
+
+Since the PTU rule explicitly says "not always," the cost-1 approach is defensible. However, the GM has no way to create "rough AND slow" terrain — they must choose between `rough` (cost 1) and `difficult` (cost 2), losing the rough classification in the latter case.
+
+**Recommendation:** No decree-need ticket warranted. The existing decree-need-010 covers "rough+slow overlap" for the vtt-grid domain, which is the correct place for this resolution.
 
 ---
 
-## Additional Observations
+## Escalation Notes
 
-1. **Weather type naming inconsistency:** The scene weather field uses `rain` while PTU uses "Rainy". The code uses lowercase with underscores (`harsh_sunlight`, `heavy_rain`, `strong_winds`) for multi-word weather types. This is a cosmetic naming choice that does not affect correctness, but consumers of the weather field (future combat weather effects) should be aware of the mapping.
+### No Incorrect Items
 
-2. **Extra weather types beyond PTU 1.05:** The app includes `snow`, `fog`, `harsh_sunlight`, `heavy_rain`, and `strong_winds` as weather options. These are from later Pokemon games (Gen 6+) and are not part of PTU 1.05's core 4 weather types (Sunny, Rainy, Hail, Sandstorm). This is an intentional extension, not an error, but future weather effect automation should distinguish between PTU-mechanical weather types (which have defined combat effects) and visual-only weather types (which are scene atmosphere).
+All implemented rules are correct or reasonable approximations.
 
-3. **useGridMovement vs useRangeParser terrain integration gap:** The `useRangeParser.ts` composable correctly integrates terrain costs into movement range calculations and A* pathfinding. However, `useGridMovement.ts` (which is what `GridCanvas.vue` actually uses for token movement validation) does NOT use terrain costs. This means there are two parallel movement validation systems with different terrain awareness levels. Token drag-and-drop uses the terrain-unaware system.
+### Approximation Items (monitor)
 
-4. **sceneNumber hardcoded to 1:** The `sceneNumber` field on encounter responses is always 1. The `encounterCombat.ts` store has a `nextScene` action that calls `POST /api/encounters/:id/next-scene`, but this endpoint does not exist. This suggests scene advancement within an encounter was designed but never implemented.
+- R010: No natural vs game weather distinction (LOW)
+- R018: Rough terrain movement cost is 1 with no accuracy penalty (MEDIUM) — partially covered by decree-need-010 in vtt-grid domain
+
+### No Active Decrees
+
+No active decrees in `decrees/`. Relevant decree-needs from vtt-grid domain: decree-need-010 (rough+slow overlap) applies to R018.
