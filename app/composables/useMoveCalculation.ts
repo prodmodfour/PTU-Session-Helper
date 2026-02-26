@@ -1,4 +1,4 @@
-import type { Move, Combatant, Pokemon, HumanCharacter } from '~/types'
+import type { Move, Combatant, Pokemon, HumanCharacter, GridPosition } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
@@ -83,6 +83,146 @@ export function useMoveCalculation(
    */
   const isBlockingTerrain = (x: number, y: number): boolean => {
     return terrainStore.getTerrainAt(x, y) === 'blocking'
+  }
+
+  // =====================================
+  // Enemy-Occupied Rough Terrain (decree-003)
+  // =====================================
+
+  /**
+   * Get cells occupied by enemy combatants relative to the actor.
+   *
+   * Per decree-003 (PTU p.231): "Squares occupied by enemies always count
+   * as Rough Terrain" — targeting through these squares applies -2 accuracy.
+   *
+   * Enemy determination: 'enemies' vs 'players'/'allies'.
+   * A combatant on 'enemies' considers 'players' and 'allies' as enemies.
+   * A combatant on 'players' or 'allies' considers 'enemies' as enemies.
+   */
+  const enemyOccupiedCells = computed((): Set<string> => {
+    const cells = new Set<string>()
+    const actorSide = actor.value.side
+
+    for (const target of targets.value) {
+      if (target.id === actor.value.id) continue
+      if (!target.position) continue
+
+      // Determine if this combatant is an enemy of the actor
+      const targetSide = target.side
+      let isEnemy = false
+      if (actorSide === targetSide) {
+        isEnemy = false
+      } else if (
+        (actorSide === 'players' || actorSide === 'allies') &&
+        (targetSide === 'players' || targetSide === 'allies')
+      ) {
+        isEnemy = false
+      } else {
+        isEnemy = true
+      }
+
+      if (!isEnemy) continue
+
+      // Add all cells occupied by this enemy token
+      const size = target.tokenSize || 1
+      for (let dx = 0; dx < size; dx++) {
+        for (let dy = 0; dy < size; dy++) {
+          cells.add(`${target.position.x + dx},${target.position.y + dy}`)
+        }
+      }
+    }
+
+    return cells
+  })
+
+  /**
+   * Check if targeting from attacker to a specific target passes through
+   * any enemy-occupied squares (which count as rough terrain).
+   *
+   * Uses Bresenham's line algorithm to trace intermediate cells.
+   * Only intermediate cells are checked — the attacker's and target's
+   * own cells are excluded.
+   *
+   * Per PTU p.231: "-2 penalty to Accuracy Rolls" when targeting through
+   * rough terrain. This is a flat penalty (not cumulative per cell).
+   */
+  const targetsThroughEnemyRoughTerrain = (targetId: string): boolean => {
+    const actorPos = actor.value.position
+    if (!actorPos) return false
+
+    const target = targets.value.find(t => t.id === targetId)
+    if (!target?.position) return false
+
+    // Build sets of cells occupied by actor and target (to exclude from check)
+    const actorSize = actor.value.tokenSize || 1
+    const targetSize = target.tokenSize || 1
+    const actorCells = new Set<string>()
+    const targetCells = new Set<string>()
+
+    for (let dx = 0; dx < actorSize; dx++) {
+      for (let dy = 0; dy < actorSize; dy++) {
+        actorCells.add(`${actorPos.x + dx},${actorPos.y + dy}`)
+      }
+    }
+    for (let dx = 0; dx < targetSize; dx++) {
+      for (let dy = 0; dy < targetSize; dy++) {
+        targetCells.add(`${target.position.x + dx},${target.position.y + dy}`)
+      }
+    }
+
+    // Bresenham's line from actor center-ish to target center-ish
+    // For multi-cell tokens, use anchor position (top-left)
+    let x0 = actorPos.x
+    let y0 = actorPos.y
+    const x1 = target.position.x
+    const y1 = target.position.y
+
+    const dx = Math.abs(x1 - x0)
+    const dy = Math.abs(y1 - y0)
+    const sx = x0 < x1 ? 1 : -1
+    const sy = y0 < y1 ? 1 : -1
+    let err = dx - dy
+
+    while (true) {
+      // Check intermediate cells (exclude actor and target own cells)
+      const key = `${x0},${y0}`
+      if (!actorCells.has(key) && !targetCells.has(key)) {
+        if (enemyOccupiedCells.value.has(key)) {
+          return true
+        }
+      }
+
+      if (x0 === x1 && y0 === y1) break
+
+      const e2 = 2 * err
+      if (e2 > -dy) {
+        err -= dy
+        x0 += sx
+      }
+      if (e2 < dx) {
+        err += dx
+        y0 += sy
+      }
+    }
+
+    return false
+  }
+
+  /**
+   * Get the rough terrain accuracy penalty for targeting a specific combatant.
+   *
+   * Per decree-003 (PTU p.231): "Squares occupied by enemies always count
+   * as Rough Terrain" and "When targeting through Rough Terrain, you take
+   * a -2 penalty to Accuracy Rolls."
+   *
+   * Returns 2 if the line of sight passes through enemy-occupied squares,
+   * 0 otherwise. The penalty increases the accuracy threshold (harder to hit).
+   */
+  const getRoughTerrainPenalty = (targetId: string): number => {
+    if (targetsThroughEnemyRoughTerrain(targetId)) {
+      return 2
+    }
+    return 0
   }
 
   /**
@@ -272,7 +412,10 @@ export function useMoveCalculation(
 
     const evasion = getTargetEvasion(targetId)
     const effectiveEvasion = Math.min(9, evasion)
-    return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value)
+    // Rough terrain penalty (decree-003, PTU p.231): +2 to threshold when
+    // targeting through enemy-occupied squares (which count as rough terrain)
+    const roughPenalty = getRoughTerrainPenalty(targetId)
+    return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value + roughPenalty)
   }
 
   const rollAccuracy = () => {
@@ -613,6 +756,7 @@ export function useMoveCalculation(
     getTargetEvasion,
     getTargetEvasionLabel,
     getAccuracyThreshold,
+    getRoughTerrainPenalty,
     rollAccuracy,
     hitCount,
     missCount,
