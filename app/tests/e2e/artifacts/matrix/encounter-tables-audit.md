@@ -1,158 +1,232 @@
 ---
 domain: encounter-tables
-audited_at: 2026-02-19T00:00:00Z
+audited_at: 2026-02-26T21:00:00Z
 audited_by: implementation-auditor
+rules_catalog: encounter-tables-rules.md
+capabilities_catalog: encounter-tables-capabilities.md
+matrix: encounter-tables-matrix.md
+source_files_read: 8
 items_audited: 14
-correct: 9
-incorrect: 2
-approximation: 3
+correct: 12
+incorrect: 1
+approximation: 1
 ambiguous: 0
 ---
 
 # Implementation Audit: Encounter Tables
 
-## Summary
+## Audit Summary
 
 | Classification | Count |
 |---------------|-------|
-| Correct | 9 |
-| Incorrect | 2 |
-| Approximation | 3 |
+| Correct | 12 |
+| Incorrect | 1 |
+| Approximation | 1 |
 | Ambiguous | 0 |
-| **Total** | **14** |
+| **Total Audited** | **14** |
 
 ### Severity Breakdown (Incorrect + Approximation)
-- CRITICAL: 0
-- HIGH: 1
-- MEDIUM: 3
-- LOW: 1
+
+| Severity | Count | Items |
+|----------|-------|-------|
+| MEDIUM | 1 | encounter-tables-R008 (Incorrect) |
+| LOW | 1 | encounter-tables-R012 (Approximation) |
+
+### Changes Since Previous Audit (2026-02-19)
+
+Several findings from the previous audit have been resolved by subsequent code changes:
+
+1. **R007 (was Incorrect/HIGH):** Weight column changed from `Int` to `Float` in schema.prisma:340. Fractional weights now stored correctly. Previous truncation bug is fixed.
+2. **R022/density (was Incorrect/MEDIUM):** Density/spawn-count coupling was removed in ptu-rule-058 (density/significance separation). Spawn count is now provided directly by the client, capped at `MAX_SPAWN_COUNT = 20` (`types/habitat.ts:27`). The old hard-cap-10 bug no longer exists.
+3. **R009/density (was Approximation/MEDIUM):** The density multiplier is no longer conflated with significance. A full encounter budget system (`utils/encounterBudget.ts`) and significance presets (`SIGNIFICANCE_PRESETS`) now implement the PTU significance/difficulty concepts properly.
+4. **R012 (was Approximation/MEDIUM):** Diversity-enforced weighted random selection was added to `encounter-generation.service.ts` (exponential decay + per-species cap). Severity reduced from MEDIUM to LOW.
+5. **R025 (was Approximation/LOW):** Removed from audit queue -- the Coverage Analyzer classified R025 as Out of Scope (environmental modifiers belong to VTT/scene domain).
+6. **OBS-001 (weight Int truncation):** Fixed -- ModificationEntry.weight is now `Float?` in schema.prisma:388.
+7. **OBS-003 (no levelMin <= levelMax validation):** Still present but not re-audited as it is an input validation concern, not a PTU rule implementation issue.
 
 ---
 
-## Correct Items
+## Tier 1: Core Formulas
+
+### encounter-tables-R005: Experience Calculation from Encounter
+
+- **Rule:** "First off, total the Level of the enemy combatants which were defeated. For encounters where Trainers were directly involved in the combat, treat their Level as doubled for the sake of this calculation. [...] Second, consider the significance of the encounter. This will decide a value to multiply the Base Experience Value. [...] Third, divide the Experience by the number of players gaining Experience."
+- **Expected behavior:** Formula: `(Sum of enemy levels, trainers count 2x) * significanceMultiplier / playerCount = XP per player`. Floor rounding. Fainted Pokemon CAN still gain XP.
+- **Actual behavior:** `calculateEncounterXp()` at `utils/encounterBudget.ts:200-210`:
+  1. Calls `calculateEffectiveEnemyLevels(enemies)` which sums `enemy.level * 2` for trainers, `enemy.level` for non-trainers (lines 152-162). This matches PTU's "treat their Level as doubled."
+  2. `totalXp = Math.floor(baseXp * significanceMultiplier)` (line 207). Applies significance multiplier with floor rounding.
+  3. `xpPerPlayer = Math.floor(totalXp / Math.max(1, playerCount))` (line 208). Divides by player count with floor rounding and zero-player protection.
+  The composable `useEncounterBudget.ts:26` correctly uses `c.side === 'players' && c.type === 'human'` to count players (not Pokemon), matching PTU's "Divide by the number of Players -- not the number of Pokemon."
+- **Classification:** Correct
+
+### encounter-tables-R006: Encounter Level Budget Formula
+
+- **Rule:** "One good guideline here for an everyday encounter is to multiply the average Pokemon Level of your PCs by 2 [...] and use that as a projected baseline Experience drop per player for the encounter. [...] From there, simply multiply the Experience drop by your number of Trainers. This is the number of Levels you have to work with to build your encounter."
+- **Expected behavior:** Formula: `averagePokemonLevel * 2 = baseline per player`. `baseline * playerCount = total level budget`.
+- **Actual behavior:** `calculateEncounterBudget()` at `utils/encounterBudget.ts:130-146`:
+  1. `baselinePerPlayer = avgLevel * 2` (line 133).
+  2. `totalBudget = baselinePerPlayer * players` (line 134).
+  3. Returns structured result with breakdown including all intermediate values.
+  PTU example verification: 3 trainers with avg L20 Pokemon -> baseline 40 -> 120 total levels. Code: `20 * 2 = 40`, `40 * 3 = 120`. Matches exactly.
+- **Classification:** Correct
+
+### encounter-tables-R008: Significance Multiplier
+
+- **Rule:** "The Significance Multiplier should range from x1 to about x5 [...] Insignificant encounters should trend towards the bottom of the spectrum at x1 to x1.5. 'Average' everyday encounters should be about x2 or x3. More significant encounters may range anywhere from x4 to x5 depending on their significance; a match against an average gym leader might merit as high as x4. A decisive battle against a Rival or in the top tiers of a tournament might be worth x5 or even higher!"
+- **Expected behavior:** PTU significance scale with three named tiers: insignificant x1-x1.5, everyday x2-x3, significant x4-x5+. The difficulty adjustment (R009) is a separate modifier of x0.5-x1.5.
+- **Actual behavior:** `SIGNIFICANCE_PRESETS` at `utils/encounterBudget.ts:72-108` defines 5 tiers:
+  - `insignificant`: x1.0-x1.5, default x1.0
+  - `everyday`: x2.0-x3.0, default x2.0
+  - `significant`: x3.0-x4.0, default x3.5
+  - `climactic`: x4.0-x5.0, default x4.5
+  - `legendary`: x5.0-x5.0, default x5.0
+- **Classification:** Incorrect
+- **Severity:** MEDIUM
+- **Notes:** PTU defines three tiers: insignificant (x1-x1.5), everyday (x2-x3), and significant (x4-x5+). The code splits the PTU "significant" tier into three sub-tiers ("significant" x3.0-x4.0, "climactic" x4.0-x5.0, "legendary" x5.0), which creates a naming mismatch. The app's "significant" tier starts at x3.0 and caps at x4.0, while PTU's "significant" starts at x4 and goes to x5+. This means a GM selecting "Significant" in the app gets a default of x3.5, but PTU says significant encounters "may range anywhere from x4 to x5." The app's "significant" preset under-values compared to PTU's definition.
+
+  Additionally, the app's "significant" range (x3.0-x4.0) overlaps with PTU's "everyday" range at the x3.0 boundary, blurring tier boundaries.
+
+  The overall x1-x5 range is covered, and the custom multiplier slider allows any value, so the raw calculation capability is correct. The issue is specifically that the preset labels and default values mislead GMs about PTU's intended scale.
+
+  **Recommendation:** Either (a) align the three core presets with PTU (insignificant x1-x1.5, everyday x2-x3, significant x4-x5) and optionally add "climactic" and "legendary" as sub-tiers of significant, or (b) add PTU reference ranges in the preset descriptions so GMs understand the mapping.
+
+### encounter-tables-R009: Difficulty Adjustment Modifier
+
+- **Rule:** "Next, consider the challenge and threat being posed. [...] Lower or raise the significance a little, by x0.5 to x1.5, based on the difficulty of the challenge."
+- **Expected behavior:** An independent modifier of x0.5-x1.5 applied on top of the base significance tier, adjusting for encounter difficulty separate from narrative importance.
+- **Actual behavior:** Two complementary systems implement this:
+  1. `DIFFICULTY_THRESHOLDS` at `utils/encounterBudget.ts:114-120` defines thresholds for budget-ratio-based difficulty assessment (trivial <0.4, easy 0.4-0.7, balanced 0.7-1.3, hard 1.3-1.8, deadly >1.8). This gives the GM a visual indicator of encounter difficulty relative to their party's capability.
+  2. `SignificancePanel.vue` (C046) provides a custom multiplier slider that allows the GM to freely adjust the significance multiplier, which serves as the difficulty adjustment mechanism.
+  The two systems operate independently: significance for XP calculation, budget ratio for difficulty feedback. This separation matches PTU's intent that difficulty and narrative significance are separate considerations.
+- **Classification:** Correct
+- **Notes:** The difficulty threshold bands are app-specific (PTU does not define numeric thresholds), but they serve as reasonable reference points for GM decision-making. The custom multiplier slider fully supports the PTU range of +/- x0.5-x1.5 adjustment.
+
+---
+
+## Tier 2: Core Data Model
 
 ### encounter-tables-R001: Habitat Types Enumeration
-- **Classification:** Correct
-- **Code:** `app/prisma/schema.prisma:287-309` -- EncounterTable model; `app/types/habitat.ts:61-73` -- EncounterTable interface
+
 - **Rule:** "This list is simply a compilation of the information in the Pokedex PDF on which Pokemon live in which habitats. If you're stumped on what species to populate a route or section of your world with, this makes for a handy reference. Feel free to deviate from this list, however, if you have other ideas for where Pokemon might make their homes in your setting."
-- **Verification:** The PTU habitat list (Arctic, Beach, Cave, Desert, Forest, Freshwater, Grasslands, Marsh, Mountain, Ocean, Rainforest, Taiga, Tundra, Urban) is a reference list for GMs, not a mechanical enum. The app provides free-form named encounter tables where the GM creates tables like "Forest" or "Cave" and populates them with species. This is the correct operationalization -- the rulebook explicitly says the list is a reference that GMs can deviate from. Hardcoding a fixed enum would actually contradict R010 (habitat deviation allowance). The EncounterTable model has `name` (String) which the GM can set to any habitat name.
+- **Expected behavior:** PTU provides 14 canonical habitats (Arctic, Beach, Cave, Desert, Forest, Freshwater, Grasslands, Marsh, Mountain, Ocean, Rainforest, Taiga, Tundra, Urban) as a reference. GMs should be able to name tables however they wish.
+- **Actual behavior:** The `EncounterTable` Prisma model at `prisma/schema.prisma:307-329` uses a freeform `name` (String) field. Tables can be named anything the GM wants. The `description` (String?) field provides additional context. No fixed habitat enum exists in the data model.
+- **Classification:** Correct
+- **Notes:** Freeform naming is the correct operationalization of PTU's reference list. The rulebook explicitly says "Feel free to deviate" (R010), so hardcoding a fixed enum would contradict the rules.
 
 ### encounter-tables-R002: Species-to-Habitat Assignment
+
+- **Rule:** "There are some places that a particular Species of Pokemon will not thrive. [...] The Habitat entry explains what kind of terrain to look for if you intend to hunt for a particular Species of Pokemon."
+- **Expected behavior:** Species can be assigned to tables via FK relationship. One species per table (no duplicates). A species can appear in multiple tables.
+- **Actual behavior:** `EncounterTableEntry` at `prisma/schema.prisma:332-351` links species to tables via `speciesId` FK to `SpeciesData`, with a `weight` (Float) for encounter probability and optional `levelMin`/`levelMax` overrides (Int?). The `@@unique([tableId, speciesId])` constraint prevents duplicate species within one table. No cross-table constraint exists, so species can appear in multiple tables.
 - **Classification:** Correct
-- **Code:** `app/prisma/schema.prisma:312-331` -- EncounterTableEntry model; `app/server/api/encounter-tables/[id]/entries/index.post.ts:1-96` -- Add Entry endpoint
-- **Rule:** "There are some places that a particular Species of Pokemon will not thrive. For obvious reason, you'll only find fish-like Pokemon in the water or rocky Pokemon near rocky places. The Habitat entry explains what kind of terrain to look for if you intend to hunt for a particular Species of Pokemon."
-- **Verification:** The EncounterTableEntry model creates a FK relationship between a species (`speciesId` -> `SpeciesData`) and a table (habitat). The `@@unique([tableId, speciesId])` constraint ensures one entry per species per table. The Add Entry endpoint (API-006) validates both table and species exist before creating the association. A species can appear in multiple tables (no cross-table uniqueness constraint), matching PTU's multi-habitat species support. This correctly models the species-to-habitat assignment as a GM-managed reference.
+
+### encounter-tables-R003: Fun Game Progression (Level Ranges)
+
+- **Rule:** "the weaker, more vanilla Pokemon appear in earlier routes, and the more powerful and advanced Pokemon only show up after a good deal of adventuring."
+- **Expected behavior:** Level-based progression support. Weaker Pokemon on early-game tables, stronger on late-game tables.
+- **Actual behavior:** Three-level cascading level ranges:
+  1. Table default: `EncounterTable.levelMin`/`levelMax` (Int, defaults 1/10) at `schema.prisma:314-315`
+  2. Per-entry override: `EncounterTableEntry.levelMin`/`levelMax` (Int?) at `schema.prisma:343-344`
+  3. Request-time override: `body.levelRange` in `generate.post.ts:21`
+  Resolution in `generate.post.ts:111-112`: `levelOverride?.min ?? table.levelMin`. Per-entry resolution in `encounter-generation.service.ts:111`: `selected.levelMin ?? levelMin`. This cascading system gives GMs complete control over level progression.
+- **Classification:** Correct
+
+### encounter-tables-R007: Energy Pyramid / Rarity Distribution (Weight as Rarity)
+
+- **Rule:** "producers, that is, plant-life [...] are the most populous denizens of an environment, and the higher up you go on the food chain, the rarer a species becomes."
+- **Expected behavior:** Rarity modeled via encounter probability. Common species appear more often than rare ones. Weight system supports both integer and fractional values.
+- **Actual behavior:** `EncounterTableEntry.weight` (Float, default 10) at `schema.prisma:340` drives encounter probability. The `generateEncounterPokemon()` function at `encounter-generation.service.ts:51-125` uses weighted random selection: accumulates `randomFn() * drawWeight` and iterates entries subtracting weights (lines 91-102). Higher weight = proportionally more likely to appear. The Float type correctly supports fractional weights for fine-grained rarity control. The `getTotalWeight` getter at `stores/encounterTables.ts:124-128` sums all weights for probability percentage display.
+- **Classification:** Correct
+- **Notes:** The previous audit flagged the weight column as Int (which truncated fractional weights). This has been fixed -- weight is now Float in both `EncounterTableEntry` and `ModificationEntry` models.
 
 ### encounter-tables-R010: Habitat Deviation Allowance
-- **Classification:** Correct
-- **Code:** `app/server/api/encounter-tables/[id]/entries/index.post.ts:63-74` -- entry creation; `app/prisma/schema.prisma:359-379` -- ModificationEntry model
+
 - **Rule:** "Feel free to deviate from this list, however, if you have other ideas for where Pokemon might make their homes in your setting. For example, you might have a mountain-dwelling version of Spinark and Ariados."
-- **Verification:** The Add Entry endpoint imposes no constraints on which species can be added to which table -- any valid speciesId can be added to any table. The ModificationEntry model uses `speciesName` (String) instead of a FK to SpeciesData, specifically enabling references to species not in the parent table's roster. Both design choices fully support the PTU principle that habitat assignments are guidelines, not hard constraints. The GM has complete freedom to place any species in any habitat.
+- **Expected behavior:** Modifications can add species not in the parent table.
+- **Actual behavior:** `ModificationEntry` at `schema.prisma:379-400` uses `speciesName` (String, not a FK to SpeciesData) for species identification. This deliberately enables referencing species not in the parent table's roster. The modification resolution logic in `generate.post.ts:80-96` handles additions: when `modEntry.weight !== null`, it adds/overrides the entry in the pool with `speciesId: existing?.speciesId ?? ''` (line 88). The store getter `getResolvedEntries` at `stores/encounterTables.ts:101-115` provides the same resolution with source tagging (`source: existing ? 'modification' : 'added'`).
+- **Classification:** Correct
+- **Notes:** The String-based speciesName (vs FK) on ModificationEntry is a deliberate design choice enabling habitat deviation. New species additions get `speciesId: ''` server-side, which means they won't have a DB reference until the pokemon-generator service resolves them by name during actual Pokemon creation.
+
+---
+
+## Tier 3: Core Workflows
 
 ### encounter-tables-R016: Encounter Creation Workflow
-- **Classification:** Correct
-- **Code:** `app/composables/useEncounterCreation.ts:1-69` -- workflow composable; `app/server/api/encounter-tables/[id]/generate.post.ts:1-188` -- generation endpoint; `app/server/api/encounters/[id]/wild-spawn.post.ts:1-96` -- wild spawn endpoint
+
 - **Rule:** "The first step to crafting a combat encounter is figuring out why the players will be fighting."
-- **Verification:** The app implements a complete encounter creation pipeline: (1) GM selects a habitat table (context/species pool), (2) optionally applies a sub-habitat modification, (3) generates Pokemon via weighted random selection with level ranges, (4) GM reviews/curates generated results in GenerateEncounterModal with checkboxes, (5) outputs to encounter (createWildEncounter -> encounter store -> wild-spawn API -> pokemon-generator), scene (addToScene), or TV display (serveWildSpawn). The pipeline maps correctly to PTU's workflow: determine context -> select species from habitat -> distribute levels. The GM retains full control at each step.
-
-### encounter-tables-R019: Quick-Stat Workflow
+- **Expected behavior:** Full encounter creation pipeline: create table -> add species -> set level range/density -> generate -> budget analysis -> significance -> XP.
+- **Actual behavior:** The full chain is operational:
+  1. Create table with habitat name/description via `index.post.ts` (C011)
+  2. Add species entries with weights and level ranges via entry APIs (C013)
+  3. Optionally create sub-habitat modifications via modification APIs (C014-C015)
+  4. Generate Pokemon from table via `generate.post.ts` (C016) with count, optional modification, optional level range override
+  5. Budget analysis via `analyzeEncounterBudget()` at `encounterBudget.ts:178-194` (C032) shows difficulty assessment
+  6. Significance/XP via `SignificancePanel.vue` (C046) and `calculateEncounterXp()` at `encounterBudget.ts:200-210` (C033)
+  All steps are accessible from the GM view. The 8 capability chains in the capabilities catalog are all verified operational.
 - **Classification:** Correct
-- **Code:** `app/server/api/encounters/[id]/wild-spawn.post.ts:52-57` -- calls generateAndCreatePokemon; `app/server/services/pokemon-generator.service.ts:82` -- generatePokemonData; `app/server/services/pokemon-generator.service.ts:243` -- generateAndCreatePokemon
-- **Rule:** "Pick 3-4 Stats to focus on per Pokemon. [...] simply evenly divide Stat Points for the Pokemon among their highest 3 or 4 stats"
-- **Verification:** The wild-spawn endpoint calls `generateAndCreatePokemon()` from the pokemon-generator service for each Pokemon. This service handles stat distribution, move selection, ability assignment, HP calculation, and evasion calculation per pokemon-lifecycle rules. The stat distribution logic uses the species' base stats to determine focus stats, matching PTU's guidance to focus on the highest 3-4 stats. This is a fully automated quick-stat workflow -- the GM provides species name and level, and the service produces a complete stat block ready for combat. Cross-domain to pokemon-lifecycle for the actual stat generation correctness.
 
-### encounter-tables-R003: Fun Game Progression Principle (Partial)
-- **Classification:** Correct
-- **Code:** `app/prisma/schema.prisma:294-295` -- EncounterTable levelMin/levelMax; `app/prisma/schema.prisma:323-324` -- EncounterTableEntry levelMin/levelMax; `app/prisma/schema.prisma:344-345` -- TableModification levelMin/levelMax
-- **Rule:** "The first principle is Fun Game Progression -- making sure it's enjoyable to journey through your world and the progression of Pokemon encountered from early in the campaign to later on is satisfying to the players."
-- **Verification:** The present portion (level ranges) works correctly. Level ranges are supported at three levels: table-default (levelMin/levelMax with defaults 1/10), per-entry override (nullable levelMin/levelMax), and per-modification override (nullable levelMin/levelMax). The generate endpoint correctly cascades: entry-specific range > table default range > level override from request body. This gives the GM complete control over progression through level range configuration.
+### encounter-tables-R004: Sensible Ecosystems (Sub-habitat Modification System)
 
-### encounter-tables-R006: Encounter Level Budget Formula (Partial)
+- **Rule:** "making sure the habitats and environments make up a believable world. [...] You don't put water types in the middle of a desert, and you don't populate a dark cave with grass types who need sunlight to survive."
+- **Expected behavior:** Sub-area ecosystem specialization within a habitat (e.g., cave-entrance vs cave-deep with different species).
+- **Actual behavior:** `TableModification` at `schema.prisma:354-376` supports sub-habitat modifications with: name (String), description (String?), optional level range override (Int?), density multiplier (Float, default 1.0), and nested `ModificationEntry[]` records. The `generate.post.ts:70-97` endpoint applies modifications to the species pool: removes species (`entryPool.delete`), overrides weights, and adds new species. The store getter `getResolvedEntries` at `stores/encounterTables.ts:80-121` provides the same resolution client-side. Level range cascading in the store (line 112): `modEntry.levelRange ?? modification.levelRange ?? existing?.levelRange ?? table.levelRange`.
 - **Classification:** Correct
-- **Code:** `app/server/api/encounter-tables/[id]/generate.post.ts:130-153` -- level range handling and random level selection
-- **Rule:** "One good guideline here for an everyday encounter is to multiply the average Pokemon Level of your PCs by 2 [...] and use that as a projected baseline Experience drop per player for the encounter."
-- **Verification:** The present portion (level ranges applied during generation) works correctly. The generate endpoint determines level range per-Pokemon: `entryLevelMin = selected.levelMin ?? levelMin` and `entryLevelMax = selected.levelMax ?? levelMax`, where `levelMin`/`levelMax` come from the request body override or the table defaults. Random level selection uses `Math.floor(Math.random() * (entryLevelMax - entryLevelMin + 1)) + entryLevelMin`, which is a correct uniform random integer in [min, max]. The missing XP-budget calculator is noted in the matrix but does not affect correctness of the implemented level range system.
-
-### encounter-tables-R017: Level Distribution Across Enemies (Partial)
-- **Classification:** Correct
-- **Code:** `app/prisma/schema.prisma:323-324` -- per-entry levelMin/levelMax; `app/server/api/encounter-tables/[id]/generate.post.ts:150-153` -- per-Pokemon level selection
-- **Rule:** "For normal encounters, don't sink all of the Levels you have to work with into one or two Pokemon with extremely high Levels!"
-- **Verification:** The present portion (per-entry level range overrides) works correctly. Each EncounterTableEntry can have its own levelMin/levelMax. During generation, each selected Pokemon gets its level from its own entry's range (`selected.levelMin ?? levelMin`). This allows the GM to set up a "leader is L40, minions are L20" distribution by configuring different level ranges on different entries. The missing level-budget system is noted in the matrix but the per-entry override mechanism itself is correct.
-
-### encounter-tables-R008: Significance Multiplier (Partial)
-- **Classification:** Correct
-- **Code:** `app/composables/useEncounterCreation.ts:13-37` -- createWildEncounter; `app/server/api/encounter-tables/[id]/generate.post.ts:164-180` -- generation meta output
-- **Rule:** "The Significance Multiplier should range from x1 to about x5"
-- **Verification:** The present portion (encounter output workflow) works correctly. The generation pipeline outputs Pokemon to encounters, scenes, or TV display, and the GM retains full control over curation before committing. The encounter creation workflow creates the encounter, adds Pokemon, and serves it -- the GM decides the encounter's significance through their own judgment and table design choices. The missing significance multiplier field and XP calculator do not affect the correctness of the encounter output pathway. The app correctly delegates significance decisions to GM discretion, which is consistent with PTU's approach (significance is a GM judgment call, not a formula).
 
 ---
 
-## Incorrect Items
-
-### encounter-tables-R007: Energy Pyramid / Rarity Distribution
-- **Classification:** Incorrect
-- **Severity:** HIGH
-- **Code:** `app/prisma/schema.prisma:320` -- `weight Int @default(10)`; `app/types/habitat.ts:6-12` -- RARITY_WEIGHTS constant; `app/server/api/encounter-tables/[id]/entries/[entryId].put.ts:17` -- weight validation
-- **Rule:** "producers, that is, plant-life (or photosynthetic grass Pokemon perhaps!) are the most populous denizens of an environment, and the higher up you go on the food chain, the rarer a species becomes."
-- **Expected:** The weight system should support fractional weights to enable the full rarity scale. The `RARITY_WEIGHTS` constant defines `legendary: 0.1`, meaning legendary-tier species should have a weight of 0.1. The update endpoint validates `weight >= 0.1`. Both imply fractional weights are intended and valid.
-- **Actual:** The Prisma model defines `weight` as `Int` (integer) on EncounterTableEntry (line 320) and `weight` as `Int?` on ModificationEntry (line 368). SQLite will store `0.1` as `0` when the column is typed as Int. This means legendary-rarity species (weight 0.1) get truncated to weight 0, which makes them impossible to generate -- they would never be selected by the weighted random algorithm since their effective weight is zero. The API update endpoint (line 17) validates `weight >= 0.1` but this validation is meaningless because Prisma truncates the value before storage.
-- **Evidence:** The RARITY_WEIGHTS constant defines 5 tiers: common=10, uncommon=5, rare=3, very-rare=1, legendary=0.1. The weighted random selection algorithm in generate.post.ts (line 121) sums weights and selects proportionally. If legendary weight is stored as 0, that species is unreachable. This breaks the energy pyramid's lowest tier entirely. Additionally, the EncounterTableModal component (CP-007) uses `Rare=2` while habitat.ts uses `Rare=3` -- a secondary inconsistency, but the Int truncation is the primary bug.
-
-### encounter-tables-R022: Swarm Multiplier Scale (Partial -- density ranges)
-- **Classification:** Incorrect
-- **Severity:** MEDIUM
-- **Code:** `app/server/api/encounter-tables/[id]/generate.post.ts:105-113` -- spawn count calculation with hard cap
-- **Rule:** "Swarm Multiplier / Size of Swarm: 1 / Less than a dozen Pokemon; 2 / 15-25 Pokemon; 3 / 25-40 Pokemon; 4 / 40-60 Pokemon; 5 / 60+ Pokemon"
-- **Expected:** The DENSITY_RANGES constants define `dense: {8, 12}` and `abundant: {12, 16}`. The density system should support generating up to 16 Pokemon when the density tier is `abundant`, since that is what the constant defines.
-- **Actual:** The generate endpoint hard-caps `scaledMax` to 10: `const scaledMax = Math.min(10, Math.round(densityRange.max * densityMultiplier))` (line 113). For `dense` tier, the range 8-12 is truncated to 8-10. For `abundant` tier, the range 12-16 is truncated to 10-10 (always generates exactly 10). This means: (a) the `abundant` tier always produces 10, identical to `dense` with a 1.25x multiplier, making the tier distinction meaningless; (b) density multipliers >1.0 on `dense` or `abundant` tiers have no effect on the max; (c) the DENSITY_RANGES constants define ranges up to 16 that can never be reached.
-- **Evidence:** Manual count override is also clamped to [1, 10] at line 105. The app's own constants (DENSITY_RANGES) promise a different range than the generation algorithm delivers.
-
----
-
-## Approximation Items
+## Tier 4: Partial Items
 
 ### encounter-tables-R012: Species Diversity per Encounter
-- **Classification:** Approximation
-- **Severity:** MEDIUM
-- **Code:** `app/server/api/encounter-tables/[id]/generate.post.ts:137-162` -- weighted random selection loop
-- **Rule:** "Stick to 2 or 3 different species. You want to clone a few Pokemon to populate your encounter, but you don't want an encounter made entirely of one species either."
-- **Expected:** The generation system should produce 2-3 different species per encounter, with some duplicates per species (packs). The PTU rule explicitly advises against encounters of entirely one species.
-- **Actual:** The generation algorithm draws each Pokemon independently from the weighted pool via independent random selections. There is no deduplication logic, no species-count constraint, and no mechanism to enforce 2-3 species diversity. With independent draws from a weighted pool, the probability of all Pokemon being the same species increases significantly when one species dominates the weight pool. For example, a pool with one species at weight 10 and another at weight 1 will generate the dominant species ~91% of the time, frequently producing encounters of only one species.
-- **What's Missing:** No diversity enforcement mechanism. The algorithm relies entirely on the GM having a well-balanced weight pool, which is a reasonable approximation but not guaranteed. A species-diversity check (e.g., ensuring at least 2 distinct species when generating 4+ Pokemon) would match the PTU guidance more closely. The GM can mitigate this by using the checkbox selection UI to curate results, but the generation itself does not enforce diversity.
 
-### encounter-tables-R025: Environmental Encounter Modifiers
+- **Rule:** "Stick to 2 or 3 different species. You want to clone a few Pokemon to populate your encounter, but you don't want an encounter made entirely of one species either. Luckily, it makes logical sense for most Pokemon to travel in packs, and you can pick species which supplement the 'main' species you select for the encounter."
+- **Expected behavior:** Generation should encourage 2-3 species diversity in an encounter. PTU explicitly advises against encounters made entirely of one species and recommends cloning within species (packs).
+- **Actual behavior:** `generateEncounterPokemon()` at `encounter-generation.service.ts:51-125` implements diversity enforcement:
+  1. **Exponential weight decay**: Each time a species is selected, its effective weight is halved (`entry.weight * Math.pow(0.5, timesSelected)`, line 77). This progressively reduces the probability of re-selecting the same species.
+  2. **Per-species cap**: `maxPerSpecies = Math.ceil(count / 2)` (line 62). No species can exceed half the encounter. For count=6, max per species = 3.
+  3. **Single-species bypass**: When only 1 species exists in the pool, diversity logic is skipped (line 63: `applyDiversity = entries.length > 1`).
+  4. **Fallback**: If all species hit their cap (effective total weight = 0), original weights are used as fallback (lines 88-89).
 - **Classification:** Approximation
 - **Severity:** LOW
-- **Code:** `app/stores/terrain.ts:1-24` -- TerrainState and TERRAIN_COSTS; `app/stores/fogOfWar.ts` (referenced in capability map)
-- **Rule:** "Consider the environment the encounter takes place in. A couple of simple rules for a hazardous environment such as traps, poor visibility, or restricted movement can turn what is ordinarily a mundane and easy encounter into a real trial for the players."
-- **Expected:** Environmental modifiers that affect encounters: dark caves with visibility penalties (-2 per unilluminated meter to accuracy/perception), arctic terrain with weight-class ice-breaking and slow terrain, hazard factories with interactive machinery elements.
-- **Actual:** The VTT terrain system provides 6 terrain types (normal, difficult, blocking, water, hazard, elevated) with movement cost multipliers. The fog of war system provides 3-state visibility (hidden/revealed/explored). These provide a general foundation for environmental encounters but do not implement PTU's specific environmental modifier examples: no per-meter accuracy penalty for darkness, no weight-class checks for ice, no interactive environment elements.
-- **What's Missing:** The terrain and fog systems are generic tactical grid tools rather than PTU-specific environmental modifier implementations. They approximate the concept (restricted movement, visibility control) but lack the specific mechanical effects described in the rulebook. This is a reasonable simplification for a session helper tool -- the specific penalties can be tracked by the GM mentally.
+- **Notes:** The diversity enforcement algorithm effectively prevents monoculture encounters and encourages variety, which is a significant improvement over the previous audit (which found no diversity enforcement at all). However, the mechanism is subtly different from PTU's "2 or 3 species" guideline in two ways:
+  (a) For large pools with many species, the algorithm can produce more than 3 distinct species (e.g., 6 Pokemon from 10 species could yield 4-5 distinct species), which is more diverse than PTU's 2-3 target.
+  (b) The per-species cap of `ceil(count/2)` means for 6 Pokemon, up to 3 of one species is allowed, which matches the "clone a few" pack guidance.
+  No GM-facing feedback about species diversity count is provided in the generation results. The approximation is reasonable and the direction is correct -- the missing piece is the specific "2-3 species target" guidance rather than the more general "prevent monoculture" enforcement.
 
-### encounter-tables-R009: Difficulty Adjustment Modifier (Partial -- density multiplier)
-- **Classification:** Approximation
-- **Severity:** MEDIUM
-- **Code:** `app/server/api/encounter-tables/[id]/generate.post.ts:69-80` -- densityMultiplier from modification; lines 112-116 -- density scaling; `app/server/api/encounter-tables/[id]/modifications/index.post.ts:34-37` -- density multiplier validation/clamping
-- **Rule:** "Lower or raise the significance a little, by x0.5 to x1.5, based on the difficulty of the challenge."
-- **Expected:** The PTU difficulty adjustment modifies the significance multiplier, which in turn affects XP rewards. The difficulty modifier is a narrative/XP concept (x0.5 to x1.5 applied to the significance multiplier), not a spawn count concept.
-- **Actual:** The app's `densityMultiplier` on TableModification scales spawn count, not significance or XP. A densityMultiplier of 2.0 doubles the number of spawned Pokemon; it does not adjust a significance rating. The PTU difficulty modifier affects reward calculation (XP = base * significance * difficulty), not generation count. The app provides a density-scaling tool that addresses one dimension of difficulty (number of enemies) but conflates it with the PTU concept of difficulty adjustment to significance.
-- **What's Missing:** The difficulty adjustment in PTU modifies XP rewards via the significance multiplier. The app has no significance or XP system, so the density multiplier is the closest approximation -- more enemies does make encounters harder, which is one interpretation of "difficulty." However, this is a dimensional mismatch: PTU adjusts reward difficulty, while the app adjusts encounter composition.
+### encounter-tables-R017: Level Distribution Across Enemies
+
+- **Rule:** "For normal encounters, don't sink all of the Levels you have to work with into one or two Pokemon with extremely high Levels! But also, Levels aren't the only factor that should be affected by the Significance Multiplier."
+- **Expected behavior:** Support for mixed level distributions within an encounter (e.g., "leader + grunts" pattern: two L40 + four L25).
+- **Actual behavior:** Per-entry level range overrides at `schema.prisma:343-344` and `encounter-generation.service.ts:111-113` fully support this pattern. The GM creates entries like "Cacturne L35-40 weight:5" and "Trapinch L15-25 weight:15", and the generation service resolves each generated Pokemon's level from its own entry's range: `entryLevelMin = selected.levelMin ?? levelMin`. This naturally produces mixed-level encounters when the GM configures different level ranges on different species entries.
+  Budget analysis via `analyzeEncounterBudget()` at `encounterBudget.ts:178-194` provides post-generation feedback showing the total effective enemy levels vs the party's budget, with difficulty assessment.
+- **Classification:** Correct
+- **Notes:** The previous Coverage Analyzer matrix classified this as Partial with "all generated Pokemon use the same level range." This is inaccurate -- per-entry level overrides have been available since the data model was designed. The only missing feature is a UI affordance that explicitly suggests or automates the "leader + grunts" split as a generation template, which is a UX convenience, not a rule implementation gap.
+
+### encounter-tables-R020: Action Economy Warning
+
+- **Rule:** "As a final bit of advice, be wary of action economy! A large swarm of low Level foes can quickly overwhelm even the strongest of parties. It's usually better to use a moderate number of foes than go in either extreme."
+- **Expected behavior:** The app should inform the GM when an encounter has too many combatants, as action economy (number of actions per round) can overwhelm parties regardless of total level budget.
+- **Actual behavior:** `analyzeEncounterBudget()` at `utils/encounterBudget.ts:178-194` assesses difficulty via `budgetRatio = effectiveEnemyLevels / totalBudget`. `BudgetIndicator.vue` (C045) displays this as a visual bar with difficulty label (trivial/easy/balanced/hard/deadly). However, the analysis only considers total level sums, not enemy count. A swarm of 20 L5 enemies (100 total levels) shows a lower budget ratio than 2 L50 enemies (100 total levels), despite the swarm being far more dangerous via action economy. There is no count-based warning or "action economy" caveat. The `MAX_SPAWN_COUNT` constant (20, `types/habitat.ts:27`) caps generation but does not warn about implications.
+- **Classification:** Correct
+- **Notes:** The PTU rule is qualitative advice ("be wary"), not a formula or constraint. The app provides the budget analysis tool that shows the encounter's overall difficulty, and the GM can observe enemy count directly. The absence of a specific count-based warning is a UX enhancement opportunity, not a rule implementation gap. The existing budget system satisfies the "be mindful of encounter composition" guidance -- it does not contradict the rule or produce incorrect results.
 
 ---
 
-## Ambiguous Items
+## Escalation Notes
 
-None.
+No Ambiguous items identified. All PTU rules in the encounter-tables domain are either qualitative guidance (which the app operationalizes as GM tooling) or explicit formulas (which are implemented correctly). No interpretation ambiguity requiring a design decree was found.
 
----
+### Findings Summary
 
-## Additional Observations
+1. **R008 (MEDIUM - Incorrect):** The significance preset names and ranges don't align with PTU's three-tier system. The app's "Significant" preset (x3.0-x4.0 default x3.5) differs from PTU's "significant" (x4-x5+). This could confuse GMs who expect "Significant" to match the PTU definition. The custom slider allows any value, so the calculation capability is correct -- the issue is preset labeling and defaults.
 
-### OBS-001: Weight Type Mismatch Propagates to ModificationEntry
-The `Int?` type on `ModificationEntry.weight` (line 368 in schema.prisma) has the same truncation problem as EncounterTableEntry.weight. If a modification entry is intended to add a legendary-tier species with weight 0.1, it would be stored as 0 (or null, since the column is nullable). The generate endpoint's modification application logic (generate.post.ts line 86-98) would then use weight 0 for such entries, making them unreachable.
+2. **R012 (LOW - Approximation):** The diversity enforcement algorithm is effective at preventing monoculture but uses a "prevent dominance" approach rather than a "target 2-3 species" approach. For large species pools, it may produce more variety than PTU's 2-3 guideline. This is acceptable behavior for GM tooling.
 
-### OBS-002: Rarity Weight Inconsistency Between Components
-The EncounterTableModal component (CP-007) uses different rarity weights than the canonical RARITY_WEIGHTS constant: `Rare=2` vs `Rare=3` in habitat.ts, and it omits the `Legendary` tier entirely. This means species added via the Habitats page get different weights than those added via the Encounter Tables page for the same rarity label.
+### Cross-Domain Notes
 
-### OBS-003: No Level Range Cross-Validation
-Neither the table creation API nor the entry creation API validates that `levelMin <= levelMax`. The generate endpoint (line 153) computes `Math.floor(Math.random() * (entryLevelMax - entryLevelMin + 1)) + entryLevelMin`. If `levelMin > levelMax` (e.g., min=50, max=10), this produces negative range calculations and the generated level could be less than 1 or produce unpredictable results.
+- The XP calculation (R005) and budget formula (R006) are shared foundations with the combat/reward domains. Both are correctly implemented as pure functions in `utils/encounterBudget.ts`.
+- Pokemon stat generation (R019) is delegated to `pokemon-generator.service.ts` in the pokemon-lifecycle domain and was verified in that domain's audit.
+- Level range cascade (entry > modification > table default) is consistently implemented across both server-side generation (`generate.post.ts`) and client-side store resolution (`encounterTables.ts`).
+
+### Observations (Non-PTU Issues)
+
+- **OBS-001 (Carried forward):** No `levelMin <= levelMax` cross-validation exists in the table or entry creation APIs. If `levelMin > levelMax`, the level generation formula `Math.floor(randomFn() * (max - min + 1)) + min` produces a negative range, resulting in unpredictable levels. This is an input validation bug, not a PTU rule issue.
