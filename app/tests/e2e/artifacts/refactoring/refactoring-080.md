@@ -2,7 +2,7 @@
 ticket_id: refactoring-080
 priority: P4
 category: EXT-DUPLICATE
-status: open
+status: in-progress
 domain: vtt-grid
 source: code-review-161 M1
 created_by: slave-collector (plan-20260225-032831)
@@ -41,3 +41,16 @@ Import in all 5 locations. Locations 4 and 5 (Vue components) may benefit from a
 ## Impact
 
 Low — all 5 instances are currently correct and identical. This is a maintainability improvement to prevent drift if the formula ever needs adjustment.
+
+## Resolution Log
+
+- `d5b4c4d` — feat: create gridDistance utility with ptuDiagonalDistance (`app/utils/gridDistance.ts`)
+- `567a5f8` — refactor: replace inline diagonal formula in useGridMovement (`app/composables/useGridMovement.ts`)
+- `a0b27fb` — refactor: replace inline diagonal formula in 5 remaining locations:
+  - `app/composables/usePathfinding.ts` (calculateMoveCost + A* heuristic)
+  - `app/stores/measurement.ts` (distance getter)
+  - `app/components/player/PlayerGridView.vue` (handleCellClick)
+  - `app/components/vtt/VTTContainer.vue` (isometric3dDistance)
+  - `app/composables/useCanvasRendering.ts` (calculateMoveDistance — 6th instance not in original ticket)
+
+All 7 inline instances (not 5 as originally identified) now delegate to `ptuDiagonalDistance()`.

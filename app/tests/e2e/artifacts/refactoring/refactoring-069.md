@@ -2,7 +2,7 @@
 ticket_id: refactoring-069
 category: EXT-DUPLICATE
 priority: P4
-status: open
+status: in-progress
 source: code-review-132 M1
 created_by: slave-collector (plan-20260222-214423)
 created_at: 2026-02-22
@@ -39,3 +39,11 @@ Alternatively, create a separate `constants/equipmentUI.ts` for UI-specific cons
 ## Impact
 
 Low — icons rarely change, and both files already import the same Phosphor icon set. This is a duplication cleanup, not a correctness issue.
+
+## Resolution Log
+
+- `9eb0d05` — refactor: extract SLOT_ICONS to constants/equipment.ts
+  - Added `SLOT_ICONS: Record<EquipmentSlot, Component>` to `app/constants/equipment.ts`
+  - Removed local `SLOT_ICONS` from `app/components/character/tabs/HumanEquipmentTab.vue`
+  - Removed local `SLOT_ICONS` from `app/components/character/EquipmentCatalogBrowser.vue`
+  - Both components now import `SLOT_ICONS` from the shared constants file
