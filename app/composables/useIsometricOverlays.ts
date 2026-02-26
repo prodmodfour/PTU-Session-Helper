@@ -1,4 +1,5 @@
-import type { GridConfig, GridPosition, CameraAngle, TerrainType } from '~/types'
+import type { GridConfig, GridPosition, CameraAngle, TerrainType, TerrainFlags } from '~/types'
+import { FLAG_COLORS } from '~/stores/terrain'
 import { useIsometricProjection } from '~/composables/useIsometricProjection'
 import type { FogState } from '~/stores/fogOfWar'
 import type { MeasurementMode } from '~/stores/measurement'
@@ -48,6 +49,7 @@ interface IsometricOverlayOptions {
   fogEnabled?: Ref<boolean>
   // Terrain
   getTerrainType?: (x: number, y: number) => TerrainType
+  getTerrainFlags?: (x: number, y: number) => TerrainFlags
   terrainColors?: Record<TerrainType, { fill: string; stroke: string }>
   getTerrainElevation?: (x: number, y: number) => number
   // Measurement
@@ -196,48 +198,61 @@ export function useIsometricOverlays(options: IsometricOverlayOptions) {
   // --- Terrain ---
 
   /**
-   * Draw terrain layer as colored isometric diamonds with patterns.
+   * Draw terrain layer as colored isometric diamonds with patterns + flag overlays.
    */
   const drawTerrainLayer = (ctx: CanvasRenderingContext2D) => {
     if (!options.getTerrainType || !options.terrainColors) return
     const config = options.config.value
     const angle = options.cameraAngle.value
     const { cellSize, width: gridW, height: gridH } = config
+    const defaultFlags: TerrainFlags = { rough: false, slow: false }
 
     for (const cell of options.sortedCells.value) {
       const terrain = options.getTerrainType(cell.x, cell.y)
-      if (terrain === 'normal') continue
+      const flags = options.getTerrainFlags
+        ? options.getTerrainFlags(cell.x, cell.y)
+        : defaultFlags
+      const hasFlags = flags.rough || flags.slow
 
-      const terrainColor = options.terrainColors[terrain]
-      if (!terrainColor) continue
+      if (terrain === 'normal' && !hasFlags) continue
 
       // Get terrain elevation (raised/lowered ground)
       const elev = options.getTerrainElevation
         ? options.getTerrainElevation(cell.x, cell.y)
         : 0
 
-      // Fill diamond with terrain color at terrain elevation
-      drawFilledDiamond(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, terrainColor.fill)
+      // Draw base terrain type
+      if (terrain !== 'normal') {
+        const terrainColor = options.terrainColors[terrain]
+        if (terrainColor) {
+          drawFilledDiamond(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, terrainColor.fill)
 
-      // Draw terrain border
-      const diamond = getTileDiamondPoints(cell.x, cell.y, elev, angle, gridW, gridH, cellSize)
-      ctx.beginPath()
-      ctx.moveTo(diamond.top.x, diamond.top.y)
-      ctx.lineTo(diamond.right.x, diamond.right.y)
-      ctx.lineTo(diamond.bottom.x, diamond.bottom.y)
-      ctx.lineTo(diamond.left.x, diamond.left.y)
-      ctx.closePath()
-      ctx.strokeStyle = terrainColor.stroke
-      ctx.lineWidth = 1
-      ctx.stroke()
+          const diamond = getTileDiamondPoints(cell.x, cell.y, elev, angle, gridW, gridH, cellSize)
+          ctx.beginPath()
+          ctx.moveTo(diamond.top.x, diamond.top.y)
+          ctx.lineTo(diamond.right.x, diamond.right.y)
+          ctx.lineTo(diamond.bottom.x, diamond.bottom.y)
+          ctx.lineTo(diamond.left.x, diamond.left.y)
+          ctx.closePath()
+          ctx.strokeStyle = terrainColor.stroke
+          ctx.lineWidth = 1
+          ctx.stroke()
 
-      // Draw stacked side faces for elevated terrain (visual height indicator)
-      if (elev > 0) {
-        drawTerrainSideFaces(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, terrainColor.fill, terrainColor.stroke)
+          if (elev > 0) {
+            drawTerrainSideFaces(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, terrainColor.fill, terrainColor.stroke)
+          }
+
+          drawIsometricTerrainPattern(ctx, cell.x, cell.y, terrain, angle, gridW, gridH, cellSize, elev)
+        }
       }
 
-      // Draw terrain pattern at elevation
-      drawIsometricTerrainPattern(ctx, cell.x, cell.y, terrain, angle, gridW, gridH, cellSize, elev)
+      // Draw flag overlays on top of base terrain
+      if (flags.slow) {
+        drawFilledDiamond(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, FLAG_COLORS.slow.fill)
+      }
+      if (flags.rough) {
+        drawFilledDiamond(ctx, cell.x, cell.y, elev, angle, gridW, gridH, cellSize, FLAG_COLORS.rough.fill)
+      }
     }
   }
 

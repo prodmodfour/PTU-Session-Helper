@@ -1,4 +1,4 @@
-import type { GridConfig, GridPosition, CameraAngle, Combatant, MovementPreview, Pokemon, HumanCharacter, CombatSide, TerrainType } from '~/types'
+import type { GridConfig, GridPosition, CameraAngle, Combatant, MovementPreview, Pokemon, HumanCharacter, CombatSide, TerrainType, TerrainFlags } from '~/types'
 import { useIsometricProjection } from '~/composables/useIsometricProjection'
 import { useIsometricOverlays } from '~/composables/useIsometricOverlays'
 import type { FogState } from '~/stores/fogOfWar'
@@ -66,6 +66,7 @@ interface UseIsometricRenderingOptions {
   fogEnabled?: Ref<boolean>
   // P2: Terrain
   getTerrainType?: (x: number, y: number) => TerrainType
+  getTerrainFlags?: (x: number, y: number) => TerrainFlags
   terrainColors?: Record<TerrainType, { fill: string; stroke: string }>
   // P2: Measurement
   measurementMode?: Ref<MeasurementMode>
@@ -131,6 +132,7 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
     getFogState: options.getFogState,
     fogEnabled: options.fogEnabled,
     getTerrainType: options.getTerrainType,
+    getTerrainFlags: options.getTerrainFlags,
     terrainColors: options.terrainColors,
     getTerrainElevation: options.getTerrainElevation,
     measurementMode: options.measurementMode,

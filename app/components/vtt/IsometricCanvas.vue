@@ -188,6 +188,7 @@ const rendering = useIsometricRendering({
   fogEnabled: computed(() => fogOfWarStore.enabled),
   // P2: Terrain
   getTerrainType: (x: number, y: number) => terrainStore.getTerrainAt(x, y),
+  getTerrainFlags: (x: number, y: number) => terrainStore.getFlagsAt(x, y),
   terrainColors: TERRAIN_COLORS,
   // P2: Measurement
   measurementMode: computed(() => measurementStore.mode),
