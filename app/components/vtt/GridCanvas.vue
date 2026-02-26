@@ -35,6 +35,7 @@
         :is-gm="isGm"
         :is-own-token="playerMode ? isOwnTokenCheck(token.combatantId) : false"
         :is-pending-move="token.combatantId === pendingMoveCombatantId"
+        :display-hp-override="getDisplayHpOverride(token.combatantId)"
         @select="(id, evt) => handleTokenSelectWithPlayerMode(id, evt)"
       />
     </div>
@@ -163,6 +164,43 @@ const isOwnTokenCheck = (combatantId: string): boolean => {
   if (!combatant) return false
   return combatant.entityId === props.playerCharacterId ||
     (props.playerPokemonIds?.includes(combatant.entityId) ?? false)
+}
+
+/**
+ * Round a percentage to display tiers for enemy HP masking.
+ * Matches the tiers in usePlayerGridView.roundToDisplayTier.
+ */
+const roundToDisplayTier = (percentage: number): number => {
+  if (percentage <= 0) return 0
+  if (percentage >= 100) return 100
+  if (percentage >= 88) return 100
+  if (percentage >= 63) return 75
+  if (percentage >= 38) return 50
+  if (percentage >= 25) return 25
+  return 10
+}
+
+/**
+ * Get the display HP override for a combatant in player mode.
+ * Returns undefined for own/allied tokens (show exact HP),
+ * or a rounded percentage for enemy tokens.
+ */
+const getDisplayHpOverride = (combatantId: string): number | undefined => {
+  if (!props.playerMode) return undefined
+  if (isOwnTokenCheck(combatantId)) return undefined
+
+  const combatant = getCombatant(combatantId)
+  if (!combatant) return undefined
+
+  // Allied combatants (players/allies side, but not own) get exact HP
+  if (combatant.side === 'players' || combatant.side === 'allies') return undefined
+
+  // Enemy combatants get rounded HP
+  const entity = combatant.entity
+  const currentHp = 'currentHp' in entity ? (entity as { currentHp: number }).currentHp : 0
+  const maxHp = 'maxHp' in entity ? (entity as { maxHp: number }).maxHp : 1
+  const rawPercent = maxHp > 0 ? Math.round((currentHp / maxHp) * 100) : 0
+  return roundToDisplayTier(rawPercent)
 }
 
 const handleTokenSelectWithPlayerMode = (combatantId: string, evt: MouseEvent): void => {
