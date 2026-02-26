@@ -221,8 +221,13 @@ export default defineEventHandler(async (event) => {
     })
 
     // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0
+    // Check both entity.statusConditions and combatant.tempConditions
+    // (Take a Breather applies Vulnerable via tempConditions)
     const targetConditions: string[] = target.entity.statusConditions ?? []
+    const targetTempConditions: string[] = target.tempConditions ?? []
     const hasZeroEvasionCondition = targetConditions.some(
+      (c) => (ZERO_EVASION_CONDITIONS as readonly string[]).includes(c)
+    ) || targetTempConditions.some(
       (c) => (ZERO_EVASION_CONDITIONS as readonly string[]).includes(c)
     )
 

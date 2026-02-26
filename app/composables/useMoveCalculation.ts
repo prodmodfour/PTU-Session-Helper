@@ -346,8 +346,12 @@ export function useMoveCalculation(
     const entity = target.entity
 
     // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0
+    // Check both entity.statusConditions and combatant.tempConditions
+    // (Take a Breather applies Vulnerable via tempConditions)
     const hasZeroEvasionCondition = entity.statusConditions?.some(
       (c: StatusCondition) => ZERO_EVASION_CONDITIONS.includes(c)
+    ) || target.tempConditions?.some(
+      (c: string) => (ZERO_EVASION_CONDITIONS as readonly string[]).includes(c)
     )
     if (hasZeroEvasionCondition) {
       return { physical: 0, special: 0, speed: 0 }
