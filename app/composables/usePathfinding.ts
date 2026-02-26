@@ -264,12 +264,16 @@ export function usePathfinding() {
       return xyCost + elevCost
     }
 
-    // A* state includes position, diagonal parity, and elevation
+    // A* state includes position, diagonal parity, and elevation.
+    // closedNodes stores finalized nodes for path reconstruction.
     const openSet = new Map<string, {
       x: number; y: number; g: number; f: number;
       parity: number; elevation: number; parent: string | null
     }>()
     const closedSet = new Set<string>()
+    const closedNodes = new Map<string, {
+      x: number; y: number; parent: string | null
+    }>()
 
     const startKey = `${from.x},${from.y}`
     openSet.set(startKey, {
@@ -299,18 +303,42 @@ export function usePathfinding() {
 
       if (!current) break
 
-      // Check if we reached the destination
+      // Check if we reached the destination — reconstruct full path
       if (current.node.x === to.x && current.node.y === to.y) {
-        const path: GridPosition[] = [{ x: to.x, y: to.y }]
-        if (from.x !== to.x || from.y !== to.y) {
+        const path: GridPosition[] = []
+        let traceKey: string | null = current.key
+        // Walk back through parents to build the full path
+        // First add the destination from current (not yet in closedNodes)
+        path.unshift({ x: current.node.x, y: current.node.y })
+        traceKey = current.node.parent
+        while (traceKey !== null) {
+          const node = closedNodes.get(traceKey)
+          if (!node) {
+            // Parent is the start node still in openSet
+            const openNode = openSet.get(traceKey)
+            if (openNode) {
+              path.unshift({ x: openNode.x, y: openNode.y })
+            }
+            break
+          }
+          path.unshift({ x: node.x, y: node.y })
+          traceKey = node.parent
+        }
+        // Ensure start is included
+        if (path.length === 0 || path[0].x !== from.x || path[0].y !== from.y) {
           path.unshift({ x: from.x, y: from.y })
         }
         return { cost: current.node.g, path }
       }
 
-      // Move to closed set
+      // Move to closed set — store node data for path reconstruction
       openSet.delete(current.key)
       closedSet.add(current.key)
+      closedNodes.set(current.key, {
+        x: current.node.x,
+        y: current.node.y,
+        parent: current.node.parent,
+      })
 
       // Explore neighbors
       for (const [dx, dy, isDiagonal] of directions) {
