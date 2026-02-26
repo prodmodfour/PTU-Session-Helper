@@ -8,7 +8,8 @@ import {
 import { updateStatusConditions, validateStatusConditions } from '~/server/services/combatant.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { getStatusCsEffect } from '~/constants/statusConditions'
-import type { StatusCondition } from '~/types'
+import { findImmuneStatuses } from '~/utils/typeStatusImmunity'
+import type { StatusCondition, Pokemon } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -45,6 +46,28 @@ export default defineEventHandler(async (event) => {
   try {
     const { record, combatants } = await loadEncounter(id)
     const combatant = findCombatant(combatants, body.combatantId)
+
+    // Decree-012: Check type-based status immunities for Pokemon targets
+    // Reject immune statuses unless override: true is passed
+    if (addStatuses.length > 0 && combatant.type === 'pokemon') {
+      const pokemonEntity = combatant.entity as Pokemon
+      const entityTypes = pokemonEntity.types as string[]
+      const immuneStatuses = findImmuneStatuses(entityTypes, addStatuses)
+
+      if (immuneStatuses.length > 0 && !body.override) {
+        const messages = immuneStatuses.map(({ status, immuneType }) =>
+          `${immuneType}-type Pokemon are immune to ${status}`
+        )
+        throw createError({
+          statusCode: 409,
+          message: messages.join('; '),
+          data: {
+            immune: immuneStatuses,
+            hint: 'Send override: true to force application (GM override)'
+          }
+        })
+      }
+    }
 
     // Update status conditions using service (auto-applies/reverses CS per decree-005)
     const statusResult = updateStatusConditions(combatant, addStatuses, removeStatuses)
