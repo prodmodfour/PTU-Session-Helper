@@ -95,3 +95,9 @@
 | plan-20260225-032831/slave-1 | developer | feature-003-track-b-p1-fix | success | 2026-02-25T03:35:00Z | 76b2cc8, 348da35, dad1106, 58df654, 24e1f16, fce6559 |
 | plan-20260225-032831/slave-2 | developer | feature-003-track-c-p1-fix | success | 2026-02-25T04:18:00Z | 6e48b8a, 849c211, aed853a, adb6ecb, 9b89809, ce8e6a4, 279f4d7, c3ba9c9 |
 | plan-20260225-032831/slave-3 | reviewers | ptu-rule-082+083-review | APPROVED | 2026-02-25T03:35:00Z | dd1b1f7, 3c753d3 |
+| plan-20260225-174854/slave-1 | senior-reviewer | feature-003-track-b-p1-rereview | APPROVED | 2026-02-26T00:03:00Z | 34261a9 |
+| plan-20260225-174854/slave-2 | senior-reviewer + game-logic-reviewer | feature-003-track-c-p1-rereview | APPROVED | 2026-02-26T00:15:00Z | 4be1835, b3891ff |
+| plan-20260225-174854/slave-3 | developer | refactoring-081 | success | 2026-02-26T00:02:00Z | f3fc8ae, 266e764 |
+| plan-20260225-174854/slave-4 | developer | bug-030 | success | 2026-02-26T00:09:00Z | 7a037c8, daf0c68, 90b616a, 584a55d, 2e74942, 784acfa |
+| plan-20260225-174854/slave-5 | developer | ux-003 | success | 2026-02-26T00:08:00Z | c35b4b3, 1a528bf, b3ce0df |
+| plan-20260225-174854/slave-6 | developer | ux-004 | success | 2026-02-26T00:05:00Z | aa0a8fe, 9363563, 4d90081, db5c60d |

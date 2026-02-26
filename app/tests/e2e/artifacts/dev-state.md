@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-25T04:30:00
-updated_by: slave-collector (plan-20260225-032831)
+last_updated: 2026-02-26T04:00:00
+updated_by: slave-collector (plan-20260225-174854)
 ---
 
 # Dev Ecosystem State
@@ -11,7 +11,7 @@ updated_by: slave-collector (plan-20260225-032831)
 | Ticket | Priority | Severity | Status | Summary |
 |--------|----------|----------|--------|---------|
 | bug-001–029 | P0–P3 | — | resolved | (all resolved — see sessions 1–9) |
-| bug-030 | P2 | **open** | Player grid has no touch event support for mobile (pinch-to-zoom, touch panning) — from code-review-159 M3 |
+| bug-030 | P2 | **resolved** | Player grid touch event support (pan, pinch-to-zoom, tap) — implemented in useGridInteraction + GridCanvas + IsometricCanvas. 6 commits |
 | bug-031 | P3 | **open** | Explored fog cells show tokens contrary to design spec (from rules-review-149 R3) |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
@@ -36,25 +36,33 @@ updated_by: slave-collector (plan-20260225-032831)
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
-| feature-003 | P1 | **Track-B-P1+Track-C-P1-fix-applied** | Player View — Track B P1 fix cycle applied (6 commits: C1+H1+H2+M1+M2+M3 from code-review-158). Track C P1 fix cycle applied (8 commits: H1+H2+H3+M1+M2+M3+R3 from code-review-159+rules-review-149). C1/R1 pre-fixed by ptu-rule-083. Both need re-review | multi-phase-parallel |
+| feature-003 | P1 | **Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | ux-001 | P4 | **open** | Equipment catalog browser closes on equip, forces re-open for multi-item sessions (from code-review-127 M3) |
 | ux-002 | P4 | **open** | Trainer HP stat display shows raw stat without formula context in player view (from rules-review-129 M1) |
-| ux-003 | P3 | **open** | QR code generation for SessionUrlDisplay tunnel/LAN URLs (from code-review-158 M1) |
-| ux-004 | P3 | **open** | Wire getDisplayHp into VTTToken for player mode HP masking (from rules-review-149 R2) |
+| ux-003 | P3 | **resolved** | QR code rendering in SessionUrlDisplay — pure TS QR encoder + SVG rendering, no external deps. 3 commits |
+| ux-004 | P3 | **resolved** | Enemy HP masking in VTTToken player mode — wired getDisplayHp with 25% increment rounding. 4 commits |
 | ux-005 | P4 | **open** | Pokemon at full HP appears damaged after level-up — currentHp not increased with maxHp (from code-review-161 M2) |
 
 ## Active Developer Work
 
-**Current task:** feature-003 Track B P1 + Track C P1 fix cycles applied (needs re-review). ptu-rule-082 + ptu-rule-083 APPROVED + resolved.
+**Current task:** Session 33 collection complete. feature-003 Track B+C P1 both APPROVED. refactoring-081, bug-030, ux-003, ux-004 all resolved. All dev work needs review.
+
+**Session 33 (2026-02-26, plan-20260225-174854):**
+- feature-003 Track B P1 re-review — code-review-162 **APPROVED** → Track B P1 complete
+- feature-003 Track C P1 re-review — code-review-163 **APPROVED** + rules-review-152 **APPROVED** → Track C P1 complete
+- refactoring-081 (P1) — SCSS unit incompatibility fix (_player-view.scss calc() for mixed units) → **resolved, needs review**
+- bug-030 (P2) — Touch event support (pan, pinch-to-zoom, tap) in useGridInteraction + GridCanvas + IsometricCanvas → **resolved, needs review**
+- ux-003 (P3) — QR code rendering in SessionUrlDisplay via pure TS QR encoder (app/utils/qrcode.ts) → **resolved, needs review**
+- ux-004 (P3) — Enemy HP masking in VTTToken player mode via getDisplayHp 25% rounding → **resolved, needs review**
 
 **Session 32 (2026-02-25, plan-20260225-032831):**
-- feature-003 Track B P1 fix cycle — 6 commits (C1 WS race fix, H1 LAN misclassification via shared getConnectionType(), H2 app-surface.md, M1 QR TODO, M2 extract getConnectionType utility, M3 execCommand TODO) → **fix applied, needs re-review**
-- feature-003 Track C P1 fix cycle — 8 commits (H1 tab state broadcast to players, H2 reactive cooldown, H3 multi-cell token click, M1 dead fetch removal, M2 encounter_unserved broadcast, M3 click-vs-drag panning, R3 bug-031 TODO) → **fix applied, needs re-review**
-- ptu-rule-082 + ptu-rule-083 review — code-review-161 APPROVED (M1 → refactoring-080, M2 → ux-005) + rules-review-151 APPROVED → **both resolved**
+- feature-003 Track B P1 fix cycle — 6 commits → **APPROVED in session 33 (code-review-162)**
+- feature-003 Track C P1 fix cycle — 8 commits → **APPROVED in session 33 (code-review-163 + rules-review-152)**
+- ptu-rule-082 + ptu-rule-083 review — code-review-161 APPROVED + rules-review-151 APPROVED → **both resolved**
 - Tickets filed: refactoring-080 (diagonal formula duplication), ux-005 (currentHp on level-up)
 
 **Session 31 (2026-02-25):**
@@ -65,11 +73,20 @@ updated_by: slave-collector (plan-20260225-032831)
 - ptu-rule-082 fix — 2 commits (maxHp += levelsGained in both XP endpoints) → **fix applied, needs review**
 
 **Next actions (by priority):**
-1. **Re-review** feature-003 Track B P1 fix cycle (6 commits addressing code-review-158)
-2. **Re-review** feature-003 Track C P1 fix cycle (8 commits addressing code-review-159 + rules-review-149)
-3. bug-030 P2, ux-003 P3, ux-004 P3, bug-031 P3, ptu-rule-081 P4, ux-005 P4
+1. **Review** refactoring-081 (P1 SCSS fix — 2 commits)
+2. **Review** bug-030 (P2 touch events — 6 commits)
+3. **Review** ux-003 (P3 QR code — 3 commits)
+4. **Review** ux-004 (P3 HP masking — 4 commits)
+5. Remaining open: bug-031 P3, ptu-rule-081 P4, ux-001 P4, ux-002 P4, ux-005 P4
 
 ## Review Status
+
+### Session 33 Reviews (plan-20260225-174854)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-162 | feature-003 Track B P1 re-review | APPROVED | senior-reviewer | 2026-02-26 |
+| code-review-163 | feature-003 Track C P1 re-review | APPROVED | senior-reviewer | 2026-02-26 |
+| rules-review-152 | feature-003 Track C P1 re-review | APPROVED | game-logic-reviewer | 2026-02-26 |
 
 ### Session 32 Reviews (plan-20260225-032831)
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -255,6 +272,8 @@ updated_by: slave-collector (plan-20260225-032831)
 | refactoring-077 | P4 | open | Move TerrainCostGetter type to shared types file (from code-review-151 M2 note) |
 | refactoring-078 | P4 | open | Add elevation parameters to validateMovement for unit tests (from code-review-151 regression check note) |
 | refactoring-079 | P4 | open | Replace deprecated document.execCommand('copy') in SessionUrlDisplay (from code-review-158 M3) |
+| refactoring-080 | P4 | open | Diagonal formula duplication across movement distance code paths (from code-review-161 M1) |
+| refactoring-081 | P1 | **resolved** | SCSS unit incompatibility in _player-view.scss — calc() fix for mixed rem+px. 2 commits (plan-20260225-174854 slave-3) |
 
 ## Code Health
 
