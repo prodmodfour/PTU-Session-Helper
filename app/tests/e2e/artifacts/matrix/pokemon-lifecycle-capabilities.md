@@ -1,1052 +1,1074 @@
 ---
 domain: pokemon-lifecycle
-mapped_at: 2026-02-19T12:00:00Z
+mapped_at: 2026-02-26T14:30:00Z
 mapped_by: app-capability-mapper
-total_capabilities: 92
-files_read: 32
+total_capabilities: 85
+files_read: 35
 ---
 
 # App Capabilities: Pokemon Lifecycle
 
 ## Summary
-- Total capabilities: 92
-- Types: prisma-model(2), prisma-field(6), api-endpoint(22), service-function(11), composable-function(18), store-action(7), store-getter(5), component(7), utility(9), page(3), type-definition(2)
-- Orphan capabilities: 3
+- Total capabilities: 85
+- Types: api-endpoint(17), service-function(5), composable-function(11), store-action(7), store-getter(5), component(7), utility(16), constant(4), websocket-event(1), prisma-model(2), prisma-field(10)
+- Orphan capabilities: 0
 
 ---
 
-## pokemon-lifecycle-C001: Pokemon Prisma Model
+## Prisma Models
 
-- **Type:** prisma-model
-- **Location:** `app/prisma/schema.prisma:Pokemon`
-- **Game Concept:** Pokemon data storage
-- **Description:** Core data model for all Pokemon. 40+ columns storing species, stats, moves, abilities, capabilities, healing tracking, ownership, and metadata. JSON-stringified columns for complex nested data (nature, stageModifiers, abilities, moves, statusConditions, capabilities, skills, eggGroups).
-- **Inputs:** N/A (schema definition)
-- **Outputs:** Defines DB structure: id, species, nickname, level, experience, nature, type1/type2, base stats (6), current stats (7), stageModifiers, abilities, moves, heldItem, capabilities, skills, statusConditions, injuries, temporaryHp, rest/healing tracking (4 fields), tutorPoints, trainingExp, spriteUrl, shiny, gender, eggGroups, isInLibrary (archive flag), origin, location, notes, ownerId (FK to HumanCharacter)
-- **Orphan:** false
+### pokemon-lifecycle-C001: Pokemon Prisma Model
+- **cap_id**: pokemon-lifecycle-C001
+- **name**: Pokemon Data Model
+- **type**: prisma-model
+- **location**: `app/prisma/schema.prisma:Pokemon`
+- **game_concept**: Core Pokemon entity
+- **description**: Primary data model for all Pokemon. Stores species, level, experience, nature (JSON), base/current stats, types, abilities (JSON), moves (JSON), capabilities (JSON), skills (JSON), status conditions, injuries, HP, held item, gender, shiny flag, origin, location, owner relationship, archive flag (isInLibrary), tutor points, training exp, egg groups, and rest/healing tracking fields.
+- **inputs**: N/A (schema definition)
+- **outputs**: Defines the complete Pokemon record shape
+- **accessible_from**: gm, player, group, api-only
 
-## pokemon-lifecycle-C002: SpeciesData Prisma Model
-
-- **Type:** prisma-model
-- **Location:** `app/prisma/schema.prisma:SpeciesData`
-- **Game Concept:** Pokemon species reference data
-- **Description:** Reference data for all Pokemon species. Contains base stats, abilities, learnset, capabilities, evolution info, skills, and size. Seeded from pokedex files. Immutable during gameplay.
-- **Inputs:** N/A (schema definition)
-- **Outputs:** Defines DB structure: id, name (unique), type1/type2, base stats (6), abilities (JSON), numBasicAbilities, eggGroups (JSON), evolutionStage, maxEvolutionStage, movement capabilities (6), power, jumpHigh, jumpLong, weightClass, learnset (JSON), skills (JSON), capabilities (JSON), size
-- **Orphan:** false
-
-## pokemon-lifecycle-C003: Pokemon.isInLibrary Archive Flag
-
-- **Type:** prisma-field
-- **Location:** `app/prisma/schema.prisma:Pokemon.isInLibrary`
-- **Game Concept:** Pokemon library visibility / archival
-- **Description:** Boolean flag repurposed as archive flag. `true` = visible in library sheets, `false` = archived/hidden. Default `true`. Used by list endpoint to filter archived Pokemon and by bulk-action to archive.
-- **Inputs:** Boolean value
-- **Outputs:** Controls visibility in GET /api/pokemon listing
-- **Orphan:** false
-
-## pokemon-lifecycle-C004: Pokemon.origin Field
-
-- **Type:** prisma-field
-- **Location:** `app/prisma/schema.prisma:Pokemon.origin`
-- **Game Concept:** Pokemon creation provenance tracking
-- **Description:** Tracks how a Pokemon was created. Values: `'manual'` (form), `'wild'` (scene/wild spawn), `'template'` (encounter template), `'import'` (CSV import), `'captured'` (capture system). Default `'manual'`. Used for filtering in library and bulk actions.
-- **Inputs:** PokemonOrigin string
-- **Outputs:** Filterable metadata for library management
-- **Orphan:** false
-
-## pokemon-lifecycle-C005: Pokemon.ownerId Ownership Relation
-
-- **Type:** prisma-field
-- **Location:** `app/prisma/schema.prisma:Pokemon.ownerId`
-- **Game Concept:** Pokemon-to-Trainer ownership link
-- **Description:** Foreign key to HumanCharacter. Nullable — unowned Pokemon have `null`. Set by link/unlink endpoints and capture system. Used to group Pokemon by trainer.
-- **Inputs:** HumanCharacter ID or null
-- **Outputs:** Links Pokemon to owner; enables getPokemonByOwner queries
-- **Orphan:** false
-
-## pokemon-lifecycle-C006: Pokemon Healing Tracking Fields
-
-- **Type:** prisma-field
-- **Location:** `app/prisma/schema.prisma:Pokemon.lastInjuryTime,restMinutesToday,injuriesHealedToday,lastRestReset`
-- **Game Concept:** PTU rest and healing daily counters
-- **Description:** Four fields tracking healing state: `lastInjuryTime` (DateTime for 24h natural healing timer), `restMinutesToday` (Int, max 480 for HP regen cap), `injuriesHealedToday` (Int, max 3), `lastRestReset` (DateTime for daily counter auto-reset).
-- **Inputs:** Updated by rest/healing API endpoints
-- **Outputs:** Controls healing eligibility and daily limits
-- **Orphan:** false
-
-## pokemon-lifecycle-C007: Pokemon Injury Field
-
-- **Type:** prisma-field
-- **Location:** `app/prisma/schema.prisma:Pokemon.injuries`
-- **Game Concept:** PTU injury tracking
-- **Description:** Integer count of current injuries. At 5+ injuries, rest healing is blocked. Injuries are gained from HP thresholds (50%, 0%, -50%, -100%) during combat. Healed by Pokemon Center (max 3/day) or natural healing (24h timer).
-- **Inputs:** Incremented by combat damage, decremented by healing
-- **Outputs:** Affects rest eligibility and capture rate
-- **Orphan:** false
-
-## pokemon-lifecycle-C008: Pokemon Status Conditions Field
-
-- **Type:** prisma-field
-- **Location:** `app/prisma/schema.prisma:Pokemon.statusConditions`
-- **Game Concept:** PTU status conditions (persistent + volatile)
-- **Description:** JSON array of status conditions. Each has name, type (persistent/volatile), and effects. Persistent conditions cleared by extended rest; all conditions cleared by Pokemon Center. Affect capture rate (persistent +10, volatile +5).
-- **Inputs:** Added/removed by combat status endpoints
-- **Outputs:** Affects rest healing, capture rate, combat behavior
-- **Orphan:** false
+### pokemon-lifecycle-C002: SpeciesData Prisma Model
+- **cap_id**: pokemon-lifecycle-C002
+- **name**: Species Reference Data Model
+- **type**: prisma-model
+- **location**: `app/prisma/schema.prisma:SpeciesData`
+- **game_concept**: Pokemon species reference data (seeded from PTU pokedex)
+- **description**: Reference data for each Pokemon species seeded from the PTU pokedex. Contains base stats, types, abilities (JSON), learnset (JSON with level+move entries), evolution stage/max, movement capabilities, size, weight class, power, jump, skills, egg groups, and numeric basic ability count. Used by pokemon-generator service and level-up check.
+- **inputs**: Populated by seed.ts from books/markdown/pokedexes/
+- **outputs**: Species lookup data for generation, level-up, capture rate
+- **accessible_from**: api-only
 
 ---
 
-## pokemon-lifecycle-C009: List All Pokemon API
+## Prisma Fields (Key Pokemon Fields)
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/index.get.ts:default`
-- **Game Concept:** Pokemon library browsing
-- **Description:** Returns all Pokemon, filtered by archive status and optionally by origin. Default: only non-archived (`isInLibrary: true`). Parses JSON fields and reshapes to nested objects. Does NOT include injuries, temporaryHp, capabilities, skills, rest/healing tracking, tutorPoints, trainingExp, or eggGroups.
-- **Inputs:** Query: `origin` (optional filter, 'all' = no filter), `includeArchived` ('true' to include archived)
-- **Outputs:** `{ success: true, data: Pokemon[] }` — species, nickname, level, experience, nature, types, baseStats, currentStats, currentHp, maxHp, stageModifiers, abilities, moves, heldItem, statusConditions, ownerId, spriteUrl, shiny, gender, isInLibrary, origin, location, notes
-- **Orphan:** false
+### pokemon-lifecycle-C003: origin Field
+- **cap_id**: pokemon-lifecycle-C003
+- **name**: Pokemon Origin Tracking
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.origin`
+- **game_concept**: How a Pokemon was created
+- **description**: String field tracking provenance: 'manual' (GM-created), 'wild' (encounter table spawn), 'template' (loaded from template), 'import' (CSV import), 'captured' (capture system). Default 'manual'.
+- **inputs**: Set at creation or on capture
+- **outputs**: Used for library filtering
+- **accessible_from**: gm, player
 
-## pokemon-lifecycle-C010: Create Pokemon API
+### pokemon-lifecycle-C004: isInLibrary Field (Archive Flag)
+- **cap_id**: pokemon-lifecycle-C004
+- **name**: Pokemon Archive Flag
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.isInLibrary`
+- **game_concept**: Archive/visibility control
+- **description**: Boolean flag repurposed as an archive indicator. true = visible in sheets and library, false = archived (hidden from sheets but preserved in DB). Default true.
+- **inputs**: Set via bulk-action archive or direct PUT
+- **outputs**: Filters library queries (GET /api/pokemon excludes archived unless includeArchived=true)
+- **accessible_from**: gm
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/index.post.ts:default`
-- **Game Concept:** Manual Pokemon creation
-- **Description:** Creates a new Pokemon from form data. Auto-resolves nickname via `resolveNickname()`. Applies PTU HP formula (`level + baseHp*3 + 10`) when maxHp not provided. JSON-stringifies complex fields for storage. Sets `origin: 'manual'` by default.
-- **Inputs:** Body: species (required), nickname, level, experience, types/type1/type2, baseStats, maxHp, currentHp, currentStats, nature, stageModifiers, abilities, moves, heldItem, capabilities, skills, statusConditions, tutorPoints, trainingExp, eggGroups, ownerId, spriteUrl, shiny, gender, isInLibrary, origin, location, notes
-- **Outputs:** `{ success: true, data: Pokemon }` — full parsed Pokemon including capabilities, skills, training fields
-- **Orphan:** false
+### pokemon-lifecycle-C005: ownerId Field
+- **cap_id**: pokemon-lifecycle-C005
+- **name**: Pokemon Owner Relationship
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.ownerId`
+- **game_concept**: Trainer-Pokemon ownership link
+- **description**: Foreign key to HumanCharacter. Nullable. Set via link/unlink endpoints or capture auto-link. Determines which trainer's party a Pokemon belongs to.
+- **inputs**: String (HumanCharacter ID) or null
+- **outputs**: Used for library grouping, party display, XP distribution grouping
+- **accessible_from**: gm, player
 
-## pokemon-lifecycle-C011: Get Single Pokemon API
+### pokemon-lifecycle-C006: experience Field
+- **cap_id**: pokemon-lifecycle-C006
+- **name**: Pokemon Experience Points
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.experience`
+- **game_concept**: PTU cumulative XP (Core p.203)
+- **description**: Integer tracking total accumulated experience. Updated by add-experience endpoint and XP distribution. Capped at MAX_EXPERIENCE (20,555 for level 100). Level derived from experience via EXPERIENCE_CHART lookup.
+- **inputs**: Integer, incremented by XP grants
+- **outputs**: Determines level progression
+- **accessible_from**: gm, player
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id].get.ts:default`
-- **Game Concept:** Pokemon sheet data retrieval
-- **Description:** Returns the most complete Pokemon data including all fields. This is the only endpoint that returns injuries, temporaryHp, capabilities, skills, tutorPoints, trainingExp, eggGroups, and rest/healing tracking fields.
-- **Inputs:** URL param: `id` (required)
-- **Outputs:** `{ success: true, data: Pokemon }` — all fields including injuries, temporaryHp, capabilities, skills, tutorPoints, trainingExp, eggGroups, lastInjuryTime, restMinutesToday, injuriesHealedToday, lastRestReset
-- **Orphan:** false
+### pokemon-lifecycle-C007: level Field
+- **cap_id**: pokemon-lifecycle-C007
+- **name**: Pokemon Level
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.level`
+- **game_concept**: PTU Pokemon level (1-100)
+- **description**: Integer level. Updated alongside experience when XP causes level-ups. Used in HP formula (level + HP_stat*3 + 10), stat point distribution, move learning, ability milestones, and capture rate calculation.
+- **inputs**: Integer 1-100
+- **outputs**: HP calculation, move learning eligibility, ability milestones
+- **accessible_from**: gm, player
 
-## pokemon-lifecycle-C012: Update Pokemon API
+### pokemon-lifecycle-C008: tutorPoints Field
+- **cap_id**: pokemon-lifecycle-C008
+- **name**: Pokemon Tutor Points
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.tutorPoints`
+- **game_concept**: PTU tutor point currency (Core p.202)
+- **description**: Integer tracking tutor points. Gained at level 5 and every 5 levels thereafter. Updated by add-experience and xp-distribute endpoints when leveling. Used for purchasing TM moves and tutored moves.
+- **inputs**: Integer, incremented on qualifying level-ups
+- **outputs**: Displayed on skills tab
+- **accessible_from**: gm, player
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id].put.ts:default`
-- **Game Concept:** Pokemon sheet editing
-- **Description:** Partial update of any Pokemon fields. Supports nested updates for baseStats and currentStats. Auto-resolves nickname if blank. Converts date strings for healing fields. Response omits injuries, capabilities, skills, training, and healing tracking fields.
-- **Inputs:** URL param: `id`. Body: any subset of Pokemon fields including species, nickname, level, types, baseStats, currentStats, currentHp, maxHp, nature, stageModifiers, abilities, moves, heldItem, statusConditions, injuries, restMinutesToday, injuriesHealedToday, lastInjuryTime, lastRestReset, ownerId, spriteUrl, shiny, gender, isInLibrary, origin, notes, location
-- **Outputs:** `{ success: true, data: Pokemon }` — list-level response (excludes injuries, capabilities, skills, rest tracking)
-- **Orphan:** false
+### pokemon-lifecycle-C009: maxHp Field
+- **cap_id**: pokemon-lifecycle-C009
+- **name**: Pokemon Max HP
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.maxHp`
+- **game_concept**: PTU HP formula: Level + (HP_stat * 3) + 10
+- **description**: Integer maximum HP. Recalculated on level-up (level component increases by 1 per level gained). HP stat component only changes when stat points are manually allocated. If Pokemon was at full HP before leveling, currentHp is also increased to prevent appearing damaged.
+- **inputs**: Calculated from level + baseHp
+- **outputs**: Rest healing cap, combat HP bar
+- **accessible_from**: gm, player, group
 
-## pokemon-lifecycle-C013: Delete Pokemon API
+### pokemon-lifecycle-C010: nature Field
+- **cap_id**: pokemon-lifecycle-C010
+- **name**: Pokemon Nature
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.nature`
+- **game_concept**: PTU Nature system (Core Chapter 5, p.199)
+- **description**: JSON string storing { name, raisedStat, loweredStat }. 36 possible natures (30 with stat effects, 6 neutral). Affects base stats: HP +1/-1, other stats +2/-2. Applied at generation time via applyNatureToBaseStats(). Neutral natures (raise === lower) have no effect.
+- **inputs**: Generated randomly at Pokemon creation
+- **outputs**: Base stat modification, displayed on stats tab
+- **accessible_from**: gm, player
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id].delete.ts:default`
-- **Game Concept:** Pokemon deletion
-- **Description:** Deletes a Pokemon by ID. Does NOT check active encounters (unlike bulk-action). Relies on Prisma error for non-existent records.
-- **Inputs:** URL param: `id` (required)
-- **Outputs:** `{ success: true }`
-- **Orphan:** false
+### pokemon-lifecycle-C011: moves Field
+- **cap_id**: pokemon-lifecycle-C011
+- **name**: Pokemon Move Set
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.moves`
+- **game_concept**: PTU move list (up to 6 active)
+- **description**: JSON array of MoveDetail objects (name, type, damageClass, frequency, ac, damageBase, range, effect). Auto-selected from learnset at generation (most recent 6 at or below level). Can be overridden via template loading. Updated by player import (reorder only). Level-up detection reports new available moves but does not auto-add.
+- **inputs**: Array of MoveDetail objects
+- **outputs**: Move cards on moves tab, damage/attack rolls
+- **accessible_from**: gm, player
 
-## pokemon-lifecycle-C014: Link Pokemon to Trainer API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id]/link.post.ts:default`
-- **Game Concept:** Pokemon ownership assignment
-- **Description:** Links a Pokemon to a trainer by setting `ownerId`. Validates trainer exists. Response format inconsistent (no `success` field, raw DB fields leaked).
-- **Inputs:** URL param: `id`. Body: `trainerId` (required)
-- **Outputs:** `{ data: Pokemon }` — includes raw DB columns and parsed versions
-- **Orphan:** false
-
-## pokemon-lifecycle-C015: Unlink Pokemon from Trainer API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id]/unlink.post.ts:default`
-- **Game Concept:** Pokemon ownership removal
-- **Description:** Unlinks a Pokemon from its trainer by setting `ownerId` to null. Response format inconsistent (no `success` field, raw DB fields leaked).
-- **Inputs:** URL param: `id`
-- **Outputs:** `{ data: Pokemon }` — includes raw DB columns and parsed versions
-- **Orphan:** false
-
-## pokemon-lifecycle-C016: Pokemon 30-Minute Rest API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id]/rest.post.ts:default`
-- **Game Concept:** PTU 30-minute rest healing
-- **Description:** Applies one 30-minute rest period. Heals 1/16 maxHp. Blocked at 5+ injuries, daily rest cap of 480 minutes, or full HP. Auto-resets daily counters if new day. Returns success:false with reason if blocked.
-- **Inputs:** URL param: `id`
-- **Outputs:** `{ success: bool, message: string, data: { hpHealed, newHp, maxHp, restMinutesToday, restMinutesRemaining } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C017: Pokemon Extended Rest API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id]/extended-rest.post.ts:default`
-- **Game Concept:** PTU 4+ hour extended rest
-- **Description:** Simulates 8 rest periods (4 hours). Each period heals 1/16 maxHp (subject to same blocks as regular rest). Also clears persistent status conditions and restores daily-frequency moves.
-- **Inputs:** URL param: `id`
-- **Outputs:** `{ success: true, message, data: { hpHealed, newHp, maxHp, clearedStatuses[], restoredMoves[], restMinutesToday, restMinutesRemaining } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C018: Pokemon Center Healing API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id]/pokemon-center.post.ts:default`
-- **Game Concept:** PTU Pokemon Center full heal
-- **Description:** Full HP restoration. Clears ALL status conditions. Restores ALL move usage. Heals injuries (max 3/day, daily limit). Calculates healing time (1hr base + 30min/injury, or 1hr/injury at 5+).
-- **Inputs:** URL param: `id`
-- **Outputs:** `{ success: true, message, data: { hpHealed, newHp, maxHp, injuriesHealed, injuriesRemaining, clearedStatuses[], restoredMoves[], healingTime, healingTimeDescription, atDailyInjuryLimit, injuriesHealedToday } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C019: Natural Injury Healing API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id]/heal-injury.post.ts:default`
-- **Game Concept:** PTU natural injury healing (24h timer)
-- **Description:** Heals one injury naturally. Requires 24 hours since last injury. Subject to daily limit of 3 injuries healed. Returns success:false with reason if blocked (no injuries, timer not elapsed, daily limit).
-- **Inputs:** URL param: `id`
-- **Outputs:** Success: `{ success: true, data: { injuriesHealed: 1, injuries, injuriesHealedToday } }`. Failure: `{ success: false, message, data: varies }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C020: Pokemon New Day Reset API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/[id]/new-day.post.ts:default`
-- **Game Concept:** PTU daily counter reset (single Pokemon)
-- **Description:** Unconditionally resets daily healing counters for a single Pokemon: restMinutesToday → 0, injuriesHealedToday → 0, lastRestReset → now.
-- **Inputs:** URL param: `id`
-- **Outputs:** `{ success: true, message, data: { restMinutesToday: 0, injuriesHealedToday: 0, lastRestReset } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C021: Bulk Archive/Delete API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/pokemon/bulk-action.post.ts:default`
-- **Game Concept:** Pokemon library management (bulk operations)
-- **Description:** Bulk archive (set isInLibrary:false) or delete multiple Pokemon. Supports filtering by IDs or by origin/hasOwner. Safety check: blocks operations on Pokemon in active encounters (HTTP 409).
-- **Inputs:** Body: `action` ('archive'|'delete'), `pokemonIds[]` or `filter` ({ origin, hasOwner })
-- **Outputs:** `{ success: true, data: { action, count } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C022: Species List API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/species/index.get.ts:default`
-- **Game Concept:** Species reference data lookup
-- **Description:** Returns species reference data for autocomplete and creation. Searchable by name (case-insensitive), paginated up to 500. Returns id, name, types, baseStats, abilities (parsed), evolutionStage.
-- **Inputs:** Query: `search` (optional), `limit` (optional, max 500, default 100)
-- **Outputs:** `{ success: true, data: SpeciesData[] }` with types array and baseStats object
-- **Orphan:** false
-
-## pokemon-lifecycle-C023: Calculate Capture Rate API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/capture/rate.post.ts:default`
-- **Game Concept:** PTU capture rate calculation
-- **Description:** Calculates capture rate for a Pokemon. Accepts either pokemonId (auto-lookup) or raw data (level, currentHp, maxHp). Looks up species for evolution stage. Returns rate, difficulty description, and full breakdown.
-- **Inputs:** Body: `pokemonId` OR (`level`, `currentHp`, `maxHp`, optional: `species`, `statusConditions`, `injuries`, `isShiny`)
-- **Outputs:** `{ success: true, data: { species, level, currentHp, maxHp, captureRate, difficulty, canBeCaptured, hpPercentage, breakdown } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C024: Execute Capture Attempt API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/capture/attempt.post.ts:default`
-- **Game Concept:** PTU capture execution
-- **Description:** Executes a capture attempt. Calculates capture rate, rolls 1d100, applies trainer level modifier. On success: auto-links Pokemon to trainer (`ownerId = trainerId`) and sets `origin: 'captured'`. Handles natural 100 (auto-capture) and critical hits (nat 20 accuracy).
-- **Inputs:** Body: `pokemonId` (required), `trainerId` (required), `accuracyRoll` (optional), `modifiers` (optional), `pokeBallType` (optional, future)
-- **Outputs:** `{ success: true, data: { captured: bool, roll, modifiedRoll, captureRate, effectiveCaptureRate, naturalHundred, criticalHit, trainerLevel, difficulty, breakdown, pokemon: {...}, trainer: {...} } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C025: CSV Import API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/characters/import-csv.post.ts:default`
-- **Game Concept:** PTU character sheet CSV import
-- **Description:** Imports a PTU character sheet from CSV. Detects sheet type (trainer or pokemon). For Pokemon sheets: parses all fields from CSV grid, routes through `createPokemonFromCSV()` → `createPokemonRecord()` with `origin: 'import'`.
-- **Inputs:** Body: `csvContent` (required string)
-- **Outputs:** `{ success: true, type: 'pokemon', data: { id, species, nickname, level } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C026: Global New Day Reset API
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/game/new-day.post.ts:default`
-- **Game Concept:** PTU new day (global daily reset)
-- **Description:** Resets daily healing counters for ALL Pokemon and ALL characters in a single operation. Resets restMinutesToday, injuriesHealedToday, lastRestReset. Also resets drainedAp on characters.
-- **Inputs:** None
-- **Outputs:** `{ success: true, message, data: { pokemonReset: count, charactersReset: count, timestamp } }`
-- **Orphan:** false
-
-## pokemon-lifecycle-C027: Scene-to-Encounter Pokemon Creation
-
-- **Type:** api-endpoint
-- **Location:** `app/server/api/encounters/from-scene.post.ts:default`
-- **Game Concept:** Wild Pokemon spawning from scene
-- **Description:** Creates an encounter from a scene. Each scene Pokemon entry generates a real DB record via `generateAndCreatePokemon()` with `origin: 'wild'`. Wraps each in a combatant via `buildPokemonCombatant()` on the 'enemies' side with auto-placement.
-- **Inputs:** Body: `sceneId` (required), `battleType` (optional)
-- **Outputs:** `{ success: true, data: Encounter }` with Pokemon as combatants
-- **Orphan:** false
+### pokemon-lifecycle-C012: abilities Field
+- **cap_id**: pokemon-lifecycle-C012
+- **name**: Pokemon Abilities
+- **type**: prisma-field
+- **location**: `app/prisma/schema.prisma:Pokemon.abilities`
+- **game_concept**: PTU ability slots (Basic at creation, Advanced at 20, any at 40)
+- **description**: JSON array of { name, effect } objects. One Basic Ability randomly selected at generation. Additional ability slots unlock at level 20 (second: Basic or Advanced) and level 40 (third: any category). Level-up check reports milestones but does not auto-assign.
+- **inputs**: Array of ability objects
+- **outputs**: Ability cards on abilities tab
+- **accessible_from**: gm, player
 
 ---
 
-## pokemon-lifecycle-C028: Generate Pokemon Data (Pure)
+## Constants
 
-- **Type:** service-function
-- **Location:** `app/server/services/pokemon-generator.service.ts:generatePokemonData`
-- **Game Concept:** Pokemon character sheet generation
-- **Description:** Pure data generation from species + level. Looks up SpeciesData for base stats, types, abilities, learnset, capabilities. Distributes stat points weighted by base stats (level-1 points). Calculates HP via PTU formula (`level + baseHp*3 + 10`). Auto-selects moves from learnset. Picks random Basic Ability. Supports overrides for moves/abilities (template preservation).
-- **Inputs:** `GeneratePokemonInput`: speciesName, level, nickname, origin, originLabel, overrideMoves, overrideAbilities
-- **Outputs:** `GeneratedPokemonData`: species, level, nickname, types, baseStats, calculatedStats, maxHp, moves, abilities, gender, movementCaps, power, jump, weightClass, otherCapabilities, skills, eggGroups, size
-- **Orphan:** false
+### pokemon-lifecycle-C013: NATURE_TABLE
+- **cap_id**: pokemon-lifecycle-C013
+- **name**: PTU Nature Chart
+- **type**: constant
+- **location**: `app/constants/natures.ts` -- `NATURE_TABLE`
+- **game_concept**: PTU 36 natures with stat modifiers (Core Chapter 5, p.199)
+- **description**: Complete mapping of 36 nature names to { raise, lower } stat keys. 30 natures have distinct raise/lower stats; 6 neutral natures (Composed, Hardy, Docile, Bashful, Quirky, Serious) have raise === lower.
+- **inputs**: N/A (constant)
+- **outputs**: Used by applyNatureToBaseStats() and pokemon-generator
+- **accessible_from**: api-only
 
-## pokemon-lifecycle-C029: Create Pokemon DB Record
+### pokemon-lifecycle-C014: EXPERIENCE_CHART
+- **cap_id**: pokemon-lifecycle-C014
+- **name**: PTU Experience Chart
+- **type**: constant
+- **location**: `app/utils/experienceCalculation.ts` -- `EXPERIENCE_CHART`
+- **game_concept**: Cumulative XP thresholds for levels 1-100 (Core p.203)
+- **description**: Record<number, number> mapping level to cumulative XP needed. Level 1 = 0 XP, Level 100 = 20,555 XP. Used by getLevelForXp(), getXpForLevel(), getXpToNextLevel().
+- **inputs**: N/A (constant)
+- **outputs**: Level determination from XP
+- **accessible_from**: gm (via utility functions)
 
-- **Type:** service-function
-- **Location:** `app/server/services/pokemon-generator.service.ts:createPokemonRecord`
-- **Game Concept:** Pokemon database persistence
-- **Description:** Writes a Pokemon to the database from generated data. Resolves nickname via `resolveNickname()`. JSON-stringifies all complex fields. Sets `isInLibrary: true`. Stores origin and originLabel (in notes).
-- **Inputs:** `GeneratePokemonInput` + `GeneratedPokemonData`
-- **Outputs:** `CreatedPokemon`: id, species, level, nickname, data
-- **Orphan:** false
+### pokemon-lifecycle-C015: SIGNIFICANCE_PRESETS
+- **cap_id**: pokemon-lifecycle-C015
+- **name**: XP Significance Multiplier Presets
+- **type**: constant
+- **location**: `app/utils/experienceCalculation.ts` -- `SIGNIFICANCE_PRESETS`
+- **game_concept**: GM-assigned encounter significance for XP (Core p.460)
+- **description**: Derived from encounterBudget.ts canonical source. Maps tier names to multipliers: insignificant (1.0), everyday (2.0), significant (3.5), climactic (4.5), legendary (5.0). Used in XpDistributionModal preset selector.
+- **inputs**: N/A (constant)
+- **outputs**: XP calculation multiplier
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C030: Generate and Create Pokemon
-
-- **Type:** service-function
-- **Location:** `app/server/services/pokemon-generator.service.ts:generateAndCreatePokemon`
-- **Game Concept:** Pokemon creation (combined pipeline)
-- **Description:** Convenience wrapper that calls `generatePokemonData()` then `createPokemonRecord()`. Primary entry point for most callers (scene, template, wild spawn).
-- **Inputs:** `GeneratePokemonInput`
-- **Outputs:** `CreatedPokemon`
-- **Orphan:** false
-
-## pokemon-lifecycle-C031: Build Pokemon Combatant
-
-- **Type:** service-function
-- **Location:** `app/server/services/pokemon-generator.service.ts:buildPokemonCombatant`
-- **Game Concept:** Pokemon-to-combatant conversion for encounters
-- **Description:** Converts a CreatedPokemon into a full Combatant for encounter use. Builds Pokemon entity with defaults, maps size to token size, delegates to `buildCombatantFromEntity()`.
-- **Inputs:** CreatedPokemon, side (string), position (optional {x,y})
-- **Outputs:** Combatant (embedded in encounter's combatants JSON)
-- **Orphan:** false
-
-## pokemon-lifecycle-C032: Distribute Stat Points
-
-- **Type:** service-function
-- **Location:** `app/server/services/pokemon-generator.service.ts:distributeStatPoints`
-- **Game Concept:** PTU stat point distribution
-- **Description:** Distributes (level - 1) stat points weighted by base stats. Uses random weighted selection — higher base stats get proportionally more points. Internal helper used by generatePokemonData.
-- **Inputs:** baseStats (6 stats), level
-- **Outputs:** calculatedStats (base + distributed points for each stat)
-- **Orphan:** false
-
-## pokemon-lifecycle-C033: Select Moves From Learnset
-
-- **Type:** service-function
-- **Location:** `app/server/services/pokemon-generator.service.ts:selectMovesFromLearnset`
-- **Game Concept:** PTU level-up move selection
-- **Description:** Selects up to 6 most recent moves from species learnset at or below the given level. Fetches full MoveData from DB for each. Falls back to stub if move not found in DB.
-- **Inputs:** learnset (array of {level, move}), level
-- **Outputs:** MoveDetail[] (up to 6 moves with full data)
-- **Orphan:** false
-
-## pokemon-lifecycle-C034: Pick Random Ability
-
-- **Type:** service-function
-- **Location:** `app/server/services/pokemon-generator.service.ts:pickRandomAbility`
-- **Game Concept:** PTU ability assignment
-- **Description:** Picks one random Basic Ability from the species ability list. Respects `numBasicAbilities` to limit selection pool to basic abilities only (Advanced Abilities are for level 20+).
-- **Inputs:** abilityNames[], numBasicAbilities
-- **Outputs:** Array of one {name, effect} (empty string effect)
-- **Orphan:** false
-
-## pokemon-lifecycle-C035: Resolve Nickname
-
-- **Type:** service-function
-- **Location:** `app/server/utils/pokemon-nickname.ts:resolveNickname`
-- **Game Concept:** Pokemon auto-naming
-- **Description:** If nickname provided and non-empty, returns trimmed nickname. Otherwise counts existing Pokemon of that species in DB and returns `"Species N+1"` (e.g., "Pikachu 3").
-- **Inputs:** species (string), nickname (optional string)
-- **Outputs:** Resolved nickname string
-- **Orphan:** false
-
-## pokemon-lifecycle-C036: Detect CSV Sheet Type
-
-- **Type:** service-function
-- **Location:** `app/server/services/csv-import.service.ts:detectSheetType`
-- **Game Concept:** PTU sheet CSV detection
-- **Description:** Detects whether a CSV is a trainer sheet or pokemon sheet by examining the first few rows for 'species' keyword. Returns 'trainer', 'pokemon', or 'unknown'.
-- **Inputs:** rows (string[][])
-- **Outputs:** 'trainer' | 'pokemon' | 'unknown'
-- **Orphan:** false
-
-## pokemon-lifecycle-C037: Parse Pokemon CSV Sheet
-
-- **Type:** service-function
-- **Location:** `app/server/services/csv-import.service.ts:parsePokemonSheet`
-- **Game Concept:** PTU Pokemon sheet CSV parsing
-- **Description:** Extracts all Pokemon data from a CSV grid: nickname, species, level, nature, gender, shiny, types, base stats, calculated stats, maxHp, moves (up to 11), abilities (up to 8), capabilities (overland/swim/sky/burrow/levitate/power/jump), skills, held item. Uses fixed grid positions for each field.
-- **Inputs:** rows (string[][])
-- **Outputs:** ParsedPokemon object with all extracted fields
-- **Orphan:** false
-
-## pokemon-lifecycle-C038: Create Pokemon From CSV
-
-- **Type:** service-function
-- **Location:** `app/server/services/csv-import.service.ts:createPokemonFromCSV`
-- **Game Concept:** CSV-imported Pokemon DB creation
-- **Description:** Routes parsed CSV Pokemon through `createPokemonRecord()` for consistent DB creation. Looks up SpeciesData for authoritative types. Maps CSV move format to MoveDetail. Preserves nature, shiny, heldItem from CSV. Sets `origin: 'import'`, `originLabel: 'Imported from PTU sheet'`.
-- **Inputs:** ParsedPokemon
-- **Outputs:** { id, species, nickname, level }
-- **Orphan:** false
+### pokemon-lifecycle-C016: SIGNIFICANCE_PRESET_LABELS
+- **cap_id**: pokemon-lifecycle-C016
+- **name**: XP Significance Display Labels
+- **type**: constant
+- **location**: `app/utils/experienceCalculation.ts` -- `SIGNIFICANCE_PRESET_LABELS`
+- **game_concept**: Human-readable significance tier names
+- **description**: Record mapping preset keys to friendly labels for UI display. Used in XpDistributionModal and SignificancePanel for consistent labeling.
+- **inputs**: N/A (constant)
+- **outputs**: UI labels
+- **accessible_from**: gm
 
 ---
 
-## pokemon-lifecycle-C039: Calculate Capture Rate (Pure)
+## Utility Functions
 
-- **Type:** utility
-- **Location:** `app/utils/captureRate.ts:calculateCaptureRate`
-- **Game Concept:** PTU 1.05 capture rate formula
-- **Description:** Pure calculation: base 100, minus level*2, HP% modifier, evolution stage penalty, shiny/legendary modifiers, status condition bonuses (persistent +10, volatile +5 each), injury bonus (+5 each), stuck/slow modifiers. Caps at 0 minimum. Returns canBeCaptured flag (false at 0 HP).
-- **Inputs:** { level, currentHp, maxHp, evolutionStage, maxEvolutionStage, statusConditions, injuries, isShiny, isLegendary }
-- **Outputs:** { captureRate, canBeCaptured, hpPercentage, breakdown }
-- **Orphan:** false
+### pokemon-lifecycle-C017: applyNatureToBaseStats
+- **cap_id**: pokemon-lifecycle-C017
+- **name**: Nature Stat Modifier Application
+- **type**: utility
+- **location**: `app/constants/natures.ts` -- `applyNatureToBaseStats()`
+- **game_concept**: PTU nature stat adjustments (HP: +1/-1, others: +2/-2)
+- **description**: Pure function. Returns a new stats object with nature modifiers applied. HP uses +1/-1, non-HP stats use +2/-2. Stats floored at 1. Neutral natures return unmodified copy. Does not mutate input.
+- **inputs**: baseStats object, natureName string
+- **outputs**: Modified stats object (immutable)
+- **accessible_from**: api-only (used by pokemon-generator)
 
-## pokemon-lifecycle-C040: Execute Capture Roll (Pure)
+### pokemon-lifecycle-C018: checkLevelUp
+- **cap_id**: pokemon-lifecycle-C018
+- **name**: Per-Level Level-Up Info Calculator
+- **type**: utility
+- **location**: `app/utils/levelUpCheck.ts` -- `checkLevelUp()`
+- **game_concept**: PTU level-up effects (Core Chapter 5, pp.201-202)
+- **description**: Pure function. Returns array of LevelUpInfo (one per level gained): +1 stat point per level, new moves from learnset at exactly that level, ability milestones (level 20: second ability, level 40: third ability), tutor points at level 5 and every 5 levels. Does NOT handle evolution (conditions vary by species).
+- **inputs**: { oldLevel, newLevel, learnset: LearnsetEntry[] }
+- **outputs**: LevelUpInfo[] with newMoves, abilityMilestone, tutorPointGained per level
+- **accessible_from**: api-only
 
-- **Type:** utility
-- **Location:** `app/utils/captureRate.ts:attemptCapture`
-- **Game Concept:** PTU capture dice roll
-- **Description:** Rolls 1d100. Natural 100 = auto-capture. Effective rate = captureRate + trainerLevel + modifiers. Critical hit doubles effective rate. Success if roll <= effectiveCaptureRate.
-- **Inputs:** captureRate, trainerLevel, modifiers, criticalHit
-- **Outputs:** { success, roll, modifiedRoll, effectiveCaptureRate, naturalHundred }
-- **Orphan:** false
+### pokemon-lifecycle-C019: summarizeLevelUps
+- **cap_id**: pokemon-lifecycle-C019
+- **name**: Level-Up Summary Aggregator
+- **type**: utility
+- **location**: `app/utils/levelUpCheck.ts` -- `summarizeLevelUps()`
+- **game_concept**: Aggregate multi-level level-up info for display
+- **description**: Pure function. Combines array of LevelUpInfo into a single summary: totalStatPoints, allNewMoves, abilityMilestones, totalTutorPoints. Used by level-up-check endpoint for single notification display.
+- **inputs**: LevelUpInfo[]
+- **outputs**: { totalStatPoints, allNewMoves, abilityMilestones, totalTutorPoints }
+- **accessible_from**: api-only
 
-## pokemon-lifecycle-C041: Capture Difficulty Description
+### pokemon-lifecycle-C020: calculateEncounterXp
+- **cap_id**: pokemon-lifecycle-C020
+- **name**: Post-Combat XP Calculator
+- **type**: utility
+- **location**: `app/utils/experienceCalculation.ts` -- `calculateEncounterXp()`
+- **game_concept**: PTU post-combat XP formula (Core p.460)
+- **description**: Pure function. Step 1: sum defeated enemy levels (trainers count as 2x). Step 2: multiply by GM significance multiplier (0.5-10). Step 3: divide by player count (unless boss encounter). All divisions floored. Returns full breakdown with per-enemy contributions.
+- **inputs**: XpCalculationInput (defeatedEnemies, significanceMultiplier, playerCount, isBossEncounter)
+- **outputs**: XpCalculationResult (totalXpPerPlayer, breakdown with enemy details)
+- **accessible_from**: gm (via xp-calculate/xp-distribute endpoints)
 
-- **Type:** utility
-- **Location:** `app/utils/captureRate.ts:getCaptureDescription`
-- **Game Concept:** Capture difficulty display
-- **Description:** Converts numeric capture rate to human-readable difficulty string (e.g., "Very Easy", "Moderate", "Nearly Impossible").
-- **Inputs:** captureRate (number)
-- **Outputs:** Difficulty string
-- **Orphan:** true
+### pokemon-lifecycle-C021: calculateLevelUps
+- **cap_id**: pokemon-lifecycle-C021
+- **name**: XP Application Level-Up Calculator
+- **type**: utility
+- **location**: `app/utils/experienceCalculation.ts` -- `calculateLevelUps()`
+- **game_concept**: Determine level-ups from XP gain (Core p.202-203)
+- **description**: Pure function. Given current experience/level and XP to add, determines new level via EXPERIENCE_CHART lookup, then delegates to checkLevelUp() for per-level details. Returns XpApplicationResult with previousExperience, newExperience, levelsGained, and LevelUpEvent array.
+- **inputs**: currentExperience, currentLevel, xpToAdd, learnset?, evolutionLevels?
+- **outputs**: Omit<XpApplicationResult, 'pokemonId' | 'species'>
+- **accessible_from**: api-only
 
-## pokemon-lifecycle-C042: Should Reset Daily Counters
+### pokemon-lifecycle-C022: enrichDefeatedEnemies
+- **cap_id**: pokemon-lifecycle-C022
+- **name**: Defeated Enemy Enrichment
+- **type**: utility
+- **location**: `app/utils/experienceCalculation.ts` -- `enrichDefeatedEnemies()`
+- **game_concept**: Trainer identification for XP 2x multiplier
+- **description**: Pure function. Converts raw defeated enemy entries (from encounter JSON) into DefeatedEnemy shape. Determines isTrainer via the type field on the entry (new entries) or fallback trainerEnemyIds (legacy). Default false.
+- **inputs**: RawDefeatedEnemy[], optional trainerEnemyIds string[]
+- **outputs**: DefeatedEnemy[] with isTrainer flag
+- **accessible_from**: api-only
 
-- **Type:** utility
-- **Location:** `app/utils/restHealing.ts:shouldResetDailyCounters`
-- **Game Concept:** PTU new day detection
-- **Description:** Compares `lastRestReset` timestamp to current time to detect if a new calendar day has begun. Used by all rest/healing endpoints.
-- **Inputs:** lastRestReset (Date or null)
-- **Outputs:** boolean
-- **Orphan:** false
+### pokemon-lifecycle-C023: getXpForLevel
+- **cap_id**: pokemon-lifecycle-C023
+- **name**: XP Threshold Lookup
+- **type**: utility
+- **location**: `app/utils/experienceCalculation.ts` -- `getXpForLevel()`
+- **game_concept**: PTU Experience Chart lookup (Core p.203)
+- **description**: Pure function. Returns cumulative XP needed to reach a specific level (1-100). Returns 0 for invalid levels below 1, MAX_EXPERIENCE for levels above 100.
+- **inputs**: level number
+- **outputs**: XP threshold number
+- **accessible_from**: gm (via modal preview)
 
-## pokemon-lifecycle-C043: Calculate Rest Healing
+### pokemon-lifecycle-C024: getLevelForXp
+- **cap_id**: pokemon-lifecycle-C024
+- **name**: Level from XP Lookup
+- **type**: utility
+- **location**: `app/utils/experienceCalculation.ts` -- `getLevelForXp()`
+- **game_concept**: Reverse XP chart lookup
+- **description**: Pure function. Walks chart from level 100 down to find highest level the XP qualifies for. Returns 1-100.
+- **inputs**: totalXp number
+- **outputs**: level number
+- **accessible_from**: gm (via modal level-up preview)
 
-- **Type:** utility
-- **Location:** `app/utils/restHealing.ts:calculateRestHealing`
-- **Game Concept:** PTU 30-minute rest HP formula
-- **Description:** Calculates HP restored from one 30-minute rest period: 1/16 of maxHp (rounded down). Returns 0 if blocked: 5+ injuries, daily rest cap (480 min), or already at full HP.
-- **Inputs:** { currentHp, maxHp, injuries, restMinutesToday }
-- **Outputs:** { hpHealed, blocked, blockReason }
-- **Orphan:** false
+### pokemon-lifecycle-C025: getXpToNextLevel
+- **cap_id**: pokemon-lifecycle-C025
+- **name**: XP to Next Level Calculator
+- **type**: utility
+- **location**: `app/utils/experienceCalculation.ts` -- `getXpToNextLevel()`
+- **game_concept**: Remaining XP until next level
+- **description**: Pure function. Returns XP remaining until the next level. 0 if at max level. Max(0, nextLevelXp - currentExperience).
+- **inputs**: currentExperience, currentLevel
+- **outputs**: XP remaining number
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C044: Can Heal Injury Naturally
+### pokemon-lifecycle-C026: resolvePresetFromMultiplier
+- **cap_id**: pokemon-lifecycle-C026
+- **name**: Significance Preset Resolver
+- **type**: utility
+- **location**: `app/utils/experienceCalculation.ts` -- `resolvePresetFromMultiplier()`
+- **game_concept**: Map multiplier value back to preset name
+- **description**: Pure function. Given a numeric multiplier, finds the matching SIGNIFICANCE_PRESETS key. Returns 'custom' if no preset matches. Used to initialize XpDistributionModal from encounter's persisted significanceMultiplier.
+- **inputs**: multiplier number
+- **outputs**: SignificancePreset | 'custom'
+- **accessible_from**: gm
 
-- **Type:** utility
-- **Location:** `app/utils/restHealing.ts:canHealInjuryNaturally`
-- **Game Concept:** PTU 24-hour natural injury healing timer
-- **Description:** Checks if 24 hours have passed since the last injury. Returns eligibility with hours remaining if not eligible.
-- **Inputs:** lastInjuryTime (Date or null)
-- **Outputs:** { canHeal, hoursSinceLastInjury, hoursRemaining }
-- **Orphan:** false
+### pokemon-lifecycle-C027: resolveNickname
+- **cap_id**: pokemon-lifecycle-C027
+- **name**: Auto-Nickname Generator
+- **type**: utility
+- **location**: `app/server/utils/pokemon-nickname.ts` -- `resolveNickname()`
+- **game_concept**: Default Pokemon naming convention
+- **description**: Async function. If nickname provided and non-empty, returns trimmed nickname. Otherwise, counts existing Pokemon of same species in DB and generates "Species N+1" (e.g., "Pikachu 3"). Used by both index.post.ts and pokemon-generator service.
+- **inputs**: species string, optional nickname string
+- **outputs**: Resolved nickname string
+- **accessible_from**: api-only
 
-## pokemon-lifecycle-C045: Calculate Pokemon Center Time
-
-- **Type:** utility
-- **Location:** `app/utils/restHealing.ts:calculatePokemonCenterTime`
-- **Game Concept:** PTU Pokemon Center healing time
-- **Description:** Calculates healing time at a Pokemon Center: base 1 hour, +30 min per injury (or +1 hour per injury at 5+).
-- **Inputs:** injuries (number)
-- **Outputs:** { totalMinutes, description }
-- **Orphan:** false
-
-## pokemon-lifecycle-C046: Calculate Pokemon Center Injury Healing
-
-- **Type:** utility
-- **Location:** `app/utils/restHealing.ts:calculatePokemonCenterInjuryHealing`
-- **Game Concept:** PTU Pokemon Center injury healing with daily limit
-- **Description:** Calculates how many injuries a Pokemon Center heals: up to 3 per day, subject to daily limit across all healing types.
-- **Inputs:** { injuries, injuriesHealedToday }
-- **Outputs:** { injuriesHealed, atDailyLimit }
-- **Orphan:** false
-
-## pokemon-lifecycle-C047: Clear Persistent Status Conditions
-
-- **Type:** utility
-- **Location:** `app/utils/restHealing.ts:clearPersistentStatusConditions`
-- **Game Concept:** PTU extended rest status clearing
-- **Description:** Filters out persistent status conditions from an array. Used by extended rest endpoint. `getStatusesToClear()` companion returns list of cleared names for reporting.
-- **Inputs:** statusConditions array
-- **Outputs:** Filtered array (persistent removed) and names of cleared conditions
-- **Orphan:** false
-
----
-
-## pokemon-lifecycle-C048: Library Store - Pokemon State
-
-- **Type:** store-action
-- **Location:** `app/stores/library.ts:loadLibrary`
-- **Game Concept:** Pokemon library data loading
-- **Description:** Fetches all Pokemon and Human Characters in parallel from `/api/pokemon` and `/api/characters`. Stores results in `state.pokemon[]` and `state.humans[]`. Sets loading/error state.
-- **Inputs:** None (action)
-- **Outputs:** Populates `state.pokemon[]` and `state.humans[]`
-- **Orphan:** false
-
-## pokemon-lifecycle-C049: Library Store - Create Pokemon
-
-- **Type:** store-action
-- **Location:** `app/stores/library.ts:createPokemon`
-- **Game Concept:** Pokemon creation (client-side)
-- **Description:** POSTs to `/api/pokemon`, pushes created Pokemon to local state array.
-- **Inputs:** Partial<Pokemon>
-- **Outputs:** Returns created Pokemon, updates `state.pokemon[]`
-- **Orphan:** false
-
-## pokemon-lifecycle-C050: Library Store - Update Pokemon
-
-- **Type:** store-action
-- **Location:** `app/stores/library.ts:updatePokemon`
-- **Game Concept:** Pokemon editing (client-side)
-- **Description:** PUTs to `/api/pokemon/:id`, replaces Pokemon in local state array by index.
-- **Inputs:** id, Partial<Pokemon>
-- **Outputs:** Returns updated Pokemon, updates `state.pokemon[]`
-- **Orphan:** false
-
-## pokemon-lifecycle-C051: Library Store - Delete Pokemon
-
-- **Type:** store-action
-- **Location:** `app/stores/library.ts:deletePokemon`
-- **Game Concept:** Pokemon deletion (client-side)
-- **Description:** DELETEs `/api/pokemon/:id`, filters Pokemon from local state array.
-- **Inputs:** id (string)
-- **Outputs:** Removes Pokemon from `state.pokemon[]`
-- **Orphan:** false
-
-## pokemon-lifecycle-C052: Library Store - Link Pokemon
-
-- **Type:** store-action
-- **Location:** `app/stores/library.ts:linkPokemonToTrainer`
-- **Game Concept:** Pokemon ownership (client-side)
-- **Description:** POSTs to `/api/pokemon/:id/link`, replaces Pokemon in local state with response data.
-- **Inputs:** pokemonId, trainerId
-- **Outputs:** Updates Pokemon in `state.pokemon[]` with new ownerId
-- **Orphan:** false
-
-## pokemon-lifecycle-C053: Library Store - Unlink Pokemon
-
-- **Type:** store-action
-- **Location:** `app/stores/library.ts:unlinkPokemon`
-- **Game Concept:** Pokemon ownership removal (client-side)
-- **Description:** POSTs to `/api/pokemon/:id/unlink`, replaces Pokemon in local state with response data.
-- **Inputs:** pokemonId
-- **Outputs:** Updates Pokemon in `state.pokemon[]` with ownerId: null
-- **Orphan:** false
-
-## pokemon-lifecycle-C054: Library Store - Set Filters
-
-- **Type:** store-action
-- **Location:** `app/stores/library.ts:setFilters`
-- **Game Concept:** Pokemon library filtering
-- **Description:** Updates filter state including `pokemonOrigin`, `pokemonType`, `search`, `sortBy`, `sortOrder`. Filters are applied reactively by getters.
-- **Inputs:** Partial<LibraryFilters>
-- **Outputs:** Updates `state.filters`
-- **Orphan:** false
+### pokemon-lifecycle-C028: serializePokemon
+- **cap_id**: pokemon-lifecycle-C028
+- **name**: Pokemon Response Serializer
+- **type**: utility
+- **location**: `app/server/utils/serializers.ts` -- `serializePokemon()`
+- **game_concept**: JSON response normalization
+- **description**: Converts a raw Prisma Pokemon record into a client-friendly shape: parses JSON fields (nature, stageModifiers, abilities, moves, capabilities, skills, eggGroups, statusConditions), restructures stats into baseStats/currentStats objects with semantic keys. Used by all Pokemon GET/PUT/POST endpoints.
+- **inputs**: Prisma Pokemon record
+- **outputs**: Serialized Pokemon object with parsed JSON fields
+- **accessible_from**: api-only
 
 ---
 
-## pokemon-lifecycle-C055: Filtered Pokemon Getter
+## Service Functions
 
-- **Type:** store-getter
-- **Location:** `app/stores/library.ts:filteredPokemon`
-- **Game Concept:** Pokemon library search and filter
-- **Description:** Returns Pokemon filtered by: search text (species, nickname, location), pokemonType (type filter), pokemonOrigin (origin filter). Sorted by name or level, ascending or descending.
-- **Inputs:** Reads from `state.filters` and `state.pokemon[]`
-- **Outputs:** Pokemon[] (filtered and sorted)
-- **Orphan:** false
+### pokemon-lifecycle-C029: generatePokemonData
+- **cap_id**: pokemon-lifecycle-C029
+- **name**: Pokemon Data Generator (Pure)
+- **type**: service-function
+- **location**: `app/server/services/pokemon-generator.service.ts` -- `generatePokemonData()`
+- **game_concept**: Full Pokemon sheet generation from species + level
+- **description**: Async function. Looks up SpeciesData, selects random nature and applies modifiers, distributes stat points (level + 10 points weighted by base stats with Base Relations enforcement), calculates HP (level + HP_stat*3 + 10), selects up to 6 moves from learnset, picks random Basic Ability, assigns random gender. Supports overrideMoves and overrideAbilities for template preservation. No DB writes.
+- **inputs**: GeneratePokemonInput (speciesName, level, nickname?, origin, overrideMoves?, overrideAbilities?)
+- **outputs**: GeneratedPokemonData (full sheet data)
+- **accessible_from**: api-only
 
-## pokemon-lifecycle-C056: Get Pokemon By ID Getter
+### pokemon-lifecycle-C030: createPokemonRecord
+- **cap_id**: pokemon-lifecycle-C030
+- **name**: Pokemon DB Record Creator
+- **type**: service-function
+- **location**: `app/server/services/pokemon-generator.service.ts` -- `createPokemonRecord()`
+- **game_concept**: Persist generated Pokemon to database
+- **description**: Async function. Takes GeneratePokemonInput + GeneratedPokemonData and creates a Prisma Pokemon record. Always sets isInLibrary: true. Resolves nickname via resolveNickname(). Stores origin and originLabel (in notes). Returns CreatedPokemon with id, species, level, nickname, data.
+- **inputs**: GeneratePokemonInput, GeneratedPokemonData
+- **outputs**: CreatedPokemon
+- **accessible_from**: api-only
 
-- **Type:** store-getter
-- **Location:** `app/stores/library.ts:getPokemonById`
-- **Game Concept:** Single Pokemon lookup
-- **Description:** Returns a Pokemon from the store by ID. Used by sheet pages and modals.
-- **Inputs:** id (string)
-- **Outputs:** Pokemon | undefined
-- **Orphan:** false
+### pokemon-lifecycle-C031: generateAndCreatePokemon
+- **cap_id**: pokemon-lifecycle-C031
+- **name**: Pokemon Generate + Create (Combined)
+- **type**: service-function
+- **location**: `app/server/services/pokemon-generator.service.ts` -- `generateAndCreatePokemon()`
+- **game_concept**: Primary entry point for Pokemon creation
+- **description**: Async function. Calls generatePokemonData() then createPokemonRecord(). Primary entry point for wild spawns, template loads, and scene-to-encounter conversion.
+- **inputs**: GeneratePokemonInput
+- **outputs**: CreatedPokemon
+- **accessible_from**: api-only
 
-## pokemon-lifecycle-C057: Get Pokemon By Owner Getter
+### pokemon-lifecycle-C032: buildPokemonCombatant
+- **cap_id**: pokemon-lifecycle-C032
+- **name**: Pokemon-to-Combatant Builder
+- **type**: service-function
+- **location**: `app/server/services/pokemon-generator.service.ts` -- `buildPokemonCombatant()`
+- **game_concept**: Embed Pokemon in encounter combatants JSON
+- **description**: Converts a CreatedPokemon into a full Combatant wrapper via createdPokemonToEntity() and buildCombatantFromEntity(). Determines token size from species size. Used when spawning Pokemon directly into encounters.
+- **inputs**: CreatedPokemon, side string, optional position {x, y}
+- **outputs**: Combatant object for encounter JSON
+- **accessible_from**: api-only
 
-- **Type:** store-getter
-- **Location:** `app/stores/library.ts:getPokemonByOwner`
-- **Game Concept:** Trainer's Pokemon team lookup
-- **Description:** Returns all Pokemon owned by a specific trainer. Used by character sheet's Pokemon tab.
-- **Inputs:** ownerId (string)
-- **Outputs:** Pokemon[]
-- **Orphan:** false
-
-## pokemon-lifecycle-C058: Grouped Pokemon By Location Getter
-
-- **Type:** store-getter
-- **Location:** `app/stores/library.ts:groupedPokemonByLocation`
-- **Game Concept:** Location-based Pokemon grouping
-- **Description:** Groups filtered Pokemon by their `location` field. Sorted alphabetically with "No Location" last. Used by the sheets page for organized display.
-- **Inputs:** Reads from `filteredPokemon`
-- **Outputs:** Array of { location: string, pokemon: Pokemon[] }
-- **Orphan:** false
-
-## pokemon-lifecycle-C059: All Filtered Getter
-
-- **Type:** store-getter
-- **Location:** `app/stores/library.ts:allFiltered`
-- **Game Concept:** Combined entity listing
-- **Description:** Combines filteredHumans and filteredPokemon based on `state.filters.type` ('all', 'human', 'pokemon'). Used for unified library browsing.
-- **Inputs:** Reads from other getters and `state.filters.type`
-- **Outputs:** (HumanCharacter | Pokemon)[]
-- **Orphan:** false
-
----
-
-## pokemon-lifecycle-C060: Pokemon Sprite URL Generator
-
-- **Type:** composable-function
-- **Location:** `app/composables/usePokemonSprite.ts:getSpriteUrl`
-- **Game Concept:** Pokemon sprite display
-- **Description:** Returns animated sprite URL for a Pokemon. Gen 1-5 use B2W2 animated GIFs, Gen 6+ use Pokemon Showdown. Contains dex number map (649 entries) and special name map (~100 entries for regional forms). Primary entry point for all sprite rendering.
-- **Inputs:** species (string), shiny (boolean)
-- **Outputs:** URL string for animated GIF
-- **Orphan:** false
-
-## pokemon-lifecycle-C061: Static Sprite URL
-
-- **Type:** composable-function
-- **Location:** `app/composables/usePokemonSprite.ts:getStaticSpriteUrl`
-- **Game Concept:** Pokemon sprite fallback
-- **Description:** Returns static (non-animated) sprite URL. Fallback when animated sprite is unavailable.
-- **Inputs:** species (string), shiny (boolean)
-- **Outputs:** URL string
-- **Orphan:** true
-
-## pokemon-lifecycle-C062: Sprite With Fallback
-
-- **Type:** composable-function
-- **Location:** `app/composables/usePokemonSprite.ts:getSpriteWithFallback`
-- **Game Concept:** Pokemon sprite with error recovery
-- **Description:** Attempts animated sprite, falls back to static, then to official artwork. Ensures a valid sprite is always available.
-- **Inputs:** species (string), shiny (boolean)
-- **Outputs:** URL string
-- **Orphan:** false
-
-## pokemon-lifecycle-C063: Roll Skill Check
-
-- **Type:** composable-function
-- **Location:** `app/composables/usePokemonSheetRolls.ts:rollSkill`
-- **Game Concept:** PTU Pokemon skill check
-- **Description:** Rolls a skill check using dice notation (e.g., "2d6+2"). Returns roll result and total.
-- **Inputs:** skill name, dice notation string
-- **Outputs:** Roll result object
-- **Orphan:** false
-
-## pokemon-lifecycle-C064: Roll Attack
-
-- **Type:** composable-function
-- **Location:** `app/composables/usePokemonSheetRolls.ts:rollAttack`
-- **Game Concept:** PTU accuracy check
-- **Description:** Rolls 1d20 for move accuracy. Handles natural 1 (auto-miss) and natural 20 (auto-hit/crit).
-- **Inputs:** Move object
-- **Outputs:** Roll result with hit/miss/crit
-- **Orphan:** false
-
-## pokemon-lifecycle-C065: Roll Damage
-
-- **Type:** composable-function
-- **Location:** `app/composables/usePokemonSheetRolls.ts:rollDamage`
-- **Game Concept:** PTU damage roll
-- **Description:** Rolls damage for a move with stat modifier addition. Handles critical hit flag.
-- **Inputs:** Move object, isCrit boolean
-- **Outputs:** Damage total
-- **Orphan:** false
-
-## pokemon-lifecycle-C066: Client Capture Rate Calculator
-
-- **Type:** composable-function
-- **Location:** `app/composables/useCapture.ts:calculateCaptureRateLocal`
-- **Game Concept:** PTU capture rate (client-side mirror)
-- **Description:** Pure client-side capture rate calculation that mirrors the server-side implementation. Used for real-time UI updates without API calls.
-- **Inputs:** Same as server-side calculateCaptureRate
-- **Outputs:** Capture rate and breakdown
-- **Orphan:** true
-
-## pokemon-lifecycle-C067: Get Capture Rate (API)
-
-- **Type:** composable-function
-- **Location:** `app/composables/useCapture.ts:getCaptureRate`
-- **Game Concept:** Capture rate API call
-- **Description:** Calls `/api/capture/rate` to get authoritative capture rate from server.
-- **Inputs:** pokemonId (string)
-- **Outputs:** Capture rate data from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C068: Attempt Capture (API)
-
-- **Type:** composable-function
-- **Location:** `app/composables/useCapture.ts:attemptCapture`
-- **Game Concept:** Capture execution API call
-- **Description:** Calls `/api/capture/attempt` to execute a capture attempt.
-- **Inputs:** { pokemonId, trainerId, accuracyRoll, modifiers }
-- **Outputs:** Capture result from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C069: Roll Accuracy Check (Capture)
-
-- **Type:** composable-function
-- **Location:** `app/composables/useCapture.ts:rollAccuracyCheck`
-- **Game Concept:** Poke Ball accuracy check (AC 6)
-- **Description:** Rolls 1d20 for Poke Ball throw accuracy check against AC 6.
-- **Inputs:** None
-- **Outputs:** Roll result (hit/miss)
-- **Orphan:** false
-
-## pokemon-lifecycle-C070: Rest Composable (30-min)
-
-- **Type:** composable-function
-- **Location:** `app/composables/useRestHealing.ts:rest`
-- **Game Concept:** PTU rest (client-side wrapper)
-- **Description:** Calls `/api/pokemon/:id/rest` or `/api/characters/:id/rest`. Polymorphic for both entity types.
-- **Inputs:** type ('pokemon'|'character'), id
-- **Outputs:** Rest result from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C071: Extended Rest Composable
-
-- **Type:** composable-function
-- **Location:** `app/composables/useRestHealing.ts:extendedRest`
-- **Game Concept:** PTU extended rest (client-side wrapper)
-- **Description:** Calls `/api/pokemon/:id/extended-rest` or `/api/characters/:id/extended-rest`.
-- **Inputs:** type ('pokemon'|'character'), id
-- **Outputs:** Extended rest result from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C072: Pokemon Center Composable
-
-- **Type:** composable-function
-- **Location:** `app/composables/useRestHealing.ts:pokemonCenter`
-- **Game Concept:** PTU Pokemon Center (client-side wrapper)
-- **Description:** Calls `/api/pokemon/:id/pokemon-center` or `/api/characters/:id/pokemon-center`.
-- **Inputs:** type ('pokemon'|'character'), id
-- **Outputs:** Pokemon Center result from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C073: Heal Injury Composable
-
-- **Type:** composable-function
-- **Location:** `app/composables/useRestHealing.ts:healInjury`
-- **Game Concept:** PTU injury healing (client-side wrapper)
-- **Description:** Calls `/api/pokemon/:id/heal-injury` or corresponding character endpoint. Supports natural and drain AP methods.
-- **Inputs:** type ('pokemon'|'character'), id, method
-- **Outputs:** Injury healing result from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C074: New Day Composable (Single)
-
-- **Type:** composable-function
-- **Location:** `app/composables/useRestHealing.ts:newDay`
-- **Game Concept:** PTU new day (single entity, client-side)
-- **Description:** Calls `/api/pokemon/:id/new-day` or corresponding character endpoint for a single entity.
-- **Inputs:** type ('pokemon'|'character'), id
-- **Outputs:** Reset result from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C075: New Day Global Composable
-
-- **Type:** composable-function
-- **Location:** `app/composables/useRestHealing.ts:newDayGlobal`
-- **Game Concept:** PTU new day (global, client-side)
-- **Description:** Calls `/api/game/new-day` to reset all entities at once.
-- **Inputs:** None
-- **Outputs:** Global reset result from server
-- **Orphan:** false
-
-## pokemon-lifecycle-C076: Get Healing Info
-
-- **Type:** composable-function
-- **Location:** `app/composables/useRestHealing.ts:getHealingInfo`
-- **Game Concept:** Healing status display
-- **Description:** Aggregates healing display information for an entity: current rest minutes, daily injury count, rest eligibility, etc.
-- **Inputs:** Entity data
-- **Outputs:** Healing info summary for UI display
-- **Orphan:** false
-
-## pokemon-lifecycle-C077: Entity Stats Accessor
-
-- **Type:** composable-function
-- **Location:** `app/composables/useEntityStats.ts:getStageModifiers`
-- **Game Concept:** Pokemon stat access (polymorphic)
-- **Description:** Safe accessor for stage modifiers and stats. Handles both nested (client-side) and flat (DB) formats. Functions: `getPokemonAttackStat()`, `getPokemonSpAtkStat()`, `getPokemonDefenseStat()`, `getPokemonSpDefStat()`, `getPokemonSpeedStat()`, `getAttackStat()`, `getDefenseStat()`.
-- **Inputs:** Entity object, isPokemon boolean, damageClass
-- **Outputs:** Stat value (number)
-- **Orphan:** false
+### pokemon-lifecycle-C033: distributeStatPoints (internal)
+- **cap_id**: pokemon-lifecycle-C033
+- **name**: Stat Point Distribution with Base Relations
+- **type**: service-function
+- **location**: `app/server/services/pokemon-generator.service.ts` -- `distributeStatPoints()`
+- **game_concept**: PTU stat point allocation (Core Chapter 5, Base Relations Rule)
+- **description**: Internal function. Distributes (level + 10) stat points weighted by base stats using random rolls, then enforces Base Relations Rule: stats with higher base values must have >= added points than stats with lower base values. Equal base stats form tiers with randomized internal order.
+- **inputs**: baseStats object, level number
+- **outputs**: Calculated stats object (base + distributed)
+- **accessible_from**: api-only (internal to service)
 
 ---
 
-## pokemon-lifecycle-C078: Pokemon Card Component
+## API Endpoints
 
-- **Type:** component
-- **Location:** `app/components/character/PokemonCard.vue`
-- **Game Concept:** Pokemon list display
-- **Description:** Card component for Pokemon library listing. Shows sprite (with shiny indicator), nickname/species, types, level, location, HP bar, status conditions, injuries, origin badge. Clickable to navigate to Pokemon sheet.
-- **Inputs:** Pokemon data object
-- **Outputs:** Rendered card with click navigation to `/gm/pokemon/:id`
-- **Orphan:** false
+### pokemon-lifecycle-C034: GET /api/pokemon
+- **cap_id**: pokemon-lifecycle-C034
+- **name**: List All Pokemon
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/index.get.ts`
+- **game_concept**: Pokemon library listing
+- **description**: Returns all Pokemon, sorted by species asc. Filters: origin (string, optional), includeArchived (boolean, default false). When includeArchived is false, only returns Pokemon with isInLibrary=true. Uses serializePokemon() for consistent response shape.
+- **inputs**: Query params: origin?, includeArchived?
+- **outputs**: { success: true, data: Pokemon[] }
+- **accessible_from**: gm, player
 
-## pokemon-lifecycle-C079: Trainer Pokemon Tab Component
+### pokemon-lifecycle-C035: GET /api/pokemon/:id
+- **cap_id**: pokemon-lifecycle-C035
+- **name**: Get Single Pokemon
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/[id].get.ts`
+- **game_concept**: Pokemon sheet detail view
+- **description**: Returns a single Pokemon by ID with all fields serialized. 404 if not found.
+- **inputs**: Route param: id
+- **outputs**: { success: true, data: Pokemon }
+- **accessible_from**: gm, player
 
-- **Type:** component
-- **Location:** `app/components/character/tabs/HumanPokemonTab.vue`
-- **Game Concept:** Trainer's Pokemon team display
-- **Description:** Tab on human character sheet showing linked Pokemon team. Displays sprites, names, levels, HP for each Pokemon. Uses `getPokemonByOwner()` getter.
-- **Inputs:** trainer ID (from parent page)
-- **Outputs:** Rendered Pokemon team list
-- **Orphan:** false
+### pokemon-lifecycle-C036: POST /api/pokemon
+- **cap_id**: pokemon-lifecycle-C036
+- **name**: Create Pokemon (Manual)
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/index.post.ts`
+- **game_concept**: Manual Pokemon creation by GM
+- **description**: Creates a Pokemon record from arbitrary body data. Applies PTU HP formula (level + baseHp*3 + 10). Resolves nickname via resolveNickname(). Accepts baseStats, currentStats, types, nature, abilities, moves, capabilities, skills, eggGroups, and all other fields. Default origin: 'manual'. Does NOT use pokemon-generator service (that's for wild/template).
+- **inputs**: Body: full or partial Pokemon data
+- **outputs**: { success: true, data: Pokemon }
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C080: Pokemon Stats Tab Component
+### pokemon-lifecycle-C037: PUT /api/pokemon/:id
+- **cap_id**: pokemon-lifecycle-C037
+- **name**: Update Pokemon
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/[id].put.ts`
+- **game_concept**: Edit Pokemon stats, moves, items, etc.
+- **description**: Updates any subset of Pokemon fields. Handles JSON serialization for nature, stageModifiers, abilities, moves, statusConditions. Supports baseStats and currentStats as nested objects. Also handles healing fields (injuries, restMinutesToday, etc.). Resolves nickname changes via resolveNickname().
+- **inputs**: Route param: id, Body: partial Pokemon data
+- **outputs**: { success: true, data: Pokemon }
+- **accessible_from**: gm
 
-- **Type:** component
-- **Location:** `app/components/character/tabs/PokemonStatsTab.vue`
-- **Game Concept:** Pokemon stat display
-- **Description:** Stats display tab for Pokemon sheets. Shows base stats vs current stats grid, nature with raised/lowered stat indicators.
-- **Inputs:** Pokemon data
-- **Outputs:** Rendered stats grid
-- **Orphan:** false
+### pokemon-lifecycle-C038: DELETE /api/pokemon/:id
+- **cap_id**: pokemon-lifecycle-C038
+- **name**: Delete Single Pokemon
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/[id].delete.ts`
+- **game_concept**: Permanent Pokemon removal
+- **description**: Permanently deletes a Pokemon record by ID. No active encounter guard (that's only on bulk-action).
+- **inputs**: Route param: id
+- **outputs**: { success: true }
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C081: Pokemon Capabilities Tab Component
+### pokemon-lifecycle-C039: POST /api/pokemon/:id/link
+- **cap_id**: pokemon-lifecycle-C039
+- **name**: Link Pokemon to Trainer
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/[id]/link.post.ts`
+- **game_concept**: Trainer-Pokemon ownership assignment
+- **description**: Sets ownerId on a Pokemon record to the specified trainerId. Verifies both Pokemon and trainer exist. Returns full parsed Pokemon data.
+- **inputs**: Route param: id, Body: { trainerId }
+- **outputs**: { data: Pokemon }
+- **accessible_from**: gm
 
-- **Type:** component
-- **Location:** `app/components/character/tabs/PokemonCapabilitiesTab.vue`
-- **Game Concept:** Pokemon capability display
-- **Description:** Capabilities display tab: overland, swim, sky, burrow, levitate, jump, power, weight class, size, other capabilities.
-- **Inputs:** Pokemon capabilities data
-- **Outputs:** Rendered capabilities grid
-- **Orphan:** false
+### pokemon-lifecycle-C040: POST /api/pokemon/:id/unlink
+- **cap_id**: pokemon-lifecycle-C040
+- **name**: Unlink Pokemon from Trainer
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/[id]/unlink.post.ts`
+- **game_concept**: Release Pokemon from trainer ownership
+- **description**: Sets ownerId to null on a Pokemon record. Returns full parsed Pokemon data.
+- **inputs**: Route param: id
+- **outputs**: { data: Pokemon }
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C082: Pokemon Search Input Component
+### pokemon-lifecycle-C041: POST /api/pokemon/bulk-action
+- **cap_id**: pokemon-lifecycle-C041
+- **name**: Bulk Archive/Delete Pokemon
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/bulk-action.post.ts`
+- **game_concept**: Mass Pokemon management
+- **description**: Bulk archive (isInLibrary=false) or delete Pokemon. Accepts pokemonIds array OR filter (origin, hasOwner). Safety check: blocks both archive and delete for Pokemon in active encounters (checks encounter combatants JSON). Returns count of affected records.
+- **inputs**: Body: { action: 'archive'|'delete', pokemonIds?: string[], filter?: { origin?, hasOwner? } }
+- **outputs**: { success: true, data: { action, count } }
+- **accessible_from**: gm
 
-- **Type:** component
-- **Location:** `app/components/common/PokemonSearchInput.vue`
-- **Game Concept:** Species autocomplete for Pokemon creation
-- **Description:** Autocomplete search input. Loads species from `/api/species` on mount, filters client-side, shows type badges in dropdown. Emits `select` with species id/name. Used by creation forms and encounter table editors.
-- **Inputs:** None (self-loading)
-- **Outputs:** Emits selected species { id, name }
-- **Orphan:** false
+### pokemon-lifecycle-C042: POST /api/pokemon/:id/add-experience
+- **cap_id**: pokemon-lifecycle-C042
+- **name**: Manual XP Grant
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/[id]/add-experience.post.ts`
+- **game_concept**: Standalone XP grant (training, manual GM award) (Core p.202)
+- **description**: Adds XP to a single Pokemon. Validates amount is positive integer <= MAX_EXPERIENCE. Loads learnset from SpeciesData for move detection. Calls calculateLevelUps(). Updates experience, level, tutorPoints, and maxHp (level component increase). Preserves full-HP state on level-up. Separate from combat XP distribution.
+- **inputs**: Route param: id, Body: { amount: number }
+- **outputs**: { success: true, data: XpApplicationResult }
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C083: Healing Tab Component
+### pokemon-lifecycle-C043: POST /api/pokemon/:id/level-up-check
+- **cap_id**: pokemon-lifecycle-C043
+- **name**: Level-Up Preview
+- **type**: api-endpoint
+- **location**: `app/server/api/pokemon/[id]/level-up-check.post.ts`
+- **game_concept**: Preview level-up effects before committing
+- **description**: Read-only endpoint. Returns level-up information for transitioning from current level to targetLevel. Uses checkLevelUp() + summarizeLevelUps(). Reports stat points, new moves, ability milestones, tutor points, and whether species was found in DB.
+- **inputs**: Route param: id, Body: { targetLevel: number }
+- **outputs**: { success: true, data: LevelUpSummary }
+- **accessible_from**: gm
 
-- **Type:** component
-- **Location:** `app/components/common/HealingTab.vue`
-- **Game Concept:** PTU healing UI
-- **Description:** Shared healing tab used by both Pokemon and human character sheets. Provides buttons for rest, extended rest, Pokemon Center, heal injury, new day. Shows current rest minutes, injury count, healing eligibility. Uses `useRestHealing` composable.
-- **Inputs:** Entity data, entity type ('pokemon'|'character')
-- **Outputs:** Rendered healing controls and status display
-- **Orphan:** false
+### pokemon-lifecycle-C044: POST /api/encounters/:id/xp-calculate
+- **cap_id**: pokemon-lifecycle-C044
+- **name**: Encounter XP Preview
+- **type**: api-endpoint
+- **location**: `app/server/api/encounters/[id]/xp-calculate.post.ts`
+- **game_concept**: Post-combat XP preview (Core p.460)
+- **description**: Read-only endpoint. Loads encounter's defeated enemies, enriches trainer status, calls calculateEncounterXp(). Collects player-side Pokemon combatants with owner info. Returns XP breakdown and participating Pokemon list for the XP distribution modal. Does not write to DB.
+- **inputs**: Route param: id, Body: { significanceMultiplier, playerCount, isBossEncounter?, trainerEnemyIds? }
+- **outputs**: { success: true, data: { totalXpPerPlayer, breakdown, participatingPokemon[] } }
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C084: Species Autocomplete Component
+### pokemon-lifecycle-C045: POST /api/encounters/:id/xp-distribute
+- **cap_id**: pokemon-lifecycle-C045
+- **name**: Encounter XP Distribution (Write)
+- **type**: api-endpoint
+- **location**: `app/server/api/encounters/[id]/xp-distribute.post.ts`
+- **game_concept**: Apply post-combat XP to Pokemon (Core p.460)
+- **description**: Write endpoint. Recalculates XP from encounter data to verify. Rejects duplicate pokemonIds. Validates total distribution <= maxDistributable (totalXpPerPlayer * playerCount). For each Pokemon: loads learnset, calls calculateLevelUps(), updates experience/level/tutorPoints/maxHp. Marks encounter.xpDistributed = true. Returns per-Pokemon XpApplicationResult with level-up events.
+- **inputs**: Route param: id, Body: { significanceMultiplier, playerCount, isBossEncounter?, distribution: [{ pokemonId, xpAmount }] }
+- **outputs**: { success: true, data: { results: XpApplicationResult[], totalXpDistributed } }
+- **accessible_from**: gm
 
-- **Type:** component
-- **Location:** `app/components/habitat/SpeciesAutocomplete.vue`
-- **Game Concept:** Species selection for encounter tables
-- **Description:** Autocomplete for encounter table use. Loads species list, filters, emits `update:modelValue` with species ID. Similar to PokemonSearchInput but for encounter table context.
-- **Inputs:** modelValue (species ID)
-- **Outputs:** Emits species ID
-- **Orphan:** false
+### pokemon-lifecycle-C046: GET /api/species
+- **cap_id**: pokemon-lifecycle-C046
+- **name**: Species Reference Data List
+- **type**: api-endpoint
+- **location**: `app/server/api/species/index.get.ts`
+- **game_concept**: Species lookup for UI autocomplete and generation
+- **description**: Returns species reference data with search and limit. Select fields: name, types, base stats, abilities, evolution stage. Parses abilities JSON. Default limit 100, max 500.
+- **inputs**: Query params: search?, limit?
+- **outputs**: { success: true, data: SpeciesSummary[] }
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C047: GET /api/player/export/:characterId
+- **cap_id**: pokemon-lifecycle-C047
+- **name**: Character + Pokemon Export
+- **type**: api-endpoint
+- **location**: `app/server/api/player/export/[characterId].get.ts`
+- **game_concept**: Offline data portability for players
+- **description**: Exports full character data with all owned Pokemon as a versioned JSON blob. Includes exportVersion, exportedAt timestamp, and appVersion for import validation. Uses serializeCharacter() and serializePokemon().
+- **inputs**: Route param: characterId
+- **outputs**: { success: true, data: { exportVersion, exportedAt, appVersion, character, pokemon[] } }
+- **accessible_from**: player
+
+### pokemon-lifecycle-C048: POST /api/player/import/:characterId
+- **cap_id**: pokemon-lifecycle-C048
+- **name**: Character + Pokemon Import
+- **type**: api-endpoint
+- **location**: `app/server/api/player/import/[characterId].post.ts`
+- **game_concept**: Merge offline player edits back to server
+- **description**: Validates payload with Zod schema. Only accepts safe offline edits: character (background, personality, goals, notes), Pokemon (nickname, heldItem, move reorder). Conflict detection: if server updatedAt > exportedAt, differing fields flagged as conflicts (server wins). Atomic transaction. Returns update counts and conflict list.
+- **inputs**: Route param: characterId, Body: validated import payload
+- **outputs**: { success: true, data: { characterFieldsUpdated, pokemonUpdated, hasConflicts, conflicts[] } }
+- **accessible_from**: player
 
 ---
 
-## pokemon-lifecycle-C085: Pokemon Sheet Page
+## Store Actions
 
-- **Type:** page
-- **Location:** `app/pages/gm/pokemon/[id].vue`
-- **Game Concept:** Pokemon character sheet
-- **Description:** Full Pokemon sheet page (574 lines + 668 lines SCSS). Tabbed interface: Stats, Moves, Abilities, Capabilities, Skills, Healing, Notes. Edit mode with save. Uses `usePokemonSheetRolls` for dice rolling, `usePokemonSprite` for sprites, HealingTab for rest. Fetches full Pokemon data via GET /api/pokemon/:id.
-- **Inputs:** Route param: `id`
-- **Outputs:** Full interactive Pokemon sheet
-- **Orphan:** false
+### pokemon-lifecycle-C049: library.loadLibrary
+- **cap_id**: pokemon-lifecycle-C049
+- **name**: Load Library (Characters + Pokemon)
+- **type**: store-action
+- **location**: `app/stores/library.ts` -- `loadLibrary()`
+- **game_concept**: Fetch all entities for library view
+- **description**: Parallel-fetches GET /api/characters and GET /api/pokemon. Populates humans and pokemon state arrays. Manages loading/error state.
+- **inputs**: None
+- **outputs**: Populates store state
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C086: Pokemon Creation Page
+### pokemon-lifecycle-C050: library.createPokemon
+- **cap_id**: pokemon-lifecycle-C050
+- **name**: Create Pokemon (Store Action)
+- **type**: store-action
+- **location**: `app/stores/library.ts` -- `createPokemon()`
+- **game_concept**: Client-side Pokemon creation
+- **description**: POSTs to /api/pokemon with partial Pokemon data. Pushes returned Pokemon to store's pokemon array. Returns the created Pokemon.
+- **inputs**: Partial<Pokemon> data
+- **outputs**: Created Pokemon object
+- **accessible_from**: gm
 
-- **Type:** page
-- **Location:** `app/pages/gm/create.vue`
-- **Game Concept:** Manual Pokemon/Character creation
-- **Description:** Character creation page with Human/Pokemon toggle. Pokemon form: species (autocomplete), nickname, level, gender, shiny, location, types (primary/secondary), base stats (6 fields), notes. Applies PTU HP formula on submit. Creates via library store action.
-- **Inputs:** User form input
-- **Outputs:** Creates Pokemon and navigates to sheet or library
-- **Orphan:** false
+### pokemon-lifecycle-C051: library.updatePokemon
+- **cap_id**: pokemon-lifecycle-C051
+- **name**: Update Pokemon (Store Action)
+- **type**: store-action
+- **location**: `app/stores/library.ts` -- `updatePokemon()`
+- **game_concept**: Client-side Pokemon update
+- **description**: PUTs to /api/pokemon/:id with partial Pokemon data. Updates the matching entry in store's pokemon array by index. Returns updated Pokemon.
+- **inputs**: id string, Partial<Pokemon> data
+- **outputs**: Updated Pokemon object
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C087: Library Sheets Page
+### pokemon-lifecycle-C052: library.deletePokemon
+- **cap_id**: pokemon-lifecycle-C052
+- **name**: Delete Pokemon (Store Action)
+- **type**: store-action
+- **location**: `app/stores/library.ts` -- `deletePokemon()`
+- **game_concept**: Client-side Pokemon deletion
+- **description**: DELETEs /api/pokemon/:id. Filters Pokemon out of store's pokemon array.
+- **inputs**: id string
+- **outputs**: void (updates store state)
+- **accessible_from**: gm
 
-- **Type:** page
-- **Location:** `app/pages/gm/sheets.vue`
-- **Game Concept:** Pokemon library management UI
-- **Description:** Character library page. Shows Players, NPCs (grouped by location), Pokemon (grouped by location). Filters: search, type, characterType, pokemonOrigin, sortBy. Manage panel with origin counts, bulk archive/delete unowned wild Pokemon. Uses PokemonCard components.
-- **Inputs:** None (loads via store)
-- **Outputs:** Rendered library with filters and bulk actions
-- **Orphan:** false
+### pokemon-lifecycle-C053: library.linkPokemonToTrainer
+- **cap_id**: pokemon-lifecycle-C053
+- **name**: Link Pokemon to Trainer (Store Action)
+- **type**: store-action
+- **location**: `app/stores/library.ts` -- `linkPokemonToTrainer()`
+- **game_concept**: Assign Pokemon to trainer party
+- **description**: POSTs to /api/pokemon/:id/link with { trainerId }. Updates matching Pokemon in store array with returned data.
+- **inputs**: pokemonId string, trainerId string
+- **outputs**: void (updates store state)
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C054: library.unlinkPokemon
+- **cap_id**: pokemon-lifecycle-C054
+- **name**: Unlink Pokemon from Trainer (Store Action)
+- **type**: store-action
+- **location**: `app/stores/library.ts` -- `unlinkPokemon()`
+- **game_concept**: Release Pokemon from trainer
+- **description**: POSTs to /api/pokemon/:id/unlink. Updates matching Pokemon in store array with returned data (ownerId now null).
+- **inputs**: pokemonId string
+- **outputs**: void (updates store state)
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C055: encounter.calculateXp
+- **cap_id**: pokemon-lifecycle-C055
+- **name**: Calculate XP (Store Action)
+- **type**: store-action
+- **location**: `app/stores/encounter.ts` -- `calculateXp()`
+- **game_concept**: Preview post-combat XP distribution
+- **description**: POSTs to /api/encounters/:id/xp-calculate with significance, playerCount, and boss flag. Returns totalXpPerPlayer, breakdown, and participatingPokemon array. Used by XpDistributionModal.
+- **inputs**: { significanceMultiplier, playerCount, isBossEncounter?, trainerEnemyIds? }
+- **outputs**: XP calculation result with participating Pokemon
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C056: encounter.distributeXp
+- **cap_id**: pokemon-lifecycle-C056
+- **name**: Distribute XP (Store Action)
+- **type**: store-action
+- **location**: `app/stores/encounter.ts` -- `distributeXp()`
+- **game_concept**: Apply post-combat XP to Pokemon
+- **description**: POSTs to /api/encounters/:id/xp-distribute with significance, playerCount, boss flag, and distribution array. Returns XpApplicationResult[] and totalXpDistributed. Used by XpDistributionModal Apply button.
+- **inputs**: { significanceMultiplier, playerCount, isBossEncounter?, distribution: [{ pokemonId, xpAmount }] }
+- **outputs**: { results: XpApplicationResult[], totalXpDistributed }
+- **accessible_from**: gm
 
 ---
 
-## pokemon-lifecycle-C088: Pokemon Type Interface
+## Store Getters
 
-- **Type:** type-definition
-- **Location:** `app/types/character.ts:Pokemon`
-- **Game Concept:** Pokemon data shape (TypeScript)
-- **Description:** Core TypeScript interface defining the Pokemon data shape used across the entire client. Includes all fields: species, nickname, level, experience, nature, types, baseStats, currentStats, currentHp, maxHp, stageModifiers, abilities, moves, heldItem, capabilities, skills, statusConditions, injuries, temporaryHp, rest/healing tracking, tutorPoints, trainingExp, eggGroups, ownerId, spriteUrl, shiny, gender, isInLibrary, origin, location, notes. Also defines: PokemonOrigin, PokemonType, Stats, PokemonCapabilities, Move, Ability, Nature.
-- **Inputs:** N/A (type definition)
-- **Outputs:** Used by stores, composables, components, and API response typing
-- **Orphan:** false
+### pokemon-lifecycle-C057: library.filteredPokemon
+- **cap_id**: pokemon-lifecycle-C057
+- **name**: Filtered Pokemon List
+- **type**: store-getter
+- **location**: `app/stores/library.ts` -- `filteredPokemon`
+- **game_concept**: Pokemon library filtering and sorting
+- **description**: Filters store's pokemon array by search (species, nickname, location), pokemonType, and pokemonOrigin. Sorts by name or level (asc/desc). Returns filtered and sorted Pokemon[].
+- **inputs**: LibraryFilters state (search, pokemonType, pokemonOrigin, sortBy, sortOrder)
+- **outputs**: Pokemon[]
+- **accessible_from**: gm
 
-## pokemon-lifecycle-C089: Type Guards
+### pokemon-lifecycle-C058: library.getPokemonById
+- **cap_id**: pokemon-lifecycle-C058
+- **name**: Get Pokemon by ID
+- **type**: store-getter
+- **location**: `app/stores/library.ts` -- `getPokemonById`
+- **game_concept**: Single Pokemon lookup from store
+- **description**: Returns the first Pokemon in store matching the given ID, or undefined.
+- **inputs**: id string
+- **outputs**: Pokemon | undefined
+- **accessible_from**: gm
 
-- **Type:** type-definition
-- **Location:** `app/types/guards.ts:isPokemon`
-- **Game Concept:** Pokemon/Human entity discrimination
-- **Description:** Type guards for polymorphic entity handling: `isPokemon()` checks for `species` property, `isHumanCharacter()` checks for `characterType`. `getEntityDisplayName()` returns nickname/species for Pokemon. `getEntityType()` returns 'pokemon' or 'human'.
-- **Inputs:** Any entity object
-- **Outputs:** Type narrowing boolean or entity type string
-- **Orphan:** false
+### pokemon-lifecycle-C059: library.getPokemonByOwner
+- **cap_id**: pokemon-lifecycle-C059
+- **name**: Get Pokemon by Owner
+- **type**: store-getter
+- **location**: `app/stores/library.ts` -- `getPokemonByOwner`
+- **game_concept**: Trainer's party lookup
+- **description**: Returns all Pokemon in store with matching ownerId.
+- **inputs**: ownerId string
+- **outputs**: Pokemon[]
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C060: library.groupedPokemonByLocation
+- **cap_id**: pokemon-lifecycle-C060
+- **name**: Pokemon Grouped by Location
+- **type**: store-getter
+- **location**: `app/stores/library.ts` -- `groupedPokemonByLocation`
+- **game_concept**: Location-based Pokemon organization
+- **description**: Groups filteredPokemon by location field. Empty locations sorted last as "No Location". Returns array of { location, pokemon[] }.
+- **inputs**: Derived from filteredPokemon
+- **outputs**: Array<{ location: string, pokemon: Pokemon[] }>
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C061: library.setFilters
+- **cap_id**: pokemon-lifecycle-C061
+- **name**: Set Library Filters
+- **type**: store-getter
+- **location**: `app/stores/library.ts` -- `setFilters()`
+- **game_concept**: Filter control for library UI
+- **description**: Merges partial filter updates into current filters state (search, type, characterType, pokemonType, pokemonOrigin, sortBy, sortOrder). Immutable merge via spread.
+- **inputs**: Partial<LibraryFilters>
+- **outputs**: void (updates state)
+- **accessible_from**: gm
 
 ---
 
-## pokemon-lifecycle-C090: Encounter Table Generate (Wild Spawn List)
+## Composable Functions
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/encounter-tables/[id]/generate.post.ts:default`
-- **Game Concept:** Wild Pokemon spawn generation from encounter table
-- **Description:** Generates a list of wild Pokemon species/levels from an encounter table using weighted random selection. Does NOT create DB records — just returns species names and levels for preview. Respects density tiers and sub-habitat modifications. Count based on density (1-10) or manual override.
-- **Inputs:** URL param: tableId. Body: modificationId (optional), levelRange (optional), count (optional)
-- **Outputs:** `{ success: true, data: { generated: [{speciesId, speciesName, level, weight, source}], meta: {tableName, density, spawnCount, ...} } }`
-- **Orphan:** false
+### pokemon-lifecycle-C062: usePokemonSprite.getSpriteUrl
+- **cap_id**: pokemon-lifecycle-C062
+- **name**: Primary Sprite URL Generator
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSprite.ts` -- `getSpriteUrl()`
+- **game_concept**: Pokemon sprite display (B2W2 for Gen 1-5, Showdown for Gen 6+)
+- **description**: Returns animated sprite URL. Gen 1-5 (dex <= 649): PokeAPI B2W2 animated GIF. Gen 6+: Pokemon Showdown animated GIF. Handles shiny variants. Maps special names via showdownNames lookup (regional forms, special characters).
+- **inputs**: species string, shiny boolean
+- **outputs**: URL string
+- **accessible_from**: gm, player, group
 
-## pokemon-lifecycle-C091: Wild Spawn Preview API
+### pokemon-lifecycle-C063: usePokemonSprite.getStaticSpriteUrl
+- **cap_id**: pokemon-lifecycle-C063
+- **name**: Static Sprite URL Generator
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSprite.ts` -- `getStaticSpriteUrl()`
+- **game_concept**: Fallback static sprite
+- **description**: Returns static PNG sprite URL via PokeAPI dex number or PokemonDB name-based URL as last resort. Handles shiny variants.
+- **inputs**: species string, shiny boolean
+- **outputs**: URL string
+- **accessible_from**: gm, player, group
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/group/wild-spawn.post.ts:default`
-- **Game Concept:** Wild spawn preview display on group view
-- **Description:** Stores a wild spawn preview in server memory (not DB). Used to show generated wild Pokemon on the group/TV view before committing to an encounter. Preview contains species names, levels, and source table name.
-- **Inputs:** Body: pokemon array [{speciesId, speciesName, level}], tableName
-- **Outputs:** `{ success: true, data: WildSpawnPreview }` with generated UUID
-- **Orphan:** false
+### pokemon-lifecycle-C064: usePokemonSprite.getSpriteWithFallback
+- **cap_id**: pokemon-lifecycle-C064
+- **name**: Sprite URL with Fallback Chain
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSprite.ts` -- `getSpriteWithFallback()`
+- **game_concept**: Reliable sprite loading
+- **description**: Async function. Tries multiple sprite sources in order: Showdown animated, PokeAPI BW animated, PokeAPI static. HEAD-checks each URL. Returns /images/pokemon-placeholder.svg if all fail.
+- **inputs**: species string, shiny boolean
+- **outputs**: Promise<URL string>
+- **accessible_from**: gm, player, group
 
-## pokemon-lifecycle-C092: Template Load Pokemon Creation
+### pokemon-lifecycle-C065: usePokemonSprite.getDexNumber
+- **cap_id**: pokemon-lifecycle-C065
+- **name**: Species Dex Number Lookup
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSprite.ts` -- `getDexNumber()`
+- **game_concept**: National Pokedex number resolution
+- **description**: Returns dex number from species name (Gen 1-5 complete: 649 entries). Returns null for unknown species.
+- **inputs**: species string
+- **outputs**: number | null
+- **accessible_from**: gm, player, group
 
-- **Type:** api-endpoint
-- **Location:** `app/server/api/encounter-templates/[id]/load.post.ts:default`
-- **Game Concept:** Pokemon creation from encounter template
-- **Description:** Creates an encounter from a template. Each Pokemon combatant generates a real DB record via `generateAndCreatePokemon()` with `origin: 'template'`. Preserves saved moves/abilities from template as overrides. Sets originLabel to template name.
-- **Inputs:** URL param: templateId. Body: name (optional)
-- **Outputs:** `{ success: true, data: Encounter }` with Pokemon as combatants
-- **Orphan:** false
+### pokemon-lifecycle-C066: usePokemonSheetRolls.rollSkill
+- **cap_id**: pokemon-lifecycle-C066
+- **name**: Pokemon Skill Roll
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSheetRolls.ts` -- `rollSkill()`
+- **game_concept**: Pokemon skill check dice roll
+- **description**: Rolls dice notation for a skill check. Stores result in lastSkillRoll ref for display in PokemonSkillsTab.
+- **inputs**: skill name string, dice notation string
+- **outputs**: Sets lastSkillRoll reactive state
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C067: usePokemonSheetRolls.rollAttack
+- **cap_id**: pokemon-lifecycle-C067
+- **name**: Pokemon Move Attack Roll
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSheetRolls.ts` -- `rollAttack()`
+- **game_concept**: PTU attack accuracy check (d20 vs AC)
+- **description**: Rolls 1d20. Detects natural 20 (crit), natural 1 (miss), or compares to move AC for hit/miss. Stores result in lastMoveRoll with resultClass for styling.
+- **inputs**: Move object
+- **outputs**: Sets lastMoveRoll reactive state
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C068: usePokemonSheetRolls.rollDamage
+- **cap_id**: pokemon-lifecycle-C068
+- **name**: Pokemon Move Damage Roll
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSheetRolls.ts` -- `rollDamage()`
+- **game_concept**: PTU damage roll with stat bonus
+- **description**: Rolls damage dice from getDamageRoll(damageBase). Adds attack/specialAttack stat. For crits, uses rollCritical(). Updates lastMoveRoll with damage result and breakdown string.
+- **inputs**: Move object, isCrit boolean
+- **outputs**: Sets lastMoveRoll.damage reactive state
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C069: usePokemonSheetRolls.getMoveDamageFormula
+- **cap_id**: pokemon-lifecycle-C069
+- **name**: Move Damage Formula Display
+- **type**: composable-function
+- **location**: `app/composables/usePokemonSheetRolls.ts` -- `getMoveDamageFormula()`
+- **game_concept**: Damage dice + stat display
+- **description**: Returns human-readable damage formula string (e.g., "2d6+10+12" for dice+stat). Returns '-' for status moves with no damageBase.
+- **inputs**: Move object
+- **outputs**: Formula string
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C070: useCharacterExportImport.handleExport
+- **cap_id**: pokemon-lifecycle-C070
+- **name**: Character Export Handler
+- **type**: composable-function
+- **location**: `app/composables/useCharacterExportImport.ts` -- `handleExport()`
+- **game_concept**: Download character + Pokemon as JSON
+- **description**: Fetches GET /api/player/export/:characterId. Creates a Blob and triggers download with filename "{characterName}_export.json". Manages exporting/operationResult state.
+- **inputs**: characterId (from ref), characterName (from ref)
+- **outputs**: Browser download, operationResult state
+- **accessible_from**: player
+
+### pokemon-lifecycle-C071: useCharacterExportImport.handleImportFile
+- **cap_id**: pokemon-lifecycle-C071
+- **name**: Character Import Handler
+- **type**: composable-function
+- **location**: `app/composables/useCharacterExportImport.ts` -- `handleImportFile()`
+- **game_concept**: Upload offline edits back to server
+- **description**: Reads File as text, parses JSON, POSTs to /api/player/import/:characterId. Reports update counts and conflicts. Returns boolean indicating whether fields were updated. Manages importing/operationResult state.
+- **inputs**: File object
+- **outputs**: Promise<boolean>, operationResult state
+- **accessible_from**: player
+
+---
+
+## Components
+
+### pokemon-lifecycle-C072: PokemonEditForm
+- **cap_id**: pokemon-lifecycle-C072
+- **name**: Pokemon Header/Edit Form
+- **type**: component
+- **location**: `app/components/pokemon/PokemonEditForm.vue`
+- **game_concept**: Pokemon identity display and editing
+- **description**: Displays sprite (with shiny badge), species, nickname, level, experience, gender, shiny checkbox, location, and type badges. In edit mode, fields become editable inputs. Emits update:editData with immutable spread.
+- **inputs**: pokemon, editData, isEditing, spriteUrl props
+- **outputs**: Emits update:editData
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C073: PokemonLevelUpPanel
+- **cap_id**: pokemon-lifecycle-C073
+- **name**: Level-Up Info Panel
+- **type**: component
+- **location**: `app/components/pokemon/PokemonLevelUpPanel.vue`
+- **game_concept**: Preview level-up effects when editing level
+- **description**: Shown in edit mode when targetLevel > currentLevel. Watches targetLevel and fetches POST /api/pokemon/:id/level-up-check. Displays stat points, tutor points, new moves, ability milestones, and evolution reminder. Animated slide-down appearance.
+- **inputs**: pokemonId, currentLevel, targetLevel props
+- **outputs**: Visual-only (fetches data internally)
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C074: PokemonStatsTab
+- **cap_id**: pokemon-lifecycle-C074
+- **name**: Pokemon Stats Display/Edit Tab
+- **type**: component
+- **location**: `app/components/pokemon/PokemonStatsTab.vue`
+- **game_concept**: Pokemon stat sheet with combat state
+- **description**: 3-column grid showing base stats and current stats. HP editable in edit mode. Displays status conditions (color-coded badges), injuries (count badge), combat stage modifiers (positive/negative styling), and nature with raised/lowered stat indicators.
+- **inputs**: pokemon, editData, isEditing props
+- **outputs**: Emits update:editData for HP changes
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C075: PokemonMovesTab
+- **cap_id**: pokemon-lifecycle-C075
+- **name**: Pokemon Moves Display with Rolls
+- **type**: component
+- **location**: `app/components/pokemon/PokemonMovesTab.vue`
+- **game_concept**: Move cards with inline attack/damage rolling
+- **description**: Lists all moves as cards showing name, type badge, class, frequency, AC, damage formula, range, and effect. Each card has Attack Roll (d20 vs AC), Damage Roll, and Crit Roll buttons. Displays last roll result with hit/miss/crit styling.
+- **inputs**: pokemon, lastMoveRoll, getMoveDamageFormula props
+- **outputs**: Emits roll-attack, roll-damage events
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C076: PokemonCapabilitiesTab
+- **cap_id**: pokemon-lifecycle-C076
+- **name**: Pokemon Capabilities Display
+- **type**: component
+- **location**: `app/components/pokemon/PokemonCapabilitiesTab.vue`
+- **game_concept**: PTU movement capabilities and other capabilities
+- **description**: 3-column grid showing movement caps (overland, swim, sky, burrow, levitate), jump high/long, power, weight class, size. Lists other capabilities as tags.
+- **inputs**: pokemon prop
+- **outputs**: Visual-only
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C077: PokemonSkillsTab
+- **cap_id**: pokemon-lifecycle-C077
+- **name**: Pokemon Skills Display with Rolls
+- **type**: component
+- **location**: `app/components/pokemon/PokemonSkillsTab.vue`
+- **game_concept**: Pokemon skill checks with dice rolling
+- **description**: 2-column grid of skills with dice notations. Clickable rows trigger skill rolls. Shows last roll result. Also displays tutor points, training exp, and egg groups.
+- **inputs**: pokemon, lastSkillRoll props
+- **outputs**: Emits roll-skill event
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C078: XpDistributionModal
+- **cap_id**: pokemon-lifecycle-C078
+- **name**: Post-Combat XP Distribution Modal
+- **type**: component
+- **location**: `app/components/encounter/XpDistributionModal.vue`
+- **game_concept**: Post-combat XP calculation and per-Pokemon distribution (Core p.460)
+- **description**: Two-phase modal (configure -> results). Configure phase: shows defeated enemies with type tags, significance preset selector (or custom), player count (auto-detected from encounter), boss toggle, XP calculation summary. Groups player-side Pokemon by owner. Per-Pokemon XP input with level-up preview. Split Evenly button per player. Over-allocation validation. Apply sends to encounter.distributeXp(). Results phase shows XpDistributionResults + LevelUpNotification. Skip option available.
+- **inputs**: encounter prop
+- **outputs**: Emits skip, complete, close
+- **accessible_from**: gm
+
+---
+
+## WebSocket Events
+
+### pokemon-lifecycle-C079: character_update
+- **cap_id**: pokemon-lifecycle-C079
+- **name**: Character/Pokemon Update Broadcast
+- **type**: websocket-event
+- **location**: `app/server/routes/ws.ts` -- broadcast event
+- **game_concept**: Real-time sync of entity changes
+- **description**: Broadcast event relayed to all connected clients (gm, group, player). Sent after character or Pokemon updates. Clients receiving this event can refresh their local state.
+- **inputs**: Entity update data
+- **outputs**: Broadcast to all clients
+- **accessible_from**: gm, group, player
+
+---
+
+## GM Page (Container)
+
+### pokemon-lifecycle-C080: Pokemon Sheet Page
+- **cap_id**: pokemon-lifecycle-C080
+- **name**: GM Pokemon Detail Page
+- **type**: component
+- **location**: `app/pages/gm/pokemon/[id].vue`
+- **game_concept**: Full Pokemon character sheet with editing
+- **description**: Container page loading a single Pokemon by route param ID. Composes PokemonEditForm, PokemonLevelUpPanel, and tab components (Stats, Moves, Abilities, Capabilities, Skills, Healing, Notes). Uses usePokemonSheetRolls() for dice rolling and usePokemonSprite() for sprite URL. Edit mode saves via library.updatePokemon(). Tabs: stats, moves, abilities, capabilities, skills, healing, notes.
+- **inputs**: Route param: id, optional query: edit=true
+- **outputs**: Full interactive Pokemon sheet
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C081: XpDistributionResults
+- **cap_id**: pokemon-lifecycle-C081
+- **name**: XP Distribution Results Display
+- **type**: component
+- **location**: `app/components/encounter/XpDistributionResults.vue`
+- **game_concept**: Post-XP-distribution summary
+- **description**: Displays per-Pokemon XP results: species, XP gained, level change (highlighted if leveled). Shows total XP distributed. Conditionally renders LevelUpNotification for any Pokemon that leveled up.
+- **inputs**: results: XpApplicationResult[], totalXpDistributed: number
+- **outputs**: Visual-only
+- **accessible_from**: gm
+
+### pokemon-lifecycle-C082: LevelUpNotification
+- **cap_id**: pokemon-lifecycle-C082
+- **name**: Level-Up Notification Panel
+- **type**: component
+- **location**: `app/components/encounter/LevelUpNotification.vue`
+- **game_concept**: Detailed level-up effects display
+- **description**: Renders detailed level-up info for Pokemon that gained levels. Per Pokemon: stat points, tutor points, new moves, ability milestones (second at 20, third at 40), evolution eligibility. Uses Phosphor icons. Filters to only leveled-up Pokemon from XpApplicationResult array.
+- **inputs**: results: XpApplicationResult[]
+- **outputs**: Visual-only
+- **accessible_from**: gm
 
 ---
 
 ## Capability Chains
 
 ### Chain 1: Manual Pokemon Creation
-1. `pokemon-lifecycle-C086` (page — creation form) → 2. `pokemon-lifecycle-C049` (store-action — createPokemon) → 3. `pokemon-lifecycle-C010` (api-endpoint — POST /api/pokemon) → 4. `pokemon-lifecycle-C035` (service-function — resolveNickname) → 5. `pokemon-lifecycle-C001` (prisma-model — Pokemon)
-**Breaks at:** complete
+1. **GM** -> `library.createPokemon` (C050) -> `POST /api/pokemon` (C036) -> `resolveNickname` (C027) -> `serializePokemon` (C028) -> Pokemon record created -> Store updated
+- **Accessible from**: gm
 
-### Chain 2: CSV Import Pokemon Creation
-1. `pokemon-lifecycle-C025` (api-endpoint — import-csv) → 2. `pokemon-lifecycle-C036` (service-function — detectSheetType) → 3. `pokemon-lifecycle-C037` (service-function — parsePokemonSheet) → 4. `pokemon-lifecycle-C038` (service-function — createPokemonFromCSV) → 5. `pokemon-lifecycle-C029` (service-function — createPokemonRecord) → 6. `pokemon-lifecycle-C035` (service-function — resolveNickname) → 7. `pokemon-lifecycle-C001` (prisma-model — Pokemon)
-**Breaks at:** complete
+### Chain 2: Generated Pokemon Creation (Wild/Template)
+1. **Server** -> `generateAndCreatePokemon` (C031) -> `generatePokemonData` (C029) [SpeciesData lookup, nature via NATURE_TABLE (C013), stat distribution (C033), move selection, ability pick] -> `createPokemonRecord` (C030) -> `resolveNickname` (C027) -> Pokemon record created
+2. **For encounter insertion**: -> `buildPokemonCombatant` (C032) -> Combatant in encounter JSON
+- **Accessible from**: gm (via encounter spawn endpoints)
 
-### Chain 3: Wild Spawn Pokemon Creation (from Scene)
-1. `pokemon-lifecycle-C027` (api-endpoint — from-scene) → 2. `pokemon-lifecycle-C030` (service-function — generateAndCreatePokemon) → 3. `pokemon-lifecycle-C028` (service-function — generatePokemonData) → 4. `pokemon-lifecycle-C032` (service-function — distributeStatPoints) + `pokemon-lifecycle-C033` (service-function — selectMovesFromLearnset) + `pokemon-lifecycle-C034` (service-function — pickRandomAbility) → 5. `pokemon-lifecycle-C029` (service-function — createPokemonRecord) → 6. `pokemon-lifecycle-C031` (service-function — buildPokemonCombatant) → 7. `pokemon-lifecycle-C001` (prisma-model — Pokemon)
-**Breaks at:** complete
+### Chain 3: Pokemon Sheet Viewing & Editing
+1. **GM** navigates to `/gm/pokemon/:id` (C080) -> `GET /api/pokemon/:id` (C035) -> `serializePokemon` (C028) -> Page rendered with `PokemonEditForm` (C072), tab components (C074-C077)
+2. **GM** clicks Edit -> `PokemonLevelUpPanel` (C073) watches level changes -> `POST /api/pokemon/:id/level-up-check` (C043) -> `checkLevelUp` (C018) + `summarizeLevelUps` (C019) -> Panel shows new moves/abilities
+3. **GM** saves -> `library.updatePokemon` (C051) -> `PUT /api/pokemon/:id` (C037) -> `serializePokemon` (C028) -> Store + page refreshed
+- **Accessible from**: gm
 
-### Chain 4: Template Pokemon Creation
-1. `pokemon-lifecycle-C092` (api-endpoint — template load) → 2. `pokemon-lifecycle-C030` (service-function — generateAndCreatePokemon with overrides) → 3. `pokemon-lifecycle-C028` (service-function — generatePokemonData) → 4. `pokemon-lifecycle-C029` (service-function — createPokemonRecord) → 5. `pokemon-lifecycle-C031` (service-function — buildPokemonCombatant) → 6. `pokemon-lifecycle-C001` (prisma-model — Pokemon)
-**Breaks at:** complete
+### Chain 4: Trainer-Pokemon Linking
+1. **GM** -> `library.linkPokemonToTrainer` (C053) -> `POST /api/pokemon/:id/link` (C039) -> ownerId set -> Store updated
+2. **Or via capture**: Capture attempt endpoint auto-links on success (sets ownerId + origin='captured')
+- **Accessible from**: gm
 
-### Chain 5: Wild Spawn Preview Flow
-1. `pokemon-lifecycle-C090` (api-endpoint — encounter table generate) → 2. `pokemon-lifecycle-C091` (api-endpoint — wild spawn preview POST)
-**Breaks at:** complete (preview only — actual DB creation happens via Chain 3 when scene encounter is started)
+### Chain 5: Post-Combat XP Distribution
+1. **GM** opens XpDistributionModal (C078) -> `encounter.calculateXp` (C055) -> `POST /api/encounters/:id/xp-calculate` (C044) -> `enrichDefeatedEnemies` (C022) + `calculateEncounterXp` (C020) -> Returns XP preview + participating Pokemon
+2. **GM** adjusts significance (C015/C016), allocates XP per Pokemon, previews level-ups via `getLevelForXp` (C024)
+3. **GM** clicks Apply -> `encounter.distributeXp` (C056) -> `POST /api/encounters/:id/xp-distribute` (C045) -> For each Pokemon: `calculateLevelUps` (C021) [-> `checkLevelUp` (C018)] -> Updates experience/level/tutorPoints/maxHp -> Marks encounter xpDistributed
+4. **Results phase**: `XpDistributionResults` (C081) + `LevelUpNotification` (C082) display outcomes
+- **Accessible from**: gm
 
-### Chain 6: Pokemon Sheet View & Edit
-1. `pokemon-lifecycle-C085` (page — pokemon sheet) → 2. `pokemon-lifecycle-C011` (api-endpoint — GET /api/pokemon/:id) → 3. `pokemon-lifecycle-C001` (prisma-model — Pokemon)
-Edit: → 4. `pokemon-lifecycle-C050` (store-action — updatePokemon) → 5. `pokemon-lifecycle-C012` (api-endpoint — PUT /api/pokemon/:id) → 6. `pokemon-lifecycle-C001` (prisma-model — Pokemon)
-**Breaks at:** complete
+### Chain 6: Manual XP Grant
+1. **GM** -> `POST /api/pokemon/:id/add-experience` (C042) -> `calculateLevelUps` (C021) [-> `checkLevelUp` (C018)] -> Updates experience/level/tutorPoints/maxHp -> Returns XpApplicationResult
+- **Accessible from**: gm
 
-### Chain 7: Pokemon Library Browse & Filter
-1. `pokemon-lifecycle-C087` (page — sheets) → 2. `pokemon-lifecycle-C048` (store-action — loadLibrary) → 3. `pokemon-lifecycle-C009` (api-endpoint — GET /api/pokemon) → 4. `pokemon-lifecycle-C001` (prisma-model — Pokemon)
-Filter: → 5. `pokemon-lifecycle-C054` (store-action — setFilters) → 6. `pokemon-lifecycle-C055` (store-getter — filteredPokemon) → 7. `pokemon-lifecycle-C058` (store-getter — groupedPokemonByLocation) → 8. `pokemon-lifecycle-C078` (component — PokemonCard)
-**Breaks at:** complete
+### Chain 7: Bulk Archive/Delete
+1. **GM** -> `POST /api/pokemon/bulk-action` (C041) -> Safety check (active encounters) -> Archive (isInLibrary=false) or Delete -> Returns count
+- **Accessible from**: gm
 
-### Chain 8: Pokemon Ownership (Link/Unlink)
-Link: 1. `pokemon-lifecycle-C052` (store-action — linkPokemonToTrainer) → 2. `pokemon-lifecycle-C014` (api-endpoint — link) → 3. `pokemon-lifecycle-C001` (prisma-model — Pokemon.ownerId)
-Unlink: 1. `pokemon-lifecycle-C053` (store-action — unlinkPokemon) → 2. `pokemon-lifecycle-C015` (api-endpoint — unlink) → 3. `pokemon-lifecycle-C001` (prisma-model — Pokemon.ownerId)
-**Breaks at:** complete
+### Chain 8: Player Export/Import
+1. **Player** -> `handleExport` (C070) -> `GET /api/player/export/:characterId` (C047) -> JSON download with character + Pokemon
+2. **Player** -> `handleImportFile` (C071) -> `POST /api/player/import/:characterId` (C048) -> Zod validation -> Conflict detection -> Atomic DB update -> Returns update counts + conflicts
+- **Accessible from**: player
 
-### Chain 9: Pokemon Capture
-1. `pokemon-lifecycle-C069` (composable — rollAccuracyCheck) → 2. `pokemon-lifecycle-C067` (composable — getCaptureRate) → 3. `pokemon-lifecycle-C023` (api-endpoint — capture rate) → 4. `pokemon-lifecycle-C039` (utility — calculateCaptureRate) → 5. `pokemon-lifecycle-C068` (composable — attemptCapture) → 6. `pokemon-lifecycle-C024` (api-endpoint — capture attempt) → 7. `pokemon-lifecycle-C040` (utility — attemptCapture roll) → 8. `pokemon-lifecycle-C001` (prisma-model — Pokemon.ownerId, origin = 'captured')
-**Breaks at:** complete
+### Chain 9: Sprite Resolution
+1. **Any view** -> `usePokemonSprite().getSpriteUrl()` (C062) -> dex number lookup (C065) -> Gen 1-5: PokeAPI B2W2 GIF / Gen 6+: Showdown GIF
+2. **Fallback**: `getSpriteWithFallback()` (C064) -> HEAD-checks multiple sources -> placeholder SVG as last resort
+- **Accessible from**: gm, player, group
 
-### Chain 10: Pokemon Rest Healing (30-min)
-1. `pokemon-lifecycle-C083` (component — HealingTab) → 2. `pokemon-lifecycle-C070` (composable — rest) → 3. `pokemon-lifecycle-C016` (api-endpoint — rest) → 4. `pokemon-lifecycle-C042` (utility — shouldResetDailyCounters) + `pokemon-lifecycle-C043` (utility — calculateRestHealing) → 5. `pokemon-lifecycle-C001` (prisma-model — Pokemon HP/rest tracking)
-**Breaks at:** complete
-
-### Chain 11: Pokemon Extended Rest
-1. `pokemon-lifecycle-C083` (component — HealingTab) → 2. `pokemon-lifecycle-C071` (composable — extendedRest) → 3. `pokemon-lifecycle-C017` (api-endpoint — extended-rest) → 4. `pokemon-lifecycle-C043` (utility — calculateRestHealing) + `pokemon-lifecycle-C047` (utility — clearPersistentStatusConditions) → 5. `pokemon-lifecycle-C001` (prisma-model — Pokemon HP/statuses/moves)
-**Breaks at:** complete
-
-### Chain 12: Pokemon Center Healing
-1. `pokemon-lifecycle-C083` (component — HealingTab) → 2. `pokemon-lifecycle-C072` (composable — pokemonCenter) → 3. `pokemon-lifecycle-C018` (api-endpoint — pokemon-center) → 4. `pokemon-lifecycle-C045` (utility — calculatePokemonCenterTime) + `pokemon-lifecycle-C046` (utility — calculatePokemonCenterInjuryHealing) → 5. `pokemon-lifecycle-C001` (prisma-model — Pokemon full heal)
-**Breaks at:** complete
-
-### Chain 13: Natural Injury Healing
-1. `pokemon-lifecycle-C083` (component — HealingTab) → 2. `pokemon-lifecycle-C073` (composable — healInjury) → 3. `pokemon-lifecycle-C019` (api-endpoint — heal-injury) → 4. `pokemon-lifecycle-C044` (utility — canHealInjuryNaturally) → 5. `pokemon-lifecycle-C001` (prisma-model — Pokemon injuries)
-**Breaks at:** complete
-
-### Chain 14: New Day Reset
-Single entity: 1. `pokemon-lifecycle-C083` (component — HealingTab) → 2. `pokemon-lifecycle-C074` (composable — newDay) → 3. `pokemon-lifecycle-C020` (api-endpoint — new-day) → 4. `pokemon-lifecycle-C001` (prisma-model)
-Global: 1. `pokemon-lifecycle-C075` (composable — newDayGlobal) → 2. `pokemon-lifecycle-C026` (api-endpoint — game/new-day) → 3. `pokemon-lifecycle-C001` (prisma-model — all Pokemon)
-**Breaks at:** complete
-
-### Chain 15: Bulk Archive/Delete
-1. `pokemon-lifecycle-C087` (page — sheets manage panel) → 2. `pokemon-lifecycle-C021` (api-endpoint — bulk-action) → 3. `pokemon-lifecycle-C001` (prisma-model — isInLibrary or delete)
-**Breaks at:** complete
-
-### Chain 16: Species Autocomplete
-1. `pokemon-lifecycle-C082` (component — PokemonSearchInput) → 2. `pokemon-lifecycle-C022` (api-endpoint — GET /api/species) → 3. `pokemon-lifecycle-C002` (prisma-model — SpeciesData)
-**Breaks at:** complete
-
-### Chain 17: Pokemon Dice Rolling (Sheet)
-1. `pokemon-lifecycle-C085` (page — pokemon sheet) → 2. `pokemon-lifecycle-C063` (composable — rollSkill) / `pokemon-lifecycle-C064` (composable — rollAttack) / `pokemon-lifecycle-C065` (composable — rollDamage)
-**Breaks at:** complete (client-only, no server round-trip)
-
-### Chain 18: Trainer Pokemon Tab
-1. `pokemon-lifecycle-C079` (component — HumanPokemonTab) → 2. `pokemon-lifecycle-C057` (store-getter — getPokemonByOwner) → 3. `pokemon-lifecycle-C060` (composable — getSpriteUrl)
-**Breaks at:** complete
+### Chain 10: Library Browsing & Filtering
+1. **GM** -> `library.loadLibrary` (C049) -> Populates store
+2. **GM** adjusts filters -> `library.setFilters` (C061) -> `filteredPokemon` getter (C057) applies search/type/origin/sort
+3. **GM** clicks Pokemon -> navigates to sheet page (C080)
+- **Accessible from**: gm
 
 ---
 
-## Orphan Capabilities
+## Accessibility Summary
 
-### pokemon-lifecycle-C061: Static Sprite URL
-- **Orphan:** true
-- **Reason:** `getStaticSpriteUrl()` is exported but no component directly calls it — all sprite rendering goes through `getSpriteUrl()` or `getSpriteWithFallback()`.
+### GM View (`/gm`)
+- **Full CRUD**: Create (C036/C050), Read (C034/C035), Update (C037/C051), Delete (C038/C052)
+- **Linking**: Link/Unlink (C039-C040/C053-C054)
+- **Bulk ops**: Archive/Delete (C041)
+- **XP system**: Calculate (C044/C055), Distribute (C045/C056), Manual grant (C042)
+- **Level-up**: Preview (C043/C073)
+- **Sheet**: Full interactive sheet (C080) with tabs (C072-C077), dice rolling (C066-C069)
+- **Library**: Filter, sort, browse (C049/C057-C061)
+- **Sprites**: Full resolution (C062-C065)
 
-### pokemon-lifecycle-C066: Client Capture Rate Calculator
-- **Orphan:** true
-- **Reason:** `calculateCaptureRateLocal()` is exported from `useCapture.ts` but current UI uses the server-side API (`getCaptureRate()`) for authoritative calculation. The local calculator exists for potential real-time UI updates but no component currently calls it directly.
+### Group View (`/group`)
+- **Read-only**: Pokemon data visible in encounter display (combatant entities)
+- **Sprites**: Display sprites (C062-C065)
+- **WebSocket**: Receives character_update events (C079)
 
-### pokemon-lifecycle-C041: Capture Difficulty Description (Client)
-- **Orphan:** true
-- **Reason:** `getCaptureDescription()` in `captureRate.ts` is used server-side by the capture rate and attempt APIs. It's also importable client-side but the capture UI relies on the server response `difficulty` field rather than calling this locally.
+### Player View (`/player`)
+- **Read**: View own Pokemon on character sheet
+- **Export/Import**: Download/upload character + Pokemon JSON (C047-C048/C070-C071)
+- **Sprites**: Display sprites (C062-C065)
+- **WebSocket**: Receives character_update events (C079)
+
+### API-Only (No UI)
+- **Services**: generatePokemonData (C029), createPokemonRecord (C030), generateAndCreatePokemon (C031), buildPokemonCombatant (C032), distributeStatPoints (C033)
+- **Utilities**: applyNatureToBaseStats (C017), checkLevelUp (C018), summarizeLevelUps (C019), enrichDefeatedEnemies (C022), resolveNickname (C027), serializePokemon (C028)
+- **Constants**: NATURE_TABLE (C013)
+- **Models**: SpeciesData (C002)
+
+---
+
+## Missing Subsystems
+
+1. **Evolution System**: No automated evolution detection or species transformation. Level-up check notes "check Pokedex entry" as a reminder but cannot detect evolution conditions (level, item, trade, etc.) because SpeciesData doesn't encode evolution triggers. GM must manually handle evolution.
+
+2. **Stat Point Allocation UI**: Level-ups report stat points gained but there is no UI for the GM or player to allocate them following the Base Relations Rule. The GM must manually edit base stats via the PUT endpoint.
+
+3. **Move Learning UI**: Level-up detection reports new moves available but there is no UI to add/replace moves on the Pokemon's active move list. The GM must manually edit the moves JSON.
+
+4. **Breeding System**: eggGroups field exists on the Pokemon model and is populated at generation, but there is no breeding mechanic, egg creation, or inheritance logic.
+
+5. **Training XP System**: trainingExp field exists on the Pokemon model but there is no endpoint or UI for daily training XP grants (PTU Core p.202: half Pokemon level + Command Rank bonus).
+
+6. **Held Item Effects**: heldItem field stored as a string with no mechanical effect. No item database or item effect application during combat or rest.
+
+7. **Ability Effect Application**: Abilities stored as { name, effect } text. No automated ability trigger detection or effect application during combat.
+
+8. **Move Frequency Tracking (Pokemon Sheet)**: While extended-rest and pokemon-center endpoints handle move frequency reset, the Pokemon sheet's move tab has no frequency usage counter or exhaustion indicator visible to the GM.
+
+9. **Multi-form Pokemon Management**: Species with alternate forms (Rotom appliances, Oricorio styles, Darmanitan Zen Mode) are parsed at seed time but there is no runtime form-change mechanic or UI.
+
+10. **Pokedex Viewer**: SpeciesData is seeded and queryable via GET /api/species but there is no dedicated Pokedex browsing UI for the GM or players to look up species reference data.
