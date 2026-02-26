@@ -74,3 +74,56 @@
   background: rgba($color-danger, 0.1);
   border-radius: $border-radius-md;
 }
+
+// ===========================================
+// Section Pattern
+// ===========================================
+// Generic section with uppercase title label.
+.section {
+  margin-bottom: $spacing-lg;
+
+  &__title {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-text-muted;
+    margin-bottom: $spacing-sm;
+  }
+}
+
+// ===========================================
+// Compact Form Controls
+// ===========================================
+// Compact variants of form-select and form-input for dense UIs
+// (configuration panels, inline controls). These differ from the
+// full-width global .form-input / .form-select in main.scss.
+.form-select-compact {
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: $font-size-sm;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: $color-accent-teal;
+  }
+}
+
+.form-input-compact {
+  width: 80px;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: $font-size-sm;
+
+  &:focus {
+    outline: none;
+    border-color: $color-accent-teal;
+  }
+}

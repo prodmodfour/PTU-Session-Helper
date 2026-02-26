@@ -47,7 +47,7 @@
               <div class="config-field__row">
                 <select
                   v-model="selectedPreset"
-                  class="form-select"
+                  class="form-select-compact"
                 >
                   <option v-for="(value, key) in SIGNIFICANCE_PRESETS" :key="key" :value="key">
                     {{ SIGNIFICANCE_PRESET_LABELS[key] }} (x{{ value }})
@@ -58,7 +58,7 @@
                   v-if="selectedPreset === 'custom'"
                   v-model.number="customMultiplier"
                   type="number"
-                  class="form-input form-input--sm"
+                  class="form-input-compact"
                   min="0.5"
                   max="10"
                   step="0.5"
@@ -73,7 +73,7 @@
               <input
                 v-model.number="playerCount"
                 type="number"
-                class="form-input form-input--sm"
+                class="form-input-compact"
                 min="1"
                 max="20"
               />
@@ -149,7 +149,7 @@
                     <input
                       :value="getXpAllocation(pokemon.id)"
                       type="number"
-                      class="form-input form-input--sm"
+                      class="form-input-compact"
                       min="0"
                       :max="xpPerPlayer"
                       @input="handleXpInput(pokemon.id, $event)"
@@ -198,39 +198,10 @@
 
       <!-- Results Phase -->
       <div v-if="phase === 'results'" class="xp-modal__body">
-        <div class="results-section">
-          <h3 class="section__title">XP Distribution Complete</h3>
-          <div class="results-list">
-            <div
-              v-for="result in distributionResults"
-              :key="result.pokemonId"
-              class="result-row"
-              :class="{ 'result-row--leveled': result.levelsGained > 0 }"
-            >
-              <div class="result-row__info">
-                <span class="result-row__name">{{ result.species }}</span>
-                <span class="result-row__xp">+{{ result.xpGained }} XP</span>
-              </div>
-              <div class="result-row__level">
-                <span v-if="result.levelsGained > 0" class="result-row__levelup">
-                  Lv.{{ result.previousLevel }} -> Lv.{{ result.newLevel }}
-                </span>
-                <span v-else class="result-row__no-change">
-                  Lv.{{ result.newLevel }}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="results-total">
-            Total XP Distributed: {{ totalDistributed }}
-          </div>
-
-          <!-- Level-Up Notification (detailed view for leveled Pokemon) -->
-          <LevelUpNotification
-            v-if="hasLevelUps"
-            :results="distributionResults"
-          />
-        </div>
+        <XpDistributionResults
+          :results="distributionResults"
+          :total-xp-distributed="totalDistributed"
+        />
       </div>
 
       <!-- Footer -->
@@ -262,12 +233,10 @@ import {
   SIGNIFICANCE_PRESETS,
   SIGNIFICANCE_PRESET_LABELS,
   resolvePresetFromMultiplier,
-  getLevelForXp
-} from '~/utils/experienceCalculation'
-import type {
-  SignificancePreset,
-  XpCalculationResult,
-  XpApplicationResult
+  getLevelForXp,
+  type SignificancePreset,
+  type XpCalculationResult,
+  type XpApplicationResult
 } from '~/utils/experienceCalculation'
 import type { Encounter } from '~/types'
 
@@ -307,32 +276,21 @@ const initialized = ref(false)
 
 // Configuration state — default from the encounter's persisted significance
 const persistedSignificance = props.encounter.significanceMultiplier ?? 1.0
-const selectedPreset = ref<SignificancePreset | 'custom'>(
-  resolvePresetFromMultiplier(persistedSignificance)
-)
+const selectedPreset = ref<SignificancePreset | 'custom'>(resolvePresetFromMultiplier(persistedSignificance))
 const customMultiplier = ref(persistedSignificance)
 const isBossEncounter = ref(false)
 const isCalculating = ref(false)
 const isDistributing = ref(false)
 const calculationError = ref<string | null>(null)
 
-// Calculation results
+// Calculation & distribution results
 const calculationResult = ref<{
   totalXpPerPlayer: number
   breakdown: XpCalculationResult['breakdown']
   participatingPokemon: ParticipatingPokemon[]
 } | null>(null)
-
-// Distribution results
 const distributionResults = ref<XpApplicationResult[]>([])
 const totalDistributed = ref(0)
-
-// Whether any Pokemon leveled up (for showing LevelUpNotification)
-const hasLevelUps = computed(() =>
-  distributionResults.value.some(r => r.levelsGained > 0)
-)
-
-// XP allocation map: pokemonId -> xpAmount
 const xpAllocations = ref<Map<string, number>>(new Map())
 
 // Defeated enemies from encounter
@@ -607,20 +565,6 @@ onMounted(async () => {
   }
 }
 
-// Sections
-.section {
-  margin-bottom: $spacing-lg;
-
-  &__title {
-    font-size: $font-size-sm;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: $color-text-muted;
-    margin-bottom: $spacing-sm;
-  }
-}
-
 // XP Warning Banner
 .xp-warning {
   display: flex;
@@ -704,37 +648,6 @@ onMounted(async () => {
     align-items: center;
   }
 }
-
-.form-select {
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  color: $color-text;
-  font-size: $font-size-sm;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: $color-accent-teal;
-  }
-}
-
-.form-input--sm {
-  width: 80px;
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-sm;
-  color: $color-text;
-  font-size: $font-size-sm;
-
-  &:focus {
-    outline: none;
-    border-color: $color-accent-teal;
-  }
-}
-
 
 // XP Summary
 .xp-summary {
@@ -857,7 +770,7 @@ onMounted(async () => {
   }
 
   &__input {
-    .form-input--sm {
+    .form-input-compact {
       width: 70px;
       text-align: center;
     }
@@ -882,70 +795,4 @@ onMounted(async () => {
     animation: pulse 1.5s ease-in-out infinite;
   }
 }
-
-// Results Section
-.results-section {
-  padding: $spacing-sm 0;
-}
-
-.results-list {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-lg;
-}
-
-.result-row {
-  background: $color-bg-tertiary;
-  border: 1px solid $border-color-default;
-  border-radius: $border-radius-md;
-  padding: $spacing-md;
-
-  &--leveled {
-    border-color: rgba($color-success, 0.4);
-    background: linear-gradient(135deg, rgba($color-success, 0.05) 0%, $color-bg-tertiary 100%);
-  }
-
-  &__info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__name {
-    font-weight: 600;
-    color: $color-text;
-  }
-
-  &__xp {
-    font-size: $font-size-sm;
-    color: $color-accent-teal;
-    font-weight: 600;
-  }
-
-  &__level {
-    margin-bottom: $spacing-xs;
-  }
-
-  &__levelup {
-    font-weight: 700;
-    color: $color-success;
-  }
-
-  &__no-change {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-  }
-}
-
-.results-total {
-  text-align: center;
-  padding: $spacing-md;
-  font-size: $font-size-lg;
-  font-weight: 600;
-  color: $color-accent-teal;
-}
-
-
 </style>
