@@ -191,23 +191,89 @@ export function useGridMovement(options: UseGridMovementOptions) {
   }
 
   /**
-   * Get blocked cells (cells occupied by other tokens)
+   * Get blocked cells for pathfinding purposes.
+   *
+   * Per decree-003 (PTU p.231): All tokens are passable — no token blocks
+   * movement. Enemy-occupied squares count as rough terrain (accuracy
+   * penalty only, no movement cost increase). Tokens cannot stack
+   * (destination check handled separately by getOccupiedCells).
+   *
+   * Returns an empty array — no cells are blocked by tokens.
+   * Terrain blocking (walls, water, etc.) is handled by the terrain
+   * cost getter, not by this function.
    */
-  const getBlockedCells = (excludeCombatantId?: string): GridPosition[] => {
-    const blocked: GridPosition[] = []
+  const getBlockedCells = (_excludeCombatantId?: string): GridPosition[] => {
+    return []
+  }
+
+  /**
+   * Get all cells occupied by other tokens (for no-stacking destination check).
+   *
+   * Per decree-003: Movement cannot end on any occupied square.
+   * This list is used to validate the FINAL position only — movement
+   * THROUGH these cells is always allowed.
+   */
+  const getOccupiedCells = (excludeCombatantId?: string): GridPosition[] => {
+    const occupied: GridPosition[] = []
     options.tokens.value.forEach(token => {
       if (token.combatantId === excludeCombatantId) return
-      // Add all cells occupied by this token
       for (let dx = 0; dx < token.size; dx++) {
         for (let dy = 0; dy < token.size; dy++) {
-          blocked.push({
+          occupied.push({
             x: token.position.x + dx,
             y: token.position.y + dy
           })
         }
       }
     })
-    return blocked
+    return occupied
+  }
+
+  /**
+   * Get cells occupied by enemy combatants relative to a given combatant.
+   *
+   * Per decree-003 (PTU p.231): "Squares occupied by enemies always count
+   * as Rough Terrain" — this applies a -2 accuracy penalty when targeting
+   * through these squares. This is a DYNAMIC property computed from
+   * combatant positions, not stored in the terrain data model.
+   *
+   * Enemy determination: 'enemies' side vs 'players'/'allies' sides.
+   * A combatant on 'enemies' considers 'players' and 'allies' as enemies.
+   * A combatant on 'players' or 'allies' considers 'enemies' as enemies.
+   */
+  const getEnemyOccupiedCells = (combatantId: string): GridPosition[] => {
+    const combatant = findCombatant(combatantId)
+    if (!combatant) return []
+
+    const isEnemy = (otherCombatantId: string): boolean => {
+      const other = findCombatant(otherCombatantId)
+      if (!other) return false
+      // Same side = not enemy
+      if (combatant.side === other.side) return false
+      // 'players' and 'allies' are friendly to each other
+      if (
+        (combatant.side === 'players' || combatant.side === 'allies') &&
+        (other.side === 'players' || other.side === 'allies')
+      ) {
+        return false
+      }
+      return true
+    }
+
+    const enemyCells: GridPosition[] = []
+    options.tokens.value.forEach(token => {
+      if (token.combatantId === combatantId) return
+      if (!isEnemy(token.combatantId)) return
+      for (let dx = 0; dx < token.size; dx++) {
+        for (let dy = 0; dy < token.size; dy++) {
+          enemyCells.push({
+            x: token.position.x + dx,
+            y: token.position.y + dy
+          })
+        }
+      }
+    })
+    return enemyCells
   }
 
   /**
@@ -266,13 +332,16 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * Calculate the terrain-aware path cost between two positions.
    * Uses A* pathfinding with PTU diagonal rules, terrain costs, and elevation.
    * Returns the cost and path, or null if no valid path exists.
+   *
+   * Per decree-003: tokens do not block pathfinding — only terrain blocks.
    */
   const calculateTerrainAwarePathCost = (
     from: GridPosition,
     to: GridPosition,
     combatantId: string
   ): { cost: number; path: GridPosition[] } | null => {
-    const blockedCells = getBlockedCells(combatantId)
+    // No cells blocked by tokens — only terrain blocks pathfinding
+    const blockedCells: GridPosition[] = []
     const terrainCostGetter = getTerrainCostGetter(combatantId)
     const elevCostGetter = getElevationCostGetter(combatantId)
     const terrainElevGetter = getTerrainElevationGetter()
@@ -286,7 +355,13 @@ export function useGridMovement(options: UseGridMovementOptions) {
   }
 
   /**
-   * Check if a move is valid, accounting for terrain costs, elevation, and combatant capabilities.
+   * Check if a move is valid, accounting for terrain costs, elevation,
+   * combatant capabilities, and the no-stacking rule.
+   *
+   * Per decree-003 (PTU p.231):
+   * - All tokens are passable (no movement blocking by tokens)
+   * - Enemy-occupied squares count as rough terrain (accuracy penalty only)
+   * - Cannot end movement on any occupied square (no stacking)
    *
    * Uses terrain-aware pathfinding (A*) when terrain is present on the grid.
    * Falls back to geometric distance when no terrain exists (for performance).
@@ -308,18 +383,23 @@ export function useGridMovement(options: UseGridMovementOptions) {
     gridHeight: number
   ): { valid: boolean; distance: number; blocked: boolean } => {
     const speed = getSpeed(combatantId)
-    const blockedCells = getBlockedCells(combatantId)
-    const isBlocked = blockedCells.some(b => b.x === toPos.x && b.y === toPos.y)
     const inBounds = toPos.x >= 0 && toPos.x < gridWidth && toPos.y >= 0 && toPos.y < gridHeight
 
-    if (isBlocked || !inBounds) {
+    // No-stacking rule: cannot end movement on any occupied square
+    const occupiedCells = getOccupiedCells(combatantId)
+    const isOccupied = occupiedCells.some(c => c.x === toPos.x && c.y === toPos.y)
+
+    if (isOccupied || !inBounds) {
       const geometricDistance = calculateMoveDistance(fromPos, toPos)
       return {
         valid: false,
         distance: geometricDistance,
-        blocked: isBlocked
+        blocked: isOccupied
       }
     }
+
+    // No cells blocked by tokens — only terrain blocks pathfinding
+    const blockedCells: GridPosition[] = []
 
     // Build elevation-aware cost getters for A* pathfinding
     const elevCostGetter = getElevationCostGetter(combatantId)
@@ -365,6 +445,8 @@ export function useGridMovement(options: UseGridMovementOptions) {
     calculateTerrainAwarePathCost,
     getSpeed,
     getBlockedCells,
+    getOccupiedCells,
+    getEnemyOccupiedCells,
     getTerrainCostAt,
     getTerrainCostForCombatant,
     getTerrainCostGetter,
