@@ -3,6 +3,7 @@ import { useTerrainStore } from '~/stores/terrain'
 import { useRangeParser, type TerrainCostGetter } from '~/composables/useRangeParser'
 import type { ElevationCostGetter, TerrainElevationGetter } from '~/composables/usePathfinding'
 import { combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed } from '~/utils/combatantCapabilities'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 interface TokenData {
   combatantId: string
@@ -139,13 +140,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * use calculateTerrainAwarePathCost instead.
    */
   const calculateMoveDistance = (from: GridPosition, to: GridPosition): number => {
-    const dx = Math.abs(to.x - from.x)
-    const dy = Math.abs(to.y - from.y)
-    const diagonals = Math.min(dx, dy)
-    const straights = Math.abs(dx - dy)
-    // Diagonal cost: 1 + 2 + 1 + 2... = diagonals + floor(diagonals / 2)
-    const diagonalCost = diagonals + Math.floor(diagonals / 2)
-    return diagonalCost + straights
+    return ptuDiagonalDistance(to.x - from.x, to.y - from.y)
   }
 
   /**
