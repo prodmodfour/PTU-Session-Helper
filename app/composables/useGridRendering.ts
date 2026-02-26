@@ -26,6 +26,9 @@ interface UseGridRenderingOptions {
   externalMovementPreview: Ref<MovementPreview | null>
   // Movement helpers
   getSpeed: (combatantId: string) => number
+  getMaxPossibleSpeed?: (combatantId: string) => number
+  buildSpeedAveragingFn?: (combatantId: string) => (terrainTypes: Set<string>) => number
+  getTerrainTypeAt?: (x: number, y: number) => string
   getBlockedCells: (excludeCombatantId?: string) => GridPosition[]
   calculateMoveDistance: (from: GridPosition, to: GridPosition) => number
   getTerrainCostAt: (x: number, y: number) => number
@@ -45,7 +48,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
   const measurementStore = useMeasurementStore()
   const fogOfWarStore = useFogOfWarStore()
   const terrainStore = useTerrainStore()
-  const { getMovementRangeCells } = useRangeParser()
+  const { getMovementRangeCells, getMovementRangeCellsWithAveraging } = useRangeParser()
   const {
     drawArrow,
     drawDistanceLabel,
@@ -364,23 +367,55 @@ export function useGridRendering(options: UseGridRenderingOptions) {
   }
 
   /**
-   * Draw movement range overlay for selected token
+   * Draw movement range overlay for selected token.
+   *
+   * When speed averaging callbacks are available and terrain is present,
+   * uses the terrain-type-aware flood-fill to correctly display the movement
+   * range accounting for PTU p.231 speed averaging across terrain boundaries.
    */
   const drawMovementRange = (ctx: CanvasRenderingContext2D) => {
     const token = options.selectedTokenForMovement.value
     if (!token) return
 
     const { cellSize } = options.config.value
-    const speed = options.getSpeed(token.combatantId)
     const blocked = options.getBlockedCells(token.combatantId)
 
-    // Pass combatant-aware terrain cost getter if terrain is present
+    // Build combatant-aware terrain cost getter
     const terrainCostGetter = terrainStore.terrainCount > 0
       ? (options.getTerrainCostForCombatant
         ? (x: number, y: number) => options.getTerrainCostForCombatant!(x, y, token.combatantId)
         : options.getTerrainCostAt)
       : undefined
-    const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
+
+    let rangeCells: GridPosition[]
+    let displaySpeed: number
+
+    // Use terrain-type-aware averaging when all callbacks are available
+    const canUseAveraging = terrainCostGetter
+      && options.getMaxPossibleSpeed
+      && options.buildSpeedAveragingFn
+      && options.getTerrainTypeAt
+
+    if (canUseAveraging) {
+      const maxSpeed = options.getMaxPossibleSpeed!(token.combatantId)
+      const averagingFn = options.buildSpeedAveragingFn!(token.combatantId)
+      const terrainTypeGetter = options.getTerrainTypeAt! as (x: number, y: number) => import('~/types').TerrainType
+
+      rangeCells = getMovementRangeCellsWithAveraging(
+        token.position,
+        maxSpeed,
+        blocked,
+        terrainCostGetter,
+        terrainTypeGetter,
+        averagingFn,
+      )
+      // Display the speed based on starting terrain (may differ for specific paths)
+      displaySpeed = options.getSpeed(token.combatantId)
+    } else {
+      const speed = options.getSpeed(token.combatantId)
+      rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
+      displaySpeed = speed
+    }
 
     // Draw reachable cells with cyan tint
     ctx.fillStyle = MOVEMENT_VALID_BG
@@ -403,7 +438,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     // Draw speed indicator
     const badgeX = token.position.x * cellSize + token.size * cellSize - 10
     const badgeY = token.position.y * cellSize + token.size * cellSize - 10
-    drawSpeedBadge(ctx, badgeX, badgeY, speed)
+    drawSpeedBadge(ctx, badgeX, badgeY, displaySpeed)
   }
 
   /**
@@ -487,14 +522,33 @@ export function useGridRendering(options: UseGridRenderingOptions) {
 
     // Draw movement range grid if token exists
     if (token) {
-      const speed = options.getSpeed(token.combatantId)
       const blocked = options.getBlockedCells(token.combatantId)
       const terrainCostGetter = terrainStore.terrainCount > 0
         ? (options.getTerrainCostForCombatant
           ? (x: number, y: number) => options.getTerrainCostForCombatant!(x, y, token.combatantId)
           : options.getTerrainCostAt)
         : undefined
-      const rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
+
+      // Use terrain-type-aware averaging when callbacks are available
+      let rangeCells: GridPosition[]
+      const canUseAveraging = terrainCostGetter
+        && options.getMaxPossibleSpeed
+        && options.buildSpeedAveragingFn
+        && options.getTerrainTypeAt
+
+      if (canUseAveraging) {
+        const maxSpeed = options.getMaxPossibleSpeed!(token.combatantId)
+        const averagingFn = options.buildSpeedAveragingFn!(token.combatantId)
+        const terrainTypeGetter = options.getTerrainTypeAt! as (x: number, y: number) => import('~/types').TerrainType
+
+        rangeCells = getMovementRangeCellsWithAveraging(
+          token.position, maxSpeed, blocked,
+          terrainCostGetter, terrainTypeGetter, averagingFn,
+        )
+      } else {
+        const speed = options.getSpeed(token.combatantId)
+        rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
+      }
 
       // Draw reachable cells with cyan tint
       ctx.fillStyle = MOVEMENT_VALID_BG
