@@ -1,569 +1,395 @@
 ---
 domain: encounter-tables
-mapped_at: 2026-02-19T00:00:00Z
+mapped_at: 2026-02-26T12:00:00Z
 mapped_by: app-capability-mapper
-total_capabilities: 58
-sources:
-  api: 18 endpoints
-  stores: 1 primary + 2 supporting
-  composables: 2
-  components: 11
-  pages: 4
-  types: 1 file (habitat.ts)
-  prisma_models: 4
+total_capabilities: 48
+files_read: 28
 ---
 
 # App Capabilities: Encounter Tables
 
-## Summary
-- Total capabilities: 58
-- Categories: CRUD(22), generation(8), UI-state(10), integration(10), data-transform(8)
-- Layers: API(18), store(17), composable(8), component(11), page(4)
-
----
-
-## Data Model Layer
-
-### Prisma Models (4 models)
-
-#### DM-001: EncounterTable Model
-- **Fields:** id (uuid), name (string), description (string?), imageUrl (string?), levelMin (int, default 1), levelMax (int, default 10), density (string, default "moderate"), createdAt, updatedAt
-- **Relations:** entries[] (EncounterTableEntry), modifications[] (TableModification)
-- **File:** `app/prisma/schema.prisma`
-
-#### DM-002: EncounterTableEntry Model
-- **Fields:** id (uuid), speciesId (FK to SpeciesData), weight (int, default 10), levelMin (int?), levelMax (int?), tableId (FK to EncounterTable)
-- **Constraints:** `@@unique([tableId, speciesId])` -- one entry per species per table
-- **Cascade:** onDelete from parent EncounterTable
-- **File:** `app/prisma/schema.prisma`
-
-#### DM-003: TableModification Model (Sub-habitat)
-- **Fields:** id (uuid), name (string), description (string?), parentTableId (FK to EncounterTable), levelMin (int?), levelMax (int?), densityMultiplier (float, default 1.0), createdAt, updatedAt
-- **Relations:** entries[] (ModificationEntry)
-- **Cascade:** onDelete from parent EncounterTable
-- **File:** `app/prisma/schema.prisma`
-
-#### DM-004: ModificationEntry Model
-- **Fields:** id (uuid), speciesName (string -- NOT FK), weight (int?), remove (boolean, default false), levelMin (int?), levelMax (int?), modificationId (FK to TableModification)
-- **Constraints:** `@@unique([modificationId, speciesName])` -- one entry per species per modification
-- **Cascade:** onDelete from parent TableModification
-- **Design note:** Uses speciesName (string) instead of speciesId (FK) to allow referencing species not in the parent table
-- **File:** `app/prisma/schema.prisma`
-
-### TypeScript Types (`app/types/habitat.ts`)
-
-#### DM-005: Type System Constants
-- `RarityPreset`: `'common' | 'uncommon' | 'rare' | 'very-rare' | 'legendary'`
-- `RARITY_WEIGHTS`: `{ common: 10, uncommon: 5, rare: 3, 'very-rare': 1, legendary: 0.1 }`
-- `DensityTier`: `'sparse' | 'moderate' | 'dense' | 'abundant'`
-- `DENSITY_RANGES`: `{ sparse: {2,4}, moderate: {4,8}, dense: {8,12}, abundant: {12,16} }`
-
-#### DM-006: Derived Types
-- `LevelRange`: `{ min: number; max: number }`
-- `ResolvedTableEntry`: parent + modification merge result with `source: 'parent' | 'modification' | 'added'`
-- `GeneratedPokemon`: `{ speciesName, level, weight, source, rerolled }`
-
----
-
-## API Layer (18 endpoints)
-
-### Table CRUD
-
-#### API-001: List All Tables
-- **Route:** `GET /api/encounter-tables`
-- **Response:** All tables with entries (species joined) and modifications (shallow -- no nested modification entries)
-- **Sorting:** Alphabetical by name
-- **Serialization:** `levelMin`/`levelMax` -> `{ min, max }` object; entry-level levelRange only included when both min/max non-null
-- **File:** `app/server/api/encounter-tables/index.get.ts`
-
-#### API-002: Create Table
-- **Route:** `POST /api/encounter-tables`
-- **Body:** `{ name (required), description?, imageUrl?, levelRange?: {min, max}, density? }`
-- **Defaults:** levelMin=1, levelMax=10, density='moderate'
-- **Validation:** name required (400); density validated against `['sparse', 'moderate', 'dense', 'abundant']` -- invalid values silently default to 'moderate'
-- **File:** `app/server/api/encounter-tables/index.post.ts`
-
-#### API-003: Get Single Table
-- **Route:** `GET /api/encounter-tables/:id`
-- **Response:** Full table with entries (species joined) and modifications (deep -- includes nested modification entries)
-- **Validation:** id required (400), table must exist (404)
-- **File:** `app/server/api/encounter-tables/[id].get.ts`
-
-#### API-004: Update Table
-- **Route:** `PUT /api/encounter-tables/:id`
-- **Body:** `{ name?, description?, imageUrl?, levelRange?: {min, max}, density? }`
-- **Behavior:** Density only updated if valid; otherwise silently preserved. Level range defaults to 1-10 if not provided.
-- **Validation:** id required (400)
-- **Note:** No explicit 404 check -- relies on Prisma throwing for missing records (hits generic 500 catch)
-- **File:** `app/server/api/encounter-tables/[id].put.ts`
-
-#### API-005: Delete Table
-- **Route:** `DELETE /api/encounter-tables/:id`
-- **Behavior:** Cascade deletes entries and modifications via Prisma schema
-- **Validation:** id required (400), handles Prisma P2025 (record not found) as 404
-- **File:** `app/server/api/encounter-tables/[id].delete.ts`
-
-### Entry CRUD
-
-#### API-006: Add Entry
-- **Route:** `POST /api/encounter-tables/:id/entries`
-- **Body:** `{ speciesId (required), weight? (default 10), levelRange?: {min, max} }`
-- **Validation:** id required (400), speciesId required (400), table must exist (404), species must exist in SpeciesData (404), duplicate species in same table returns 409
-- **File:** `app/server/api/encounter-tables/[id]/entries/index.post.ts`
-
-#### API-007: Update Entry
-- **Route:** `PUT /api/encounter-tables/:id/entries/:entryId`
-- **Body:** `{ weight?, levelMin?: number|null, levelMax?: number|null }`
-- **Validation:** weight >= 0.1 (400), levelMin/levelMax 1-100 or null (400), entry must exist and belong to table (404)
-- **Note:** Does NOT validate levelMin <= levelMax
-- **File:** `app/server/api/encounter-tables/[id]/entries/[entryId].put.ts`
-
-#### API-008: Delete Entry
-- **Route:** `DELETE /api/encounter-tables/:id/entries/:entryId`
-- **Validation:** id required (400), entryId required (400), entry must exist (404), entry must belong to table (400)
-- **File:** `app/server/api/encounter-tables/[id]/entries/[entryId].delete.ts`
-
-### Modification CRUD
-
-#### API-009: List Modifications
-- **Route:** `GET /api/encounter-tables/:id/modifications`
-- **Response:** All modifications for a table, ordered alphabetically, with their entries
-- **Validation:** id required (400), table must exist (404)
-- **Note:** Response does NOT include `densityMultiplier` -- unlike all other modification responses (likely a bug)
-- **File:** `app/server/api/encounter-tables/[id]/modifications/index.get.ts`
-
-#### API-010: Create Modification
-- **Route:** `POST /api/encounter-tables/:id/modifications`
-- **Body:** `{ name (required), description?, levelRange?: {min, max}, densityMultiplier? }`
-- **Defaults:** densityMultiplier = 1.0
-- **Validation:** id required (400), name required (400), table must exist (404), densityMultiplier clamped to [0.1, 5.0]
-- **File:** `app/server/api/encounter-tables/[id]/modifications/index.post.ts`
-
-#### API-011: Get Single Modification
-- **Route:** `GET /api/encounter-tables/:id/modifications/:modId`
-- **Response:** Modification with entries, includes densityMultiplier
-- **Validation:** id, modId required (400), modification must exist (404), must belong to table (400)
-- **File:** `app/server/api/encounter-tables/[id]/modifications/[modId].get.ts`
-
-#### API-012: Update Modification
-- **Route:** `PUT /api/encounter-tables/:id/modifications/:modId`
-- **Body:** `{ name?, description?, levelRange?: {min, max}, densityMultiplier? }`
-- **Behavior:** densityMultiplier clamped to [0.1, 5.0] if provided; not updated if omitted
-- **Validation:** id, modId required (400), modification must exist (404), must belong to table (400)
-- **File:** `app/server/api/encounter-tables/[id]/modifications/[modId].put.ts`
-
-#### API-013: Delete Modification
-- **Route:** `DELETE /api/encounter-tables/:id/modifications/:modId`
-- **Behavior:** Cascade deletes modification entries via Prisma schema
-- **Validation:** id, modId required (400), modification must exist (404), must belong to table (400)
-- **File:** `app/server/api/encounter-tables/[id]/modifications/[modId].delete.ts`
-
-### Modification Entry CRUD
-
-#### API-014: Add Modification Entry
-- **Route:** `POST /api/encounter-tables/:id/modifications/:modId/entries`
-- **Body:** `{ speciesName (required), weight? (default 10), remove? (default false), levelRange?: {min, max} }`
-- **Behavior:** If `remove=true`, weight stored as null. Uses speciesName (string) not speciesId (FK).
-- **Validation:** speciesName required (400), modification must exist (404), must belong to table (400), duplicate speciesName in same modification returns 409
-- **File:** `app/server/api/encounter-tables/[id]/modifications/[modId]/entries/index.post.ts`
-
-#### API-015: Delete Modification Entry
-- **Route:** `DELETE /api/encounter-tables/:id/modifications/:modId/entries/:entryId`
-- **Validation:** Full chain validation: id, modId, entryId required (400), modification must exist (404), mod belongs to table (400), entry must exist (404), entry belongs to modification (400)
-- **File:** `app/server/api/encounter-tables/[id]/modifications/[modId]/entries/[entryId].delete.ts`
-
-### Generation
-
-#### API-016: Generate Random Pokemon Encounter
-- **Route:** `POST /api/encounter-tables/:id/generate`
-- **Body:** `{ modificationId?, levelRange?: {min, max}, count? }`
-- **Algorithm:**
-  1. Build entry pool from parent table entries (Map by speciesName)
-  2. Apply modification if provided: remove flagged entries, add/override others
-  3. Determine spawn count: manual `count` clamped [1,10] OR density-based from `DENSITY_RANGES` scaled by `densityMultiplier`, clamped [1,10]
-  4. Weighted random selection: random [0, totalWeight), iterate entries subtracting weights
-  5. Per-Pokemon level: random within entry-specific or table-default range
-- **Response:** `{ generated: [{speciesId, speciesName, level, weight, source}], meta: {tableId, tableName, modificationId, levelRange, density, densityMultiplier, spawnCount, totalPoolSize, totalWeight} }`
-- **Validation:** id required (400), table not found (404), modification not found (404 if specified), empty pool or zero weight (400)
-- **Note:** Hard cap of 10 truncates `dense` (8-12) and `abundant` (12-16) tiers
-- **File:** `app/server/api/encounter-tables/[id]/generate.post.ts`
-
-### Import/Export
-
-#### API-017: Export Table as JSON
-- **Route:** `GET /api/encounter-tables/:id/export`
-- **Response:** Raw JSON file download (not `{success, data}` envelope)
-- **Format:** `{ version: '1.0', exportedAt, table: { name, description, imageUrl, levelRange, entries: [{speciesName, weight, levelRange}], modifications: [{name, description, levelRange, entries: [{speciesName, weight, remove, levelRange}]}] } }`
-- **Behavior:** Uses species names (not IDs) for portability. Sets Content-Disposition for file download. Filename sanitized (non-alphanumeric -> underscore).
-- **Note:** Density is NOT included in the export format
-- **File:** `app/server/api/encounter-tables/[id]/export.get.ts`
-
-#### API-018: Import Table from JSON
-- **Route:** `POST /api/encounter-tables/import`
-- **Body:** Full export JSON format
-- **Behavior:**
-  1. Structural validation (version, table.name, levelRange)
-  2. Name deduplication: appends `(1)`, `(2)`, etc. if name exists
-  3. Species resolution: case-insensitive name lookup against SpeciesData; unmatched species silently skipped
-  4. Nested creation via Prisma
-- **Response:** `{ success, data: table, warnings?: string }` -- warnings list unmatched species
-- **Note:** Does NOT validate/import density field
-- **File:** `app/server/api/encounter-tables/import.post.ts`
-
----
-
-## Store Layer
-
-### Primary: `encounterTables` Store (`app/stores/encounterTables.ts`)
-
-#### ST-001: State Management
-- `tables: EncounterTable[]` -- cached table data
-- `selectedTableId: string | null` -- UI selection tracking
-- `loading: boolean` -- async loading indicator
-- `error: string | null` -- last error message
-- `filters: { search: string, sortBy: 'name'|'createdAt'|'updatedAt', sortOrder: 'asc'|'desc' }`
-
-#### ST-002: Filtered/Sorted Tables Getter
-- `filteredTables` -- case-insensitive search on name/description, then sort by selected field/direction
-- Used by both encounter-tables list page and habitats list page
-
-#### ST-003: Selected Table Getter
-- `selectedTable` -- finds table by `selectedTableId`
-- `getTableById(id)` -- parameterized getter for any table by ID
-
-#### ST-004: Resolved Entries Getter (Core Business Logic)
-- `getResolvedEntries(tableId, modificationId?)` -- merges parent table entries with optional modification
-- Algorithm: Map keyed by speciesName, parent entries as base, then modification entries applied:
-  - `remove=true` -> delete from map
-  - Has weight -> override/add with `source: 'modification'` or `source: 'added'`
-  - Level range cascade: modification entry > modification-level > existing entry > table default
-- Returns `ResolvedTableEntry[]`
-
-#### ST-005: Total Weight Getter
-- `getTotalWeight(tableId, modificationId?)` -- sum of resolved entry weights
-
-#### ST-006: Table CRUD Actions
-- `loadTables()` -- GET all, replaces tables array
-- `loadTable(id)` -- GET single, updates in-place or pushes
-- `createTable(data)` -- POST, pushes to array
-- `updateTable(id, data)` -- PUT, replaces at index
-- `deleteTable(id)` -- DELETE, filters out, clears selection if matched
-
-#### ST-007: Entry CRUD Actions
-- `addEntry(tableId, data)` -- POST, reloads entire table (server generates ID + denormalized fields)
-- `updateEntry(tableId, entryId, data)` -- PUT, mutates entry in-place (direct mutation, not immutable)
-  - Transforms client `LevelRange` to API `levelMin`/`levelMax`
-- `removeEntry(tableId, entryId)` -- DELETE, filters entry from local state
-
-#### ST-008: Modification CRUD Actions
-- `createModification(tableId, data)` -- POST, pushes with synthesized timestamps
-- `updateModification(tableId, modId, data)` -- PUT, replaces at index preserving createdAt
-- `deleteModification(tableId, modId)` -- DELETE, filters out
-
-#### ST-009: Modification Entry CRUD Actions
-- `addModificationEntry(tableId, modId, data)` -- POST, reloads entire table
-- `removeModificationEntry(tableId, modId, entryId)` -- DELETE, filters entry
-
-#### ST-010: Generation Action
-- `generateFromTable(tableId, options?)` -- POST to generate endpoint
-- Options: `{ count?, modificationId?, levelRange? }`
-- Returns: `{ generated[], meta }` with full metadata
-
-#### ST-011: UI State Actions
-- `selectTable(id | null)` -- sets selectedTableId
-- `setFilters(partial)` -- merges filters (immutable spread)
-- `resetFilters()` -- resets to defaults
-
-#### ST-012: Import/Export Actions
-- `exportTable(tableId)` -- `window.location.href` navigation to export GET endpoint (browser download)
-- `importTable(jsonData)` -- POST to import, pushes to local state, returns `{ table, warnings }`
-
-#### ST-013: No WebSocket Integration
-- Encounter tables store is purely REST-based
-- Consistent with being a GM-only authoring tool, not a real-time collaborative feature
-
-### Supporting: `groupView` Store (wild spawn subset, `app/stores/groupView.ts`)
-
-#### ST-014: Wild Spawn Preview State
-- `wildSpawnPreview: WildSpawnPreview | null`
-- `hasWildSpawn` getter
-- Interface: `{ id, pokemon: [{speciesId, speciesName, level}], tableName, timestamp }`
-
-#### ST-015: Wild Spawn Actions
-- `fetchWildSpawnPreview()` -- GET `/api/group/wild-spawn`
-- `serveWildSpawn(tableName, pokemon[])` -- POST `/api/group/wild-spawn`
-- `clearWildSpawnPreview()` -- DELETE `/api/group/wild-spawn`
-- `setWildSpawnPreview(preview)` -- local state setter
-
-### Supporting: Wild Spawn Server State (`app/server/utils/wildSpawnState.ts`)
-
-#### ST-016: In-Memory Wild Spawn Singleton
-- `getWildSpawnPreview()` / `setWildSpawnPreview()` / `clearWildSpawnPreview()`
-- Server-side transient state (no DB persistence)
-- Shared between GM POST and Group GET via 3 endpoints:
-  - `GET /api/group/wild-spawn` -- fetch current preview
-  - `POST /api/group/wild-spawn` -- set preview (validates non-empty pokemon array + tableName)
-  - `DELETE /api/group/wild-spawn` -- clear preview
-
----
-
-## Composable Layer
-
-### `useTableEditor` (`app/composables/useTableEditor.ts`)
-
-#### CO-001: Table Editor State Management
-- Wraps `encounterTables` store with UI-specific form state
-- Internal form interfaces: `NewEntryForm`, `NewModForm`, `EditModForm`, `EditSettingsForm`
-- Factory functions for default form values
-- Returns: table, loading, 4 modal visibility refs, 4 form state refs
-
-#### CO-002: Computed Helpers
-- `totalWeight` -- sum of entry weights
-- `sortedEntries` -- entries sorted by weight descending
-
-#### CO-003: Display Helpers
-- `getDensityLabel(density)` -- capitalizes tier name (e.g., "moderate" -> "Moderate")
-- `getSpawnRange(density)` -- returns min-max string from DENSITY_RANGES
-
-#### CO-004: Entry Management Actions
-- `handleSpeciesSelect(species)` -- updates form with selected species (immutable)
-- `addEntry()` -- resolves weight from rarity preset or custom, creates entry via store, resets form
-- `removeEntry(entry)` -- confirmation dialog, then store remove
-- `updateEntryWeight(entry, weight)` -- store update for single field
-- `updateEntryLevelRange(entry, levelRange | null)` -- store update + table reload
-
-#### CO-005: Modification Management Actions
-- `addModification()` -- creates sub-habitat with optional level range
-- `editModification(mod)` -- populates edit form, opens modal
-- `saveModification()` -- saves edited metadata via store
-- `deleteModification(mod)` -- confirmation dialog, then store delete
-
-#### CO-006: Settings Management
-- `saveSettings()` -- saves table-level name, description, levelRange, density
-
-#### CO-007: Lifecycle
-- `onMounted` -> `refreshTable()` (loads table data)
-- `useHead` -> dynamic page title "GM - {tableName}"
-
-### `useEncounterCreation` (`app/composables/useEncounterCreation.ts`)
-
-#### CO-008: Encounter/Scene Creation from Generated Pokemon
-- `creating` / `error` -- reactive state
-- `createWildEncounter(pokemon[], tableName)`:
-  1. Creates encounter via `encounterStore.createEncounter(tableName, 'full_contact')`
-  2. Adds wild Pokemon via `encounterStore.addWildPokemon(pokemon, 'enemies')`
-  3. Serves encounter via `encounterStore.serveEncounter()`
-  4. Navigates to `/gm`
-- `addToScene(sceneId, pokemon[])` -- adds Pokemon one-by-one via `POST /api/scenes/{sceneId}/pokemon`
-- `clearError()` -- resets error state
-
----
-
-## Component Layer (11 components)
-
-### encounter-table/ directory (5 components)
-
-#### CP-001: EntryRow (`app/components/encounter-table/EntryRow.vue`)
-- Single entry row with editable weight, chance percentage, level range override
-- Props: entry, totalWeight, tableLevelRange
-- Emits: remove, update-weight, update-level-range
-- Computes chance as `(weight / totalWeight) * 100`
-- Uses `usePokemonSprite()` for species sprite display
-
-#### CP-002: TableCard (`app/components/encounter-table/TableCard.vue`)
-- Clickable summary card linking to `/gm/encounter-tables/{id}`
-- Shows: name, description, level badge, density badge (color-coded), entry count, modification count
-- Top 5 Pokemon preview with rarity labels (>=10 Common, >=5 Uncommon, >=3 Rare, >=1 Very Rare, <1 Legendary)
-- Sub-habitat modification tags
-
-#### CP-003: ModificationCard (`app/components/encounter-table/ModificationCard.vue`)
-- Sub-habitat editor with entries list and density controls
-- Density preset buttons: 0.5x, 1x, 1.5x, 2x
-- Shows effective spawn range based on parent density x multiplier
-- Color-coded changes: green=add, red=remove, yellow=override
-- Inline "Add Change" modal with PokemonSearchInput, action choice (Override/Remove), weight input
-- Store actions: `updateModification()`, `addModificationEntry()`
-
-#### CP-004: TableEditor (`app/components/encounter-table/TableEditor.vue`)
-- Main full-page editor component with entries list, sub-habitats section, 4 inline modals
-- Props: tableId, backLink, backLabel
-- Slots: header-actions (scoped: {table}), after (scoped: {table})
-- Add Entry modal: PokemonSearchInput, rarity dropdown (Common/Uncommon/Rare/Very Rare/Legendary/Custom), custom weight, level range override
-- Add/Edit Modification modals: name, description, level range
-- Settings modal: name, description, level range, density dropdown
-- Delegates all state/actions to `useTableEditor` composable
-
-#### CP-005: ImportTableModal (`app/components/encounter-table/ImportTableModal.vue`)
-- JSON file import via drag-and-drop or file picker
-- Accepts `.json` files
-- Displays errors for invalid JSON, warnings for unmatched species
-- Store action: `importTable(jsonData)`
-
-### habitat/ directory (4 components)
-
-#### CP-006: EncounterTableCard (`app/components/habitat/EncounterTableCard.vue`)
-- Richer summary card linking to `/gm/habitats/{id}`
-- Image (or tree icon placeholder), sprite grid (up to 8 previews with "+N" overflow)
-- Density badge with spawn range numbers
-- Modification tags
-- `data-testid="encounter-table-card"` for Playwright tests
-
-#### CP-007: EncounterTableModal (`app/components/habitat/EncounterTableModal.vue`)
-- Create/edit modal for the Habitats page
-- Create mode: name, description, level range, density, image URL
-- Edit mode: additionally shows inline species entry management + modification management
-- Weight presets: Common=10, Uncommon=5, Rare=2, Very Rare=1 (differs from TableEditor: no Legendary, Rare=2 vs 3)
-- Store actions: `createTable()`, `updateTable()`, `addEntry()`, `loadTable()`, `removeEntry()`, `createModification()`, `deleteModification()`
-
-#### CP-008: GenerateEncounterModal (`app/components/habitat/GenerateEncounterModal.vue`)
-- Most feature-rich modal: generates wild Pokemon with multiple output targets
-- Generation options: spawn count (auto/manual 1-10), modification selector, level range override
-- Pool preview: top 10 resolved entries with weight percentages
-- Results: selectable list with checkboxes, species name, level, source tag
-- Select All / Select None bulk actions
-- Output targets:
-  - "Show on TV" -- serves wild spawn to Group View via `serveWildSpawn()`
-  - "Clear TV" -- clears wild spawn overlay via `clearWildSpawnPreview()`
-  - "New Encounter" -- creates combat encounter via `@add-to-encounter` emit
-  - "Add to Scene" -- adds to narrative scene via `@add-to-scene` emit with scene selector dropdown
-- Store usage: `encounterTables` (getResolvedEntries, generateFromTable), `groupView` (wild spawn)
-
-#### CP-009: SpeciesAutocomplete (`app/components/habitat/SpeciesAutocomplete.vue`)
-- Species search/autocomplete dropdown
-- Loads all species from `/api/species` on mount
-- Filters by name substring, shows max 20 results with type badges
-- v-model binding returns speciesId
-
-### scene/ directory (1 component)
-
-#### CP-010: SceneHabitatPanel (`app/components/scene/SceneHabitatPanel.vue`)
-- Collapsible side panel linking encounter tables to scenes
-- Habitat selector dropdown for linking/unlinking
-- Shows entry list with sprites, rarity labels, level info
-- Per-entry "+" button for adding individual Pokemon (random level from entry range)
-- "Generate Random" button for bulk generation
-- Rarity labels: >=20% Common, >=10% Uncommon, >=5% Rare, <5% Very Rare (different thresholds from TableCard)
-- Locally defines its own interfaces (does NOT import from types/habitat.ts)
-
-### group/ directory (1 component)
-
-#### CP-011: WildSpawnOverlay (`app/components/group/WildSpawnOverlay.vue`)
-- Full-screen "Wild Pokemon Appeared!" display for Group View (TV/projector)
-- Pokemon grid with circular sprite containers, level badges, species names
-- Staggered pop-in animation (0.1s delay per slot)
-- 4K media query support (3000px+ breakpoint, 144px sprites)
-- Vue Transition for fade enter/leave
-- Display-only -- no game logic or interaction
-
----
-
-## Page Layer (4 pages)
-
-#### PG-001: Encounter Tables List (`app/pages/gm/encounter-tables.vue`)
-- Primary list page with filter bar (search, sort by, sort order)
-- Create modal (inline, not using EncounterTableModal component)
-- Import modal via ImportTableModal component
-- Generate modal via `?generate=tableId` query parameter (deep-linkable)
-- Scene integration: loads available scenes for add-to-scene action
-- Uses `useEncounterCreation` for encounter/scene output
-- Navigates to `/gm/encounter-tables/{id}` after create or import
-
-#### PG-002: Encounter Table Detail (`app/pages/gm/encounter-tables/[id].vue`)
-- Wraps `TableEditor` component with back-link to `/gm/encounter-tables`
-- Header action: "Generate" button navigates to list page with `?generate={id}` query param
-
-#### PG-003: Habitats List (`app/pages/gm/habitats/index.vue`)
-- Alternative list page using EncounterTableCard and EncounterTableModal components
-- Local search/sort (not using store filters -- implements its own computed)
-- Create/edit via EncounterTableModal, delete via ConfirmModal
-- Generate via GenerateEncounterModal (inline, no query param pattern)
-- Encounter creation handled inline (not using useEncounterCreation composable)
-- No import functionality
-
-#### PG-004: Habitat Detail (`app/pages/gm/habitats/[id].vue`)
-- Wraps `TableEditor` component with back-link to `/gm/habitats`
-- Header actions: "Generate" button (opens modal inline), "Delete" button (opens ConfirmModal)
-- Scene integration: loads available scenes for add-to-scene action
-- Uses `useEncounterCreation` for encounter/scene output
-
----
-
-## Cross-Cutting Capabilities
-
-### INT-001: Encounter Table -> Combat Encounter Pipeline
-- GenerateEncounterModal generates Pokemon -> "New Encounter" creates encounter + adds wild Pokemon + auto-serves to Group View + navigates to `/gm`
-- Full workflow: `encounterStore.createEncounter()` -> `encounterStore.addWildPokemon()` -> `encounterStore.serveEncounter()`
-- Available from: encounter-tables page (PG-001), habitats list (PG-003), habitat detail (PG-004)
-
-### INT-002: Encounter Table -> Scene Integration
-- GenerateEncounterModal "Add to Scene" -> adds Pokemon one-by-one via `POST /api/scenes/{sceneId}/pokemon`
-- SceneHabitatPanel links habitat to scene, allows per-entry and bulk generation
-- Available from: encounter-tables page (PG-001), habitat detail (PG-004), scene detail page
-
-### INT-003: Wild Spawn TV Display Pipeline
-- GenerateEncounterModal "Show on TV" -> `groupView.serveWildSpawn()` -> POST `/api/group/wild-spawn` -> in-memory singleton -> Group View polls/fetches -> WildSpawnOverlay renders
-- "Clear TV" -> `groupView.clearWildSpawnPreview()` -> DELETE `/api/group/wild-spawn`
-- No WebSocket push for wild spawn -- uses REST polling
-
-### INT-004: JSON Import/Export Portability
-- Export: species names (not IDs) for cross-instance portability
-- Import: case-insensitive species name resolution, name deduplication, unmatched species warnings
-- Density NOT included in export format (lost on round-trip)
-- No authentication/authorization on import
-
-### INT-005: Dual Page System (Encounter Tables vs Habitats)
-- Two parallel page hierarchies: `/gm/encounter-tables` and `/gm/habitats`
-- Both manage the same underlying data (EncounterTable model)
-- Different component sets: TableCard vs EncounterTableCard, inline create modal vs EncounterTableModal
-- Different feature coverage: encounter-tables has import, habitats has delete from detail page
-- Habitats list does its own filtering (not using store filters)
-
----
-
-## Capability Gaps and Inconsistencies
-
-### GAP-001: Missing `densityMultiplier` in GET Modifications List
-- `GET /api/encounter-tables/:id/modifications` (API-009) does not include `densityMultiplier` in response
-- All other modification endpoints include it
-- Store's `getResolvedEntries` getter may use stale multiplier data if loaded from this endpoint
-
-### GAP-002: No Modification Entry Update Endpoint
-- Can add and delete modification entries, but cannot update them
-- To change a modification entry's weight/remove/levelRange, must delete and recreate
-
-### GAP-003: Spawn Count Cap Truncates Density Tiers
-- Generate endpoint (API-016) clamps spawn count to max 10
-- `dense` tier (8-12) and `abundant` tier (12-16) are truncated
-- DENSITY_RANGES constants suggest counts up to 16 should be possible
-
-### GAP-004: Rarity Weight Inconsistencies Across Components
-- TableEditor (CP-004): Common=10, Uncommon=5, Rare=3, Very Rare=1, Legendary=0.1
-- EncounterTableModal (CP-007): Common=10, Uncommon=5, Rare=2, Very Rare=1 (no Legendary, Rare differs)
-- habitat.ts constants (DM-005): Common=10, Uncommon=5, Rare=3, Very Rare=1, Legendary=0.1
-
-### GAP-005: Rarity Label Inconsistencies Across Components
-- TableCard (CP-002): >=10 Common, >=5 Uncommon, >=3 Rare, >=1 Very Rare, <1 Legendary
-- SceneHabitatPanel (CP-010): >=20% Common, >=10% Uncommon, >=5% Rare, <5% Very Rare (percentage-based vs weight-based)
-
-### GAP-006: Direct Mutation in Store
-- `updateEntry` action directly mutates `entry.weight` and `entry.levelRange` in state (ST-007)
-- Violates immutable patterns used elsewhere in the store
-
-### GAP-007: Export/Import Density Loss
-- Export format (API-017) does not include density field
-- Import (API-018) does not read/apply density
-- Round-trip export->import loses the table's density setting (defaults to 'moderate')
-
-### GAP-008: SceneHabitatPanel Local Type Definitions
-- CP-010 defines its own `EncounterTable` and `EncounterTableEntry` interfaces locally
-- Does not import from `types/habitat.ts` -- risk of drift
-
-### GAP-009: No Pagination
-- `GET /api/encounter-tables` returns all tables with all entries and modifications
-- No pagination, limit, or cursor support on any endpoint
-
-### GAP-010: EncounterTableEntry Weight Type Mismatch
-- Prisma model uses `Int` for weight
-- API-007 update validates weight >= 0.1 (fractional)
-- RARITY_WEIGHTS includes `legendary: 0.1` (fractional)
-- Int storage would truncate 0.1 to 0
+> Re-mapped capability catalog for the encounter-tables domain.
+> Includes new: density separated from spawn count, significance tier/presets (SIGNIFICANCE_PRESETS), encounter budget system (encounterBudget.ts, BudgetIndicator, useEncounterBudget), XP calculation.
+
+## Prisma Models
+
+### encounter-tables-C001
+- **name:** EncounterTable Prisma Model
+- **type:** prisma-model
+- **location:** `app/prisma/schema.prisma` — model EncounterTable
+- **game_concept:** PTU encounter table / habitat
+- **description:** Weighted spawn table with name, description, imageUrl, default level range (levelMin/levelMax), population density tier, entries (EncounterTableEntry[]), and sub-habitat modifications (TableModification[]).
+- **inputs:** name, description, imageUrl, levelMin, levelMax, density
+- **outputs:** Persisted table record with entries and modifications
+- **accessible_from:** gm
+
+### encounter-tables-C002
+- **name:** EncounterTableEntry Prisma Model
+- **type:** prisma-model
+- **location:** `app/prisma/schema.prisma` — model EncounterTableEntry
+- **game_concept:** Pokemon species entry in encounter table
+- **description:** Links a species (speciesId → SpeciesData) to a table with a weight (encounter probability) and optional level range override. Unique constraint on (tableId, speciesId).
+- **inputs:** speciesId, weight, levelMin?, levelMax?, tableId
+- **outputs:** Persisted entry record
+- **accessible_from:** gm
+
+### encounter-tables-C003
+- **name:** TableModification Prisma Model
+- **type:** prisma-model
+- **location:** `app/prisma/schema.prisma` — model TableModification
+- **game_concept:** Sub-habitat modification of parent encounter table
+- **description:** Modifies a parent table's species pool: can add, remove, or override entries. Has own level range override, density multiplier (scales parent density), and nested ModificationEntry[] records.
+- **inputs:** name, description, parentTableId, levelMin?, levelMax?, densityMultiplier
+- **outputs:** Persisted modification with entries
+- **accessible_from:** gm
+
+### encounter-tables-C004
+- **name:** ModificationEntry Prisma Model
+- **type:** prisma-model
+- **location:** `app/prisma/schema.prisma` — model ModificationEntry
+- **game_concept:** Sub-habitat species override/add/remove
+- **description:** Individual entry in a modification. speciesName (string, not FK — can add species not in parent). weight (overrides parent) or remove=true (excludes). Optional level range override.
+- **inputs:** speciesName, weight?, remove, levelMin?, levelMax?, modificationId
+- **outputs:** Persisted modification entry
+- **accessible_from:** gm
+
+## API Endpoints
+
+### encounter-tables-C010
+- **name:** List Encounter Tables API
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/index.get.ts`
+- **game_concept:** Browse encounter tables
+- **description:** Returns all encounter tables with their entries and modifications.
+- **inputs:** None
+- **outputs:** `{ success, data: EncounterTable[] }`
+- **accessible_from:** gm
+
+### encounter-tables-C011
+- **name:** Create Encounter Table API
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/index.post.ts`
+- **game_concept:** Create new encounter table
+- **description:** Creates a new encounter table with name, description, imageUrl, level range, and density tier.
+- **inputs:** Body: { name, description?, imageUrl?, levelRange?, density? }
+- **outputs:** `{ success, data: EncounterTable }`
+- **accessible_from:** gm
+
+### encounter-tables-C012
+- **name:** Get/Update/Delete Encounter Table APIs
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/[id].get.ts`, `[id].put.ts`, `[id].delete.ts`
+- **game_concept:** Single table CRUD
+- **description:** Get returns table with all entries and modifications. Put updates name, description, imageUrl, level range, density. Delete cascades to all entries and modifications.
+- **inputs:** URL param: id. Body (put): partial table fields
+- **outputs:** `{ success, data: EncounterTable }` or `{ success: true }`
+- **accessible_from:** gm
+
+### encounter-tables-C013
+- **name:** Add/Update/Remove Entry APIs
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/[id]/entries/index.post.ts`, `[entryId].put.ts`, `[entryId].delete.ts`
+- **game_concept:** Manage species entries in table
+- **description:** Add species entry (speciesId + weight + optional level range), update weight/level range, or remove entry.
+- **inputs:** URL params: id, entryId. Body: { speciesId, weight?, levelRange? } or { weight?, levelMin?, levelMax? }
+- **outputs:** `{ success, data: EncounterTableEntry }` or `{ success: true }`
+- **accessible_from:** gm
+
+### encounter-tables-C014
+- **name:** CRUD Modification (Sub-habitat) APIs
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/[id]/modifications/` — index.get.ts, index.post.ts, [modId].get.ts, [modId].put.ts, [modId].delete.ts
+- **game_concept:** Sub-habitat management
+- **description:** List, create, get, update, delete sub-habitat modifications. Each modification can have its own name, description, level range override, and density multiplier.
+- **inputs:** URL params: id, modId. Body: { name, description?, levelRange?, densityMultiplier? }
+- **outputs:** `{ success, data: TableModification }` or `{ success: true }`
+- **accessible_from:** gm
+
+### encounter-tables-C015
+- **name:** Add/Remove Modification Entry APIs
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/[id]/modifications/[modId]/entries/` — index.post.ts, [entryId].delete.ts
+- **game_concept:** Sub-habitat species pool changes
+- **description:** Add species override (speciesName + weight), species addition (speciesName + weight for new species), or species removal (speciesName + remove=true). Remove deletes the modification entry.
+- **inputs:** URL params: id, modId, entryId. Body: { speciesName, weight?, remove?, levelRange? }
+- **outputs:** `{ success, data: ModificationEntry }` or `{ success: true }`
+- **accessible_from:** gm
+
+### encounter-tables-C016
+- **name:** Generate Pokemon from Table API
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/[id]/generate.post.ts`
+- **game_concept:** Wild Pokemon encounter generation
+- **description:** Generates Pokemon from table using diversity-enforced weighted random selection. Resolves species pool with optional modification applied, determines level range (override or table default). Uses encounter-generation.service for the actual selection. Returns generated list and metadata (table info, density, spawn count, pool size).
+- **inputs:** URL param: id. Body: { count, modificationId?, levelRange? }
+- **outputs:** `{ success, data: { generated: [...], meta: { tableId, tableName, density, spawnCount, totalPoolSize, totalWeight } } }`
+- **accessible_from:** gm
+
+### encounter-tables-C017
+- **name:** Export/Import Table APIs
+- **type:** api-endpoint
+- **location:** `app/server/api/encounter-tables/[id]/export.get.ts`, `app/server/api/encounter-tables/import.post.ts`
+- **game_concept:** Table JSON export/import
+- **description:** Export downloads table as JSON file. Import creates a new table from JSON data, returns the created table and any warnings.
+- **inputs:** Export: URL param id. Import: Body: JSON data object
+- **outputs:** Export: JSON file download. Import: `{ data: EncounterTable, warnings: string | null }`
+- **accessible_from:** gm
+
+## Store
+
+### encounter-tables-C020
+- **name:** Encounter Tables Store — table CRUD actions
+- **type:** store-action
+- **location:** `app/stores/encounterTables.ts` — loadTables(), loadTable(), createTable(), updateTable(), deleteTable()
+- **game_concept:** Encounter table state management
+- **description:** Manages local table cache. loadTables fetches all, loadTable fetches/updates single, createTable/updateTable/deleteTable perform API operations and update local state.
+- **inputs:** Table CRUD data
+- **outputs:** Updated tables state
+- **accessible_from:** gm
+
+### encounter-tables-C021
+- **name:** Encounter Tables Store — entry management actions
+- **type:** store-action
+- **location:** `app/stores/encounterTables.ts` — addEntry(), updateEntry(), removeEntry()
+- **game_concept:** Table entry management via store
+- **description:** Add/update/remove species entries from a table. Add and remove reload the full table; update modifies local state directly.
+- **inputs:** tableId, entryId, entry data
+- **outputs:** Updated table entries
+- **accessible_from:** gm
+
+### encounter-tables-C022
+- **name:** Encounter Tables Store — modification management actions
+- **type:** store-action
+- **location:** `app/stores/encounterTables.ts` — createModification(), updateModification(), deleteModification(), addModificationEntry(), removeModificationEntry()
+- **game_concept:** Sub-habitat management via store
+- **description:** Full CRUD for modifications (sub-habitats) and their entries. Creates/updates/deletes modifications, adds/removes modification entries.
+- **inputs:** tableId, modId, entryId, modification/entry data
+- **outputs:** Updated modifications in local state
+- **accessible_from:** gm
+
+### encounter-tables-C023
+- **name:** Encounter Tables Store — getResolvedEntries getter
+- **type:** store-getter
+- **location:** `app/stores/encounterTables.ts` — getResolvedEntries()
+- **game_concept:** Resolved species pool after modification
+- **description:** Computes final species pool by starting with parent entries and applying a modification (if specified): removes, overrides weights, adds new species. Each entry tagged with source ('parent', 'modification', 'added'). Level ranges cascade: entry → modification → table default.
+- **inputs:** tableId, modificationId?
+- **outputs:** ResolvedTableEntry[] with speciesName, weight, levelRange, source
+- **accessible_from:** gm
+
+### encounter-tables-C024
+- **name:** Encounter Tables Store — getTotalWeight getter
+- **type:** store-getter
+- **location:** `app/stores/encounterTables.ts` — getTotalWeight()
+- **game_concept:** Encounter probability calculation
+- **description:** Sums weights of all resolved entries for a table (with optional modification). Used for probability percentage display.
+- **inputs:** tableId, modificationId?
+- **outputs:** number (total weight)
+- **accessible_from:** gm
+
+### encounter-tables-C025
+- **name:** Encounter Tables Store — generateFromTable action
+- **type:** store-action
+- **location:** `app/stores/encounterTables.ts` — generateFromTable()
+- **game_concept:** Wild Pokemon generation via store
+- **description:** POSTs to generate endpoint with count, modificationId, levelRange options. Returns generated Pokemon list and metadata.
+- **inputs:** tableId, { count, modificationId?, levelRange? }
+- **outputs:** { generated: Array<{speciesId, speciesName, level, weight, source}>, meta: {...} }
+- **accessible_from:** gm
+
+### encounter-tables-C026
+- **name:** Encounter Tables Store — export/import actions
+- **type:** store-action
+- **location:** `app/stores/encounterTables.ts` — exportTable(), importTable()
+- **game_concept:** Table JSON export/import via store
+- **description:** Export triggers browser download via URL navigation. Import POSTs JSON data and adds result to local state, returns table + warnings.
+- **inputs:** tableId (export) or JSON data (import)
+- **outputs:** void (export) or { table, warnings } (import)
+- **accessible_from:** gm
+
+### encounter-tables-C027
+- **name:** Encounter Tables Store — filteredTables / filter actions
+- **type:** store-getter
+- **location:** `app/stores/encounterTables.ts` — filteredTables getter, setFilters(), resetFilters()
+- **game_concept:** Table search/filter
+- **description:** Filters tables by search (name, description) and sorts by name/createdAt/updatedAt.
+- **inputs:** filters: { search, sortBy, sortOrder }
+- **outputs:** EncounterTable[]
+- **accessible_from:** gm
+
+## Utilities (NEW)
+
+### encounter-tables-C030
+- **name:** calculateEncounterBudget utility
+- **type:** utility
+- **location:** `app/utils/encounterBudget.ts` — calculateEncounterBudget()
+- **game_concept:** PTU Level Budget formula (PTU Core p. 473)
+- **description:** Pure function: averagePokemonLevel * 2 * playerCount = total level budget. Returns breakdown with per-player and total budget.
+- **inputs:** BudgetCalcInput { averagePokemonLevel, playerCount }
+- **outputs:** BudgetCalcResult { totalBudget, levelBudgetPerPlayer, breakdown }
+- **accessible_from:** gm (via composable)
+
+### encounter-tables-C031
+- **name:** calculateEffectiveEnemyLevels utility
+- **type:** utility
+- **location:** `app/utils/encounterBudget.ts` — calculateEffectiveEnemyLevels()
+- **game_concept:** PTU XP rules — trainer levels count double (p. 460)
+- **description:** Pure function: sums enemy levels, doubling trainer levels. Returns both raw total and effective (doubled) total.
+- **inputs:** Array<{ level, isTrainer }>
+- **outputs:** { totalLevels, effectiveLevels }
+- **accessible_from:** gm (via composable)
+
+### encounter-tables-C032
+- **name:** analyzeEncounterBudget utility
+- **type:** utility
+- **location:** `app/utils/encounterBudget.ts` — analyzeEncounterBudget()
+- **game_concept:** Encounter difficulty assessment
+- **description:** Full budget analysis combining budget calculation and enemy level analysis. Computes budgetRatio (effective enemy levels / total budget) and assesses difficulty: trivial (<0.4), easy (0.4-0.7), balanced (0.7-1.3), hard (1.3-1.8), deadly (>1.8).
+- **inputs:** BudgetCalcInput, Array<{ level, isTrainer }>
+- **outputs:** BudgetAnalysis { totalEnemyLevels, budget, budgetRatio, difficulty, hasTrainerEnemies, effectiveEnemyLevels }
+- **accessible_from:** gm (via composable)
+
+### encounter-tables-C033
+- **name:** calculateEncounterXp utility
+- **type:** utility
+- **location:** `app/utils/encounterBudget.ts` — calculateEncounterXp()
+- **game_concept:** PTU XP calculation (PTU Core p. 460)
+- **description:** Pure function: effectiveEnemyLevels * significanceMultiplier / playerCount. Returns totalXp, xpPerPlayer, and baseXp.
+- **inputs:** Array<{ level, isTrainer }>, significanceMultiplier, playerCount
+- **outputs:** { totalXp, xpPerPlayer, baseXp }
+- **accessible_from:** gm (via composable)
+
+### encounter-tables-C034
+- **name:** SIGNIFICANCE_PRESETS constant
+- **type:** constant
+- **location:** `app/utils/encounterBudget.ts` — SIGNIFICANCE_PRESETS
+- **game_concept:** PTU significance tiers for XP (PTU Core p. 460)
+- **description:** 5 preset significance tiers: insignificant (x1-1.5), everyday (x2-3), significant (x3-4), climactic (x4-5), legendary (x5). Each with tier key, label, multiplier range, default multiplier, and description.
+- **inputs:** N/A (static data)
+- **outputs:** SignificancePreset[]
+- **accessible_from:** gm
+
+### encounter-tables-C035
+- **name:** DIFFICULTY_THRESHOLDS constant
+- **type:** constant
+- **location:** `app/utils/encounterBudget.ts` — DIFFICULTY_THRESHOLDS
+- **game_concept:** Budget ratio difficulty bands
+- **description:** Threshold values for difficulty assessment: trivial <0.4, easy 0.4-0.7, balanced 0.7-1.3, hard 1.3-1.8, deadly >1.8.
+- **inputs:** N/A (static data)
+- **outputs:** Threshold object
+- **accessible_from:** gm
+
+## Composables (NEW)
+
+### encounter-tables-C040
+- **name:** useEncounterBudget composable
+- **type:** composable-function
+- **location:** `app/composables/useEncounterBudget.ts`
+- **game_concept:** Reactive encounter budget analysis
+- **description:** Wraps encounterBudget.ts for Vue components. analyzeCurrent(averagePokemonLevel) computes BudgetAnalysis for the active encounter by extracting player count and enemy levels from the encounter store. Also re-exports all pure utility functions.
+- **inputs:** averagePokemonLevel: number
+- **outputs:** BudgetAnalysis | null; plus calculateEncounterBudget, calculateEffectiveEnemyLevels, analyzeEncounterBudget, calculateEncounterXp
+- **accessible_from:** gm
+
+## Components
+
+### encounter-tables-C045
+- **name:** BudgetIndicator component (NEW)
+- **type:** component
+- **location:** `app/components/encounter/BudgetIndicator.vue`
+- **game_concept:** Visual encounter difficulty indicator
+- **description:** Displays budget analysis as a progress bar with difficulty coloring. Shows effective enemy levels vs total budget, trainer x2 note, and difficulty label (Trivial/Easy/Balanced/Hard/Deadly). Bar has fill and overflow segments.
+- **inputs:** Props: { analysis: BudgetAnalysis }
+- **outputs:** Visual display only
+- **accessible_from:** gm
+
+### encounter-tables-C046
+- **name:** SignificancePanel component
+- **type:** component
+- **location:** `app/components/encounter/SignificancePanel.vue`
+- **game_concept:** Encounter significance/XP configuration
+- **description:** Panel for setting encounter significance tier (preset selector + custom multiplier), difficulty adjustment slider, and XP breakdown display. Uses SIGNIFICANCE_PRESETS for preset options. Updates encounter significance via API.
+- **inputs:** Encounter significance state
+- **outputs:** Significance tier and multiplier changes
+- **accessible_from:** gm
+
+### encounter-tables-C047
+- **name:** TableEditor component
+- **type:** component
+- **location:** `app/components/encounter-table/TableEditor.vue`
+- **game_concept:** Encounter table editing interface
+- **description:** Full editor for encounter table: name, description, level range, density tier, species entries (add/remove/edit weight/level), sub-habitat modifications, generate button.
+- **inputs:** Table data
+- **outputs:** Table/entry/modification CRUD events
+- **accessible_from:** gm
+
+### encounter-tables-C048
+- **name:** TableCard / EntryRow / ModificationCard / ImportTableModal components
+- **type:** component
+- **location:** `app/components/encounter-table/TableCard.vue`, `EntryRow.vue`, `ModificationCard.vue`, `ImportTableModal.vue`
+- **game_concept:** Encounter table UI building blocks
+- **description:** TableCard: summary card for table list. EntryRow: single species entry with weight/level display and edit controls. ModificationCard: sub-habitat card with entries. ImportTableModal: JSON file upload for table import.
+- **inputs:** Respective data props
+- **outputs:** Click/edit/delete events
+- **accessible_from:** gm
+
+## Capability Chains
+
+### Chain 1: Encounter Table CRUD
+`GM Encounter Tables Page` → `TableCard (C048)` → `Encounter Tables Store CRUD (C020)` → `Table CRUD APIs (C010-C012)` → `Prisma EncounterTable (C001)`
+- **Accessibility:** gm only
+
+### Chain 2: Species Entry Management
+`TableEditor (C047)` → `EntryRow (C048)` → `Store entry actions (C021)` → `Entry APIs (C013)` → `Prisma EncounterTableEntry (C002)`
+- **Accessibility:** gm only
+
+### Chain 3: Sub-habitat Management
+`TableEditor (C047)` → `ModificationCard (C048)` → `Store modification actions (C022)` → `Modification APIs (C014-C015)` → `Prisma TableModification/ModificationEntry (C003-C004)`
+- **Accessibility:** gm only
+
+### Chain 4: Pokemon Generation
+`TableEditor (C047)` → `Store generateFromTable (C025)` → `Generate API (C016)` → encounter-generation.service → weighted random selection
+- **Accessibility:** gm only
+
+### Chain 5: Table Export/Import
+`GM Encounter Tables Page` → `ImportTableModal (C048)` / export button → `Store export/import (C026)` → `Export/Import APIs (C017)`
+- **Accessibility:** gm only
+
+### Chain 6: Encounter Budget Analysis (NEW)
+`GM Encounter Page` → `BudgetIndicator (C045)` → `useEncounterBudget (C040)` → `analyzeEncounterBudget (C032)` → `calculateEncounterBudget (C030)` + `calculateEffectiveEnemyLevels (C031)`
+- **Accessibility:** gm only
+
+### Chain 7: Significance & XP (NEW)
+`SignificancePanel (C046)` → significance PUT API → Encounter model significanceMultiplier/Tier → `calculateEncounterXp (C033)` → XP distribution flow
+- **Accessibility:** gm only
+
+### Chain 8: Resolved Entry Pool
+`Store getResolvedEntries (C023)` + `getTotalWeight (C024)` → used by TableEditor and generation for species pool resolution with modification overlay
+- **Accessibility:** gm only (client-side computation)
+
+## Accessibility Summary
+
+| Access Level | Capability IDs |
+|---|---|
+| **gm-only** | All capabilities (C001-C048) |
+| **api-only** | None (all endpoints are used by GM UI) |
+
+## Missing Subsystems
+
+### MS-1: No player-facing encounter table browsing
+- **subsystem:** Players cannot view or interact with encounter tables
+- **actor:** player
+- **ptu_basis:** Encounter tables are a GM tool in PTU; players don't typically interact with them. This is working as intended for PTU.
+- **impact:** Low — encounter tables are inherently a GM preparation tool.
+
+### MS-2: No wild Pokemon tracking post-generation
+- **subsystem:** Generated wild Pokemon from tables are not automatically tracked or linked back to the table they came from
+- **actor:** gm
+- **ptu_basis:** PTU GMs may want to review what was previously generated from a habitat for consistency
+- **impact:** GM has no generation history — each generation is ephemeral.
+
+### MS-3: No encounter budget integration in table generation
+- **subsystem:** When generating from encounter tables, there is no budget-awareness — the table generates a count of Pokemon without considering the party's level budget
+- **actor:** gm
+- **ptu_basis:** PTU Core p. 473 suggests building encounters within a level budget. Table generation generates by count, not by budget.
+- **impact:** GM must manually assess whether generated Pokemon fit the party's level budget by checking the BudgetIndicator after adding them to an encounter.
