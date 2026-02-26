@@ -2,7 +2,8 @@
 ticket_id: decree-need-024
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-024
 domain: vtt-grid
 topic: diagonal-cone-expansion-semantics
 source: rules-review-160 M1

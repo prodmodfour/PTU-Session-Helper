@@ -2,7 +2,8 @@
 ticket_id: decree-need-023
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-023
 domain: vtt-grid
 topic: burst-shape-distance-rule
 source: code-review-183 HIGH-3
