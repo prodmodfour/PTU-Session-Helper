@@ -33,9 +33,9 @@ export function useRestHealing() {
   }
 
   /**
-   * Apply extended rest (4+ hours)
+   * Apply extended rest (4-8 hours, default 4) per decree-018
    */
-  async function extendedRest(type: 'pokemon' | 'character', id: string): Promise<RestResult | null> {
+  async function extendedRest(type: 'pokemon' | 'character', id: string, duration: number = 4): Promise<RestResult | null> {
     loading.value = true
     error.value = null
 
@@ -44,7 +44,10 @@ export function useRestHealing() {
         ? `/api/pokemon/${id}/extended-rest`
         : `/api/characters/${id}/extended-rest`
 
-      const result = await $fetch<RestResult>(endpoint, { method: 'POST' })
+      const result = await $fetch<RestResult>(endpoint, {
+        method: 'POST',
+        body: { duration }
+      })
       return result
     } catch (e: any) {
       error.value = e.message || 'Failed to apply extended rest'
