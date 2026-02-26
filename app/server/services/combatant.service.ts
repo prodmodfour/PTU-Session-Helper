@@ -712,17 +712,18 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
     : stats.speed + focusSpeedBonus
   const initiative = effectiveSpeed + initiativeBonus
 
-  // Set initial speed CS to equipment default for Heavy Armor wearers (PTU p.293)
-  // Create a copy to avoid mutating the input entity parameter
-  const combatantEntity = equipmentSpeedDefaultCS !== 0
-    ? {
-        ...entity,
-        stageModifiers: {
-          ...(entity.stageModifiers ?? createDefaultStageModifiers()),
-          speed: equipmentSpeedDefaultCS
-        }
-      }
-    : entity
+  // Reset stageModifiers to defaults for combat entry (PTU p.235: stages are combat-scoped).
+  // This prevents double-application of status CS effects if the entity's DB record
+  // still has stale CS values from a previous encounter.
+  // Equipment speed default CS (Heavy Armor, PTU p.293) is applied on top.
+  const combatStages = {
+    ...createDefaultStageModifiers(),
+    ...(equipmentSpeedDefaultCS !== 0 ? { speed: equipmentSpeedDefaultCS } : {})
+  }
+  const combatantEntity = {
+    ...entity,
+    stageModifiers: combatStages
+  }
 
   const combatant: Combatant = {
     id: uuidv4(),
