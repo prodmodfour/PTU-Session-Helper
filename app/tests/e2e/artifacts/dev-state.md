@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T19:30:00
-updated_by: slave-collector (plan-20260226-175938)
+last_updated: 2026-02-26T20:00:00
+updated_by: slave-collector (plan-20260226-154130)
 ---
 
 # Dev Ecosystem State
@@ -31,8 +31,8 @@ updated_by: slave-collector (plan-20260226-175938)
 | ptu-rule-081 | P4 | **resolved** | Multiple Focus items — single Focus limit enforced in equipmentBonuses.ts. code-review-169 APPROVED (M1 non-blocking → ux-008), rules-review-156 APPROVED |
 | ptu-rule-082 | P4 | **resolved** | Pokemon maxHp not auto-updated on level-up (from rules-review-118). Fix applied + APPROVED (code-review-161, rules-review-151). M2 → ux-005 |
 | ptu-rule-083 | P4 | **resolved** | Measurement store uses Chebyshev distance instead of PTU alternating diagonal (from rules-review-144 RULING-1). Fix applied + APPROVED (code-review-161, rules-review-151). M1 → refactoring-080 |
-| ptu-rule-084 | P2 | **open** | Vulnerable condition does not zero evasion in getTargetEvasion (from combat-audit R108) |
-| ptu-rule-085 | P2 | **open** | Legendary Pokemon detection hard-coded to false in capture API endpoints (from capture-audit R016) |
+| ptu-rule-084 | P2 | **implemented, needs review** | Vulnerable/Frozen/Asleep conditions now zero evasion in getTargetEvasion + calculate-damage endpoint. Implemented by slave-5 (plan-20260226-154130). 3 commits |
+| ptu-rule-085 | P2 | **implemented, needs review** | Legendary Pokemon auto-detected for capture rate -30 modifier via LEGENDARY_SPECIES constant. Implemented by slave-5 (plan-20260226-154130). 3 commits |
 | ptu-rule-086 | P3 | **open** | Capture modifier sign convention inverted from PTU (from capture-audit R005) |
 | ptu-rule-087 | P3 | **open** | Generated Pokemon start with 0 tutor points instead of level-based calculation (from pokemon-lifecycle-audit R022) |
 | ptu-rule-088 | P3 | **open** | Significance tier presets misaligned with PTU values (from encounter-tables-audit R008) |
@@ -43,13 +43,19 @@ updated_by: slave-collector (plan-20260226-175938)
 | ptu-rule-093 | P3 | **open** | Rough terrain accuracy penalty not implemented (from vtt-grid-audit R015 + scenes-audit R018) |
 | ptu-rule-094 | P4 | **open** | Natural healing min(1) HP contradicts PTU for low-HP entities (from healing-audit R007) |
 | ptu-rule-095 | P4 | **open** | Disengage maneuver missing from combatManeuvers — defer until AoO implemented (from vtt-grid-audit R030) |
+| ptu-rule-096 | P0 | **implemented, needs review** | Switch ALL range measurement from Chebyshev to PTU alternating diagonal. Implemented by slave-1 (plan-20260226-154130). Part of 3-commit VTT range overhaul |
+| ptu-rule-097 | P0 | **implemented, needs review** | Make all tokens passable, enemy-occupied squares as dynamic rough terrain with -2 accuracy penalty, no stacking at end. Implemented by slave-2 (plan-20260226-154130). 4 commits |
+| ptu-rule-098 | P1 | **implemented, needs review** | Auto-apply combat stage changes from status conditions (Burn=-2 Def, Paralysis=-4 Speed, Poison=-2 SpDef) with source tracking. Cure reversal, breather re-application, faint reversal, combat entry auto-apply. Implemented by slave-3 (plan-20260226-154130). 9 commits |
+| ptu-rule-100 | P1 | **implemented, needs review** | Fix cone shapes to fixed 3m-wide rows per PTU literal text. Implemented by slave-1 (plan-20260226-154130). Part of 3-commit VTT range overhaul |
+| ptu-rule-101 | P1 | **implemented, needs review** | Change water terrain default cost to 1 (was 2). Water is basic terrain per PTU; GM can overlay slow flag. Implemented by slave-4 (plan-20260226-154130). Part of terrain multi-tag overhaul |
+| ptu-rule-102 | P1 | **implemented, needs review** | Shorten diagonal Line attacks per PTU alternating diagonal rule. Implemented by slave-1 (plan-20260226-154130). Part of 3-commit VTT range overhaul |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
-| feature-003 | P1 | **Track-A-P2-fix2-complete + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 fix cycle 2 complete: SCSS extracted to _player-character-sheet.scss, .list-subheader 4K override added (code-review-181 M1+M2 resolved). Needs re-review. Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
+| feature-003 | P1 | **Track-A-P2-CHANGES_REQUIRED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 fix cycle 3 needed: code-review-182 CHANGES_REQUIRED (C1: `:deep()` selectors in global SCSS produce dead CSS — replace with plain selectors in 3 locations). rules-review-159 APPROVED. Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -65,7 +71,16 @@ updated_by: slave-collector (plan-20260226-175938)
 
 ## Active Developer Work
 
-**Current task:** Session 41 collection complete. All 5 slaves merged (13 commits). Slave-1 (developer): feature-003 Track A P2 fix cycle 2 complete + ux-002 resolved. Slave-2 (developer): ux-008, refactoring-060, refactoring-078 resolved. Slaves 3-5 (matrix): all 8 domain audits refreshed. 15 follow-up tickets filed from audit findings (12 ptu-rule, 1 bug, 1 refactoring, 1 decree-need).
+**Current task:** Session 42 collection complete. All 6 slaves merged (31 commits, 2 conflicts resolved). 5 developer slaves: VTT range/measurement overhaul (ptu-rule-096+100+102), token passability (ptu-rule-097), status CS tracking (ptu-rule-098), terrain multi-tag (refactoring-001+ptu-rule-101), evasion+legendary fixes (ptu-rule-084+085). 1 reviewer slave: feature-003 Track A P2 re-review (CHANGES_REQUIRED C1: `:deep()` in global SCSS).
+
+**Session 42 (2026-02-26, plan-20260226-154130):**
+- slave-1 (developer): ptu-rule-096+100+102 — 3 commits: switched range measurement to PTU alternating diagonal, fixed cone shapes to 3m-wide rows, shortened diagonal Line attacks → **all 3 implemented, need review**
+- slave-2 (developer): ptu-rule-097 — 4 commits: made all tokens passable, enemy-occupied squares as dynamic rough terrain with -2 accuracy penalty, no stacking at movement end → **implemented, needs review**
+- slave-3 (developer): ptu-rule-098 — 9 commits: StageSource type, STATUS_CS_EFFECTS constant, source-tracked auto-CS on status apply, DB sync, Take a Breather re-application, faint reversal, combat entry auto-apply, Badly Poisoned mapping → **implemented, needs review**
+- slave-4 (developer): refactoring-001+ptu-rule-101 — 10 commits: TerrainFlags interface, terrain store multi-tag overhaul, persistence update, API update, 2D+isometric rendering, TerrainPainter UI, elevation fix, water cost changed to 1 → **implemented, needs review**
+- slave-5 (developer): ptu-rule-084+085 — 3 commits: Vulnerable/Frozen/Asleep zero evasion in getTargetEvasion + calculate-damage endpoint, legendary Pokemon auto-detection via LEGENDARY_SPECIES constant → **implemented, needs review**
+- slave-6 (reviewers): feature-003 Track A P2 re-review — code-review-182 **CHANGES_REQUIRED** (C1: `:deep()` pseudo-selectors in global SCSS file produce dead CSS rules — 3 locations need plain selector replacement). rules-review-159 **APPROVED** (trainer HP formula correct)
+- **Merge notes:** 2 conflicts resolved (useMoveCalculation.ts import merge between slaves 2+5, statusConditions.ts export merge between slaves 5+3). Slave 4 high-risk merge with slave 2 (shared useGridMovement.ts) resolved cleanly — no textual conflicts.
 
 **Session 41 (2026-02-26, plan-20260226-175938):**
 - slave-1 (developer): feature-003 Track A P2 fix2 + ux-002 — 4 commits: extracted PlayerCharacterSheet SCSS to _player-character-sheet.scss (M1), added .list-subheader 4K override (M2), labeled HP stat as 'HP Base' with formula tooltip (ux-002) → **feature-003 needs re-review, ux-002 resolved**
@@ -149,6 +164,12 @@ updated_by: slave-collector (plan-20260226-175938)
 3. Remaining open: ux-002 P4, ux-006 P4, ux-008 P4, refactoring-060/078
 
 ## Review Status
+
+### Session 42 Reviews (plan-20260226-154130)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-182 | feature-003 Track A P2 fix cycle 2 re-review | CHANGES_REQUIRED (C1: `:deep()` selectors in global SCSS produce dead CSS — 3 locations) | senior-reviewer | 2026-02-26 |
+| rules-review-159 | feature-003 Track A P2 fix cycle 2 re-review | APPROVED (trainer HP formula correct) | game-logic-reviewer | 2026-02-26 |
 
 ### Session 40 Reviews (plan-20260226-115023)
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -398,6 +419,7 @@ updated_by: slave-collector (plan-20260226-175938)
 | refactoring-082 | P4 | **resolved** | Touch handlers extracted to useTouchInteraction composable, used by both useGridInteraction (630 lines) and useIsometricInteraction (691 lines) — resolved by slave-3 (plan-20260226-070756) |
 | refactoring-083 | P0 | **APPROVED** | Undefined $z-index-modal in XpDistributionModal — fix cycle complete. Extracted _form-utilities.scss (shared SCSS utilities) + XpDistributionResults.vue child component. File reduced from 1019 to 798 lines. code-review-179 APPROVED (re-review of code-review-173 C1) |
 | refactoring-084 | P4 | **resolved** | app-surface.md missing entries for useTouchInteraction.ts and gridDistance.ts — updated. Resolved by slave-2 (plan-20260226-120000) |
+| refactoring-001 | P1 | **implemented, needs review** | Multi-tag terrain system — cells support multiple flags (rough, slow) simultaneously instead of single enum. 10 commits: TerrainFlags interface, terrain store overhaul, persistence update, API update, 2D+isometric rendering, TerrainPainter UI, elevation fix. Implemented by slave-4 (plan-20260226-154130) |
 
 ## Code Health
 
@@ -411,6 +433,27 @@ updated_by: slave-collector (plan-20260226-175938)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-02-26, session 42 — plan-20260226-154130)
+
+**Slave collection plan-20260226-154130:** 6 slaves merged (31 commits total, 2 conflicts resolved)
+- **slave-1** (developer): ptu-rule-096+100+102 — 3 commits: VTT range/measurement overhaul (Chebyshev→PTU diagonal, cone 3m-wide rows, diagonal Line shortening)
+- **slave-2** (developer): ptu-rule-097 — 4 commits: all tokens passable, enemy-occupied squares as dynamic rough terrain with -2 accuracy penalty, no stacking at movement end
+- **slave-3** (developer): ptu-rule-098 — 9 commits: source-tracked auto-CS on status conditions (Burn=-2 Def, Paralysis=-4 Speed, Poison=-2 SpDef), cure reversal, breather re-application, faint reversal, combat entry auto-apply, Badly Poisoned mapping
+- **slave-4** (developer): refactoring-001+ptu-rule-101 — 10 commits: multi-tag terrain system (TerrainFlags interface, store overhaul, persistence, API, 2D+isometric rendering, TerrainPainter UI, elevation fix), water cost changed to 1
+- **slave-5** (developer): ptu-rule-084+085 — 3 commits: Vulnerable/Frozen/Asleep zero evasion, legendary Pokemon auto-detection for capture rate
+- **slave-6** (reviewers): feature-003 Track A P2 re-review — code-review-182 CHANGES_REQUIRED (C1: `:deep()` in global SCSS), rules-review-159 APPROVED
+
+**Merge conflicts resolved:** 2 — useMoveCalculation.ts import line (slaves 2+5, both added different type imports), statusConditions.ts exports (slaves 5+3, both added different constants at same location). Both resolved by keeping both sides.
+
+**Tickets filed:** 0 (no new tickets — all review issues are fix-cycle items)
+**Tickets implemented:** 9 (ptu-rule-084, 085, 096, 097, 098, 100, 101, 102, refactoring-001) — all need review
+**Reviews completed:** 2 artifacts (code-review-182 CHANGES_REQUIRED, rules-review-159 APPROVED)
+
+**Follow-up needed:**
+- feature-003 Track A P2 fix cycle 3: replace `:deep()` with plain selectors in 3 locations of `_player-character-sheet.scss`
+- 9 newly implemented tickets need code + rules review
+- High-risk domain: VTT grid had 4 slaves modifying overlapping composables — integration testing recommended
 
 ## Session Summary (2026-02-20, session 13)
 

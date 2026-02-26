@@ -139,3 +139,9 @@
 | plan-20260226-175938/slave-3 | matrix | audit-combat+capture | success | 2026-02-26T18:25:00Z | 8d92c39 |
 | plan-20260226-175938/slave-4 | matrix | audit-healing+pokemon+encounter-tables | success | 2026-02-26T18:20:00Z | 9f2337c |
 | plan-20260226-175938/slave-5 | matrix | audit-charlc+scenes+vtt | success | 2026-02-26T18:13:00Z | 2a2704e, 9709e20, 007b0d5 |
+| plan-20260226-154130/slave-1 | developer | ptu-rule-096+100+102 | success | 2026-02-26T16:13:00Z | 1b3b1a3, d68871e, 6d058c4 |
+| plan-20260226-154130/slave-2 | developer | ptu-rule-097 | success | 2026-02-26T16:15:00Z | 81e997f, ffbe9d2, 1a15ae8, 7339bf9 |
+| plan-20260226-154130/slave-3 | developer | ptu-rule-098 | success | 2026-02-26T16:12:00Z | db50fc1, 108f6b2, 617b45d, 7776619, 8cb6524, 1375585, 3effd78, 29f4b3f, 6604aba |
+| plan-20260226-154130/slave-4 | developer | refactoring-001+ptu-rule-101 | success | 2026-02-26T17:28:30Z | 75fb072, 2279851, 0f00d30, b56dba8, 9e3d08a, 1e8837d, 96fad60, 0cb762d, 1aa6cc4, 0ca001a |
+| plan-20260226-154130/slave-5 | developer | ptu-rule-084+085 | success | 2026-02-26T16:11:30Z | 46757fa, 112e5ba, 96a36ae |
+| plan-20260226-154130/slave-6 | reviewers | feature-003-track-a-p2-rereview | CHANGES_REQUIRED | 2026-02-26T15:57:00Z | c3283e3, 067754c |
