@@ -38,11 +38,8 @@
         Connection lost. <button class="player-reconnect-banner__retry" @click="resetAndReconnect">Retry</button>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="loading" class="player-loading">
-        <div class="player-spinner"></div>
-        <p>Loading character data...</p>
-      </div>
+      <!-- Loading State (skeleton screen) -->
+      <PlayerSkeleton v-if="loading" />
 
       <!-- Error State -->
       <div v-else-if="error" class="player-error">
@@ -380,30 +377,6 @@ onUnmounted(() => {
 .player-content {
   flex: 1;
   overflow-y: auto;
-}
-
-.player-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-md;
-  padding: $spacing-xxl $spacing-md;
-  color: $color-text-muted;
-  flex: 1;
-}
-
-.player-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid $glass-border;
-  border-top-color: $color-accent-scarlet;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .player-error {
