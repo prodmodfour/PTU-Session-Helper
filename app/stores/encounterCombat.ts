@@ -13,11 +13,12 @@ export const useEncounterCombatStore = defineStore('encounterCombat', {
 
     /**
      * Add status condition to a combatant
+     * @param override - If true, bypasses type immunity checks (GM override per decree-012)
      */
-    async addStatusCondition(encounterId: string, combatantId: string, condition: StatusCondition) {
+    async addStatusCondition(encounterId: string, combatantId: string, condition: StatusCondition, override: boolean = false) {
       const response = await $fetch<{ data: Encounter }>(`/api/encounters/${encounterId}/status`, {
         method: 'POST',
-        body: { combatantId, add: [condition] }
+        body: { combatantId, add: [condition], override }
       })
       return response.data
     },
@@ -35,16 +36,18 @@ export const useEncounterCombatStore = defineStore('encounterCombat', {
 
     /**
      * Update status conditions (bulk add/remove)
+     * @param override - If true, bypasses type immunity checks (GM override per decree-012)
      */
     async updateStatusConditions(
       encounterId: string,
       combatantId: string,
       add: StatusCondition[] = [],
-      remove: StatusCondition[] = []
+      remove: StatusCondition[] = [],
+      override: boolean = false
     ) {
       const response = await $fetch<{ data: Encounter }>(`/api/encounters/${encounterId}/status`, {
         method: 'POST',
-        body: { combatantId, add, remove }
+        body: { combatantId, add, remove, override }
       })
       return response.data
     },
