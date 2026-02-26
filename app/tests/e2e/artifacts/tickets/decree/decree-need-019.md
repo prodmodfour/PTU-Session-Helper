@@ -2,7 +2,8 @@
 ticket_id: decree-need-019
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-019
 domain: rest
 topic: new-day-extended-rest
 affected_files:

@@ -2,7 +2,8 @@
 ticket_id: decree-need-020
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-020
 domain: rest
 topic: pokemon-center-injury-time
 affected_files:

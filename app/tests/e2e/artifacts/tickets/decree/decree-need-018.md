@@ -2,7 +2,8 @@
 ticket_id: decree-need-018
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-018
 domain: rest
 topic: extended-rest-duration
 affected_files:

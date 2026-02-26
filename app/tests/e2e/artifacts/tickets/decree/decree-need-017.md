@@ -2,7 +2,8 @@
 ticket_id: decree-need-017
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-017
 domain: rest
 topic: pokemon-center-full-health
 affected_files:

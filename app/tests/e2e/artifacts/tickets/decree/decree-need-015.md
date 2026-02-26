@@ -2,7 +2,8 @@
 ticket_id: decree-need-015
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-015
 domain: capture
 topic: capture-hp-percentage-base
 affected_files:

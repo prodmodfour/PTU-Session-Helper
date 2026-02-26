@@ -2,7 +2,8 @@
 ticket_id: decree-need-014
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-014
 domain: capture
 topic: stuck-slow-capture-bonus
 affected_files:

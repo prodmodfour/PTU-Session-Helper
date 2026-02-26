@@ -2,7 +2,8 @@
 ticket_id: decree-need-011
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-011
 domain: vtt
 topic: mixed-terrain-speed-averaging
 affected_files:

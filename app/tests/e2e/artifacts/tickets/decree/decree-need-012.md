@@ -2,7 +2,8 @@
 ticket_id: decree-need-012
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-012
 domain: combat
 topic: type-immunity-enforcement
 affected_files:

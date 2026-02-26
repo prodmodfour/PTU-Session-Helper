@@ -2,7 +2,8 @@
 ticket_id: decree-need-016
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-016
 domain: rest
 topic: extended-rest-bound-ap
 affected_files:

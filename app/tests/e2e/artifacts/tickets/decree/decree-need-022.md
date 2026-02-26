@@ -2,7 +2,8 @@
 id: decree-need-022
 title: Branch class handling — duplicate entries vs specialization suffix
 priority: P3
-status: open
+status: addressed
+decree_id: decree-022
 domain: character-lifecycle
 source: character-lifecycle-audit.md (R035)
 created_by: slave-collector (plan-20260226-175938)

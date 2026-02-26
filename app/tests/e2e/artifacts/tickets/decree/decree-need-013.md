@@ -2,7 +2,8 @@
 ticket_id: decree-need-013
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-013
 domain: capture
 topic: capture-system-version
 affected_files:

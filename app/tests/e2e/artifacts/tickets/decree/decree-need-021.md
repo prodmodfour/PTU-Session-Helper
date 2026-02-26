@@ -2,7 +2,8 @@
 ticket_id: decree-need-021
 ticket_type: decree-need
 priority: P2
-status: open
+status: addressed
+decree_id: decree-021
 domain: combat
 topic: league-battle-trainer-phases
 affected_files:
