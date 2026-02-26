@@ -331,19 +331,7 @@ function onAddFeature(): void {
   }
 }
 
-.counter {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-  padding: 2px $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-  border: 1px solid $border-color-default;
-
-  &--full {
-    color: $color-success;
-    border-color: rgba($color-success, 0.3);
-  }
-}
+// .counter — base styles in _create-form-shared.scss
 
 .class-picker {
   margin-bottom: $spacing-md;
@@ -473,21 +461,9 @@ function onAddFeature(): void {
   }
 }
 
-.selected-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
-  margin-top: $spacing-sm;
-}
+// .selected-tags, .tag base, .tag__remove — in _create-form-shared.scss
 
 .tag {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  font-size: $font-size-sm;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-
   &--class {
     background: rgba($color-accent-violet, 0.15);
     border: 1px solid rgba($color-accent-violet, 0.3);
@@ -499,39 +475,7 @@ function onAddFeature(): void {
     border: 1px solid rgba($color-accent-teal, 0.3);
     color: $color-accent-teal;
   }
-
-  &__remove {
-    background: none;
-    border: none;
-    color: inherit;
-    cursor: pointer;
-    padding: 0;
-    font-size: $font-size-md;
-    line-height: 1;
-    opacity: 0.6;
-    transition: opacity $transition-fast;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
 }
 
-.warning-item {
-  font-size: $font-size-sm;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-
-  &--warning {
-    background: rgba($color-warning, 0.1);
-    border: 1px solid rgba($color-warning, 0.3);
-    color: $color-warning;
-  }
-
-  &--info {
-    background: rgba($color-info, 0.1);
-    border: 1px solid rgba($color-info, 0.3);
-    color: $color-info;
-  }
-}
+// .warning-item — in _create-form-shared.scss
 </style>
