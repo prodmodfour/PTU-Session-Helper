@@ -72,7 +72,7 @@ import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore } from '~/stores/measurement'
 import { useGridMovement } from '~/composables/useGridMovement'
 import { useGridRendering } from '~/composables/useGridRendering'
-import { useGridInteraction } from '~/composables/useGridInteraction'
+import { useGridInteraction, TOUCH_TAP_THRESHOLD } from '~/composables/useGridInteraction'
 
 interface TokenData {
   combatantId: string
@@ -306,8 +306,7 @@ const marqueePixelRect = computed(() => {
 const handleWheel = interaction.handleWheel
 
 // Player mode click-vs-drag detection: track mousedown/touchstart position to
-// distinguish a click/tap (< 5px movement) from a drag/pan gesture.
-const CLICK_THRESHOLD_PX = 5
+// distinguish a click/tap from a drag/pan gesture. Threshold imported from useGridInteraction.
 const playerMouseDownPos = ref<{ x: number; y: number } | null>(null)
 
 const handleMouseMove = (event: MouseEvent): void => {
@@ -319,7 +318,7 @@ const handleMouseUp = (event: MouseEvent): void => {
   if (props.playerMode && event.button === 0 && playerMouseDownPos.value) {
     const dx = Math.abs(event.clientX - playerMouseDownPos.value.x)
     const dy = Math.abs(event.clientY - playerMouseDownPos.value.y)
-    const wasClick = dx < CLICK_THRESHOLD_PX && dy < CLICK_THRESHOLD_PX
+    const wasClick = dx < TOUCH_TAP_THRESHOLD && dy < TOUCH_TAP_THRESHOLD
 
     if (wasClick) {
       const container = containerRef.value

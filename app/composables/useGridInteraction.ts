@@ -38,6 +38,8 @@ interface UseGridInteractionOptions {
 const MIN_ZOOM = 0.25
 const MAX_ZOOM = 3
 const ZOOM_STEP = 0.1
+/** Pixel threshold to distinguish a tap/click from a drag/pan gesture */
+export const TOUCH_TAP_THRESHOLD = 5
 
 export function useGridInteraction(options: UseGridInteractionOptions) {
   const selectionStore = useSelectionStore()
@@ -59,7 +61,6 @@ export function useGridInteraction(options: UseGridInteractionOptions) {
   const isPinching = ref(false)
   const lastPinchDistance = ref(0)
   const lastPinchCenter = ref<{ x: number; y: number } | null>(null)
-  const TOUCH_TAP_THRESHOLD = 5
 
   // Click-to-move state
   const movingTokenId = ref<string | null>(null)
