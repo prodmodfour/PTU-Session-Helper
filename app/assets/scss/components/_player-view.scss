@@ -213,3 +213,45 @@
     }
   }
 }
+
+// ===========================================
+// 4K Scaling
+// ===========================================
+// When the player view is displayed on larger screens (e.g. 4K TV for
+// shared viewing), scale up fonts, spacing, and touch targets.
+@media (min-width: $breakpoint-4k) {
+  .player-stat-cell {
+    padding: $spacing-4k-sm;
+
+    &__label {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__value {
+      font-size: $font-size-4k-md;
+    }
+
+    &__stage {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .player-hp-bar-track {
+    height: $hp-bar-height-4k;
+  }
+
+  .player-hp-bar-label {
+    font-size: $font-size-4k-sm;
+  }
+
+  .player-status-badge {
+    padding: $spacing-xs $spacing-4k-sm;
+    font-size: $font-size-4k-sm;
+  }
+
+  .player-sheet__action-btn {
+    padding: $spacing-4k-sm $spacing-4k-md;
+    font-size: $font-size-4k-sm;
+    min-height: 56px;
+  }
+}

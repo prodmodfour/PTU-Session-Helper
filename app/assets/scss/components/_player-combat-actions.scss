@@ -669,3 +669,66 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
+
+// =============================================
+// 4K Scaling
+// =============================================
+@media (min-width: $breakpoint-4k) {
+  .combat-actions {
+    gap: $spacing-4k-sm;
+
+    &__turn-banner {
+      padding: $spacing-4k-sm $spacing-4k-md;
+    }
+
+    &__turn-label {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__section-title {
+      font-size: $font-size-4k-sm;
+    }
+
+    &__btn {
+      min-height: 56px;
+      min-width: 56px;
+      font-size: $font-size-4k-sm;
+    }
+
+    &__panel-row {
+      min-height: 56px;
+      padding: $spacing-4k-sm;
+      font-size: $font-size-4k-sm;
+    }
+
+    &__toast {
+      font-size: $font-size-4k-sm;
+      padding: $spacing-4k-sm $spacing-4k-md;
+    }
+  }
+
+  .move-btn {
+    min-height: 56px;
+    padding: $spacing-4k-sm;
+
+    &__name {
+      font-size: $font-size-4k-sm;
+    }
+  }
+
+  .action-pip {
+    font-size: $font-size-4k-sm;
+    padding: $spacing-xs $spacing-sm;
+  }
+
+  .target-selector {
+    &__target {
+      min-height: 56px;
+      padding: $spacing-4k-sm;
+    }
+
+    &__target-name {
+      font-size: $font-size-4k-sm;
+    }
+  }
+}

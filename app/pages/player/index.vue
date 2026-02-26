@@ -547,4 +547,36 @@ onUnmounted(() => {
   opacity: 0;
   transform: translateX(30px);
 }
+
+// 4K scaling
+@media (min-width: $breakpoint-4k) {
+  .player-top-bar {
+    height: 72px;
+    padding: 0 $spacing-4k-md;
+
+    &__name {
+      font-size: $font-size-4k-md;
+    }
+
+    &__switch {
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  .player-reconnect-banner {
+    padding: $spacing-4k-sm $spacing-4k-md;
+    font-size: $font-size-4k-sm;
+  }
+
+  .player-toast {
+    padding: $spacing-4k-sm $spacing-4k-md;
+    font-size: $font-size-4k-sm;
+  }
+
+  .player-turn-flash {
+    padding: $spacing-4k-sm $spacing-4k-md;
+    font-size: $font-size-4k-sm;
+  }
+}
 </style>

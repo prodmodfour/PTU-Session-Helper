@@ -106,5 +106,23 @@ const tabs = [
     font-weight: 500;
     white-space: nowrap;
   }
+
+  // 4K scaling
+  @media (min-width: $breakpoint-4k) {
+    height: 80px;
+
+    &__tab {
+      min-height: 64px;
+
+      .player-nav-bar__icon {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    &__label {
+      font-size: $font-size-4k-sm;
+    }
+  }
 }
 </style>

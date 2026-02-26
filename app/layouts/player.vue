@@ -28,7 +28,9 @@
     z-index: 1;
   }
 
-  // Mobile-first: no 4K scaling for player view
-  // (players use phones, not TVs)
+  // 4K scaling when displayed on larger screens
+  @media (min-width: $breakpoint-4k) {
+    font-size: $font-size-4k-md;
+  }
 }
 </style>
