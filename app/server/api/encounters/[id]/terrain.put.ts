@@ -1,11 +1,12 @@
 import { prisma } from '~/server/utils/prisma'
-import type { GridPosition, TerrainType } from '~/types'
+import type { GridPosition, TerrainType, TerrainFlags } from '~/types'
 
 interface TerrainCellData {
   position: GridPosition
   type: TerrainType
   elevation: number
   note?: string
+  flags?: TerrainFlags  // Optional for backward compat with legacy clients
 }
 
 interface TerrainStateBody {
