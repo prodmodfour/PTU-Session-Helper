@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-111
 ticket_type: ptu-rule
 priority: P2
-status: open
+status: in-progress
 domain: combat
 topic: temp-conditions-vulnerable-evasion
 source: rules-review-161 M3
@@ -35,3 +35,13 @@ Both client and server zero-evasion checks should inspect BOTH `entity.statusCon
 
 - Pre-existing architectural pattern gap (tempConditions has always been separate)
 - Not a regression from ptu-rule-084 — the new code follows the existing pattern
+
+## Resolution Log
+
+**Branch:** slave/3-dev-combat-cs-fix-20260226
+
+**Commit:** `316b856` fix: check tempConditions for zero-evasion Vulnerable
+
+**Files changed:**
+- `app/composables/useMoveCalculation.ts` — Extended `computeTargetEvasions` to also check `target.tempConditions` for zero-evasion conditions alongside `entity.statusConditions`
+- `app/server/api/encounters/[id]/calculate-damage.post.ts` — Extended server-side evasion check to also inspect `target.tempConditions`

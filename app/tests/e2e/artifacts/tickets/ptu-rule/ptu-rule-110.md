@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-110
 ticket_type: ptu-rule
 priority: P2
-status: open
+status: in-progress
 domain: combat
 topic: encounter-end-reset-combat-stages
 source: rules-review-161 M2 + code-review-184 H1
@@ -38,3 +38,15 @@ When an encounter ends:
 
 - Pre-existing issue, not a regression. Directly contributes to the double-CS-application bug.
 - Also need to ensure `buildCombatantFromEntity` resets stages before calling `reapplyActiveStatusCsEffects` as a defense-in-depth measure.
+
+## Resolution Log
+
+**Branch:** slave/3-dev-combat-cs-fix-20260226
+
+**Commits:**
+- `a6ba48f` fix: reset combat stages to defaults on encounter end
+- `02a8094` fix: reset stageModifiers to defaults in buildCombatantFromEntity (defense-in-depth)
+
+**Files changed:**
+- `app/server/api/encounters/[id]/end.post.ts` — Resets all combatants' stageModifiers to zero defaults and clears stageSources on encounter end; syncs reset stageModifiers to entity DB records
+- `app/server/services/combatant.service.ts` — buildCombatantFromEntity now starts with default stageModifiers (all zeros) instead of inheriting from entity DB record

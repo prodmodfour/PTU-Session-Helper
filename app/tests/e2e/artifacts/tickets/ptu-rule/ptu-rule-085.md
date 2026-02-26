@@ -47,3 +47,9 @@ All legendary Pokemon capture attempts ignore the -30 penalty, making them signi
   - `app/server/api/capture/rate.post.ts` — auto-detects legendary from species name, accepts `isLegendary` GM override in request body
   - `app/server/api/capture/attempt.post.ts` — auto-detects legendary from species name
 - **Approach:** Used Option 2 (constant lookup) as primary detection, with Option 3 (GM override) as fallback in the rate endpoint. No Prisma migration needed.
+
+### Fix Cycle (branch: slave/3-dev-combat-cs-fix-20260226)
+
+Addresses rules-review-161 M1 (incomplete legendary list, filed as ptu-rule-109).
+
+**Commit:** `bddd907` fix: add missing legendary species Meltan, Melmetal, Zarude, Enamorus

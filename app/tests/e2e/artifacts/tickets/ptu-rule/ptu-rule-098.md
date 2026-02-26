@@ -71,3 +71,17 @@ Status conditions with inherent CS effects (Burn: -2 Def, Paralysis: -4 Speed, P
 - Reversal uses tracked delta, not nominal value, ensuring exactness even near bounds
 - Badly Poisoned treated as poison variant with same -2 SpDef CS per PTU rules
 - WebSocket sync handled by existing `encounter_update` broadcast (full state push)
+
+### Fix Cycle (branch: slave/3-dev-combat-cs-fix-20260226)
+
+Addresses code-review-184 + rules-review-161 CHANGES_REQUIRED.
+
+**Commits:**
+- `7ad0acd` fix: sync stageModifiers to entity DB when combatant faints
+- `0f7ae02` refactor: use ZERO_EVASION_CONDITIONS constant for evasion checks
+- `02a8094` fix: reset stageModifiers to defaults in buildCombatantFromEntity
+
+**Fixes applied:**
+- H1: Faint path now syncs reversed stageModifiers to entity DB via `syncStagesToDatabase()` in both `damage.post.ts` and `move.post.ts`
+- M1: Both `useMoveCalculation.ts` and `calculate-damage.post.ts` now import and use `ZERO_EVASION_CONDITIONS` constant instead of inline string comparisons
+- HIGH-1: `buildCombatantFromEntity` now resets stageModifiers to zero defaults before calling `reapplyActiveStatusCsEffects`, preventing double-application of status CS on combat re-entry

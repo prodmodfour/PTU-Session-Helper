@@ -45,3 +45,15 @@ In `getTargetEvasion`, check the target's active conditions. If Vulnerable, Froz
   - `app/composables/useMoveCalculation.ts` — early return in `computeTargetEvasions` when target has Vulnerable/Frozen/Asleep
   - `app/server/api/encounters/[id]/calculate-damage.post.ts` — same zero-evasion check in server-side damage calculation endpoint
 - **Approach:** Both client-side (composable) and server-side (API endpoint) evasion code paths now check for these conditions and return 0 for all evasion values before any stat-based calculation
+
+### Fix Cycle (branch: slave/3-dev-combat-cs-fix-20260226)
+
+Addresses code-review-184 M1 + rules-review-161 M3.
+
+**Commits:**
+- `0f7ae02` refactor: use ZERO_EVASION_CONDITIONS constant for evasion checks
+- `316b856` fix: check tempConditions for zero-evasion Vulnerable
+
+**Fixes applied:**
+- Replaced inline string comparisons with `ZERO_EVASION_CONDITIONS` constant import
+- Extended evasion checks to also inspect `combatant.tempConditions` for Vulnerable (Take a Breather applies Vulnerable via tempConditions, not statusConditions)
