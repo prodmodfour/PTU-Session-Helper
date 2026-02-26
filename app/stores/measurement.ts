@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { GridPosition, RangeType, ParsedRange } from '~/types'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 export type MeasurementMode = 'none' | 'distance' | 'burst' | 'cone' | 'line' | 'close-blast'
 
@@ -34,16 +35,10 @@ export const useMeasurementStore = defineStore('measurement', {
     // Calculate distance between start and end positions using PTU alternating diagonal rule
     distance: (state): number => {
       if (!state.startPosition || !state.endPosition) return 0
-
-      const dx = Math.abs(state.endPosition.x - state.startPosition.x)
-      const dy = Math.abs(state.endPosition.y - state.startPosition.y)
-
-      // PTU alternating diagonal: 1m, 2m, 1m, 2m...
-      // diagonalCost = diagonals + floor(diagonals / 2)
-      const diagonals = Math.min(dx, dy)
-      const straights = Math.abs(dx - dy)
-      const diagonalCost = diagonals + Math.floor(diagonals / 2)
-      return diagonalCost + straights
+      return ptuDiagonalDistance(
+        state.endPosition.x - state.startPosition.x,
+        state.endPosition.y - state.startPosition.y
+      )
     },
 
     // Get affected cells based on current measurement mode

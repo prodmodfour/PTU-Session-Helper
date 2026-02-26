@@ -3,6 +3,7 @@
  * Extracted from GridCanvas.vue for reuse and maintainability
  */
 import type { GridConfig, GridPosition, TerrainType, MovementPreview } from '~/types'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 import { TERRAIN_COLORS } from '~/stores/terrain'
 
 // Constants
@@ -312,13 +313,7 @@ export function useCanvasRendering() {
    * Diagonals alternate: 1m, 2m, 1m, 2m...
    */
   const calculateMoveDistance = (from: GridPosition, to: GridPosition): number => {
-    const dx = Math.abs(to.x - from.x)
-    const dy = Math.abs(to.y - from.y)
-    const diagonals = Math.min(dx, dy)
-    const straights = Math.abs(dx - dy)
-    // Diagonal cost: 1 + 2 + 1 + 2... = diagonals + floor(diagonals / 2)
-    const diagonalCost = diagonals + Math.floor(diagonals / 2)
-    return diagonalCost + straights
+    return ptuDiagonalDistance(to.x - from.x, to.y - from.y)
   }
 
   return {

@@ -1,5 +1,6 @@
 import type { GridPosition } from '~/types'
 import type { TerrainCostGetter } from '~/composables/useRangeParser'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 // Elevation cost function type for 3D pathfinding
 // Returns the movement cost for transitioning between two elevation levels.
@@ -156,13 +157,7 @@ export function usePathfinding() {
    * Diagonals alternate: 1m, 2m, 1m, 2m...
    */
   function calculateMoveCost(from: GridPosition, to: GridPosition): number {
-    const dx = Math.abs(to.x - from.x)
-    const dy = Math.abs(to.y - from.y)
-    const diagonals = Math.min(dx, dy)
-    const straights = Math.abs(dx - dy)
-    // Diagonal cost: 1 + 2 + 1 + 2... = diagonals + floor(diagonals / 2)
-    const diagonalCost = diagonals + Math.floor(diagonals / 2)
-    return diagonalCost + straights
+    return ptuDiagonalDistance(to.x - from.x, to.y - from.y)
   }
 
   /**
@@ -257,11 +252,7 @@ export function usePathfinding() {
     // Uses getElevationCost when provided so flying Pokemon (who return 0 for
     // elevation transitions within Sky speed) get a correct lower bound.
     const heuristic = (x: number, y: number, z: number) => {
-      const dx = Math.abs(to.x - x)
-      const dy = Math.abs(to.y - y)
-      const diagonals = Math.min(dx, dy)
-      const straights = Math.abs(dx - dy)
-      const xyCost = diagonals + Math.floor(diagonals / 2) + straights
+      const xyCost = ptuDiagonalDistance(to.x - x, to.y - y)
       const elevCost = getElevationCost ? getElevationCost(z, toElev) : 0
       return xyCost + elevCost
     }

@@ -53,6 +53,7 @@
 import { PhSquaresFour } from '@phosphor-icons/vue'
 import type { GridPosition, GridConfig, WebSocketEvent } from '~/types'
 import GridCanvas from '~/components/vtt/GridCanvas.vue'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 const props = defineProps<{
   characterId: string
@@ -122,12 +123,10 @@ const handleCellClick = (position: GridPosition): void => {
   const combatant = combatants.value.find(c => c.id === selectedId)
   if (!combatant?.position) return
 
-  const dx = Math.abs(position.x - combatant.position.x)
-  const dy = Math.abs(position.y - combatant.position.y)
-  // PTU alternating diagonal: 1m, 2m, 1m, 2m...
-  const diagonals = Math.min(dx, dy)
-  const straights = Math.abs(dx - dy)
-  const distance = diagonals + Math.floor(diagonals / 2) + straights
+  const distance = ptuDiagonalDistance(
+    position.x - combatant.position.x,
+    position.y - combatant.position.y
+  )
 
   setMoveTarget(position, distance)
 }

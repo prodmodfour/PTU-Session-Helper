@@ -177,6 +177,7 @@ import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore, type MeasurementMode } from '~/stores/measurement'
 import { useFogOfWarStore, type FogOfWarState } from '~/stores/fogOfWar'
 import { useTerrainStore } from '~/stores/terrain'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 const { getCombatantName } = useCombatantDisplay()
 
@@ -309,10 +310,7 @@ const isometric3dDistance = computed(() => {
   const dz = Math.abs(endZ - startZ)
 
   // 3D Euclidean distance for elevation-aware measurement
-  // PTU alternating diagonal: 1m, 2m, 1m, 2m...
-  const diagonals = Math.min(dx, dy)
-  const straights = Math.abs(dx - dy)
-  const flatDist = diagonals + Math.floor(diagonals / 2) + straights
+  const flatDist = ptuDiagonalDistance(dx, dy)
   return Math.round(Math.sqrt(flatDist * flatDist + dz * dz) * 10) / 10
 })
 
