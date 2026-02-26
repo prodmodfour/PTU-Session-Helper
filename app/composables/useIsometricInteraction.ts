@@ -1,6 +1,6 @@
 import type { GridConfig, GridPosition, CameraAngle, MovementPreview } from '~/types'
 import { useIsometricProjection } from '~/composables/useIsometricProjection'
-import { TOUCH_TAP_THRESHOLD } from '~/composables/useGridInteraction'
+import { useTouchInteraction } from '~/composables/useTouchInteraction'
 import { useSelectionStore } from '~/stores/selection'
 import { useMeasurementStore } from '~/stores/measurement'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
@@ -90,14 +90,6 @@ export function useIsometricInteraction(options: UseIsometricInteractionOptions)
   // Terrain painting state
   const isTerrainPainting = ref(false)
   const lastTerrainCell = ref<GridPosition | null>(null)
-
-  // Touch state
-  const isTouchPanning = ref(false)
-  const touchStartPos = ref<{ x: number; y: number } | null>(null)
-  const lastTouchPos = ref<{ x: number; y: number } | null>(null)
-  const isPinching = ref(false)
-  const lastPinchDistance = ref(0)
-  const lastPinchCenter = ref<{ x: number; y: number } | null>(null)
 
   // Moving token data for preview
   const movingToken = computed(() => {
@@ -642,163 +634,32 @@ export function useIsometricInteraction(options: UseIsometricInteractionOptions)
     }
   }
 
-  // --- Touch Event Handlers ---
+  // --- Touch interaction (delegated to shared composable) ---
 
-  /**
-   * Calculate distance between two touch points.
-   */
-  const getTouchDistance = (touch1: Touch, touch2: Touch): number => {
-    const dx = touch1.clientX - touch2.clientX
-    const dy = touch1.clientY - touch2.clientY
-    return Math.sqrt(dx * dx + dy * dy)
-  }
+  const touch = useTouchInteraction({
+    containerRef: options.containerRef,
+    zoom: options.zoom,
+    panOffset: options.panOffset,
+    minZoom: MIN_ZOOM,
+    maxZoom: MAX_ZOOM,
+    render: options.render,
+    onTap: (screenX: number, screenY: number) => {
+      const gridPos = screenToGrid(screenX, screenY)
+      // Use screen-based hit-test for isometric accuracy
+      const clickedToken = getTokenAtScreenPosition(screenX, screenY)
 
-  /**
-   * Calculate center point between two touches.
-   */
-  const getTouchCenter = (touch1: Touch, touch2: Touch): { x: number; y: number } => {
-    return {
-      x: (touch1.clientX + touch2.clientX) / 2,
-      y: (touch1.clientY + touch2.clientY) / 2,
-    }
-  }
+      // Allow caller to override tap handling (e.g. player mode)
+      const handled = options.onTouchTap?.(gridPos, clickedToken) ?? false
 
-  /**
-   * Handle touch start — single finger starts pan, two fingers start pinch-to-zoom.
-   */
-  const handleTouchStart = (event: TouchEvent) => {
-    event.preventDefault()
-
-    if (event.touches.length === 1) {
-      // Single finger: start potential pan or tap
-      const touch = event.touches[0]
-      touchStartPos.value = { x: touch.clientX, y: touch.clientY }
-      lastTouchPos.value = { x: touch.clientX, y: touch.clientY }
-      isTouchPanning.value = false
-      isPinching.value = false
-    } else if (event.touches.length === 2) {
-      // Two fingers: start pinch-to-zoom
-      isTouchPanning.value = false
-      isPinching.value = true
-      lastPinchDistance.value = getTouchDistance(event.touches[0], event.touches[1])
-      lastPinchCenter.value = getTouchCenter(event.touches[0], event.touches[1])
-    }
-  }
-
-  /**
-   * Handle touch move — pan with single finger, zoom with two fingers.
-   */
-  const handleTouchMove = (event: TouchEvent) => {
-    event.preventDefault()
-
-    if (event.touches.length === 1 && !isPinching.value) {
-      const touch = event.touches[0]
-
-      // Check if movement exceeds tap threshold to start panning
-      if (!isTouchPanning.value && touchStartPos.value) {
-        const dx = Math.abs(touch.clientX - touchStartPos.value.x)
-        const dy = Math.abs(touch.clientY - touchStartPos.value.y)
-        if (dx > TOUCH_TAP_THRESHOLD || dy > TOUCH_TAP_THRESHOLD) {
-          isTouchPanning.value = true
+      if (!handled) {
+        if (clickedToken) {
+          handleTokenSelect(clickedToken.combatantId)
+        } else if (isInBounds(gridPos)) {
+          options.onCellClick(gridPos)
         }
       }
-
-      // Apply pan delta
-      if (isTouchPanning.value && lastTouchPos.value) {
-        const deltaX = touch.clientX - lastTouchPos.value.x
-        const deltaY = touch.clientY - lastTouchPos.value.y
-        options.panOffset.value = {
-          x: options.panOffset.value.x + deltaX,
-          y: options.panOffset.value.y + deltaY,
-        }
-        options.render()
-      }
-
-      lastTouchPos.value = { x: touch.clientX, y: touch.clientY }
-    } else if (event.touches.length === 2 && isPinching.value) {
-      // Pinch-to-zoom
-      const newDistance = getTouchDistance(event.touches[0], event.touches[1])
-      const newCenter = getTouchCenter(event.touches[0], event.touches[1])
-
-      if (lastPinchDistance.value > 0 && lastPinchCenter.value) {
-        const scale = newDistance / lastPinchDistance.value
-        const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, options.zoom.value * scale))
-
-        if (newZoom !== options.zoom.value) {
-          // Zoom toward pinch center
-          const container = options.containerRef.value
-          if (container) {
-            const rect = container.getBoundingClientRect()
-            const centerX = lastPinchCenter.value.x - rect.left
-            const centerY = lastPinchCenter.value.y - rect.top
-
-            const zoomRatio = newZoom / options.zoom.value
-            options.panOffset.value = {
-              x: centerX - (centerX - options.panOffset.value.x) * zoomRatio,
-              y: centerY - (centerY - options.panOffset.value.y) * zoomRatio,
-            }
-          }
-
-          options.zoom.value = newZoom
-          options.render()
-        }
-      }
-
-      lastPinchDistance.value = newDistance
-      lastPinchCenter.value = newCenter
-    }
-  }
-
-  /**
-   * Handle touch end — detect taps (short touch without movement).
-   */
-  const handleTouchEnd = (event: TouchEvent) => {
-    event.preventDefault()
-
-    // If pinching and one finger lifts, reset to single-finger state
-    if (isPinching.value) {
-      isPinching.value = false
-      lastPinchDistance.value = 0
-      lastPinchCenter.value = null
-
-      if (event.touches.length === 1) {
-        // One finger still down: continue as pan
-        const touch = event.touches[0]
-        lastTouchPos.value = { x: touch.clientX, y: touch.clientY }
-        touchStartPos.value = { x: touch.clientX, y: touch.clientY }
-        isTouchPanning.value = false
-      }
-      return
-    }
-
-    // All fingers lifted — check if this was a tap
-    if (event.touches.length === 0 && !isTouchPanning.value && touchStartPos.value) {
-      // This was a tap (no significant movement)
-      const changedTouch = event.changedTouches[0]
-      if (changedTouch) {
-        const gridPos = screenToGrid(changedTouch.clientX, changedTouch.clientY)
-        // Use screen-based hit-test for isometric accuracy
-        const clickedToken = getTokenAtScreenPosition(changedTouch.clientX, changedTouch.clientY)
-
-        // Allow caller to override tap handling (e.g. player mode)
-        const handled = options.onTouchTap?.(gridPos, clickedToken) ?? false
-
-        if (!handled) {
-          if (clickedToken) {
-            // Handle token tap (synthesized click is suppressed by preventDefault)
-            handleTokenSelect(clickedToken.combatantId)
-          } else if (isInBounds(gridPos)) {
-            options.onCellClick(gridPos)
-          }
-        }
-      }
-    }
-
-    // Reset touch state
-    isTouchPanning.value = false
-    touchStartPos.value = null
-    lastTouchPos.value = null
-  }
+    },
+  })
 
   return {
     // State
@@ -817,9 +678,9 @@ export function useIsometricInteraction(options: UseIsometricInteractionOptions)
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
+    handleTouchStart: touch.handleTouchStart,
+    handleTouchMove: touch.handleTouchMove,
+    handleTouchEnd: touch.handleTouchEnd,
     handleTokenSelect,
     handleKeyDown,
     // Constants
