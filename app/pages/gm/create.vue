@@ -188,7 +188,7 @@
             :features="creation.form.features"
             :training-feature="creation.form.trainingFeature"
             :max-classes="creation.MAX_TRAINER_CLASSES"
-            :max-features="creation.MAX_FEATURES"
+            :expected-features="creation.expectedFeatures.value"
             :warnings="creation.classFeatureEdgeWarnings.value"
             @add-class="creation.addClass"
             @remove-class="creation.removeClass"

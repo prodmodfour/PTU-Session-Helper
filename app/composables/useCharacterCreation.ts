@@ -27,8 +27,6 @@ import { MAX_TRAINER_CLASSES } from '~/constants/trainerClasses'
 import { validateStatAllocation, validateSkillBackground, validateEdgesAndFeatures } from '~/utils/characterCreationValidation'
 import type { CreationWarning } from '~/utils/characterCreationValidation'
 
-/** Maximum features at level 1: 4 class features + 1 Training Feature */
-const MAX_FEATURES = 4
 /** Starting edges at level 1 */
 const STARTING_EDGES = 4
 /** Default starting money for level 1 trainers (PTU Core p. 17) */
@@ -199,7 +197,6 @@ export function useCharacterCreation() {
   )
 
   function addFeature(featureName: string): void {
-    if (form.features.length >= MAX_FEATURES) return
     form.features = [...form.features, featureName]
   }
 
@@ -267,6 +264,11 @@ export function useCharacterCreation() {
     form.edges = [...form.edges, `Skill Edge: ${skill}`]
     return null
   }
+
+  /** Expected non-training features for the current level (total features minus the training slot) */
+  const expectedFeatures = computed(() =>
+    getExpectedFeaturesForLevel(form.level) - 1
+  )
 
   // --- Validation (soft warnings) ---
   const statWarnings = computed((): CreationWarning[] =>
@@ -400,12 +402,13 @@ export function useCharacterCreation() {
     allWarnings,
     // API
     buildCreatePayload,
+    // Computed expectations
+    expectedFeatures,
     // Constants (exposed for components)
     BASE_HP,
     BASE_OTHER,
     TOTAL_STAT_POINTS,
     MAX_POINTS_PER_STAT,
-    MAX_FEATURES,
     STARTING_EDGES,
     MAX_TRAINER_CLASSES,
     DEFAULT_STARTING_MONEY

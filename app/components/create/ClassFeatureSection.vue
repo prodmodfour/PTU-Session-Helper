@@ -96,9 +96,9 @@
         <h4>Features</h4>
         <span
           class="counter"
-          :class="{ 'counter--full': features.length >= maxFeatures }"
+          :class="{ 'counter--full': features.length >= expectedFeatures }"
         >
-          {{ features.length }} / {{ maxFeatures }} (+1 Training)
+          {{ features.length }} / {{ expectedFeatures }} (+1 Training)
         </span>
       </div>
 
@@ -108,12 +108,11 @@
           type="text"
           class="form-input"
           placeholder="Enter feature name..."
-          :disabled="features.length >= maxFeatures"
           @keydown.enter.prevent="onAddFeature"
         />
         <button
           class="btn btn--primary btn--sm"
-          :disabled="!newFeature.trim() || features.length >= maxFeatures"
+          :disabled="!newFeature.trim()"
           @click="onAddFeature"
         >
           Add
@@ -170,7 +169,7 @@ interface Props {
   features: string[]
   trainingFeature: string
   maxClasses: number
-  maxFeatures: number
+  expectedFeatures: number
   warnings: CreationWarning[]
 }
 
@@ -261,7 +260,7 @@ function getBranchingPlaceholder(className: string): string {
 }
 
 function onAddFeature(): void {
-  if (!newFeature.value.trim() || props.features.length >= props.maxFeatures) return
+  if (!newFeature.value.trim()) return
   emit('addFeature', newFeature.value.trim())
   newFeature.value = ''
 }
