@@ -1,11 +1,13 @@
 import { useTerrainStore } from '~/stores/terrain'
-import type { GridPosition, TerrainType } from '~/types'
+import type { GridPosition, TerrainType, TerrainFlags } from '~/types'
 
+// Serialized cell format — supports both legacy (no flags) and new (with flags)
 interface TerrainCellData {
   position: GridPosition
   type: TerrainType
   elevation: number
   note?: string
+  flags?: TerrainFlags  // Optional for backward compat — migrated on import
 }
 
 interface TerrainApiResponse {
@@ -38,7 +40,7 @@ export function useTerrainPersistence() {
       })
 
       if (response.success && response.data) {
-        // Import state into store
+        // Import state into store — migration handles legacy cells without flags
         terrainStore.setEnabled(response.data.enabled)
         terrainStore.importState({
           cells: response.data.cells || []
