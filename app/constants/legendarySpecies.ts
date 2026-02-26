@@ -104,16 +104,22 @@ export const LEGENDARY_SPECIES: ReadonlySet<string> = new Set([
   'Zeraora',
 
   // Gen 8
+  'Meltan',
+  'Melmetal',
   'Zacian',
   'Zamazenta',
   'Eternatus',
   'Kubfu',
   'Urshifu',
+  'Zarude',
   'Regieleki',
   'Regidrago',
   'Glastrier',
   'Spectrier',
   'Calyrex',
+
+  // Hisui
+  'Enamorus',
 ])
 
 /**
