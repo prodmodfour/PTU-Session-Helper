@@ -699,6 +699,7 @@ export function useGridInteraction(options: UseGridInteractionOptions) {
 
         if (!handled) {
           if (clickedToken) {
+            // Handle token tap (synthesized click is suppressed by preventDefault)
             handleTokenSelect(clickedToken.combatantId)
           } else if (gridPos.x >= 0 && gridPos.x < options.config.value.width &&
                      gridPos.y >= 0 && gridPos.y < options.config.value.height) {

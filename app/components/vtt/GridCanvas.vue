@@ -209,7 +209,8 @@ const interaction = useGridInteraction({
       if (isOwnTokenCheck(token.combatantId)) {
         emit('playerTokenSelect', token.combatantId)
       }
-    } else {
+    } else if (gridPos.x >= 0 && gridPos.x < props.config.width &&
+               gridPos.y >= 0 && gridPos.y < props.config.height) {
       emit('playerCellClick', gridPos)
     }
     return true
