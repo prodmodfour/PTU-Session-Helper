@@ -5,13 +5,13 @@
  */
 
 import { prisma } from '~/server/utils/prisma'
-import { ALL_STATUS_CONDITIONS, PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } from '~/constants/statusConditions'
+import { ALL_STATUS_CONDITIONS, PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS, getStatusCsEffect } from '~/constants/statusConditions'
 import { getEffectiveMaxHp } from '~/utils/restHealing'
 import { v4 as uuidv4 } from 'uuid'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { applyStageModifier, calculateEvasion } from '~/utils/damageCalculation'
 import type {
-  StatusCondition, StageModifiers, Combatant,
+  StatusCondition, StageModifiers, StageSource, Combatant,
   Pokemon, HumanCharacter, CombatSide, GridPosition
 } from '~/types'
 
@@ -251,13 +251,14 @@ export interface StatusChangeResult {
 }
 
 /**
- * Update status conditions on a combatant's entity
+ * Update status conditions on a combatant's entity.
+ * Per decree-005: auto-applies/reverses CS effects for Burn, Paralysis, Poison.
  */
 export function updateStatusConditions(
   combatant: Combatant,
   addStatuses: StatusCondition[],
   removeStatuses: StatusCondition[]
-): StatusChangeResult {
+): StatusChangeResult & { stageChanges?: StageChangeResult } {
   const entity = combatant.entity
   let currentStatuses: StatusCondition[] = entity.statusConditions || []
 
@@ -276,10 +277,34 @@ export function updateStatusConditions(
 
   entity.statusConditions = currentStatuses
 
+  // Auto-apply/reverse CS effects from status conditions (decree-005)
+  let stageChanges: StageChangeResult | undefined
+  const hasSourcedChanges = actuallyAdded.some(s => getStatusCsEffect(s)) ||
+                            actuallyRemoved.some(s => getStatusCsEffect(s))
+
+  if (hasSourcedChanges) {
+    // Reverse CS effects for removed conditions
+    for (const status of actuallyRemoved) {
+      reverseStatusCsEffects(combatant, status)
+    }
+
+    // Apply CS effects for added conditions
+    for (const status of actuallyAdded) {
+      applyStatusCsEffects(combatant, status)
+    }
+
+    // Return the current stage state after all changes
+    stageChanges = {
+      changes: {},
+      currentStages: { ...(entity.stageModifiers || createDefaultStageModifiers()) }
+    }
+  }
+
   return {
     added: actuallyAdded,
     removed: actuallyRemoved,
-    current: currentStatuses
+    current: currentStatuses,
+    stageChanges
   }
 }
 
@@ -295,6 +320,96 @@ export function validateStatusConditions(statuses: StatusCondition[]): void {
         message: `Invalid status condition: ${status}`
       })
     }
+  }
+}
+
+// ============================================
+// STATUS CONDITION → COMBAT STAGE AUTO-APPLICATION (decree-005)
+// ============================================
+
+/**
+ * Apply the inherent CS effect for a status condition (e.g., Burn → -2 Def).
+ * Records the change in combatant.stageSources for clean reversal on cure.
+ * Respects -6/+6 stage bounds.
+ */
+export function applyStatusCsEffects(combatant: Combatant, condition: StatusCondition): void {
+  const csEffect = getStatusCsEffect(condition)
+  if (!csEffect) return
+
+  const entity = combatant.entity
+  if (!entity.stageModifiers) {
+    entity.stageModifiers = createDefaultStageModifiers()
+  }
+
+  // Initialize stageSources if needed
+  if (!combatant.stageSources) {
+    combatant.stageSources = []
+  }
+
+  const { stat, value } = csEffect
+  const currentValue = entity.stageModifiers[stat] || 0
+  const newValue = Math.max(-6, Math.min(6, currentValue + value))
+  const actualDelta = newValue - currentValue
+
+  entity.stageModifiers = {
+    ...entity.stageModifiers,
+    [stat]: newValue
+  }
+
+  // Record the source entry with the actual delta applied (may differ from
+  // the nominal value if the stage was already near a bound)
+  combatant.stageSources = [
+    ...combatant.stageSources,
+    { stat, value: actualDelta, source: condition }
+  ]
+}
+
+/**
+ * Reverse the CS effect for a cured status condition.
+ * Only reverses the delta that was actually applied (tracked in stageSources).
+ * Removes matching stageSources entries.
+ */
+export function reverseStatusCsEffects(combatant: Combatant, condition: StatusCondition): void {
+  if (!combatant.stageSources || combatant.stageSources.length === 0) return
+
+  const entity = combatant.entity
+  if (!entity.stageModifiers) return
+
+  // Find all source entries for this condition
+  const matchingEntries = combatant.stageSources.filter(s => s.source === condition)
+  if (matchingEntries.length === 0) return
+
+  // Reverse each entry's delta
+  let updatedModifiers = { ...entity.stageModifiers }
+  for (const entry of matchingEntries) {
+    const currentValue = updatedModifiers[entry.stat] || 0
+    const newValue = Math.max(-6, Math.min(6, currentValue - entry.value))
+    updatedModifiers = { ...updatedModifiers, [entry.stat]: newValue }
+  }
+
+  entity.stageModifiers = updatedModifiers
+
+  // Remove matching source entries
+  combatant.stageSources = combatant.stageSources.filter(s => s.source !== condition)
+}
+
+/**
+ * Re-apply CS effects from all active status conditions.
+ * Used after Take a Breather resets stages to 0 — the persistent conditions
+ * (Burn, Paralysis, Poison) survive the breather and their CS effects must persist.
+ *
+ * Clears all existing stageSources and re-applies fresh entries.
+ */
+export function reapplyActiveStatusCsEffects(combatant: Combatant): void {
+  const entity = combatant.entity
+  const activeStatuses: StatusCondition[] = entity.statusConditions || []
+
+  // Clear existing source tracking (stages were just reset)
+  combatant.stageSources = []
+
+  // Re-apply CS effects for each active condition that has one
+  for (const condition of activeStatuses) {
+    applyStatusCsEffects(combatant, condition)
   }
 }
 
