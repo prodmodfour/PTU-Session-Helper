@@ -134,3 +134,8 @@
 | plan-20260226-115023/slave-3 | matrix | coverage-analyzer-groupB | success | 2026-02-26T12:11:00Z | 612e9c30, 82a8b123, d80607c1, b5f8df1a |
 | plan-20260226-115023/slave-4 | developer | refactoring-062 | success | 2026-02-26T12:04:00Z | 1f42648, 7dfa954 |
 | plan-20260226-115023/slave-5 | developer | player-view-p4-cluster | success | 2026-02-26T12:08:30Z | 356402d, 6b8073f, 4eb4654 |
+| plan-20260226-175938/slave-1 | developer | feature-003-fix2+ux-002 | success | 2026-02-26T18:07:00Z | 6d80b1a, 969ab55, 891a4fe, 4ea8ec7 |
+| plan-20260226-175938/slave-2 | developer | p4-cluster-ux008+refactoring060+078 | success | 2026-02-26T18:50:00Z | e965991, f24cc9d, 5258f2f, 60da3c4 |
+| plan-20260226-175938/slave-3 | matrix | audit-combat+capture | success | 2026-02-26T18:25:00Z | 8d92c39 |
+| plan-20260226-175938/slave-4 | matrix | audit-healing+pokemon+encounter-tables | success | 2026-02-26T18:20:00Z | 9f2337c |
+| plan-20260226-175938/slave-5 | matrix | audit-charlc+scenes+vtt | success | 2026-02-26T18:13:00Z | 2a2704e, 9709e20, 007b0d5 |

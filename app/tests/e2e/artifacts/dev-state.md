@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T18:00:00
-updated_by: slave-collector (plan-20260226-115023)
+last_updated: 2026-02-26T19:30:00
+updated_by: slave-collector (plan-20260226-175938)
 ---
 
 # Dev Ecosystem State
@@ -13,6 +13,7 @@ updated_by: slave-collector (plan-20260226-115023)
 | bug-001–029 | P0–P3 | — | resolved | (all resolved — see sessions 1–9) |
 | bug-030 | P2 | **resolved** | Player grid touch event support — fix cycle complete (4 commits: touch handlers added to useIsometricInteraction, threshold deduped). code-review-166 CHANGES_REQUIRED → fixed. code-review-170 CHANGES_REQUIRED (H1: file size) → resolved by refactoring-082 (touch extraction). rules-review-153 APPROVED |
 | bug-031 | P3 | **resolved** | Explored fog cells show tokens — 1-line fix in usePlayerGridView.ts. code-review-168 APPROVED, rules-review-155 APPROVED |
+| bug-032 | P4 | **open** | No levelMin <= levelMax validation in encounter table APIs (from encounter-tables-audit R008-OBS) |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
@@ -30,29 +31,49 @@ updated_by: slave-collector (plan-20260226-115023)
 | ptu-rule-081 | P4 | **resolved** | Multiple Focus items — single Focus limit enforced in equipmentBonuses.ts. code-review-169 APPROVED (M1 non-blocking → ux-008), rules-review-156 APPROVED |
 | ptu-rule-082 | P4 | **resolved** | Pokemon maxHp not auto-updated on level-up (from rules-review-118). Fix applied + APPROVED (code-review-161, rules-review-151). M2 → ux-005 |
 | ptu-rule-083 | P4 | **resolved** | Measurement store uses Chebyshev distance instead of PTU alternating diagonal (from rules-review-144 RULING-1). Fix applied + APPROVED (code-review-161, rules-review-151). M1 → refactoring-080 |
+| ptu-rule-084 | P2 | **open** | Vulnerable condition does not zero evasion in getTargetEvasion (from combat-audit R108) |
+| ptu-rule-085 | P2 | **open** | Legendary Pokemon detection hard-coded to false in capture API endpoints (from capture-audit R016) |
+| ptu-rule-086 | P3 | **open** | Capture modifier sign convention inverted from PTU (from capture-audit R005) |
+| ptu-rule-087 | P3 | **open** | Generated Pokemon start with 0 tutor points instead of level-based calculation (from pokemon-lifecycle-audit R022) |
+| ptu-rule-088 | P3 | **open** | Significance tier presets misaligned with PTU values (from encounter-tables-audit R008) |
+| ptu-rule-089 | P3 | **open** | Extended rest does not refresh daily moves (from healing-audit R034) |
+| ptu-rule-090 | P3 | **open** | Scene-end AP restoration not automated (from healing-audit R042) |
+| ptu-rule-091 | P3 | **open** | Branch class blocked by duplicate check — isBranching flag is dead code (from character-lifecycle-audit R035). Blocked by decree-need-022 |
+| ptu-rule-092 | P3 | **open** | Pathetic skill enforcement gap in custom background mode (from character-lifecycle-audit R024) |
+| ptu-rule-093 | P3 | **open** | Rough terrain accuracy penalty not implemented (from vtt-grid-audit R015 + scenes-audit R018) |
+| ptu-rule-094 | P4 | **open** | Natural healing min(1) HP contradicts PTU for low-HP entities (from healing-audit R007) |
+| ptu-rule-095 | P4 | **open** | Disengage maneuver missing from combatManeuvers — defer until AoO implemented (from vtt-grid-audit R030) |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
-| feature-003 | P1 | **Track-A-P2-CHANGES_REQUIRED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 re-review done: code-review-181 CHANGES_REQUIRED (M1: CharacterSheet 820 lines > 800 limit, M2: .list-subheader missing 4K override). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
+| feature-003 | P1 | **Track-A-P2-fix2-complete + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 fix cycle 2 complete: SCSS extracted to _player-character-sheet.scss, .list-subheader 4K override added (code-review-181 M1+M2 resolved). Needs re-review. Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | ux-001 | P4 | **resolved** | Equipment catalog browser closes on equip — fixed: modal stays open with success toast. Resolved by slave-3 (plan-20260226-073726) |
-| ux-002 | P4 | **open** | Trainer HP stat display shows raw stat without formula context in player view (from rules-review-129 M1) |
+| ux-002 | P4 | **resolved** | Trainer HP stat display — labeled as 'HP Base' with formula tooltip (Level x2 + HP Base x3 + 10). Resolved by slave-1 (plan-20260226-175938) |
 | ux-003 | P3 | **resolved** | QR code rendering — fix cycle complete (3 commits: dead bestMatrix removed, app-surface.md updated). code-review-165 CHANGES_REQUIRED → fixed. code-review-171 **APPROVED** |
 | ux-004 | P3 | **resolved** | Enemy HP masking — fix cycle complete (3 commits: roundToDisplayTier extracted to utils/displayHp.ts, dead getDisplayHp removed, commit hashes fixed). code-review-167 CHANGES_REQUIRED → fixed. code-review-172 **APPROVED**. rules-review-154 APPROVED |
 | ux-005 | P4 | **resolved** | Pokemon full HP on level-up — currentHp preserved when at full HP. code-review-169 APPROVED, rules-review-156 APPROVED |
 | ux-006 | P4 | **open** | PTU injury markers may leak precise HP info in player mode (from rules-review-154 R2) |
 | ux-007 | P4 | **resolved** | Player's own tokens hidden in explored fog cells — fixed: isOwnCombatant exception in usePlayerGridView.ts. Resolved by slave-2 (plan-20260226-120000). code-review-180 APPROVED, rules-review-158 APPROVED |
-| ux-008 | P4 | **open** | Focus item selection non-deterministic across different equipment slots (from code-review-169 M1) |
+| ux-008 | P4 | **resolved** | Focus item selection — deterministic slot priority order added to equipmentBonuses.ts. Resolved by slave-2 (plan-20260226-175938) |
 
 ## Active Developer Work
 
-**Current task:** Session 40 collection complete. All 5 slaves merged (14 commits). feature-003 Track A P2 re-review: code-review-181 CHANGES_REQUIRED (M1: CharacterSheet 820 lines, M2: .list-subheader missing 4K). refactoring-062 resolved (30 combatant builder tests). refactoring-076/079/084 resolved (P4 player-view cluster). All 8 matrix domains re-analyzed with fresh capabilities.
+**Current task:** Session 41 collection complete. All 5 slaves merged (13 commits). Slave-1 (developer): feature-003 Track A P2 fix cycle 2 complete + ux-002 resolved. Slave-2 (developer): ux-008, refactoring-060, refactoring-078 resolved. Slaves 3-5 (matrix): all 8 domain audits refreshed. 15 follow-up tickets filed from audit findings (12 ptu-rule, 1 bug, 1 refactoring, 1 decree-need).
+
+**Session 41 (2026-02-26, plan-20260226-175938):**
+- slave-1 (developer): feature-003 Track A P2 fix2 + ux-002 — 4 commits: extracted PlayerCharacterSheet SCSS to _player-character-sheet.scss (M1), added .list-subheader 4K override (M2), labeled HP stat as 'HP Base' with formula tooltip (ux-002) → **feature-003 needs re-review, ux-002 resolved**
+- slave-2 (developer): P4 cluster — 4 commits: deterministic Focus item slot priority (ux-008), count clamping tests (refactoring-060), elevation params for validateMovement (refactoring-078) → **all 3 resolved**
+- slave-3 (matrix): combat + capture audit — 1 commit: 53 combat items + 21 capture items audited. combat: 44 correct, 1 incorrect (R108 Vulnerable evasion), 6 approximation, 1 ambiguous (R025 = decree-need-001). capture: 17 correct, 2 incorrect (R005 sign convention, R016 legendary), 1 ambiguous (XREF-005 = decree-need-013)
+- slave-4 (matrix): healing + pokemon-lifecycle + encounter-tables audit — 1 commit: 31+29+14 items audited. healing: 26 correct, 1 incorrect (R007 min heal), 3 approx, 1 ambiguous (R006 fainted). pokemon: 25 correct, 1 incorrect (R022 tutor points), 3 approx. tables: 12 correct, 1 incorrect (R008 significance), 1 approx
+- slave-5 (matrix): character-lifecycle + scenes + vtt-grid audit — 3 commits: 42+20+24 items audited. char: 33 correct, 1 incorrect (R035 branch class), 7 approx, 1 ambiguous (R035 = new decree-need-022). scenes: 17 correct, 2 approx, 1 ambiguous (R018 = decree-need-010). vtt: 20 correct, 1 incorrect (R030 disengage), 2 approx, 1 ambiguous (R030 defer)
+- **Tickets filed:** ptu-rule-084 through 095 (12 tickets), bug-032, refactoring-085, decree-need-022
 
 **Session 40 (2026-02-26, plan-20260226-115023):**
 - slave-1 (reviewers): feature-003 Track A P2 re-review — code-review-181 **CHANGES_REQUIRED** (M1: PlayerCharacterSheet 820 lines > 800 limit after 4K SCSS, M2: .list-subheader missing 4K override). H1+M1+M3 from code-review-177 resolved correctly
@@ -352,7 +373,7 @@ updated_by: slave-collector (plan-20260226-115023)
 | refactoring-057 | P4 | resolved | Zero-weight selection guard (session 12-13) |
 | refactoring-058 | P4 | resolved | Immutable turnState pattern (session 12-13) |
 | refactoring-059 | P4 | **resolved** | densityMultiplier removed from 5 encounter-tables API endpoints — resolved by slave-5 (plan-20260226-073726) |
-| refactoring-060 | P4 | open | Count clamping test coverage (from code-review-122) |
+| refactoring-060 | P4 | **resolved** | Count clamping test coverage — 6 tests added for generateCountClamping. Resolved by slave-2 (plan-20260226-175938) |
 | refactoring-061 | P4 | **resolved** | CSS duplication extracted to _create-form-shared.scss partial, applied to 4 components — resolved by slave-4 (plan-20260226-073726) |
 | refactoring-062 | P4 | **resolved** | buildCombatantFromEntity test coverage — 30 tests across 8 describe blocks, all passing. Resolved by slave-4 (plan-20260226-115023) |
 | refactoring-063 | P4 | **resolved** | Extract shared significance preset utilities (from code-review-123 M2 + rules-review-113 M2) — resolved by slave-1 |
@@ -370,7 +391,7 @@ updated_by: slave-collector (plan-20260226-115023)
 | refactoring-075 | P4 | **resolved** | Extract CombatantConditionsSection from GMActionModal.vue (803→~670 lines) — resolved by slave-3 (plan-20260224-162105) |
 | refactoring-076 | P4 | **resolved** | Restore 9px font-size for PokemonCard stat cell labels — :deep() overrides added. Resolved by slave-5 (plan-20260226-115023) |
 | refactoring-077 | P4 | **resolved** | TerrainCostGetter/ElevationCostGetter types moved to shared types/vtt.ts — resolved by slave-5 (plan-20260226-073726) |
-| refactoring-078 | P4 | open | Add elevation parameters to validateMovement for unit tests (from code-review-151 regression check note) |
+| refactoring-078 | P4 | **resolved** | Add elevation parameters to validateMovement — optional getElevationCost, getTerrainElevation, fromElev params added. Resolved by slave-2 (plan-20260226-175938) |
 | refactoring-079 | P4 | **resolved** | Replace deprecated execCommand copy — select-to-copy fallback with readonly input. Resolved by slave-5 (plan-20260226-115023) |
 | refactoring-080 | P4 | **resolved** | ptuDiagonalDistance extracted to utils/gridDistance.ts, 6 inline implementations replaced — resolved by slave-5 (plan-20260226-070756) |
 | refactoring-081 | P1 | **APPROVED** | SCSS unit incompatibility in _player-view.scss — calc() fix. code-review-164 APPROVED |

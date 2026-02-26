@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T18:00:00
-updated_by: slave-collector (plan-20260226-115023)
+last_updated: 2026-02-26T19:30:00
+updated_by: slave-collector (plan-20260226-175938)
 ---
 
 # Matrix Ecosystem State
@@ -9,21 +9,21 @@ updated_by: slave-collector (plan-20260226-115023)
 
 | Domain | Rules | Capabilities | Matrix | Audit | Tickets | Coverage |
 |--------|-------|-------------|--------|-------|---------|----------|
-| combat | done (135) | **FRESH** | **FRESH** | stale | created | 83.1% (88 impl + 16 partial + 4 unreachable / 118 reachable) |
-| capture | done (33) | **FRESH** | **FRESH** | stale | created | 73.2% (17 impl + 4 partial + 3 unreachable / 28 reachable) |
-| healing | done (42) | **FRESH** | **FRESH** | stale | created | 81.4% (26 impl + 5 partial / 35 reachable) |
-| pokemon-lifecycle | done (68) | **FRESH** | **FRESH** | stale | created | 72.2% (35 impl + 8 partial / 54 reachable) |
-| character-lifecycle | done (68) | **FRESH** | **FRESH** | stale | created | 70.0% (36 impl + 2 unreachable + 10 partial / 60 reachable) |
-| encounter-tables | done (27) | **FRESH** | **FRESH** | stale | created | 90.6% (13 impl + 3 partial / 16 reachable) |
-| scenes | done (42) | **FRESH** | **FRESH** | stale | created | 71.7% (14 impl + 5 partial / 23 reachable) |
-| vtt-grid | done (42) | **FRESH** | **FRESH** | stale | created | 66.2% (19 impl + 1 unreachable + 6 partial / 34 reachable) |
+| combat | done (135) | **FRESH** | **FRESH** | **FRESH** (53 audited: 44C/1I/6A/1AMB) | created | 83.1% (88 impl + 16 partial + 4 unreachable / 118 reachable) |
+| capture | done (33) | **FRESH** | **FRESH** | **FRESH** (21 audited: 17C/2I/1AMB) | created | 73.2% (17 impl + 4 partial + 3 unreachable / 28 reachable) |
+| healing | done (42) | **FRESH** | **FRESH** | **FRESH** (31 audited: 26C/1I/3A/1AMB) | created | 81.4% (26 impl + 5 partial / 35 reachable) |
+| pokemon-lifecycle | done (68) | **FRESH** | **FRESH** | **FRESH** (29 audited: 25C/1I/3A) | created | 72.2% (35 impl + 8 partial / 54 reachable) |
+| character-lifecycle | done (68) | **FRESH** | **FRESH** | **FRESH** (42 audited: 33C/1I/7A/1AMB) | created | 70.0% (36 impl + 2 unreachable + 10 partial / 60 reachable) |
+| encounter-tables | done (27) | **FRESH** | **FRESH** | **FRESH** (14 audited: 12C/1I/1A) | created | 90.6% (13 impl + 3 partial / 16 reachable) |
+| scenes | done (42) | **FRESH** | **FRESH** | **FRESH** (20 audited: 17C/2A/1AMB) | created | 71.7% (14 impl + 5 partial / 23 reachable) |
+| vtt-grid | done (42) | **FRESH** | **FRESH** | **FRESH** (24 audited: 20C/1I/2A/1AMB) | created | 66.2% (19 impl + 1 unreachable + 6 partial / 34 reachable) |
 | player-view | — | **FRESH** (new) | — | — | — | — (first-time mapping) |
 
-**Overall: Matrix scores FRESH (session 40). Audit step still stale — need re-run of Implementation Auditor to verify scores against code.**
+**Overall: Full pipeline FRESH (session 41). All 8 domains: rules + capabilities + matrix + audit all current. 234 items audited across 8 domains: 194 Correct, 8 Incorrect, 20 Approximation, 6 Ambiguous. 15 follow-up tickets filed from audit findings.**
 
 ## Active Work
 
-All 8 existing domains have fresh matrix coverage scores as of session 40 (Coverage Analyzer re-run). Audit step is stale — need re-run of Implementation Auditor to verify scores against code. player-view domain has fresh capabilities but no rules catalog or matrix yet.
+All 8 existing domains have FRESH pipeline as of session 41 (rules + capabilities + matrix + audit all current). All audits re-run against current code by slaves 3-5 (plan-20260226-175938). 15 follow-up tickets filed from audit findings (ptu-rule-084 through 095, bug-032, refactoring-085, decree-need-022). player-view domain has fresh capabilities but no rules catalog or matrix yet.
 
 ## Staleness Status
 
