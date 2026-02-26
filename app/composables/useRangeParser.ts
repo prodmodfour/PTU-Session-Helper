@@ -4,6 +4,7 @@ import { ptuDiagonalDistance, maxDiagonalCells } from '~/utils/gridDistance'
 
 // Re-export VTT pathfinding types for backwards compatibility
 export type { TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
+export type { TerrainTypeGetter, SpeedAveragingFn } from '~/composables/usePathfinding'
 
 // Token footprint for multi-cell range calculations
 export interface TokenFootprint {
@@ -477,6 +478,7 @@ export function useRangeParser() {
     getAffectedCells,
     // Re-exported from usePathfinding for backwards compatibility
     getMovementRangeCells: pathfinding.getMovementRangeCells,
+    getMovementRangeCellsWithAveraging: pathfinding.getMovementRangeCellsWithAveraging,
     calculateMoveCost: pathfinding.calculateMoveCost,
     validateMovement: pathfinding.validateMovement,
     calculatePathCost: pathfinding.calculatePathCost,
