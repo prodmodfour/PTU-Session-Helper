@@ -1,227 +1,149 @@
 ---
 domain: capture
-analyzed_at: 2026-02-19T00:00:00Z
+analyzed_at: 2026-02-26T16:30:00Z
 analyzed_by: coverage-analyzer
+rules_catalog: capture-rules.md
+capabilities_catalog: capture-capabilities.md (re-mapped 2026-02-26)
 total_rules: 33
-implemented: 19
-partial: 5
-missing: 7
-out_of_scope: 2
-coverage_score: 69.4
 ---
 
 # Feature Completeness Matrix: Capture
 
 ## Coverage Score
-**69.4%** — (19 + 0.5 * 5) / (33 - 2) * 100 = 21.5 / 31 * 100
 
-| Classification | Count |
-|---------------|-------|
-| Implemented | 19 |
-| Partial | 5 |
-| Missing | 7 |
-| Out of Scope | 2 |
-| **Total** | **33** |
+```
+Implemented:              17
+Implemented-Unreachable:   3
+Partial:                   4
+Missing:                   4
+Subsystem-Missing:         0
+Out of Scope:              5
+Coverage = (17 + 0.5*4 + 0.5*3) / (33 - 5) * 100 = (17 + 2 + 1.5) / 28 * 100 = 73.2%
+```
 
----
-
-## Implemented Rules
-
-### capture-R001: Capture Rate Base Formula
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R002: Persistent Status Condition Definition
-- **Classification:** Implemented
-- **Mapped to:** `capture-C014` — Persistent Conditions Constant (`constants/statusConditions.ts:PERSISTENT_CONDITIONS`)
-
-### capture-R003: Volatile Status Condition Definition
-- **Classification:** Implemented
-- **Mapped to:** `capture-C015` — Volatile Conditions Constant (`constants/statusConditions.ts:VOLATILE_CONDITIONS`)
-
-### capture-R005: Capture Roll Mechanic
-- **Classification:** Implemented
-- **Mapped to:** `capture-C012` — attemptCapture (`utils/captureRate.ts:attemptCapture`)
-
-### capture-R006: HP Modifier — Above 75%
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R007: HP Modifier — 51-75%
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R008: HP Modifier — 26-50%
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R009: HP Modifier — 1-25%
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R010: HP Modifier — Exactly 1 HP
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R011: Evolution Stage Modifier — Two Evolutions Remaining
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-- **Note:** Utility accepts correct inputs; CombatantCard (C024) passes hardcoded evolutionStage 1/3 instead of actual species data. Auditor should verify utility logic is correct; the hardcoded data is a UI integration issue, not a formula issue.
-
-### capture-R012: Evolution Stage Modifier — One Evolution Remaining
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R013: Evolution Stage Modifier — No Evolutions Remaining
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R014: Status Affliction Modifier — Persistent
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`) + `capture-C014` — PERSISTENT_CONDITIONS (`constants/statusConditions.ts:PERSISTENT_CONDITIONS`)
-
-### capture-R015: Status Affliction Modifier — Volatile and Injuries
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`) + `capture-C015` — VOLATILE_CONDITIONS + `capture-C016` — STUCK/SLOW_CONDITIONS + `capture-C007` — injuries field
-
-### capture-R016: Rarity Modifier — Shiny and Legendary
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`) + `capture-C008` — shiny field
-
-### capture-R017: Fainted Cannot Be Captured
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate returns `canBeCaptured: false` when HP <= 0 (`utils/captureRate.ts:calculateCaptureRate`)
-
-### capture-R019: Fainted Pokemon Capture Failsafe
-- **Classification:** Implemented
-- **Mapped to:** `capture-C011` — calculateCaptureRate (`utils/captureRate.ts:calculateCaptureRate`)
-- **Note:** Restatement of R017 from a different rulebook section. Same canBeCaptured check covers both.
-
-### capture-R028: Natural 20 Accuracy Bonus
-- **Classification:** Implemented
-- **Mapped to:** `capture-C012` — attemptCapture (`utils/captureRate.ts:attemptCapture`) — criticalHit parameter adds +10 to effective capture rate
-
-### capture-R029: Natural 100 Auto-Capture
-- **Classification:** Implemented
-- **Mapped to:** `capture-C012` — attemptCapture (`utils/captureRate.ts:attemptCapture`) — natural 100 on d100 always captures
+| Classification | Count | % of Total |
+|---------------|-------|------------|
+| Implemented | 17 | 51.5% |
+| Implemented-Unreachable | 3 | 9.1% |
+| Partial | 4 | 12.1% |
+| Missing | 4 | 12.1% |
+| Subsystem-Missing | 0 | 0.0% |
+| Out of Scope | 5 | 15.2% |
+| **Total** | **33** | **100%** |
 
 ---
 
-## Partial Rules
+## Matrix Table
 
-### capture-R004: Throwing Accuracy Check
-- **Classification:** Partial
-- **Present:** d20 roll function exists in `rollAccuracyCheck()` composable (C022). Returns roll value and isNat20 flag.
-- **Missing:** AC 6 comparison is not enforced — caller must check manually. Throw range (4 + Athletics Rank) is not calculated or validated. No UI component calls `rollAccuracyCheck()` (Chain 4 breaks at UI layer).
-- **Mapped to:** `capture-C022` — rollAccuracyCheck (`composables/useCapture.ts:rollAccuracyCheck`)
-- **Gap Priority:** P1
-
-### capture-R018: Owned Pokemon Cannot Be Captured
-- **Classification:** Partial
-- **Present:** CombatantCard (C024) only shows capture UI for wild Pokemon (enemy side + no ownerId). The `ownerId` field (C003) tracks ownership. UI-level gatekeeping prevents accidental capture attempts on owned Pokemon.
-- **Missing:** No server-side validation in the capture attempt endpoint (C018) to reject requests targeting owned Pokemon. A direct API call could bypass the UI check.
-- **Mapped to:** `capture-C024` — CombatantCard isWildPokemon check + `capture-C003` — ownerId field
-- **Gap Priority:** P1
-
-### capture-R020: Poke Ball Type Modifiers
-- **Classification:** Partial
-- **Present:** API endpoint (C018) accepts `pokeBallType` parameter. The attempt flow passes this through.
-- **Missing:** No constant, enumeration, or lookup table for Poke Ball modifier values found in the capability catalog. The full chart (25 ball types with conditional modifiers) is not represented as app data. It is unclear whether the server converts pokeBallType to a numeric modifier or relies on the client to pass the modifier directly.
-- **Mapped to:** `capture-C018` — Attempt Capture API (`server/api/capture/attempt.post.ts`)
-- **Gap Priority:** P1
-
-### capture-R027: Capture Workflow
-- **Classification:** Partial
-- **Present:** Full server-side workflow exists — capture rate calculation (C011, C017), roll resolution (C012, C018), and DB update on success (sets ownerId and origin). Chain 1 (calculate rate) is complete. Chain 3 (execute attempt) is complete on the server side.
-- **Missing:** UI wiring is broken — CaptureRateDisplay (C023) emits an `attempt` event but CombatantCard (C024) does not handle it. There is no `@attempt` listener connecting the button to the composable's `attemptCapture()` function. The "Attempt Capture" button exists visually but does nothing. Additionally, the accuracy check (C022) is not integrated into the workflow.
-- **Mapped to:** Chain 3 (`capture-C023` -> `capture-C021` -> `capture-C018` -> `capture-C011` + `capture-C012` -> `capture-C001`)
-- **Gap Priority:** P0
-
-### capture-R032: Capture Is a Standard Action
-- **Classification:** Partial
-- **Present:** Capture can be initiated during an encounter (the UI shows capture rate on combatant cards during combat).
-- **Missing:** No enforcement that capture consumes a Standard Action in the action economy. The turn/action tracking system does not deduct or validate action usage when a capture attempt is made.
-- **Mapped to:** No specific capability — depends on encounter action economy system
-- **Gap Priority:** P2
-
----
-
-## Missing Rules
-
-### capture-R021: Level Ball Condition
-- **Classification:** Missing
-- **Gap Priority:** P2
-- **Notes:** Requires comparing target Pokemon level to active Pokemon level. No conditional ball logic exists in the app. Workaround: GM manually applies the -20 modifier.
-
-### capture-R022: Love Ball Condition
-- **Classification:** Missing
-- **Gap Priority:** P2
-- **Notes:** Requires checking same evolutionary line and opposite gender between active Pokemon and target. Complex condition involving species evolution chain lookup and gender comparison. Workaround: GM manually applies the -30 modifier.
-
-### capture-R023: Timer Ball Scaling
-- **Classification:** Missing
-- **Gap Priority:** P2
-- **Notes:** Requires tracking rounds since encounter start and scaling modifier from +5 down to -20. The encounter system tracks turns but no ball-specific round-based modifier logic exists. Workaround: GM manually calculates the modifier based on round count.
-
-### capture-R024: Quick Ball Decay
-- **Classification:** Missing
-- **Gap Priority:** P2
-- **Notes:** Similar to Timer Ball — requires round-based modifier decay from -20 up to 0 over 4 rounds. Workaround: GM manually applies the correct modifier per round.
-
-### capture-R025: Heavy Ball Scaling
-- **Classification:** Missing
-- **Gap Priority:** P2
-- **Notes:** Requires looking up target Pokemon weight class from species data. No weight class field found in the capability catalog's SpeciesData model (C002). Workaround: GM manually applies the modifier.
-
-### capture-R026: Heal Ball Post-Capture Effect
-- **Classification:** Missing
-- **Gap Priority:** P2
-- **Notes:** Requires healing captured Pokemon to max HP immediately on capture. The capture attempt endpoint (C018) updates ownerId and origin but does not heal. Workaround: GM manually sets HP to max after capture.
-
-### capture-R033: Accuracy Check Natural 1 Always Misses
-- **Classification:** Missing
-- **Gap Priority:** P2
-- **Notes:** The accuracy check (C022) tracks isNat20 but does not flag natural 1. Since the AC 6 comparison itself is not enforced (R004 partial), nat 1 handling is also absent. Workaround: GM observes the roll and applies the rule manually.
+| Rule ID | Rule Name | Category | Scope | Actor | Classification | Accessible From | Capability Match | Gap Priority | Notes |
+|---------|-----------|----------|-------|-------|---------------|-----------------|-----------------|-------------|-------|
+| capture-R001 | Capture Rate Base Formula | formula | core | system | Implemented | gm, player | C001, C010 | - | Base 100 - level*2 in calculateCaptureRate |
+| capture-R002 | Persistent Status Condition Def | enumeration | core | system | Implemented | gm | C001 | - | Persistent conditions counted in capture rate |
+| capture-R003 | Volatile Status Condition Def | enumeration | core | system | Implemented | gm | C001 | - | Volatile conditions counted (+5 each) |
+| capture-R004 | Throwing Accuracy Check | formula | core | player | Implemented-Unreachable | gm only | C023 | P1 | rollAccuracyCheck (d20 vs AC 6) implemented but only accessible from GM view. **Intended actor: player** (throwing a Poke Ball is a player action). |
+| capture-R005 | Capture Roll Mechanic | formula | core | system | Implemented | gm | C002, C011 | - | 1d100 - trainerLevel in attemptCapture |
+| capture-R006 | HP Modifier — Above 75% | modifier | core | system | Implemented | gm, player | C001 | - | -30 at >75% HP |
+| capture-R007 | HP Modifier — 51-75% | modifier | core | system | Implemented | gm, player | C001 | - | -15 at <=75% HP |
+| capture-R008 | HP Modifier — 26-50% | modifier | core | system | Implemented | gm, player | C001 | - | 0 at <=50% HP |
+| capture-R009 | HP Modifier — 1-25% | modifier | core | system | Implemented | gm, player | C001 | - | +15 at <=25% HP |
+| capture-R010 | HP Modifier — Exactly 1 HP | modifier | core | system | Implemented | gm, player | C001 | - | +30 at exactly 1 HP |
+| capture-R011 | Evo Stage — Two Remaining | modifier | core | system | Implemented | gm, player | C001, C042 | - | +10 when 2 evolutions remaining |
+| capture-R012 | Evo Stage — One Remaining | modifier | core | system | Implemented | gm, player | C001 | - | +0 when 1 evolution remaining |
+| capture-R013 | Evo Stage — No Remaining | modifier | core | system | Implemented | gm, player | C001, C042 | - | -10 when fully evolved |
+| capture-R014 | Status Modifier — Persistent | modifier | core | system | Implemented | gm, player | C001 | - | +10 per persistent condition |
+| capture-R015 | Status Modifier — Volatile/Injuries | modifier | core | system | Implemented | gm, player | C001 | - | +5 per volatile, +5 per injury, +10 Stuck, +5 Slow |
+| capture-R016 | Rarity Modifier — Shiny/Legendary | modifier | core | system | Implemented | gm, player | C001 | - | Shiny -10, Legendary -30 |
+| capture-R017 | Fainted Cannot Be Captured | constraint | core | system | Implemented | gm | C011 | - | canBeCaptured false at 0 HP |
+| capture-R018 | Owned Pokemon Cannot Be Captured | constraint | core | system | Missing | - | - | P2 | No check for existing ownerId in capture attempt endpoint. GM must verify manually. |
+| capture-R019 | Fainted Pokemon Capture Failsafe | constraint | core | system | Implemented | gm | C011 | - | Same as R017 — 0 HP check in attempt endpoint |
+| capture-R020 | Poke Ball Type Modifiers | enumeration | core | both | Partial | gm | C002, C011 | P1 | **Present:** Generic `modifiers` parameter accepts numeric value. **Missing:** No Poke Ball type catalog or dropdown. GM must manually calculate ball-specific modifier and pass it. No UI for ball selection. |
+| capture-R021 | Level Ball Condition | condition | situational | system | Missing | - | - | P2 | No Level Ball condition check (-20 if target < half user's Pokemon level). |
+| capture-R022 | Love Ball Condition | condition | situational | system | Missing | - | - | P3 | No Love Ball condition (same evo line, opposite gender). |
+| capture-R023 | Timer Ball Scaling | formula | situational | system | Missing | - | - | P2 | No round-based modifier scaling for Timer Ball. |
+| capture-R024 | Quick Ball Decay | formula | situational | system | Out of Scope | - | - | - | Ball-specific scaling; covered by generic modifiers if GM calculates manually |
+| capture-R025 | Heavy Ball Scaling | formula | situational | system | Out of Scope | - | - | - | Weight class scaling; covered by generic modifiers |
+| capture-R026 | Heal Ball Post-Capture Effect | interaction | situational | system | Out of Scope | - | - | - | Post-capture healing effect not automated |
+| capture-R027 | Capture Workflow | workflow | core | player | Implemented-Unreachable | gm only | Chain 2 | P1 | Full workflow (accuracy check -> capture roll -> auto-link) implemented. **Intended actor: player.** Only GM view has capture UI (CaptureRateDisplay, useCapture composable). Player must ask GM to execute. |
+| capture-R028 | Natural 20 Accuracy Bonus | interaction | situational | system | Implemented | gm | C002 | - | Nat 20 on accuracy gives +10 effective capture rate |
+| capture-R029 | Natural 100 Auto-Capture | condition | edge-case | system | Partial | gm | C002 | P3 | **Present:** attemptCapture checks for naturalHundred. **Missing:** The actual d100 roll is simulated server-side; the "natural 100" is checked on modifiedRoll === 100 rather than the raw roll. Edge case: if modifiers push below 100, a raw 100 might not be caught. |
+| capture-R030 | Missed Ball Recovery | condition | situational | system | Out of Scope | - | - | - | Physical ball recovery is narrative; no mechanical tracking |
+| capture-R031 | Poke Ball Recall Range | constraint | situational | system | Out of Scope | - | - | - | 8m recall range is VTT/narrative; no mechanical enforcement |
+| capture-R032 | Capture Is a Standard Action | workflow | core | player | Implemented-Unreachable | gm only | C022 | P1 | attemptCapture composable optionally consumes Standard Action via encounter context. **Intended actor: player.** Player view has no capture button. |
+| capture-R033 | Accuracy Check Nat 1 Misses | condition | edge-case | system | Implemented | gm | C023 | - | rollAccuracyCheck returns isNat1 (handled by GM workflow) |
 
 ---
 
-## Out of Scope
+## Actor Accessibility Summary
 
-### capture-R030: Missed Ball Recovery
-- **Classification:** Out of Scope
-- **Justification:** The app is a session helper focused on encounter and combat automation. It does not track item inventory, Poke Ball quantities, or physical ball recovery after a miss. Ball inventory management is outside the app's stated purpose — the GM tracks consumables separately.
+| Actor | Total Rules | Implemented | Impl-Unreachable | Partial | Missing | Out of Scope |
+|-------|------------|-------------|------------------|---------|---------|-------------|
+| system | 26 | 16 | 0 | 2 | 3 | 5 |
+| player | 4 | 0 | 3 | 0 | 0 | 0 |
+| both | 1 | 0 | 0 | 1 | 0 | 0 |
+| gm | 2 | 1 | 0 | 1 | 1 | 0 |
 
-### capture-R031: Poke Ball Recall Range
-- **Classification:** Out of Scope
-- **Justification:** Poke Ball recall (returning a Pokemon to its ball from 8 meters away) is a narrative/spatial action handled by the GM during play. The VTT grid could theoretically enforce this range, but the app treats recall as an out-of-combat action not requiring automation. No spatial constraints on non-combat Poke Ball usage exist in the app's design.
+### Key Findings
+- **3 rules with actor `player` are Implemented-Unreachable:** R004 (Throwing Accuracy), R027 (Capture Workflow), R032 (Capture as Standard Action). All capture mechanics work but only the GM can trigger them. In PTU, throwing a Poke Ball is a player action.
+- **The entire capture flow is GM-gated.** Players must verbally request capture, and the GM executes it from their view. This is a significant workflow bottleneck in multi-player sessions.
+
+---
+
+## Subsystem Gaps
+
+### 1. No Player-Initiated Capture Flow
+- **Rules affected:** R004 (Throwing Accuracy), R027 (Capture Workflow), R032 (Capture as Standard Action) — 3 rules
+- **Impact:** All capture mechanics work correctly but only via GM view. Players cannot throw Poke Balls from their view.
+- **Suggested ticket:** "feat: add player-initiated capture flow with accuracy roll and ball selection" (P1)
+
+### 2. No Poke Ball Type Catalog
+- **Rules affected:** R020 (Ball Modifiers), R021 (Level Ball), R022 (Love Ball), R023 (Timer Ball) — 4 rules
+- **Impact:** 25 Poke Ball types exist in PTU, each with different modifiers. Currently a flat numeric modifier field. GM must manually calculate.
+- **Suggested ticket:** "feat: implement Poke Ball type selection with automated modifier calculation" (P1)
+
+### 3. No Capture Rate Display for Players
+- **Rules affected:** R027 (Workflow — informed player decision)
+- **Impact:** CaptureRateDisplay component only renders in GM encounter view. Players cannot assess capture difficulty.
+- **Suggested ticket:** "feat: add capture rate preview to player encounter view" (P2)
+
+---
+
+## Gap Priorities
+
+| Priority | Count | Rules |
+|----------|-------|-------|
+| P1 | 4 | R004, R020, R027, R032 |
+| P2 | 3 | R018, R021, R023 |
+| P3 | 2 | R022, R029 |
 
 ---
 
 ## Auditor Queue
 
-Ordered list of items for the Implementation Auditor to check. Core scope first, formulas and conditions first, foundation rules before derived.
+### Tier 1: Core Formulas (Verify Correctness)
+1. capture-R001 — Capture Rate Base Formula → C001 (base 100 - level*2)
+2. capture-R006 — HP Modifier >75% → C001 (-30)
+3. capture-R007 — HP Modifier 51-75% → C001 (-15)
+4. capture-R008 — HP Modifier 26-50% → C001 (0)
+5. capture-R009 — HP Modifier 1-25% → C001 (+15)
+6. capture-R010 — HP Modifier 1 HP → C001 (+30)
+7. capture-R005 — Capture Roll d100 → C002 (1d100 - trainerLevel)
+8. capture-R011 — Evo Stage +10 → C001, C042
+9. capture-R013 — Evo Stage -10 → C001, C042
+10. capture-R014 — Persistent +10 → C001
+11. capture-R015 — Volatile/Injury modifiers → C001
+12. capture-R016 — Shiny/Legendary → C001
 
-1. `capture-R001` — Implemented — core/formula — Base capture rate formula (foundation)
-2. `capture-R002` — Implemented — core/enumeration — Persistent status conditions (foundation) — verify exact condition names match PTU (Sleep vs Badly Poisoned)
-3. `capture-R003` — Implemented — core/enumeration — Volatile status conditions (foundation) — verify exact condition names (Rage vs Enraged, Bad Sleep vs Asleep)
-4. `capture-R005` — Implemented — core/formula — d100 capture roll mechanic (foundation)
-5. `capture-R017` — Implemented — core/constraint — Fainted cannot be captured (foundation)
-6. `capture-R006` — Implemented — core/modifier — HP >75% modifier (-30)
-7. `capture-R007` — Implemented — core/modifier — HP 51-75% modifier (-15)
-8. `capture-R008` — Implemented — core/modifier — HP 26-50% modifier (0)
-9. `capture-R009` — Implemented — core/modifier — HP 1-25% modifier (+15)
-10. `capture-R010` — Implemented — core/modifier — HP exactly 1 (+30)
-11. `capture-R011` — Implemented — core/modifier — Evolution stage: two remaining (+10)
-12. `capture-R012` — Implemented — core/modifier — Evolution stage: one remaining (0)
-13. `capture-R013` — Implemented — core/modifier — Evolution stage: none remaining (-10)
-14. `capture-R014` — Implemented — core/modifier — Persistent status +10 each
-15. `capture-R015` — Implemented — core/modifier — Volatile +5, Injuries +5, Stuck +10, Slow +5
-16. `capture-R016` — Implemented — core/modifier — Shiny -10, Legendary -30
-17. `capture-R019` — Implemented — core/constraint — Fainted capture failsafe (same check as R017)
-18. `capture-R004` — Partial (present) — core/formula — Accuracy check d20 roll exists
-19. `capture-R018` — Partial (present) — core/constraint — UI-level owned Pokemon gatekeeping
-20. `capture-R020` — Partial (present) — core/enumeration — pokeBallType parameter accepted
-21. `capture-R027` — Partial (present) — core/workflow — Server-side capture workflow (rate calc + roll + DB update)
-22. `capture-R028` — Implemented — situational/interaction — Nat 20 accuracy bonus (+10 to capture rate)
-23. `capture-R029` — Implemented — edge-case/condition — Natural 100 auto-capture
-24. `capture-R032` — Partial (present) — core/workflow — Capture during encounter (action economy not enforced)
+### Tier 2: Core Constraints (Verify Correctness)
+13. capture-R017 — Fainted cannot capture → C011
+14. capture-R019 — Fainted failsafe → C011
+15. capture-R028 — Nat 20 +10 bonus → C002
+16. capture-R033 — Nat 1 misses → C023
+
+### Tier 3: Implemented-Unreachable (Verify Logic, Flag Access)
+17. capture-R004 — Accuracy Check → C023 (verify AC 6 d20 roll, flag: player can't reach)
+18. capture-R027 — Full Workflow → Chain 2 (verify accuracy->capture->auto-link, flag: GM-only)
+19. capture-R032 — Standard Action consumption → C022 (verify action deduction, flag: GM-only)
+
+### Tier 4: Partial Items — Present Portion (Verify)
+20. capture-R020 — Modifiers parameter → C002, C011 (verify numeric modifier pass-through)
+21. capture-R029 — Natural 100 → C002 (verify naturalHundred check logic)
