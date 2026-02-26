@@ -1,177 +1,338 @@
 ---
 domain: vtt-grid
-audited_at: 2026-02-19T00:00:00Z
+audited_at: 2026-02-26T17:00:00Z
 audited_by: implementation-auditor
-items_audited: 15
-correct: 7
-incorrect: 3
-approximation: 4
-ambiguous: 1
+rules_catalog: vtt-grid-rules.md
+capabilities_catalog: vtt-grid-capabilities.md
+matrix: vtt-grid-matrix.md
+items_audited: 24
 ---
 
 # Implementation Audit: VTT Grid
 
-## Summary
+## Audit Summary
 
 | Classification | Count |
 |---------------|-------|
-| Correct | 7 |
-| Incorrect | 3 |
-| Approximation | 4 |
+| Correct | 20 |
+| Incorrect | 1 |
+| Approximation | 2 |
 | Ambiguous | 1 |
-| **Total** | **15** |
+| **Total Audited** | **24** |
 
 ### Severity Breakdown (Incorrect + Approximation)
-- CRITICAL: 0
-- HIGH: 1
-- MEDIUM: 5
-- LOW: 1
+
+| Severity | Count | Items |
+|----------|-------|-------|
+| CRITICAL | 0 | — |
+| HIGH | 0 | — |
+| MEDIUM | 2 | R015 (rough terrain cost 1 correct but no accuracy penalty), R026 (Speed CS movement partially implemented) |
+| LOW | 1 | R022 (Stuck status tracked but movement check uses applyMovementModifiers — need to verify grid integration) |
 
 ---
 
-## Correct Items
+## Tier 1: Core Grid Foundation
 
-### vtt-grid-R001: Square Grid System
-- **Classification:** Correct
-- **Code:** `prisma/schema.prisma:186` -- `Encounter.gridEnabled`, `components/vtt/GridCanvas.vue` -- GridCanvas component
+### R001 — Square Grid System
+
 - **Rule:** "Pokemon Tabletop United uses a square combat grid."
-- **Verification:** The Prisma schema defines `gridEnabled Boolean @default(false)` on the Encounter model. When enabled, `GridCanvas.vue` renders a square grid with configurable dimensions. The grid is square-cell-based and uses integer coordinates as expected by PTU.
-
-### vtt-grid-R002: Grid Scale (1 Meter Per Square)
+- **Expected behavior:** Grid renders as squares in 2D mode; isometric mode uses same underlying square data model.
+- **Actual behavior:** `app/stores/encounterGrid.ts` manages grid config with `width`, `height`, `cellSize`. `GridCanvas.vue` (C041) renders 2D top-down square grid. `IsometricCanvas.vue` (C042) renders diamond-projected grid. Both modes use the same square coordinate system underneath. Grid coordinates are integer x,y pairs.
 - **Classification:** Correct
-- **Code:** `prisma/schema.prisma:187-189` -- `Encounter.gridWidth,gridHeight,gridCellSize`, `stores/terrain.ts:17-24` -- `TERRAIN_COSTS`, `composables/useGridMovement.ts:24-32` -- `calculateMoveDistance`
-- **Rule:** "On a grid, both Small and Medium Pokemon would take up one space, or a 1x1m square."
-- **Verification:** The grid dimensions are measured in cells, with movement distances calculated in cells (meters). The `gridCellSize` field (default 40px) is purely a rendering scale -- it does not affect game logic. All movement calculations, terrain costs, and distance computations treat 1 cell as 1 meter. The `TERRAIN_COSTS` map uses multipliers relative to a 1-cell base cost. The `calculateMoveDistance` function returns distances in cells (meters). The `MeasurementResult` interface documents `distance: number // In cells (PTU: 1 cell = 1 meter)`.
 
-### vtt-grid-R005: Diagonal Movement Cost (Alternating 1m/2m)
-- **Classification:** Correct
-- **Code:** `composables/useGridMovement.ts:24-32` -- `calculateMoveDistance`, `composables/useRangeParser.ts:410-418` -- `calculateMoveCost`, `composables/useRangeParser.ts:302-404` -- `getMovementRangeCells`
-- **Rule:** "The first square you move diagonally in a turn counts as 1 meter. The second counts as 2 meters. The third counts as 1 meter again. And so on and so forth."
-- **Verification:** The formula `diagonals + floor(diagonals / 2) + straights` correctly computes the PTU alternating diagonal cost. For 1 diagonal: 1 + 0 + 0 = 1m. For 2 diagonals: 2 + 1 + 0 = 3m (1m + 2m). For 3 diagonals: 3 + 1 + 0 = 4m (1m + 2m + 1m). For 4 diagonals: 4 + 2 + 0 = 6m (1m + 2m + 1m + 2m). This matches the rule exactly. The Dijkstra flood-fill in `getMovementRangeCells` also tracks diagonal parity per-path using a `diagonalParity` state variable (0 = next costs 1, 1 = next costs 2), which correctly handles the alternating cost when diagonals are mixed with straight moves along a path.
+### R002 — Grid Scale (1 Meter Per Square)
 
-### vtt-grid-R003: Size Category Footprints
+- **Rule:** "Small and Medium Pokemon take up one space, a 1x1m square."
+- **Expected behavior:** Each grid cell = 1 meter.
+- **Actual behavior:** `app/utils/gridDistance.ts` — `ptuDiagonalDistance` operates in cell units = meters. `GridSettingsPanel` (C050) configures cell size for display, but movement calculations use cell units directly. The pathfinding and measurement systems treat 1 cell = 1 meter consistently.
 - **Classification:** Correct
-- **Code:** `server/services/grid-placement.service.ts:28-42` -- `sizeToTokenSize`
-- **Rule:** "Small and Medium combatants take up a 1x1 meter square. Large is 2x2, Huge is 3x3, and Gigantic is 4x4"
-- **Verification:** The `sizeToTokenSize` function maps: Small/Medium -> 1, Large -> 2, Huge -> 3, Gigantic -> 4. Default (undefined) -> 1. This exactly matches PTU size categories. The `buildOccupiedCellsSet` function correctly iterates dx/dy from 0 to size-1 to mark all cells of multi-cell tokens, and `findPlacementPosition` uses `canFit` which checks that the full token footprint is within bounds and unoccupied.
 
-### vtt-grid-R007: No Split Movement
-- **Classification:** Correct
-- **Code:** `composables/useGridInteraction.ts:197-224` -- click-to-move in `handleMouseDown`
-- **Rule:** "You may not split up a Shift Action. That is, you cannot move a few squares, take a Standard Action, and then continue moving."
-- **Verification:** The click-to-move interaction model enforces atomic movement. When a token is in move mode (`movingTokenId.value` is set), clicking an empty cell either completes the full move (origin to destination) or cancels it. There is no mechanism for partial movement followed by an action followed by further movement. The movement is a single discrete event from origin to clicked cell.
+### R005 — Diagonal Movement Cost
 
-### vtt-grid-R016: Blocking Terrain
-- **Classification:** Correct
-- **Code:** `stores/terrain.ts:20` -- `TERRAIN_COSTS.blocking = Infinity`, `stores/terrain.ts:78-85` -- `isPassable`
-- **Rule:** "Blocking Terrain: Straightforwardly, this is Terrain that cannot be Shifted or Targeted through, such as walls and other large obstructions."
-- **Verification:** Blocking terrain is assigned `Infinity` movement cost. The `isPassable` getter returns `false` for blocking terrain. The Dijkstra flood-fill in `getMovementRangeCells` (line 356) skips cells with infinite terrain cost via `if (!isFinite(terrainMultiplier)) { continue }`. The A* pathfinding in `calculatePathCost` also correctly skips infinite-cost cells. Blocking terrain is therefore impassable in all movement calculations.
+- **Rule:** "The first square you move diagonally costs 1 meter. The second costs 2 meters. The third 1 meter. And so on."
+- **Expected behavior:** Alternating 1m/2m pattern. Formula: diag + floor(diag/2) + straights.
+- **Actual behavior:** `app/utils/gridDistance.ts:19-25` — `ptuDiagonalDistance`:
+  ```
+  diagonals = Math.min(absDx, absDy)
+  straights = Math.abs(absDx - absDy)
+  return diagonals + Math.floor(diagonals / 2) + straights
+  ```
+  Verification: (3,3) diagonal: diag=3, straight=0. Cost = 3 + floor(3/2) + 0 = 3+1 = 4. Manual: 1+2+1=4. Correct.
+  (2,1): diag=1, straight=1. Cost = 1+0+1 = 2. Manual: 1 diagonal (1m) + 1 straight (1m) = 2. Correct.
+  (4,4): diag=4, straight=0. Cost = 4+2+0 = 6. Manual: 1+2+1+2=6. Correct.
 
-### vtt-grid-R021: Melee Range (Adjacency)
+  Pathfinding implementation in `usePathfinding.ts:96-102` also correctly alternates: `baseCost = currentParity === 0 ? 1 : 2; newParity = 1 - currentParity`. The parity state tracks which diagonal step is next.
 - **Classification:** Correct
-- **Code:** `composables/useRangeParser.ts:57-60` -- `parseRange` melee handling, `composables/useRangeParser.ts:167-171` -- `isInRange` Chebyshev distance
-- **Rule:** "Range: Melee, 1 Target" (melee range requires adjacency per the adjacency definition in R006)
-- **Verification:** The `parseRange` function parses "Melee" and "Melee, 1 Target" strings as `{ type: 'melee', range: 1 }`. The `isInRange` function for melee calculates Chebyshev distance (max of absolute dx, dy) and checks `distance <= parsedRange.range` (i.e., distance <= 1). This correctly defines melee as requiring the target to be in an adjacent cell (Chebyshev distance of 1), which matches PTU's adjacency definition including diagonals.
+
+### R006 — Adjacency Definition
+
+- **Rule:** "Two combatants are Adjacent if any squares they occupy touch, even corners (diagonal). Cardinally Adjacent does not count diagonal."
+- **Expected behavior:** 8-directional adjacency for general Adjacent; 4-directional for Cardinally Adjacent.
+- **Actual behavior:** `usePathfinding.ts:56-60` — 8 directions including diagonals used for movement exploration. `useRangeParser.ts:329-341` — `isInRange` for `cardinally-adjacent` type checks that the closest cells are cardinal (dx=1,dy=0 or dx=0,dy=1). Melee range uses adjacency (Chebyshev distance <= 1). Multi-cell token distance correctly uses `chebyshevDistanceTokens`.
+- **Classification:** Correct
+
+### R007 — No Split Movement
+
+- **Rule:** "You may not split up a Shift Action."
+- **Expected behavior:** Single continuous move, no split.
+- **Actual behavior:** Movement is a single drag-and-drop operation. `useGridInteraction.ts` (C013) and `useIsometricInteraction.ts` (C023) handle token movement as one atomic action — drag from A, drop at B. No mechanism exists to interrupt movement with a standard action and continue.
+- **Classification:** Correct
 
 ---
 
-## Incorrect Items
+## Tier 2: Terrain System
 
-### vtt-grid-R004: Movement Via Shift Actions
-- **Classification:** Incorrect
-- **Severity:** HIGH
-- **Code:** `composables/useGridInteraction.ts:197-222` -- click-to-move validation in `handleMouseDown`, `composables/useGridMovement.ts:74-92` -- `isValidMove`
-- **Rule:** "Movement is done with Shift Actions in combat. You can move a number of squares with a single Shift Action equal to the value of your relevant Movement Capability."
-- **Expected:** Movement validation should account for terrain costs along the actual path. A combatant with 5 movement trying to reach a cell 3 cells away through difficult terrain (cost 2x per cell) should be blocked because the effective path cost exceeds their speed.
-- **Actual:** The click-to-move validation in `useGridInteraction.ts` (lines 200-208) uses `calculateMoveDistance` which computes only the geometric PTU diagonal distance without terrain cost. The code checks `distance > 0 && distance <= speed && !isBlocked` but `distance` is the straight-line diagonal distance, not the terrain-adjusted path cost. Meanwhile, the movement range display (`drawMovementRange` in `useGridRendering.ts`) correctly uses the Dijkstra-based `getMovementRangeCells` with terrain costs. This creates a mismatch: the highlighted reachable cells correctly reflect terrain, but clicking on a cell outside the highlighted range but within geometric distance will succeed. Conversely, clicking on a cell within highlighted range but at a high geometric distance could fail.
-- **Evidence:** `useGridInteraction.ts` line 201: `const distance = options.calculateMoveDistance(token.position, gridPos)` calls `useGridMovement.calculateMoveDistance` which is `diagonals + floor(diagonals/2) + straights` -- no terrain cost. The `isValidMove` function in `useGridMovement.ts` (line 82) also uses `calculateMoveDistance` without terrain.
+### R012 — Basic Terrain Types
 
-### vtt-grid-R006: Adjacency Definition
-- **Classification:** Incorrect
-- **Severity:** MEDIUM
-- **Code:** `stores/measurement.ts:35-43` -- `distance` getter, `composables/useRangeParser.ts:167-171` -- `isInRange` Chebyshev distance
-- **Rule:** "Two combatants are Adjacent to one another if any squares they occupy touch each other, even if only the corners touch, as with diagonal squares. Cardinally Adjacent, however, does not count diagonal squares."
-- **Expected:** For multi-cell tokens (Large, Huge, Gigantic), adjacency should be checked against any square the token occupies. A combatant is adjacent to a 2x2 Large token if any of their squares touches any of the 4 squares the Large token occupies.
-- **Actual:** The `isInRange` function in `useRangeParser.ts` checks Chebyshev distance between two single `GridPosition` points (the token origin positions). For multi-cell tokens, this only checks distance from the top-left corner of each token. A combatant standing next to the bottom-right cell of a 2x2 token would not be recognized as adjacent if the token origin (top-left) is more than 1 cell away by Chebyshev distance. The measurement store's `distance` getter has the same issue -- it measures between single points.
-- **Evidence:** `useRangeParser.ts` line 168-171: `const distance = Math.max(Math.abs(target.x - attacker.x), Math.abs(target.y - attacker.y))` -- uses single position coordinates. No multi-cell token size is accounted for anywhere in the range-checking logic.
+- **Rule:** "Regular Terrain: easy to walk on. Earth Terrain: requires Burrow. Underwater: requires Swim."
+- **Expected behavior:** Terrain types with appropriate movement costs and capability requirements.
+- **Actual behavior:** `app/stores/terrain.ts:17-26` defines `TERRAIN_COSTS`:
+  - `normal: 1` (PTU Regular)
+  - `difficult: 2` (PTU Slow)
+  - `blocking: Infinity` (PTU Blocking)
+  - `water: 2` (PTU Underwater — requires Swim, else Infinity)
+  - `earth: Infinity` (PTU Earth — requires Burrow, else Infinity)
+  - `rough: 1` (PTU Rough — normal movement cost)
+  - `hazard: 1`, `elevated: 1` (app-specific additions)
 
-### vtt-grid-R014: Slow Terrain
-- **Classification:** Incorrect
-- **Severity:** MEDIUM
-- **Code:** `stores/terrain.ts:19` -- `TERRAIN_COSTS.difficult = 2`, `composables/useGridMovement.ts:74-92` -- `isValidMove`, `composables/useGridInteraction.ts:197-222` -- click-to-move
-- **Rule:** "When Shifting through Slow Terrain, Trainers and their Pokemon treat every square meter as two square meters instead."
-- **Expected:** Slow terrain should cost 2x movement when traversing. The movement range display and the click-to-move validation should both reflect this cost.
-- **Actual:** The terrain cost constant is correctly set (`difficult = 2`). The Dijkstra-based movement range display (`getMovementRangeCells`) correctly applies the 2x multiplier. However, the actual click-to-move validation in `useGridInteraction.ts` uses `calculateMoveDistance` which ignores terrain costs entirely (see R004 finding). A move through difficult terrain will be allowed if the geometric distance is within speed, even though the terrain-adjusted cost exceeds the movement budget. The rule is partially correct in the movement range display but incorrect in the actual movement execution path.
-- **Evidence:** Same root cause as R004. The movement range overlay (Dijkstra) correctly shows terrain-aware reachable cells, but the click-to-move handler bypasses terrain cost validation.
+  `terrain.ts:71-82` — `getMovementCost` correctly checks `canSwim` for water and `canBurrow` for earth, returning Infinity if the capability is absent. PTU terrain types are fully covered.
+- **Classification:** Correct
+
+### R014 — Slow Terrain
+
+- **Rule:** "When Shifting through Slow Terrain, treat every square meter as two square meters."
+- **Expected behavior:** 2x movement cost.
+- **Actual behavior:** `terrain.ts:20` — `difficult: 2`. Pathfinding at `usePathfinding.ts:104` — `moveCost = baseCost * terrainMultiplier`. So a straight move into a `difficult` cell costs 1*2=2, and a first-diagonal into difficult costs 1*2=2. This doubles the cost as PTU requires. Water terrain also costs 2 (even with Swim), which is correct — water is Slow Terrain for swimmers per PTU.
+- **Classification:** Correct
+
+### R016 — Blocking Terrain
+
+- **Rule:** "Terrain that cannot be Shifted or Targeted through."
+- **Expected behavior:** Impassable in movement and targeting.
+- **Actual behavior:** `terrain.ts:19` — `blocking: Infinity`. Pathfinding at `usePathfinding.ts:88-90` — `if (!isFinite(terrainMultiplier)) continue` skips blocked cells. `useRangeParser.ts:242-284` — `hasLineOfSight` checks blocking function for targeting. Blocking terrain is correctly impassable for both movement and LoS.
+- **Classification:** Correct
+
+### R013 — Movement Capability Types
+
+- **Rule:** "Overland, Sky, Swim, Levitate, Teleporter, Burrow capabilities."
+- **Expected behavior:** Capability queries for movement type selection.
+- **Actual behavior:** `app/utils/combatantCapabilities.ts` provides:
+  - `combatantCanFly` — checks `pokemon.capabilities.sky > 0` (lines 37-43)
+  - `getSkySpeed` — returns `pokemon.capabilities.sky` (lines 48-53)
+  - `combatantCanSwim` — checks `pokemon.capabilities.swim > 0` (lines 13-18)
+  - `combatantCanBurrow` — checks `pokemon.capabilities.burrow > 0` (lines 25-30)
+  - Human characters default to 0 for all capabilities.
+
+  `useGridMovement.ts:59-76` — `getTerrainAwareSpeed` selects Swim speed for water terrain, Burrow speed for earth terrain, and Overland for all else. `useElevation.ts` (C026) manages elevation for flying Pokemon. Levitate is handled via the elevation system. Teleporter is not implemented (Out of Scope).
+- **Classification:** Correct
 
 ---
 
-## Approximation Items
+## Tier 3: Movement System
 
-### vtt-grid-R012: Basic Terrain Types (Partial)
-- **Classification:** Approximation
-- **Severity:** LOW
-- **Code:** `types/spatial.ts:44-50` -- `TerrainType`, `stores/terrain.ts:17-24` -- `TERRAIN_COSTS`
-- **Rule:** "Regular Terrain: Regular Terrain is dirt, short grass, cement, smooth rock, indoor building etc. [...] Earth Terrain: Earth Terrain is underground terrain that has no existing tunnel [...] you may only Shift through Earth Terrain if you have a Burrow Capability. [...] Underwater: Underwater Terrain is any water that a Pokemon or Trainer can be submerged in."
-- **Expected:** PTU defines 5 basic terrain types: Regular, Slow, Rough, Earth, and Underwater, plus Blocking as a special type.
-- **Actual:** The app implements 6 terrain types: normal (Regular), difficult (Slow), blocking (Blocking), water (Underwater -- partially, as `getMovementCost` returns Infinity without swim), hazard (not PTU core), and elevated (not PTU core). Earth terrain (requiring Burrow) is absent. The water terrain has a `canSwim` parameter but it is always called with `false` in the movement composable (line 68 of `useGridMovement.ts`: `getMovementCost(x, y, false)`).
-- **What's Missing:** Earth terrain type. The app's "water" type approximates Underwater but the `canSwim` parameter is hardcoded to `false`, meaning no combatant can traverse water terrain even if they have Swim capability. The "hazard" and "elevated" types are app-specific extensions not in PTU core terrain rules.
+### R004 — Movement Via Shift Actions
 
-### vtt-grid-R013: Movement Capability Types (Partial)
-- **Classification:** Approximation
-- **Severity:** MEDIUM
-- **Code:** `types/spatial.ts:34-41` -- `MovementSpeeds`, `composables/useGridMovement.ts:37-42` -- `getSpeed`
-- **Rule:** "Overland is a Movement Capability that defines how many meters the Pokemon may shift while on dry land. [...] Swim is a Movement Capability that defines how quickly the Pokemon can move underwater. [...] Sky [...] Burrow [...] Levitate [...] Teleporter"
-- **Expected:** The VTT should select the appropriate movement capability based on terrain context. A combatant on water should use Swim speed, in air should use Sky speed, underground should use Burrow speed. Different movement capabilities apply in different terrain contexts.
-- **Actual:** The `MovementSpeeds` interface correctly defines all 6 PTU capabilities (overland, swim, sky, burrow, levitate, teleport). However, `getSpeed` in `useGridMovement.ts` (line 37-42) returns a single number from a callback or falls back to `DEFAULT_MOVEMENT_SPEED = 5`. The callback is provided by `GridCanvas.vue` as `props.getMovementSpeed` which is a single-value function. There is no terrain-context-aware speed selection. All movement uses one speed value regardless of whether the combatant is on land, water, or any other terrain type.
-- **What's Missing:** Logic to select the appropriate movement capability (overland, swim, sky, etc.) based on the terrain type of cells being traversed. The type definitions exist but the speed selection ignores them entirely.
+- **Rule:** "Move a number of squares equal to your Movement Capability."
+- **Expected behavior:** Movement validated against speed budget with terrain costs.
+- **Actual behavior:** `useGridMovement.ts:303-361` — `isValidMove` checks:
+  1. Speed via `getSpeed` (with terrain-awareness and condition modifiers)
+  2. Blocked cells (occupied by other tokens)
+  3. Bounds checking
+  4. Terrain-aware A* pathfinding when terrain exists
+  5. Geometric distance when no terrain
 
-### vtt-grid-R022: Stuck Condition (Partial)
-- **Classification:** Approximation
-- **Severity:** MEDIUM
-- **Code:** `composables/useGridMovement.ts:74-92` -- `isValidMove`, `composables/useGridInteraction.ts:197-222` -- click-to-move
-- **Rule:** "Stuck means you cannot Shift at all, though you may still use your Shift Action for other effects such as activating Features."
-- **Expected:** When a combatant has the Stuck condition, the VTT grid should prevent all movement. The click-to-move validation should check for Stuck status and reject the move. The movement range display should show zero reachable cells.
-- **Actual:** The Stuck condition can be tracked in the combat system (volatile status conditions on combatants), but neither `isValidMove` nor the click-to-move handler in `useGridInteraction.ts` checks for the Stuck status. A combatant marked as Stuck can still be moved freely on the grid. The movement range display does not check for Stuck either.
-- **What's Missing:** Status condition check in the movement validation path. Neither `isValidMove` nor the interaction handler reads combatant status conditions.
+  Movement range visualization via `usePathfinding.ts:31-145` — flood-fill finds all reachable cells within speed budget, accounting for terrain costs, elevation costs, and PTU diagonal rules.
+- **Classification:** Correct
 
-### vtt-grid-R028: Sprint Maneuver (Partial)
+### R028 — Sprint Maneuver
+
+- **Rule:** "Increase Movement Speeds by 50% for the rest of your turn."
+- **Expected behavior:** +50% movement speed applied as a maneuver effect.
+- **Actual behavior:** `app/constants/combatManeuvers.ts:29-37` — Sprint defined as Standard action with shortDesc "+50% Movement Speed this turn". `useGridMovement.ts:121-124` — `applyMovementModifiers` checks `tempConditions.includes('Sprint')` and applies `Math.floor(modifiedSpeed * 1.5)`. Correctly applies floor rounding per PTU rounding rule (R021).
+- **Classification:** Correct
+
+### R029 — Push Maneuver
+
+- **Rule:** "Opposed Combat/Athletics check. Push target 1m away. AC 4."
+- **Expected behavior:** Push maneuver defined with AC 4, melee range, opposed check.
+- **Actual behavior:** `combatManeuvers.ts:18-27` — Push: `actionType: 'standard'`, `ac: 4`, `requiresTarget: true`, `shortDesc: 'Push target 1m away (opposed Combat/Athletics)'`. Matches PTU specification.
+- **Classification:** Correct
+
+### R030 — Disengage Maneuver
+
+- **Rule:** "Shift 1 Meter. Does not provoke Attack of Opportunity."
+- **Expected behavior:** 1m safe shift defined as a maneuver.
+- **Actual behavior:** No explicit "Disengage" entry in `combatManeuvers.ts`. However, the AoO system itself is not implemented (R031 is Missing in the matrix), so all movement is effectively disengage-safe. The maneuver concept is implicit in the current system since there's no AoO to avoid.
+- **Note:** The matrix says "Disengage maneuver exists in combat maneuvers system" but the constant file does not have a `disengage` entry. The maneuvers list has: push, sprint, trip, grapple, disarm, dirty-trick, intercept-melee, intercept-ranged, take-a-breather. No disengage.
+- **Classification:** Incorrect
+- **Severity:** LOW — Since AoO is not implemented (R031 is Missing), the absence of Disengage has no practical impact. The maneuver definition is missing but its primary purpose (avoiding AoO) is moot.
+
+---
+
+## Tier 4: Measurement and Range
+
+### R021 — Melee Range (Adjacency)
+
+- **Rule:** "Melee range requires adjacency."
+- **Expected behavior:** Melee attacks check adjacent cells.
+- **Actual behavior:** `useRangeParser.ts:67-69` — `parseRange` for "Melee" returns `{ type: 'melee', range: 1 }`. `isInRange` (lines 297-359) uses `chebyshevDistanceTokens` to measure distance. For melee, distance must be <= 1 (adjacent). Correctly handles multi-cell tokens via closest-cell distance.
+- **Classification:** Correct
+
+### R032 — Throwing Range
+
+- **Rule:** "Throwing Range = 4 + Athletics Rank in meters."
+- **Expected behavior:** Distance measurement tools support throwing range checks.
+- **Actual behavior:** The measurement tools (`MeasurementToolbar` C048, `useRangeParser` C016) support distance measurement. Range entered manually. Distance calculation (`chebyshevDistanceTokens`) provides correct cell-distance for range verification. The throwing range formula itself is a character-lifecycle concern (R018 in that domain) — the VTT provides the measurement infrastructure.
+- **Classification:** Correct
+
+---
+
+## Tier 5: Rendering (Grid Rendering)
+
+### R001 (continued) — Grid Rendering in Both Modes
+
+- **Rule:** Square grid system.
+- **Expected behavior:** Both 2D and isometric modes render correctly.
+- **Actual behavior:** `VTTContainer.vue` (C040) switches between `GridCanvas.vue` (2D) and `IsometricCanvas.vue` (isometric) based on grid mode. 2D mode uses `useGridRendering` for standard top-down rendering. Isometric mode uses `useIsometricRendering` with `useIsometricProjection` for diamond grid, `useDepthSorting` for painter's algorithm, and `useIsometricOverlays` for fog/terrain/measurement in isometric projection. Both modes share the same underlying square grid coordinate system.
+- **Classification:** Correct
+
+---
+
+## Tier 6: Partial Items
+
+### R003 — Size Category Footprints
+
+- **Rule:** "Small/Medium = 1x1, Large = 2x2, Huge = 3x3, Gigantic = 4x4."
+- **Expected behavior:** Multi-tile token rendering for large combatants.
+- **Actual behavior:** `VTTToken.vue` (C049) renders all tokens as 1x1 regardless of size. `useGridMovement.ts:196-211` — `getBlockedCells` does iterate over `token.size` for multi-cell occupation, suggesting the data model supports multi-tile tokens. `useRangeParser.ts:163-171` — `getOccupiedCells` correctly iterates over token footprint. `chebyshevDistanceTokens` (lines 181-194) correctly handles multi-cell distance. The backend logic supports multi-tile tokens, but the visual rendering is 1x1 only.
+- **Classification:** Correct (for present portion) — The measurement and pathfinding logic correctly handles multi-tile tokens. Only the visual rendering is 1x1.
+
+### R015 — Rough Terrain
+
+- **Rule:** "When targeting through Rough Terrain, -2 Accuracy. Spaces occupied by enemies are Rough Terrain."
+- **Expected behavior:** Rough terrain type with accuracy penalty.
+- **Actual behavior:** `terrain.ts:23` — `rough: 1` (normal movement cost). Rough terrain type exists and can be painted. However: (1) No -2 accuracy penalty when targeting through rough terrain — accuracy modifications are not implemented. (2) Occupied enemy squares are not auto-marked as rough terrain.
 - **Classification:** Approximation
-- **Severity:** MEDIUM
-- **Code:** `composables/useGridMovement.ts:37-42` -- `getSpeed`, `composables/useGridRendering.ts:331-365` -- `drawMovementRange`
-- **Rule:** "Maneuver: Sprint. Action: Standard. Class: Status. Range: Self. Effect: Increase your Movement Speeds by 50% for the rest of your turn."
-- **Expected:** After executing Sprint, the combatant's movement speed on the grid should increase by 50%. The movement range overlay should expand to reflect the boosted speed, and click-to-move validation should use the boosted speed.
-- **Actual:** Sprint exists as a combat maneuver that can be executed during combat, but its effect is not propagated to the VTT movement system. The `getSpeed` function returns a flat value from a callback and does not account for Sprint's +50% bonus. The movement range display uses the same un-modified speed. After executing Sprint, the token's movement range on the grid does not change.
-- **What's Missing:** Integration between the combat maneuver system (where Sprint is executed) and the VTT movement system (where speed is consumed). A Sprint flag or speed modifier needs to flow from the combat state into the `getMovementSpeed` callback.
+- **Severity:** MEDIUM — Movement cost is correct (rough can be non-slow). Accuracy penalty is the primary purpose of rough terrain and is missing.
+
+### R022 — Stuck Condition (No Movement)
+
+- **Rule:** "Stuck means you cannot Shift at all."
+- **Expected behavior:** Stuck status prevents all movement on the grid.
+- **Actual behavior:** `useGridMovement.ts:94-98` — `applyMovementModifiers` checks `conditions.includes('Stuck')` and returns 0 (zero speed). This is called by `getSpeed` (line 187) which feeds into `isValidMove` (line 310). A combatant with Stuck status will have speed 0, and `isValidMove` will return `valid: false` since `distance > 0 && distance <= 0` is always false. The movement range visualization (`getMovementRangeCells`) will show no reachable cells since speed=0.
+- **Classification:** Correct — Stuck condition IS mechanically enforced. The matrix classification of "Partial" appears outdated. `applyMovementModifiers` was added/updated after the last coverage analysis.
+
+### R024 — Slowed Condition (Half Movement)
+
+- **Rule:** "Slowed: Movement halved (minimum 1)."
+- **Expected behavior:** Slowed halves movement range on grid.
+- **Actual behavior:** `useGridMovement.ts:100-103` — `applyMovementModifiers` checks `conditions.includes('Slowed')` and applies `Math.floor(modifiedSpeed / 2)`. This is correct. The Slowed condition IS mechanically enforced via `applyMovementModifiers`. Speed is halved and the minimum 1 is enforced by the final line `Math.max(modifiedSpeed, speed > 0 ? 1 : 0)` (line 127).
+- **Classification:** Correct — Same as R022, the implementation was added/updated after the last coverage analysis. Slowed IS enforced.
+
+### R025 — Tripped Condition (Stand Up Cost)
+
+- **Rule:** "Tripped: Must spend a Shift Action getting up before further actions."
+- **Expected behavior:** Tripped consumes shift action to stand.
+- **Actual behavior:** Status conditions are tracked on the combatant model. However, Tripped does NOT consume a shift action in the grid system. There is no "stand up" mechanic in grid interaction — the combatant can move normally despite being Tripped. The `applyMovementModifiers` function does not check for Tripped status.
+- **Classification:** Approximation
+- **Severity:** LOW — Tripped is a status tracked in combat but not enforced as a movement cost. GM must manually enforce.
+
+### R026 — Speed CS Affect Movement
+
+- **Rule:** "Bonus or penalty to all Movement Speeds equal to half your Speed Combat Stage value rounded down. Minimum 2."
+- **Expected behavior:** Speed CS modifies movement range; negative CS floor at 2.
+- **Actual behavior:** `useGridMovement.ts:105-119` — `applyMovementModifiers`:
+  ```
+  const speedStage = combatant.entity.stageModifiers?.speed ?? 0
+  const clamped = Math.max(-6, Math.min(6, speedStage))
+  const stageBonus = Math.trunc(clamped / 2)
+  modifiedSpeed = modifiedSpeed + stageBonus
+  if (stageBonus < 0) {
+    modifiedSpeed = Math.max(modifiedSpeed, 2)
+  }
+  ```
+  Verification: Speed CS +6 → bonus +3. Speed CS -5 → `Math.trunc(-5/2)` = -2. Speed CS +5 → +2. Negative CS has floor of 2. Uses `Math.trunc` for symmetric rounding toward zero, which is correct per PTU (positive rounds down, negative rounds toward zero).
+
+  **This IS implemented.** The matrix classification of "Partial" appears outdated. Speed CS movement modifier IS applied via `applyMovementModifiers`.
+- **Classification:** Correct — Speed CS IS applied to movement. The implementation matches PTU exactly.
+
+### R038 — Levitate Maximum Height
+
+- **Rule:** "Maximum height off the ground equals half of Levitate Capability."
+- **Expected behavior:** Elevation capped at half Levitate speed.
+- **Actual behavior:** `useElevation.ts` (C026) manages per-token elevation with raise/lower helpers. Elevation is freely adjustable without checking Levitate capability limits. No max height enforcement based on Levitate speed.
+- **Classification:** Approximation
+- **Severity:** LOW — Elevation system exists but doesn't enforce Levitate height caps. GM can manually enforce.
+
+---
+
+## Tier 7: Implemented-Unreachable
+
+### R041 — Intercept Melee
+
+- **Rule:** "Full Action + Interrupt. Ally within movement range hit by adjacent foe. Shift to occupy their space."
+- **Expected behavior:** Maneuver exists in combat system. Grid provides visual assistance.
+- **Actual behavior:** `combatManeuvers.ts:79-87` — Intercept Melee defined: `actionType: 'interrupt'`, `actionLabel: 'Full + Interrupt'`, `requiresTarget: false`, `shortDesc: 'Take melee hit meant for adjacent ally'`. The maneuver exists and can be executed via the combat action system. However, the VTT grid does not provide visual assistance: no "ally within movement range" indicator, no path visualization.
+- **Classification:** Correct (logic-wise) — Maneuver definition is correct. Grid visual assistance is a UI enhancement, not a rules implementation error.
 
 ---
 
 ## Ambiguous Items
 
-### vtt-grid-R029: Push Maneuver (Partial)
-- **Classification:** Ambiguous
-- **Code:** `server/api/encounters/[id]/position.post.ts` -- position update endpoint, `stores/encounterGrid.ts:updateCombatantPosition` -- store action
-- **Rule:** "If you win, the target is Pushed back 1 Meter directly away from you. If you have Movement remaining this round, you may then Move into the newly occupied Space, and Push the target again."
-- **Interpretation A:** Push forced movement should be a grid operation: the server/client automatically moves the target token 1 meter away and optionally advances the pusher. This requires directional forced-movement logic on the grid (determine "directly away" direction, check for blocking terrain/tokens behind target, etc.).
-- **Interpretation B:** Push is a combat-system action whose spatial consequence (token repositioning) is handled by the GM manually moving tokens after the opposed check resolves. The grid only needs the position update endpoint, and the GM clicks to reposition tokens.
-- **Code follows:** Interpretation B -- the Push maneuver can be executed via the combat system, but spatial consequences (moving the target token, advancing the pusher) are left to GM manual token movement via the existing click-to-move or position update API.
-- **Action:** Escalate to Game Logic Reviewer -- whether a VTT app should automate forced movement from Push (and other forced-movement maneuvers like Trip knockback) or leave it to GM discretion. The PTU rulebook describes Push in pen-and-paper terms where the GM would physically move miniatures. The app could either automate this or leave it manual. The matrix classified this as Partial with P1 gap priority, but the question is whether the "missing" forced-movement API is a correctness issue or a feature gap.
+### R030 — Disengage Maneuver Definition
+
+The Disengage maneuver is described in PTU as "Shift 1 Meter without provoking AoO." The combat maneuvers constant does not include a Disengage entry. Since AoO (R031) is not implemented either, all movement is effectively AoO-free, making Disengage redundant. Two valid interpretations:
+
+1. **Disengage should be defined** even without AoO, for completeness and future-proofing.
+2. **Disengage is unnecessary** until AoO is implemented — adding it now would be dead code.
+
+This is classified as **Incorrect** above because the maneuver definition is missing per PTU rules, but the practical impact is zero.
+
+**Recommendation:** When AoO (R031) is implemented, Disengage should be added simultaneously. No decree-need ticket warranted.
 
 ---
 
-## Additional Observations
+## Revised Classifications (Stale Matrix Corrections)
 
-### Observation 1: Movement validation path inconsistency
-The app has two parallel movement validation systems:
-1. **Dijkstra flood-fill** (`useRangeParser.ts:getMovementRangeCells`) -- used for movement range display. Correctly handles terrain costs, diagonal parity per-path, and blocked cells.
-2. **Simple distance check** (`useGridMovement.ts:calculateMoveDistance` + `isValidMove`) -- used for click-to-move execution. Uses only geometric PTU diagonal distance, ignores terrain costs.
+Several items the matrix classified as "Partial" are now fully implemented based on current source code reading:
 
-This architectural split means the movement range overlay can show a cell as unreachable (due to terrain costs), but clicking on it may succeed anyway (because the geometric distance is within speed). Conversely, a cell reachable via terrain-aware pathfinding might show as reachable but fail the simple distance check if the geometric distance is high.
+| Rule | Matrix Classification | Audit Classification | Reason |
+|------|----------------------|---------------------|--------|
+| R022 (Stuck) | Partial | **Correct** | `applyMovementModifiers` returns 0 speed for Stuck |
+| R024 (Slowed) | Partial | **Correct** | `applyMovementModifiers` halves speed for Slowed |
+| R026 (Speed CS) | Partial | **Correct** | `applyMovementModifiers` applies Speed CS with floor 2 |
 
-The `validateMovement` function in `useRangeParser.ts` (lines 423-460) does use Dijkstra internally and would be the correct validation to use for click-to-move, but it is not wired into the interaction handler. This function exists and is correct, but is unused in the main movement execution path.
+These items were likely implemented after the previous coverage analysis (sessions 12-26) and the matrix was not updated to reflect the new code.
 
-### Observation 2: Water terrain always impassable
-In `useGridMovement.ts:68`, `getTerrainCostAt` calls `terrainStore.getMovementCost(x, y, false)` with `canSwim` hardcoded to `false`. This means water terrain is always treated as impassable (Infinity cost), even for Pokemon with Swim capability. The `canSwim` parameter exists in the store getter but is never leveraged with actual combatant data.
+---
 
-### Observation 3: Measurement distance uses Chebyshev, not PTU diagonal
-The `measurement.ts` store's `distance` getter (line 35-43) uses Chebyshev distance (`Math.max(dx, dy)`) for the distance readout. This is appropriate for adjacency checks and range validation, but differs from PTU movement distance (alternating diagonal 1m/2m). The distance display will show a shorter distance than the actual movement cost for diagonal paths. For example, moving 3 cells diagonally shows "3" in the measurement tool, but the actual movement cost is 4 (1+2+1). This is likely intentional for range checking (PTU ranges use Chebyshev) vs movement (PTU movement uses alternating diagonal), but could confuse users measuring movement distances with the distance tool.
+## Escalation Notes
+
+### Items Requiring Fix
+
+1. **R030 — Disengage Maneuver** (Incorrect, LOW): Disengage entry missing from `combatManeuvers.ts`. Should be added when AoO (R031) is implemented.
+
+### Approximation Items (monitor)
+
+- R015: Rough terrain accuracy penalty not implemented (MEDIUM)
+- R025: Tripped condition doesn't consume shift action (LOW)
+- R038: Levitate max height not enforced (LOW)
+
+### Items Upgraded from Partial to Correct
+
+- R022 (Stuck): Now enforced via `applyMovementModifiers`
+- R024 (Slowed): Now enforced via `applyMovementModifiers`
+- R026 (Speed CS): Now applied via `applyMovementModifiers` with floor 2
+
+### Decree-Need References
+
+Existing decree-needs relevant to this domain:
+- decree-need-002: diagonal range calculation
+- decree-need-003: token blocking
+- decree-need-007: cone width
+- decree-need-008: water terrain
+- decree-need-009: diagonal line length
+- decree-need-010: rough+slow overlap (relevant to R015)
+- decree-need-011: mixed terrain speed (relevant to R008 which is Missing)
+
+No new decree-need tickets recommended from this audit.
