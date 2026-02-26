@@ -26,7 +26,7 @@
             @click="terrainStore.setPaintMode(terrain.type)"
             :title="terrain.description"
           >
-            <span class="terrain-btn__icon">{{ terrain.icon }}</span>
+            <span class="terrain-btn__icon"><component :is="terrain.icon" :size="16" /></span>
             <span class="terrain-btn__label">{{ terrain.label }}</span>
           </button>
         </div>
@@ -184,7 +184,16 @@
 </template>
 
 <script setup lang="ts">
-import { PhCrosshairSimple, PhHourglass } from '@phosphor-icons/vue'
+import {
+  PhCircle,
+  PhProhibit,
+  PhWaves,
+  PhShovel,
+  PhWarning,
+  PhArrowFatLineUp,
+  PhCrosshairSimple,
+  PhHourglass,
+} from '@phosphor-icons/vue'
 import { useTerrainStore, TERRAIN_COLORS, FLAG_COLORS } from '~/stores/terrain'
 import type { TerrainType } from '~/types'
 
@@ -208,42 +217,42 @@ const baseTerrainTypes = [
   {
     type: 'normal' as TerrainType,
     label: 'Normal',
-    icon: '○',
+    icon: PhCircle,
     color: 'rgba(200, 200, 200, 0.5)',
     description: 'Normal terrain - standard movement',
   },
   {
     type: 'blocking' as TerrainType,
     label: 'Blocking',
-    icon: '■',
+    icon: PhProhibit,
     color: TERRAIN_COLORS.blocking.fill,
     description: 'Blocking terrain - impassable',
   },
   {
     type: 'water' as TerrainType,
     label: 'Water',
-    icon: '≈',
+    icon: PhWaves,
     color: TERRAIN_COLORS.water.fill,
     description: 'Water terrain - requires Swim capability (cost 1)',
   },
   {
     type: 'earth' as TerrainType,
     label: 'Earth',
-    icon: '⛏',
+    icon: PhShovel,
     color: TERRAIN_COLORS.earth.fill,
     description: 'Earth terrain - requires Burrow capability',
   },
   {
     type: 'hazard' as TerrainType,
     label: 'Hazard',
-    icon: '⚠',
+    icon: PhWarning,
     color: TERRAIN_COLORS.hazard.fill,
     description: 'Hazard - deals damage on entry',
   },
   {
     type: 'elevated' as TerrainType,
     label: 'Elevated',
-    icon: '△',
+    icon: PhArrowFatLineUp,
     color: TERRAIN_COLORS.elevated.fill,
     description: 'Elevated terrain - height advantage',
   },
