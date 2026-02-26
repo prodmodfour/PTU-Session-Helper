@@ -475,7 +475,7 @@ onUnmounted(() => {
 
 .player-toast {
   position: fixed;
-  top: 56px;
+  top: 100px;
   left: 50%;
   transform: translateX(-50%);
   z-index: $z-index-toast;
