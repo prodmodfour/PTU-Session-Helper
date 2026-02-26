@@ -735,24 +735,6 @@ onMounted(async () => {
   }
 }
 
-// Toggle
-.toggle {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  cursor: pointer;
-
-  input {
-    accent-color: $color-accent-teal;
-    width: 16px;
-    height: 16px;
-  }
-
-  &__text {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-  }
-}
 
 // XP Summary
 .xp-summary {
@@ -965,55 +947,5 @@ onMounted(async () => {
   color: $color-accent-teal;
 }
 
-// Empty/Loading/Error States
-.empty-state {
-  text-align: center;
-  padding: $spacing-xl;
-  color: $color-text-muted;
 
-  &__hint {
-    font-size: $font-size-sm;
-    font-style: italic;
-    margin-top: $spacing-xs;
-  }
-}
-
-.loading-state {
-  text-align: center;
-  padding: $spacing-lg;
-  color: $color-text-muted;
-  font-style: italic;
-}
-
-.error-state {
-  text-align: center;
-  padding: $spacing-md;
-  color: $color-danger;
-  font-size: $font-size-sm;
-  background: rgba($color-danger, 0.1);
-  border-radius: $border-radius-md;
-}
-
-// Button variants used in the modal
-.btn--sm {
-  padding: $spacing-xs $spacing-sm;
-  font-size: $font-size-xs;
-}
-
-.btn--ghost {
-  background: transparent;
-  border: 1px solid $glass-border;
-  color: $color-text-muted;
-
-  &:hover {
-    border-color: $color-accent-teal;
-    color: $color-text;
-  }
-}
-
-// Animations
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
 </style>
