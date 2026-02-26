@@ -347,3 +347,18 @@ Functional scaffolding exists at `/player` — encounter display with combatant 
 - `app/assets/scss/components/_player-view.scss` (4K, touch targets)
 - `app/assets/scss/components/_player-combat-actions.scss` (move detail overlay, 4K)
 - `app/layouts/player.vue` (4K font scaling)
+
+### Track A: Core Player View (P2 Fix Cycle 2 — code-review-181)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-26 | 6d80b1a | M1+M2: Extract PlayerCharacterSheet SCSS to `_player-character-sheet.scss`, add missing .list-subheader 4K override |
+
+**Files created (1):**
+- `app/assets/scss/components/_player-character-sheet.scss`
+
+**Files modified (2):**
+- `app/components/player/PlayerCharacterSheet.vue` (removed scoped style block — 820→383 lines)
+- `app/nuxt.config.ts` (registered new SCSS file in css array)
+
+**All 2 issues from code-review-181 resolved:** 2 MEDIUM.
