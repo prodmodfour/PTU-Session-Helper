@@ -285,7 +285,7 @@ const {
   // Confirmation
   canConfirm,
   getConfirmData
-} = useMoveCalculation(moveRef, actorRef, targetsRef)
+} = useMoveCalculation(moveRef, actorRef, targetsRef, targetsRef)
 
 // Helper to check if a target is in range
 const isTargetInRange = (targetId: string): boolean => {

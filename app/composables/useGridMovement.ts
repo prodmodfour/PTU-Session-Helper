@@ -6,6 +6,7 @@ import {
   getOverlandSpeed, calculateAveragedSpeed
 } from '~/utils/combatantCapabilities'
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
+import { isEnemySide } from '~/utils/combatSides'
 
 interface TokenData {
   combatantId: string
@@ -350,16 +351,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
     const isEnemy = (otherCombatantId: string): boolean => {
       const other = findCombatant(otherCombatantId)
       if (!other) return false
-      // Same side = not enemy
-      if (combatant.side === other.side) return false
-      // 'players' and 'allies' are friendly to each other
-      if (
-        (combatant.side === 'players' || combatant.side === 'allies') &&
-        (other.side === 'players' || other.side === 'allies')
-      ) {
-        return false
-      }
-      return true
+      return isEnemySide(combatant.side, other.side)
     }
 
     const enemyCells: GridPosition[] = []

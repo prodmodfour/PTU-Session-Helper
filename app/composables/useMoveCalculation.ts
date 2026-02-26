@@ -3,6 +3,7 @@ import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { useTerrainStore } from '~/stores/terrain'
+import { isEnemySide } from '~/utils/combatSides'
 
 export interface TargetDamageCalc {
   targetId: string
@@ -29,7 +30,8 @@ export interface AccuracyResult {
 export function useMoveCalculation(
   move: Ref<Move>,
   actor: Ref<Combatant>,
-  targets: Ref<Combatant[]>
+  targets: Ref<Combatant[]>,
+  allCombatants?: Ref<Combatant[]>
 ) {
   const {
     rollDamageBase,
@@ -99,35 +101,29 @@ export function useMoveCalculation(
    * A combatant on 'enemies' considers 'players' and 'allies' as enemies.
    * A combatant on 'players' or 'allies' considers 'enemies' as enemies.
    */
+  /**
+   * All combatants on the grid — used for grid-level properties like
+   * enemy-occupied rough terrain. Falls back to `targets` when the
+   * optional `allCombatants` param is not provided.
+   */
+  const combatantsOnGrid = computed((): Combatant[] => {
+    return allCombatants?.value ?? targets.value
+  })
+
   const enemyOccupiedCells = computed((): Set<string> => {
     const cells = new Set<string>()
     const actorSide = actor.value.side
 
-    for (const target of targets.value) {
-      if (target.id === actor.value.id) continue
-      if (!target.position) continue
-
-      // Determine if this combatant is an enemy of the actor
-      const targetSide = target.side
-      let isEnemy = false
-      if (actorSide === targetSide) {
-        isEnemy = false
-      } else if (
-        (actorSide === 'players' || actorSide === 'allies') &&
-        (targetSide === 'players' || targetSide === 'allies')
-      ) {
-        isEnemy = false
-      } else {
-        isEnemy = true
-      }
-
-      if (!isEnemy) continue
+    for (const combatant of combatantsOnGrid.value) {
+      if (combatant.id === actor.value.id) continue
+      if (!combatant.position) continue
+      if (!isEnemySide(actorSide, combatant.side)) continue
 
       // Add all cells occupied by this enemy token
-      const size = target.tokenSize || 1
+      const size = combatant.tokenSize || 1
       for (let dx = 0; dx < size; dx++) {
         for (let dy = 0; dy < size; dy++) {
-          cells.add(`${target.position.x + dx},${target.position.y + dy}`)
+          cells.add(`${combatant.position.x + dx},${combatant.position.y + dy}`)
         }
       }
     }
