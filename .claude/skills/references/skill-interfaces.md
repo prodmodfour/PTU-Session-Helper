@@ -10,7 +10,8 @@ app/tests/e2e/artifacts/
 │   ├── bug/               # Orchestrator writes (from audit) → Developer reads
 │   ├── ptu-rule/          # Orchestrator/Game Logic Reviewer writes → Developer reads
 │   ├── feature/           # Orchestrator writes (from matrix) → Developer reads
-│   └── ux/                # Orchestrator writes (from matrix) → Developer reads
+│   ├── ux/                # Orchestrator writes (from matrix) → Developer reads
+│   └── decree/            # Skills write (ambiguities) → Decree Facilitator reads
 ├── matrix/                # Feature Matrix workflow artifacts
 │   ├── <domain>-rules.md          # PTU Rule Extractor writes
 │   ├── <domain>-capabilities.md   # App Capability Mapper writes
@@ -667,6 +668,110 @@ estimated_scope: small | medium | large    # refactoring only
 - Status lifecycle: `open` → `in-progress` → `resolved` (or `rejected`)
 - Bug/feature/ux tickets are created by the Orchestrator when processing completed matrix + audit data
 - Legacy tickets may have `source_report` instead of `matrix_source` — both are valid
+
+---
+
+## 6e. Decree-Need Ticket
+
+**Written by:** Senior Reviewer, Game Logic Reviewer, Implementation Auditor, Slave Collector, UX Ticket Creator
+**Read by:** Decree Facilitator
+**Location:** `artifacts/tickets/decree/decree-need-<NNN>.md`
+
+```markdown
+---
+ticket_id: decree-need-NNN
+type: decree-need
+priority: P1
+status: open | addressed | rejected
+domain: <domain>
+source: <review-id or skill-name or ux-session-NNN>
+created_by: <skill-name>
+created_at: <ISO timestamp>
+decree_id: null | decree-NNN
+---
+
+# decree-need-NNN: Question requiring human ruling
+
+## The Ambiguity
+<What question arose>
+
+## Context
+<file:line references, PTU quotes, review artifacts that surfaced this>
+
+## Options Identified
+### Option A: <Name>
+<Description, implications, precedent>
+### Option B: <Name>
+<Description, implications, precedent>
+
+## Recommendation
+<Skill's recommendation, or "genuinely ambiguous — needs human input">
+
+## Blocking Work
+<Ticket IDs blocked by this ruling, or "none">
+```
+
+**Status lifecycle:** `open` → `addressed` (decree recorded) or `rejected` (existing decree reaffirmed)
+
+**Constraints:**
+- One decree-need per ambiguity (don't duplicate)
+- Always include at least 2 options
+- Set `decree_id` after Decree Facilitator records the ruling
+
+---
+
+## 6f. Design Decree
+
+**Written by:** Decree Facilitator (from human ruling)
+**Read by:** All reviewer/auditor/dev skills
+**Location:** `decrees/decree-<NNN>.md` (project root)
+
+```markdown
+---
+decree_id: decree-NNN
+status: active | superseded | withdrawn
+domain: <domain>
+topic: <short-kebab-case-topic>
+title: "<Imperative: Use X approach for Y>"
+ruled_at: <ISO timestamp>
+supersedes: null | decree-NNN
+superseded_by: null | decree-NNN
+source_ticket: decree-need-NNN
+implementation_tickets: [<ticket-id>, ...]
+tags: [<searchable>, <tags>]
+---
+
+# decree-NNN: <Title>
+
+## The Ambiguity
+<What question arose. Reference the source ticket/review.>
+
+## Options Considered
+### Option A: <Name>
+<Description, pros, cons, PTU references.>
+### Option B: <Name>
+<Description, pros, cons, PTU references.>
+
+## Ruling
+**The true master decrees: <one-sentence decision>.**
+<Full explanation with rationale.>
+
+## Precedent
+<The reusable principle this establishes. This is what reviewers and skills cite.>
+
+## Implementation Impact
+- Tickets created: <list or "none — confirms current behavior">
+- Files affected: <key files>
+- Skills affected: <which skills need awareness>
+```
+
+**Status lifecycle:** `active` → `superseded` (replaced by newer decree) or `withdrawn`
+
+**Constraints:**
+- Decrees are immutable once written (only `status`, `superseded_by` fields change)
+- Supersession creates a new decree and marks the old one
+- Active decrees override all skill-level rulings
+- Decree violations found by reviewers are CRITICAL severity
 
 ---
 

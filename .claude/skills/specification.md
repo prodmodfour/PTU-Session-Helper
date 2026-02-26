@@ -23,7 +23,7 @@ The Retrospective Analyst serves both. The Master Planner reads both state files
 
 The orchestration system has three phases:
 
-1. **Master Planner** (`/create_slave_plan`) — analyzes ALL pending work, assigns to N slaves, writes plan file + launch script
+1. **Master Planner** (`/create_slave_plan`) — analyzes ALL pending work, assigns to N slaves, writes plan file, launches slave tmux sessions directly, and verifies startup
 2. **Slave Executors** (`/slave N`) — each slave creates a worktree, launches agents, commits to its branch, writes status, dies
 3. **Slave Collector** (`/collect_slaves`) — merges all completed branches to master, updates state files, cleans up
 
@@ -825,6 +825,8 @@ When skills disagree:
 
 No skill overrides another outside its authority domain.
 
+**Design decrees override all skill-level rulings.** A decree represents an explicit human decision. If a decree contradicts a skill's judgment, the decree wins. Skills should cite decrees in their output and file `decree-need` tickets for new ambiguities.
+
 ## 6. Shared References
 
 All skills that need PTU knowledge read from shared reference files rather than encoding rulebook content themselves.
@@ -839,6 +841,11 @@ All skills that need PTU knowledge read from shared reference files rather than 
 | Refactoring Tickets | `app/tests/e2e/artifacts/refactoring/` | Code Health Auditor (writes), Developer + Senior Reviewer (read) |
 | Review Artifacts | `app/tests/e2e/artifacts/reviews/` | Senior Reviewer + Game Logic Reviewer (write), Orchestrator + Developer (read) |
 | Matrix Artifacts | `app/tests/e2e/artifacts/matrix/` | All 4 matrix skills (write sequentially), Orchestrator (read for tickets) |
+| Design Decrees | `decrees/` | Decree Facilitator (writes), all reviewer/auditor/dev skills (read) |
+| Decree-Need Tickets | `app/tests/e2e/artifacts/tickets/decree/` | Reviewers/Auditor/Collector (write), Decree Facilitator (read) |
+| UX Session Scenarios | `ux-sessions/scenarios/` | UX Session Planner (read), UX agents (read) |
+| UX Party Profiles | `ux-sessions/party.md` | UX Session Planner (read), UX agents (read) |
+| UX Session Reports | `ux-sessions/reports/` | UX agents (write), Narrator (read/write), Ticket Creator (read) |
 
 Reference files live in `.claude/skills/references/`.
 
@@ -929,3 +936,134 @@ Examples: `slave/1-dev-ptu-rule-079-1740200000`, `slave/2-reviewers-ptu-rule-058
 **Stale slave detection:**
 - PID check: `kill -0 <pid>` — if dead and status is "running", slave is stale
 - Collector treats stale slaves as failed
+
+## 8. Design Decrees
+
+Design decrees are binding human rulings on ambiguous design decisions. They provide precedent that all skills must respect.
+
+### 8.1 Why Decrees Exist
+
+Skills discover ambiguity (multiple valid interpretations of PTU rules, conflicting architectural approaches, UX decisions without clear best practice). Without a mechanism for the human to rule on these, skills either guess (introducing inconsistency) or stall (wasting pipeline time). Decrees solve both.
+
+### 8.2 Decree Lifecycle
+
+1. **Discovery:** A skill encounters ambiguity during its work (review, audit, implementation)
+2. **Ticket:** The skill creates a `decree-need` ticket in `tickets/decree/`
+3. **Facilitation:** Human runs `/address_design_decrees` → Decree Facilitator presents options
+4. **Ruling:** Human decides → Decree Facilitator records the ruling in `decrees/decree-NNN.md`
+5. **Enforcement:** All skills check `decrees/` before acting and cite applicable decrees
+6. **Implementation:** If the ruling requires code changes, implementation tickets are created
+
+### 8.3 Decree Authority
+
+- Decrees override all skill-level rulings, including Game Logic Reviewer interpretations
+- If a decree contradicts PTU RAW, the decree still wins (it represents an intentional human choice)
+- Decrees can be superseded by newer decrees (old decree gets `status: superseded`)
+- Decree violations found by reviewers are CRITICAL severity
+
+### 8.4 Skills Affected
+
+| Skill | Decree Interaction |
+|-------|-------------------|
+| Senior Reviewer | Step 0b: Check decrees before reviewing. Cite in review. File decree-need for new ambiguities. |
+| Game Logic Reviewer | Check decrees. Decrees override PTU RAW interpretations. File decree-need to recommend revisitation. |
+| Implementation Auditor | Check decrees before classifying as Ambiguous. Decree match = Correct/Incorrect, not Ambiguous. |
+| Developer | Read relevant decrees before implementing. Follow them exactly. |
+| Master Planner | Scan decree-need tickets. Inject `{{RELEVANT_DECREES}}` into templates. Never assign decree-needs to slaves. |
+| Slave Collector | Scan merged artifacts for ambiguity. Create decree-need tickets from AMBIGUOUS flags. |
+| Decree Facilitator | Primary skill. Presents options, records rulings, creates implementation tickets. |
+
+### 8.5 File Locations
+
+| Type | Location |
+|------|----------|
+| Decrees | `decrees/decree-NNN.md` (project root) |
+| Decree-need tickets | `app/tests/e2e/artifacts/tickets/decree/decree-need-NNN.md` |
+| Skill | `.claude/skills/decree-facilitator.md` |
+| Command | `.claude/commands/address-design-decrees.md` |
+
+## 9. UX Exploration Sessions
+
+UX exploration sessions are simulated play sessions where 5 AI personas interact with the live app through real browsers, then report on the experience.
+
+### 9.1 Why UX Sessions
+
+Unit tests verify logic. The matrix verifies PTU rule coverage. Neither catches:
+- Mobile layout breakdowns
+- Multi-view sync problems (GM acts, player doesn't see update)
+- Confusing flows for new users
+- Missing UI for implemented backend features
+- Performance issues under realistic multi-user load
+
+UX sessions fill this gap with persona-based browser interaction.
+
+### 9.2 The Party
+
+Five fixed personas with diverse devices, viewports, PTU knowledge levels, and play styles. See `ux-sessions/party.md` for full profiles.
+
+| Name | Role | Device | Viewport | Personality |
+|------|------|--------|----------|-------------|
+| Kaelen | GM | Laptop | 1280x800 | Methodical, rules-focused |
+| Mira | Player | Phone | 390x844 | Enthusiastic, impatient |
+| Dex | Player | Laptop | 1440x900 | Analytical, number-checker |
+| Spark | Player | Phone | 360x780 | Casual, rule-ignorant |
+| Riven | Player | Laptop | 1920x1080 | Strategic, edge-case tester |
+
+### 9.3 Session Architecture
+
+Each session uses 7 slaves:
+
+```
+Phase A: GM Setup (slave 1 — starts immediately)
+  Kaelen → /gm → sets up scene/encounter
+
+Phase B: Parallel Play (slaves 2-5 — start 60s after GM)
+  All 4 players → /player → join, interact, report
+
+Phase C: Post-Session (slaves 6-7 — after all browsers finish)
+  Narrator reads all 5 reports → writes combined session-report.md
+  Ticket Creator reads reports → creates bug/ux/feature/decree-need tickets
+```
+
+Coordination happens through the app (WebSocket sync), not between agents. No worktrees — UX slaves don't modify code.
+
+### 9.4 Browser Automation
+
+Agents use Playwright via Node.js scripts executed through Bash:
+1. Agent writes a script using the `playwright` library
+2. Executes via `node script.js`
+3. Script launches browser with persona-specific viewport
+4. Agent reads screenshots (multimodal) to understand screen state
+5. Agent decides next action, writes another script
+6. Repeat until session goals are met
+
+### 9.5 Session Roadmap
+
+UX sessions are blocking milestones — no dev work during a session:
+
+1. After Player View complete → **ux-session-001** (basic combat + player flow)
+2. After Scene System polish → **ux-session-002** (exploration + scenes)
+3. After VTT Grid player integration → **ux-session-003** (tactical combat)
+4. After Capture System polish → **ux-session-004** (capture flow)
+5. Before release candidate → **ux-session-005** (comprehensive all-domains)
+
+### 9.6 Output
+
+- Individual reports per persona in `ux-sessions/reports/ux-session-NNN/`
+- Combined session report by Narrator
+- Tickets created by Ticket Creator in standard ticket directories
+- Decree-need tickets for design questions surfaced during play
+
+### 9.7 File Locations
+
+| Type | Location |
+|------|----------|
+| Party profiles | `ux-sessions/party.md` |
+| Scenarios | `ux-sessions/scenarios/ux-session-NNN.md` |
+| Reports | `ux-sessions/reports/ux-session-NNN/` |
+| UX Session Planner skill | `.claude/skills/ux-session-planner.md` |
+| Command | `.claude/commands/ux-session.md` |
+| GM template | `.claude/skills/templates/agent-ux-gm.md` |
+| Player template | `.claude/skills/templates/agent-ux-player.md` |
+| Narrator template | `.claude/skills/templates/agent-ux-narrator.md` |
+| Ticket Creator template | `.claude/skills/templates/agent-ux-ticket-creator.md` |

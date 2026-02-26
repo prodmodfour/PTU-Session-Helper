@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **State**: 13 Pinia stores (auto-registered via `@pinia/nuxt`)
 - **Real-time**: WebSocket for GM-Group synchronization
 - **Styling**: SCSS with global variables
-- **Testing**: Playwright (e2e) + Vitest (unit)
+- **Testing**: Vitest (unit) + UX exploration sessions (Playwright browser automation)
 
 ### Solid Principles
 1. Single Responsibility Principle (SRP)
@@ -111,7 +111,7 @@ app/
 ├── utils/           # captureRate, diceRoller, restHealing
 ├── constants/       # combatManeuvers, statusConditions
 ├── prisma/          # Schema, seeds, database
-├── tests/           # Playwright (e2e) + Vitest (unit)
+├── tests/           # Vitest (unit) + e2e artifacts (tickets, matrix, reviews)
 ├── server/
 │   ├── api/         # REST endpoints across 10 domain categories
 │   ├── services/    # Business logic (combatant, encounter, entity-update, pokemon-generator)
@@ -123,7 +123,7 @@ app/
 ### Triple-View System
 - **GM View** (`/gm`): Full control — spawn characters, edit stats, manage NPC turns, all information visible
 - **Group View** (`/group`): TV/projector display — 4 tabs (lobby, scene, encounter, map) managed via `GroupViewState` singleton. Cross-tab sync via BroadcastChannel. Store: `groupViewTabs`
-- **Player View** (`/player`): Individual player interface — scaffolding exists but not yet complete
+- **Player View** (`/player`): Individual player interface
 
 ### Data Models (14 Prisma models)
 - **HumanCharacter**: Players or NPCs with stats, rest/healing tracking, linked to their Pokemon
@@ -190,9 +190,9 @@ WebSocket (`/ws`) handles GM-to-Group synchronization with role-based broadcasti
 - Import and use icon components rather than emoji characters
 
 ### Testing
-- **E2E**: Playwright — `app/tests/e2e/` with capture/ and combat/ scenario directories
 - **Unit**: Vitest — `app/tests/unit/` covering composables, API, stores, components
-- Config: `app/playwright.config.ts`, `app/vitest.config.ts`
+- **UX Exploration**: Playwright browser automation via AI personas (see UX Sessions below)
+- Config: `app/vitest.config.ts`
 
 ## Git & Attribution Rules
 
@@ -244,3 +244,24 @@ Use **incremental multi-tier delivery** for non-trivial features. Break the feat
 **Why:** Focused review at each tier catches bugs before they propagate. P0 bugs don't infect P1/P2 code. Reviewers context-switch less. Regression testing after each tier is smaller and faster.
 
 **Reference implementation:** `captureRate.ts` (pure calculation utility) → `damageCalculation.ts` (same pattern applied to damage).
+
+## Design Decrees
+
+Binding human rulings on ambiguous design decisions. Skills discover ambiguity and create `decree-need` tickets. The human runs `/address_design_decrees` to make rulings, which are recorded as decree files.
+
+- **Decrees live in:** `decrees/decree-NNN.md` (project root)
+- **Decree-need tickets:** `app/tests/e2e/artifacts/tickets/decree/decree-need-NNN.md`
+- **Authority:** Decrees override all skill-level rulings. Violations are CRITICAL severity.
+- **Command:** `/address_design_decrees` — scan open decree-needs, facilitate human rulings, record decrees
+- **Skills affected:** All reviewers check decrees before reviewing. Implementation Auditor uses decrees to resolve ambiguity. Developer follows decrees during implementation.
+
+## UX Exploration Sessions
+
+Simulated play sessions where 5 AI personas interact with the live app through real browsers (Playwright). Each persona has a fixed device, viewport, personality, and PTU knowledge level.
+
+- **Party profiles:** `ux-sessions/party.md` (5 fixed personas: Kaelen GM, Mira/Dex/Spark/Riven players)
+- **Scenarios:** `ux-sessions/scenarios/ux-session-NNN.md`
+- **Reports:** `ux-sessions/reports/ux-session-NNN/`
+- **Command:** `/ux_session ux-session-NNN` — orchestrates 7-slave session (5 browser + narrator + ticket creator)
+- **Blocking milestones:** No dev work during UX sessions. After session, tickets are created from findings.
+- **Roadmap:** ux-session-001 (basic combat) → 002 (scenes) → 003 (VTT) → 004 (capture) → 005 (comprehensive)
