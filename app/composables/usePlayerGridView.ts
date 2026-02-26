@@ -117,8 +117,23 @@ export function usePlayerGridView(options: {
   }
 
   /**
+   * Round a percentage to the nearest 25% increment for enemy display.
+   * Returns: 100 (full), 75, 50, 25, 10 (critical), or 0 (fainted).
+   * The 10% "critical" tier prevents enemies at 1-24% from appearing at 0%.
+   */
+  const roundToDisplayTier = (percentage: number): number => {
+    if (percentage <= 0) return 0
+    if (percentage >= 100) return 100
+    if (percentage >= 88) return 100
+    if (percentage >= 63) return 75
+    if (percentage >= 38) return 50
+    if (percentage >= 25) return 25
+    return 10 // "critical" — low but not fainted
+  }
+
+  /**
    * Get display HP for a combatant based on information asymmetry.
-   * Own/allied: exact HP. Enemy: percentage only.
+   * Own/allied: exact HP percentage. Enemy: rounded to 25% increments.
    */
   const getDisplayHp = (combatant: Combatant): { current: number; max: number; percentage: number } | { percentage: number } => {
     const entity = combatant.entity
@@ -128,7 +143,7 @@ export function usePlayerGridView(options: {
 
     const level = getInfoLevel(combatant)
     if (level === 'enemy') {
-      return { percentage }
+      return { percentage: roundToDisplayTier(percentage) }
     }
     return { current: currentHp, max: maxHp, percentage }
   }
