@@ -48,21 +48,32 @@ export interface MovementSpeeds {
   teleport: number;
 }
 
-// Terrain type for map cells
+// Base terrain type — the physical surface of a cell.
+// Movement modifiers (rough, slow) are separate flags on TerrainCell,
+// per decree-010: cells support multiple flags simultaneously.
 export type TerrainType =
   | 'normal'
-  | 'difficult'    // 2x movement cost (PTU: Slow Terrain)
+  | 'difficult'    // LEGACY — migrated to normal + slow flag on load
   | 'blocking'     // Cannot pass
-  | 'water'        // Requires swim (PTU: Underwater)
+  | 'water'        // Requires swim (PTU: Underwater). Cost 1 per decree-008.
   | 'earth'        // Requires burrow (PTU: Earth Terrain)
-  | 'rough'        // -2 accuracy penalty (PTU: Rough Terrain)
+  | 'rough'        // LEGACY — migrated to normal + rough flag on load
   | 'hazard'       // Damage on entry (app-specific)
   | 'elevated';    // Height difference (app-specific)
 
-// Terrain cell data
+// Movement modifier flags — can be combined with any base terrain type.
+// Per decree-010: rough affects accuracy only, slow affects movement cost only.
+export interface TerrainFlags {
+  rough: boolean;  // -2 accuracy penalty (PTU: Rough Terrain, p.231)
+  slow: boolean;   // Double movement cost (PTU: Slow Terrain, p.231)
+}
+
+// Terrain cell data — multi-tag system per decree-010.
+// A cell has a base terrain type AND optional movement flags.
 export interface TerrainCell {
   position: GridPosition;
   type: TerrainType;
+  flags: TerrainFlags;
   elevation: number;
   note?: string;
 }
