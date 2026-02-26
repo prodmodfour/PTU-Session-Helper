@@ -325,6 +325,15 @@ const statEntries = computed(() => {
     @media (max-width: 320px) {
       grid-template-columns: repeat(2, 1fr);
     }
+
+    // Restore 9px for compact card layout (global _player-view.scss uses 10px)
+    :deep(.player-stat-cell__label) {
+      font-size: 9px;
+    }
+
+    :deep(.player-stat-cell__stage) {
+      font-size: 9px;
+    }
   }
 
   &__abilities {
