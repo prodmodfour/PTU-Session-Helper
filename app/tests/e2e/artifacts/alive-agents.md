@@ -111,3 +111,8 @@
 | plan-20260226-060858/slave-3 | developer | ux-004-fix | success | 2026-02-26T06:16:00Z | ddcd8d9, ad2734e, e6e9c90 |
 | plan-20260226-060858/slave-4 | reviewers | bug-031-review | APPROVED | 2026-02-26T06:15:00Z | ec6dac2, 4663264 |
 | plan-20260226-060858/slave-5 | reviewers | ux-005+ptu-rule-081-review | APPROVED | 2026-02-26T06:17:00Z | 5a4bd22, 96b0953 |
+| plan-20260226-070756/slave-1 | developer | refactoring-083 | success | 2026-02-26T07:12:30Z | 7642cc7, d7c8f91 |
+| plan-20260226-070756/slave-2 | reviewers | bug-030+ux-003+ux-004-rereview | MIXED (bug-030=CHANGES_REQUIRED, ux-003=APPROVED, ux-004=APPROVED) | 2026-02-26T07:14:00Z | fc6754f, f38d975, 4197b03 |
+| plan-20260226-070756/slave-3 | developer | refactoring-082 | success | 2026-02-26T07:15:10Z | 69cb189, 013015a, efe5a61, 263bcc9 |
+| plan-20260226-070756/slave-4 | developer | refactoring-071+070 | success | 2026-02-26T07:14:00Z | 38095c7, bdedc47, d2e2b8d |
+| plan-20260226-070756/slave-5 | developer | refactoring-080+069 | success | 2026-02-26T07:15:30Z | d5b4c4d, 567a5f8, a0b27fb, 9eb0d05, 19a9cd1 |

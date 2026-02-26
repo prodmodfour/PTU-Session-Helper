@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T06:30:00
-updated_by: slave-collector (plan-20260226-060858)
+last_updated: 2026-02-26T07:30:00
+updated_by: slave-collector (plan-20260226-070756)
 ---
 
 # Dev Ecosystem State
@@ -11,7 +11,7 @@ updated_by: slave-collector (plan-20260226-060858)
 | Ticket | Priority | Severity | Status | Summary |
 |--------|----------|----------|--------|---------|
 | bug-001–029 | P0–P3 | — | resolved | (all resolved — see sessions 1–9) |
-| bug-030 | P2 | **resolved** | Player grid touch event support — fix cycle complete (4 commits: touch handlers added to useIsometricInteraction, threshold deduped). code-review-166 CHANGES_REQUIRED → fixed. rules-review-153 APPROVED |
+| bug-030 | P2 | **resolved** | Player grid touch event support — fix cycle complete (4 commits: touch handlers added to useIsometricInteraction, threshold deduped). code-review-166 CHANGES_REQUIRED → fixed. code-review-170 CHANGES_REQUIRED (H1: file size) → resolved by refactoring-082 (touch extraction). rules-review-153 APPROVED |
 | bug-031 | P3 | **resolved** | Explored fog cells show tokens — 1-line fix in usePlayerGridView.ts. code-review-168 APPROVED, rules-review-155 APPROVED |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
@@ -43,8 +43,8 @@ updated_by: slave-collector (plan-20260226-060858)
 |--------|----------|--------|---------|
 | ux-001 | P4 | **open** | Equipment catalog browser closes on equip, forces re-open for multi-item sessions (from code-review-127 M3) |
 | ux-002 | P4 | **open** | Trainer HP stat display shows raw stat without formula context in player view (from rules-review-129 M1) |
-| ux-003 | P3 | **resolved** | QR code rendering — fix cycle complete (3 commits: dead bestMatrix removed, app-surface.md updated). code-review-165 CHANGES_REQUIRED → fixed |
-| ux-004 | P3 | **resolved** | Enemy HP masking — fix cycle complete (3 commits: roundToDisplayTier extracted to utils/displayHp.ts, dead getDisplayHp removed, commit hashes fixed). code-review-167 CHANGES_REQUIRED → fixed. rules-review-154 APPROVED |
+| ux-003 | P3 | **resolved** | QR code rendering — fix cycle complete (3 commits: dead bestMatrix removed, app-surface.md updated). code-review-165 CHANGES_REQUIRED → fixed. code-review-171 **APPROVED** |
+| ux-004 | P3 | **resolved** | Enemy HP masking — fix cycle complete (3 commits: roundToDisplayTier extracted to utils/displayHp.ts, dead getDisplayHp removed, commit hashes fixed). code-review-167 CHANGES_REQUIRED → fixed. code-review-172 **APPROVED**. rules-review-154 APPROVED |
 | ux-005 | P4 | **resolved** | Pokemon full HP on level-up — currentHp preserved when at full HP. code-review-169 APPROVED, rules-review-156 APPROVED |
 | ux-006 | P4 | **open** | PTU injury markers may leak precise HP info in player mode (from rules-review-154 R2) |
 | ux-007 | P4 | **open** | Player's own tokens hidden in explored fog cells (from rules-review-155 edge case) |
@@ -52,7 +52,15 @@ updated_by: slave-collector (plan-20260226-060858)
 
 ## Active Developer Work
 
-**Current task:** Session 35 collection complete. All 5 slaves merged. All fix cycles (bug-030, ux-003, ux-004) resolved. All reviews (bug-031, ux-005, ptu-rule-081) APPROVED. No CHANGES_REQUIRED outstanding.
+**Current task:** Session 36 collection complete. All 5 slaves merged (17 commits). Refactoring batch resolved (083, 082, 080, 069, 071, 070). Re-reviews: ux-003 APPROVED, ux-004 APPROVED, bug-030 CHANGES_REQUIRED (H1 file size — already resolved by refactoring-082 touch extraction in same plan). No CHANGES_REQUIRED outstanding.
+
+**Session 36 (2026-02-26, plan-20260226-070756):**
+- refactoring-083 (P0) — 2 commits: inlined SCSS partial into XpDistributionModal, deleted _xp-distribution-modal.scss → **resolved**
+- refactoring-082 (P4) — 4 commits: extracted useTouchInteraction composable, used by both grid composables → **resolved** (also resolves code-review-170 H1)
+- refactoring-080 (P4) — 5 commits: created gridDistance.ts with ptuDiagonalDistance, replaced 6 inline implementations → **resolved**
+- refactoring-069 (P4) — part of slave-5: extracted SLOT_ICONS to constants/equipment.ts → **resolved**
+- refactoring-071+070 (P4) — 3 commits: removed MAX_FEATURES hard cap, removed unused props assignment → **resolved**
+- Re-reviews: code-review-170 (bug-030) CHANGES_REQUIRED (H1 moot), code-review-171 (ux-003) **APPROVED**, code-review-172 (ux-004) **APPROVED**
 
 **Session 35 (2026-02-26, plan-20260226-060858):**
 - bug-030 fix cycle (P2) — 4 commits: touch handlers added to useIsometricInteraction, threshold deduplicated → **resolved**
@@ -87,12 +95,20 @@ updated_by: slave-collector (plan-20260226-060858)
 - Tickets filed: refactoring-080 (diagonal formula duplication), ux-005 (currentHp on level-up)
 
 **Next actions (by priority):**
-1. **Re-review** ux-003 (P3 — fix cycle complete, needs re-review)
-2. **Re-review** ux-004 (P3 — fix cycle complete, needs re-review)
-3. **Re-review** bug-030 (P2 — fix cycle complete, needs re-review)
-4. Remaining open: ux-001 P4, ux-002 P4, ux-006 P4, ux-007 P4, ux-008 P4, refactoring-076–082
+1. **Review** refactoring-083 (P0 — build fix, needs code review)
+2. **Review** refactoring-082 (P4 — touch extraction, needs code review)
+3. **Review** refactoring-080+069 (P4 — grid distance + SLOT_ICONS, needs code review)
+4. **Review** refactoring-071+070 (P4 — character-lifecycle, needs code review)
+5. Remaining open: ux-001 P4, ux-002 P4, ux-006 P4, ux-007 P4, ux-008 P4, refactoring-068/076/077/078/079
 
 ## Review Status
+
+### Session 36 Reviews (plan-20260226-070756)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-170 | bug-030 (touch events re-review) | CHANGES_REQUIRED (H1: file size — resolved by refactoring-082) | senior-reviewer | 2026-02-26 |
+| code-review-171 | ux-003 (QR code re-review) | APPROVED | senior-reviewer | 2026-02-26 |
+| code-review-172 | ux-004 (HP masking re-review) | APPROVED | senior-reviewer | 2026-02-26 |
 
 ### Session 35 Reviews (plan-20260226-060858)
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -292,9 +308,9 @@ updated_by: slave-collector (plan-20260226-060858)
 | refactoring-066 | P4 | **resolved** | Use calculateEvasion for initial evasion in combatant builder — resolved by slave-4 (plan-20260224-171113) |
 | refactoring-067 | P4 | **resolved** | Dead calculateInitiative removed from useCombat — resolved by slave-4 (plan-20260224-171113) |
 | refactoring-068 | P4 | open | Equipment dropdown uses DOM manipulation instead of reactive ref (from code-review-127 M2) |
-| refactoring-069 | P4 | open | SLOT_ICONS duplicated between HumanEquipmentTab and EquipmentCatalogBrowser (from code-review-132 M1) |
-| refactoring-070 | P4 | open | Unused `props` assignment in StatAllocationSection.vue (from code-review-137 M1) |
-| refactoring-071 | P4 | open | MAX_FEATURES cap not level-aware in useCharacterCreation.ts (from code-review-137 M2) |
+| refactoring-069 | P4 | **resolved** | SLOT_ICONS extracted to constants/equipment.ts — resolved by slave-5 (plan-20260226-070756) |
+| refactoring-070 | P4 | **resolved** | Unused `props` assignment removed from StatAllocationSection.vue — resolved by slave-4 (plan-20260226-070756) |
+| refactoring-071 | P4 | **resolved** | MAX_FEATURES hard cap removed, addFeature now matches addEdge behavior — resolved by slave-4 (plan-20260226-070756) |
 | refactoring-072 | P4 | **resolved** | Replace `tier: string` with `SignificanceTier` — resolved by slave-5 (plan-20260224-171113) |
 | refactoring-073 | P4 | **resolved** | Add server-side validation for significanceTier — resolved by slave-5 (plan-20260224-171113) |
 | refactoring-074 | P4 | **resolved** | Consolidate duplicate SIGNIFICANCE_PRESETS — resolved by slave-5 (plan-20260224-171113) |
@@ -303,9 +319,10 @@ updated_by: slave-collector (plan-20260226-060858)
 | refactoring-077 | P4 | open | Move TerrainCostGetter type to shared types file (from code-review-151 M2 note) |
 | refactoring-078 | P4 | open | Add elevation parameters to validateMovement for unit tests (from code-review-151 regression check note) |
 | refactoring-079 | P4 | open | Replace deprecated document.execCommand('copy') in SessionUrlDisplay (from code-review-158 M3) |
-| refactoring-080 | P4 | open | Diagonal formula duplication across movement distance code paths (from code-review-161 M1) |
+| refactoring-080 | P4 | **resolved** | ptuDiagonalDistance extracted to utils/gridDistance.ts, 6 inline implementations replaced — resolved by slave-5 (plan-20260226-070756) |
 | refactoring-081 | P1 | **APPROVED** | SCSS unit incompatibility in _player-view.scss — calc() fix. code-review-164 APPROVED |
-| refactoring-082 | P4 | open | Extract touch handlers from useGridInteraction.ts (764 lines → approaching 800 limit) into shared useTouchInteraction composable (from code-review-166 M2) |
+| refactoring-082 | P4 | **resolved** | Touch handlers extracted to useTouchInteraction composable, used by both useGridInteraction (630 lines) and useIsometricInteraction (691 lines) — resolved by slave-3 (plan-20260226-070756) |
+| refactoring-083 | P0 | **resolved** | Undefined $z-index-modal in XpDistributionModal — SCSS partial inlined into component, partial file deleted — resolved by slave-1 (plan-20260226-070756) |
 
 ## Code Health
 
@@ -316,7 +333,7 @@ updated_by: slave-collector (plan-20260226-060858)
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 1 (bug-030 — CHANGES_REQUIRED fix cycle needed) |
 | Open tickets (P3) | 2 (ux-003 CHANGES_REQUIRED, ux-004 CHANGES_REQUIRED) |
-| Open tickets (P4) | 13 (refactoring-076–080,082 + ux-001/002/006 + bug-031/ux-005/ptu-rule-081 needs review) |
+| Open tickets (P4) | 8 (refactoring-068/076/077/078/079 + ux-001/002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
 
