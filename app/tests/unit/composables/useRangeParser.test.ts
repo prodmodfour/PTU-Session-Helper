@@ -97,11 +97,23 @@ describe('useRangeParser', () => {
       expect(isInRange(origin, { x: 7, y: 5 }, melee)).toBe(false)
     })
 
-    it('should correctly check ranged attacks', () => {
+    it('should correctly check ranged attacks (cardinal)', () => {
       const ranged = { type: 'ranged' as const, range: 6 }
 
       expect(isInRange(origin, { x: 11, y: 5 }, ranged)).toBe(true) // Exactly 6
       expect(isInRange(origin, { x: 12, y: 5 }, ranged)).toBe(false) // 7, out of range
+    })
+
+    it('should use PTU alternating diagonal for ranged distance (decree-002)', () => {
+      // PTU diagonal: 4 diag = 4 + floor(4/2) = 6 meters
+      const ranged6 = { type: 'ranged' as const, range: 6 }
+      expect(isInRange(origin, { x: 9, y: 9 }, ranged6)).toBe(true) // 4 diag = 6m, in range
+
+      // PTU diagonal: 5 diag = 5 + floor(5/2) = 7 meters
+      expect(isInRange(origin, { x: 10, y: 10 }, ranged6)).toBe(false) // 5 diag = 7m, out of range
+
+      // Under old Chebyshev, 5 diag would be 5 (in range). Under PTU diagonal it's 7 (out).
+      // This verifies we're using PTU diagonal, not Chebyshev.
     })
 
     it('should only allow self for self type', () => {

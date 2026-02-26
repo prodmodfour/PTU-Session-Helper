@@ -1,5 +1,6 @@
 import type { RangeType, ParsedRange, GridPosition, TerrainType, TerrainCostGetter } from '~/types'
 import { usePathfinding } from '~/composables/usePathfinding'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 // Re-export VTT pathfinding types for backwards compatibility
 export type { TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
@@ -171,14 +172,15 @@ export function useRangeParser() {
   }
 
   /**
-   * Calculate minimum Chebyshev distance between two multi-cell tokens.
+   * Calculate minimum PTU diagonal distance between two multi-cell tokens.
    *
-   * PTU Rule: Range is measured from the nearest occupied cell of the
+   * PTU Rule (decree-002): All grid distances use the alternating diagonal rule
+   * (1-2-1-2). Range is measured from the nearest occupied cell of the
    * attacker to the nearest occupied cell of the target.
    *
-   * For single-cell tokens (size=1), this is equivalent to standard Chebyshev distance.
+   * Computes the gap between token bounding boxes and applies ptuDiagonalDistance.
    */
-  function chebyshevDistanceTokens(
+  function ptuDistanceTokens(
     a: TokenFootprint,
     b: TokenFootprint
   ): number {
@@ -190,13 +192,13 @@ export function useRangeParser() {
     const gapX = Math.max(0, a.position.x - bRight, b.position.x - aRight)
     const gapY = Math.max(0, a.position.y - bBottom, b.position.y - aBottom)
 
-    return Math.max(gapX, gapY)
+    return ptuDiagonalDistance(gapX, gapY)
   }
 
   /**
    * Find the closest pair of cells between two tokens (for LoS tracing).
    * Returns the pair of cells (one from each token) that have the minimum
-   * Chebyshev distance between them.
+   * PTU diagonal distance between them.
    */
   function closestCellPair(
     a: TokenFootprint,
@@ -216,7 +218,7 @@ export function useRangeParser() {
 
     for (const ac of aCells) {
       for (const bc of bCells) {
-        const dist = Math.max(Math.abs(ac.x - bc.x), Math.abs(ac.y - bc.y))
+        const dist = ptuDiagonalDistance(ac.x - bc.x, ac.y - bc.y)
         if (dist < bestDist) {
           bestDist = dist
           bestFrom = ac
@@ -310,7 +312,7 @@ export function useRangeParser() {
       // Multi-cell self: target cell must overlap attacker footprint
       const attackerFootprint = { position: attacker, size: attackerSize }
       const targetFootprint = { position: target, size: targetSize }
-      return chebyshevDistanceTokens(attackerFootprint, targetFootprint) === 0
+      return ptuDistanceTokens(attackerFootprint, targetFootprint) === 0
     }
 
     // Field affects everyone
@@ -322,8 +324,8 @@ export function useRangeParser() {
     const attackerFootprint: TokenFootprint = { position: attacker, size: attackerSize }
     const targetFootprint: TokenFootprint = { position: target, size: targetSize }
 
-    // Calculate Chebyshev distance between nearest cells (PTU standard)
-    const distance = chebyshevDistanceTokens(attackerFootprint, targetFootprint)
+    // Calculate PTU diagonal distance between nearest cells (decree-002)
+    const distance = ptuDistanceTokens(attackerFootprint, targetFootprint)
 
     // Cardinally adjacent - only orthogonal between nearest cells
     if (parsedRange.type === 'cardinally-adjacent') {
@@ -464,7 +466,7 @@ export function useRangeParser() {
     isInRange,
     hasLineOfSight,
     getOccupiedCells,
-    chebyshevDistanceTokens,
+    ptuDistanceTokens,
     closestCellPair,
     getAffectedCells,
     // Re-exported from usePathfinding for backwards compatibility
