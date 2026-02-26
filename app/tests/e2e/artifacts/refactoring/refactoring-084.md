@@ -2,7 +2,7 @@
 ticket_id: refactoring-084
 priority: P4
 category: EXT-COSMETIC
-status: open
+status: resolved
 source: code-review-174 M1, code-review-175 M1
 created_by: slave-collector (plan-20260226-073726)
 created_at: 2026-02-26T09:00:00Z
@@ -26,3 +26,11 @@ Add `useTouchInteraction.ts` to the VTT Grid composables list and `gridDistance.
 ## Impact
 
 Documentation-only. No runtime behavior affected.
+
+## Resolution Log
+
+Both entries already exist in `app-surface.md`:
+- `useTouchInteraction.ts` — line 137, VTT Grid composables section
+- `gridDistance.ts` — line 141, VTT Grid utilities section
+
+No code changes required. Ticket was likely created before or in parallel with the app-surface.md update that added these entries.
