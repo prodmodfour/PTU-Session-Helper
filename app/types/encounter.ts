@@ -9,7 +9,8 @@ import type {
   BattleType,
   TurnPhase,
   TurnState,
-  InjuryState
+  InjuryState,
+  StageSource
 } from './combat';
 import type { Pokemon, HumanCharacter, PokemonType } from './character';
 import type { SignificanceTier } from '~/utils/encounterBudget';
@@ -42,6 +43,10 @@ export interface Combatant {
 
   // PTU-specific tracking
   injuries: InjuryState;
+
+  // Source-tracked combat stage modifications (decree-005)
+  // Tracks CS changes from status conditions for clean reversal on cure
+  stageSources?: StageSource[];
 
   // Evasion values (derived from stats)
   physicalEvasion: number;

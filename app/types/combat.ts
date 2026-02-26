@@ -64,6 +64,18 @@ export interface TurnState {
   heldUntilInitiative?: number;
 }
 
+// Source-tracked combat stage modification (decree-005)
+// Tracks who/what caused a CS change so it can be cleanly reversed.
+// Used for status conditions (Burn → -2 Def, Paralysis → -4 Speed, Poison → -2 SpDef).
+export interface StageSource {
+  /** Which stat is affected (uses StageModifiers key names) */
+  stat: keyof StageModifiers;
+  /** The delta applied (e.g., -2 for Burn's defense penalty) */
+  value: number;
+  /** Identifier for the source (e.g., 'Burned', 'Paralyzed', 'Poisoned') */
+  source: string;
+}
+
 // PTU Injury tracking
 export interface InjuryState {
   count: number;
