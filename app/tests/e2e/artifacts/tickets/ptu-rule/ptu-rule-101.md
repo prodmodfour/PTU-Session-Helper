@@ -45,3 +45,24 @@ Water terrain has hardcoded cost of 2 in `terrain.ts`. Per decree-008, water is 
   - [x] `getTerrainAwareSpeed()` still selects Swim speed for water cells (line 65: `terrainType === 'water' && caps.swim > 0`)
   - [x] GM can mark water cells as slow terrain via the new flag toggle UI (water + slow = cost 2)
   - [x] No double-dip: swim speed selection + cost 1 is the default
+
+### Fix Cycle (code-review-185 CHANGES_REQUIRED)
+
+- **Branch:** `slave/2-dev-terrain-fix-20260226`
+- **Commits:**
+  - `44c7d99` — fix: replace let mutation with immutable pattern in getMovementCost (MEDIUM-2)
+  - `6c223b8` — fix: add runtime legacy type conversion in setTerrain (HIGH-2)
+  - `200d1c6` — fix: replace emoji icons with Phosphor Icons in TerrainPainter (MEDIUM-1)
+  - `adbc28f` — fix: add Zod validation for flags in terrain PUT endpoint (HIGH-1)
+  - `af53170` — test: fix broken terrain store tests and add multi-tag coverage (CRITICAL-1)
+- **Files changed:**
+  - `app/stores/terrain.ts` — immutable getMovementCost, runtime legacy conversion in setTerrain
+  - `app/server/api/encounters/[id]/terrain.put.ts` — Zod schema validation for cell flags
+  - `app/components/vtt/TerrainPainter.vue` — Phosphor Icons for terrain type buttons
+  - `app/tests/unit/stores/terrain.test.ts` — fixed signature, stale expectations, new coverage
+- **All 5 review issues addressed:**
+  - [x] CRITICAL-1: Unit tests fixed (signature, paintMode, water cost) + new coverage added
+  - [x] HIGH-1: Zod validation for flags field in PUT endpoint
+  - [x] HIGH-2: Runtime conversion of legacy 'difficult'/'rough' types in setTerrain
+  - [x] MEDIUM-1: Emoji icons replaced with Phosphor Icons
+  - [x] MEDIUM-2: let mutation replaced with immutable ternary
