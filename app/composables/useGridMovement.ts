@@ -1,7 +1,10 @@
-import type { GridPosition, Combatant, Pokemon, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
+import type { GridPosition, Combatant, Pokemon, TerrainType, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
 import { useTerrainStore } from '~/stores/terrain'
 import { useRangeParser } from '~/composables/useRangeParser'
-import { combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed } from '~/utils/combatantCapabilities'
+import {
+  combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed,
+  getOverlandSpeed, calculateAveragedSpeed
+} from '~/utils/combatantCapabilities'
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 interface TokenData {
@@ -129,7 +132,7 @@ export function applyMovementModifiers(combatant: Combatant, speed: number): num
 
 export function useGridMovement(options: UseGridMovementOptions) {
   const terrainStore = useTerrainStore()
-  const { calculatePathCost, getMovementRangeCells } = useRangeParser()
+  const { calculatePathCost, getMovementRangeCells, getMovementRangeCellsWithAveraging } = useRangeParser()
 
   /**
    * Calculate distance between two grid positions using PTU diagonal rules.
@@ -153,11 +156,47 @@ export function useGridMovement(options: UseGridMovementOptions) {
   }
 
   /**
+   * Get the maximum possible movement speed for a combatant across all capabilities.
+   * Used as the exploration budget for A* and flood-fill before averaging is applied.
+   *
+   * Returns the highest of Overland, Swim (if > 0), and Burrow (if > 0),
+   * with movement modifiers applied.
+   */
+  const getMaxPossibleSpeed = (combatantId: string): number => {
+    const combatant = findCombatant(combatantId)
+    if (!combatant) return DEFAULT_MOVEMENT_SPEED
+
+    if (options.getMovementSpeed) {
+      return options.getMovementSpeed(combatantId)
+    }
+
+    const overland = getOverlandSpeed(combatant)
+    const speeds = [overland]
+
+    if (combatantCanSwim(combatant)) {
+      const pokemon = combatant.entity as Pokemon
+      speeds.push(pokemon.capabilities?.swim ?? 0)
+    }
+    if (combatantCanBurrow(combatant)) {
+      const pokemon = combatant.entity as Pokemon
+      speeds.push(pokemon.capabilities?.burrow ?? 0)
+    }
+
+    const maxSpeed = Math.max(...speeds)
+    return applyMovementModifiers(combatant, maxSpeed)
+  }
+
+  /**
    * Get movement speed for a combatant, considering:
    * 1. Terrain-aware speed selection (Swim for water, Burrow for earth, Overland default)
-   * 2. Movement-modifying conditions (Stuck, Slowed)
-   * 3. Combat stage speed modifier
-   * 4. Sprint maneuver (+50%)
+   * 2. Path-based speed averaging when crossing terrain boundaries (PTU p.231, decree-011)
+   * 3. Movement-modifying conditions (Stuck, Slowed)
+   * 4. Combat stage speed modifier
+   * 5. Sprint maneuver (+50%)
+   *
+   * When called without a path, returns the speed based on the combatant's
+   * starting terrain. For movement range display, use getMaxPossibleSpeed
+   * with getMovementRangeCellsWithAveraging for accurate averaging.
    */
   const getSpeed = (combatantId: string): number => {
     const combatant = findCombatant(combatantId)
@@ -188,6 +227,69 @@ export function useGridMovement(options: UseGridMovementOptions) {
     }
 
     return baseSpeed
+  }
+
+  /**
+   * Compute the averaged speed for a path that crosses terrain boundaries.
+   *
+   * Per PTU p.231: "When using multiple different Movement Capabilities in one turn,
+   * such as using Overland on a beach and then Swim in the water, average the
+   * Capabilities and use that value."
+   *
+   * Per decree-011: Average movement speeds when path crosses terrain boundaries.
+   *
+   * @param combatantId - The combatant moving
+   * @param path - Array of grid positions along the path
+   * @returns The averaged speed with movement modifiers applied, or the standard speed if no mixing
+   */
+  const getAveragedSpeedForPath = (combatantId: string, path: GridPosition[]): number => {
+    const combatant = findCombatant(combatantId)
+    if (!combatant || terrainStore.terrainCount === 0) {
+      return getSpeed(combatantId)
+    }
+
+    // If the external callback overrides speed, no averaging
+    if (options.getMovementSpeed) {
+      return options.getMovementSpeed(combatantId)
+    }
+
+    // Collect distinct terrain types along the path
+    const terrainTypes = new Set<string>()
+    for (const pos of path) {
+      terrainTypes.add(terrainStore.getTerrainAt(pos.x, pos.y))
+    }
+
+    // Calculate averaged base speed from terrain types
+    const averagedBase = calculateAveragedSpeed(combatant, terrainTypes)
+
+    // Apply movement modifiers (Stuck, Slowed, Speed CS, Sprint)
+    return applyMovementModifiers(combatant, averagedBase)
+  }
+
+  /**
+   * Build a speed averaging callback for the flood-fill pathfinding.
+   * Returns a function that, given a set of terrain types, returns the
+   * averaged speed with movement modifiers applied.
+   *
+   * Used by getMovementRangeCellsWithAveraging to constrain movement range
+   * based on terrain types encountered along each path.
+   */
+  const buildSpeedAveragingFn = (combatantId: string): ((terrainTypes: Set<string>) => number) => {
+    const combatant = findCombatant(combatantId)
+    if (!combatant) {
+      return () => DEFAULT_MOVEMENT_SPEED
+    }
+    return (terrainTypes: Set<string>) => {
+      const averagedBase = calculateAveragedSpeed(combatant, terrainTypes)
+      return applyMovementModifiers(combatant, averagedBase)
+    }
+  }
+
+  /**
+   * Get the terrain type at a position (for speed averaging terrain detection).
+   */
+  const getTerrainTypeAt = (x: number, y: number): TerrainType => {
+    return terrainStore.getTerrainAt(x, y)
   }
 
   /**
@@ -356,12 +458,17 @@ export function useGridMovement(options: UseGridMovementOptions) {
 
   /**
    * Check if a move is valid, accounting for terrain costs, elevation,
-   * combatant capabilities, and the no-stacking rule.
+   * combatant capabilities, speed averaging, and the no-stacking rule.
    *
    * Per decree-003 (PTU p.231):
    * - All tokens are passable (no movement blocking by tokens)
    * - Enemy-occupied squares count as rough terrain (accuracy penalty only)
    * - Cannot end movement on any occupied square (no stacking)
+   *
+   * Per PTU p.231 and decree-011:
+   * - When a path crosses terrain boundaries, movement capabilities are
+   *   averaged to determine the effective speed for that path.
+   * - Example: Overland 7 + Swim 5 = 6m max when crossing land/water.
    *
    * Uses terrain-aware pathfinding (A*) when terrain is present on the grid.
    * Falls back to geometric distance when no terrain exists (for performance).
@@ -383,7 +490,6 @@ export function useGridMovement(options: UseGridMovementOptions) {
     gridWidth: number,
     gridHeight: number
   ): { valid: boolean; distance: number; blocked: boolean } => {
-    const speed = getSpeed(combatantId)
     const inBounds = toPos.x >= 0 && toPos.x < gridWidth && toPos.y >= 0 && toPos.y < gridHeight
 
     // No-stacking rule: cannot end movement on any occupied square
@@ -425,14 +531,22 @@ export function useGridMovement(options: UseGridMovementOptions) {
           blocked: true // Effectively blocked by terrain
         }
       }
+
+      // Per PTU p.231 / decree-011: average movement speeds when path
+      // crosses terrain boundaries. Use the full A* path for terrain analysis.
+      const effectiveSpeed = terrainStore.terrainCount > 0
+        ? getAveragedSpeedForPath(combatantId, pathResult.path)
+        : getSpeed(combatantId)
+
       return {
-        valid: pathResult.cost > 0 && pathResult.cost <= speed,
+        valid: pathResult.cost > 0 && pathResult.cost <= effectiveSpeed,
         distance: pathResult.cost,
         blocked: false
       }
     }
 
     // No terrain, no elevation: fast geometric check
+    const speed = getSpeed(combatantId)
     const distance = calculateMoveDistance(fromPos, toPos)
     return {
       valid: distance > 0 && distance <= speed,
@@ -445,6 +559,10 @@ export function useGridMovement(options: UseGridMovementOptions) {
     calculateMoveDistance,
     calculateTerrainAwarePathCost,
     getSpeed,
+    getMaxPossibleSpeed,
+    getAveragedSpeedForPath,
+    buildSpeedAveragingFn,
+    getTerrainTypeAt,
     getBlockedCells,
     getOccupiedCells,
     getEnemyOccupiedCells,
