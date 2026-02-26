@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { GridPosition, RangeType, ParsedRange } from '~/types'
-import { ptuDiagonalDistance } from '~/utils/gridDistance'
+import { ptuDiagonalDistance, maxDiagonalCells } from '~/utils/gridDistance'
 
 export type MeasurementMode = 'none' | 'distance' | 'burst' | 'cone' | 'line' | 'close-blast'
 
@@ -56,7 +56,7 @@ export const useMeasurementStore = defineStore('measurement', {
           return getConeCells(state.startPosition, state.aoeSize, state.aoeDirection)
 
         case 'line':
-          return getLineCells(state.startPosition, state.endPosition ?? state.startPosition, state.aoeSize)
+          return getLineAttackCells(state.startPosition, state.aoeSize, state.aoeDirection)
 
         case 'close-blast':
           return getCloseBlastCells(state.startPosition, state.aoeSize, state.aoeDirection)
@@ -288,6 +288,42 @@ function getCloseBlastCells(
       const cellY = offset.dy >= 0 ? startY + dy : startY - dy
       cells.push({ x: cellX, y: cellY })
     }
+  }
+
+  return cells
+}
+
+/**
+ * Calculate cells for a Line X attack from origin in a given direction.
+ * Diagonal lines are shortened per PTU alternating diagonal rule (decree-009).
+ *
+ * Cardinal lines: X cells (1 meter per cell).
+ * Diagonal lines: maxDiagonalCells(X) cells (alternating 1-2m cost per cell).
+ */
+function getLineAttackCells(
+  origin: GridPosition,
+  length: number,
+  direction: MeasurementState['aoeDirection']
+): GridPosition[] {
+  const cells: GridPosition[] = []
+
+  const dirVectors: Record<MeasurementState['aoeDirection'], { dx: number; dy: number }> = {
+    north: { dx: 0, dy: -1 },
+    south: { dx: 0, dy: 1 },
+    east: { dx: 1, dy: 0 },
+    west: { dx: -1, dy: 0 },
+    northeast: { dx: 1, dy: -1 },
+    northwest: { dx: -1, dy: -1 },
+    southeast: { dx: 1, dy: 1 },
+    southwest: { dx: -1, dy: 1 },
+  }
+
+  const dir = dirVectors[direction]
+  const isDiagonal = dir.dx !== 0 && dir.dy !== 0
+  const maxCells = isDiagonal ? maxDiagonalCells(length) : length
+
+  for (let d = 1; d <= maxCells; d++) {
+    cells.push({ x: origin.x + dir.dx * d, y: origin.y + dir.dy * d })
   }
 
   return cells

@@ -1,6 +1,6 @@
 import type { RangeType, ParsedRange, GridPosition, TerrainType, TerrainCostGetter } from '~/types'
 import { usePathfinding } from '~/composables/usePathfinding'
-import { ptuDiagonalDistance } from '~/utils/gridDistance'
+import { ptuDiagonalDistance, maxDiagonalCells } from '~/utils/gridDistance'
 
 // Re-export VTT pathfinding types for backwards compatibility
 export type { TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
@@ -422,10 +422,14 @@ export function useRangeParser() {
         }
         break
 
-      case 'line':
-        // Line from origin in direction
+      case 'line': {
+        // Line from origin in direction (decree-009: diagonal lines shortened)
         const width = parsedRange.width || 1
-        for (let d = 1; d <= size; d++) {
+        const isDiagonal = direction.dx !== 0 && direction.dy !== 0
+        // Diagonal lines cover fewer cells because each diagonal step costs
+        // alternating 1-2m per PTU rules. Cardinal lines use 1 cell per meter.
+        const maxCells = isDiagonal ? maxDiagonalCells(size) : size
+        for (let d = 1; d <= maxCells; d++) {
           const baseX = origin.x + direction.dx * d
           const baseY = origin.y + direction.dy * d
           cells.push({ x: baseX, y: baseY })
@@ -445,6 +449,7 @@ export function useRangeParser() {
           }
         }
         break
+      }
 
       case 'melee':
       case 'cardinally-adjacent':
