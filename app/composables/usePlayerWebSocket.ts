@@ -33,6 +33,7 @@ export function usePlayerWebSocket() {
   const encounterStore = useEncounterStore()
   const { refreshCharacterData } = usePlayerIdentity()
   const { handleSceneSync, handleSceneDeactivated, fetchActiveScene, activeScene } = usePlayerScene()
+  const { vibrateOnTurnStart, vibrateOnDamageTaken, vibrateOnMoveExecute } = useHapticFeedback()
 
   // Pending action requests: requestId -> { resolve, reject, timestamp }
   const pendingActions = ref<Map<string, {
@@ -129,9 +130,7 @@ export function usePlayerWebSocket() {
     turnNotification.value = { ...notification }
 
     // Haptic feedback (mobile)
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate([200, 100, 200])
-    }
+    vibrateOnTurnStart()
 
     // Auto-clear after 5 seconds
     setTimeout(() => {
@@ -139,6 +138,30 @@ export function usePlayerWebSocket() {
         turnNotification.value = null
       }
     }, TURN_NOTIFY_DURATION_MS)
+  }
+
+  /**
+   * Handle damage_applied events — vibrate if the damaged entity
+   * belongs to the player (their character or one of their pokemon).
+   */
+  const handleDamageApplied = (data: { targetId?: string }): void => {
+    if (!playerStore.characterId) return
+    const targetId = data?.targetId
+    if (targetId === playerStore.characterId || playerStore.pokemonIds.includes(targetId ?? '')) {
+      vibrateOnDamageTaken()
+    }
+  }
+
+  /**
+   * Handle move_executed events — vibrate if the player's combatant
+   * was the one who executed the move.
+   */
+  const handleMoveExecuted = (data: { combatantId?: string; entityId?: string }): void => {
+    if (!playerStore.characterId) return
+    const entityId = data?.entityId
+    if (entityId === playerStore.characterId || playerStore.pokemonIds.includes(entityId ?? '')) {
+      vibrateOnMoveExecute()
+    }
   }
 
   /**
@@ -178,6 +201,14 @@ export function usePlayerWebSocket() {
 
       case 'character_update':
         handleCharacterUpdate(message.data as { id?: string })
+        break
+
+      case 'damage_applied':
+        handleDamageApplied(message.data as { targetId?: string })
+        break
+
+      case 'move_executed':
+        handleMoveExecuted(message.data as { combatantId?: string; entityId?: string })
         break
 
       case 'scene_activated':
