@@ -1,7 +1,7 @@
 import type { GridConfig, GridPosition, MovementPreview } from '~/types'
 import { useMeasurementStore } from '~/stores/measurement'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
-import { useTerrainStore, TERRAIN_COLORS } from '~/stores/terrain'
+import { useTerrainStore, TERRAIN_COLORS, FLAG_COLORS } from '~/stores/terrain'
 import { useRangeParser } from '~/composables/useRangeParser'
 import { useCanvasDrawing } from '~/composables/useCanvasDrawing'
 
@@ -188,7 +188,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
   }
 
   /**
-   * Draw terrain cells
+   * Draw terrain cells — base terrain type + flag overlays (multi-tag system).
    */
   const drawTerrain = (ctx: CanvasRenderingContext2D) => {
     const { width, height, cellSize } = options.config.value
@@ -196,22 +196,58 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         const terrain = terrainStore.getTerrainAt(x, y)
-        if (terrain === 'normal') continue
+        const flags = terrainStore.getFlagsAt(x, y)
+        const hasFlags = flags.rough || flags.slow
+        if (terrain === 'normal' && !hasFlags) continue
 
-        const colors = TERRAIN_COLORS[terrain]
-        if (!colors) continue
+        // Draw base terrain type
+        if (terrain !== 'normal') {
+          const colors = TERRAIN_COLORS[terrain]
+          if (colors) {
+            ctx.fillStyle = colors.fill
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
 
-        // Fill cell with terrain color
-        ctx.fillStyle = colors.fill
-        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+            ctx.strokeStyle = colors.stroke
+            ctx.lineWidth = 1
+            ctx.strokeRect(x * cellSize + 0.5, y * cellSize + 0.5, cellSize - 1, cellSize - 1)
 
-        // Draw border
-        ctx.strokeStyle = colors.stroke
-        ctx.lineWidth = 1
-        ctx.strokeRect(x * cellSize + 0.5, y * cellSize + 0.5, cellSize - 1, cellSize - 1)
+            drawTerrainPattern(ctx, x, y, terrain, cellSize)
+          }
+        }
 
-        // Draw pattern/icon using shared utility
-        drawTerrainPattern(ctx, x, y, terrain, cellSize)
+        // Draw flag overlays on top of base terrain
+        if (flags.slow) {
+          ctx.fillStyle = FLAG_COLORS.slow.fill
+          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+          // Draw slow indicator — dots in bottom-left corner
+          ctx.fillStyle = FLAG_COLORS.slow.stroke
+          const dotRadius = Math.max(2, cellSize * 0.04)
+          const margin = cellSize * 0.2
+          ctx.beginPath()
+          ctx.arc(x * cellSize + margin, (y + 1) * cellSize - margin, dotRadius, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.beginPath()
+          ctx.arc(x * cellSize + margin + dotRadius * 3, (y + 1) * cellSize - margin, dotRadius, 0, Math.PI * 2)
+          ctx.fill()
+        }
+
+        if (flags.rough) {
+          ctx.fillStyle = FLAG_COLORS.rough.fill
+          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+          // Draw rough indicator — jagged line in top-right corner
+          ctx.strokeStyle = FLAG_COLORS.rough.stroke
+          ctx.lineWidth = 1.5
+          const rMargin = cellSize * 0.15
+          const rTop = y * cellSize + rMargin
+          const rRight = (x + 1) * cellSize - rMargin
+          const rLen = cellSize * 0.3
+          ctx.beginPath()
+          ctx.moveTo(rRight - rLen, rTop)
+          ctx.lineTo(rRight - rLen * 0.66, rTop + 4)
+          ctx.lineTo(rRight - rLen * 0.33, rTop - 2)
+          ctx.lineTo(rRight, rTop + 3)
+          ctx.stroke()
+        }
       }
     }
   }
