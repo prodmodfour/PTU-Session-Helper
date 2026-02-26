@@ -2,7 +2,7 @@
 id: refactoring-082
 category: EXT-GOD
 priority: P4
-status: open
+status: in-progress
 source: code-review-166 M2
 created_by: slave-collector (plan-20260226-051629)
 created_at: 2026-02-26T06:00:00Z
@@ -35,3 +35,29 @@ This also reduces `useGridInteraction.ts` by ~170 lines to ~594 lines.
 - **Extensibility:** Prevents God-composable anti-pattern. Makes touch support reusable across grid types.
 - **Correctness:** Resolves the structural cause of bug-030 C1 (IsometricCanvas touch crash).
 - **Maintainability:** Single responsibility per composable.
+
+## Resolution Log
+
+### Commit 1: 69cb189
+- **Created** `app/composables/useTouchInteraction.ts` (193 lines)
+- Shared composable handling: single-finger pan, pinch-to-zoom, tap detection (TOUCH_TAP_THRESHOLD=5), one-finger-lift-from-pinch transition
+- Accepts containerRef, zoom, panOffset, zoom bounds, render callback, and onTap callback
+- onTap receives screen coordinates so each consumer does its own coordinate conversion
+
+### Commit 2: 013015a
+- **Refactored** `app/composables/useGridInteraction.ts` (764 -> 631 lines, -133 lines)
+- Removed inline touch state, getTouchDistance/getTouchCenter helpers, handleTouchStart/Move/End
+- Delegated to useTouchInteraction with grid-specific onTap callback (screenToGrid + getTokenAtPosition)
+- Re-exported TOUCH_TAP_THRESHOLD for backward compatibility with GridCanvas.vue import
+
+### Commit 3: efe5a61
+- **Refactored** `app/composables/useIsometricInteraction.ts` (831 -> 692 lines, -139 lines)
+- Same pattern as grid, but onTap uses getTokenAtScreenPosition (isometric diamond hit-test) instead of grid-based hit-test
+- Removed TOUCH_TAP_THRESHOLD import from useGridInteraction (now uses useTouchInteraction directly)
+
+### Files changed
+- `app/composables/useTouchInteraction.ts` (new, 193 lines)
+- `app/composables/useGridInteraction.ts` (764 -> 631 lines)
+- `app/composables/useIsometricInteraction.ts` (831 -> 692 lines)
+- `app/components/vtt/GridCanvas.vue` (no changes needed)
+- `app/components/vtt/IsometricCanvas.vue` (no changes needed)
