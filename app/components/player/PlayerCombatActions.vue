@@ -447,14 +447,23 @@ const toggleTarget = (targetId: string) => {
 const confirmTargetSelection = async () => {
   if (selectedTargetIds.value.length === 0) return
 
+  const moveName = pendingAction.value === 'move' && pendingMoveId.value
+    ? activeMoves.value.find(m => m.id === pendingMoveId.value)?.name ?? 'Move'
+    : 'Struggle'
+
   try {
     if (pendingAction.value === 'move' && pendingMoveId.value) {
       await executeMove(pendingMoveId.value, selectedTargetIds.value)
     } else if (pendingAction.value === 'struggle') {
       await useStruggle(selectedTargetIds.value)
     }
+    const targetCount = selectedTargetIds.value.length
+    showToast(
+      `${moveName} used on ${targetCount} ${targetCount === 1 ? 'target' : 'targets'}`,
+      'success'
+    )
   } catch (err: any) {
-    showToast('Action failed: ' + (err.message || 'Unknown error'), 'error')
+    showToast(`${moveName} failed: ` + (err.message || 'Unknown error'), 'error')
   }
 
   resetTargetSelector()
@@ -476,6 +485,7 @@ const handleShift = async () => {
   if (!canUseShiftAction.value) return
   try {
     await useShiftAction()
+    showToast('Shifted 1 meter', 'success')
   } catch (err: any) {
     showToast('Shift failed: ' + (err.message || 'Unknown error'), 'error')
   }

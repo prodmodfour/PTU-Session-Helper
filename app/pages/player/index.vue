@@ -84,16 +84,16 @@
         </Transition>
       </main>
 
-      <!-- Action Ack Toast (fixed overlay) -->
+      <!-- Action Ack Toast (fixed overlay, auto-dismiss 3s) -->
       <Transition name="fade">
         <div
           v-if="lastActionAck"
           class="player-toast"
-          :class="lastActionAck.status === 'accepted' ? 'player-toast--success' : 'player-toast--error'"
+          :class="actionAckClass"
           role="status"
           aria-live="polite"
         >
-          {{ lastActionAck.status === 'accepted' ? 'Action accepted' : 'Action rejected' }}
+          {{ actionAckMessage }}
           <span v-if="lastActionAck.reason" class="player-toast__reason">{{ lastActionAck.reason }}</span>
         </div>
       </Transition>
@@ -200,6 +200,24 @@ const characterName = computed(() => playerStore.characterName ?? 'Player')
 
 // Pokemon IDs for visibility checks
 const pokemonIds = computed(() => playerStore.pokemonIds)
+
+// Action ack toast computed properties
+const actionAckClass = computed(() => {
+  if (!lastActionAck.value) return ''
+  return lastActionAck.value.status === 'accepted'
+    ? 'player-toast--success'
+    : 'player-toast--error'
+})
+
+const actionAckMessage = computed(() => {
+  if (!lastActionAck.value) return ''
+  switch (lastActionAck.value.status) {
+    case 'accepted': return 'Request approved by GM'
+    case 'rejected': return 'Request rejected by GM'
+    case 'pending': return 'Waiting for GM approval...'
+    default: return 'Action acknowledged'
+  }
+})
 
 // Active encounter detection
 const hasActiveEncounter = computed(() => encounterStore.encounter?.isActive ?? false)
