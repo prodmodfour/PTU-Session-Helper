@@ -14,6 +14,13 @@
       <div class="session-url__header">
         <PhWifiHigh :size="16" />
         <span>Player Connection</span>
+        <button
+          class="session-url__qr-toggle"
+          :title="showQrCodes ? 'Hide QR codes' : 'Show QR codes'"
+          @click="showQrCodes = !showQrCodes"
+        >
+          <PhQrCode :size="14" />
+        </button>
       </div>
 
       <div v-if="loading" class="session-url__loading">
@@ -44,6 +51,11 @@
                 <PhCheck v-else :size="14" />
               </button>
             </div>
+            <div
+              v-if="showQrCodes && tunnelPlayerUrl"
+              class="session-url__qr"
+              v-html="generateQrSvg(tunnelPlayerUrl, qrOptions)"
+            />
           </div>
 
           <div v-else class="session-url__unconfigured">
@@ -79,6 +91,11 @@
                 <PhCheck v-else :size="14" />
               </button>
             </div>
+            <div
+              v-if="showQrCodes"
+              class="session-url__qr"
+              v-html="generateQrSvg(toPlayerUrl(addr.url), qrOptions)"
+            />
           </div>
 
           <p v-if="addresses.length === 0" class="session-url__empty">
@@ -126,8 +143,9 @@
 </template>
 
 <script setup lang="ts">
-// TODO: QR code generation for player connection URLs — see ticket ux-003
-import { PhWifiHigh, PhGlobe, PhCopy, PhCheck, PhGear, PhFloppyDisk, PhTrash } from '@phosphor-icons/vue'
+import { PhWifiHigh, PhGlobe, PhCopy, PhCheck, PhGear, PhFloppyDisk, PhTrash, PhQrCode } from '@phosphor-icons/vue'
+import { generateQrSvg } from '~/utils/qrcode'
+import type { QrSvgOptions } from '~/utils/qrcode'
 
 interface ServerAddress {
   interface: string
@@ -146,6 +164,27 @@ const showTunnelConfig = ref(false)
 const tunnelInput = ref('')
 const savingTunnel = ref(false)
 const tunnelError = ref<string | null>(null)
+const showQrCodes = ref(false)
+
+/** QR code styling options for the dark theme */
+const qrOptions: QrSvgOptions = {
+  moduleSize: 3,
+  quietZone: 2,
+  foreground: '#f0f0f5',
+  background: 'transparent',
+}
+
+/** Append /player path to a base URL */
+const toPlayerUrl = (baseUrl: string): string => {
+  const trimmed = baseUrl.replace(/\/+$/, '')
+  return `${trimmed}/player`
+}
+
+/** Tunnel URL with /player path appended */
+const tunnelPlayerUrl = computed(() => {
+  if (!tunnelUrl.value) return null
+  return toPlayerUrl(tunnelUrl.value)
+})
 
 let copyTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -254,6 +293,7 @@ watch(expanded, (isExpanded) => {
   } else {
     document.removeEventListener('click', handleClickOutside, true)
     showTunnelConfig.value = false
+    showQrCodes.value = false
     tunnelError.value = null
   }
 })
@@ -318,6 +358,43 @@ onUnmounted(() => {
     color: $color-accent-teal;
     padding-bottom: $spacing-xs;
     border-bottom: 1px solid $border-color-default;
+  }
+
+  &__qr-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-left: auto;
+    border: 1px solid $border-color-default;
+    background: transparent;
+    color: $color-text-muted;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $color-bg-hover;
+      color: $color-accent-teal;
+      border-color: $color-accent-teal;
+    }
+  }
+
+  &__qr {
+    display: flex;
+    justify-content: center;
+    padding: $spacing-sm;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-sm;
+    margin-top: $spacing-xs;
+
+    :deep(svg) {
+      max-width: 120px;
+      max-height: 120px;
+      width: 100%;
+      height: auto;
+    }
   }
 
   &__loading,

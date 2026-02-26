@@ -592,7 +592,7 @@ export function encodeQR(text: string): QrMatrix {
   return { modules: finalMatrix, size }
 }
 
-interface QrSvgOptions {
+export interface QrSvgOptions {
   /** Module (pixel) size in SVG units. Default: 4 */
   moduleSize?: number
   /** Quiet zone (white border) in modules. Default: 2 */
