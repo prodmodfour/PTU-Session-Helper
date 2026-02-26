@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-24T18:00:00
-updated_by: slave-collector (plan-20260224-171710)
+last_updated: 2026-02-26T15:30:00
+updated_by: slave-collector (plan-20260226-093739)
 ---
 
 # Matrix Ecosystem State
@@ -9,20 +9,21 @@ updated_by: slave-collector (plan-20260224-171710)
 
 | Domain | Rules | Capabilities | Matrix | Audit | Tickets | Coverage |
 |--------|-------|-------------|--------|-------|---------|----------|
-| combat | done (135) | **STALE** | done | done | created | 83.0% (73/88) |
-| capture | done (33) | **STALE** | done | done | created | 75.0% (18/24) |
-| healing | done (42) | **STALE** | done | done | created | 80.0% (24/30) |
-| pokemon-lifecycle | done (68) | **STALE** | done | done | created | 75.0% (33/44) |
-| character-lifecycle | done (68) | **STALE** | done | done | created | 68.3% (28/41) |
-| encounter-tables | done (27) | **STALE** | done | done | created | 64.3% (9/14) |
-| scenes | done (42) | **STALE** | done | done | created | 55.6% (10/18) |
-| vtt-grid | done (42) | **STALE** | done | done | created | 46.7% (7/15) |
+| combat | done (135) | **FRESH** | stale | stale | created | 83.0% (73/88) — stale score |
+| capture | done (33) | **FRESH** | stale | stale | created | 75.0% (18/24) — stale score |
+| healing | done (42) | **FRESH** | stale | stale | created | 80.0% (24/30) — stale score |
+| pokemon-lifecycle | done (68) | **FRESH** | stale | stale | created | 75.0% (33/44) — stale score |
+| character-lifecycle | done (68) | **FRESH** | stale | stale | created | 68.3% (28/41) — stale score |
+| encounter-tables | done (27) | **FRESH** | stale | stale | created | 64.3% (9/14) — stale score |
+| scenes | done (42) | **FRESH** | stale | stale | created | 55.6% (10/18) — stale score |
+| vtt-grid | done (42) | **FRESH** | stale | stale | created | 46.7% (7/15) — stale score |
+| player-view | — | **FRESH** (new) | — | — | — | — (first-time mapping) |
 
-**Overall: 202/274 correct (73.7%) — stale, will increase significantly after re-mapping**
+**Overall: Coverage scores stale — capabilities re-mapped in session 39, need re-run of Coverage Analyzer + Implementation Auditor to update scores**
 
 ## Active Work
 
-All 8 domains fully processed through M2 ticket creation. Matrix pipeline is **complete** (M7) but all capabilities are stale.
+All 9 domains (8 existing + new player-view) have fresh capability mappings as of session 39. Matrix and Audit steps are stale — need re-run of Coverage Analyzer + Implementation Auditor with updated capabilities.
 
 ## Staleness Status
 

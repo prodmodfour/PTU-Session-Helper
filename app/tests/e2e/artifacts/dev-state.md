@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T12:30:00
-updated_by: slave-collector (plan-20260226-120000)
+last_updated: 2026-02-26T15:30:00
+updated_by: slave-collector (plan-20260226-093739)
 ---
 
 # Dev Ecosystem State
@@ -36,7 +36,7 @@ updated_by: slave-collector (plan-20260226-120000)
 |--------|----------|--------|---------|-------------------|
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
-| feature-003 | P1 | **Track-A-P2-CHANGES_REQUIRED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 reviewed: code-review-177 CHANGES_REQUIRED (H1: long-press+click double-fire, M1-M3), rules-review-157 APPROVED. Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
+| feature-003 | P1 | **Track-A-P2-fix-done-needs-review + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 fix cycle complete (4 commits: H1 long-press flag, M1 toast offset, M2 4K queries, M3 surface doc). Needs re-review. Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1 complete | multi-phase-parallel |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -47,12 +47,18 @@ updated_by: slave-collector (plan-20260226-120000)
 | ux-004 | P3 | **resolved** | Enemy HP masking — fix cycle complete (3 commits: roundToDisplayTier extracted to utils/displayHp.ts, dead getDisplayHp removed, commit hashes fixed). code-review-167 CHANGES_REQUIRED → fixed. code-review-172 **APPROVED**. rules-review-154 APPROVED |
 | ux-005 | P4 | **resolved** | Pokemon full HP on level-up — currentHp preserved when at full HP. code-review-169 APPROVED, rules-review-156 APPROVED |
 | ux-006 | P4 | **open** | PTU injury markers may leak precise HP info in player mode (from rules-review-154 R2) |
-| ux-007 | P4 | **resolved** | Player's own tokens hidden in explored fog cells — fixed: isOwnCombatant exception in usePlayerGridView.ts. Resolved by slave-2 (plan-20260226-120000) |
+| ux-007 | P4 | **resolved** | Player's own tokens hidden in explored fog cells — fixed: isOwnCombatant exception in usePlayerGridView.ts. Resolved by slave-2 (plan-20260226-120000). code-review-180 APPROVED, rules-review-158 APPROVED |
 | ux-008 | P4 | **open** | Focus item selection non-deterministic across different equipment slots (from code-review-169 M1) |
 
 ## Active Developer Work
 
-**Current task:** Session 38 collection complete. All 4 slaves merged (9 commits). refactoring-083 fix cycle done (4 commits). ux-007+refactoring-084 resolved (2 commits). feature-003 Track A P2: code-review-177 CHANGES_REQUIRED (H1+M1-M3), rules-review-157 APPROVED. Refactoring batch: code-review-178 APPROVED. Ticket statuses fixed (M1 from code-review-178).
+**Current task:** Session 39 collection complete. All 4 slaves merged (16 commits). feature-003 Track A P2 fix cycle done (4 commits: H1 long-press flag, M1 toast offset, M2 4K queries, M3 surface doc — needs re-review). refactoring-083 re-review APPROVED (code-review-179). ux-007 review APPROVED (code-review-180 + rules-review-158). All 9 capability domains re-mapped (combat, capture, healing, pokemon-lifecycle, character-lifecycle, encounter-tables, scenes, vtt-grid, player-view).
+
+**Session 39 (2026-02-26, plan-20260226-093739):**
+- slave-1 (developer): feature-003 Track A P2 fix cycle — 4 commits: H1 long-press flag to prevent synthesized click, M1 toast offset to avoid turn-flash overlap, M2 4K media queries for 4 player components, M3 app-surface.md entries for PlayerSkeleton + useHapticFeedback → **resolved, needs re-review**
+- slave-2 (reviewers): refactoring-083 re-review + ux-007 first review — code-review-179 **APPROVED** (XpDistributionModal 798 lines, functional equivalence verified). code-review-180 **APPROVED** (surgical 1-line fix). rules-review-158 **APPROVED** (PTU self-awareness principle verified)
+- slave-3 (matrix): capability-remap-group-a — re-mapped combat, capture, healing, pokemon-lifecycle → **all 4 domains updated**
+- slave-4 (matrix): capability-remap-group-b — re-mapped character-lifecycle, encounter-tables, scenes, vtt-grid + NEW player-view first-time mapping → **all 5 domains updated**
 
 **Session 38 (2026-02-26, plan-20260226-120000):**
 - slave-1 (developer): refactoring-083 fix cycle — 4 commits: extracted _form-utilities.scss (shared SCSS utilities), removed from XpDistributionModal, extracted XpDistributionResults.vue child component. File reduced from 1019 to under 800 lines → **resolved, needs review**
@@ -110,12 +116,18 @@ updated_by: slave-collector (plan-20260226-120000)
 - Tickets filed: refactoring-080 (diagonal formula duplication), ux-005 (currentHp on level-up)
 
 **Next actions (by priority):**
-1. **Fix cycle** feature-003 Track A P2 (P1 — code-review-177 CHANGES_REQUIRED: H1 long-press+click, M1 toast overlap, M2 incomplete 4K, M3 app-surface.md)
-2. **Review** refactoring-083 fix (P0 — 4 commits: _form-utilities.scss + XpDistributionResults.vue extraction)
-3. **Review** ux-007 (P4 — 1 commit: isOwnCombatant fog exception in usePlayerGridView.ts)
-4. Remaining open: ux-002 P4, ux-006 P4, ux-008 P4, refactoring-060/062/076/078/079
+1. **Re-review** feature-003 Track A P2 fix cycle (P1 — 4 commits: long-press flag, toast offset, 4K queries, surface doc)
+2. **Re-map remaining matrix steps** — all 9 domains capabilities now fresh, run Coverage Analyzer + Implementation Auditor to update coverage scores
+3. Remaining open: ux-002 P4, ux-006 P4, ux-008 P4, refactoring-060/062/076/078/079
 
 ## Review Status
+
+### Session 39 Reviews (plan-20260226-093739)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-179 | refactoring-083 re-review (XpDistributionModal SCSS + child extraction) | APPROVED (798 lines, functional equivalence verified) | senior-reviewer | 2026-02-26 |
+| code-review-180 | ux-007 (own tokens in explored fog) | APPROVED (surgical 1-line fix, correct placement) | senior-reviewer | 2026-02-26 |
+| rules-review-158 | ux-007 (fog visibility rules) | APPROVED (PTU self-awareness principle verified) | game-logic-reviewer | 2026-02-26 |
 
 ### Session 38 Reviews (plan-20260226-120000)
 | Review ID | Target | Verdict | Reviewer | Date |
@@ -351,7 +363,7 @@ updated_by: slave-collector (plan-20260226-120000)
 | refactoring-080 | P4 | **resolved** | ptuDiagonalDistance extracted to utils/gridDistance.ts, 6 inline implementations replaced — resolved by slave-5 (plan-20260226-070756) |
 | refactoring-081 | P1 | **APPROVED** | SCSS unit incompatibility in _player-view.scss — calc() fix. code-review-164 APPROVED |
 | refactoring-082 | P4 | **resolved** | Touch handlers extracted to useTouchInteraction composable, used by both useGridInteraction (630 lines) and useIsometricInteraction (691 lines) — resolved by slave-3 (plan-20260226-070756) |
-| refactoring-083 | P0 | **resolved** | Undefined $z-index-modal in XpDistributionModal — fix cycle complete. Extracted _form-utilities.scss (shared SCSS utilities) + XpDistributionResults.vue child component. File reduced from 1019 to under 800 lines. Resolved by slave-1 (plan-20260226-120000). Needs review |
+| refactoring-083 | P0 | **APPROVED** | Undefined $z-index-modal in XpDistributionModal — fix cycle complete. Extracted _form-utilities.scss (shared SCSS utilities) + XpDistributionResults.vue child component. File reduced from 1019 to 798 lines. code-review-179 APPROVED (re-review of code-review-173 C1) |
 | refactoring-084 | P4 | **resolved** | app-surface.md missing entries for useTouchInteraction.ts and gridDistance.ts — updated. Resolved by slave-2 (plan-20260226-120000) |
 
 ## Code Health
