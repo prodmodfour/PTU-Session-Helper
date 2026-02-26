@@ -39,19 +39,13 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Validate density multiplier if provided (range 0.1-5.0)
-    const densityMultiplier = typeof body.densityMultiplier === 'number'
-      ? Math.min(5.0, Math.max(0.1, body.densityMultiplier))
-      : undefined
-
     const modification = await prisma.tableModification.update({
       where: { id: modId },
       data: {
         name: body.name,
         description: body.description ?? null,
         levelMin: body.levelRange?.min ?? null,
-        levelMax: body.levelRange?.max ?? null,
-        ...(densityMultiplier !== undefined && { densityMultiplier })
+        levelMax: body.levelRange?.max ?? null
       },
       include: {
         entries: true
@@ -66,7 +60,6 @@ export default defineEventHandler(async (event) => {
         min: modification.levelMin,
         max: modification.levelMax
       } : undefined,
-      densityMultiplier: modification.densityMultiplier,
       entries: modification.entries.map(e => ({
         id: e.id,
         speciesName: e.speciesName,

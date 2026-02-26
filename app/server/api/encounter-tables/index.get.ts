@@ -37,8 +37,7 @@ export default defineEventHandler(async () => {
       modifications: table.modifications.map(mod => ({
         id: mod.id,
         name: mod.name,
-        description: mod.description,
-        densityMultiplier: mod.densityMultiplier
+        description: mod.description
       })),
       createdAt: table.createdAt,
       updatedAt: table.updatedAt
