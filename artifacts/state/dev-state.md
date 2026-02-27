@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-28T01:30:00
-updated_by: slave-collector (plan-20260228-010000)
+last_updated: 2026-02-28T02:45:00
+updated_by: slave-collector (plan-20260228-020000)
 ---
 
 # Dev Ecosystem State
@@ -18,7 +18,7 @@ updated_by: slave-collector (plan-20260228-010000)
 | bug-034 | P0 | **resolved** | @phosphor-icons/vue not installed. Fixed: added dependency to app/package.json. Resolved by slave-2 (plan-20260227-122512) |
 | bug-035 | P0 | **resolved** | LevelUpNotification missing phosphor SVGs. Fixed: converted to @phosphor-icons/vue Vue components. Resolved by slave-2 (plan-20260227-122512) |
 | bug-036 | P0 | **resolved** | Player view 500 error: SCSS `rgba(currentColor, 0.1)` rejected by Sass compiler. Fixed: replaced with SCSS color variables. Resolved by slave-1 (plan-20260227-131024) |
-| bug-037 | P3 | **in-progress** | MoveTargetModal passes targets as allCombatants — fix applied by slave-2 (plan-20260228-010000). Passes full encounter combatant list. Needs review |
+| bug-037 | P3 | **resolved** | MoveTargetModal passes targets as allCombatants — fix applied, APPROVED (code-review-213 + rules-review-189, plan-20260228-020000). Full encounter combatant list now passed correctly |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
@@ -66,9 +66,9 @@ updated_by: slave-collector (plan-20260228-010000)
 | ptu-rule-111 | P2 | **resolved** | tempConditions Vulnerable zero evasion. APPROVED: code-review-191 + rules-review-168. Both client + server checks inspect tempConditions |
 | ptu-rule-112 | P3 | **resolved** | Naturewalk capability terrain bypass. APPROVED: code-review-205 + rules-review-181 (plan-20260227-122512 slave-5 re-review). All issues from code-review-201 resolved. 36 Naturewalk tests, decree-003/010/025 compliant. Scope note: Naturewalk status condition immunity (Slowed/Stuck) → ptu-rule-116 |
 | ptu-rule-113 | P2 | **resolved** | Burst shapes use PTU diagonal distance (per decree-023). APPROVED: code-review-189 + rules-review-166. Burst 2 = 21 cells (not 25 Chebyshev) |
-| ptu-rule-114 | P4 | **in-progress** | Assisted breather variant — fix cycle applied by slave-3 (plan-20260228-010000): added Tripped condition (HIGH-1), enabled shift prompt (MEDIUM-1), corrected page refs (MEDIUM-2). Needs re-review |
-| ptu-rule-116 | P4 | **in-progress** | Naturewalk status condition immunity — fix cycle applied by slave-3 (plan-20260228-010000): corrected PTU page refs p.276+p.322 (MEDIUM-2). Needs re-review |
-| ptu-rule-118 | P3 | **in-progress** | Block Skill Edges from raising Pathetic skills during creation — implemented by slave-1 (plan-20260228-010000) per decree-027. Guard in addSkillEdge, validation warning added. Needs review |
+| ptu-rule-114 | P4 | **resolved** | Assisted breather variant — fix cycle APPROVED (code-review-214 + rules-review-190, plan-20260228-020000). Tripped condition, shift prompt, and page refs all verified correct |
+| ptu-rule-116 | P4 | **resolved** | Naturewalk status condition immunity — fix cycle APPROVED (code-review-214 + rules-review-190, plan-20260228-020000). PTU page refs p.276+p.322 confirmed correct |
+| ptu-rule-118 | P3 | **resolved** | Block Skill Edges from raising Pathetic skills during creation — APPROVED (code-review-212 + rules-review-188, plan-20260228-020000). Three-layer defense: addSkillEdge guard, validation warning, UI disable. decree-027 compliant |
 | ptu-rule-117 | P4 | **resolved** | Style Expert 'Beautiful' → 'Beauty' — fixed by slave-4 (plan-20260227-153711). code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | ptu-rule-119 | P4 | **open** | Trainer Naturewalk not supported (Survivalist class). Filed from rules-review-186 noted limitation |
 
@@ -95,7 +95,18 @@ updated_by: slave-collector (plan-20260228-010000)
 
 ## Active Developer Work
 
-**Current task:** Session 56 collection complete. 4 slaves merged (14 commits). 3 dev slaves: ptu-rule-118 (Pathetic skill edge guard), bug-037+refactoring-094 (MoveTargetModal allCombatants fix + passthrough removal), ptu-rule-114+116-fix (assisted breather Tripped + shift + page refs). 1 reviewer slave: code-review-211+rules-review-187 APPROVED (refactoring-092+093). Smoke test PASSED. No follow-up tickets filed. ptu-rule-118 needs review. bug-037+refactoring-094 need review. ptu-rule-114+116 need re-review.
+**Current task:** Session 57 collection complete. 5 slaves merged (8 commits). 3 reviewer slaves: all APPROVED (ptu-rule-118, bug-037+refactoring-094, ptu-rule-114+116-fix). 2 matrix slaves: capability remaps for 8 domains. Smoke test skipped (no code changes). 1 follow-up ticket filed (refactoring-095). All open dev tickets now resolved. 8 capability catalogs refreshed.
+
+**Session 57 (2026-02-28, plan-20260228-020000):**
+- slave-1 (reviewers): ptu-rule-118 — code-review-212 **APPROVED** + rules-review-188 **APPROVED** (MED-01: addEdge bypass → refactoring-095). Three-layer defense verified correct. decree-027 compliant → ptu-rule-118 **resolved**
+- slave-2 (reviewers): bug-037+refactoring-094 — code-review-213 **APPROVED** + rules-review-189 **APPROVED**. Full combatant list fix verified. decree-003/025 compliant → bug-037, refactoring-094 **resolved**
+- slave-3 (reviewers): ptu-rule-114+116-fix — code-review-214 **APPROVED** + rules-review-190 **APPROVED**. All 3 rules-review-186 issues resolved. No regressions → ptu-rule-114, ptu-rule-116 **resolved**
+- slave-4 (matrix): capability-remap-group-a — remapped combat, capture, healing, pokemon-lifecycle capabilities
+- slave-5 (matrix): capability-remap-group-b — remapped character-lifecycle, encounter-tables, scenes, vtt-grid capabilities
+- **Smoke test:** SKIPPED (no dev slaves — all reviewers + matrix)
+- **Merge notes:** 0 conflicts. All 5 rebased cleanly. 8 commits total
+- **Tickets filed:** refactoring-095 (addEdge Skill Edge string injection, from rules-review-188 MED-01)
+- **Tickets resolved:** ptu-rule-118, ptu-rule-114, ptu-rule-116, bug-037, refactoring-094
 
 **Session 56 (2026-02-28, plan-20260228-010000):**
 - slave-1 (developer): ptu-rule-118 — 4 commits: guarded addSkillEdge() against Pathetic-locked skills per decree-027, added validation warning, updated field comment → **implemented, needs review**

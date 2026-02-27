@@ -212,3 +212,8 @@
 | plan-20260228-010000/slave-2 | developer | bug-037+refactoring-094 | success | 2026-02-28T01:08:30Z | b839636, 7b255f6, fc0ef8f |
 | plan-20260228-010000/slave-3 | developer | ptu-rule-114+116-fix | success | 2026-02-28T01:14:30Z | 8163830, aabee84, 5fd8577, e9c9160 |
 | plan-20260228-010000/slave-4 | reviewers | refactoring-092+093 | APPROVED | 2026-02-28T01:22:00Z | 5fd0da2, 4fc0672, 4173628 |
+| plan-20260228-020000/slave-1 | reviewers | ptu-rule-118 | APPROVED | 2026-02-28T02:12:00Z | e229f1d8, 718bab36 |
+| plan-20260228-020000/slave-2 | reviewers | bug-037+refactoring-094 | APPROVED | 2026-02-28T02:15:00Z | ef92fc34, 476d4473 |
+| plan-20260228-020000/slave-3 | reviewers | ptu-rule-114+116-fix | APPROVED | 2026-02-28T02:21:00Z | 38417a68, 9c53128f |
+| plan-20260228-020000/slave-4 | matrix | capability-remap-group-a | success | 2026-02-28T02:24:00Z | 0ebf5458 |
+| plan-20260228-020000/slave-5 | matrix | capability-remap-group-b | success | 2026-02-28T02:32:00Z | b35f550e |

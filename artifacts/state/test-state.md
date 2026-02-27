@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T19:30:00
-updated_by: slave-collector (plan-20260226-175938)
+last_updated: 2026-02-28T02:45:00
+updated_by: slave-collector (plan-20260228-020000)
 ---
 
 # Matrix Ecosystem State
@@ -19,11 +19,11 @@ updated_by: slave-collector (plan-20260226-175938)
 | vtt-grid | done (42) | **FRESH** | **FRESH** | **FRESH** (24 audited: 20C/1I/2A/1AMB) | created | 66.2% (19 impl + 1 unreachable + 6 partial / 34 reachable) |
 | player-view | — | **FRESH** (new) | — | — | — | — (first-time mapping) |
 
-**Overall: Full pipeline FRESH (session 41). All 8 domains: rules + capabilities + matrix + audit all current. 234 items audited across 8 domains: 194 Correct, 8 Incorrect, 20 Approximation, 6 Ambiguous. 15 follow-up tickets filed from audit findings.**
+**Overall: Capabilities REFRESHED (session 57). All 8 domains: capabilities re-mapped after sessions 42-56 code changes. Rules + matrix + audit from session 41 are now stale relative to updated capabilities. 234 items audited across 8 domains (stale): 194 Correct, 8 Incorrect, 20 Approximation, 6 Ambiguous. 15 follow-up tickets filed from audit findings.**
 
 ## Active Work
 
-All 8 existing domains have FRESH pipeline as of session 41 (rules + capabilities + matrix + audit all current). All audits re-run against current code by slaves 3-5 (plan-20260226-175938). 15 follow-up tickets filed from audit findings (ptu-rule-084 through 095, bug-032, refactoring-085, decree-need-022). player-view domain has fresh capabilities but no rules catalog or matrix yet.
+All 8 domains had capabilities re-mapped in session 57 (plan-20260228-020000, slaves 4+5) to account for sessions 42-56 code changes (15 sessions of new mechanics, fix cycles, and refactoring). Matrix + audit layers are now stale and need re-running against updated capabilities. player-view domain has fresh capabilities but no rules catalog or matrix yet.
 
 ## Staleness Status
 
