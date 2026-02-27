@@ -21,6 +21,7 @@
     "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
+    "@phosphor-icons/vue": "^2.2.1",
     "@pinia/nuxt": "^0.7.0",
     "@prisma/client": "^5.22.0",
     "nuxt": "^3.14.0",
