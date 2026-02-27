@@ -13,7 +13,7 @@ updated_by: slave-collector (plan-20260227-131024)
 | bug-001–029 | P0–P3 | — | resolved | (all resolved — see sessions 1–9) |
 | bug-030 | P2 | **resolved** | Player grid touch event support — fix cycle complete (4 commits: touch handlers added to useIsometricInteraction, threshold deduped). code-review-166 CHANGES_REQUIRED → fixed. code-review-170 CHANGES_REQUIRED (H1: file size) → resolved by refactoring-082 (touch extraction). rules-review-153 APPROVED |
 | bug-031 | P3 | **resolved** | Explored fog cells show tokens — 1-line fix in usePlayerGridView.ts. code-review-168 APPROVED, rules-review-155 APPROVED |
-| bug-032 | P4 | **open** | No levelMin <= levelMax validation in encounter table APIs (from encounter-tables-audit R008-OBS) |
+| bug-032 | P4 | **resolved** | No levelMin <= levelMax validation in encounter table APIs. Fixed: Zod validation added to all table/entry/modification create+update endpoints + import endpoint. Resolved by slave-4 (plan-20260228-000430) |
 | bug-033 | P0 | **resolved** | SCSS @use module scoping breaks variable resolution in mixin files. Fixed: added `@use 'variables' as *` to _modal, _pokemon-sheet, _difficulty, _sheet. Resolved by slave-1 (plan-20260227-122512) |
 | bug-034 | P0 | **resolved** | @phosphor-icons/vue not installed. Fixed: added dependency to app/package.json. Resolved by slave-2 (plan-20260227-122512) |
 | bug-035 | P0 | **resolved** | LevelUpNotification missing phosphor SVGs. Fixed: converted to @phosphor-icons/vue Vue components. Resolved by slave-2 (plan-20260227-122512) |
@@ -42,7 +42,7 @@ updated_by: slave-collector (plan-20260227-131024)
 | ptu-rule-088 | P3 | **resolved** | Significance tier presets realigned. code-review-199 APPROVED (re-review of fix cycle). rules-review-171 APPROVED (M1: overlapping tier boundaries → ux-010) |
 | ptu-rule-089 | P3 | **resolved** | Extended rest daily move refresh. APPROVED: code-review-196 + rules-review-173 (plan-20260227-174900). M1: app-surface.md → refactoring-089. M2: ticket status → resolved |
 | ptu-rule-090 | P3 | **resolved** | Scene-end AP restoration already implemented (confirmed by code-review-196 + rules-review-173). No code changes needed. APPROVED |
-| ptu-rule-091 | P3 | **fix-cycle-3-done, needs re-review** | Branch class specialization suffix per decree-022. Fix cycle 3 re-applied all reverted changes: Stat Ace HP removal, Researcher Fields of Study (Artificer naming per M1), Martial Artist removed from branching per decree-026, max slots guard, dead code removal. ptu-rule-115 resolved (open copy deleted). Resolved by slave-2 (plan-20260227-131024). Needs code + rules re-review |
+| ptu-rule-091 | P3 | **resolved** | Branch class specialization suffix per decree-022. Fix cycle 3 re-applied all reverted changes: Stat Ace HP removal, Researcher Fields of Study (Artificer naming per M1), Martial Artist removed from branching per decree-026, max slots guard, dead code removal. code-review-206 APPROVED + rules-review-183 APPROVED (re-review by slave-1, plan-20260228-000430). All issues resolved |
 | ptu-rule-092 | P3 | **resolved** | Pathetic skill enforcement gap in custom background mode. Fix cycle complete: guarded removePatheticSkill against outstanding Skill Edges (CRITICAL-01), informational warning for level > 1 (MEDIUM-01). HIGH-01 deferred to decree-need-027. code-review-203 APPROVED. rules-review-182 APPROVED (re-review by slave-3, plan-20260227-131024). All issues resolved |
 | ptu-rule-093 | P3 | **resolved** | Rough terrain accuracy penalty — resolved by ptu-rule-108 fix. APPROVED: code-review-195 + rules-review-172 (plan-20260227-174900) |
 | ptu-rule-094 | P4 | **open** | Natural healing min(1) HP contradicts PTU for low-HP entities (from healing-audit R007) |
@@ -91,7 +91,7 @@ updated_by: slave-collector (plan-20260227-131024)
 
 ## Active Developer Work
 
-**Current task:** Session 52 collection complete. All 3 slaves merged (9 commits). 2 developer slaves: bug-036 (slave-1, 2 commits), ptu-rule-091+115 fix cycle 3 (slave-2, 6 commits). 1 reviewer slave: ptu-rule-092-rereview slave-3 APPROVED. Smoke test PASSED (all 3 views render). 3 tickets resolved (bug-036, ptu-rule-092, ptu-rule-115). 0 tickets filed.
+**Current task:** Session 53 collection complete. All 4 slaves merged (12 commits). 1 reviewer slave: ptu-rule-091-rereview (slave-1, APPROVED). 3 developer slaves: refactoring-086 (slave-2, 2 commits), refactoring-002 cleanup (slave-3, 4 commits), bug-032+refactoring-091 (slave-4, 4 commits). Smoke test PASSED (all 3 views render). 5 tickets resolved (ptu-rule-091, bug-032, refactoring-086, refactoring-002 additional, refactoring-091). 1 ticket filed (ptu-rule-117).
 
 **Session 52 (2026-02-27, plan-20260227-131024):**
 - slave-1 (developer): bug-036 — 2 commits: replaced invalid `rgba(currentColor, 0.1)` with SCSS color variables in player view, ticket update → **resolved**
@@ -542,8 +542,9 @@ updated_by: slave-collector (plan-20260227-131024)
 | refactoring-083 | P0 | **APPROVED** | Undefined $z-index-modal in XpDistributionModal — fix cycle complete. Extracted _form-utilities.scss (shared SCSS utilities) + XpDistributionResults.vue child component. File reduced from 1019 to 798 lines. code-review-179 APPROVED (re-review of code-review-173 C1) |
 | refactoring-084 | P4 | **resolved** | app-surface.md missing entries for useTouchInteraction.ts and gridDistance.ts — updated. Resolved by slave-2 (plan-20260226-120000) |
 | refactoring-001 | P1 | **resolved** | Multi-tag terrain system. Fix cycle APPROVED: code-review-190 + rules-review-167. All 5 issues from code-review-185 resolved |
-| refactoring-002 | P3 | **resolved** | Deprecate legacy terrain types — runtime conversion added in setTerrain (commit f10cad0, ptu-rule-101 fix cycle). APPROVED as part of code-review-190 |
-| refactoring-086 | P4 | **open** | Extract damage application from useMoveCalculation.ts (801 lines > 800 limit). From code-review-189 MED-1 + code-review-191 M1 |
+| refactoring-002 | P3 | **resolved** | Deprecate legacy terrain types — runtime conversion added in setTerrain (commit f10cad0, ptu-rule-101 fix cycle). APPROVED as part of code-review-190. Additional cleanup by slave-3 (plan-20260228-000430): setPaintMode legacy type guard, dead legacy rendering branches removed, unit tests added |
+| refactoring-086 | P4 | **resolved** | Extract computeTargetEvasions + getEffectivenessClass from useMoveCalculation.ts into utils/evasionCalculation.ts. File reduced from 801 to ~730 lines. Resolved by slave-2 (plan-20260228-000430) |
+| refactoring-091 | P4 | **resolved** | Replace alert() calls in create.vue with inline error banner. SCSS extracted to _create-page.scss partial. Resolved by slave-4 (plan-20260228-000430) |
 | refactoring-087 | P4 | **open** | Split terrain.test.ts (811 lines > 800 limit). Extract migrateLegacyCell tests to separate file. From code-review-190 MED-1 |
 
 ## Code Health
@@ -558,6 +559,21 @@ updated_by: slave-collector (plan-20260227-131024)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-02-28, session 53 — plan-20260228-000430)
+
+**Slave collection plan-20260228-000430:** 4 slaves merged (12 commits total, 0 conflicts)
+- **slave-1** (reviewers): ptu-rule-091-rereview — code-review-206 **APPROVED** + rules-review-183 **APPROVED**. All 9 issues across code-review-200/204/rules-review-176 verified resolved. decree-022 + decree-026 compliant. Pre-existing MEDIUM-001: Style Expert "Beautiful" → "Beauty" → ptu-rule-117
+- **slave-2** (developer): refactoring-086 — 2 commits: extracted computeTargetEvasions + getEffectivenessClass into utils/evasionCalculation.ts, useMoveCalculation.ts reduced from 801 to ~730 lines → **resolved**
+- **slave-3** (developer): refactoring-002 additional cleanup — 4 commits: added legacy type guard to setPaintMode(), removed dead legacy terrain rendering branches from useCanvasDrawing/useCanvasRendering/useIsometricOverlays, added unit tests → **resolved**
+- **slave-4** (developer): bug-032 + refactoring-091 — 4 commits: added levelMin<=levelMax Zod validation to all encounter table create/update/import endpoints, extracted create page SCSS to _create-page.scss partial, replaced alert() with inline error banner → **resolved**
+
+**Tickets resolved:** ptu-rule-091 (APPROVED by code-review-206 + rules-review-183), bug-032 (level validation), refactoring-086 (useMoveCalculation extraction), refactoring-091 (alert() replacement)
+**Tickets filed:** ptu-rule-117 (Style Expert "Beautiful" → "Beauty", pre-existing P4 LOW from rules-review-183)
+**Smoke test:** PASSED — all 3 views render correctly. GM view (navigation + encounter controls), Group view (waiting for encounter), Player view (character selection).
+
+**Follow-up needed:**
+- None — all slaves succeeded, no CHANGES_REQUIRED verdicts
 
 ## Session Summary (2026-02-27, session 52 — plan-20260227-131024)
 
