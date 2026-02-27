@@ -5,6 +5,7 @@ import { roll } from '~/utils/diceRoller'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { useTerrainStore } from '~/stores/terrain'
 import { isEnemySide } from '~/utils/combatSides'
+import { naturewalkBypassesTerrain } from '~/utils/combatantCapabilities'
 
 export interface TargetDamageCalc {
   targetId: string
@@ -139,10 +140,15 @@ export function useMoveCalculation(
    *
    * Uses Bresenham's line algorithm to trace intermediate cells.
    * Only intermediate cells are checked — the attacker's and target's
-   * own cells are excluded.
+   * own cells are excluded (decree-025: endpoints excluded).
    *
    * Per PTU p.231: "-2 penalty to Accuracy Rolls" when targeting through
    * rough terrain. This is a flat penalty (not cumulative per cell).
+   *
+   * Per PTU p.322 (Naturewalk): If the attacker has Naturewalk matching
+   * a painted rough terrain cell's base type, that cell's rough flag is
+   * bypassed. Enemy-occupied rough (decree-003) is NEVER bypassed by
+   * Naturewalk — it's a game mechanic, not painted terrain.
    */
   const targetsThroughRoughTerrain = (targetId: string): boolean => {
     const actorPos = actor.value.position
@@ -190,12 +196,17 @@ export function useMoveCalculation(
       const key = `${x0},${y0}`
       if (!actorCells.has(key) && !targetCells.has(key)) {
         // Enemy-occupied squares count as rough terrain (decree-003)
+        // Naturewalk does NOT bypass this — it's a game mechanic, not terrain
         if (enemyOccupiedCells.value.has(key)) {
           return true
         }
         // Painted terrain cells with rough flag (decree-010, TerrainPainter)
+        // PTU p.322: attacker with matching Naturewalk bypasses painted rough
         if (terrainStore.isRoughAt(x0, y0)) {
-          return true
+          const baseType = terrainStore.getTerrainAt(x0, y0)
+          if (!naturewalkBypassesTerrain(actor.value, baseType)) {
+            return true
+          }
         }
       }
 
