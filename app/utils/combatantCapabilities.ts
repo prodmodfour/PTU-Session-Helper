@@ -1,4 +1,4 @@
-import type { Combatant, Pokemon, TerrainType, TerrainCell, StatusCondition } from '~/types'
+import type { Combatant, Pokemon, HumanCharacter, TerrainType, TerrainCell, StatusCondition } from '~/types'
 import { NATUREWALK_TERRAIN_MAP } from '~/constants/naturewalk'
 import type { NaturewalkTerrain } from '~/constants/naturewalk'
 
@@ -181,17 +181,35 @@ export function calculateAveragedSpeed(combatant: Combatant, terrainTypes: Set<s
  * PTU p.322: "Naturewalk is always listed with Terrain types in parentheses,
  * such as Naturewalk (Forest and Grassland)."
  *
- * Data sources (both are checked):
+ * For Pokemon, data sources (both are checked):
  * - capabilities.naturewalk: string[] like ['Forest', 'Grassland'] (direct field)
  * - capabilities.otherCapabilities: string[] containing "Naturewalk (Forest, Grassland)"
  *   (parsed from species data by the seeder)
  *
- * Returns an empty array for human characters or Pokemon without Naturewalk.
+ * For Trainers (PTU p.149 — Survivalist class feature):
+ * - capabilities: string[] containing "Naturewalk (Forest)" etc.
+ *   (stored on HumanCharacter as a flat capability string array)
+ *
+ * Returns an empty array for combatants without Naturewalk.
  */
 export function getCombatantNaturewalks(combatant: Combatant): ReadonlyArray<string> {
-  if (combatant.type !== 'pokemon') return []
+  if (combatant.type === 'pokemon') {
+    return getPokemonNaturewalks(combatant.entity as Pokemon)
+  }
 
-  const pokemon = combatant.entity as Pokemon
+  // Human combatant — check trainer capabilities (Survivalist Naturewalk, PTU p.149)
+  const human = combatant.entity as HumanCharacter
+  const caps = human.capabilities
+  if (!caps || caps.length === 0) return []
+
+  return parseNaturewalksFromOtherCaps(caps)
+}
+
+/**
+ * Extract Naturewalk terrain names from a Pokemon's capabilities.
+ * Checks both the direct naturewalk field and otherCapabilities strings.
+ */
+function getPokemonNaturewalks(pokemon: Pokemon): ReadonlyArray<string> {
   const caps = pokemon.capabilities
   if (!caps) return []
 
@@ -291,6 +309,9 @@ const NATUREWALK_IMMUNE_STATUSES: ReadonlyArray<StatusCondition> = ['Slowed', 'S
  * movement costs of that terrain type" (p.322) and has "Immunity to Slowed
  * or Stuck in its appropriate Terrains" (p.276).
  *
+ * PTU p.149: Trainers can gain Naturewalk via the Survivalist class feature.
+ * The same immunity rules apply to trainers with Naturewalk.
+ *
  * @param combatant - The combatant being targeted
  * @param statuses - The status conditions being applied
  * @param terrainCells - Parsed terrain cell array from the encounter record
@@ -303,9 +324,6 @@ export function findNaturewalkImmuneStatuses(
   terrainCells: TerrainCell[],
   terrainEnabled: boolean
 ): StatusCondition[] {
-  // Only Pokemon have Naturewalk
-  if (combatant.type !== 'pokemon') return []
-
   // Terrain must be enabled and combatant must have a position
   if (!terrainEnabled || !combatant.position) return []
 
