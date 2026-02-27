@@ -73,7 +73,7 @@ export const TRAINER_CLASSES: TrainerClassDef[] = [
   { name: 'Athlete', category: 'Fighter', associatedSkills: ['Athletics'], description: 'Physically fit Trainer combatant' },
   { name: 'Dancer', category: 'Fighter', associatedSkills: ['Acrobatics', 'Athletics', 'Charm'], description: 'Graceful combat through dance' },
   { name: 'Hunter', category: 'Fighter', associatedSkills: ['Stealth', 'Survival'], description: 'Tracks and captures quarry' },
-  { name: 'Martial Artist', category: 'Fighter', associatedSkills: ['Combat'], description: 'Hand-to-hand fighter', isBranching: true },
+  { name: 'Martial Artist', category: 'Fighter', associatedSkills: ['Combat'], description: 'Hand-to-hand fighter' },
   { name: 'Musician', category: 'Fighter', associatedSkills: ['Charm', 'Focus'], description: 'Fights with musical abilities' },
   { name: 'Provocateur', category: 'Fighter', associatedSkills: ['Charm', 'Guile', 'Intimidate'], description: 'Silver tongue in battle' },
   { name: 'Rogue', category: 'Fighter', associatedSkills: ['Acrobatics', 'Athletics', 'Stealth'], description: 'Dark-typed stealth fighter' },
@@ -96,10 +96,11 @@ export const TRAINER_CLASSES: TrainerClassDef[] = [
  * Valid specializations for each branching class (decree-022).
  *
  * Type Ace → 18 Pokemon types
- * Stat Ace → 6 combat stats
+ * Stat Ace → 5 combat stats (PTU Core p.112: Attack, Defense, SpAtk, SpDef, Speed)
  * Style Expert → 5 contest stats
- * Researcher → fields of study (PTU Core p. 127)
- * Martial Artist → martial art styles (PTU Core p. 143)
+ * Researcher → 9 Fields of Study (PTU Core pp.140-148)
+ *
+ * Note: Martial Artist is NOT a branching class (decree-026, PTU Core p.161).
  */
 export const BRANCHING_CLASS_SPECIALIZATIONS: Record<string, readonly string[]> = {
   'Type Ace': [
@@ -117,9 +118,6 @@ export const BRANCHING_CLASS_SPECIALIZATIONS: Record<string, readonly string[]> 
   'Researcher': [
     'General Research', 'Apothecary', 'Crystal Artifice', 'Botany',
     'Chemistry', 'Climatology', 'Occultism', 'Paleontology', 'Pokemon Caretaking'
-  ],
-  'Martial Artist': [
-    'Aura', 'Cover', 'Elemental', 'Focused', 'Form', 'Freestyle', 'Parkour', 'Weapons'
   ]
 } as const
 
