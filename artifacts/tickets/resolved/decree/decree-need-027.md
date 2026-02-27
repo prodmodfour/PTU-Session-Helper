@@ -3,7 +3,8 @@ id: decree-need-027
 title: "Can Skill Edges raise Pathetic skills during character creation?"
 priority: P3
 severity: HIGH
-status: open
+status: addressed
+decree_id: decree-027
 domain: character-lifecycle
 topic: pathetic-skill-edge-raw-conflict
 source: rules-review-179 HIGH-01
@@ -35,3 +36,7 @@ The current code (ptu-rule-092 fix) sides with p.41, treating Skill Edges as the
 ## Impact
 
 Affects `app/composables/useCharacterCreation.ts` — the `addSkillEdge` function's handling of Pathetic-ranked skills.
+
+## Resolution
+
+Addressed by **decree-027**: Block Skill Edges from raising Pathetic skills during character creation. Implementation ticket: ptu-rule-118.
