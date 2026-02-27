@@ -164,7 +164,7 @@
             @enable-custom-background="creation.enableCustomBackground"
             @set-skill-rank="handleSetSkillRank"
             @add-pathetic-skill="creation.addPatheticSkill"
-            @remove-pathetic-skill="creation.removePatheticSkill"
+            @remove-pathetic-skill="handleRemovePatheticSkill"
             @update:background-name="(name: string) => creation.form.backgroundName = name"
           />
         </div>
@@ -445,6 +445,14 @@ function handleSkillEdge(skill: PtuSkillName): void {
 /** Handle skill rank set -- composable returns error string or null (Pathetic enforcement) */
 function handleSetSkillRank(skill: PtuSkillName, rank: SkillRank): void {
   const error = creation.setSkillRank(skill, rank)
+  if (error) {
+    alert(error)
+  }
+}
+
+/** Handle Pathetic skill removal -- blocks if Skill Edges reference the skill (CRITICAL-01 fix) */
+function handleRemovePatheticSkill(skill: PtuSkillName): void {
+  const error = creation.removePatheticSkill(skill)
   if (error) {
     alert(error)
   }

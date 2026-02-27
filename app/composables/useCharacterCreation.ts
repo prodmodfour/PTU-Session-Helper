@@ -207,13 +207,25 @@ export function useCharacterCreation() {
   /**
    * Remove a skill from Pathetic tracking during custom background selection.
    * Removes the skill from the tracking set and resets its rank to Untrained.
+   *
+   * Blocks removal if outstanding Skill Edge entries reference this skill,
+   * because removing the Pathetic lock while edges exist creates a tracking
+   * desync — later edge removal could demote the skill to Pathetic without
+   * it being tracked in patheticSkills.
+   *
+   * Returns an error string if blocked, or null on success.
    */
-  function removePatheticSkill(skill: PtuSkillName): void {
+  function removePatheticSkill(skill: PtuSkillName): string | null {
+    const outstandingEdges = form.edges.filter(e => e === `Skill Edge: ${skill}`)
+    if (outstandingEdges.length > 0) {
+      return `Cannot remove Pathetic lock from ${skill} while ${outstandingEdges.length} Skill Edge(s) reference it. Remove the Skill Edge(s) first.`
+    }
     form.patheticSkills = form.patheticSkills.filter(s => s !== skill)
     form.skills = {
       ...form.skills,
       [skill]: 'Untrained' as SkillRank
     }
+    return null
   }
 
   // --- Trainer Classes ---
