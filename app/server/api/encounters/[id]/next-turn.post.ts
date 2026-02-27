@@ -62,7 +62,11 @@ export default defineEventHandler(async (event) => {
       currentCombatant.actionsRemaining = 0
       currentCombatant.shiftActionsRemaining = 0
       // Clear temporary conditions that last "until next turn"
-      currentCombatant.tempConditions = []
+      // Skip during declaration phase — declaration is NOT the trainer's actual turn.
+      // Temp conditions persist through declaration and are cleared during resolution.
+      if (currentPhase !== 'trainer_declaration') {
+        currentCombatant.tempConditions = []
+      }
     }
 
     // Move to next turn
@@ -194,6 +198,9 @@ function resetResolvingTrainerTurnState(combatants: any[], combatantId: string) 
     trainer.hasActed = false
     trainer.actionsRemaining = 2
     trainer.shiftActionsRemaining = 1
+    // Clear temporary conditions (Sprint, Tripped, etc.) that last "until next turn".
+    // These were skipped during declaration phase — the resolution turn is the trainer's actual turn.
+    trainer.tempConditions = []
     trainer.turnState = {
       hasActed: false,
       standardActionUsed: false,
