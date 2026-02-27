@@ -34,9 +34,30 @@ app/tests/e2e/artifacts/test-state.md
 
 If either doesn't exist, the ecosystem is uninitialized.
 
-### 1d. Scan Artifact Directories
+### 1d. Read Artifact Indexes (Preferred) or Scan Directories (Fallback)
 
-Check what exists:
+**Preferred path — read `_index.md` files:**
+
+If index files exist, read them for a fast summary instead of scanning hundreds of individual files:
+
+1. `app/tests/e2e/artifacts/_index.md` — global open work counts, active reviews, open tickets by priority
+2. `app/tests/e2e/artifacts/tickets/_index.md` — open/in-progress tickets with ID, category, priority, domain
+3. `app/tests/e2e/artifacts/reviews/_index.md` — active reviews (CHANGES_REQUIRED/FAIL), recent approvals
+4. `app/tests/e2e/artifacts/designs/_index.md` — design status, tier completion
+5. `app/tests/e2e/artifacts/matrix/_index.md` — per-domain coverage, pipeline completeness, staleness
+6. `decrees/_index.md` — active decrees by domain
+
+From these indexes, extract:
+- Open tickets by priority and category (for D-category assignment)
+- Active reviews requiring action (for D6 reviewer assignment)
+- Matrix pipeline completeness per domain (for M-category assignment)
+- Design spec status (for D7 pending designs)
+
+**Only scan individual files when** you need the full file content (e.g., reading a ticket body for template data in Step 5) or when an `_index.md` file is missing/stale.
+
+**Fallback path — scan directories directly:**
+
+If `_index.md` files don't exist, fall back to scanning directories:
 - `app/tests/e2e/artifacts/tickets/bug/`, `ptu-rule/`, `feature/`, `ux/`, `decree/`
 - `app/tests/e2e/artifacts/refactoring/`
 - `app/tests/e2e/artifacts/reviews/`
@@ -53,9 +74,11 @@ For each ecosystem, determine:
 
 ### 1f. Scan Decree-Need Tickets and Active Decrees
 
-Scan `app/tests/e2e/artifacts/tickets/decree/` for `status: open` decree-need tickets. Count them.
+Read `decrees/_index.md` for active decrees. Read `app/tests/e2e/artifacts/tickets/_index.md` for open decree-need tickets (check "Open Decree-Needs" section).
 
-Scan `decrees/` for `status: active` decrees. Index them by domain for Step 5 template data gathering.
+If indexes are missing, fall back to scanning `app/tests/e2e/artifacts/tickets/decree/` for `status: open` and `decrees/` for `status: active`.
+
+Index decrees by domain for Step 5 template data gathering.
 
 Report open decree-need tickets: "N decree-need tickets await human ruling. Run `/address_design_decrees` to unblock."
 

@@ -205,6 +205,33 @@ List all filed tickets in the final report:
 | refactoring-063 | EXT-DUPLICATE | code-review-123 M2 + rules-review-113 M2 | Extract shared significance preset utilities |
 ```
 
+## Step 6b: Regenerate Artifact Indexes
+
+After filing tickets and committing state updates, regenerate all `_index.md` summary files so they reflect the latest artifact state:
+
+```bash
+node scripts/regenerate-artifact-indexes.mjs
+```
+
+This updates indexes in:
+- `app/tests/e2e/artifacts/_index.md` — global summary
+- `app/tests/e2e/artifacts/reviews/_index.md` — review summary
+- `app/tests/e2e/artifacts/tickets/_index.md` — ticket summary
+- `app/tests/e2e/artifacts/designs/_index.md` — design summary
+- `app/tests/e2e/artifacts/matrix/_index.md` — matrix summary
+- `decrees/_index.md` — decree summary
+
+Stage and commit the regenerated indexes:
+
+```bash
+git add app/tests/e2e/artifacts/_index.md app/tests/e2e/artifacts/reviews/_index.md \
+       app/tests/e2e/artifacts/tickets/_index.md app/tests/e2e/artifacts/designs/_index.md \
+       app/tests/e2e/artifacts/matrix/_index.md decrees/_index.md
+git commit -m "chore: regenerate artifact indexes after collection"
+```
+
+If the script fails, warn the user but do NOT block cleanup. Indexes are a convenience optimization, not a critical path.
+
 ## Step 7: Cleanup
 
 ### 7a. Successfully Merged Slaves
