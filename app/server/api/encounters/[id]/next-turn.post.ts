@@ -142,6 +142,14 @@ function resetCombatantsForNewRound(combatants: any[]) {
     c.actionsRemaining = 2
     c.shiftActionsRemaining = 1
     c.readyAction = null
+    c.turnState = {
+      hasActed: false,
+      standardActionUsed: false,
+      shiftActionUsed: false,
+      swiftActionUsed: false,
+      canBeCommanded: true,
+      isHolding: false
+    }
   })
 }
 
