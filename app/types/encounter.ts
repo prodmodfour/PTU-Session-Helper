@@ -10,7 +10,8 @@ import type {
   TurnPhase,
   TurnState,
   InjuryState,
-  StageSource
+  StageSource,
+  TrainerDeclaration
 } from './combat';
 import type { Pokemon, HumanCharacter, PokemonType } from './character';
 import type { SignificanceTier } from '~/utils/encounterBudget';
@@ -120,6 +121,11 @@ export interface Encounter {
   currentPhase: TurnPhase;
   trainerTurnOrder: string[]; // Trainer combatant IDs (low to high speed for declaration)
   pokemonTurnOrder: string[]; // Pokemon combatant IDs (high to low speed)
+
+  // League Battle declaration tracking (decree-021)
+  // Populated during trainer_declaration phase, consumed during trainer_resolution phase
+  // Cleared at the start of each new round
+  declarations: TrainerDeclaration[];
 
   // State
   isActive: boolean;

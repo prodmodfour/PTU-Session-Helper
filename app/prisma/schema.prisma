@@ -189,6 +189,10 @@ model Encounter {
   trainerTurnOrder  String @default("[]") // JSON array — trainer combatant IDs (low→high speed for declaration)
   pokemonTurnOrder  String @default("[]") // JSON array — pokemon combatant IDs (high→low speed)
 
+  // League Battle trainer declarations (decree-021)
+  // JSON array of TrainerDeclaration — populated during declaration phase, consumed during resolution, cleared per round
+  declarations      String @default("[]")
+
   // State
   isActive      Boolean  @default(true)
   isPaused      Boolean  @default(false)
