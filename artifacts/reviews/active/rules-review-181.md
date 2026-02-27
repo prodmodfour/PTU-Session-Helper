@@ -13,21 +13,26 @@ commits_reviewed:
   - e5d6178
   - a34e706
   - 108239c
-files_reviewed:
-  - app/constants/naturewalk.ts
-  - app/utils/combatantCapabilities.ts
-  - app/composables/useGridMovement.ts
-  - app/composables/useMoveCalculation.ts
-  - app/tests/unit/utils/combatantCapabilities.test.ts
-  - app/tests/unit/composables/useMoveCalculation.test.ts
-  - app/tests/unit/composables/useGridMovement.test.ts
+mechanics_verified:
+  - naturewalk-terrain-bypass
+  - naturewalk-slow-flag-bypass
+  - naturewalk-rough-accuracy-bypass
+  - naturewalk-enemy-occupied-exclusion
+  - naturewalk-terrain-mapping
 verdict: APPROVED
 issues_found:
   critical: 0
   high: 0
   medium: 0
+ptu_refs:
+  - core/10-indices-and-reference.md#Naturewalk (p.322)
+  - core/07-combat.md#Terrain (p.231)
+  - core/07-combat.md#Rough Terrain (p.476-485)
+  - core/07-combat.md#Example (p.2136)
+  - core/04-trainer-classes.md#Survivalist (p.4694)
+  - core/04-trainer-classes.md#Breeder (p.2800)
 reviewed_at: 2026-02-27T23:35:00Z
-follows_up: rules-review-176
+follows_up: rules-review-177
 ---
 
 ## Review Scope
