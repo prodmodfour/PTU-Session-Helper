@@ -64,7 +64,7 @@ export function useCharacterCreation() {
     isCustomBackground: false,
     // Skills
     skills: getDefaultSkills(),
-    /** Skills marked Pathetic during background selection — cannot be raised except via Skill Edges (PTU p. 41) */
+    /** Skills marked Pathetic during background selection — cannot be raised by any means during creation (PTU pp. 14, 18; decree-027) */
     patheticSkills: [] as PtuSkillName[],
     // Stats
     statPoints: {
@@ -176,12 +176,12 @@ export function useCharacterCreation() {
 
   /**
    * Set a single skill rank in custom background mode.
-   * Blocks raising a Pathetic-locked skill above Pathetic — use Skill Edges instead (PTU p. 41).
+   * Blocks raising a Pathetic-locked skill above Pathetic during creation (PTU pp. 14, 18; decree-027).
    * Returns an error string if blocked, or null on success.
    */
   function setSkillRank(skill: PtuSkillName, rank: SkillRank): string | null {
     if (form.patheticSkills.includes(skill) && rank !== 'Pathetic') {
-      return `${skill} is Pathetic and cannot be raised except through Skill Edges (PTU p. 41)`
+      return `${skill} is Pathetic and cannot be raised during character creation (PTU pp. 14, 18; decree-027)`
     }
     form.skills = {
       ...form.skills,
@@ -294,11 +294,20 @@ export function useCharacterCreation() {
    * Add a Skill Edge that raises a skill rank by one step.
    * Adds "Skill Edge: [Skill Name]" to edges and bumps the skill rank.
    *
-   * PTU p. 41 — Basic Skills: Pathetic → Untrained, or Untrained → Novice.
+   * PTU p. 41 — Basic Skills: Untrained → Novice.
    * Adept Skills (Lv2): Novice → Adept. Expert Skills (Lv6): Adept → Expert.
    * Master Skills (Lv12): Expert → Master.
+   *
+   * decree-027: Pathetic skills cannot be raised via Skill Edges during
+   * character creation. The Pathetic→Untrained progression from p. 41
+   * applies only post-creation during leveling.
    */
   function addSkillEdge(skill: PtuSkillName): string | null {
+    // decree-027: Block Skill Edges from raising Pathetic-locked skills (PTU pp. 14, 18)
+    if (form.patheticSkills.includes(skill)) {
+      return `${skill} is Pathetic and cannot be raised during character creation — not even by Skill Edges (PTU pp. 14, 18; decree-027)`
+    }
+
     const currentRank = form.skills[skill]
     const rankProgression: SkillRank[] = ['Pathetic', 'Untrained', 'Novice', 'Adept', 'Expert', 'Master']
     const currentIndex = rankProgression.indexOf(currentRank)
