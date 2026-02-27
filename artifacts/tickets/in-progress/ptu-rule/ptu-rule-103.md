@@ -68,3 +68,17 @@ Implement path-based speed averaging when movement crosses terrain boundaries, p
 
 **Files changed:** 7 files
 **Duplicate code path check:** All speed consumers verified — `getSpeed` (badge display), `isValidMove` (path-based averaging), `getMovementRangeCells`/`getMovementRangeCellsWithAveraging` (flood-fill), `calculateTerrainAwarePathCost` (A* with full path). All paths now respect speed averaging when terrain is present.
+
+### Fix Cycle (slave/2-dev-ptu-rule-103-fix-20260227)
+
+Addresses all 4 issues from code-review-187 + rules-review-164 CHANGES_REQUIRED.
+
+1. **`2aaa5e9` — combatantCapabilities.ts** (CRIT-2/M-001): Changed `capabilitySpeeds` from `Set<number>` to `number[]` in `calculateAveragedSpeed`. Replaced `.add()` with `.push()`, `.size` with `.length`. Fixes incorrect averaging when 2+ distinct capabilities share the same speed value (e.g., Overland 6 + Swim 6 + Burrow 3 was (6+3)/2=4 instead of correct (6+6+3)/3=5).
+
+2. **`ef76650` — useGridRendering.ts** (CRIT-1/M-002): Fixed undefined `speed` variable in `drawExternalMovementPreview`. Declared `displaySpeed` before the if/else branch and set it in both branches. Speed badge now uses `displaySpeed` consistently.
+
+3. **`0692024` — useGridMovement.ts** (MED-1): Replaced direct `pokemon.capabilities?.swim`/`burrow` property access in `getMaxPossibleSpeed` with canonical `getSwimSpeed(combatant)`/`getBurrowSpeed(combatant)` utility functions. Added missing imports.
+
+4. **`046d24a` — usePathfinding.ts** (MED-2): Added JSDoc comment to `getMovementRangeCellsWithAveraging` documenting the conservative approximation limitation (flood-fill may under-report reachable cells in edge cases where a higher-cost path yields a higher averaged speed).
+
+**Files changed:** 4 files (combatantCapabilities.ts, useGridRendering.ts, useGridMovement.ts, usePathfinding.ts)
