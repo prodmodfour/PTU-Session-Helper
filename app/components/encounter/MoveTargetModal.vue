@@ -230,6 +230,7 @@ import type { Move, Combatant } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 
 const { getCombatantName } = useCombatantDisplay()
+const encounterStore = useEncounterStore()
 
 const props = defineProps<{
   move: Move
@@ -246,6 +247,13 @@ const emit = defineEmits<{
 const moveRef = toRef(props, 'move')
 const actorRef = toRef(props, 'actor')
 const targetsRef = toRef(props, 'targets')
+
+// Full encounter combatant list for decree-003 rough terrain penalty check.
+// The targets prop is the selectable target list, but allCombatants must include
+// every combatant on the grid so non-target enemies are visible for LoS checks.
+const allEncounterCombatants = computed((): Combatant[] =>
+  encounterStore.encounter?.combatants ?? []
+)
 
 // Use the extracted composable for all calculations
 const {
@@ -285,7 +293,7 @@ const {
   // Confirmation
   canConfirm,
   getConfirmData
-} = useMoveCalculation(moveRef, actorRef, targetsRef, targetsRef)
+} = useMoveCalculation(moveRef, actorRef, targetsRef, allEncounterCombatants)
 
 // Helper to check if a target is in range
 const isTargetInRange = (targetId: string): boolean => {
