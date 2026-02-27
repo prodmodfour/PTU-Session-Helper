@@ -162,7 +162,9 @@
             @apply-background="creation.applyBackground"
             @clear-background="creation.clearBackground"
             @enable-custom-background="creation.enableCustomBackground"
-            @set-skill-rank="creation.setSkillRank"
+            @set-skill-rank="handleSetSkillRank"
+            @add-pathetic-skill="creation.addPatheticSkill"
+            @remove-pathetic-skill="creation.removePatheticSkill"
             @update:background-name="(name: string) => creation.form.backgroundName = name"
           />
         </div>
@@ -383,7 +385,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PokemonType, QuickCreatePayload } from '~/types'
+import type { PokemonType, QuickCreatePayload, SkillRank } from '~/types'
 import type { PtuSkillName } from '~/constants/trainerSkills'
 import type { CreateMode } from '~/composables/useCharacterCreation'
 import { getStatPointsForLevel } from '~/constants/trainerStats'
@@ -435,6 +437,14 @@ watch(() => creation.form.characterType, (newType) => {
 /** Handle Skill Edge add -- composable returns error string or null */
 function handleSkillEdge(skill: PtuSkillName): void {
   const error = creation.addSkillEdge(skill)
+  if (error) {
+    alert(error)
+  }
+}
+
+/** Handle skill rank set -- composable returns error string or null (Pathetic enforcement) */
+function handleSetSkillRank(skill: PtuSkillName, rank: SkillRank): void {
+  const error = creation.setSkillRank(skill, rank)
   if (error) {
     alert(error)
   }

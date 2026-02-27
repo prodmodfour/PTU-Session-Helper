@@ -173,6 +173,8 @@ const emit = defineEmits<{
   clearBackground: []
   enableCustomBackground: []
   setSkillRank: [skill: PtuSkillName, rank: SkillRank]
+  addPatheticSkill: [skill: PtuSkillName]
+  removePatheticSkill: [skill: PtuSkillName]
   'update:backgroundName': [name: string]
 }>()
 
@@ -268,9 +270,9 @@ function onCustomNoviceChange(event: Event) {
 
 function onPatheticToggle(skill: PtuSkillName) {
   if (customPathetics.value.includes(skill)) {
-    emit('setSkillRank', skill, 'Untrained')
+    emit('removePatheticSkill', skill)
   } else if (customPathetics.value.length < 3) {
-    emit('setSkillRank', skill, 'Pathetic')
+    emit('addPatheticSkill', skill)
   }
 }
 </script>
