@@ -50,3 +50,18 @@ Custom background mode allows bypassing the Pathetic skill restriction, making c
 4. `applyBackground` (preset mode) populates the tracking array from the background definition.
 5. `clearBackground` and `enableCustomBackground` reset the tracking array.
 6. Bonus fix: `addSkillEdge` no longer incorrectly blocks Pathetic→Untrained. Per PTU p. 41, Basic Skills edge allows this progression.
+
+### Fix Cycle (rules-review-179 CHANGES_REQUIRED)
+
+**CRITICAL-01 fix:**
+- `19ec89c` — fix: guard removePatheticSkill against outstanding Skill Edges
+
+**MEDIUM-01 fix:**
+- `4101e1d` — fix: add informational warning for Pathetic enforcement at level > 1
+
+**HIGH-01:** BLOCKED by decree-need-027. Not implemented.
+
+#### Files Changed (fix cycle)
+- `app/composables/useCharacterCreation.ts` — `removePatheticSkill` now returns `string | null` and checks for outstanding `Skill Edge: <skill>` entries in `form.edges` before allowing removal. Passes `patheticSkills` to `validateSkillBackground`.
+- `app/pages/gm/create.vue` — Added `handleRemovePatheticSkill` wrapper with `alert()` for error feedback, matching `handleSetSkillRank` pattern.
+- `app/utils/characterCreationValidation.ts` — `validateSkillBackground` accepts optional `patheticSkills` parameter. Emits info-severity warning when level > 1 and Pathetic skills are locked, explaining the restriction persists and how to work around it.
