@@ -3,9 +3,9 @@ import {
   calculateRestHealing,
   shouldResetDailyCounters,
   clearPersistentStatusConditions,
-  getStatusesToClear,
-  isDailyMoveRefreshable
+  getStatusesToClear
 } from '~/utils/restHealing'
+import { refreshDailyMoves } from '~/server/services/rest-healing.service'
 
 /**
  * Apply extended rest to a Pokemon (decree-018: configurable duration)
@@ -79,36 +79,9 @@ export default defineEventHandler(async (event) => {
   const clearedStatuses = getStatusesToClear(statusConditions)
   const newStatusConditions = clearPersistentStatusConditions(statusConditions)
 
-  // Reset daily move usage (rolling window: PTU Core p.252)
-  // Daily-frequency moves are only refreshed if they haven't been used since the previous day.
-  // A move used today cannot be refreshed by tonight's Extended Rest.
+  // PTU Core p.252: Refresh daily-frequency moves (rolling window applies)
   const moves = JSON.parse(pokemon.moves || '[]')
-  const restoredMoves: string[] = []
-  const skippedMoves: string[] = []
-
-  for (const move of moves) {
-    const isDailyMove = move.frequency?.startsWith('Daily')
-
-    if (isDailyMove && move.usedToday && move.usedToday > 0) {
-      // Rolling window (PTU Core p.252): only refresh if not used today
-      if (isDailyMoveRefreshable(move.lastUsedAt)) {
-        restoredMoves.push(move.name)
-        move.usedToday = 0
-        move.lastUsedAt = undefined
-      } else {
-        skippedMoves.push(move.name)
-      }
-    } else if (!isDailyMove && move.usedToday && move.usedToday > 0) {
-      // Non-daily moves: reset usage counter (no rolling window applies)
-      move.usedToday = 0
-      move.lastUsedAt = undefined
-    }
-
-    // Also reset scene usage if frequency is daily and the move was refreshed
-    if (isDailyMove && move.usedThisScene && !skippedMoves.includes(move.name)) {
-      move.usedThisScene = 0
-    }
-  }
+  const { updatedMoves, restoredMoves, skippedMoves } = refreshDailyMoves(moves)
 
   const updated = await prisma.pokemon.update({
     where: { id },
@@ -118,7 +91,7 @@ export default defineEventHandler(async (event) => {
       injuriesHealedToday,
       lastRestReset: new Date(),
       statusConditions: JSON.stringify(newStatusConditions),
-      moves: JSON.stringify(moves)
+      moves: JSON.stringify(updatedMoves)
     }
   })
 
