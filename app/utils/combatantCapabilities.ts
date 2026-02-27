@@ -1,4 +1,6 @@
-import type { Combatant, Pokemon } from '~/types'
+import type { Combatant, Pokemon, TerrainType } from '~/types'
+import { NATUREWALK_TERRAIN_MAP } from '~/constants/naturewalk'
+import type { NaturewalkTerrain } from '~/constants/naturewalk'
 
 /**
  * Shared utility functions for querying combatant movement capabilities.
@@ -167,4 +169,105 @@ export function calculateAveragedSpeed(combatant: Combatant, terrainTypes: Set<s
   // Average and floor (PTU convention: round down)
   const sum = capabilitySpeeds.reduce((a, b) => a + b, 0)
   return Math.floor(sum / capabilitySpeeds.length)
+}
+
+// =====================================
+// Naturewalk Capability (PTU p.322)
+// =====================================
+
+/**
+ * Extract Naturewalk terrain names from a combatant's capabilities.
+ *
+ * PTU p.322: "Naturewalk is always listed with Terrain types in parentheses,
+ * such as Naturewalk (Forest and Grassland)."
+ *
+ * Data sources (both are checked):
+ * - capabilities.naturewalk: string[] like ['Forest', 'Grassland'] (direct field)
+ * - capabilities.otherCapabilities: string[] containing "Naturewalk (Forest, Grassland)"
+ *   (parsed from species data by the seeder)
+ *
+ * Returns an empty array for human characters or Pokemon without Naturewalk.
+ */
+export function getCombatantNaturewalks(combatant: Combatant): ReadonlyArray<string> {
+  if (combatant.type !== 'pokemon') return []
+
+  const pokemon = combatant.entity as Pokemon
+  const caps = pokemon.capabilities
+  if (!caps) return []
+
+  // Source 1: direct naturewalk field (e.g., from manual seeds)
+  const directNaturewalks = caps.naturewalk ?? []
+
+  // Source 2: parse from otherCapabilities strings
+  const parsedNaturewalks = parseNaturewalksFromOtherCaps(caps.otherCapabilities ?? [])
+
+  // Merge and deduplicate
+  if (parsedNaturewalks.length === 0) return directNaturewalks
+  if (directNaturewalks.length === 0) return parsedNaturewalks
+
+  const combined = new Set([...directNaturewalks, ...parsedNaturewalks])
+  return Array.from(combined)
+}
+
+/**
+ * Parse Naturewalk terrain names from otherCapabilities strings.
+ *
+ * Handles formats like:
+ * - "Naturewalk (Forest, Grassland)"
+ * - "Naturewalk (Forest and Grassland)"
+ * - "Naturewalk (Ocean)"
+ *
+ * @param otherCaps - Array of capability strings from otherCapabilities
+ * @returns Array of terrain names extracted from Naturewalk entries
+ */
+function parseNaturewalksFromOtherCaps(otherCaps: string[]): string[] {
+  const terrains: string[] = []
+
+  for (const cap of otherCaps) {
+    const match = cap.match(/^Naturewalk\s*\(([^)]+)\)$/i)
+    if (!match) continue
+
+    // Split by comma or "and", trim whitespace
+    const parts = match[1]
+      .split(/[,]|\band\b/i)
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+
+    terrains.push(...parts)
+  }
+
+  return terrains
+}
+
+/**
+ * Check whether a combatant's Naturewalk bypasses terrain modifiers
+ * (rough/slow flags) on a cell with the given base terrain type.
+ *
+ * PTU p.322: "Pokemon with Naturewalk treat all listed terrains as Basic
+ * Terrain." Basic Terrain = no movement cost modifier, no accuracy penalty.
+ *
+ * Per decree-003: enemy-occupied rough terrain is a game mechanic, NOT
+ * painted terrain. Naturewalk does NOT bypass enemy-occupied rough.
+ * This function only checks terrain-based flags.
+ *
+ * @param combatant - The combatant to check
+ * @param baseTerrainType - The base terrain type of the cell
+ * @returns true if the combatant's Naturewalk applies to this terrain type
+ */
+export function naturewalkBypassesTerrain(
+  combatant: Combatant,
+  baseTerrainType: TerrainType
+): boolean {
+  const naturewalks = getCombatantNaturewalks(combatant)
+  if (naturewalks.length === 0) return false
+
+  // Check if any of the combatant's Naturewalk terrains map to this base type
+  for (const nw of naturewalks) {
+    const mappedTypes = NATUREWALK_TERRAIN_MAP[nw as NaturewalkTerrain]
+    if (mappedTypes && mappedTypes.includes(baseTerrainType)) {
+      return true
+    }
+  }
+
+  return false
 }
