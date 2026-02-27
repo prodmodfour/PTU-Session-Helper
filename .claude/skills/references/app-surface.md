@@ -140,6 +140,8 @@ CRUD + extensive combat actions.
 
 **VTT Grid utilities:** `utils/combatantCapabilities.ts` (shared combatantCanFly, getSkySpeed, combatantCanSwim, combatantCanBurrow), `utils/gridDistance.ts` (PTU diagonal distance calculation — alternating 1m/2m diagonal movement cost formula).
 
+**Type immunity utility:** `utils/typeStatusImmunity.ts` (shared between server and client — TYPE_STATUS_IMMUNITIES map, isImmuneToStatus, getImmuneType, findImmuneStatuses; per decree-012, PTU p.239 type-based status immunities).
+
 ### Encounter Templates (`/api/encounter-templates`)
 Full CRUD + save-from/load-to encounter.
 - `GET/POST /api/encounter-templates` — list, create
@@ -224,7 +226,8 @@ Export/import for offline character management.
 |------|---------|
 | `server/services/pokemon-generator.service.ts` | Canonical Pokemon creation — generatePokemonData, createPokemonRecord, buildPokemonCombatant |
 | `server/services/csv-import.service.ts` | CSV import parsing (trainer/pokemon sheets) and DB creation |
-| `server/services/combatant.service.ts` | Combatant builder and damage pipeline |
+| `server/services/combatant.service.ts` | Combatant builder, damage pipeline, calculateCurrentInitiative (CS-modified speed for initiative) |
+| `server/services/encounter.service.ts` | Encounter CRUD, reorderInitiativeAfterSpeedChange (decree-006), saveInitiativeReorder |
 | `server/services/entity-update.service.ts` | Entity update broadcasting |
 | `server/services/grid-placement.service.ts` | VTT grid placement and size-to-token mapping |
 | `server/utils/csv-parser.ts` | Reusable CSV parser (parseCSV, getCell, parseNumber) |
