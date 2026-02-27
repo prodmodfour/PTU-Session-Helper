@@ -3,7 +3,7 @@ id: ptu-rule-088
 title: Significance tier presets misaligned with PTU values
 priority: P3
 severity: MEDIUM
-status: open
+status: in-progress
 domain: encounter-tables
 source: encounter-tables-audit.md (R008)
 created_by: slave-collector (plan-20260226-175938)
@@ -31,3 +31,7 @@ Either (a) realign the three core presets to match PTU values (keep climactic/le
 ## Impact
 
 GMs selecting "Significant" get weaker encounters than PTU intends (x3.5 default vs x4-x5 PTU).
+
+## Fix Log
+
+- **9f0ff20** — Realigned significance tier presets in `app/utils/encounterBudget.ts`. Significant: x3.0-x4.0 (default 3.5) changed to x4.0-x5.0 (default 4.0) matching PTU. Extended tiers shifted upward: Climactic x5.0-x7.0 (default 6.0), Legendary x7.0-x10.0 (default 8.0). Updated comment in `app/utils/experienceCalculation.ts` to reflect new defaults.

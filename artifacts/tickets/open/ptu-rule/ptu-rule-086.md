@@ -3,7 +3,7 @@ id: ptu-rule-086
 title: Capture modifier sign convention inverted from PTU
 priority: P3
 severity: MEDIUM
-status: open
+status: in-progress
 domain: capture
 source: capture-audit.md (capture-R005)
 created_by: slave-collector (plan-20260226-175938)
@@ -31,3 +31,7 @@ Change formula from `roll - trainerLevel - modifiers` to `roll - trainerLevel + 
 ## Impact
 
 UX/correctness issue. GMs entering PTU-listed ball modifiers get inverted results. Currently mitigated only by GMs knowing to negate the sign.
+
+## Fix Log
+
+- **569d030** — Changed `roll - trainerLevel - modifiers` to `roll - trainerLevel + modifiers` in `app/utils/captureRate.ts` (line 199). Negative PTU ball modifiers now correctly reduce the roll.

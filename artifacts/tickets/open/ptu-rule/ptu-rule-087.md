@@ -3,7 +3,7 @@ id: ptu-rule-087
 title: Generated Pokemon start with 0 tutor points
 priority: P3
 severity: MEDIUM
-status: open
+status: in-progress
 domain: pokemon-lifecycle
 source: pokemon-lifecycle-audit.md (R022)
 created_by: slave-collector (plan-20260226-175938)
@@ -31,3 +31,7 @@ Add tutor point calculation to `generatePokemonData()`: `tutorPoints = 1 + Math.
 ## Impact
 
 All generated Pokemon have incorrect tutor point counts. Affects wild spawns, template loads, and manual creation.
+
+## Fix Log
+
+- **00b2f1f** — Added `tutorPoints` field to `GeneratedPokemonData` interface. Added calculation `tutorPoints = 1 + Math.floor(level / 5)` in `generatePokemonData()`. Passed computed value to `createPokemonRecord()` (Prisma write) and `createdPokemonToEntity()` (combatant entity). Files: `app/server/services/pokemon-generator.service.ts`.
