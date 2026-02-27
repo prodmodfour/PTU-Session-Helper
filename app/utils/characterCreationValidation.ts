@@ -86,7 +86,8 @@ export function validateStatAllocation(
 export function validateSkillBackground(
   skills: Record<string, string>,
   level: number,
-  edges: string[] = []
+  edges: string[] = [],
+  patheticSkills: string[] = []
 ): CreationWarning[] {
   const warnings: CreationWarning[] = []
   const ranks = Object.values(skills)
@@ -142,6 +143,15 @@ export function validateSkillBackground(
     warnings.push({
       section: 'skills',
       message: `Level ${level} skill rank cap: ${maxRank}. Bonus Skill Edges from milestones: ${level >= 2 ? 'Lv2' : ''}${level >= 6 ? ', Lv6' : ''}${level >= 12 ? ', Lv12' : ''} (cannot raise to the newly unlocked rank).`,
+      severity: 'info'
+    })
+  }
+
+  // Informational: Pathetic restrictions persist for higher-level characters
+  if (level > 1 && patheticSkills.length > 0) {
+    warnings.push({
+      section: 'skills',
+      message: `Pathetic restrictions from background are still enforced at level ${level}. Skills locked: ${patheticSkills.join(', ')}. To assign these skills freely, remove the Pathetic marking in custom background mode.`,
       severity: 'info'
     })
   }
