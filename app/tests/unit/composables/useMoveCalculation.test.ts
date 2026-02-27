@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import { useTerrainStore } from '~/stores/terrain'
 import type { Combatant, Move } from '~/types'
+
+// Stub Vue's ref/computed as globals — Nuxt auto-imports them but tests don't
+vi.stubGlobal('ref', ref)
+vi.stubGlobal('computed', computed)
 
 // Mock auto-imported composables that useMoveCalculation depends on
 vi.mock('~/utils/diceRoller', () => ({
