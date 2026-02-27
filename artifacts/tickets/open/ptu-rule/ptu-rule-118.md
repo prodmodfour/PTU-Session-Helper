@@ -3,7 +3,7 @@ id: ptu-rule-118
 title: "Block Skill Edges from raising Pathetic skills during character creation"
 priority: P3
 severity: HIGH
-status: open
+status: in-progress
 domain: character-lifecycle
 source: decree-027
 created_at: 2026-02-27
@@ -31,3 +31,18 @@ Per decree-027, Skill Edges cannot raise Pathetic-locked skills during character
 - `addSkillEdge('SomePatheticSkill')` returns an error string and does NOT modify the skill rank
 - Validation warns if any existing Skill Edge entry references a Pathetic-locked skill
 - Comment on `patheticSkills` field accurately reflects the new ruling
+
+## Resolution Log
+
+### Commits
+- `58d7ef7` — fix: block Skill Edges from raising Pathetic skills during creation
+- `5657695` — fix: add validation warning for Skill Edges on Pathetic-locked skills
+- `231af39` — docs: update removePatheticSkill comment to reflect decree-027 guard
+
+### Files Changed
+- `app/composables/useCharacterCreation.ts` — Added Pathetic guard to `addSkillEdge()`, updated `setSkillRank` error message, updated `patheticSkills` field comment, updated `removePatheticSkill` JSDoc
+- `app/utils/characterCreationValidation.ts` — Added decree-027 validation warning in `validateSkillBackground()` for Skill Edges referencing Pathetic-locked skills
+
+### Notes
+- The `EdgeSelectionSection.vue` component already had UI-level blocking for Pathetic skills (disabled button + tooltip). No changes needed there.
+- The `removePatheticSkill` guard for outstanding Skill Edges is now defensive-only (should never fire) but kept as a safety net.
