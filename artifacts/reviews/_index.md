@@ -1,8 +1,8 @@
 ---
-generated_at: 2026-02-27T07:39:35.660Z
-total_reviews: 77
+generated_at: 2026-02-27T08:17:11.606Z
+total_reviews: 83
 active_count: 74
-approved_count: 0
+approved_count: 6
 ---
 
 # Reviews Index
@@ -88,12 +88,20 @@ approved_count: 0
 
 ## Recently Approved (last 10)
 
+| Review ID | Target | Reviewer | Date |
+|-----------|--------|----------|------|
+| code-review-191 | ptu-rule-098+084+085+110+111+109 | senior-reviewer | 2026-02-27 |
+| code-review-190 | ptu-rule-101 | senior-reviewer | 2026-02-27 |
+| code-review-189 | ptu-rule-096+097+100+102+113 | senior-reviewer | 2026-02-27 |
+| rules-review-168 | ptu-rule-098+084+085+110+111+109 | game-logic-reviewer | 2026-02-27 |
+| rules-review-167 | ptu-rule-101 | game-logic-reviewer | 2026-02-27 |
+| rules-review-166 | ptu-rule-096+097+100+102+113 | game-logic-reviewer | 2026-02-27 |
 
 ## Stats
 
-- Active reviews: 77
+- Active reviews: 83
 - Needs action: 74
-- Approved/Pass (active): 0
+- Approved/Pass (active): 6
 - Archived: 297
-- Total (active + archived): 374
-- Unique targets reviewed: 41
+- Total (active + archived): 380
+- Unique targets reviewed: 44

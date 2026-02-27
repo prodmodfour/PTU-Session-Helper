@@ -1,22 +1,19 @@
 ---
-generated_at: 2026-02-27T07:39:35.664Z
-total_tickets: 155
-open: 17
-in_progress: 49
+generated_at: 2026-02-27T08:17:11.612Z
+total_tickets: 157
+open: 16
+in_progress: 52
 resolved: 88
 ---
 
 # Tickets Index
 
-## Open Tickets (17)
+## Open Tickets (16)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-107 | ptu-rule | P2 | combat | Implement the two-phase trainer system for League Battles: d |
 | ptu-rule-108 | ptu-rule | P2 | vtt-grid | Targeting through rough terrain cells (painted via TerrainPa |
-| ptu-rule-086 | ptu-rule | P3 | capture | ptu-rule-086: Capture modifier sign convention inverted from |
-| ptu-rule-087 | ptu-rule | P3 | pokemon-lifecycle | ptu-rule-087: Generated Pokemon start with 0 tutor points |
-| ptu-rule-088 | ptu-rule | P3 | encounter-tables | ptu-rule-088: Significance tier presets misaligned with PTU  |
 | ptu-rule-089 | ptu-rule | P3 | healing | ptu-rule-089: Extended rest does not refresh daily moves |
 | ptu-rule-090 | ptu-rule | P3 | healing | ptu-rule-090: Scene-end AP restoration not automated |
 | ptu-rule-091 | ptu-rule | P3 | character-lifecycle | ptu-rule-091: Branch class blocked by duplicate check |
@@ -29,8 +26,10 @@ resolved: 88
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
 | ux-009 | ux | P4 | combat | ux-009: Show type-immunity IMMUNE tags on all statuses proac |
+| refactoring-086 | refactoring | P4 | combat | `app/composables/useMoveCalculation.ts` is 801 lines, exceed |
+| refactoring-087 | refactoring | P4 | vtt-grid | `app/tests/unit/stores/terrain.test.ts` is 811 lines, exceed |
 
-## In-Progress Tickets (49)
+## In-Progress Tickets (52)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -62,6 +61,9 @@ resolved: 88
 | ptu-rule-111 | ptu-rule | P2 | combat | rules-review-161 M3 |
 | ptu-rule-113 | ptu-rule | P2 | vtt | decree-023 |
 | feature-002 | feature | P2 | vtt-grid | — |
+| ptu-rule-086 | ptu-rule | P3 | capture | capture-audit.md (capture-R005) |
+| ptu-rule-087 | ptu-rule | P3 | pokemon-lifecycle | pokemon-lifecycle-audit.md (R022) |
+| ptu-rule-088 | ptu-rule | P3 | encounter-tables | encounter-tables-audit.md (R008) |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
 | ptu-rule-055 | ptu-rule | P3 | pokemon-lifecycle | — |
@@ -93,8 +95,8 @@ All decree-needs addressed.
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 5 | 26 | 32 |
-| ptu-rule | 13 | 37 | 35 | 85 |
+| ptu-rule | 10 | 40 | 35 | 85 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 2 | 5 | 2 | 9 |
 | decree | 0 | 0 | 24 | 24 |
-| refactoring | 1 | 1 | 0 | 2 |
+| refactoring | 3 | 1 | 0 | 4 |
