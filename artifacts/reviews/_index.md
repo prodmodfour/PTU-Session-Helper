@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-02-27T10:28:33.158Z
-total_reviews: 98
-active_count: 78
-approved_count: 17
+generated_at: 2026-02-27T11:11:36.043Z
+total_reviews: 102
+active_count: 81
+approved_count: 18
 ---
 
 # Reviews Index
 
-## Active Reviews (78)
+## Active Reviews (81)
 
 | Review ID | Verdict | Target | Reviewer | Date |
 |-----------|---------|--------|----------|------|
@@ -72,6 +72,8 @@ approved_count: 17
 | code-review-192 | CHANGES_REQUIRED | ptu-rule-099+104 | senior-reviewer | 2026-02-27 |
 | code-review-194 | CHANGES_REQUIRED | ptu-rule-086+087+088 | senior-reviewer | 2026-02-27 |
 | code-review-198 | CHANGES_REQUIRED | ptu-rule-107 | senior-reviewer | 2026-02-27 |
+| code-review-200 | CHANGES_REQUIRED | ptu-rule-091 | senior-reviewer | 2026-02-27 |
+| code-review-201 | CHANGES_REQUIRED | ptu-rule-112 | senior-reviewer | 2026-02-27 |
 | rules-review-034 | CHANGES_REQUIRED | bug-002 | game-logic-reviewer | 2026-02-18 |
 | rules-review-039 | CHANGES_REQUIRED | ptu-rule-034, ptu-rule-035 | game-logic-reviewer | 2026-02-18 |
 | rules-review-047 | MIXED | — | game-logic-reviewer | 2026-02-19 |
@@ -88,6 +90,7 @@ approved_count: 17
 | rules-review-161 | CHANGES_REQUIRED | ptu-rule-098+084+085 | game-logic-reviewer | 2026-02-26 |
 | rules-review-164 | CHANGES_REQUIRED | ptu-rule-103 | game-logic-reviewer | 2026-02-26 |
 | rules-review-169 | CHANGES_REQUIRED | ptu-rule-099+104 | game-logic-reviewer | 2026-02-27 |
+| rules-review-176 | CHANGES_REQUIRED | ptu-rule-091 | game-logic-reviewer | 2026-02-27 |
 | rules-review-test-integrity-001 | CHANGES_REQUIRED | — | — | 2026-02-16 |
 
 ## Recently Approved (last 10)
@@ -102,14 +105,14 @@ approved_count: 17
 | code-review-191 | ptu-rule-098+084+085+110+111+109 | senior-reviewer | 2026-02-27 |
 | code-review-190 | ptu-rule-101 | senior-reviewer | 2026-02-27 |
 | code-review-189 | ptu-rule-096+097+100+102+113 | senior-reviewer | 2026-02-27 |
+| rules-review-177 | ptu-rule-112 | senior-reviewer | 2026-02-27 |
 | rules-review-175 | ptu-rule-107 | game-logic-reviewer | 2026-02-27 |
-| rules-review-174 | ptu-rule-099+104 | game-logic-reviewer | 2026-02-27 |
 
 ## Stats
 
-- Active reviews: 98
-- Needs action: 78
-- Approved/Pass (active): 17
+- Active reviews: 102
+- Needs action: 81
+- Approved/Pass (active): 18
 - Archived: 297
-- Total (active + archived): 395
-- Unique targets reviewed: 48
+- Total (active + archived): 399
+- Unique targets reviewed: 50
