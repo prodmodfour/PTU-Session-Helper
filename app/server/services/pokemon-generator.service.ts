@@ -60,6 +60,7 @@ export interface GeneratedPokemonData {
   skills: Record<string, string>
   eggGroups: string[]
   size: string
+  tutorPoints: number
   // Optional overrides for import-specific data (CSV imports preserve these from the sheet)
   nature?: { name: string; raisedStat: string | null; loweredStat: string | null }
   shiny?: boolean
@@ -162,6 +163,9 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
   // Random gender
   const gender = ['Male', 'Female'][Math.floor(Math.random() * 2)]
 
+  // Tutor points: 1 base + 1 per 5 levels (PTU: "starts with a single Tutor Point" + more every 5 levels)
+  const tutorPoints = 1 + Math.floor(input.level / 5)
+
   return {
     species: input.speciesName,
     level: input.level,
@@ -181,6 +185,7 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
     skills,
     eggGroups,
     size,
+    tutorPoints,
     nature: natureData
   }
 }
@@ -235,6 +240,7 @@ export async function createPokemonRecord(
       statusConditions: JSON.stringify([]),
       gender: data.gender,
       shiny: data.shiny ?? false,
+      tutorPoints: data.tutorPoints,
       isInLibrary: true,
       origin: input.origin,
       notes: input.originLabel || null
@@ -309,7 +315,7 @@ function createdPokemonToEntity(pokemon: CreatedPokemon): Pokemon {
     restMinutesToday: 0,
     lastInjuryTime: null,
     injuriesHealedToday: 0,
-    tutorPoints: 0,
+    tutorPoints: data.tutorPoints,
     trainingExp: 0,
     eggGroups: data.eggGroups,
     shiny: false,
