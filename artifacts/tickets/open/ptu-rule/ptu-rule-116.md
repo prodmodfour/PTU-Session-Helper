@@ -43,3 +43,9 @@ Low — Slowed/Stuck conditions from terrain are relatively rare in typical enco
 - `app/server/api/encounters/[id]/status.post.ts` — add Naturewalk terrain immunity check after type immunity check; rejects Slowed/Stuck with 409 when Pokemon has matching Naturewalk on current terrain cell; GM can override with `override: true`
 
 **Approach:** Follows the same pattern as decree-012 type immunity: server-side enforcement with informative 409 response and GM override. Parses encounter `terrainState` JSON to resolve cell type at combatant position. Reuses existing `naturewalkBypassesTerrain()` for terrain matching and `getCombatantNaturewalks()` for capability extraction (covers both `capabilities.naturewalk` and `otherCapabilities` parsing).
+
+### Fix Cycle (rules-review-186 CHANGES_REQUIRED)
+
+**Commit:** 5fd8577 (slave/3-dev-ptu-rule-114-fix-20260228-010000)
+- `app/server/api/encounters/[id]/status.post.ts` — correct Naturewalk comment from p.239-240 to p.276
+- `app/utils/combatantCapabilities.ts` — correct all three Naturewalk comment references from p.239-240 to p.276 (immunity) and p.322 (terrain treatment)

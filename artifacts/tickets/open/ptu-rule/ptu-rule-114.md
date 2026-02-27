@@ -50,3 +50,13 @@ Low — this is a rarely-used variant of an already-implemented mechanic. The st
 - `app/constants/combatManeuvers.ts` — add "Take a Breather (Assisted)" maneuver entry
 
 **Approach:** The `ZeroEvasion` synthetic tempCondition is automatically cleared at end of next turn (same lifecycle as Tripped/Vulnerable tempConditions). The assistant's Standard Action consumption is left to the GM to manage manually (consistent with how other multi-character interactions work).
+
+### Fix Cycle (rules-review-186 CHANGES_REQUIRED)
+
+**Commit:** 8163830 (slave/3-dev-ptu-rule-114-fix-20260228-010000)
+- `app/server/api/encounters/[id]/breather.post.ts` — add Tripped tempCondition to assisted branch alongside ZeroEvasion; update header comment and move log notes
+- `app/constants/combatManeuvers.ts` — update assisted breather shortDesc to mention Tripped
+
+**Commit:** aabee84 (slave/3-dev-ptu-rule-114-fix-20260228-010000)
+- `app/composables/useEncounterActions.ts` — remove `if (!assisted)` guard so shift prompt fires for both variants
+- `app/server/api/encounters/[id]/breather.post.ts` — update assisted breather notes to mention shift requirement
