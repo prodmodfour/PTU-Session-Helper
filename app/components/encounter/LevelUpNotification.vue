@@ -1,7 +1,7 @@
 <template>
   <div class="levelup-notification">
     <div class="levelup-notification__header">
-      <img src="/icons/phosphor/star.svg" alt="" class="levelup-icon" />
+      <PhStar :size="20" class="levelup-icon" />
       <h3 class="levelup-notification__title">Level Up!</h3>
     </div>
 
@@ -15,7 +15,7 @@
           <span class="levelup-entry__name">{{ entry.species }}</span>
           <span class="levelup-entry__levels">
             Lv.{{ entry.previousLevel }}
-            <img src="/icons/phosphor/arrow-right.svg" alt="->" class="arrow-icon" />
+            <PhArrowRight :size="14" class="arrow-icon" />
             Lv.{{ entry.newLevel }}
           </span>
         </div>
@@ -23,7 +23,7 @@
         <div class="levelup-entry__details">
           <!-- Stat Points -->
           <div class="levelup-detail-item levelup-detail-item--stat">
-            <img src="/icons/phosphor/chart-bar.svg" alt="" class="detail-icon" />
+            <PhChartBar :size="14" class="detail-icon" />
             <span>+{{ entry.totalStatPoints }} Stat {{ entry.totalStatPoints === 1 ? 'Point' : 'Points' }}</span>
           </div>
 
@@ -32,7 +32,7 @@
             v-if="entry.totalTutorPoints > 0"
             class="levelup-detail-item levelup-detail-item--tutor"
           >
-            <img src="/icons/phosphor/graduation-cap.svg" alt="" class="detail-icon" />
+            <PhGraduationCap :size="14" class="detail-icon" />
             <span>+{{ entry.totalTutorPoints }} Tutor {{ entry.totalTutorPoints === 1 ? 'Point' : 'Points' }}</span>
           </div>
 
@@ -42,7 +42,7 @@
             :key="'move-' + index"
             class="levelup-detail-item levelup-detail-item--move"
           >
-            <img src="/icons/phosphor/sword.svg" alt="" class="detail-icon" />
+            <PhSword :size="14" class="detail-icon" />
             <span>New Move: {{ move }}</span>
           </div>
 
@@ -52,7 +52,7 @@
             :key="`ability-${milestone.level}`"
             class="levelup-detail-item levelup-detail-item--ability"
           >
-            <img src="/icons/phosphor/lightning.svg" alt="" class="detail-icon" />
+            <PhLightning :size="14" class="detail-icon" />
             <span>{{ milestone.message }}</span>
           </div>
 
@@ -62,7 +62,7 @@
             :key="`evo-${evoLevel}`"
             class="levelup-detail-item levelup-detail-item--evolution"
           >
-            <img src="/icons/phosphor/arrow-circle-up.svg" alt="" class="detail-icon" />
+            <PhArrowCircleUp :size="14" class="detail-icon" />
             <span>Evolution may be available at Level {{ evoLevel }}!</span>
           </div>
         </div>
@@ -72,6 +72,15 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhStar,
+  PhArrowRight,
+  PhChartBar,
+  PhGraduationCap,
+  PhSword,
+  PhLightning,
+  PhArrowCircleUp,
+} from '@phosphor-icons/vue'
 import type { XpApplicationResult } from '~/utils/experienceCalculation'
 
 interface LevelUpEntryDisplay {
