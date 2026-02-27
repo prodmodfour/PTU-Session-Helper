@@ -195,8 +195,10 @@ export function attemptCapture(
     effectiveCaptureRate += 10  // Crit subtracts 10 from roll, same as adding 10 to rate
   }
 
-  // Modified roll = roll - trainer level - modifiers
-  const modifiedRoll = roll - trainerLevel - modifiers
+  // Modified roll = roll - trainer level + modifiers
+  // PTU ball modifiers are negative (e.g., Great Ball = -10), so adding them
+  // correctly reduces the roll, making capture easier.
+  const modifiedRoll = roll - trainerLevel + modifiers
 
   // Success if modified roll <= capture rate, or natural 100
   const success = naturalHundred || modifiedRoll <= effectiveCaptureRate
