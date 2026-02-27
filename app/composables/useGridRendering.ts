@@ -532,6 +532,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
 
       // Use terrain-type-aware averaging when callbacks are available
       let rangeCells: GridPosition[]
+      let displaySpeed: number
       const canUseAveraging = terrainCostGetter
         && options.getMaxPossibleSpeed
         && options.buildSpeedAveragingFn
@@ -546,9 +547,11 @@ export function useGridRendering(options: UseGridRenderingOptions) {
           token.position, maxSpeed, blocked,
           terrainCostGetter, terrainTypeGetter, averagingFn,
         )
+        // Display the speed based on starting terrain (may differ for specific paths)
+        displaySpeed = options.getSpeed(token.combatantId)
       } else {
-        const speed = options.getSpeed(token.combatantId)
-        rangeCells = getMovementRangeCells(token.position, speed, blocked, terrainCostGetter)
+        displaySpeed = options.getSpeed(token.combatantId)
+        rangeCells = getMovementRangeCells(token.position, displaySpeed, blocked, terrainCostGetter)
       }
 
       // Draw reachable cells with cyan tint
@@ -572,7 +575,7 @@ export function useGridRendering(options: UseGridRenderingOptions) {
       // Draw speed indicator
       const badgeX = token.position.x * cellSize + tokenSize * cellSize - 10
       const badgeY = token.position.y * cellSize + tokenSize * cellSize - 10
-      drawSpeedBadge(ctx, badgeX, badgeY, speed)
+      drawSpeedBadge(ctx, badgeX, badgeY, displaySpeed)
     }
 
     // Token center
