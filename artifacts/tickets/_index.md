@@ -1,22 +1,21 @@
 ---
-generated_at: 2026-02-27T16:41:06.366Z
+generated_at: 2026-02-27T17:07:20.937Z
 total_tickets: 179
-open: 3
-in_progress: 80
+open: 2
+in_progress: 81
 resolved: 92
 ---
 
 # Tickets Index
 
-## Open Tickets (3)
+## Open Tickets (2)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| ptu-rule-118 | ptu-rule | P3 | character-lifecycle | ptu-rule-118: Block Skill Edges from raising Pathetic skills |
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
 
-## In-Progress Tickets (80)
+## In-Progress Tickets (81)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -62,6 +61,7 @@ resolved: 92
 | ptu-rule-091 | ptu-rule | P3 | character-lifecycle | character-lifecycle-audit.md (R035) |
 | ptu-rule-092 | ptu-rule | P3 | character-lifecycle | character-lifecycle-audit.md (R024) |
 | ptu-rule-093 | ptu-rule | P3 | vtt-grid | vtt-grid-audit.md (R015) + scenes-audit.md (R018) |
+| ptu-rule-118 | ptu-rule | P3 | character-lifecycle | decree-027 |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
@@ -110,7 +110,7 @@ All decree-needs addressed.
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 0 | 10 | 26 | 37 |
-| ptu-rule | 2 | 52 | 36 | 91 |
+| ptu-rule | 1 | 53 | 36 | 91 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 1 | 7 | 2 | 10 |
 | decree | 0 | 0 | 27 | 27 |
