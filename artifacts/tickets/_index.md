@@ -1,20 +1,17 @@
 ---
-generated_at: 2026-02-27T12:14:46.784Z
-total_tickets: 171
-open: 19
-in_progress: 60
+generated_at: 2026-02-27T12:47:40.986Z
+total_tickets: 172
+open: 17
+in_progress: 63
 resolved: 91
 ---
 
 # Tickets Index
 
-## Open Tickets (19)
+## Open Tickets (17)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| bug-033 | bug | P0 | build | bug-033: SCSS mixin files fail — @use module scoping breaks  |
-| bug-034 | bug | P0 | build | bug-034: @phosphor-icons/vue not installed — TerrainPainter  |
-| bug-035 | bug | P0 | build | bug-035: LevelUpNotification.vue references 6 missing phosph |
 | ptu-rule-115 | ptu-rule | P2 | character-lifecycle | ptu-rule-115: Remove Martial Artist from branching classes |
 | decree-need-027 | decree | P3 | character-lifecycle | decree-need-027: Can Skill Edges raise Pathetic skills durin |
 | refactoring-002 | refactoring | P3 | vtt-grid | Legacy terrain types `'difficult'` and `'rough'` are still v |
@@ -22,6 +19,7 @@ resolved: 91
 | ptu-rule-094 | ptu-rule | P4 | healing | ptu-rule-094: Natural healing minimum 1 HP contradicts PTU f |
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ptu-rule-114 | ptu-rule | P4 | combat | ptu-rule-114: Assisted breather variant not implemented |
+| ptu-rule-116 | ptu-rule | P4 | vtt-grid | ptu-rule-116: Naturewalk status condition immunity (Slowed/S |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
 | ux-009 | ux | P4 | combat | ux-009: Show type-immunity IMMUNE tags on all statuses proac |
 | ux-010 | ux | P4 | encounter-tables | ux-010: Overlapping significance tier boundary values |
@@ -32,12 +30,15 @@ resolved: 91
 | refactoring-090 | refactoring | P4 | healing | The `refreshDailyMoves()` function only processes daily-freq |
 | refactoring-091 | refactoring | P4 | character-lifecycle | refactoring-091: Replace alert() calls in create.vue with in |
 
-## In-Progress Tickets (60)
+## In-Progress Tickets (63)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
 | ptu-rule-096 | ptu-rule | P0 | vtt | decree-002 |
 | ptu-rule-097 | ptu-rule | P0 | vtt | decree-003 |
+| bug-033 | bug | P0 | build | dev-server-error-log |
+| bug-034 | bug | P0 | build | dev-server-error-log |
+| bug-035 | bug | P0 | build | dev-server-error-log |
 | bug-002 | bug | P1 | — | code-review-035 |
 | ptu-rule-038 | ptu-rule | P1 | healing | — |
 | ptu-rule-098 | ptu-rule | P1 | combat | decree-005 |
@@ -74,7 +75,6 @@ resolved: 91
 | ptu-rule-091 | ptu-rule | P3 | character-lifecycle | character-lifecycle-audit.md (R035) |
 | ptu-rule-092 | ptu-rule | P3 | character-lifecycle | character-lifecycle-audit.md (R024) |
 | ptu-rule-093 | ptu-rule | P3 | vtt-grid | vtt-grid-audit.md (R015) + scenes-audit.md (R018) |
-| ptu-rule-112 | ptu-rule | P3 | vtt-grid | rules-review-162 M2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
 | ptu-rule-055 | ptu-rule | P3 | pokemon-lifecycle | — |
@@ -90,6 +90,7 @@ resolved: 91
 | ptu-rule-109 | ptu-rule | P3 | capture | rules-review-161 M1 |
 | ux-003 | ux | P3 | player-view | code-review-158 M1 |
 | ux-004 | ux | P3 | player-view | rules-review-149 R2 |
+| ptu-rule-112 | ptu-rule | P3 | vtt-grid | rules-review-162 M2 |
 | ptu-rule-081 | ptu-rule | P4 | combat | rules-review-115 M2 |
 | ptu-rule-082 | ptu-rule | P4 | pokemon-lifecycle | rules-review-118 (MEDIUM observation) |
 | ptu-rule-083 | ptu-rule | P4 | vtt-grid | rules-review-144 RULING-1 |
@@ -107,8 +108,8 @@ resolved: 91
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 4 | 5 | 26 | 35 |
-| ptu-rule | 4 | 48 | 36 | 88 |
+| bug | 1 | 8 | 26 | 35 |
+| ptu-rule | 5 | 48 | 36 | 89 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 3 | 5 | 2 | 10 |
 | decree | 1 | 0 | 26 | 27 |

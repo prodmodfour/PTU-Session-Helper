@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-02-27T12:14:46.778Z
-total_reviews: 106
-active_count: 82
-approved_count: 21
+generated_at: 2026-02-27T12:47:40.979Z
+total_reviews: 110
+active_count: 83
+approved_count: 23
 ---
 
 # Reviews Index
 
-## Active Reviews (82)
+## Active Reviews (83)
 
 | Review ID | Verdict | Target | Reviewer | Date |
 |-----------|---------|--------|----------|------|
@@ -74,6 +74,7 @@ approved_count: 21
 | code-review-198 | CHANGES_REQUIRED | ptu-rule-107 | senior-reviewer | 2026-02-27 |
 | code-review-200 | CHANGES_REQUIRED | ptu-rule-091 | senior-reviewer | 2026-02-27 |
 | code-review-201 | CHANGES_REQUIRED | ptu-rule-112 | senior-reviewer | 2026-02-27 |
+| code-review-204 | CHANGES_REQUIRED | ptu-rule-091 | senior-reviewer | 2026-02-27 |
 | rules-review-034 | CHANGES_REQUIRED | bug-002 | game-logic-reviewer | 2026-02-18 |
 | rules-review-039 | CHANGES_REQUIRED | ptu-rule-034, ptu-rule-035 | game-logic-reviewer | 2026-02-18 |
 | rules-review-047 | MIXED | — | game-logic-reviewer | 2026-02-19 |
@@ -98,6 +99,7 @@ approved_count: 21
 
 | Review ID | Target | Reviewer | Date |
 |-----------|--------|----------|------|
+| code-review-205 | ptu-rule-112 | senior-reviewer | 2026-02-27 |
 | code-review-203 | ptu-rule-092 | senior-reviewer | 2026-02-27 |
 | code-review-202 | ptu-rule-107 | senior-reviewer | 2026-02-27 |
 | code-review-199 | ptu-rule-086+087+088 | senior-reviewer | 2026-02-27 |
@@ -107,13 +109,12 @@ approved_count: 21
 | code-review-193 | ptu-rule-103 | senior-reviewer | 2026-02-27 |
 | code-review-191 | ptu-rule-098+084+085+110+111+109 | senior-reviewer | 2026-02-27 |
 | code-review-190 | ptu-rule-101 | senior-reviewer | 2026-02-27 |
-| code-review-189 | ptu-rule-096+097+100+102+113 | senior-reviewer | 2026-02-27 |
 
 ## Stats
 
-- Active reviews: 106
-- Needs action: 82
-- Approved/Pass (active): 21
+- Active reviews: 110
+- Needs action: 83
+- Approved/Pass (active): 23
 - Archived: 297
-- Total (active + archived): 403
+- Total (active + archived): 407
 - Unique targets reviewed: 51
