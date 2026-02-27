@@ -528,30 +528,62 @@ function generateGlobalIndex() {
   })
 
   const ticketCategories = ['bug', 'ptu-rule', 'feature', 'ux', 'decree', 'refactoring']
+  const statusDirs = ['open', 'in-progress', 'resolved']
   let totalTickets = 0
   let openTickets = 0
   let inProgressTickets = 0
   const openByPriority = { P0: 0, P1: 0, P2: 0, P3: 0, P4: 0 }
 
-  for (const cat of ticketCategories) {
-    const tickets = readAllFrontmatter(join(ARTIFACTS, 'tickets', cat))
-    totalTickets += tickets.length
-    for (const t of tickets) {
-      if (t.status === 'open') {
-        openTickets++
-        if (t.priority && openByPriority[t.priority] !== undefined) {
-          openByPriority[t.priority]++
+  const hasNewTicketStructure = existsSync(join(ARTIFACTS, 'tickets', 'open'))
+
+  if (hasNewTicketStructure) {
+    for (const status of statusDirs) {
+      for (const cat of ticketCategories) {
+        const tickets = readAllFrontmatter(join(ARTIFACTS, 'tickets', status, cat))
+        totalTickets += tickets.length
+        if (status === 'open') {
+          openTickets += tickets.length
+          for (const t of tickets) {
+            if (t.priority && openByPriority[t.priority] !== undefined) {
+              openByPriority[t.priority]++
+            }
+          }
+        } else if (status === 'in-progress') {
+          inProgressTickets += tickets.length
         }
-      } else if (t.status === 'in-progress') {
-        inProgressTickets++
+      }
+    }
+  } else {
+    for (const cat of ticketCategories) {
+      const tickets = readAllFrontmatter(join(ARTIFACTS, 'tickets', cat))
+      totalTickets += tickets.length
+      for (const t of tickets) {
+        if (t.status === 'open') {
+          openTickets++
+          if (t.priority && openByPriority[t.priority] !== undefined) {
+            openByPriority[t.priority]++
+          }
+        } else if (t.status === 'in-progress') {
+          inProgressTickets++
+        }
       }
     }
   }
 
   const designFiles = listMdFiles(join(ARTIFACTS, 'designs'))
-  const matrixFiles = listMdFiles(join(ARTIFACTS, 'matrix'))
   const decreeFiles = listMdFiles(DECREES_DIR)
   const refactoringFiles = listMdFiles(join(ARTIFACTS, 'refactoring'))
+
+  // Matrix: count domain subdirectories (atomized) or flat files (legacy)
+  const matrixDir = join(ARTIFACTS, 'matrix')
+  const matrixEntries = existsSync(matrixDir) ? readdirSync(matrixDir) : []
+  const matrixDomainDirs = matrixEntries.filter((e) => {
+    try { return statSync(join(matrixDir, e)).isDirectory() && e !== '_archive' }
+    catch { return false }
+  })
+  const matrixCount = matrixDomainDirs.length > 0
+    ? matrixDomainDirs.length
+    : listMdFiles(matrixDir).length
 
   // Open decree-needs
   const decreeNeedsDir = existsSync(join(ARTIFACTS, 'tickets', 'open', 'decree'))
@@ -595,7 +627,7 @@ function generateGlobalIndex() {
   out += `| reviews/ | ${reviewFiles.length} |\n`
   out += `| tickets/ (all) | ${totalTickets} |\n`
   out += `| designs/ | ${designFiles.length} |\n`
-  out += `| matrix/ | ${matrixFiles.length} |\n`
+  out += `| matrix/ | ${matrixCount}${matrixDomainDirs.length > 0 ? ' domains' : ''} |\n`
   out += `| refactoring/ | ${refactoringFiles.length} |\n`
   out += `| decrees/ | ${decreeFiles.length} |\n`
 
