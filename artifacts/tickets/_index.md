@@ -1,32 +1,24 @@
 ---
-generated_at: 2026-02-27T15:21:56.172Z
-total_tickets: 173
-open: 13
-in_progress: 68
+generated_at: 2026-02-27T16:00:37.889Z
+total_tickets: 175
+open: 5
+in_progress: 78
 resolved: 91
 ---
 
 # Tickets Index
 
-## Open Tickets (13)
+## Open Tickets (5)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | decree-need-027 | decree | P3 | character-lifecycle | decree-need-027: Can Skill Edges raise Pathetic skills durin |
-| ptu-rule-094 | ptu-rule | P4 | healing | ptu-rule-094: Natural healing minimum 1 HP contradicts PTU f |
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
-| ptu-rule-114 | ptu-rule | P4 | combat | ptu-rule-114: Assisted breather variant not implemented |
-| ptu-rule-116 | ptu-rule | P4 | vtt-grid | ptu-rule-116: Naturewalk status condition immunity (Slowed/S |
-| ptu-rule-117 | ptu-rule | P4 | character-lifecycle | `BRANCHING_CLASS_SPECIALIZATIONS['Style Expert']` at `app/co |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
-| ux-009 | ux | P4 | combat | ux-009: Show type-immunity IMMUNE tags on all statuses proac |
-| ux-010 | ux | P4 | encounter-tables | ux-010: Overlapping significance tier boundary values |
-| refactoring-087 | refactoring | P4 | vtt-grid | `app/tests/unit/stores/terrain.test.ts` is 811 lines, exceed |
-| refactoring-088 | refactoring | P4 | vtt-grid | `combatantsOnGrid` in `useMoveCalculation.ts` falls back to  |
-| refactoring-089 | refactoring | P4 | healing | The new `rest-healing.service.ts` service file exports `refr |
-| refactoring-090 | refactoring | P4 | healing | The `refreshDailyMoves()` function only processes daily-freq |
+| refactoring-092 | refactoring | P4 | encounter-tables | refactoring-092: Add partial-update merge to modification up |
+| refactoring-093 | refactoring | P4 | combat | refactoring-093: Rename evasionCalculation.ts or relocate ge |
 
-## In-Progress Tickets (68)
+## In-Progress Tickets (78)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -90,14 +82,24 @@ resolved: 91
 | ux-004 | ux | P3 | player-view | rules-review-149 R2 |
 | ptu-rule-112 | ptu-rule | P3 | vtt-grid | rules-review-162 M2 |
 | bug-032 | bug | P4 | encounter-tables | encounter-tables-audit.md (OBS-001) |
+| ptu-rule-114 | ptu-rule | P4 | combat | rules-review-169 (ptu-rule-099+104 re-review, note on breather mechanics) |
+| ptu-rule-116 | ptu-rule | P4 | vtt-grid | rules-review-181 (scope boundary note) |
+| ptu-rule-117 | ptu-rule | P4 | character-lifecycle | rules-review-183 MEDIUM-001 (pre-existing issue from commit 69f53a0) |
+| ux-009 | ux | P4 | combat | rules-review-163 M-1 |
+| ux-010 | ux | P4 | encounter-tables | rules-review-171 M1 |
 | refactoring-086 | refactoring | P4 | combat | code-review-189 MED-1, code-review-191 M1 |
+| refactoring-087 | refactoring | P4 | vtt-grid | code-review-190 MED-1 |
+| refactoring-088 | refactoring | P4 | vtt-grid | code-review-195 MED-1 |
 | refactoring-091 | refactoring | P4 | character-lifecycle | code-review-203 M1 |
 | ptu-rule-081 | ptu-rule | P4 | combat | rules-review-115 M2 |
 | ptu-rule-082 | ptu-rule | P4 | pokemon-lifecycle | rules-review-118 (MEDIUM observation) |
 | ptu-rule-083 | ptu-rule | P4 | vtt-grid | rules-review-144 RULING-1 |
+| ptu-rule-094 | ptu-rule | P4 | healing | healing-audit.md (R007) |
 | ux-002 | ux | P4 | — | rules-review-129 M1 |
 | ux-005 | ux | P4 | pokemon-lifecycle | code-review-161 M2 |
 | ux-008 | ux | P4 | — | code-review-169 M1 |
+| refactoring-089 | refactoring | P4 | healing | code-review-196 M1 |
+| refactoring-090 | refactoring | P4 | healing | rules-review-173 MED-1 |
 
 ## Open Decree-Needs (1)
 
@@ -110,8 +112,8 @@ resolved: 91
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 0 | 10 | 26 | 36 |
-| ptu-rule | 5 | 48 | 36 | 89 |
+| ptu-rule | 1 | 52 | 36 | 89 |
 | feature | 0 | 1 | 1 | 3 |
-| ux | 3 | 5 | 2 | 10 |
+| ux | 1 | 7 | 2 | 10 |
 | decree | 1 | 0 | 26 | 27 |
-| refactoring | 4 | 4 | 0 | 8 |
+| refactoring | 2 | 8 | 0 | 10 |
