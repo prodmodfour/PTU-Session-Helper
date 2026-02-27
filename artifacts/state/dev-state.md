@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-27T16:45:00
-updated_by: slave-collector (plan-20260227-162300)
+last_updated: 2026-02-28T01:30:00
+updated_by: slave-collector (plan-20260228-010000)
 ---
 
 # Dev Ecosystem State
@@ -18,7 +18,7 @@ updated_by: slave-collector (plan-20260227-162300)
 | bug-034 | P0 | **resolved** | @phosphor-icons/vue not installed. Fixed: added dependency to app/package.json. Resolved by slave-2 (plan-20260227-122512) |
 | bug-035 | P0 | **resolved** | LevelUpNotification missing phosphor SVGs. Fixed: converted to @phosphor-icons/vue Vue components. Resolved by slave-2 (plan-20260227-122512) |
 | bug-036 | P0 | **resolved** | Player view 500 error: SCSS `rgba(currentColor, 0.1)` rejected by Sass compiler. Fixed: replaced with SCSS color variables. Resolved by slave-1 (plan-20260227-131024) |
-| bug-037 | P3 | **open** | MoveTargetModal passes targets as allCombatants — decree-003 rough terrain penalty incomplete for non-target enemies (from rules-review-185 MED) |
+| bug-037 | P3 | **in-progress** | MoveTargetModal passes targets as allCombatants — fix applied by slave-2 (plan-20260228-010000). Passes full encounter combatant list. Needs review |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
@@ -66,8 +66,9 @@ updated_by: slave-collector (plan-20260227-162300)
 | ptu-rule-111 | P2 | **resolved** | tempConditions Vulnerable zero evasion. APPROVED: code-review-191 + rules-review-168. Both client + server checks inspect tempConditions |
 | ptu-rule-112 | P3 | **resolved** | Naturewalk capability terrain bypass. APPROVED: code-review-205 + rules-review-181 (plan-20260227-122512 slave-5 re-review). All issues from code-review-201 resolved. 36 Naturewalk tests, decree-003/010/025 compliant. Scope note: Naturewalk status condition immunity (Slowed/Stuck) → ptu-rule-116 |
 | ptu-rule-113 | P2 | **resolved** | Burst shapes use PTU diagonal distance (per decree-023). APPROVED: code-review-189 + rules-review-166. Burst 2 = 21 cells (not 25 Chebyshev) |
-| ptu-rule-114 | P4 | **in-progress** | Assisted breather variant — implemented by slave-5 (plan-20260227-153711). code-review-210 APPROVED + rules-review-186 **CHANGES_REQUIRED** (HIGH-1: omits Tripped condition, MEDIUM-1: suppresses shift prompt, MEDIUM-2: wrong page refs). Needs fix cycle |
-| ptu-rule-116 | P4 | **in-progress** | Naturewalk status condition immunity — implemented by slave-5 (plan-20260227-153711). code-review-210 APPROVED + rules-review-186 **CHANGES_REQUIRED** (MEDIUM-2: wrong page refs only). Needs fix cycle |
+| ptu-rule-114 | P4 | **in-progress** | Assisted breather variant — fix cycle applied by slave-3 (plan-20260228-010000): added Tripped condition (HIGH-1), enabled shift prompt (MEDIUM-1), corrected page refs (MEDIUM-2). Needs re-review |
+| ptu-rule-116 | P4 | **in-progress** | Naturewalk status condition immunity — fix cycle applied by slave-3 (plan-20260228-010000): corrected PTU page refs p.276+p.322 (MEDIUM-2). Needs re-review |
+| ptu-rule-118 | P3 | **in-progress** | Block Skill Edges from raising Pathetic skills during creation — implemented by slave-1 (plan-20260228-010000) per decree-027. Guard in addSkillEdge, validation warning added. Needs review |
 | ptu-rule-117 | P4 | **resolved** | Style Expert 'Beautiful' → 'Beauty' — fixed by slave-4 (plan-20260227-153711). code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | ptu-rule-119 | P4 | **open** | Trainer Naturewalk not supported (Survivalist class). Filed from rules-review-186 noted limitation |
 
@@ -94,7 +95,17 @@ updated_by: slave-collector (plan-20260227-162300)
 
 ## Active Developer Work
 
-**Current task:** Session 55 collection complete. 4 slaves merged (9 commits). 3 reviewer slaves: code-review-208+rules-review-184 APPROVED (healing P4), code-review-209+rules-review-185 APPROVED (code quality batch), code-review-210 APPROVED+rules-review-186 CHANGES_REQUIRED (mechanics P4). 1 dev slave: refactoring-092+093 (partial-update merge + relocate getEffectivenessClass). Smoke test PASSED. 3 follow-up tickets filed. ptu-rule-114+116 need fix cycle (rules-review-186 HIGH-1 + MEDIUM-1 + MEDIUM-2).
+**Current task:** Session 56 collection complete. 4 slaves merged (14 commits). 3 dev slaves: ptu-rule-118 (Pathetic skill edge guard), bug-037+refactoring-094 (MoveTargetModal allCombatants fix + passthrough removal), ptu-rule-114+116-fix (assisted breather Tripped + shift + page refs). 1 reviewer slave: code-review-211+rules-review-187 APPROVED (refactoring-092+093). Smoke test PASSED. No follow-up tickets filed. ptu-rule-118 needs review. bug-037+refactoring-094 need review. ptu-rule-114+116 need re-review.
+
+**Session 56 (2026-02-28, plan-20260228-010000):**
+- slave-1 (developer): ptu-rule-118 — 4 commits: guarded addSkillEdge() against Pathetic-locked skills per decree-027, added validation warning, updated field comment → **implemented, needs review**
+- slave-2 (developer): bug-037+refactoring-094 — 3 commits: passed full encounter combatant list to useMoveCalculation (bug-037), removed trivial combatantsOnGrid passthrough (refactoring-094) → **implemented, needs review**
+- slave-3 (developer): ptu-rule-114+116-fix — 4 commits: added Tripped to assisted breather (HIGH-1), enabled shift prompt for assisted variant (MEDIUM-1), corrected Naturewalk page refs p.276+p.322 (MEDIUM-2) → **fix-cycle-done, needs re-review**
+- slave-4 (reviewers): refactoring-092+093 — code-review-211 **APPROVED** + rules-review-187 **APPROVED**. Both refactorings clean, minimal, correct. → refactoring-092, refactoring-093 **resolved**
+- **Smoke test:** PASSED (Playwright) — GM view renders (navigation, controls, group view buttons). Group view renders (characters, Pokemon, levels). Player view renders (character selection, names, classes).
+- **Merge notes:** 0 conflicts. All 4 rebased cleanly. 14 commits total
+- **Tickets filed:** none
+- **Tickets resolved:** refactoring-092 (APPROVED), refactoring-093 (APPROVED)
 
 **Session 55 (2026-02-27, plan-20260227-162300):**
 - slave-1 (reviewers): ptu-rule-094+refactoring-089+090 — code-review-208 **APPROVED** + rules-review-184 **APPROVED**. Natural healing formula, non-daily usedToday cleanup, app-surface entry all correct. → ptu-rule-094 **resolved**
@@ -562,9 +573,9 @@ updated_by: slave-collector (plan-20260227-162300)
 | refactoring-088 | P4 | **resolved** | Make allCombatants required in useMoveCalculation. code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | refactoring-089 | P4 | **resolved** | Add rest-healing.service.ts to app-surface.md. code-review-208 APPROVED + rules-review-184 APPROVED (plan-20260227-162300 slave-1) |
 | refactoring-090 | P4 | **resolved** | Reset usedToday on all moves during extended rest. code-review-208 APPROVED + rules-review-184 APPROVED (plan-20260227-162300 slave-1) |
-| refactoring-092 | P4 | **in-progress** | Partial-update merge for modification endpoint — implemented by slave-4 (plan-20260227-162300). Needs review |
-| refactoring-093 | P4 | **in-progress** | Relocated getEffectivenessClass to typeEffectiveness.ts — implemented by slave-4 (plan-20260227-162300). Needs review |
-| refactoring-094 | P4 | **open** | Remove trivial combatantsOnGrid passthrough (from code-review-209 MED-1) |
+| refactoring-092 | P4 | **resolved** | Partial-update merge for modification endpoint — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
+| refactoring-093 | P4 | **resolved** | Relocated getEffectivenessClass to typeEffectiveness.ts — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
+| refactoring-094 | P4 | **in-progress** | Remove trivial combatantsOnGrid passthrough — fixed by slave-2 (plan-20260228-010000). Needs review |
 
 ## Code Health
 
