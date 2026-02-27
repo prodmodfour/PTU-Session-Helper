@@ -23,7 +23,7 @@ import {
   getExpectedFeaturesForLevel,
   isSkillRankAboveCap
 } from '~/constants/trainerStats'
-import { MAX_TRAINER_CLASSES } from '~/constants/trainerClasses'
+import { MAX_TRAINER_CLASSES, hasBaseClass, getBaseClassName } from '~/constants/trainerClasses'
 import { validateStatAllocation, validateSkillBackground, validateEdgesAndFeatures } from '~/utils/characterCreationValidation'
 import type { CreationWarning } from '~/utils/characterCreationValidation'
 
@@ -178,14 +178,28 @@ export function useCharacterCreation() {
   }
 
   // --- Trainer Classes ---
+  /**
+   * Add a trainer class. For branching classes (decree-022), the className
+   * should include the specialization suffix (e.g. 'Type Ace: Fire').
+   * Blocks exact duplicates but allows different specializations of the same base class.
+   */
   function addClass(className: string): void {
     if (form.trainerClasses.length >= MAX_TRAINER_CLASSES) return
+    // Block exact duplicates (same class + same specialization)
     if (form.trainerClasses.includes(className)) return
     form.trainerClasses = [...form.trainerClasses, className]
   }
 
   function removeClass(className: string): void {
     form.trainerClasses = form.trainerClasses.filter(c => c !== className)
+  }
+
+  /**
+   * Count how many times a base class appears in the current selection.
+   * Useful for branching classes that can appear multiple times.
+   */
+  function countClassInstances(baseName: string): number {
+    return form.trainerClasses.filter(c => hasBaseClass(c, baseName)).length
   }
 
   // --- Features ---
@@ -384,6 +398,7 @@ export function useCharacterCreation() {
     // Classes
     addClass,
     removeClass,
+    countClassInstances,
     // Features
     allFeatures,
     addFeature,
