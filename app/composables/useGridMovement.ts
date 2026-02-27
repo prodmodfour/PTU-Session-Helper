@@ -3,8 +3,10 @@ import { useTerrainStore } from '~/stores/terrain'
 import { useRangeParser } from '~/composables/useRangeParser'
 import {
   combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed,
-  getOverlandSpeed, getSwimSpeed, getBurrowSpeed, calculateAveragedSpeed
+  getOverlandSpeed, getSwimSpeed, getBurrowSpeed, calculateAveragedSpeed,
+  naturewalkBypassesTerrain
 } from '~/utils/combatantCapabilities'
+import { TERRAIN_COSTS, DEFAULT_FLAGS } from '~/stores/terrain'
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
 import { isEnemySide } from '~/utils/combatSides'
 
@@ -356,11 +358,35 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * Get terrain cost at a position for a specific combatant.
    * Checks the combatant's Swim and Burrow capabilities to determine
    * whether water/earth terrain is passable.
+   *
+   * PTU p.322 (Naturewalk): If the combatant has a Naturewalk capability
+   * matching the cell's base terrain type, the slow flag is bypassed
+   * (treated as Basic Terrain — cost 1). The rough flag has no movement
+   * cost effect regardless (it only affects accuracy).
    */
   const getTerrainCostForCombatant = (x: number, y: number, combatantId: string): number => {
     const combatant = findCombatant(combatantId)
     const canSwim = combatant ? combatantCanSwim(combatant) : false
     const canBurrow = combatant ? combatantCanBurrow(combatant) : false
+
+    // Check Naturewalk bypass for slow flag
+    if (combatant) {
+      const cell = terrainStore.getCellAt(x, y)
+      const terrain = cell?.type ?? terrainStore.defaultType
+      const flags = cell?.flags ?? DEFAULT_FLAGS
+
+      // Impassable checks (unaffected by Naturewalk)
+      if (terrain === 'blocking') return Infinity
+      if (terrain === 'water' && !canSwim) return Infinity
+      if (terrain === 'earth' && !canBurrow) return Infinity
+
+      // If cell has slow flag and combatant has matching Naturewalk,
+      // bypass the slow cost doubling (treat as Basic Terrain)
+      if (flags.slow && naturewalkBypassesTerrain(combatant, terrain)) {
+        return TERRAIN_COSTS[terrain] // Base cost without slow doubling
+      }
+    }
+
     return terrainStore.getMovementCost(x, y, canSwim, canBurrow)
   }
 
