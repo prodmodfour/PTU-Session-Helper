@@ -1,143 +1,132 @@
 ---
 domain: scenes
-analyzed_at: 2026-02-26T14:00:00Z
+type: matrix
+total_rules: 42
+analyzed_at: 2026-02-28T03:00:00Z
 analyzed_by: coverage-analyzer
-rules_catalog: scenes-rules.md
-capabilities_catalog: scenes-capabilities.md
 ---
 
-# Feature Completeness Matrix: Scenes
+# Coverage Matrix: scenes
 
 ## Coverage Score
 
 ```
-Implemented:              14
-Implemented-Unreachable:   0
-Partial:                   5
-Missing:                   4
-Subsystem-Missing:         0
-Out of Scope:             19
----
-Total:                    42
-Effective Total:          23  (42 - 19 Out of Scope)
+Implemented:             17
+Implemented-Unreachable:  0
+Partial:                  8
+Missing:                  5
+Subsystem-Missing:        0
+Out of Scope:            12
 
-Coverage = (14 + 0.5*5) / 23 * 100
-         = 16.5 / 23 * 100
-         = 71.7%
+Total:                   42
+Scoreable (Total - OoS): 30
+
+Coverage = (17 + 0.5*8) / 30 * 100 = 70.0%
 ```
 
 ## Matrix Table
 
-| Rule ID | Rule Name | Category | Scope | Actor | Classification | Accessible From | Gap Priority | Notes |
-|---------|-----------|----------|-------|-------|---------------|-----------------|-------------|-------|
-| R001 | Habitat Type Enumeration | enumeration | core | gm | **Implemented** | gm | — | C034 (SceneHabitatPanel links scene to encounter table by habitatId). Tables represent habitats. Scene links to a habitat for wild spawn context. |
-| R002 | Habitat Pokemon Assignment | enumeration | core | gm | **Implemented** | gm | — | C034 (habitat link) + encounter-tables domain (species entries on table). Cross-domain: scene's habitat determines available wild Pokemon via linked encounter table. |
-| R003 | Fun Game Progression | constraint | core | gm | **Out of Scope** | — | — | Qualitative design guidance for world-building. GM controls progression through encounter table level ranges, not through the scene system. |
-| R004 | Sensible Ecosystems | constraint | core | gm | **Out of Scope** | — | — | Qualitative design guidance. Scene's habitat link provides context, but ecosystem design is GM responsibility via encounter tables. |
-| R005 | Energy Pyramid Population | constraint | situational | gm | **Out of Scope** | — | — | Encounter table domain concern (species weighting). Not a scene-level feature. |
-| R006 | Niche Competition | interaction | situational | gm | **Out of Scope** | — | — | Qualitative ecosystem design. Not mechanizable at the scene level. |
-| R007 | Pokemon Hierarchies | enumeration | core | gm | **Out of Scope** | — | — | Qualitative encounter design guidance. GM applies when setting up encounters within a scene, not tracked by the scene model. |
-| R008 | Pokemon Behavior and Intelligence | workflow | situational | gm | **Out of Scope** | — | — | Qualitative GM guidance for roleplay. Not mechanizable. |
-| R009 | Weather Keyword Definition | enumeration | core | system | **Implemented** | gm, group, player | — | C001 (Scene model has weather field), C033 (ScenePropertiesPanel edits weather), C040 (WebSocket broadcasts scene_update including weather). Weather stored as string on scene. |
-| R010 | Natural Weather vs Game Weather | condition | core | gm | **Partial** | gm | P3 | **Present:** Weather field on scene allows setting weather conditions. **Missing:** No distinction between narrative weather (sunny day) and mechanical weather (Sunny condition). GM must apply this judgment manually. This is inherently a GM decision, but the UI could offer guidance. |
-| R011 | Hail Weather Effects | modifier | core | system | **Missing** | — | P2 | No automatic weather effect application. Hail damage (1 tick/turn for non-Ice), Blizzard accuracy, Ice Body healing, Snow Cloak evasion, Thermosensitive penalty — none automated. Weather is stored but effects are not applied during combat. |
-| R012 | Rainy Weather Effects | modifier | core | system | **Missing** | — | P2 | No automatic rain effects. Water +5, Fire -5 damage modifiers, Thunder/Hurricane accuracy, ability triggers (Hydration, Rain Dish, Swift Swim, Desert Weather, Dry Skin) — none automated. |
-| R013 | Sandstorm Weather Effects | modifier | core | system | **Missing** | — | P2 | No automatic sandstorm effects. Tick damage for non-Ground/Rock/Steel, Sand Force +5 bonus, Sand Rush speed, Desert Weather immunity — none automated. |
-| R014 | Sunny Weather Effects | modifier | core | system | **Missing** | — | P2 | No automatic sun effects. Fire +5, Water -5 damage, Thunder/Hurricane AC 11, ability triggers (Dry Skin damage, Thermosensitive boost, Chlorophyll speed, etc.) — none automated. |
-| R015 | Weather-Dependent Ability Interactions | interaction | situational | system | **Out of Scope** | — | — | Depends on weather effects (R011-R014) which are missing. Forecast type changes and Weather Ball type changes would be combat-domain automation. |
-| R016 | Basic Terrain Types | enumeration | core | gm | **Implemented** | gm | — | VTT terrain store (vtt-grid-C003) has 6 terrain types including normal, rough, water, blocked. Scene model has terrains JSON field (DB storage exists). VTT terrain painter covers this at the encounter/grid level. |
-| R017 | Slow Terrain | modifier | core | system | **Implemented** | gm | — | VTT useGridMovement (vtt-grid-C014) applies terrain cost multipliers. Slow terrain (ice in VTT) costs 2x movement. Applied at VTT grid level during encounters. |
-| R018 | Rough Terrain | modifier | core | system | **Implemented** | gm | — | VTT terrain store has rough terrain type with movement cost. Rough terrain flag exists on grid cells. -2 accuracy penalty is a combat-domain concern. |
-| R019 | Blocking Terrain | constraint | core | system | **Implemented** | gm | — | VTT terrain store has blocked terrain type. Blocking terrain prevents movement through cells. usePathfinding (vtt-grid-C030) treats blocked cells as impassable. |
-| R020 | Naturewalk Terrain Bypass | interaction | situational | system | **Out of Scope** | — | — | Naturewalk capability ignoring terrain penalties is a combat/movement automation feature. Would need per-Pokemon capability checking against terrain type. Not implemented in movement system. |
-| R021 | Dark Cave Environment | workflow | situational | gm | **Out of Scope** | — | — | Darkness/visibility mechanics (-2 per unlit meter) are combat-domain features. Scene weather/environment doesn't model light sources or darkness penalties. |
-| R022 | Environmental Hazard Encounters | workflow | core | gm | **Partial** | gm | P3 | **Present:** Scene has terrain/modifier DB fields (C001), VTT terrain painter (C046) provides environmental setup at encounter level. **Missing:** Scene-level terrain UI is deferred (MS-2). GM can set up environmental hazards via VTT terrain painter but not pre-define them at the scene level. |
-| R023 | Collateral Damage Environment | constraint | situational | gm | **Out of Scope** | — | — | Qualitative encounter design guidance. No destructible environment or collateral damage tracking. |
-| R024 | Arctic/Ice Environment | interaction | edge-case | gm | **Out of Scope** | — | — | Specific environmental rules (ice breaking, weight class restriction). Would need custom encounter rules system. |
-| R025 | Scene Frequency Definition | enumeration | core | system | **Implemented** | gm | — | Move frequency tracking exists in combat system. Scene-frequency moves tracked per encounter. The concept of "Scene" as a frequency boundary is understood by the combat system. |
-| R026 | Scene Frequency EOT Restriction | constraint | core | system | **Implemented** | gm | — | Scene-frequency moves with Scene X > 1 can still only be used EOT (every other turn). Enforced in combat move execution system. |
-| R027 | Daily Frequency Scene Limit | constraint | core | system | **Implemented** | gm | — | Daily moves limited to once per scene. Tracked in combat frequency system. |
-| R028 | Narrative Frequency Optional Rule | interaction | edge-case | gm | **Out of Scope** | — | — | Optional house rule variant (per-day becomes per-session). Not implemented as a setting. |
-| R029 | Encounter Creation Baseline | formula | core | gm | **Implemented** | gm | — | encounter-tables-C030 (calculateEncounterBudget: avgPokemonLevel * 2 * playerCount). Cross-domain but accessible from GM encounter view. |
-| R030 | Significance Multiplier | modifier | core | gm | **Implemented** | gm | — | encounter-tables-C034 (SIGNIFICANCE_PRESETS), C046 (SignificancePanel). Accessible on encounter. |
-| R031 | Quick-Stat Wild Pokemon | workflow | situational | gm | **Out of Scope** | — | — | Pokemon stat generation is pokemon-lifecycle domain. Cross-domain reference. |
-| R032 | Wild Encounter Trigger Scenarios | workflow | core | gm | **Out of Scope** | — | — | Qualitative narrative guidance for why encounters happen. Not mechanizable. |
-| R033 | Encounter Tax vs Threat | interaction | situational | gm | **Out of Scope** | — | — | Qualitative encounter design guidance. GM applies when setting significance. |
-| R034 | Quick NPC Building | workflow | situational | gm | **Partial** | gm | P2 | **Present:** C080 Quick Create mode creates minimal NPC scaffolding (name, type, level, location, sprite). **Missing:** No guided Quick-Stat NPC workflow (choose classes, major skills, distribute stats per PTU quick-stat rules). Quick Create is minimal scaffolding, not the full PTU quick-stat process. |
-| R035 | Movement Capabilities | enumeration | cross-domain-ref | system | **Implemented** | gm | — | Cross-domain: VTT grid handles movement capabilities (Overland, Swim, Sky, Burrow) during encounters. Scene doesn't track movement directly. |
-| R036 | Shiny and Variant Pokemon | interaction | edge-case | gm | **Partial** | gm | P3 | **Present:** Pokemon model has shiny flag, generation supports shiny parameter. **Missing:** No "variant" Pokemon support (alternate types, abilities, movesets). Only cosmetic shiny supported. |
-| R037 | Experience Calculation | interaction | cross-domain-ref | gm | **Implemented** | gm | — | encounter-tables-C033 (calculateEncounterXp). Cross-domain, accessible from encounter view. |
-| R038 | Scene Boundary and Frequency Reset | condition | cross-domain-ref | system | **Partial** | gm | P2 | **Present:** Scene-frequency and daily-frequency moves tracked per encounter. **Missing:** No explicit scene boundary mechanism that triggers frequency resets. Scene transitions don't auto-reset encounter frequencies. GM must start a new encounter (which resets scene-freq). |
-| R039 | Weather Exclusivity | constraint | core | system | **Implemented** | gm | — | C001 (weather is a single string field on Scene). Only one weather condition at a time by data model design. |
-| R040 | Weather Duration (5 rounds) | constraint | core | system | **Missing** | — | P2 | No weather duration tracking. Weather on scene is persistent until manually changed. In combat, weather moves should create 5-round weather, but no countdown timer exists. Cross-domain with combat. |
-| R041 | Frozen Status Weather Interaction | interaction | situational | system | **Out of Scope** | — | — | Depends on weather effects (R011/R014) and status save check automation. Combat-domain feature. |
-| R042 | Light Source Radii | condition | edge-case | gm | **Out of Scope** | — | — | Light/darkness mechanics. No light source tracking, no Glow capability radius, no Illuminate ability bonus. Would need fog-of-war integration with per-Pokemon light sources. |
+| Rule ID | Rule Name | Category | Scope | Actor | Classification | Accessible From | Matching Capabilities | Gap Priority | Notes |
+|---------|-----------|----------|-------|-------|----------------|-----------------|----------------------|-------------|-------|
+| R001 | Habitat Type Enumeration | enumeration | core | gm | Implemented | gm | C001 (Scene.habitatId links to encounter table), C034 (SceneHabitatPanel) | — | Habitats are encounter tables; scene links to one via habitatId |
+| R002 | Habitat Pokemon Assignment | enumeration | core | gm | Implemented | gm | C001 (habitatId), C034 (habitat panel), encounter-tables domain | — | Cross-domain via encounter table linkage |
+| R003 | Fun Game Progression | constraint | core | gm | Out of Scope | — | — | — | Qualitative world-building principle. Not automatable at scene level. |
+| R004 | Sensible Ecosystems | constraint | core | gm | Out of Scope | — | — | — | Qualitative world-building principle. |
+| R005 | Energy Pyramid Population Distribution | constraint | situational | gm | Out of Scope | — | — | — | Qualitative ecology guidance. Handled at encounter-table level via weights. |
+| R006 | Niche Competition | interaction | situational | gm | Out of Scope | — | — | — | Qualitative ecology guidance. |
+| R007 | Pokemon Hierarchies and Social Organization | enumeration | core | gm | Out of Scope | — | — | — | Qualitative encounter design guidance. |
+| R008 | Pokemon Behavior and Intelligence | workflow | situational | gm | Out of Scope | — | — | — | Qualitative roleplay guidance. |
+| R009 | Weather Keyword Definition | enumeration | core | gm | Implemented | gm, group | C001 (Scene.weather field), C033 (ScenePropertiesPanel — weather dropdown) | — | Weather stored and editable on scene |
+| R010 | Natural Weather vs Game Weather | condition | core | gm | Partial | gm | C001 (weather field), C033 (weather selector) | P3 | **Present:** Weather can be set on scene. **Missing:** No distinction between natural weather (no game effects) and game weather (mechanical effects). All weather is treated equally. |
+| R011 | Hail Weather Effects | modifier | core | system | Missing | — | — | P2 | No automatic weather damage/effects application. Weather is display-only. |
+| R012 | Rainy Weather Effects | modifier | core | system | Missing | — | — | P2 | No auto fire -5/water +5 damage, no Swift Swim/Rain Dish effects. |
+| R013 | Sandstorm Weather Effects | modifier | core | system | Missing | — | — | P2 | No auto weather damage to non-Ground/Rock/Steel types. |
+| R014 | Sunny Weather Effects | modifier | core | system | Missing | — | — | P2 | No auto fire +5/water -5, no Chlorophyll/Leaf Guard effects. |
+| R015 | Weather-Dependent Ability Interactions | interaction | situational | system | Missing | — | — | P2 | No Forecast type change, no Weather Ball type change. |
+| R016 | Basic Terrain Types | enumeration | core | gm | Implemented | gm | C001 (Scene.terrains JSON field — stored but UI deferred), VTT terrain store covers encounter-level terrain | — | Terrain types defined; encounter-level terrain via VTT is active. Scene-level terrain UI deferred per SCENE_FUTURE_FEATURES.md. |
+| R017 | Slow Terrain | modifier | core | gm | Partial | gm (VTT) | VTT terrain store (terrain domain), C001 (terrains field — UI deferred) | P2 | **Present:** VTT terrain painter has slow terrain equivalent (water, ice types with cost multiplier). **Missing:** Scene-level terrain UI deferred. Movement cost not labeled as "Slow" per PTU terminology. |
+| R018 | Rough Terrain | modifier | core | gm | Partial | gm (VTT) | VTT terrain store (rough type with cost multiplier) | P2 | **Present:** VTT terrain painter has rough terrain type. **Missing:** No -2 accuracy penalty auto-application when targeting through rough terrain. Multi-tag terrain per decree-010. |
+| R019 | Blocking Terrain | constraint | core | gm | Implemented | gm (VTT) | VTT terrain store (blocked type), pathfinding respects blocked cells | — | Blocked terrain prevents movement in pathfinding |
+| R020 | Naturewalk Terrain Bypass | interaction | situational | system | Partial | gm | VTT pathfinding (usePathfinding), C036 (combatantCapabilities) | P2 | **Present:** Combatant capabilities utility exists. **Missing:** Naturewalk bypass not integrated into pathfinding cost. Pokemon with Naturewalk still pay full terrain cost. |
+| R021 | Dark Cave Environment | workflow | situational | gm | Out of Scope | — | — | — | Visibility/darkness system not implemented. Would require fog-of-war extension with light sources. |
+| R022 | Environmental Hazard Encounters | workflow | core | gm | Partial | gm | C001 (terrains field), VTT terrain painter | P3 | **Present:** Terrain types model some hazards (lava, ice). **Missing:** No custom hazard rules, no interactive environment mechanics. |
+| R023 | Collateral Damage Environment | constraint | situational | gm | Out of Scope | — | — | — | Narrative constraint. No destructible environment system. |
+| R024 | Arctic/Ice Environment | interaction | edge-case | gm | Out of Scope | — | — | — | Weight-based ice breaking is too specific for automation. |
+| R025 | Scene Frequency Definition | enumeration | core | system | Implemented | gm | Combat domain (move frequency tracking on Pokemon) | — | Scene frequency tracked per move. Cross-domain to combat. |
+| R026 | Scene Frequency EOT Restriction | constraint | core | system | Implemented | gm | Combat domain (move execution tracks frequency) | — | EOT restriction on Scene-frequency moves enforced in combat. |
+| R027 | Daily Frequency Scene Limit | constraint | core | system | Implemented | gm | Combat domain (daily moves limited to once per scene) | — | Daily moves restricted to 1 use per scene in combat. |
+| R028 | Narrative Frequency Optional Rule | interaction | edge-case | gm | Out of Scope | — | — | — | Per-session frequency interpretation is a table-level house rule. |
+| R029 | Encounter Creation Baseline | formula | core | gm | Implemented | gm | encounter-tables C030 (calculateEncounterBudget) | — | Cross-domain: budget formula in encounter-tables domain. |
+| R030 | Significance Multiplier | modifier | core | gm | Implemented | gm | encounter-tables C034 (SIGNIFICANCE_PRESETS), C046 (SignificancePanel) | — | Cross-domain: significance system in encounter-tables domain. |
+| R031 | Quick-Stat Wild Pokemon | workflow | situational | gm | Implemented | gm | pokemon-generator.service (generatePokemonData) | — | Pokemon generator handles stat distribution for wild Pokemon. |
+| R032 | Wild Encounter Trigger Scenarios | workflow | core | gm | Implemented | gm | C036 (StartEncounterModal — scene-to-encounter conversion) | — | Scene-to-encounter flow supports wild encounter creation from scene context. |
+| R033 | Encounter Tax vs Threat | interaction | situational | gm | Out of Scope | — | — | — | Qualitative design philosophy. |
+| R034 | Quick NPC Building | workflow | situational | gm | Implemented | gm | character-lifecycle C080 (Quick Create mode for NPCs) | — | Cross-domain: Quick Create mode in character creation for minimal NPC scaffolding. |
+| R035 | Movement Capabilities | enumeration | cross-domain-ref | system | Implemented | gm | VTT domain (movement capability types in grid movement) | — | Cross-domain ref to VTT. Movement capabilities implemented there. |
+| R036 | Shiny and Variant Pokemon | interaction | edge-case | gm | Partial | gm | pokemon-lifecycle domain (shiny flag on Pokemon) | P3 | **Present:** Shiny flag stored on Pokemon. **Missing:** No variant type/ability/move customization UI for shiny Pokemon. |
+| R037 | Experience Calculation from Encounters | interaction | cross-domain-ref | gm | Implemented | gm | encounter-tables C033 (calculateEncounterXp) | — | Cross-domain ref. XP calculation in encounter-tables domain. |
+| R038 | Scene Boundary and Frequency Reset | condition | cross-domain-ref | system | Partial | gm | C001 (scene isActive flag), combat domain (frequency tracking) | P2 | **Present:** Scene active state tracked. **Missing:** No automatic frequency reset when scene ends. Move frequencies must be manually reset or via new-day. |
+| R039 | Weather Exclusivity Constraint | constraint | core | gm | Implemented | gm | C001 (single weather field per scene), C033 (single dropdown selector) | — | Single weather field naturally enforces exclusivity |
+| R040 | Weather Duration Constraint | constraint | core | system | Partial | gm | C001 (weather field) | P2 | **Present:** Weather stored on scene. **Missing:** No 5-round weather duration tracking. Weather persists until manually changed. |
+| R041 | Frozen Status Weather Interaction | interaction | situational | system | Out of Scope | — | — | — | Status-weather interaction is combat domain. Frozen save check modifiers belong there. |
+| R042 | Light Source Radii in Dark Environments | condition | edge-case | gm | Out of Scope | — | — | — | No darkness/light system. Would require fog-of-war extension. |
 
 ## Actor Accessibility Summary
 
-| Actor | Total Rules | Implemented | Impl-Unreachable | Partial | Missing | Out of Scope |
-|-------|-------------|-------------|-------------------|---------|---------|-------------|
-| system | 19 | 10 | 0 | 2 | 4 | 3 |
-| gm | 23 | 4 | 0 | 3 | 0 | 16 |
+| Actor | Total Rules | Reachable | Unreachable | Out of Scope |
+|-------|------------|-----------|-------------|-------------|
+| gm | 28 | 20 | 0 | 8 |
+| system | 14 | 10 | 0 | 4 |
+| player | 0 | 0 | 0 | 0 |
 
-**Actor reachability:**
-- **system** rules (weather effects, terrain modifiers, frequency constraints): 10/19 implemented — main gaps are weather effect automation (R011-R014) and weather duration (R040)
-- **gm** rules: 4/23 implemented, 3 partial — many rules are out of scope (qualitative design guidance). In-scope GM rules are well covered.
-- **player** rules: None in this domain. Players observe scenes via WebSocket (C040) but don't interact with scene management.
+Note: Scenes are GM-managed. The Group View displays active scenes (read-only) and Player View receives updates via WebSocket. No player-initiated scene rules exist in PTU. The Capability Mapper's MS-1 (no player scene interaction) is working as intended.
 
 ## Subsystem Gaps
 
 ### SG-1: No Weather Effect Automation
-- **Missing subsystem:** Automatic application of weather effects (damage, type bonuses, ability triggers)
-- **Affected rules:** R011, R012, R013, R014 (4 rules)
-- **Suggested feature ticket:** "feat: automate weather effects in combat (damage ticks, type bonuses, ability triggers)"
-- **Priority:** P2 — weather effects are commonly used in PTU encounters but can be manually tracked by GM
+- **Missing subsystem:** Automatic application of weather damage and type/ability effects
+- **Affected rules:** R011, R012, R013, R014, R015 (5 rules)
+- **Priority:** P2
+- **Suggested ticket:** "feat: weather effect automation -- damage ticks, type bonuses, ability interactions" -- auto-apply weather damage per turn, fire/water damage modifiers, ability-weather interactions (Swift Swim, Chlorophyll, etc).
 
-### SG-2: Scene-Level Terrain UI Deferred (MS-2)
-- **Missing subsystem:** Scene terrain/modifier editing UI
-- **Affected rules:** R022 (partial)
-- **Suggested feature ticket:** Already tracked in docs/SCENE_FUTURE_FEATURES.md
-- **Priority:** P3 — VTT terrain painter covers this at encounter level
+### SG-2: Scene-level Terrain UI Deferred
+- **Missing subsystem:** Scene-level terrain/modifier editing (DB fields exist, UI removed)
+- **Affected rules:** R017, R018 (partial), R022 (partial)
+- **Priority:** P2
+- **Suggested ticket:** Already documented in docs/SCENE_FUTURE_FEATURES.md. VTT terrain covers encounter-level needs.
 
-## Gap Priorities
+## Gap Priorities Summary
 
 | Priority | Count | Rules |
 |----------|-------|-------|
-| P2 | 6 | R011, R012, R013, R014 (weather effects), R034 (partial — quick NPC), R038 (partial — scene boundary), R040 (weather duration) |
-| P3 | 3 | R010 (partial — natural vs game weather), R022 (partial — scene terrain UI), R036 (partial — variant Pokemon) |
+| P2 | 8 | R011, R012, R013, R014, R015, R017, R018, R020, R038, R040 |
+| P3 | 3 | R010, R022, R036 |
 
 ## Auditor Queue
 
-Priority-ordered list for Implementation Auditor to verify correctness.
+### Tier 1: Core Enumerations
+1. **R009** — Weather keyword definition (C001 weather field, C033 dropdown) — verify weather values
+2. **R016** — Basic terrain types (VTT terrain store) — verify 6 terrain types
+3. **R025/R026/R027** — Scene/Daily frequency (combat domain) — verify frequency tracking and limits
 
-### Tier 1: Core Data Model (verify structure)
-1. **R009** — Weather Keyword (C001) — verify weather field on Scene model, verify editable via UI
-2. **R039** — Weather Exclusivity (C001) — verify single-value weather field
-3. **R016** — Basic Terrain Types — verify VTT terrain types map to PTU terrain types
-4. **R001** — Habitat Enumeration (C034) — verify habitat link via habitatId FK
+### Tier 2: Core Constraints
+4. **R039** — Weather exclusivity (C001 single weather field) — verify single value
+5. **R019** — Blocking terrain (VTT pathfinding) — verify movement blocked
 
-### Tier 2: Terrain and Movement (verify VTT integration)
-5. **R017** — Slow Terrain — verify 2x movement cost in VTT useGridMovement
-6. **R018** — Rough Terrain — verify rough terrain type exists, movement cost applied
-7. **R019** — Blocking Terrain — verify blocked terrain prevents movement, pathfinding treats as impassable
+### Tier 3: Core Workflows
+6. **R032** — Wild encounter trigger (C036 StartEncounterModal) — verify scene-to-encounter conversion
+7. **R031** — Quick-stat (pokemon-generator.service) — verify stat distribution
+8. **R034** — Quick NPC building (character-lifecycle C080 Quick Create) — verify NPC scaffolding
 
-### Tier 3: Frequency Constraints (verify combat integration)
-8. **R025** — Scene Frequency Definition — verify scene-frequency tracking in combat system
-9. **R026** — Scene Frequency EOT Restriction — verify EOT enforcement for Scene X > 1
-10. **R027** — Daily Frequency Scene Limit — verify daily moves limited to once per scene
+### Tier 4: Cross-Domain References
+9. **R029** — Encounter budget (encounter-tables C030) — verify formula
+10. **R030** — Significance multiplier (encounter-tables C034) — verify tiers
+11. **R037** — XP calculation (encounter-tables C033) — verify formula
+12. **R035** — Movement capabilities (VTT domain) — verify types
 
-### Tier 4: Encounter Budget (verify cross-domain)
-11. **R029** — Encounter Creation Baseline — verify calculateEncounterBudget formula
-12. **R030** — Significance Multiplier — verify SIGNIFICANCE_PRESETS match PTU scale
-13. **R037** — Experience Calculation — verify calculateEncounterXp
-
-### Tier 5: Scene Workflow (verify chains)
-14. **R002** — Habitat Pokemon Assignment — verify scene habitat link enables generation
-15. **R035** — Movement Capabilities — verify VTT movement system handles Overland/Swim/Sky/Burrow
-
-### Tier 6: Partial Items (verify present portion)
-16. **R010** — Natural vs Game Weather — verify weather field accepts any string (no validation)
-17. **R022** — Environmental Hazards — verify terrain DB fields exist, confirm UI deferred
-18. **R034** — Quick NPC Building — verify Quick Create mode scope (name, type, level, location, sprite)
-19. **R036** — Shiny Pokemon — verify shiny flag on Pokemon model
-20. **R038** — Scene Boundary Frequency Reset — verify no auto-reset trigger at scene transition
+### Tier 5: Partial Items
+13. **R010** — Natural vs game weather distinction
+14. **R017/R018** — Slow/rough terrain in VTT — verify cost multipliers
+15. **R020** — Naturewalk bypass — verify capability utility exists
+16. **R038** — Scene boundary frequency reset — verify scene active state
+17. **R040** — Weather duration — verify persistence behavior
