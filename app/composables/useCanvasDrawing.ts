@@ -261,28 +261,6 @@ export function useCanvasDrawing() {
         ctx.stroke()
         break
 
-      case 'difficult':
-        // Draw dots pattern for difficult terrain
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
-        const dotSize = 2
-        const spacing = cellSize / 4
-        for (let dx = 1; dx < 4; dx++) {
-          for (let dy = 1; dy < 4; dy++) {
-            if ((dx + dy) % 2 === 0) {
-              ctx.beginPath()
-              ctx.arc(
-                x * cellSize + dx * spacing,
-                y * cellSize + dy * spacing,
-                dotSize,
-                0,
-                Math.PI * 2
-              )
-              ctx.fill()
-            }
-          }
-        }
-        break
-
       case 'earth':
         // Draw downward arrow pattern for earth/underground terrain
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
@@ -296,21 +274,6 @@ export function useCanvasDrawing() {
         ctx.stroke()
         break
 
-      case 'rough':
-        // Draw jagged line pattern for rough terrain
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
-        ctx.lineWidth = 1.5
-        ctx.beginPath()
-        const roughY = centerY
-        ctx.moveTo(x * cellSize + 4, roughY)
-        ctx.lineTo(x * cellSize + cellSize * 0.2, roughY - 5)
-        ctx.lineTo(x * cellSize + cellSize * 0.35, roughY + 3)
-        ctx.lineTo(x * cellSize + cellSize * 0.5, roughY - 4)
-        ctx.lineTo(x * cellSize + cellSize * 0.65, roughY + 5)
-        ctx.lineTo(x * cellSize + cellSize * 0.8, roughY - 3)
-        ctx.lineTo((x + 1) * cellSize - 4, roughY)
-        ctx.stroke()
-        break
     }
 
     ctx.restore()

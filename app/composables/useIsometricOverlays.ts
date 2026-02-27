@@ -391,22 +391,6 @@ export function useIsometricOverlays(options: IsometricOverlayOptions) {
         ctx.stroke()
         break
       }
-      case 'difficult': {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'
-        const dots = [
-          { dx: 0, dy: 0 },
-          { dx: -halfW * 0.3, dy: -halfH * 0.2 },
-          { dx: halfW * 0.3, dy: -halfH * 0.2 },
-          { dx: -halfW * 0.15, dy: halfH * 0.25 },
-          { dx: halfW * 0.15, dy: halfH * 0.25 },
-        ]
-        for (const d of dots) {
-          ctx.beginPath()
-          ctx.arc(cx + d.dx, cy + d.dy, 1.5, 0, Math.PI * 2)
-          ctx.fill()
-        }
-        break
-      }
       case 'earth': {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
         ctx.lineWidth = 2
@@ -416,19 +400,6 @@ export function useIsometricOverlays(options: IsometricOverlayOptions) {
         ctx.moveTo(cx - halfW * 0.2, cy + halfH * 0.15)
         ctx.lineTo(cx, cy + halfH * 0.4)
         ctx.lineTo(cx + halfW * 0.2, cy + halfH * 0.15)
-        ctx.stroke()
-        break
-      }
-      case 'rough': {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
-        ctx.lineWidth = 1.5
-        ctx.beginPath()
-        ctx.moveTo(cx - halfW * 0.5, cy)
-        ctx.lineTo(cx - halfW * 0.3, cy - halfH * 0.2)
-        ctx.lineTo(cx - halfW * 0.1, cy + halfH * 0.15)
-        ctx.lineTo(cx + halfW * 0.1, cy - halfH * 0.15)
-        ctx.lineTo(cx + halfW * 0.3, cy + halfH * 0.2)
-        ctx.lineTo(cx + halfW * 0.5, cy)
         ctx.stroke()
         break
       }
