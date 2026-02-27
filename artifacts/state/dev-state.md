@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-26T22:00:00
-updated_by: slave-collector (plan-20260226-201936)
+last_updated: 2026-02-27T16:30:00
+updated_by: slave-collector (plan-20260227-161023)
 ---
 
 # Dev Ecosystem State
@@ -31,11 +31,11 @@ updated_by: slave-collector (plan-20260226-201936)
 | ptu-rule-081 | P4 | **resolved** | Multiple Focus items — single Focus limit enforced in equipmentBonuses.ts. code-review-169 APPROVED (M1 non-blocking → ux-008), rules-review-156 APPROVED |
 | ptu-rule-082 | P4 | **resolved** | Pokemon maxHp not auto-updated on level-up (from rules-review-118). Fix applied + APPROVED (code-review-161, rules-review-151). M2 → ux-005 |
 | ptu-rule-083 | P4 | **resolved** | Measurement store uses Chebyshev distance instead of PTU alternating diagonal (from rules-review-144 RULING-1). Fix applied + APPROVED (code-review-161, rules-review-151). M1 → refactoring-080 |
-| ptu-rule-084 | P2 | **fix-cycle-done, needs re-review** | Vulnerable/Frozen/Asleep zero evasion. Fix cycle by slave-3 (plan-20260226-201936): synced stageModifiers on faint, reset stageModifiers on buildCombatantFromEntity, checked tempConditions for Vulnerable. Prior: code-review-184 M1, rules-review-161 HIGH-1+M3 |
-| ptu-rule-085 | P2 | **fix-cycle-done, needs re-review** | Legendary auto-detection -30 capture. Fix cycle by slave-3 (plan-20260226-201936): added Meltan, Melmetal, Zarude, Enamorus to LEGENDARY_SPECIES. Prior: rules-review-161 M1 |
-| ptu-rule-086 | P3 | **open** | Capture modifier sign convention inverted from PTU (from capture-audit R005) |
-| ptu-rule-087 | P3 | **open** | Generated Pokemon start with 0 tutor points instead of level-based calculation (from pokemon-lifecycle-audit R022) |
-| ptu-rule-088 | P3 | **open** | Significance tier presets misaligned with PTU values (from encounter-tables-audit R008) |
+| ptu-rule-084 | P2 | **resolved** | Vulnerable/Frozen/Asleep zero evasion. APPROVED: code-review-191 + rules-review-168 (re-review of fix cycle). All issues resolved |
+| ptu-rule-085 | P2 | **resolved** | Legendary auto-detection -30 capture. APPROVED: code-review-191 + rules-review-168. Meltan/Melmetal/Zarude/Enamorus added |
+| ptu-rule-086 | P3 | **fix-cycle-done, needs review** | Capture modifier sign convention fixed (slave-3, plan-20260227-161023). Changed `roll - trainerLevel - modifiers` to `+ modifiers` so negative PTU modifiers make capture easier |
+| ptu-rule-087 | P3 | **fix-cycle-done, needs review** | Tutor point calculation added to pokemon-generator.service.ts (slave-3, plan-20260227-161023). Formula: `1 + Math.floor(level / 5)` |
+| ptu-rule-088 | P3 | **fix-cycle-done, needs review** | Significance tier presets realigned to PTU values (slave-3, plan-20260227-161023). Insignificant x1-x1.5, everyday x2-x3, significant x4-x5+ |
 | ptu-rule-089 | P3 | **open** | Extended rest does not refresh daily moves (from healing-audit R034) |
 | ptu-rule-090 | P3 | **open** | Scene-end AP restoration not automated (from healing-audit R042) |
 | ptu-rule-091 | P3 | **open** | Branch class blocked by duplicate check — isBranching flag is dead code (from character-lifecycle-audit R035). Blocked by decree-need-022 |
@@ -43,23 +43,23 @@ updated_by: slave-collector (plan-20260226-201936)
 | ptu-rule-093 | P3 | **open** | Rough terrain accuracy penalty not implemented (from vtt-grid-audit R015 + scenes-audit R018) |
 | ptu-rule-094 | P4 | **open** | Natural healing min(1) HP contradicts PTU for low-HP entities (from healing-audit R007) |
 | ptu-rule-095 | P4 | **open** | Disengage maneuver missing from combatManeuvers — defer until AoO implemented (from vtt-grid-audit R030) |
-| ptu-rule-096 | P0 | **fix-cycle-done, needs re-review** | Range measurement switched to PTU alternating diagonal. Fix cycle by slave-1 (plan-20260226-201936): CRIT-1 fixed (enemyOccupiedCells scans all combatants), HIGH-1 fixed (full token footprint for stacking), HIGH-3 fixed (burst PTU diagonal). Prior: code-review-183 |
-| ptu-rule-097 | P0 | **fix-cycle-done, needs re-review** | Token passability + enemy rough terrain -2 accuracy. Fix cycle by slave-1 (plan-20260226-201936): HIGH-2 fixed (extracted isEnemySide utility), MED-2 fixed (unit tests added), MED-3 fixed (removed dead getBlockedCells). Prior: code-review-183 |
-| ptu-rule-098 | P1 | **fix-cycle-done, needs re-review** | Status CS auto-tracking (Burn/Paralysis/Poison) with source tracking. Fix cycle by slave-3 (plan-20260226-201936): H1 fixed (sync stageModifiers on faint), HIGH-1 fixed (reset stageModifiers in buildCombatantFromEntity). Prior: code-review-184 H1, rules-review-161 HIGH-1 |
-| ptu-rule-099 | P1 | **CHANGES_REQUIRED** | Dynamic initiative reorder on Speed CS change. code-review-186 CHANGES_REQUIRED (HIGH-1: triggers on speed key presence not actual change, HIGH-2: resetCombatantsForNewRound missing turnState reset, MED-1: app-surface.md, MED-3: breather redundant reorder). rules-review-163 APPROVED |
-| ptu-rule-100 | P1 | **fix-cycle-done, needs re-review** | Cone shapes fixed to 3m-wide rows. Fix cycle by slave-1 (plan-20260226-201936): diagonal cone corner cell added per decree-024 (7-cell diamond pattern). Prior: code-review-183, rules-review-160 M1 |
-| ptu-rule-101 | P1 | **fix-cycle-done, needs re-review** | Water cost 1 + terrain multi-tag. Fix cycle by slave-2 (plan-20260226-201936): CRIT-1 fixed (terrain tests), HIGH-1 fixed (Zod flags validation), HIGH-2 fixed (runtime legacy conversion), MED-1 fixed (Phosphor Icons), MED-2 fixed (immutable getMovementCost). Prior: code-review-185 |
-| ptu-rule-102 | P1 | **fix-cycle-done, needs re-review** | Diagonal Line attacks shortened. Fix cycle by slave-1 (plan-20260226-201936): MED-2 fixed (unit tests for grid distance, combat sides, AoE shapes added). Prior: code-review-183 MED-2 |
-| ptu-rule-103 | P1 | **CHANGES_REQUIRED** | Mixed-terrain speed averaging. code-review-187 CHANGES_REQUIRED (C1: undefined speed in drawExternalMovementPreview, C2: Set<number> drops duplicate capability speeds). rules-review-164 CHANGES_REQUIRED (M-001: same as C2, M-002: same as C1). Also code-review-187 M1: getMaxPossibleSpeed duplicates, M2: flood-fill approximation comment |
-| ptu-rule-104 | P1 | **CHANGES_REQUIRED** | Type-immunity enforcement for status conditions server-side. code-review-186 CHANGES_REQUIRED (MED-2: StatusConditionsModal array mutations). rules-review-163 APPROVED (M-1: immune tag visibility → ux-009). Shares fix cycle with ptu-rule-099 |
+| ptu-rule-096 | P0 | **resolved** | Range measurement switched to PTU alternating diagonal. APPROVED: code-review-189 + rules-review-166 (re-review). All 7 issues from code-review-183 resolved |
+| ptu-rule-097 | P0 | **resolved** | Token passability + enemy rough terrain -2 accuracy. APPROVED: code-review-189 + rules-review-166. isEnemySide extracted, getBlockedCells removed, unit tests added |
+| ptu-rule-098 | P1 | **resolved** | Status CS auto-tracking (Burn/Paralysis/Poison) with source tracking. APPROVED: code-review-191 + rules-review-168. Defense-in-depth: reset at encounter end AND combat entry |
+| ptu-rule-099 | P1 | **fix-cycle-done, needs review** | Dynamic initiative reorder fix cycle (slave-1, plan-20260227-161023). Fixed: HIGH-1 (speed actual change check), HIGH-2 (turnState reset), MED-2 (immutable arrays), MED-3 (breather reorder guard), MED-1 (app-surface.md) |
+| ptu-rule-100 | P1 | **resolved** | Cone shapes fixed to 3m-wide rows. APPROVED: code-review-189 + rules-review-166. Diagonal cone diamond pattern per decree-024 |
+| ptu-rule-101 | P1 | **resolved** | Water cost 1 + terrain multi-tag. APPROVED: code-review-190 + rules-review-167. All 5 issues from code-review-185 resolved |
+| ptu-rule-102 | P1 | **resolved** | Diagonal Line attacks shortened. APPROVED: code-review-189 + rules-review-166. Unit tests for grid distance, combat sides, AoE shapes |
+| ptu-rule-103 | P1 | **fix-cycle-done, needs review** | Mixed-terrain speed averaging fix cycle (slave-2, plan-20260227-161023). Fixed: C1 (undefined speed variable), C2 (number[] replaces Set<number>), M1 (getSwimSpeed/getBurrowSpeed utilities), M2 (approximation comment) |
+| ptu-rule-104 | P1 | **fix-cycle-done, needs review** | Type-immunity enforcement fix cycle (slave-1, plan-20260227-161023). Fixed: MED-2 (immutable array patterns in StatusConditionsModal). Shares fix with ptu-rule-099 |
 | ptu-rule-105 | P2 | **resolved** | Extended rest preserves Bound AP (clears only Drained AP) per decree-016. code-review-188 APPROVED, rules-review-165 APPROVED |
 | ptu-rule-106 | P2 | **resolved** | Extended rest duration parameter (4-8h, default 4). Scalable healing periods with 8h daily cap. Per decree-018. code-review-188 APPROVED, rules-review-165 APPROVED |
 | ptu-rule-108 | P2 | **open** | Static rough terrain accuracy penalty for painted terrain cells (from rules-review-160 M2 + rules-review-162 M1) |
-| ptu-rule-109 | P3 | **fix-cycle-done, needs re-review** | Legendary species list missing Meltan/Melmetal/Zarude/Enamorus. Fix by slave-3 (plan-20260226-201936): 4 species added to LEGENDARY_SPECIES constant. Prior: rules-review-161 M1 |
-| ptu-rule-110 | P2 | **fix-cycle-done, needs re-review** | Encounter end should reset combat stages. Fix by slave-3 (plan-20260226-201936): reset stageModifiers and stageSources to defaults in end.post.ts. Prior: rules-review-161 M2 |
-| ptu-rule-111 | P2 | **fix-cycle-done, needs re-review** | tempConditions Vulnerable not checked for zero evasion. Fix by slave-3 (plan-20260226-201936): extended both client and server evasion checks to inspect tempConditions. Prior: rules-review-161 M3 |
+| ptu-rule-109 | P3 | **resolved** | Legendary species list complete. APPROVED: code-review-191 + rules-review-168. 100 total species (Meltan/Melmetal/Zarude/Enamorus added) |
+| ptu-rule-110 | P2 | **resolved** | Encounter end resets combat stages. APPROVED: code-review-191 + rules-review-168. stageModifiers + stageSources reset to defaults |
+| ptu-rule-111 | P2 | **resolved** | tempConditions Vulnerable zero evasion. APPROVED: code-review-191 + rules-review-168. Both client + server checks inspect tempConditions |
 | ptu-rule-112 | P3 | **open** | Naturewalk capability bypass for terrain flags (from rules-review-162 M2) |
-| ptu-rule-113 | P2 | **fix-cycle-done, needs re-review** | Burst shapes use PTU diagonal distance (per decree-023). Fix by slave-1 (plan-20260226-201936): replaced Chebyshev with ptuDiagonalDistance in getBurstCells and getAffectedCells. Prior: code-review-183 HIGH-3 |
+| ptu-rule-113 | P2 | **resolved** | Burst shapes use PTU diagonal distance (per decree-023). APPROVED: code-review-189 + rules-review-166. Burst 2 = 21 cells (not 25 Chebyshev) |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
@@ -82,7 +82,18 @@ updated_by: slave-collector (plan-20260226-201936)
 
 ## Active Developer Work
 
-**Current task:** Session 44 collection complete. All 6 slaves merged (28 commits). 3 developer slaves (fix cycles): VTT range (slave-1, 9 commits), terrain multi-tag (slave-2, 6 commits), combat CS/evasion (slave-3, 7 commits). 3 reviewer slaves: slave-4 CHANGES_REQUIRED (ptu-rule-099+104), slave-5 CHANGES_REQUIRED (ptu-rule-103), slave-6 APPROVED (ptu-rule-105+106+feature-003-fix3). 1 follow-up ticket filed (ux-009).
+**Current task:** Session 45 collection complete. All 6 slaves merged (21 commits). 3 developer slaves (fix cycles): ptu-rule-099+104 (slave-1, 6 commits), ptu-rule-103 (slave-2, 5 commits), P3 cluster 086+087+088 (slave-3, 4 commits). 3 reviewer slaves: slave-4 APPROVED (VTT range/shapes), slave-5 APPROVED (VTT terrain), slave-6 APPROVED (combat CS/evasion). 2 follow-up tickets filed (refactoring-086, refactoring-087). 12 tickets resolved by re-review approvals.
+
+**Session 45 (2026-02-27, plan-20260227-161023):**
+- slave-1 (developer): ptu-rule-099+104 fix cycle — 6 commits: actual speed CS change check (HIGH-1), turnState reset in resetCombatantsForNewRound (HIGH-2), immutable array patterns in StatusConditionsModal (MED-2), breather reorder guard (MED-3), app-surface.md update (MED-1), ticket updates → **fix-cycle-done, needs review**
+- slave-2 (developer): ptu-rule-103 fix cycle — 5 commits: number[] replaces Set<number> for capabilitySpeeds (C2), undefined speed variable fix (C1), getSwimSpeed/getBurrowSpeed utilities (M1), approximation comment (M2), ticket update → **fix-cycle-done, needs review**
+- slave-3 (developer): P3 cluster (ptu-rule-086+087+088) — 4 commits: capture modifier sign convention fix, tutor point calculation added to pokemon-generator, significance tier presets realigned to PTU → **fix-cycle-done, needs review**
+- slave-4 (reviewers): ptu-rule-096+097+100+102+113 re-review — code-review-189 **APPROVED** (MED-1: useMoveCalculation 801 lines → refactoring-086). rules-review-166 **APPROVED** (all 8 mechanics verified correct)
+- slave-5 (reviewers): ptu-rule-101 re-review — code-review-190 **APPROVED** (MED-1: terrain.test.ts 811 lines → refactoring-087). rules-review-167 **APPROVED** (all 6 mechanics verified, decree-008/010/011 compliant)
+- slave-6 (reviewers): ptu-rule-098+084+085+110+111+109 re-review — code-review-191 **APPROVED** (M1: useMoveCalculation 801 lines → refactoring-086). rules-review-168 **APPROVED** (all 6 mechanics verified, defense-in-depth confirmed)
+- **Merge notes:** 0 conflicts. All 6 rebased cleanly.
+- **Tickets filed:** refactoring-086 (useMoveCalculation extraction), refactoring-087 (terrain test split)
+- **Tickets resolved by re-review:** ptu-rule-096, 097, 098, 100, 101, 102, 109, 110, 111, 113, refactoring-001, refactoring-002 (12 total)
 
 **Session 44 (2026-02-26, plan-20260226-201936):**
 - slave-1 (developer): ptu-rule-096+097+100+102+113 fix cycle — 9 commits: extracted isEnemySide utility, enemyOccupiedCells scans all combatants (CRIT-1), full token footprint stacking (HIGH-1), burst PTU diagonal (HIGH-3), closestCellPair for multi-cell LoS (MED-1), removed dead getBlockedCells (MED-3), diagonal cone corner cell per decree-024, unit tests → **fix-cycle-done, needs re-review**
@@ -461,8 +472,10 @@ updated_by: slave-collector (plan-20260226-201936)
 | refactoring-082 | P4 | **resolved** | Touch handlers extracted to useTouchInteraction composable, used by both useGridInteraction (630 lines) and useIsometricInteraction (691 lines) — resolved by slave-3 (plan-20260226-070756) |
 | refactoring-083 | P0 | **APPROVED** | Undefined $z-index-modal in XpDistributionModal — fix cycle complete. Extracted _form-utilities.scss (shared SCSS utilities) + XpDistributionResults.vue child component. File reduced from 1019 to 798 lines. code-review-179 APPROVED (re-review of code-review-173 C1) |
 | refactoring-084 | P4 | **resolved** | app-surface.md missing entries for useTouchInteraction.ts and gridDistance.ts — updated. Resolved by slave-2 (plan-20260226-120000) |
-| refactoring-001 | P1 | **CHANGES_REQUIRED** | Multi-tag terrain system. code-review-185 CHANGES_REQUIRED (CRIT-1: broken unit tests, HIGH-1: no server-side flags validation, HIGH-2: legacy types still valid, MED-1: emojis not Phosphor Icons). rules-review-162 APPROVED |
-| refactoring-002 | P3 | **open** | Deprecate legacy terrain types ('difficult','rough') in setTerrain — prevent direct use, add runtime conversion (from code-review-185 HIGH-2) |
+| refactoring-001 | P1 | **resolved** | Multi-tag terrain system. Fix cycle APPROVED: code-review-190 + rules-review-167. All 5 issues from code-review-185 resolved |
+| refactoring-002 | P3 | **resolved** | Deprecate legacy terrain types — runtime conversion added in setTerrain (commit f10cad0, ptu-rule-101 fix cycle). APPROVED as part of code-review-190 |
+| refactoring-086 | P4 | **open** | Extract damage application from useMoveCalculation.ts (801 lines > 800 limit). From code-review-189 MED-1 + code-review-191 M1 |
+| refactoring-087 | P4 | **open** | Split terrain.test.ts (811 lines > 800 limit). Extract migrateLegacyCell tests to separate file. From code-review-190 MED-1 |
 
 ## Code Health
 
