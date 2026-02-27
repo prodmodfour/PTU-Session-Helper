@@ -40,14 +40,14 @@
                 class="class-option"
                 :class="{
                   'class-option--selected': isClassSelected(cls.name),
-                  'class-option--disabled': !isClassSelected(cls.name) && trainerClasses.length >= maxClasses
+                  'class-option--disabled': isClassDisabled(cls)
                 }"
-                :disabled="!isClassSelected(cls.name) && trainerClasses.length >= maxClasses"
+                :disabled="isClassDisabled(cls)"
                 :title="cls.description"
                 @click="toggleClass(cls)"
               >
                 <span class="class-option__name">{{ cls.name }}</span>
-                <span v-if="cls.isBranching" class="class-option__branching" title="Can be taken with different specializations">*</span>
+                <span v-if="cls.isBranching" class="class-option__branching" title="Can be taken with different specializations">[Branch]</span>
                 <span v-if="cls.associatedSkills.length" class="class-option__skills">
                   {{ cls.associatedSkills.join(', ') }}
                 </span>
@@ -69,18 +69,24 @@
         </span>
       </div>
 
-      <!-- Branching Specialization Input -->
+      <!-- Branching Specialization Picker -->
       <div v-if="pendingBranching" class="class-feature__branching-prompt">
         <label>{{ pendingBranching.name }} Specialization:</label>
         <div class="branching-input">
-          <input
+          <select
             v-model="branchingSpec"
-            type="text"
-            class="form-input"
-            :placeholder="getBranchingPlaceholder(pendingBranching.name)"
-            @keydown.enter.prevent="confirmBranching"
-          />
-          <button class="btn btn--primary btn--sm" :disabled="!branchingSpec.trim()" @click="confirmBranching">
+            class="form-select"
+          >
+            <option value="" disabled>Select specialization...</option>
+            <option
+              v-for="spec in availableSpecializations"
+              :key="spec"
+              :value="spec"
+            >
+              {{ spec }}
+            </option>
+          </select>
+          <button class="btn btn--primary btn--sm" :disabled="!branchingSpec" @click="confirmBranching">
             Confirm
           </button>
           <button class="btn btn--secondary btn--sm" @click="cancelBranching">
@@ -161,7 +167,13 @@
 
 <script setup lang="ts">
 import type { TrainerClassDef, TrainerClassCategory } from '~/constants/trainerClasses'
-import { TRAINER_CLASSES, TRAINER_CLASS_CATEGORIES } from '~/constants/trainerClasses'
+import {
+  TRAINER_CLASSES,
+  TRAINER_CLASS_CATEGORIES,
+  getBranchingSpecializations,
+  hasBaseClass,
+  getSpecialization
+} from '~/constants/trainerClasses'
 import type { CreationWarning } from '~/utils/characterCreationValidation'
 
 interface Props {
@@ -217,19 +229,75 @@ function filteredClassesByCategory(category: TrainerClassCategory): TrainerClass
   return filteredClasses.value.filter(cls => cls.category === category)
 }
 
+/** Check if a non-branching class is selected, or if a branching class has at least one instance */
 function isClassSelected(className: string): boolean {
-  return props.trainerClasses.some(c => c === className || c.startsWith(`${className}: `))
+  return props.trainerClasses.some(c => hasBaseClass(c, className))
+}
+
+/**
+ * Determine if a class button should be disabled.
+ * - Non-branching: disabled when not selected and at max slots
+ * - Branching: disabled when at max slots AND not selected, OR all specializations taken
+ */
+function isClassDisabled(cls: TrainerClassDef): boolean {
+  if (isClassSelected(cls.name)) {
+    // Already selected -- for branching, disabled only if all specializations taken
+    return cls.isBranching ? isFullySpecialized(cls.name) : false
+  }
+  // Not selected -- disabled if at max class slots
+  return props.trainerClasses.length >= props.maxClasses
+}
+
+/**
+ * Get already-taken specializations for a branching class.
+ */
+function takenSpecializations(className: string): string[] {
+  return props.trainerClasses
+    .filter(c => hasBaseClass(c, className))
+    .map(c => getSpecialization(c))
+    .filter((s): s is string => s !== null)
+}
+
+/**
+ * Available specializations for the currently pending branching class,
+ * excluding already-taken specializations.
+ */
+const availableSpecializations = computed((): readonly string[] => {
+  if (!pendingBranching.value) return []
+  const allSpecs = getBranchingSpecializations(pendingBranching.value.name)
+  const taken = new Set(takenSpecializations(pendingBranching.value.name))
+  return allSpecs.filter(s => !taken.has(s))
+})
+
+/**
+ * Check if a branching class has used all available specializations.
+ */
+function isFullySpecialized(className: string): boolean {
+  const allSpecs = getBranchingSpecializations(className)
+  if (allSpecs.length === 0) return false
+  const taken = takenSpecializations(className)
+  return taken.length >= allSpecs.length
 }
 
 function toggleClass(cls: TrainerClassDef): void {
-  if (isClassSelected(cls.name)) {
-    // Remove all variants of this class (including specializations)
-    const toRemove = props.trainerClasses.find(c => c === cls.name || c.startsWith(`${cls.name}: `))
-    if (toRemove) emit('removeClass', toRemove)
-  } else {
-    if (cls.isBranching) {
+  if (cls.isBranching) {
+    if (isClassSelected(cls.name) && !isFullySpecialized(cls.name)) {
+      // Already has one instance but more specializations available -- open picker for another
       pendingBranching.value = cls
       branchingSpec.value = ''
+    } else if (isFullySpecialized(cls.name)) {
+      // All specializations taken -- remove the last one added
+      const toRemove = [...props.trainerClasses].reverse().find(c => hasBaseClass(c, cls.name))
+      if (toRemove) emit('removeClass', toRemove)
+    } else {
+      // No instances yet -- open picker
+      pendingBranching.value = cls
+      branchingSpec.value = ''
+    }
+  } else {
+    // Non-branching: simple toggle
+    if (isClassSelected(cls.name)) {
+      emit('removeClass', cls.name)
     } else {
       emit('addClass', cls.name)
     }
@@ -237,8 +305,8 @@ function toggleClass(cls: TrainerClassDef): void {
 }
 
 function confirmBranching(): void {
-  if (!pendingBranching.value || !branchingSpec.value.trim()) return
-  emit('addClass', `${pendingBranching.value.name}: ${branchingSpec.value.trim()}`)
+  if (!pendingBranching.value || !branchingSpec.value) return
+  emit('addClass', `${pendingBranching.value.name}: ${branchingSpec.value}`)
   pendingBranching.value = null
   branchingSpec.value = ''
 }
@@ -246,17 +314,6 @@ function confirmBranching(): void {
 function cancelBranching(): void {
   pendingBranching.value = null
   branchingSpec.value = ''
-}
-
-function getBranchingPlaceholder(className: string): string {
-  const placeholders: Record<string, string> = {
-    'Type Ace': 'e.g., Fire, Water, Dragon...',
-    'Stat Ace': 'e.g., Attack, Speed, HP...',
-    'Style Expert': 'e.g., Cool, Beautiful, Tough...',
-    'Researcher': 'e.g., Pokemon Ed, Technology Ed...',
-    'Martial Artist': 'e.g., Karate, Judo...'
-  }
-  return placeholders[className] || 'Enter specialization...'
 }
 
 function onAddFeature(): void {
@@ -423,7 +480,7 @@ function onAddFeature(): void {
   gap: $spacing-sm;
   align-items: center;
 
-  .form-input {
+  .form-select {
     flex: 1;
   }
 }
