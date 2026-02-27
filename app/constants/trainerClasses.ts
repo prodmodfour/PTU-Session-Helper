@@ -108,7 +108,7 @@ export const BRANCHING_CLASS_SPECIALIZATIONS: Record<string, readonly string[]> 
     'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel', 'Fairy'
   ],
   'Stat Ace': ['Attack', 'Defense', 'Special Attack', 'Special Defense', 'Speed'],
-  'Style Expert': ['Cool', 'Beautiful', 'Cute', 'Smart', 'Tough'],
+  'Style Expert': ['Cool', 'Beauty', 'Cute', 'Smart', 'Tough'],
   // PTU grants 2 Fields of Study per Researcher instance (Core p. 4163),
   // but the tool records 1 specialization per class entry — the GM tracks
   // the second field outside the tool.
