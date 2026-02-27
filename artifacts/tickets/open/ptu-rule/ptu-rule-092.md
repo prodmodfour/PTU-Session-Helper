@@ -59,7 +59,7 @@ Custom background mode allows bypassing the Pathetic skill restriction, making c
 **MEDIUM-01 fix:**
 - `4101e1d` — fix: add informational warning for Pathetic enforcement at level > 1
 
-**HIGH-01:** BLOCKED by decree-need-027. Not implemented.
+**HIGH-01:** Resolved by decree-027 → implementation ticket ptu-rule-118.
 
 #### Files Changed (fix cycle)
 - `app/composables/useCharacterCreation.ts` — `removePatheticSkill` now returns `string | null` and checks for outstanding `Skill Edge: <skill>` entries in `form.edges` before allowing removal. Passes `patheticSkills` to `validateSkillBackground`.

@@ -27,7 +27,7 @@ The `addClass` function in `useCharacterCreation.ts:183` blocks adding the same 
 
 ## Suggested Fix
 
-Requires decree-need-022 to determine implementation approach (see decree ticket). Two options: (a) skip duplicate check when `isBranching` is true, (b) require specialization suffix (e.g., "Type Ace: Fire") so names are naturally unique.
+Resolved by decree-022: specialization suffix approach (e.g., "Type Ace: Fire") so names are naturally unique.
 
 ## Impact
 
