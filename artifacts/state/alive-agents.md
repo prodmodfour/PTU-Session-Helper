@@ -192,3 +192,6 @@
 | plan-20260227-122512/slave-3 | developer | ptu-rule-092-fix | success | 2026-02-27T12:33:30Z | 19ec89c, 4101e1d, fa258dc |
 | plan-20260227-122512/slave-4 | reviewers | ptu-rule-091-rereview | BLOCKED | 2026-02-27T12:38:00Z | dd605fc, a531b86 |
 | plan-20260227-122512/slave-5 | reviewers | ptu-rule-112-rereview | APPROVED | 2026-02-27T12:40:00Z | c674164, f86256c |
+| plan-20260227-131024/slave-1 | developer | bug-036 | success | 2026-02-27T13:14:30Z | c64607a, 9fdee25 |
+| plan-20260227-131024/slave-2 | developer | ptu-rule-091+115 | success | 2026-02-27T13:19:06Z | 6772154, 40dc548, 0d189c1, 1967ed2, c367c25, b8e673a |
+| plan-20260227-131024/slave-3 | reviewers | ptu-rule-092-rereview | APPROVED | 2026-02-27T13:16:30Z | 1c3038b |

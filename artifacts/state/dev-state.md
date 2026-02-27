@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-27T12:45:00
-updated_by: slave-collector (plan-20260227-122512)
+last_updated: 2026-02-27T13:45:00
+updated_by: slave-collector (plan-20260227-131024)
 ---
 
 # Dev Ecosystem State
@@ -17,7 +17,7 @@ updated_by: slave-collector (plan-20260227-122512)
 | bug-033 | P0 | **resolved** | SCSS @use module scoping breaks variable resolution in mixin files. Fixed: added `@use 'variables' as *` to _modal, _pokemon-sheet, _difficulty, _sheet. Resolved by slave-1 (plan-20260227-122512) |
 | bug-034 | P0 | **resolved** | @phosphor-icons/vue not installed. Fixed: added dependency to app/package.json. Resolved by slave-2 (plan-20260227-122512) |
 | bug-035 | P0 | **resolved** | LevelUpNotification missing phosphor SVGs. Fixed: converted to @phosphor-icons/vue Vue components. Resolved by slave-2 (plan-20260227-122512) |
-| bug-036 | P0 | **open** | Player view 500 error: SCSS `rgba(currentColor, 0.1)` rejected by Sass compiler. Pre-existing, discovered by smoke test (plan-20260227-122512) |
+| bug-036 | P0 | **resolved** | Player view 500 error: SCSS `rgba(currentColor, 0.1)` rejected by Sass compiler. Fixed: replaced with SCSS color variables. Resolved by slave-1 (plan-20260227-131024) |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
@@ -42,8 +42,8 @@ updated_by: slave-collector (plan-20260227-122512)
 | ptu-rule-088 | P3 | **resolved** | Significance tier presets realigned. code-review-199 APPROVED (re-review of fix cycle). rules-review-171 APPROVED (M1: overlapping tier boundaries → ux-010) |
 | ptu-rule-089 | P3 | **resolved** | Extended rest daily move refresh. APPROVED: code-review-196 + rules-review-173 (plan-20260227-174900). M1: app-surface.md → refactoring-089. M2: ticket status → resolved |
 | ptu-rule-090 | P3 | **resolved** | Scene-end AP restoration already implemented (confirmed by code-review-196 + rules-review-173). No code changes needed. APPROVED |
-| ptu-rule-091 | P3 | **CHANGES_REQUIRED (merge reversion)** | Branch class specialization suffix per decree-022. Fix cycle 2 code was correct but reverted by prior collect-slaves merge (1ff8d81). code-review-204 CHANGES_REQUIRED (C1: re-apply all fix cycle 2 changes, M1: Crystal Artifice→Artificer naming). rules-review-180 BLOCKED (decree-026 violated on master — Martial Artist still branching). Needs fix cycle 3: re-apply trainerClasses.ts + ClassFeatureSection.vue changes + Crystal Artifice rename. ptu-rule-115 open copy still exists (was resolved then reverted) |
-| ptu-rule-092 | P3 | **fix-cycle-done, needs re-review** | Pathetic skill enforcement gap in custom background mode. Fix cycle complete (3 commits, plan-20260227-122512 slave-3): guarded removePatheticSkill against outstanding Skill Edges (CRITICAL-01), added informational warning for Pathetic enforcement at level > 1 (MEDIUM-01). HIGH-01 skipped per decree-need-027 (blocked). code-review-203 APPROVED. rules-review-179 CHANGES_REQUIRED → fix applied. Needs re-review |
+| ptu-rule-091 | P3 | **fix-cycle-3-done, needs re-review** | Branch class specialization suffix per decree-022. Fix cycle 3 re-applied all reverted changes: Stat Ace HP removal, Researcher Fields of Study (Artificer naming per M1), Martial Artist removed from branching per decree-026, max slots guard, dead code removal. ptu-rule-115 resolved (open copy deleted). Resolved by slave-2 (plan-20260227-131024). Needs code + rules re-review |
+| ptu-rule-092 | P3 | **resolved** | Pathetic skill enforcement gap in custom background mode. Fix cycle complete: guarded removePatheticSkill against outstanding Skill Edges (CRITICAL-01), informational warning for level > 1 (MEDIUM-01). HIGH-01 deferred to decree-need-027. code-review-203 APPROVED. rules-review-182 APPROVED (re-review by slave-3, plan-20260227-131024). All issues resolved |
 | ptu-rule-093 | P3 | **resolved** | Rough terrain accuracy penalty — resolved by ptu-rule-108 fix. APPROVED: code-review-195 + rules-review-172 (plan-20260227-174900) |
 | ptu-rule-094 | P4 | **open** | Natural healing min(1) HP contradicts PTU for low-HP entities (from healing-audit R007) |
 | ptu-rule-095 | P4 | **open** | Disengage maneuver missing from combatManeuvers — defer until AoO implemented (from vtt-grid-audit R030) |
@@ -91,19 +91,17 @@ updated_by: slave-collector (plan-20260227-122512)
 
 ## Active Developer Work
 
-**Current task:** Session 51 collection complete. All 5 slaves merged (12 commits). 3 developer slaves: bug-033 (slave-1, 2 commits), bug-034+035 (slave-2, 3 commits), ptu-rule-092-fix (slave-3, 3 commits). 2 reviewer slaves: ptu-rule-091-rereview slave-4 BLOCKED, ptu-rule-112-rereview slave-5 APPROVED. Smoke test PARTIAL PASS (GM+Group OK, Player 500 from pre-existing SCSS bug → bug-036). 4 tickets resolved (bug-033, bug-034, bug-035, ptu-rule-112). 2 tickets filed (ptu-rule-116, bug-036).
+**Current task:** Session 52 collection complete. All 3 slaves merged (9 commits). 2 developer slaves: bug-036 (slave-1, 2 commits), ptu-rule-091+115 fix cycle 3 (slave-2, 6 commits). 1 reviewer slave: ptu-rule-092-rereview slave-3 APPROVED. Smoke test PASSED (all 3 views render). 3 tickets resolved (bug-036, ptu-rule-092, ptu-rule-115). 0 tickets filed.
 
-**Session 51 (2026-02-27, plan-20260227-122512):**
-- slave-1 (developer): bug-033 — 2 commits: added `@use 'variables' as *` to 4 SCSS mixin files (_difficulty, _modal, _pokemon-sheet, _sheet). Build-blocking SCSS variable resolution fixed → **resolved**
-- slave-2 (developer): bug-034+035 — 3 commits: added @phosphor-icons/vue dependency to package.json (bug-034), converted LevelUpNotification from missing SVG img tags to Vue icon components (bug-035) → **resolved**
-- slave-3 (developer): ptu-rule-092-fix — 3 commits: guarded removePatheticSkill against outstanding Skill Edges (CRITICAL-01), added informational warning for level > 1 Pathetic enforcement (MEDIUM-01), ticket update. HIGH-01 skipped per decree-need-027 → **fix-cycle-done, needs re-review**
-- slave-4 (reviewers): ptu-rule-091-rereview — code-review-204 **CHANGES_REQUIRED** (C1 CRITICAL: prior collect-slaves merge 1ff8d81 reverted ALL fix cycle 2 code changes, M1: Crystal Artifice→Artificer naming). rules-review-180 **BLOCKED** (all fixes reverted, decree-026 violated). Fix cycle 2 commits were correct but merge process undid them.
-- slave-5 (reviewers): ptu-rule-112-rereview — code-review-205 **APPROVED** + rules-review-181 **APPROVED**. All issues from code-review-201 resolved. 36 Naturewalk tests, decree compliance verified. ptu-rule-112 → **resolved**
-- **Smoke test:** PARTIAL PASS (Playwright) — GM view renders fully (navigation, encounter controls, group view buttons). Group view renders (lobby state). Player view FAILED: 500 error from SCSS `rgba(currentColor, 0.1)` at player/index.vue:471. Pre-existing bug, not introduced by this collection → bug-036 filed
-- **Merge notes:** 0 conflicts. 3 untracked file conflicts (bug-033/034/035.md) resolved by removing pre-existing untracked copies. All 5 rebased cleanly. 12 commits total
-- **Tickets filed:** ptu-rule-116 (Naturewalk status condition immunity — from rules-review-181 scope boundary), bug-036 (Player view 500 SCSS error — pre-existing, from smoke test)
-- **Tickets resolved:** bug-033 (SCSS @use fix), bug-034 (@phosphor-icons/vue installed), bug-035 (LevelUpNotification icons converted), ptu-rule-112 (APPROVED by both reviewers)
-- **Notable:** ptu-rule-091 needs fix cycle 3 — re-apply reverted trainerClasses.ts/ClassFeatureSection.vue changes + Crystal Artifice→Artificer rename. ptu-rule-115 open copy remains until ptu-rule-091 reversion is resolved.
+**Session 52 (2026-02-27, plan-20260227-131024):**
+- slave-1 (developer): bug-036 — 2 commits: replaced invalid `rgba(currentColor, 0.1)` with SCSS color variables in player view, ticket update → **resolved**
+- slave-2 (developer): ptu-rule-091+115 fix cycle 3 — 6 commits: re-applied all reverted fix cycle 2 changes (Stat Ace HP removal, Researcher Fields of Study with Artificer naming, Martial Artist removed from branching per decree-026, max slots guard, dead code removal), cleaned up ptu-rule-115 (open copy deleted, resolved copy updated) → **fix-cycle-3-done, needs re-review**
+- slave-3 (reviewers): ptu-rule-092-rereview — rules-review-182 **APPROVED**. CRITICAL-01 fix verified (edge guard prevents removePatheticSkill desync), MEDIUM-01 fix verified (level > 1 info warning), HIGH-01 properly deferred (decree-need-027). All mechanics re-confirmed correct. ptu-rule-092 → **resolved**
+- **Smoke test:** PASSED (Playwright) — GM view renders fully (navigation, encounter controls, group view buttons). Group view renders (lobby state). Player view renders (character selection with names, levels, classes). bug-036 fix confirmed working.
+- **Merge notes:** 0 conflicts. All 3 rebased cleanly. 9 commits total
+- **Tickets filed:** none
+- **Tickets resolved:** bug-036 (SCSS fix), ptu-rule-092 (APPROVED by rules-review-182 + code-review-203), ptu-rule-115 (resolved as part of slave-2 decree-026 implementation)
+- **Notable:** ptu-rule-091 fix cycle 3 still needs code + rules re-review (branching class changes re-applied with Artificer naming correction)
 
 **Session 50 (2026-02-27, plan-20260227-210000):**
 - slave-1 (developer): ptu-rule-091-fix — 6 commits: removed HP from Stat Ace specializations (CRITICAL-001), replaced Researcher specs with Fields of Study (HIGH-001), removed Martial Artist from branching per decree-026 (HIGH-002/C1), disabled branching at max slots (H1), removed dead countClassInstances (M2), resolved ptu-rule-115 → **fix-cycle-2-done, needs re-review**
@@ -560,6 +558,20 @@ updated_by: slave-collector (plan-20260227-122512)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-02-27, session 52 — plan-20260227-131024)
+
+**Slave collection plan-20260227-131024:** 3 slaves merged (9 commits total, 0 conflicts)
+- **slave-1** (developer): bug-036 — 2 commits: replaced invalid `rgba(currentColor, 0.1)` with SCSS color variables in player view
+- **slave-2** (developer): ptu-rule-091+115 — 6 commits: re-applied all reverted fix cycle 2 changes (Stat Ace HP removal, Researcher Fields of Study with Artificer naming, Martial Artist removed from branching per decree-026, max slots guard, dead code removal), ptu-rule-115 resolved
+- **slave-3** (reviewers): ptu-rule-092-rereview — rules-review-182 APPROVED (CRITICAL-01 edge guard verified, MEDIUM-01 warning verified, HIGH-01 properly deferred)
+
+**Tickets resolved:** bug-036 (SCSS fix), ptu-rule-092 (APPROVED), ptu-rule-115 (resolved via decree-026 implementation)
+**Tickets filed:** none
+**Smoke test:** PASSED — all 3 views render correctly. Player view bug-036 fix confirmed.
+
+**Follow-up needed:**
+- ptu-rule-091 fix cycle 3 needs code + rules re-review (branching class changes re-applied)
 
 ## Session Summary (2026-02-26, session 43 — plan-20260226-190737)
 
