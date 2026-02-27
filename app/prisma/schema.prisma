@@ -37,6 +37,10 @@ model HumanCharacter {
   features       String  @default("[]") // JSON array of feature names
   edges          String  @default("[]") // JSON array of edge names
 
+  // Trainer capabilities (e.g. Naturewalk from Survivalist class, PTU p.149)
+  // JSON array of capability strings: ["Naturewalk (Forest)", "Naturewalk (Mountain)"]
+  capabilities   String  @default("[]")
+
   // Equipment (JSON object mapping slot to equipped item)
   equipment     String   @default("{}") // JSON: EquipmentSlots
 
