@@ -38,10 +38,12 @@ export function computeTargetEvasions(
 ): EvasionValues {
   const entity = target.entity
 
+  // Check for zero-evasion conditions from both statusConditions and tempConditions.
+  // ZeroEvasion is a synthetic tempCondition applied by the assisted breather variant (PTU p.245).
   const hasZeroEvasionCondition = entity.statusConditions?.some(
     (c: StatusCondition) => ZERO_EVASION_CONDITIONS.includes(c)
   ) || target.tempConditions?.some(
-    (c: string) => (ZERO_EVASION_CONDITIONS as readonly string[]).includes(c)
+    (c: string) => (ZERO_EVASION_CONDITIONS as readonly string[]).includes(c) || c === 'ZeroEvasion'
   )
   if (hasZeroEvasionCondition) {
     return { physical: 0, special: 0, speed: 0 }

@@ -152,7 +152,7 @@ export function useEncounterActions(options: EncounterActionsOptions) {
         await encounterStore.useAction(combatantId, 'standard')
       }
       // Full actions use both standard and shift
-      if (['take-a-breather', 'intercept-melee', 'intercept-ranged'].includes(maneuverId)) {
+      if (['take-a-breather', 'take-a-breather-assisted', 'intercept-melee', 'intercept-ranged'].includes(maneuverId)) {
         await encounterStore.useAction(combatantId, 'standard')
         await encounterStore.useAction(combatantId, 'shift')
       }
@@ -162,13 +162,17 @@ export function useEncounterActions(options: EncounterActionsOptions) {
           encounterStore.encounter.id, combatantId
         )
       }
-      // Special handling for Take a Breather
-      if (maneuverId === 'take-a-breather') {
+      // Special handling for Take a Breather (standard and assisted variants)
+      if (maneuverId === 'take-a-breather' || maneuverId === 'take-a-breather-assisted') {
+        const assisted = maneuverId === 'take-a-breather-assisted'
         encounterStore.encounter = await encounterCombatStore.takeABreather(
-          encounterStore.encounter.id, combatantId
+          encounterStore.encounter.id, combatantId, assisted
         )
         // Signal that the GM needs to shift this combatant away from enemies (PTU p.245)
-        breatherShift = { combatantId, combatantName: name }
+        // Only for unassisted breather — assisted variant doesn't require the shift
+        if (!assisted) {
+          breatherShift = { combatantId, combatantName: name }
+        }
       }
     } else {
       // Handle standard actions

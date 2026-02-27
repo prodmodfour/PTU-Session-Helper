@@ -3,7 +3,10 @@
  * - Reset all combat stages to 0
  * - Remove Temporary HP
  * - Cure all Volatile status conditions + Slowed and Stuck (except Cursed — requires GM adjudication)
- * - Apply Tripped + Vulnerable until next turn (stored as tempConditions)
+ * - Standard: Apply Tripped + Vulnerable until next turn (stored as tempConditions)
+ * - Assisted: Another character uses their Standard Action to help — breather character
+ *   gets 0 Evasion (via ZeroEvasion tempCondition) instead of Tripped+Vulnerable.
+ *   The assistant's Standard Action must be consumed separately by the GM.
  */
 import { prisma } from '~/server/utils/prisma'
 import {
@@ -30,7 +33,7 @@ const BREATHER_CURED_CONDITIONS: StatusCondition[] = [
  * Build descriptive notes for the breather move log entry.
  */
 function buildBreatherNotes(
-  result: { tempHpRemoved: number; conditionsCured: string[] },
+  result: { tempHpRemoved: number; conditionsCured: string[]; assisted: boolean },
   reappliedSources: StageSource[]
 ): string {
   const parts = [
@@ -41,7 +44,11 @@ function buildBreatherNotes(
     const sourceDescs = reappliedSources.map(s => `${s.source} (${s.value >= 0 ? '+' : ''}${s.value} ${s.stat})`)
     parts.push(`re-applied CS: ${sourceDescs.join(', ')}`)
   }
-  parts.push('SHIFT REQUIRED: Move away from all enemies using full movement.')
+  if (result.assisted) {
+    parts.push('ASSISTED: Evasion set to 0 (no Trip/Vulnerable)')
+  } else {
+    parts.push('SHIFT REQUIRED: Move away from all enemies using full movement.')
+  }
   return parts.join('. ')
 }
 
@@ -68,12 +75,16 @@ export default defineEventHandler(async (event) => {
     const combatant = findCombatant(combatants, body.combatantId)
     const entity = combatant.entity
 
+    const assisted = body.assisted === true
+
     const result = {
       stagesReset: false,
       tempHpRemoved: 0,
       conditionsCured: [] as string[],
       trippedApplied: false,
-      vulnerableApplied: false
+      vulnerableApplied: false,
+      assisted,
+      zeroEvasionApplied: false
     }
 
     // Reset combat stages to defaults
@@ -126,17 +137,28 @@ export default defineEventHandler(async (event) => {
     const speedCsAfter = entity.stageModifiers?.speed ?? 0
     const speedCsChanged = speedCsBefore !== speedCsAfter
 
-    // Apply Tripped and Vulnerable (temporary until next turn)
+    // Apply penalties (temporary until next turn)
     if (!combatant.tempConditions) {
       combatant.tempConditions = []
     }
-    if (!combatant.tempConditions.includes('Tripped')) {
-      combatant.tempConditions = [...combatant.tempConditions, 'Tripped']
-      result.trippedApplied = true
-    }
-    if (!combatant.tempConditions.includes('Vulnerable')) {
-      combatant.tempConditions = [...combatant.tempConditions, 'Vulnerable']
-      result.vulnerableApplied = true
+
+    if (assisted) {
+      // Assisted breather: 0 Evasion instead of Tripped+Vulnerable (PTU p.245)
+      // ZeroEvasion is a synthetic tempCondition recognized by evasionCalculation.ts
+      if (!combatant.tempConditions.includes('ZeroEvasion')) {
+        combatant.tempConditions = [...combatant.tempConditions, 'ZeroEvasion']
+        result.zeroEvasionApplied = true
+      }
+    } else {
+      // Standard breather: Tripped + Vulnerable
+      if (!combatant.tempConditions.includes('Tripped')) {
+        combatant.tempConditions = [...combatant.tempConditions, 'Tripped']
+        result.trippedApplied = true
+      }
+      if (!combatant.tempConditions.includes('Vulnerable')) {
+        combatant.tempConditions = [...combatant.tempConditions, 'Vulnerable']
+        result.vulnerableApplied = true
+      }
     }
 
     // Mark as having used their full action (standard + shift) — PTU p.245
@@ -162,7 +184,7 @@ export default defineEventHandler(async (event) => {
       round: record.currentRound,
       actorId: body.combatantId,
       actorName: entityName,
-      moveName: 'Take a Breather',
+      moveName: assisted ? 'Take a Breather (Assisted)' : 'Take a Breather',
       targets: [],
       notes: buildBreatherNotes(result, combatant.stageSources || [])
     })

@@ -114,12 +114,13 @@ export const useEncounterCombatStore = defineStore('encounterCombat', {
     // ===========================================
 
     /**
-     * Take a Breather - Full Action that resets stages, removes temp HP, cures volatile status
+     * Take a Breather - Full Action that resets stages, removes temp HP, cures volatile status.
+     * @param assisted - If true, uses assisted variant: 0 Evasion instead of Tripped+Vulnerable (PTU p.245)
      */
-    async takeABreather(encounterId: string, combatantId: string) {
+    async takeABreather(encounterId: string, combatantId: string, assisted: boolean = false) {
       const response = await $fetch<{ data: Encounter }>(`/api/encounters/${encounterId}/breather`, {
         method: 'POST',
-        body: { combatantId }
+        body: { combatantId, assisted }
       })
       return response.data
     },

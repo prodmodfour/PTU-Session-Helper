@@ -104,5 +104,15 @@ export const COMBAT_MANEUVERS: Maneuver[] = [
     icon: '/icons/phosphor/wind.svg',
     shortDesc: 'Reset stages, cure volatile status, become Tripped. Must Shift away from enemies.',
     requiresTarget: false
+  },
+  {
+    id: 'take-a-breather-assisted',
+    name: 'Take a Breather (Assisted)',
+    actionType: 'full',
+    actionLabel: 'Full Action',
+    ac: null,
+    icon: '/icons/phosphor/heart-half.svg',
+    shortDesc: 'Assisted breather: reset stages, cure volatile status, 0 Evasion (no Trip). Adjacent ally must spend Standard Action.',
+    requiresTarget: false
   }
 ]
