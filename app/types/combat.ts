@@ -76,6 +76,26 @@ export interface StageSource {
   source: string;
 }
 
+/**
+ * A trainer's declared action during League Battle declaration phase.
+ * Recorded during trainer_declaration, executed during trainer_resolution.
+ * Per decree-021: trainers declare low-to-high speed, resolve high-to-low speed.
+ */
+export interface TrainerDeclaration {
+  /** Combatant ID of the declaring trainer */
+  combatantId: string;
+  /** Display name of the trainer (for UI) */
+  trainerName: string;
+  /** Type of declared action */
+  actionType: 'command_pokemon' | 'switch_pokemon' | 'use_item' | 'use_feature' | 'orders' | 'pass';
+  /** Free-text description of the declared action */
+  description: string;
+  /** Target combatant IDs if applicable */
+  targetIds?: string[];
+  /** The round number this declaration was made in */
+  round: number;
+}
+
 // PTU Injury tracking
 export interface InjuryState {
   count: number;
