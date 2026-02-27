@@ -2,7 +2,7 @@
 ticket_id: ptu-rule-108
 ticket_type: ptu-rule
 priority: P2
-status: open
+status: in-progress
 domain: vtt-grid
 topic: static-rough-terrain-accuracy-penalty
 source: rules-review-160 M2 + rules-review-162 M1
@@ -36,3 +36,15 @@ The Bresenham line trace in `targetsThroughEnemyRoughTerrain` should also check 
 - The terrain store already exposes `isRoughAt()` (from the multi-tag refactoring)
 - The Bresenham trace infrastructure already exists — just needs to also check terrain flags
 - Pre-existing gap, not a regression. Tracked as R015 in VTT grid matrix.
+
+## Fix Log
+
+| Commit | Description | Files |
+|--------|-------------|-------|
+| 0dd3605 | Add `terrainStore.isRoughAt()` check to Bresenham line trace in `targetsThroughRoughTerrain` | `app/composables/useMoveCalculation.ts` |
+| 36571e9 | Unit tests for painted rough terrain accuracy penalty (12 tests) | `app/tests/unit/composables/useMoveCalculation.test.ts` |
+| 308f9ab | Fix Vue globals in test environment | `app/tests/unit/composables/useMoveCalculation.test.ts` |
+
+**Branch:** `slave/4-developer-ptu-rule-108-20260227`
+
+**What changed:** `getRoughTerrainPenalty()` now checks both enemy-occupied cells (decree-003) AND painted terrain cells with rough flag (decree-010) along the Bresenham line-of-fire trace. The function `targetsThroughEnemyRoughTerrain` was renamed to `targetsThroughRoughTerrain` to reflect both sources.
