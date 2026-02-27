@@ -1,8 +1,9 @@
-import type { Move, Combatant, Pokemon, HumanCharacter, GridPosition, StatusCondition } from '~/types'
-import { ZERO_EVASION_CONDITIONS } from '~/constants/statusConditions'
+import type { Move, Combatant, Pokemon, HumanCharacter, GridPosition } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
+import { computeTargetEvasions, getEffectivenessClass } from '~/utils/evasionCalculation'
+import type { EvasionDependencies } from '~/utils/evasionCalculation'
 import { useTerrainStore } from '~/stores/terrain'
 import { isEnemySide } from '~/utils/combatSides'
 import { naturewalkBypassesTerrain } from '~/utils/combatantCapabilities'
@@ -347,70 +348,23 @@ export function useMoveCalculation(
     return stages.accuracy || 0
   })
 
-  /**
-   * Compute all three evasion values for a target, including Focus bonuses
-   * and equipment evasion. Returns physical, special, and speed evasion
-   * with the evasion bonus already applied.
-   *
-   * PTU p.234 (07-combat.md:648-653): Evasion bonus from moves/effects is additive,
-   * stacking on top of stat-derived evasion. This is NOT a combat stage multiplier.
-   * PTU p.294-295: Equipment evasion bonus (shields) and Focus stat bonuses.
-   */
-  const computeTargetEvasions = (target: Combatant): {
-    physical: number
-    special: number
-    speed: number
-  } => {
-    const entity = target.entity
-
-    // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0
-    // Check both entity.statusConditions and combatant.tempConditions
-    // (Take a Breather applies Vulnerable via tempConditions)
-    const hasZeroEvasionCondition = entity.statusConditions?.some(
-      (c: StatusCondition) => ZERO_EVASION_CONDITIONS.includes(c)
-    ) || target.tempConditions?.some(
-      (c: string) => (ZERO_EVASION_CONDITIONS as readonly string[]).includes(c)
-    )
-    if (hasZeroEvasionCondition) {
-      return { physical: 0, special: 0, speed: 0 }
-    }
-
-    const stages = getStageModifiers(entity)
-
-    let evasionBonus = stages.evasion ?? 0
-    let focusDefBonus = 0
-    let focusSpDefBonus = 0
-    let focusSpeedBonus = 0
-    if (target.type === 'human') {
-      const equipBonuses = computeEquipmentBonuses((entity as HumanCharacter).equipment ?? {})
-      evasionBonus += equipBonuses.evasionBonus
-      focusDefBonus = equipBonuses.statBonuses.defense ?? 0
-      focusSpDefBonus = equipBonuses.statBonuses.specialDefense ?? 0
-      focusSpeedBonus = equipBonuses.statBonuses.speed ?? 0
-    }
-
-    const speedStat = target.type === 'pokemon'
-      ? getPokemonSpeedStat(entity)
-      : getHumanStat(entity, 'speed')
-    const defStat = target.type === 'pokemon'
-      ? getPokemonDefenseStat(entity)
-      : getHumanStat(entity, 'defense')
-    const spDefStat = target.type === 'pokemon'
-      ? getPokemonSpDefStat(entity)
-      : getHumanStat(entity, 'specialDefense')
-
-    return {
-      physical: calculatePhysicalEvasion(defStat, stages.defense, evasionBonus, focusDefBonus),
-      special: calculateSpecialEvasion(spDefStat, stages.specialDefense, evasionBonus, focusSpDefBonus),
-      speed: calculateSpeedEvasion(speedStat, stages.speed, evasionBonus, focusSpeedBonus)
-    }
+  // Build dependency bag for the extracted evasion utility
+  const evasionDeps: EvasionDependencies = {
+    getStageModifiers,
+    getPokemonDefenseStat,
+    getPokemonSpDefStat,
+    getPokemonSpeedStat,
+    getHumanStat,
+    calculatePhysicalEvasion,
+    calculateSpecialEvasion,
+    calculateSpeedEvasion
   }
 
   const getTargetEvasion = (targetId: string): number => {
     const target = targets.value.find(t => t.id === targetId)
     if (!target || !target.entity) return 0
 
-    const evasions = computeTargetEvasions(target)
+    const evasions = computeTargetEvasions(target, evasionDeps)
 
     // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
     // Auto-select the highest applicable evasion (rational defender always picks best).
@@ -430,7 +384,7 @@ export function useMoveCalculation(
     const target = targets.value.find(t => t.id === targetId)
     if (!target || !target.entity) return 'Evasion'
 
-    const evasions = computeTargetEvasions(target)
+    const evasions = computeTargetEvasions(target, evasionDeps)
 
     if (move.value.damageClass === 'Physical') {
       return evasions.speed > evasions.physical ? 'Speed Evasion' : 'Phys Evasion'
@@ -581,15 +535,6 @@ export function useMoveCalculation(
     if (!effectiveDB.value) return null
     return getDamageRoll(effectiveDB.value)
   })
-
-  const getEffectivenessClass = (effectiveness: number): string => {
-    if (effectiveness === 0) return 'immune'
-    if (effectiveness <= 0.25) return 'double-resist'
-    if (effectiveness < 1) return 'resist'
-    if (effectiveness >= 2) return 'double-super'
-    if (effectiveness > 1) return 'super'
-    return 'neutral'
-  }
 
   const targetDamageCalcs = computed((): Record<string, TargetDamageCalc> => {
     if (!hasRolledDamage.value || !damageRollResult.value) return {}
