@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 // Shared Sheet Page Styles
 // Used by pokemon/[id].vue and characters/[id].vue for consistent
 // entity sheet layouts (header, tabs, content, loading states).

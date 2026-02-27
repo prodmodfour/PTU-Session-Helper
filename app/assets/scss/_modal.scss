@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 // Shared Modal Mixins
 // These mixins provide scoped modal styles for Vue components.
 // Use @include in <style scoped> blocks where global .modal classes
