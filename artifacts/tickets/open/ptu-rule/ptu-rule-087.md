@@ -35,3 +35,4 @@ All generated Pokemon have incorrect tutor point counts. Affects wild spawns, te
 ## Fix Log
 
 - **00b2f1f** — Added `tutorPoints` field to `GeneratedPokemonData` interface. Added calculation `tutorPoints = 1 + Math.floor(level / 5)` in `generatePokemonData()`. Passed computed value to `createPokemonRecord()` (Prisma write) and `createdPokemonToEntity()` (combatant entity). Files: `app/server/services/pokemon-generator.service.ts`.
+- **7a1e409** — (code-review-194 CRITICAL-1 fix) Added missing `tutorPoints: 1 + Math.floor(pokemon.level / 5)` to the CSV import `GeneratedPokemonData` object literal. This code path builds `GeneratedPokemonData` manually (not via `generatePokemonData()`) and was missing the field after it became required. Files: `app/server/services/csv-import.service.ts`.
