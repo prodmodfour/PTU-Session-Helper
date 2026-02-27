@@ -21,8 +21,15 @@
       </div>
     </div>
 
-    <p v-if="!trainerClasses?.length && !features?.length && !edges?.length" class="empty-state">
-      No classes, features, or edges recorded
+    <div v-if="capabilities?.length" class="info-section">
+      <h4>Capabilities</h4>
+      <div class="tag-list">
+        <span v-for="cap in capabilities" :key="cap" class="tag tag--capability">{{ cap }}</span>
+      </div>
+    </div>
+
+    <p v-if="!trainerClasses?.length && !features?.length && !edges?.length && !capabilities?.length" class="empty-state">
+      No classes, features, edges, or capabilities recorded
     </p>
   </div>
 </template>
@@ -32,6 +39,7 @@ defineProps<{
   trainerClasses?: string[]
   features?: string[]
   edges?: string[]
+  capabilities?: string[]
 }>()
 </script>
 
@@ -81,6 +89,12 @@ defineProps<{
     background: rgba($color-warning, 0.15);
     border-color: rgba($color-warning, 0.3);
     color: $color-warning;
+  }
+
+  &--capability {
+    background: rgba($color-success, 0.15);
+    border-color: rgba($color-success, 0.3);
+    color: $color-success;
   }
 }
 

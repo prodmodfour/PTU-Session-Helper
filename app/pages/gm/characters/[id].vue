@@ -187,8 +187,27 @@
             </div>
           </div>
 
-          <p v-if="!character.trainerClasses?.length && !character.features?.length && !character.edges?.length" class="empty-state">
-            No classes, features, or edges recorded
+          <div v-if="character.capabilities?.length || isEditing" class="info-section">
+            <h4>Capabilities</h4>
+            <template v-if="isEditing">
+              <p class="info-section__hint">
+                Comma-separated list of trainer capabilities (e.g. Naturewalk (Forest), Naturewalk (Mountain))
+              </p>
+              <input
+                type="text"
+                class="form-input"
+                :value="(editData.capabilities || []).join(', ')"
+                @change="onCapabilitiesChange($event)"
+                placeholder="Naturewalk (Forest), Naturewalk (Ocean)"
+              />
+            </template>
+            <div v-else class="tag-list">
+              <span v-for="cap in character.capabilities" :key="cap" class="tag tag--capability">{{ cap }}</span>
+            </div>
+          </div>
+
+          <p v-if="!character.trainerClasses?.length && !character.features?.length && !character.edges?.length && !character.capabilities?.length" class="empty-state">
+            No classes, features, edges, or capabilities recorded
           </p>
         </div>
 
@@ -406,6 +425,16 @@ const cancelEditing = () => {
   router.replace({ query: {} })
 }
 
+/** Parse comma-separated capabilities string into a clean array */
+const onCapabilitiesChange = (event: Event) => {
+  const input = (event.target as HTMLInputElement).value
+  const parsed = input
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+  editData.value = { ...editData.value, capabilities: parsed }
+}
+
 const saveChanges = async () => {
   if (!character.value) return
 
@@ -604,6 +633,18 @@ const saveChanges = async () => {
     background: rgba($color-info, 0.2);
     color: $color-info;
   }
+
+  &--capability {
+    background: rgba($color-success, 0.15);
+    color: $color-success;
+  }
+}
+
+.info-section__hint {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  margin-bottom: $spacing-sm;
+  font-style: italic;
 }
 
 .skills-grid {

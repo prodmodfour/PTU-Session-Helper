@@ -191,6 +191,7 @@
                 :trainer-classes="humanData.trainerClasses"
                 :features="humanData.features"
                 :edges="humanData.edges"
+                :capabilities="humanData.capabilities"
               />
               <HumanSkillsTab
                 v-if="activeTab === 'skills'"
