@@ -1,3 +1,10 @@
+/**
+ * POST /api/encounters/:id/next-turn
+ *
+ * Advances the encounter to the next combatant's turn.
+ * For League Battles (decree-021): declaration -> resolution -> pokemon -> new round
+ * For Full Contact: standard linear turn progression
+ */
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
 
@@ -43,7 +50,11 @@ export default defineEventHandler(async (event) => {
     let weatherDuration = encounter.weatherDuration ?? 0
     let weatherSource = encounter.weatherSource
 
+    // Track whether to clear declarations (only on new round start)
+    let clearDeclarations = false
+
     // Mark current combatant as having acted and clear temp conditions (Sprint, Tripped, etc.)
+    // During declaration phase, trainers are just declaring — still mark as acted for turn progression
     const currentCombatantId = turnOrder[currentTurnIndex]
     const currentCombatant = combatants.find((c: any) => c.id === currentCombatantId)
     if (currentCombatant) {
@@ -60,28 +71,56 @@ export default defineEventHandler(async (event) => {
     const isLeagueBattle = encounter.battleType === 'trainer'
 
     if (isLeagueBattle) {
-      // League Battle: phase-based turn progression
-      // trainer_declaration → pokemon → new round (back to trainer_declaration)
+      // League Battle: three-phase turn progression (decree-021)
+      // trainer_declaration (low→high) → trainer_resolution (high→low) → pokemon (high→low) → new round
       if (currentTurnIndex >= turnOrder.length) {
         if (currentPhase === 'trainer_declaration') {
-          // Declaration phase done → transition to Pokemon phase
+          // Declaration phase done → transition to RESOLUTION phase
+          if (trainerTurnOrder.length > 0) {
+            // Resolution order: reverse of declaration order (high-to-low speed)
+            const resolutionOrder = [...trainerTurnOrder].reverse()
+            currentPhase = 'trainer_resolution'
+            turnOrder = resolutionOrder
+            currentTurnIndex = 0
+
+            // Reset the first resolving trainer's turn state so they can execute their declared action
+            resetResolvingTrainerTurnState(combatants, turnOrder[0])
+          } else {
+            // No trainers with declarations → skip to pokemon
+            if (pokemonTurnOrder.length > 0) {
+              currentPhase = 'pokemon'
+              turnOrder = [...pokemonTurnOrder]
+              currentTurnIndex = 0
+            } else {
+              // No trainers, no pokemon → new round
+              currentRound++
+              currentTurnIndex = 0
+              clearDeclarations = true
+              resetCombatantsForNewRound(combatants)
+              ;({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
+            }
+          }
+        } else if (currentPhase === 'trainer_resolution') {
+          // Resolution phase done → transition to Pokemon phase
           if (pokemonTurnOrder.length > 0) {
             currentPhase = 'pokemon'
             turnOrder = [...pokemonTurnOrder]
             currentTurnIndex = 0
           } else {
-            // No Pokemon — start new round with trainer declarations
+            // No Pokemon → start new round with trainer declarations
             currentPhase = trainerTurnOrder.length > 0 ? 'trainer_declaration' : 'pokemon'
             turnOrder = trainerTurnOrder.length > 0 ? [...trainerTurnOrder] : [...pokemonTurnOrder]
             currentTurnIndex = 0
             currentRound++
-            resetCombatantsForNewRound(combatants);
-            ({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
+            clearDeclarations = true
+            resetCombatantsForNewRound(combatants)
+            ;({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
           }
         } else {
           // Pokemon phase done → new round starts with trainer declarations
           currentTurnIndex = 0
           currentRound++
+          clearDeclarations = true
           resetCombatantsForNewRound(combatants)
 
           if (trainerTurnOrder.length > 0) {
@@ -94,6 +133,10 @@ export default defineEventHandler(async (event) => {
 
           ;({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
         }
+      } else if (currentPhase === 'trainer_resolution') {
+        // Mid-resolution: reset the next resolving trainer's turn state
+        // so they can execute their declared action
+        resetResolvingTrainerTurnState(combatants, turnOrder[currentTurnIndex])
       }
     } else {
       // Full Contact: standard linear turn progression
@@ -105,21 +148,29 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    const updateData: Record<string, unknown> = {
+      currentTurnIndex,
+      currentRound,
+      currentPhase,
+      turnOrder: JSON.stringify(turnOrder),
+      combatants: JSON.stringify(combatants),
+      weather,
+      weatherDuration,
+      weatherSource
+    }
+
+    if (clearDeclarations) {
+      updateData.declarations = JSON.stringify([])
+    }
+
     const updatedRecord = await prisma.encounter.update({
       where: { id },
-      data: {
-        currentTurnIndex,
-        currentRound,
-        currentPhase,
-        turnOrder: JSON.stringify(turnOrder),
-        combatants: JSON.stringify(combatants),
-        weather,
-        weatherDuration,
-        weatherSource
-      }
+      data: updateData
     })
 
-    const response = buildEncounterResponse(updatedRecord, combatants)
+    const response = buildEncounterResponse(updatedRecord, combatants, {
+      ...(clearDeclarations && { declarations: [] })
+    })
 
     return { success: true, data: response }
   } catch (error: unknown) {
@@ -131,6 +182,28 @@ export default defineEventHandler(async (event) => {
     })
   }
 })
+
+/**
+ * Reset a trainer's turn state during resolution phase so they can execute
+ * their declared action. Trainers get fresh action economy during resolution.
+ * Acceptable mutation here because combatants are freshly parsed from JSON.
+ */
+function resetResolvingTrainerTurnState(combatants: any[], combatantId: string) {
+  const trainer = combatants.find((c: any) => c.id === combatantId)
+  if (trainer) {
+    trainer.hasActed = false
+    trainer.actionsRemaining = 2
+    trainer.shiftActionsRemaining = 1
+    trainer.turnState = {
+      hasActed: false,
+      standardActionUsed: false,
+      shiftActionUsed: false,
+      swiftActionUsed: false,
+      canBeCommanded: true,
+      isHolding: false
+    }
+  }
+}
 
 /**
  * Reset all combatants for a new round by mutating each object in the array.
