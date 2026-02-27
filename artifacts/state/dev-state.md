@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-27T10:20:00
-updated_by: slave-collector (plan-20260227-100046)
+last_updated: 2026-02-27T19:57:00
+updated_by: slave-collector (plan-20260227-190000)
 ---
 
 # Dev Ecosystem State
@@ -38,8 +38,8 @@ updated_by: slave-collector (plan-20260227-100046)
 | ptu-rule-088 | P3 | **resolved** | Significance tier presets realigned. code-review-199 APPROVED (re-review of fix cycle). rules-review-171 APPROVED (M1: overlapping tier boundaries → ux-010) |
 | ptu-rule-089 | P3 | **resolved** | Extended rest daily move refresh. APPROVED: code-review-196 + rules-review-173 (plan-20260227-174900). M1: app-surface.md → refactoring-089. M2: ticket status → resolved |
 | ptu-rule-090 | P3 | **resolved** | Scene-end AP restoration already implemented (confirmed by code-review-196 + rules-review-173). No code changes needed. APPROVED |
-| ptu-rule-091 | P3 | **implemented, needs review** | Branch class specialization suffix per decree-022. isBranching flag now drives branching behavior. Specialization stored as 'ClassName: Specialization'. 5 commits (plan-20260227-100046 slave-4) |
-| ptu-rule-092 | P3 | **open** | Pathetic skill enforcement gap in custom background mode (from character-lifecycle-audit R024) |
+| ptu-rule-091 | P3 | **CHANGES_REQUIRED** | Branch class specialization suffix per decree-022. code-review-200 CHANGES_REQUIRED (C1: Martial Artist not [Branch], H1: branching picker at max slots). rules-review-176 CHANGES_REQUIRED (CRITICAL-001: HP in Stat Ace, HIGH-001: Researcher fields wrong, HIGH-002: Martial Artist not branching). Fix cycle needed. Blocked on decree-need-026 (Martial Artist) |
+| ptu-rule-092 | P3 | **implemented, needs review** | Pathetic skill enforcement gap in custom background mode. 3 commits (plan-20260227-190000 slave-2): Pathetic tracking in composable, UI wiring, ticket update |
 | ptu-rule-093 | P3 | **resolved** | Rough terrain accuracy penalty — resolved by ptu-rule-108 fix. APPROVED: code-review-195 + rules-review-172 (plan-20260227-174900) |
 | ptu-rule-094 | P4 | **open** | Natural healing min(1) HP contradicts PTU for low-HP entities (from healing-audit R007) |
 | ptu-rule-095 | P4 | **open** | Disengage maneuver missing from combatManeuvers — defer until AoO implemented (from vtt-grid-audit R030) |
@@ -54,12 +54,12 @@ updated_by: slave-collector (plan-20260227-100046)
 | ptu-rule-104 | P1 | **resolved** | Type-immunity enforcement. code-review-197 APPROVED + rules-review-174 APPROVED (re-review of fix cycle 2). All type-immunity pairs correct per PTU p.239 |
 | ptu-rule-105 | P2 | **resolved** | Extended rest preserves Bound AP (clears only Drained AP) per decree-016. code-review-188 APPROVED, rules-review-165 APPROVED |
 | ptu-rule-106 | P2 | **resolved** | Extended rest duration parameter (4-8h, default 4). Scalable healing periods with 8h daily cap. Per decree-018. code-review-188 APPROVED, rules-review-165 APPROVED |
-| ptu-rule-107 | P2 | **P0-CHANGES_REQUIRED** | League Battle two-phase trainer system. P0 implemented (10 commits). code-review-198 CHANGES_REQUIRED (C1: tempConditions cleared during declaration, H1: hasActed inconsistency during resolution, H2: missing app-surface entry). rules-review-175 APPROVED (2 M: P1 scope). Fix cycle needed |
+| ptu-rule-107 | P2 | **P0-fix-cycle-done, needs re-review** | League Battle two-phase trainer system. P0 fix cycle complete (5 commits, plan-20260227-190000 slave-1): C1 tempConditions skip during declaration, H1 reset all trainers at phase transition, H2 app-surface.md updated, M2 unit tests added. Needs re-review |
 | ptu-rule-108 | P2 | **resolved** | Rough terrain accuracy penalty for painted terrain. APPROVED: code-review-195 + rules-review-172 (plan-20260227-174900). MED-1: Naturewalk gap → ptu-rule-112 (existing). MED-2: "through" ambiguity → decree-need-025 |
 | ptu-rule-109 | P3 | **resolved** | Legendary species list complete. APPROVED: code-review-191 + rules-review-168. 100 total species (Meltan/Melmetal/Zarude/Enamorus added) |
 | ptu-rule-110 | P2 | **resolved** | Encounter end resets combat stages. APPROVED: code-review-191 + rules-review-168. stageModifiers + stageSources reset to defaults |
 | ptu-rule-111 | P2 | **resolved** | tempConditions Vulnerable zero evasion. APPROVED: code-review-191 + rules-review-168. Both client + server checks inspect tempConditions |
-| ptu-rule-112 | P3 | **implemented, needs review** | Naturewalk capability terrain bypass. 5 commits (plan-20260227-100046 slave-5): terrain mapping constants, extraction utilities, movement cost bypass, accuracy penalty bypass |
+| ptu-rule-112 | P3 | **CHANGES_REQUIRED** | Naturewalk capability terrain bypass. code-review-201 CHANGES_REQUIRED (HIGH-1: no unit tests, MED-1: app-surface.md, MED-2: regex fragility comment). rules-review-177 APPROVED (all PTU mechanics correct, decree-003/010/025 compliant). Fix cycle needed |
 | ptu-rule-113 | P2 | **resolved** | Burst shapes use PTU diagonal distance (per decree-023). APPROVED: code-review-189 + rules-review-166. Burst 2 = 21 cells (not 25 Chebyshev) |
 | ptu-rule-114 | P4 | **open** | Assisted breather variant not implemented (from rules-review-169 note on ptu-rule-099+104 re-review) |
 
@@ -86,7 +86,16 @@ updated_by: slave-collector (plan-20260227-100046)
 
 ## Active Developer Work
 
-**Current task:** Session 48 collection complete. All 5 slaves merged (15 commits). 2 developer slaves: ptu-rule-091 (slave-4, 5 commits), ptu-rule-112 (slave-5, 5 commits). 3 reviewer slaves: slave-1 APPROVED (ptu-rule-099+104), slave-2 CHANGES_REQUIRED (ptu-rule-107), slave-3 APPROVED (ptu-rule-086+087+088). 5 tickets resolved (ptu-rule-086, 087, 088, 099, 104). 0 tickets filed.
+**Current task:** Session 49 collection complete. All 4 slaves merged (12 commits). 2 developer slaves: ptu-rule-107-fix (slave-1, 5 commits), ptu-rule-092 (slave-2, 3 commits). 2 reviewer slaves: slave-3 CHANGES_REQUIRED (ptu-rule-091), slave-4 CHANGES_REQUIRED (code-review-201) + APPROVED (rules-review-177) for ptu-rule-112. 0 tickets resolved. 1 ticket filed (decree-need-026).
+
+**Session 49 (2026-02-27, plan-20260227-190000):**
+- slave-1 (developer): ptu-rule-107-fix — 5 commits: C1 skip tempConditions clearing during declaration phase, H1 reset hasActed for all trainers at declaration→resolution transition, H2 declare endpoint in app-surface.md, M2 unit tests for three-phase flow, ticket resolution log → **P0-fix-cycle-done, needs re-review**
+- slave-2 (developer): ptu-rule-092 — 3 commits: Pathetic skill tracking in useCharacterCreation composable, UI wiring through SkillBackgroundSection + create page, ticket update → **implemented, needs review**
+- slave-3 (reviewers): ptu-rule-091 — code-review-200 **CHANGES_REQUIRED** (C1: Martial Artist not [Branch] per PTU, H1: branching picker at max slots, M1: Researcher two-field simplification, M2: countClassInstances dead code). rules-review-176 **CHANGES_REQUIRED** (CRITICAL-001: HP in Stat Ace specializations, HIGH-001: Researcher fields wrong, HIGH-002: Martial Artist not branching → decree-need-026)
+- slave-4 (reviewers): ptu-rule-112 — code-review-201 **CHANGES_REQUIRED** (HIGH-1: no unit tests, MED-1: app-surface.md not updated, MED-2: regex fragility comment). rules-review-177 **APPROVED** (all 10 PTU mechanics verified, decree-003/010/025 compliant)
+- **Merge notes:** 0 conflicts. All 4 rebased cleanly. 12 commits total
+- **Tickets filed:** decree-need-026 (Martial Artist branching class status — decree-022 vs PTU RAW conflict)
+- **Tickets resolved:** none
 
 **Session 48 (2026-02-27, plan-20260227-100046):**
 - slave-4 (developer): ptu-rule-091 — 5 commits: branching class specialization suffix per decree-022. Constants, helpers, addClass prefix matching, specialization dropdown UI → **implemented, needs review**

@@ -179,3 +179,7 @@
 | plan-20260227-100046/slave-3 | reviewer | ptu-rule-086+087+088-rereview | APPROVED | 2026-02-27T10:04:30Z | 2fd4b3b |
 | plan-20260227-100046/slave-4 | developer | ptu-rule-091 | success | 2026-02-27T10:07:00Z | 69f53a0, 572f99f, ef9b512, 57c0aee, 89e11bc |
 | plan-20260227-100046/slave-5 | developer | ptu-rule-112 | success | 2026-02-27T10:11:30Z | d011884, a30a2b2, a61e3f4, 381aadf, fdcd3c9 |
+| plan-20260227-190000/slave-1 | developer | ptu-rule-107-fix | success | 2026-02-27T19:57:00Z | 11a42f3, 8a3e507, b90f089, 06bcb11, 9418d96 |
+| plan-20260227-190000/slave-2 | developer | ptu-rule-092 | success | 2026-02-27T19:11:00Z | 86c5731d, 4b306b93, 34818328 |
+| plan-20260227-190000/slave-3 | reviewers | ptu-rule-091 | CHANGES_REQUIRED | 2026-02-27T19:13:00Z | 6633d4c9, da43c056 |
+| plan-20260227-190000/slave-4 | reviewers | ptu-rule-112 | CHANGES_REQUIRED | 2026-02-27T19:12:00Z | 432999174857, 5f79b143063 |
