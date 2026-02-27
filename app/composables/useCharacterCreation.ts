@@ -23,7 +23,7 @@ import {
   getExpectedFeaturesForLevel,
   isSkillRankAboveCap
 } from '~/constants/trainerStats'
-import { MAX_TRAINER_CLASSES, hasBaseClass, getBaseClassName } from '~/constants/trainerClasses'
+import { MAX_TRAINER_CLASSES, hasBaseClass } from '~/constants/trainerClasses'
 import { validateStatAllocation, validateSkillBackground, validateEdgesAndFeatures } from '~/utils/characterCreationValidation'
 import type { CreationWarning } from '~/utils/characterCreationValidation'
 
