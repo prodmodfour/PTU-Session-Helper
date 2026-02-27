@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-02-27T09:40:23.791Z
-total_decrees: 24
-active: 24
+generated_at: 2026-02-27T19:30:00.000Z
+total_decrees: 25
+active: 25
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (24)
+## Active Decrees (25)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -35,3 +35,4 @@ superseded: 0
 | decree-022 | character-lifecycle | branch-class-handling | Use specialization suffix for branching classes (e.g., 'Type Ace: Fire') |
 | decree-023 | vtt-grid | burst-shape-uses-ptu-diagonal | Use PTU alternating diagonal rule for burst shapes |
 | decree-024 | vtt-grid | diagonal-cone-includes-corner-cell | Diagonal cones include the diagonal corner cell (diamond pattern) |
+| decree-025 | vtt-grid | rough-terrain-penalty-endpoint-exclusion | Exclude endpoint cells from rough terrain accuracy penalty check |

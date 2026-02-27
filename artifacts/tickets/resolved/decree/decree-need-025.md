@@ -2,7 +2,8 @@
 ticket_id: decree-need-025
 ticket_type: decree-need
 priority: P4
-status: open
+status: addressed
+decree_id: decree-025
 domain: vtt-grid
 topic: rough-terrain-penalty-endpoint-inclusion
 source: rules-review-172 MED-2
@@ -43,3 +44,7 @@ Should the -2 rough terrain accuracy penalty apply when:
 ## Impact
 
 Affects `getRoughTerrainPenalty()` in `app/composables/useMoveCalculation.ts` (lines 157-169, 191 for endpoint exclusion logic).
+
+## Resolution
+
+Addressed by decree-025. Ruling: only intervening rough terrain triggers the penalty; endpoint cells are excluded. Confirms current implementation — no code changes needed.
