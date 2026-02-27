@@ -13,13 +13,17 @@ export interface DailyMoveRefreshResult {
 }
 
 /**
- * Refresh daily-frequency moves on a single Pokemon during Extended Rest.
+ * Refresh moves on a single Pokemon during Extended Rest.
  *
- * PTU Core p.252: "Daily-Frequency Moves are also regained during an
- * Extended Rest, if the Move hasn't been used since the previous day."
+ * Daily moves (PTU Core p.252): "Daily-Frequency Moves are also regained
+ * during an Extended Rest, if the Move hasn't been used since the previous day."
  *
- * Rolling window rule: A move used today cannot be refreshed by tonight's
+ * Rolling window rule: A daily move used today cannot be refreshed by tonight's
  * Extended Rest. Only moves used before today are eligible.
+ *
+ * Non-daily moves: usedToday is reset to 0 for data hygiene. This field has
+ * no gameplay effect for non-daily frequencies (enforcement uses lastTurnUsed,
+ * usedThisScene, etc.) but stale values are cleaned up during rest.
  *
  * @param moves - The Pokemon's current moves array (parsed from JSON)
  * @returns Object with updated moves array and tracking of which were restored/skipped
@@ -28,9 +32,11 @@ export function refreshDailyMoves(moves: Move[]): {
   updatedMoves: Move[]
   restoredMoves: string[]
   skippedMoves: string[]
+  cleanedNonDaily: number
 } {
   const restoredMoves: string[] = []
   const skippedMoves: string[] = []
+  let cleanedNonDaily = 0
 
   const updatedMoves = moves.map(move => {
     const isDailyMove = move.frequency?.startsWith('Daily')
@@ -52,10 +58,19 @@ export function refreshDailyMoves(moves: Move[]): {
       }
     }
 
+    // Non-daily moves: clear stale usedToday for data hygiene
+    if (!isDailyMove && move.usedToday && move.usedToday > 0) {
+      cleanedNonDaily++
+      return {
+        ...move,
+        usedToday: 0
+      }
+    }
+
     return move
   })
 
-  return { updatedMoves, restoredMoves, skippedMoves }
+  return { updatedMoves, restoredMoves, skippedMoves, cleanedNonDaily }
 }
 
 /**
@@ -84,12 +99,12 @@ export async function refreshDailyMovesForOwnedPokemon(
 
   for (const pokemon of ownedPokemon) {
     const moves: Move[] = JSON.parse(pokemon.moves || '[]')
-    const { updatedMoves, restoredMoves, skippedMoves } = refreshDailyMoves(moves)
+    const { updatedMoves, restoredMoves, skippedMoves, cleanedNonDaily } = refreshDailyMoves(moves)
 
     const pokemonName = pokemon.nickname || pokemon.species
 
     // Only write back if something actually changed
-    if (restoredMoves.length > 0) {
+    if (restoredMoves.length > 0 || cleanedNonDaily > 0) {
       updatePromises.push(
         prisma.pokemon.update({
           where: { id: pokemon.id },

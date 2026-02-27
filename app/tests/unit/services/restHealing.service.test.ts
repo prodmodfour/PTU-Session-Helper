@@ -94,7 +94,7 @@ describe('refreshDailyMoves', () => {
     expect(result.updatedMoves[1].usedToday).toBe(1)
   })
 
-  it('does not touch At-Will, EOT, or Scene moves', () => {
+  it('does not touch At-Will, EOT, or Scene moves with usedToday 0', () => {
     const moves = [
       makeMove({ name: 'Tackle', frequency: 'At-Will', usedToday: 0 }),
       makeMove({ name: 'Flamethrower', frequency: 'EOT', usedToday: 0 }),
@@ -105,8 +105,27 @@ describe('refreshDailyMoves', () => {
 
     expect(result.restoredMoves).toEqual([])
     expect(result.skippedMoves).toEqual([])
+    expect(result.cleanedNonDaily).toBe(0)
     // All moves should be returned unchanged
     expect(result.updatedMoves).toEqual(moves)
+  })
+
+  it('clears stale usedToday on non-daily moves for data hygiene', () => {
+    const moves = [
+      makeMove({ name: 'Tackle', frequency: 'At-Will', usedToday: 3 }),
+      makeMove({ name: 'Flamethrower', frequency: 'EOT', usedToday: 2 }),
+      makeMove({ name: 'Ice Beam', frequency: 'Scene', usedToday: 1 })
+    ]
+
+    const result = refreshDailyMoves(moves)
+
+    expect(result.restoredMoves).toEqual([])
+    expect(result.skippedMoves).toEqual([])
+    expect(result.cleanedNonDaily).toBe(3)
+    // usedToday should be cleared on all non-daily moves
+    expect(result.updatedMoves[0].usedToday).toBe(0)
+    expect(result.updatedMoves[1].usedToday).toBe(0)
+    expect(result.updatedMoves[2].usedToday).toBe(0)
   })
 
   it('handles a Daily move with no usage (usedToday 0)', () => {
