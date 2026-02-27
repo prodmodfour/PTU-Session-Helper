@@ -92,6 +92,84 @@ export const TRAINER_CLASSES: TrainerClassDef[] = [
   { name: 'Warper', category: 'Supernatural', associatedSkills: ['Focus', 'Guile'], description: 'Teleportation powers' }
 ]
 
+/**
+ * Valid specializations for each branching class (decree-022).
+ *
+ * Type Ace → 18 Pokemon types
+ * Stat Ace → 6 combat stats
+ * Style Expert → 5 contest stats
+ * Researcher → fields of study (PTU Core p. 127)
+ * Martial Artist → martial art styles (PTU Core p. 143)
+ */
+export const BRANCHING_CLASS_SPECIALIZATIONS: Record<string, readonly string[]> = {
+  'Type Ace': [
+    'Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice',
+    'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug',
+    'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel', 'Fairy'
+  ],
+  'Stat Ace': ['HP', 'Attack', 'Defense', 'Special Attack', 'Special Defense', 'Speed'],
+  'Style Expert': ['Cool', 'Beautiful', 'Cute', 'Smart', 'Tough'],
+  'Researcher': [
+    'General Ed', 'Medicine Ed', 'Occult Ed', 'Pokemon Ed', 'Technology Ed'
+  ],
+  'Martial Artist': [
+    'Aura', 'Cover', 'Elemental', 'Focused', 'Form', 'Freestyle', 'Parkour', 'Weapons'
+  ]
+} as const
+
+/**
+ * Get valid specializations for a branching class, or empty array if not branching.
+ */
+export function getBranchingSpecializations(className: string): readonly string[] {
+  return BRANCHING_CLASS_SPECIALIZATIONS[className] ?? []
+}
+
+/**
+ * Check if a trainer class entry (which may include specialization suffix) has a specific base class.
+ * Per decree-022: use startsWith prefix matching for branching classes.
+ *
+ * Examples:
+ *   hasBaseClass('Type Ace: Fire', 'Type Ace') → true
+ *   hasBaseClass('Type Ace', 'Type Ace') → true
+ *   hasBaseClass('Ace Trainer', 'Type Ace') → false
+ */
+export function hasBaseClass(classEntry: string, baseName: string): boolean {
+  return classEntry === baseName || classEntry.startsWith(`${baseName}: `)
+}
+
+/**
+ * Extract the base class name from a class entry (strips specialization suffix).
+ *
+ * Examples:
+ *   getBaseClassName('Type Ace: Fire') → 'Type Ace'
+ *   getBaseClassName('Ace Trainer') → 'Ace Trainer'
+ */
+export function getBaseClassName(classEntry: string): string {
+  const colonIndex = classEntry.indexOf(': ')
+  if (colonIndex === -1) return classEntry
+  const baseName = classEntry.substring(0, colonIndex)
+  // Only strip if the base name is a known branching class
+  if (baseName in BRANCHING_CLASS_SPECIALIZATIONS) return baseName
+  return classEntry
+}
+
+/**
+ * Extract the specialization from a class entry, or null if none.
+ *
+ * Examples:
+ *   getSpecialization('Type Ace: Fire') → 'Fire'
+ *   getSpecialization('Ace Trainer') → null
+ */
+export function getSpecialization(classEntry: string): string | null {
+  const colonIndex = classEntry.indexOf(': ')
+  if (colonIndex === -1) return null
+  const baseName = classEntry.substring(0, colonIndex)
+  if (baseName in BRANCHING_CLASS_SPECIALIZATIONS) {
+    return classEntry.substring(colonIndex + 2)
+  }
+  return null
+}
+
 /** Get trainer classes grouped by category */
 export function getClassesByCategory(): Record<TrainerClassCategory, TrainerClassDef[]> {
   return TRAINER_CLASS_CATEGORIES.reduce((acc, category) => ({
