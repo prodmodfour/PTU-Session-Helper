@@ -1,19 +1,17 @@
 ---
-generated_at: 2026-02-27T13:00:34.005Z
-total_tickets: 173
-open: 18
-in_progress: 63
+generated_at: 2026-02-27T13:45:30.056Z
+total_tickets: 172
+open: 16
+in_progress: 64
 resolved: 91
 ---
 
 # Tickets Index
 
-## Open Tickets (18)
+## Open Tickets (16)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| bug-036 | bug | P0 | player-view | bug-036: Player view 500 error — SCSS rgba(currentColor, 0.1 |
-| ptu-rule-115 | ptu-rule | P2 | character-lifecycle | ptu-rule-115: Remove Martial Artist from branching classes |
 | decree-need-027 | decree | P3 | character-lifecycle | decree-need-027: Can Skill Edges raise Pathetic skills durin |
 | refactoring-002 | refactoring | P3 | vtt-grid | Legacy terrain types `'difficult'` and `'rough'` are still v |
 | bug-032 | bug | P4 | encounter-tables | bug-032: No levelMin <= levelMax validation in encounter tab |
@@ -31,10 +29,11 @@ resolved: 91
 | refactoring-090 | refactoring | P4 | healing | The `refreshDailyMoves()` function only processes daily-freq |
 | refactoring-091 | refactoring | P4 | character-lifecycle | refactoring-091: Replace alert() calls in create.vue with in |
 
-## In-Progress Tickets (63)
+## In-Progress Tickets (64)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
+| bug-036 | bug | P0 | player-view | smoke-test (plan-20260227-122512) |
 | ptu-rule-096 | ptu-rule | P0 | vtt | decree-002 |
 | ptu-rule-097 | ptu-rule | P0 | vtt | decree-003 |
 | bug-033 | bug | P0 | build | dev-server-error-log |
@@ -109,8 +108,8 @@ resolved: 91
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 2 | 8 | 26 | 36 |
-| ptu-rule | 5 | 48 | 36 | 89 |
+| bug | 1 | 9 | 26 | 36 |
+| ptu-rule | 4 | 48 | 36 | 88 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 3 | 5 | 2 | 10 |
 | decree | 1 | 0 | 26 | 27 |

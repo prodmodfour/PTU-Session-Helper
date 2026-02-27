@@ -1,8 +1,8 @@
 ---
-generated_at: 2026-02-27T13:00:33.998Z
-total_reviews: 110
+generated_at: 2026-02-27T13:45:30.046Z
+total_reviews: 111
 active_count: 83
-approved_count: 23
+approved_count: 24
 ---
 
 # Reviews Index
@@ -112,9 +112,9 @@ approved_count: 23
 
 ## Stats
 
-- Active reviews: 110
+- Active reviews: 111
 - Needs action: 83
-- Approved/Pass (active): 23
+- Approved/Pass (active): 24
 - Archived: 297
-- Total (active + archived): 407
+- Total (active + archived): 408
 - Unique targets reviewed: 51
