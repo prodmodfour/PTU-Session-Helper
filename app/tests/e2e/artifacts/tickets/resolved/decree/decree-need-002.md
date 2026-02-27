@@ -2,7 +2,8 @@
 ticket_id: decree-need-002
 ticket_type: decree-need
 priority: P0
-status: open
+status: addressed
+decree_id: decree-002
 domain: vtt
 topic: range-measurement-diagonal
 affected_files:

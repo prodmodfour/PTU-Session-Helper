@@ -258,13 +258,30 @@ function generateReviewsIndex() {
 
 function generateTicketsIndex() {
   const categories = ['bug', 'ptu-rule', 'feature', 'ux', 'decree', 'refactoring']
+  const statusDirs = ['open', 'in-progress', 'resolved']
   const allTickets = []
 
-  for (const cat of categories) {
-    const dir = join(ARTIFACTS, 'tickets', cat)
-    const tickets = readAllFrontmatter(dir)
-    for (const t of tickets) {
-      allTickets.push({ ...t, category: cat })
+  // New structure: tickets/{status}/{category}/
+  const hasNewStructure = existsSync(join(ARTIFACTS, 'tickets', 'open'))
+
+  if (hasNewStructure) {
+    for (const status of statusDirs) {
+      for (const cat of categories) {
+        const dir = join(ARTIFACTS, 'tickets', status, cat)
+        const tickets = readAllFrontmatter(dir)
+        for (const t of tickets) {
+          allTickets.push({ ...t, category: cat })
+        }
+      }
+    }
+  } else {
+    // Fallback: old flat structure tickets/{category}/
+    for (const cat of categories) {
+      const dir = join(ARTIFACTS, 'tickets', cat)
+      const tickets = readAllFrontmatter(dir)
+      for (const t of tickets) {
+        allTickets.push({ ...t, category: cat })
+      }
     }
   }
 
@@ -290,7 +307,11 @@ function generateTicketsIndex() {
     out += `|----|----------|----------|--------|--------|\n`
     for (const t of open) {
       const id = t.ticket_id || t.id || t.file.replace('.md', '')
-      const summary = getSummary(join(ARTIFACTS, 'tickets', t.category, t.file)).slice(0, 60)
+      // Try new structure first, fallback to old
+      const ticketPath = hasNewStructure
+        ? join(ARTIFACTS, 'tickets', 'open', t.category, t.file)
+        : join(ARTIFACTS, 'tickets', t.category, t.file)
+      const summary = getSummary(ticketPath).slice(0, 60)
       out += `| ${id} | ${t.category} | ${t.priority || '—'} | ${t.domain || '—'} | ${summary} |\n`
     }
   } else {
@@ -533,8 +554,11 @@ function generateGlobalIndex() {
   const refactoringFiles = listMdFiles(join(ARTIFACTS, 'refactoring'))
 
   // Open decree-needs
-  const decreeNeeds = readAllFrontmatter(join(ARTIFACTS, 'tickets', 'decree'))
-  const openDecreeNeeds = decreeNeeds.filter((d) => d.status === 'open')
+  const decreeNeedsDir = existsSync(join(ARTIFACTS, 'tickets', 'open', 'decree'))
+    ? join(ARTIFACTS, 'tickets', 'open', 'decree')
+    : join(ARTIFACTS, 'tickets', 'decree')
+  const decreeNeeds = readAllFrontmatter(decreeNeedsDir)
+  const openDecreeNeeds = decreeNeeds.filter((d) => d.status === 'open' || !d.status)
 
   let out = `---\ngenerated_at: ${new Date().toISOString()}\n---\n\n`
   out += `# Artifact Ecosystem Index\n\n`

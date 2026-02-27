@@ -2,7 +2,8 @@
 ticket_id: decree-need-006
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-006
 domain: combat
 topic: initiative-speed-cs
 affected_files:

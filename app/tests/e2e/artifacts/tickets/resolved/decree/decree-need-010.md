@@ -2,7 +2,8 @@
 ticket_id: decree-need-010
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-010
 domain: vtt
 topic: rough-slow-terrain-overlap
 affected_files:

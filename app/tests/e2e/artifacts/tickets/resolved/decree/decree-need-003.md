@@ -2,7 +2,8 @@
 ticket_id: decree-need-003
 ticket_type: decree-need
 priority: P0
-status: open
+status: addressed
+decree_id: decree-003
 domain: vtt
 topic: token-blocking-movement
 affected_files:

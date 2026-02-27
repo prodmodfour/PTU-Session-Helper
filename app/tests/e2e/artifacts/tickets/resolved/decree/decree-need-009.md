@@ -2,7 +2,8 @@
 ticket_id: decree-need-009
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-009
 domain: vtt
 topic: diagonal-line-length
 affected_files:

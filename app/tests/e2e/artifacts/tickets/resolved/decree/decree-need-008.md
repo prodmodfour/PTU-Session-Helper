@@ -2,7 +2,8 @@
 ticket_id: decree-need-008
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-008
 domain: vtt
 topic: water-terrain-cost
 affected_files:

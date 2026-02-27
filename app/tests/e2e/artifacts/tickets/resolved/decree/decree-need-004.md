@@ -2,7 +2,8 @@
 ticket_id: decree-need-004
 ticket_type: decree-need
 priority: P0
-status: open
+status: addressed
+decree_id: decree-004
 domain: combat
 topic: massive-damage-temp-hp
 affected_files:

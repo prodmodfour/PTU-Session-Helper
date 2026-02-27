@@ -2,7 +2,8 @@
 ticket_id: decree-need-005
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-005
 domain: combat
 topic: status-cs-auto-apply
 affected_files:

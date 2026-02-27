@@ -2,7 +2,8 @@
 ticket_id: decree-need-001
 ticket_type: decree-need
 priority: P0
-status: open
+status: addressed
+decree_id: decree-001
 domain: combat
 topic: minimum-damage-floor
 affected_files:

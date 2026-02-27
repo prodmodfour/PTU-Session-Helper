@@ -2,7 +2,8 @@
 ticket_id: decree-need-007
 ticket_type: decree-need
 priority: P1
-status: open
+status: addressed
+decree_id: decree-007
 domain: vtt
 topic: cone-shape-width
 affected_files:
