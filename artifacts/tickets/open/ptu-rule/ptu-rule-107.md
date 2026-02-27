@@ -2,14 +2,22 @@
 ticket_id: ptu-rule-107
 ticket_type: ptu-rule
 priority: P2
-status: open
+status: in-progress
 domain: combat
 topic: league-battle-trainer-phases
 source: decree-021
+design: design-league-battle-001
 affected_files:
   - app/types/combat.ts
+  - app/types/encounter.ts
   - app/server/api/encounters/[id]/start.post.ts
   - app/server/api/encounters/[id]/next-turn.post.ts
+  - app/server/api/encounters/[id]/declare.post.ts
+  - app/server/services/encounter.service.ts
+  - app/stores/encounter.ts
+  - app/prisma/schema.prisma
+  - app/components/encounter/DeclarationPanel.vue
+  - app/components/encounter/DeclarationSummary.vue
 created_at: 2026-02-26T18:00:00
 ---
 
@@ -37,3 +45,11 @@ Implement the two-phase trainer system for League Battles: declare (low-to-high 
 
 - The `trainer_resolution` type already exists in `combat.ts` — needs to be connected
 - Related: decree-006 (dynamic initiative with speed CS changes), decree-021
+
+## Resolution Log
+
+### Design Phase
+- Design spec created: `artifacts/designs/design-league-battle-001/`
+- P0: Core declaration/resolution flow (data model, API, phase transitions)
+- P1: UI enhancements, WebSocket sync, edge cases (faint/skip/undo)
+- Status: design-complete, awaiting implementation
