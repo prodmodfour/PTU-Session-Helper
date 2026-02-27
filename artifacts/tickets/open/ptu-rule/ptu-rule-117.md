@@ -3,7 +3,7 @@ id: ptu-rule-117
 title: Style Expert specialization 'Beautiful' should be 'Beauty' per PTU contest stat naming
 priority: P4
 severity: LOW
-status: open
+status: in-progress
 domain: character-lifecycle
 source: rules-review-183 MEDIUM-001 (pre-existing issue from commit 69f53a0)
 created_by: slave-collector (plan-20260228-000430)
@@ -24,3 +24,10 @@ Change `'Beautiful'` to `'Beauty'` in the Style Expert specialization array. Als
 ## Impact
 
 LOW — cosmetic naming discrepancy. The specialization works correctly regardless of the naming choice. However, it should match the canonical PTU contest stat name for consistency with rulebook references.
+
+## Resolution Log
+
+- **Commit:** 79340ab — `fix: correct Style Expert specialization 'Beautiful' to 'Beauty'`
+- **Files changed:** `app/constants/trainerClasses.ts` (1 line)
+- **Change:** `'Beautiful'` → `'Beauty'` in `BRANCHING_CLASS_SPECIALIZATIONS['Style Expert']`
+- **Note:** No database migration needed — existing characters with `'Style Expert: Beautiful'` would need manual correction by the GM if any exist, but this is a data-entry constant not stored in the DB schema.
