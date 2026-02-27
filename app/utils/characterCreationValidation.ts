@@ -121,6 +121,22 @@ export function validateSkillBackground(
     })
   }
 
+  // decree-027: Warn if any Skill Edge references a Pathetic-locked skill
+  if (patheticSkills.length > 0) {
+    const patheticEdgeSkills = edges
+      .map(e => e.match(/^Skill Edge: (.+)$/)?.[1])
+      .filter((s): s is string => s != null && patheticSkills.includes(s))
+
+    if (patheticEdgeSkills.length > 0) {
+      const uniqueSkills = [...new Set(patheticEdgeSkills)]
+      warnings.push({
+        section: 'skills',
+        message: `Skill Edge(s) reference Pathetic-locked skill(s): ${uniqueSkills.join(', ')}. Pathetic skills cannot be raised during creation — not even by Skill Edges (PTU pp. 14, 18; decree-027)`,
+        severity: 'warning'
+      })
+    }
+  }
+
   // Skill rank cap validation based on level
   const maxRank = getMaxSkillRankForLevel(level)
   const overCapSkills: string[] = []
