@@ -3,7 +3,7 @@ id: ptu-rule-115
 title: Remove Martial Artist from branching classes
 priority: P2
 severity: MEDIUM
-status: open
+status: resolved
 domain: character-lifecycle
 source: decree-026
 created_at: 2026-02-27
@@ -35,3 +35,11 @@ Per decree-026, Martial Artist is `[Class]` only (PTU Core p.161) and should NOT
 ## PTU Reference
 
 PTU Core p.161: Martial Artist `[Class]` — no `[Branch]` tag.
+
+## Resolution
+
+Resolved as part of ptu-rule-091 fix cycle 2.
+
+- `93eb8d3` fix: remove Martial Artist from branching classes per decree-026
+- decree-022 preamble already updated in prior commit (a3ca002)
+- All 3 required changes in `trainerClasses.ts` completed: isBranching removed, BRANCHING_CLASS_SPECIALIZATIONS entry removed, comment updated
