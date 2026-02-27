@@ -67,3 +67,10 @@ Type-immunity mapping exists client-side in `useTypeChart.ts` (lines 12-20), but
 **Fixes:**
 - **MED-2** (4294073): `StatusConditionsModal.vue` — replaced `.push()` and `.splice()` in `toggleStatus` with immutable patterns (`[...arr, item]` and `.filter()`)
 - **MED-1** (1d43b60): `app-surface.md` — added `typeStatusImmunity.ts` utility and new service functions (calculateCurrentInitiative, reorderInitiativeAfterSpeedChange, saveInitiativeReorder)
+
+### Fix Cycle 2 (code-review-192 CRITICAL-1 — shared with ptu-rule-099)
+
+**Commits:** 65cfcc8
+
+**Fixes:**
+- **CRITICAL-1** (65cfcc8): `stages.post.ts` — fixed false-positive speedChanged detection that triggered initiative reorders on all stage changes (shared endpoint with ptu-rule-099)

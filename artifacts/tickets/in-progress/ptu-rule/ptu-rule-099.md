@@ -68,3 +68,10 @@ Initiative is currently static — calculated once at encounter start. Per decre
 - **HIGH-1** (89615d4): `stages.post.ts` — replaced `'speed' in body.changes` with `stageResult.changes.speed?.change !== 0` to only trigger reorder on actual speed CS value changes
 - **HIGH-2** (f48c4a6): `next-turn.post.ts` — added full `turnState` reset to `resetCombatantsForNewRound` (hasActed, standardActionUsed, shiftActionUsed, swiftActionUsed, canBeCommanded, isHolding)
 - **MED-3** (d7df3c9): `breather.post.ts` — track speed CS before/after reset+reapply cycle, only trigger initiative reorder when speed actually changed
+
+### Fix Cycle 2 (code-review-192 CRITICAL-1 + rules-review-169 HIGH-1)
+
+**Commits:** 65cfcc8
+
+**Fixes:**
+- **CRITICAL-1** (65cfcc8): `stages.post.ts` — replaced `stageResult.changes.speed?.change !== 0` with `stageResult.changes.speed != null && stageResult.changes.speed.change !== 0` to prevent false-positive initiative reorders on non-speed stage changes (`undefined !== 0` was always true)
