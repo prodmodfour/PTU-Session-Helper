@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-02-27T11:11:36.057Z
-total_decrees: 25
-active: 25
+generated_at: 2026-02-27T12:14:46.791Z
+total_decrees: 26
+active: 26
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (25)
+## Active Decrees (26)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -36,3 +36,4 @@ superseded: 0
 | decree-023 | vtt-grid | burst-shape-uses-ptu-diagonal | Use PTU alternating diagonal rule for burst shapes |
 | decree-024 | vtt-grid | diagonal-cone-includes-corner-cell | Diagonal cones include the diagonal corner cell (diamond pattern) |
 | decree-025 | vtt-grid | rough-terrain-penalty-endpoint-exclusion | Exclude endpoint cells from rough terrain accuracy penalty check |
+| decree-026 | character-lifecycle | martial-artist-not-branching | Remove Martial Artist from branching classes (align with PTU RAW) |

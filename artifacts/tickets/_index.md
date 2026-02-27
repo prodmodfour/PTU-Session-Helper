@@ -1,17 +1,22 @@
 ---
-generated_at: 2026-02-27T11:11:36.051Z
-total_tickets: 164
-open: 14
+generated_at: 2026-02-27T12:14:46.784Z
+total_tickets: 171
+open: 19
 in_progress: 60
-resolved: 89
+resolved: 91
 ---
 
 # Tickets Index
 
-## Open Tickets (14)
+## Open Tickets (19)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| bug-033 | bug | P0 | build | bug-033: SCSS mixin files fail — @use module scoping breaks  |
+| bug-034 | bug | P0 | build | bug-034: @phosphor-icons/vue not installed — TerrainPainter  |
+| bug-035 | bug | P0 | build | bug-035: LevelUpNotification.vue references 6 missing phosph |
+| ptu-rule-115 | ptu-rule | P2 | character-lifecycle | ptu-rule-115: Remove Martial Artist from branching classes |
+| decree-need-027 | decree | P3 | character-lifecycle | decree-need-027: Can Skill Edges raise Pathetic skills durin |
 | refactoring-002 | refactoring | P3 | vtt-grid | Legacy terrain types `'difficult'` and `'rough'` are still v |
 | bug-032 | bug | P4 | encounter-tables | bug-032: No levelMin <= levelMax validation in encounter tab |
 | ptu-rule-094 | ptu-rule | P4 | healing | ptu-rule-094: Natural healing minimum 1 HP contradicts PTU f |
@@ -25,7 +30,7 @@ resolved: 89
 | refactoring-088 | refactoring | P4 | vtt-grid | `combatantsOnGrid` in `useMoveCalculation.ts` falls back to  |
 | refactoring-089 | refactoring | P4 | healing | The new `rest-healing.service.ts` service file exports `refr |
 | refactoring-090 | refactoring | P4 | healing | The `refreshDailyMoves()` function only processes daily-freq |
-| decree-need-026 | decree | — | character-lifecycle | decree-022 lists Martial Artist as a branching class: "PTU a |
+| refactoring-091 | refactoring | P4 | character-lifecycle | refactoring-091: Replace alert() calls in create.vue with in |
 
 ## In-Progress Tickets (60)
 
@@ -96,15 +101,15 @@ resolved: 89
 
 | ID | Priority | Domain | Topic |
 |----|----------|--------|-------|
-| decree-need-026 | — | character-lifecycle | martial-artist-branch-status |
+| decree-need-027 | P3 | character-lifecycle | pathetic-skill-edge-raw-conflict |
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 5 | 26 | 32 |
-| ptu-rule | 3 | 48 | 35 | 86 |
+| bug | 4 | 5 | 26 | 35 |
+| ptu-rule | 4 | 48 | 36 | 88 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 3 | 5 | 2 | 10 |
-| decree | 1 | 0 | 25 | 26 |
-| refactoring | 6 | 1 | 0 | 7 |
+| decree | 1 | 0 | 26 | 27 |
+| refactoring | 7 | 1 | 0 | 8 |
