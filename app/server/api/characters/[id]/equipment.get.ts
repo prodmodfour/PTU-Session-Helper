@@ -1,5 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
-import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
+import { computeEquipmentBonuses, getEquipmentGrantedCapabilities } from '~/utils/equipmentBonuses'
 import type { EquipmentSlots } from '~/types/character'
 
 /**
@@ -31,12 +31,14 @@ export default defineEventHandler(async (event) => {
 
     const slots: EquipmentSlots = JSON.parse(character.equipment || '{}')
     const aggregateBonuses = computeEquipmentBonuses(slots)
+    const grantedCapabilities = getEquipmentGrantedCapabilities(slots)
 
     return {
       success: true,
       data: {
         slots,
-        aggregateBonuses
+        aggregateBonuses,
+        grantedCapabilities
       }
     }
   } catch (error: any) {

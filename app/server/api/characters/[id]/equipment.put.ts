@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { prisma } from '~/server/utils/prisma'
-import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
+import { computeEquipmentBonuses, getEquipmentGrantedCapabilities } from '~/utils/equipmentBonuses'
 import { EQUIPMENT_SLOTS } from '~/constants/equipment'
 import type { EquipmentSlots, EquipmentSlot } from '~/types/character'
 
@@ -158,12 +158,14 @@ export default defineEventHandler(async (event) => {
     })
 
     const aggregateBonuses = computeEquipmentBonuses(updatedEquipment)
+    const grantedCapabilities = getEquipmentGrantedCapabilities(updatedEquipment)
 
     return {
       success: true,
       data: {
         slots: updatedEquipment,
-        aggregateBonuses
+        aggregateBonuses,
+        grantedCapabilities
       }
     }
   } catch (error: any) {
