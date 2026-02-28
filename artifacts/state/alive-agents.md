@@ -224,3 +224,7 @@
 | plan-20260228-072000/slave-2 | matrix | audit-combat+capture | success | 2026-02-28T07:45:00Z | b257c8a, 984683d |
 | plan-20260228-072000/slave-3 | matrix | audit-healing+pokemon+encounter | success | 2026-02-28T07:37:00Z | 89835a6, ef8a6fb, b54af65 |
 | plan-20260228-072000/slave-4 | matrix | audit-charlc+scenes+vtt | success | 2026-02-28T07:38:00Z | b4123f8, 6961dbd, a06286e |
+| plan-20260228-093200/slave-1 | developer | bug-038 | success | 2026-02-28T09:39:00Z | 68325a5, cef3eb4, 65b4c96, dceb7d1 |
+| plan-20260228-093200/slave-2 | developer | bug-039 | success | 2026-02-28T09:38:12Z | d98c4c9, afd453a, 015fdd0 |
+| plan-20260228-093200/slave-3 | developer | ptu-rule-107-p1 | success | 2026-02-28T09:46:00Z | 4faef76, c46ad18, 2e47c3a, 904c765, 1f8aec1, 3bae724, d6d69f3, 790ebdc |
+| plan-20260228-093200/slave-4 | developer | ptu-rule-119+refactoring-095-fix | success | 2026-02-28T10:02:00Z | c9d442c, e507367, a922d48, 8899e68, 1ccbc71, 91664e2 |
