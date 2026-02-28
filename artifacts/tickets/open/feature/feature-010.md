@@ -3,7 +3,8 @@ id: feature-010
 title: Status Condition Automation Engine
 priority: P1
 severity: HIGH
-status: open
+status: in-progress
+design_spec: design-status-automation-001
 domain: combat
 source: matrix-gap (Gap 1, remaining automation)
 matrix_source: combat R088, R089, R090, R091, R093, R094
@@ -45,3 +46,17 @@ Status conditions are tracked as labels but their mechanical effects beyond CS c
 ## Implementation Scope
 
 FULL-scope feature requiring design spec. Core combat mechanic that affects turn flow.
+
+## Design Spec
+
+Design spec created: `artifacts/designs/design-status-automation-001/`
+
+| Tier | Scope | Status |
+|------|-------|--------|
+| P0 | Tick damage (Burn/Poison/Badly Poisoned/Cursed) at turn end | design-complete |
+| P1 | Save checks (Frozen/Paralysis/Sleep/Confused) with turn gating | design-complete |
+| P2 | Auto-cure (fire thaw, wake on damage), weather modifiers, ability reference | design-complete |
+
+## Resolution Log
+
+- 2026-02-28: Design spec `design-status-automation-001` created with 3 priority tiers, shared specs, and testing strategy
