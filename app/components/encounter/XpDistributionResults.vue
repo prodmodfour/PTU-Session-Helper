@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import type { XpApplicationResult } from '~/utils/experienceCalculation'
-import type { Stats } from '~/server/services/evolution.service'
+import type { EvolutionStats as Stats } from '~/utils/evolutionCheck'
 
 const props = defineProps<{
   results: XpApplicationResult[]

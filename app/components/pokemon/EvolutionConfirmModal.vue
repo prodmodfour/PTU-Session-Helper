@@ -146,8 +146,8 @@ import {
   PhWarning
 } from '@phosphor-icons/vue'
 import { applyNatureToBaseStats } from '~/constants/natures'
-import { validateBaseRelations } from '~/server/services/evolution.service'
-import type { Stats } from '~/server/services/evolution.service'
+import { validateBaseRelations } from '~/utils/evolutionCheck'
+import type { EvolutionStats as Stats } from '~/utils/evolutionCheck'
 
 const props = defineProps<{
   pokemonId: string

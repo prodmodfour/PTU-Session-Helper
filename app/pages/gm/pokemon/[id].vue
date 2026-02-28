@@ -165,7 +165,7 @@
 <script setup lang="ts">
 import { PhArrowCircleUp } from '@phosphor-icons/vue'
 import type { Pokemon } from '~/types'
-import type { Stats } from '~/server/services/evolution.service'
+import type { EvolutionStats as Stats } from '~/utils/evolutionCheck'
 
 definePageMeta({
   layout: 'gm'

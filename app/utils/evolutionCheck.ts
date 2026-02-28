@@ -98,3 +98,56 @@ export function getEvolutionLevels(triggers: EvolutionTrigger[]): number[] {
     .filter(t => t.minimumLevel !== null && t.requiredItem === null)
     .map(t => t.minimumLevel!)
 }
+
+// ============================================
+// STAT TYPES (shared between client and server)
+// ============================================
+
+export interface EvolutionStats {
+  hp: number
+  attack: number
+  defense: number
+  specialAttack: number
+  specialDefense: number
+  speed: number
+}
+
+// ============================================
+// BASE RELATIONS VALIDATION (shared pure function)
+// ============================================
+
+/**
+ * Validate that stat point allocation preserves Base Relations ordering.
+ *
+ * PTU Core p.198: stats must maintain the same relative ordering as base stats.
+ * Equal base stats are in the same tier and need not maintain order relative to each other.
+ * Decree-035: Uses nature-adjusted base stats for ordering.
+ *
+ * Returns array of violation messages. Empty array = valid.
+ */
+export function validateBaseRelations(
+  natureAdjustedBase: EvolutionStats,
+  statPoints: EvolutionStats
+): string[] {
+  const statKeys = ['hp', 'attack', 'defense', 'specialAttack', 'specialDefense', 'speed'] as const
+  const violations: string[] = []
+
+  for (const a of statKeys) {
+    for (const b of statKeys) {
+      if (a === b) continue
+      // If base[a] > base[b], then final[a] must >= final[b]
+      if (natureAdjustedBase[a] > natureAdjustedBase[b]) {
+        const finalA = natureAdjustedBase[a] + statPoints[a]
+        const finalB = natureAdjustedBase[b] + statPoints[b]
+        if (finalA < finalB) {
+          violations.push(
+            `${a} (base ${natureAdjustedBase[a]}) must be >= ${b} (base ${natureAdjustedBase[b]}), ` +
+            `but final ${a}=${finalA} < ${b}=${finalB}`
+          )
+        }
+      }
+    }
+  }
+
+  return violations
+}
