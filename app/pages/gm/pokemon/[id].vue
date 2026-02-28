@@ -6,6 +6,10 @@
       </NuxtLink>
       <div class="sheet-header__actions">
         <template v-if="!isEditing">
+          <button class="btn btn--warning" @click="checkEvolution" :disabled="checkingEvolution">
+            <PhArrowCircleUp :size="16" />
+            Evolve
+          </button>
           <button class="btn btn--primary" @click="startEditing">
             Edit
           </button>
@@ -135,11 +139,33 @@
         </div>
       </div>
     </div>
+
+    <!-- Evolution Confirmation Modal -->
+    <EvolutionConfirmModal
+      v-if="evolutionModal.visible && pokemon"
+      :pokemon-id="pokemon.id"
+      :pokemon-name="pokemon.nickname || pokemon.species"
+      :current-species="pokemon.species"
+      :current-types="pokemon.types"
+      :target-species="evolutionModal.targetSpecies"
+      :target-types="evolutionModal.targetTypes"
+      :current-level="pokemon.level"
+      :current-max-hp="pokemon.maxHp"
+      :old-base-stats="pokemon.baseStats"
+      :target-raw-base-stats="evolutionModal.targetRawBaseStats"
+      :nature-name="pokemon.nature.name"
+      :required-item="evolutionModal.requiredItem"
+      :item-must-be-held="evolutionModal.itemMustBeHeld"
+      @close="evolutionModal.visible = false"
+      @evolved="handleEvolved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { PhArrowCircleUp } from '@phosphor-icons/vue'
 import type { Pokemon } from '~/types'
+import type { Stats } from '~/server/services/evolution.service'
 
 definePageMeta({
   layout: 'gm'
@@ -225,6 +251,84 @@ const cancelEditing = () => {
   editData.value = { ...pokemon.value }
   isEditing.value = false
   router.replace({ query: {} })
+}
+
+// Evolution
+const checkingEvolution = ref(false)
+const evolutionModal = reactive({
+  visible: false,
+  targetSpecies: '',
+  targetTypes: [] as string[],
+  targetRawBaseStats: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 } as Stats,
+  requiredItem: null as string | null,
+  itemMustBeHeld: false
+})
+
+const checkEvolution = async () => {
+  if (!pokemon.value) return
+  checkingEvolution.value = true
+
+  try {
+    const response = await $fetch<{
+      success: boolean
+      data: {
+        available: Array<{
+          toSpecies: string
+          requiredItem: string | null
+          itemMustBeHeld: boolean
+          targetBaseStats: Stats | null
+          targetTypes: string[]
+        }>
+        ineligible: Array<{
+          toSpecies: string
+          reason: string
+        }>
+      }
+    }>(`/api/pokemon/${pokemon.value.id}/evolution-check`, { method: 'POST' })
+
+    if (!response.success) {
+      alert('Failed to check evolution eligibility.')
+      return
+    }
+
+    if (response.data.available.length === 0) {
+      // Show why evolutions are not available
+      if (response.data.ineligible.length > 0) {
+        const reasons = response.data.ineligible
+          .map(i => `${i.toSpecies}: ${i.reason}`)
+          .join('\n')
+        alert(`No evolutions currently available.\n\n${reasons}`)
+      } else {
+        alert('This Pokemon has no evolution paths.')
+      }
+      return
+    }
+
+    // Use the first available evolution for P0
+    // P1 can add a selection UI for branching evolutions
+    const evo = response.data.available[0]
+    if (!evo.targetBaseStats) {
+      alert('Target species data not found.')
+      return
+    }
+
+    evolutionModal.targetSpecies = evo.toSpecies
+    evolutionModal.targetTypes = evo.targetTypes
+    evolutionModal.targetRawBaseStats = evo.targetBaseStats
+    evolutionModal.requiredItem = evo.requiredItem
+    evolutionModal.itemMustBeHeld = evo.itemMustBeHeld
+    evolutionModal.visible = true
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to check evolution'
+    alert(`Evolution check failed: ${message}`)
+  } finally {
+    checkingEvolution.value = false
+  }
+}
+
+const handleEvolved = async () => {
+  // Reload Pokemon data after evolution
+  await loadPokemon()
 }
 
 const saveChanges = async () => {
