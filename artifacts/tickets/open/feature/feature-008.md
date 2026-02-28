@@ -3,12 +3,13 @@ id: feature-008
 title: Trainer Level-Up Milestone Workflow
 priority: P1
 severity: HIGH
-status: open
+status: in-progress
 domain: character-lifecycle
 source: matrix-gap (SG-1)
 matrix_source: character-lifecycle R044, R045, R046, R047, R048, R049, R050
 created_by: master-planner
 created_at: 2026-02-28
+design_ref: artifacts/designs/design-trainer-level-up-001/
 ---
 
 # feature-008: Trainer Level-Up Milestone Workflow
@@ -40,3 +41,18 @@ No guided trainer level-up workflow exists. Trainer levels are editable but ther
 ## Implementation Scope
 
 FULL-scope feature requiring design spec. Should build on the existing character creation form patterns.
+
+## Design Reference
+
+**Design spec:** `artifacts/designs/design-trainer-level-up-001/`
+
+| Tier | Scope | Files |
+|------|-------|-------|
+| P0 | Advancement logic, stat/skill allocation, level-up modal | `trainerAdvancement.ts`, `useTrainerLevelUp.ts`, `LevelUpModal.vue`, `LevelUpStatSection.vue`, `LevelUpSkillSection.vue`, `LevelUpSummary.vue` |
+| P1 | Edges, features, class choice, lifestyle milestones | `LevelUpEdgeSection.vue`, `LevelUpFeatureSection.vue`, `LevelUpClassSection.vue`, `LevelUpMilestoneSection.vue` |
+
+**Applicable decrees:** decree-022 (branching class suffix), decree-026 (Martial Artist not branching), decree-027 (Pathetic block creation-only, lifted during level-up)
+
+## Resolution Log
+
+- 2026-02-28: Design spec created — `design-trainer-level-up-001/` with _index, shared-specs, spec-p0, spec-p1, testing-strategy
