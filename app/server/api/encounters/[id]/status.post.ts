@@ -103,6 +103,15 @@ export default defineEventHandler(async (event) => {
     // Update status conditions using service (auto-applies/reverses CS per decree-005)
     const statusResult = updateStatusConditions(combatant, addStatuses, removeStatuses)
 
+    // Track Badly Poisoned escalation round (P0 tick damage)
+    // Initialize to 1 when adding, reset to 0 when removing
+    if (statusResult.added.includes('Badly Poisoned')) {
+      combatant.badlyPoisonedRound = 1
+    }
+    if (statusResult.removed.includes('Badly Poisoned')) {
+      combatant.badlyPoisonedRound = 0
+    }
+
     // Sync both status conditions AND stage modifiers to database
     // (stages may have changed due to auto-CS from status conditions)
     await syncEntityToDatabase(combatant, {
