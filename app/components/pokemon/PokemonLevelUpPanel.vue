@@ -31,7 +31,7 @@
         </div>
       </div>
       <div class="level-up-item level-up-item--reminder">
-        Check the Pokedex entry for possible evolution at this level.
+        Use the <strong>Evolve</strong> button in the header to check evolution eligibility.
       </div>
     </div>
 
