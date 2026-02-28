@@ -33,6 +33,47 @@
       @evolve-click="handleEvolveClick"
     />
 
+    <!-- Evolution Selection Modal (branching evolutions) -->
+    <Teleport to="body">
+      <div v-if="evolutionSelectionVisible" class="modal-overlay" @click.self="evolutionSelectionVisible = false">
+        <div class="modal evolution-select-modal">
+          <div class="modal__header">
+            <h3>Choose Evolution</h3>
+            <button class="modal__close" @click="evolutionSelectionVisible = false">&times;</button>
+          </div>
+          <div class="modal__body">
+            <p class="evolution-select-prompt">This Pokemon can evolve into multiple forms. Select one:</p>
+            <div class="evolution-options">
+              <button
+                v-for="option in pendingEvolutionOptions"
+                :key="option.toSpecies"
+                class="evolution-option"
+                @click="selectEvolutionOption(option)"
+              >
+                <img
+                  :src="getSpriteUrl(option.toSpecies, false)"
+                  :alt="option.toSpecies"
+                  class="evolution-option__sprite"
+                  @error="($event.target as HTMLImageElement).style.display = 'none'"
+                />
+                <span class="evolution-option__name">{{ option.toSpecies }}</span>
+                <div class="evolution-option__types">
+                  <span
+                    v-for="t in option.targetTypes"
+                    :key="t"
+                    :class="['type-badge', `type-badge--${t.toLowerCase()}`]"
+                  >{{ t }}</span>
+                </div>
+                <span v-if="option.requiredItem" class="evolution-option__item">
+                  Requires: {{ option.requiredItem }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Evolution Confirmation Modal -->
     <EvolutionConfirmModal
       v-if="evolutionModal.visible"
@@ -68,6 +109,8 @@ const emit = defineEmits<{
   'pokemon-evolved': [result: Record<string, unknown>]
 }>()
 
+const { getSpriteUrl } = usePokemonSprite()
+
 const hasLevelUps = computed(() =>
   props.results.some(r => r.levelsGained > 0)
 )
@@ -90,6 +133,54 @@ const evolutionModal = reactive({
   itemMustBeHeld: false
 })
 
+// Evolution selection state (branching evolutions)
+interface EvolutionOptionData {
+  toSpecies: string
+  targetStage: number
+  minimumLevel: number | null
+  requiredItem: string | null
+  itemMustBeHeld: boolean
+  targetBaseStats: Stats | null
+  targetTypes: string[]
+}
+
+const evolutionSelectionVisible = ref(false)
+const pendingEvolutionOptions = ref<EvolutionOptionData[]>([])
+const pendingPokemonData = ref<{
+  id: string; species: string; nickname: string | null
+  types: string[]; level: number; maxHp: number
+  baseStats: Stats; nature: { name: string }
+} | null>(null)
+
+function openEvolutionConfirmModal(
+  pokemon: typeof pendingPokemonData.value,
+  evo: EvolutionOptionData
+): void {
+  if (!pokemon || !evo.targetBaseStats) {
+    alert('Target species data not found.')
+    return
+  }
+  evolutionModal.pokemonId = pokemon.id
+  evolutionModal.pokemonName = pokemon.nickname || pokemon.species
+  evolutionModal.currentSpecies = pokemon.species
+  evolutionModal.currentTypes = pokemon.types
+  evolutionModal.targetSpecies = evo.toSpecies
+  evolutionModal.targetTypes = evo.targetTypes
+  evolutionModal.currentLevel = pokemon.level
+  evolutionModal.currentMaxHp = pokemon.maxHp
+  evolutionModal.oldBaseStats = pokemon.baseStats
+  evolutionModal.targetRawBaseStats = evo.targetBaseStats
+  evolutionModal.natureName = pokemon.nature.name
+  evolutionModal.requiredItem = evo.requiredItem
+  evolutionModal.itemMustBeHeld = evo.itemMustBeHeld
+  evolutionModal.visible = true
+}
+
+function selectEvolutionOption(option: EvolutionOptionData): void {
+  evolutionSelectionVisible.value = false
+  openEvolutionConfirmModal(pendingPokemonData.value, option)
+}
+
 /**
  * Handle click on evolution entry in LevelUpNotification.
  * Fetches evolution check data and Pokemon details, then opens the modal.
@@ -103,15 +194,7 @@ async function handleEvolveClick(payload: { pokemonId: string; species: string }
         currentSpecies: string
         currentLevel: number
         heldItem: string | null
-        available: Array<{
-          toSpecies: string
-          targetStage: number
-          minimumLevel: number | null
-          requiredItem: string | null
-          itemMustBeHeld: boolean
-          targetBaseStats: Stats | null
-          targetTypes: string[]
-        }>
+        available: EvolutionOptionData[]
       }
     }>(`/api/pokemon/${payload.pokemonId}/evolution-check`, { method: 'POST' })
 
@@ -139,30 +222,15 @@ async function handleEvolveClick(payload: { pokemonId: string; species: string }
 
     const pokemon = pokemonResponse.data
 
-    // If multiple evolutions available, use the first one for P0
-    // P1 can add a selection UI
-    const evo = checkResponse.data.available[0]
-
-    if (!evo.targetBaseStats) {
-      alert('Target species data not found.')
-      return
+    if (checkResponse.data.available.length === 1) {
+      // Single evolution path — go straight to confirmation
+      openEvolutionConfirmModal(pokemon, checkResponse.data.available[0])
+    } else {
+      // Multiple evolution paths — show selection UI
+      pendingPokemonData.value = pokemon
+      pendingEvolutionOptions.value = checkResponse.data.available
+      evolutionSelectionVisible.value = true
     }
-
-    // Set modal data
-    evolutionModal.pokemonId = pokemon.id
-    evolutionModal.pokemonName = pokemon.nickname || pokemon.species
-    evolutionModal.currentSpecies = pokemon.species
-    evolutionModal.currentTypes = pokemon.types
-    evolutionModal.targetSpecies = evo.toSpecies
-    evolutionModal.targetTypes = evo.targetTypes
-    evolutionModal.currentLevel = pokemon.level
-    evolutionModal.currentMaxHp = pokemon.maxHp
-    evolutionModal.oldBaseStats = pokemon.baseStats
-    evolutionModal.targetRawBaseStats = evo.targetBaseStats
-    evolutionModal.natureName = pokemon.nature.name
-    evolutionModal.requiredItem = evo.requiredItem
-    evolutionModal.itemMustBeHeld = evo.itemMustBeHeld
-    evolutionModal.visible = true
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to check evolution'
     alert(`Evolution check failed: ${message}`)
@@ -236,5 +304,100 @@ function handleEvolved(result: Record<string, unknown>): void {
   font-size: $font-size-lg;
   font-weight: 600;
   color: $color-accent-teal;
+}
+
+// Evolution selection modal
+.modal-overlay {
+  @include modal-overlay-enhanced;
+}
+
+.evolution-select-modal {
+  @include modal-container-enhanced;
+  max-width: 520px;
+}
+
+.evolution-select-prompt {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin-bottom: $spacing-md;
+}
+
+.evolution-options {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.evolution-option {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-md;
+  cursor: pointer;
+  transition: border-color $transition-fast, background $transition-fast;
+  text-align: left;
+  width: 100%;
+  color: $color-text;
+  font: inherit;
+
+  &:hover {
+    border-color: rgba($color-warning, 0.5);
+    background: rgba($color-warning, 0.05);
+  }
+
+  &__sprite {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: $font-size-md;
+    flex: 1;
+  }
+
+  &__types {
+    display: flex;
+    gap: $spacing-xs;
+  }
+
+  &__item {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-style: italic;
+  }
+}
+
+.type-badge {
+  font-size: $font-size-xs;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-full;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: $color-text;
+
+  &--fire { background: $type-fire; }
+  &--water { background: $type-water; }
+  &--grass { background: $type-grass; }
+  &--electric { background: $type-electric; }
+  &--ice { background: $type-ice; }
+  &--fighting { background: $type-fighting; }
+  &--poison { background: $type-poison; }
+  &--ground { background: $type-ground; }
+  &--flying { background: $type-flying; }
+  &--psychic { background: $type-psychic; }
+  &--bug { background: $type-bug; }
+  &--rock { background: $type-rock; }
+  &--ghost { background: $type-ghost; }
+  &--dragon { background: $type-dragon; }
+  &--dark { background: $type-dark; }
+  &--steel { background: $type-steel; }
+  &--fairy { background: $type-fairy; }
+  &--normal { background: $type-normal; }
 }
 </style>

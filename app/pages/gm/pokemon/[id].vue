@@ -142,6 +142,50 @@
       </div>
     </div>
 
+    <!-- Evolution Selection Modal (branching evolutions) -->
+    <Teleport to="body">
+      <div v-if="evolutionSelection.visible" class="modal-overlay" @click.self="evolutionSelection.visible = false">
+        <div class="modal evolution-select-modal">
+          <div class="modal__header">
+            <h3>
+              <PhArrowCircleUp :size="20" class="header-icon" />
+              Choose Evolution
+            </h3>
+            <button class="modal__close" @click="evolutionSelection.visible = false">&times;</button>
+          </div>
+          <div class="modal__body">
+            <p class="evolution-select-prompt">{{ pokemon?.nickname || pokemon?.species }} can evolve into multiple forms. Select one:</p>
+            <div class="evolution-options">
+              <button
+                v-for="option in evolutionSelection.options"
+                :key="option.toSpecies"
+                class="evolution-option"
+                @click="selectEvolution(option)"
+              >
+                <img
+                  :src="getSpriteUrl(option.toSpecies, false)"
+                  :alt="option.toSpecies"
+                  class="evolution-option__sprite"
+                  @error="($event.target as HTMLImageElement).style.display = 'none'"
+                />
+                <span class="evolution-option__name">{{ option.toSpecies }}</span>
+                <div class="evolution-option__types">
+                  <span
+                    v-for="t in option.targetTypes"
+                    :key="t"
+                    :class="['type-badge', `type-badge--${t.toLowerCase()}`]"
+                  >{{ t }}</span>
+                </div>
+                <span v-if="option.requiredItem" class="evolution-option__item">
+                  Requires: {{ option.requiredItem }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Evolution Confirmation Modal -->
     <EvolutionConfirmModal
       v-if="evolutionModal.visible && pokemon"
@@ -266,6 +310,37 @@ const evolutionModal = reactive({
   itemMustBeHeld: false
 })
 
+interface EvolutionOption {
+  toSpecies: string
+  requiredItem: string | null
+  itemMustBeHeld: boolean
+  targetBaseStats: Stats | null
+  targetTypes: string[]
+}
+
+const evolutionSelection = reactive({
+  visible: false,
+  options: [] as EvolutionOption[]
+})
+
+function openEvolutionModal(evo: EvolutionOption): void {
+  if (!evo.targetBaseStats) {
+    alert('Target species data not found.')
+    return
+  }
+  evolutionModal.targetSpecies = evo.toSpecies
+  evolutionModal.targetTypes = evo.targetTypes
+  evolutionModal.targetRawBaseStats = evo.targetBaseStats
+  evolutionModal.requiredItem = evo.requiredItem
+  evolutionModal.itemMustBeHeld = evo.itemMustBeHeld
+  evolutionModal.visible = true
+}
+
+function selectEvolution(option: EvolutionOption): void {
+  evolutionSelection.visible = false
+  openEvolutionModal(option)
+}
+
 const checkEvolution = async () => {
   if (!pokemon.value) return
   checkingEvolution.value = true
@@ -274,13 +349,7 @@ const checkEvolution = async () => {
     const response = await $fetch<{
       success: boolean
       data: {
-        available: Array<{
-          toSpecies: string
-          requiredItem: string | null
-          itemMustBeHeld: boolean
-          targetBaseStats: Stats | null
-          targetTypes: string[]
-        }>
+        available: EvolutionOption[]
         ineligible: Array<{
           toSpecies: string
           reason: string
@@ -306,20 +375,14 @@ const checkEvolution = async () => {
       return
     }
 
-    // Use the first available evolution for P0
-    // P1 can add a selection UI for branching evolutions
-    const evo = response.data.available[0]
-    if (!evo.targetBaseStats) {
-      alert('Target species data not found.')
-      return
+    if (response.data.available.length === 1) {
+      // Single evolution path — go straight to confirmation
+      openEvolutionModal(response.data.available[0])
+    } else {
+      // Multiple evolution paths — show selection UI
+      evolutionSelection.options = response.data.available
+      evolutionSelection.visible = true
     }
-
-    evolutionModal.targetSpecies = evo.toSpecies
-    evolutionModal.targetTypes = evo.targetTypes
-    evolutionModal.targetRawBaseStats = evo.targetBaseStats
-    evolutionModal.requiredItem = evo.requiredItem
-    evolutionModal.itemMustBeHeld = evo.itemMustBeHeld
-    evolutionModal.visible = true
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to check evolution'
     alert(`Evolution check failed: ${message}`)
@@ -426,5 +489,105 @@ const saveChanges = async () => {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+// Evolution selection modal
+.modal-overlay {
+  @include modal-overlay-enhanced;
+}
+
+.evolution-select-modal {
+  @include modal-container-enhanced;
+  max-width: 520px;
+
+  .header-icon {
+    color: $color-warning;
+    vertical-align: middle;
+  }
+}
+
+.evolution-select-prompt {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin-bottom: $spacing-md;
+}
+
+.evolution-options {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.evolution-option {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-md;
+  cursor: pointer;
+  transition: border-color $transition-fast, background $transition-fast;
+  text-align: left;
+  width: 100%;
+  color: $color-text;
+  font: inherit;
+
+  &:hover {
+    border-color: rgba($color-warning, 0.5);
+    background: rgba($color-warning, 0.05);
+  }
+
+  &__sprite {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: $font-size-md;
+    flex: 1;
+  }
+
+  &__types {
+    display: flex;
+    gap: $spacing-xs;
+  }
+
+  &__item {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-style: italic;
+  }
+}
+
+.type-badge {
+  font-size: $font-size-xs;
+  padding: 2px $spacing-sm;
+  border-radius: $border-radius-full;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: $color-text;
+
+  &--fire { background: $type-fire; }
+  &--water { background: $type-water; }
+  &--grass { background: $type-grass; }
+  &--electric { background: $type-electric; }
+  &--ice { background: $type-ice; }
+  &--fighting { background: $type-fighting; }
+  &--poison { background: $type-poison; }
+  &--ground { background: $type-ground; }
+  &--flying { background: $type-flying; }
+  &--psychic { background: $type-psychic; }
+  &--bug { background: $type-bug; }
+  &--rock { background: $type-rock; }
+  &--ghost { background: $type-ghost; }
+  &--dragon { background: $type-dragon; }
+  &--dark { background: $type-dark; }
+  &--steel { background: $type-steel; }
+  &--fairy { background: $type-fairy; }
+  &--normal { background: $type-normal; }
 }
 </style>
