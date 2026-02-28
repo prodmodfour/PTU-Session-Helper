@@ -7,7 +7,7 @@
  * - League Battle exemption: HP-based death suppressed (decree-021)
  */
 import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse } from '~/server/services/encounter.service'
-import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
+import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
 import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import type { StatusCondition } from '~/types'
@@ -66,12 +66,10 @@ export default defineEventHandler(async (event) => {
       heavilyInjuredHpLoss = penalty.hpLost
       entity.currentHp = penalty.newHp
 
-      // Check if heavily injured penalty caused fainting
+      // Check if heavily injured penalty caused fainting (decree-005: must clear
+      // persistent/volatile conditions and reverse their CS effects)
       if (penalty.newHp === 0 && !damageResult.fainted) {
-        const currentConditions: StatusCondition[] = entity.statusConditions || []
-        if (!currentConditions.includes('Fainted')) {
-          entity.statusConditions = ['Fainted', ...currentConditions]
-        }
+        applyFaintStatus(combatant)
       }
     }
 
@@ -106,9 +104,10 @@ export default defineEventHandler(async (event) => {
     )
 
     // Sync reversed stageModifiers when fainted (decree-005: status CS effects are
-    // reversed on faint by applyDamageToEntity, but syncDamageToDatabase doesn't
-    // include stageModifiers — sync them separately)
-    if (damageResult.fainted && entity.stageModifiers) {
+    // reversed on faint by applyDamageToEntity/applyFaintStatus, but syncDamageToDatabase
+    // doesn't include stageModifiers — sync them separately)
+    const faintedFromAnySource = damageResult.fainted || (heavilyInjuredHpLoss > 0 && entity.currentHp === 0)
+    if (faintedFromAnySource && entity.stageModifiers) {
       await syncStagesToDatabase(combatant, entity.stageModifiers)
     }
 

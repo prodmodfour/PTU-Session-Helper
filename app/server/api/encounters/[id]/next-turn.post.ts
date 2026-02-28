@@ -15,7 +15,7 @@ import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
-import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
+import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
 import { getTickDamageEntries, getCombatantName } from '~/server/services/status-automation.service'
 import type { TickDamageResult } from '~/server/services/status-automation.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
@@ -102,12 +102,10 @@ export default defineEventHandler(async (event) => {
           const penalty = applyHeavilyInjuredPenalty(entity.currentHp, injuries)
           entity.currentHp = penalty.newHp
 
-          // Check if this caused fainting
+          // Check if this caused fainting (decree-005: must clear persistent/volatile
+          // conditions and reverse their CS effects)
           if (penalty.newHp === 0) {
-            const conditions: StatusCondition[] = entity.statusConditions || []
-            if (!conditions.includes('Fainted')) {
-              entity.statusConditions = ['Fainted', ...conditions]
-            }
+            applyFaintStatus(currentCombatant)
           }
 
           // Death check after heavily injured penalty
@@ -126,11 +124,13 @@ export default defineEventHandler(async (event) => {
             }
           }
 
-          // Sync HP and status changes to database
+          // Sync HP, status, and stage changes to database
+          // Include stageModifiers when faint occurred (decree-005: CS effects reversed)
           if (penalty.hpLost > 0 && currentCombatant.entityId) {
             await syncEntityToDatabase(currentCombatant, {
               currentHp: entity.currentHp,
-              statusConditions: entity.statusConditions
+              statusConditions: entity.statusConditions,
+              ...(penalty.newHp === 0 && entity.stageModifiers ? { stageModifiers: entity.stageModifiers } : {})
             })
           }
 

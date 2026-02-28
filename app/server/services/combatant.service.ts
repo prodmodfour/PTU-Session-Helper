@@ -154,23 +154,35 @@ export function applyDamageToEntity(
 
   // PTU p248: "When a Pokemon becomes Fainted, they are automatically
   // cured of all Persistent and Volatile Status Conditions."
-  // "Other" conditions (Stuck, Slowed, Trapped, Tripped, Vulnerable) are NOT cleared.
+  // Clears P/V conditions and reverses their CS effects (decree-005).
   if (damageResult.fainted) {
-    const conditionsToClear = [...PERSISTENT_CONDITIONS, ...VOLATILE_CONDITIONS] as StatusCondition[]
-
-    // Reverse CS effects from conditions being cleared (decree-005)
-    const conditionsBeingCleared = (entity.statusConditions || []).filter(
-      (s: StatusCondition) => conditionsToClear.includes(s)
-    )
-    for (const condition of conditionsBeingCleared) {
-      reverseStatusCsEffects(combatant, condition)
-    }
-
-    const survivingConditions = (entity.statusConditions || []).filter(
-      (s: StatusCondition) => !conditionsToClear.includes(s) && s !== 'Fainted'
-    )
-    entity.statusConditions = ['Fainted', ...survivingConditions]
+    applyFaintStatus(combatant)
   }
+}
+
+/**
+ * Apply Fainted status to a combatant, clearing persistent/volatile conditions
+ * and reversing their CS effects (decree-005, PTU p.248).
+ *
+ * Use this whenever a combatant faints from ANY source (damage, heavily injured
+ * penalty, tick damage, etc.) to ensure consistent faint handling.
+ */
+export function applyFaintStatus(combatant: Combatant): void {
+  const entity = combatant.entity
+  const conditionsToClear = [...PERSISTENT_CONDITIONS, ...VOLATILE_CONDITIONS] as StatusCondition[]
+
+  // Reverse CS effects from conditions being cleared (decree-005)
+  const conditionsBeingCleared = (entity.statusConditions || []).filter(
+    (s: StatusCondition) => conditionsToClear.includes(s)
+  )
+  for (const condition of conditionsBeingCleared) {
+    reverseStatusCsEffects(combatant, condition)
+  }
+
+  const survivingConditions = (entity.statusConditions || []).filter(
+    (s: StatusCondition) => !conditionsToClear.includes(s) && s !== 'Fainted'
+  )
+  entity.statusConditions = ['Fainted', ...survivingConditions]
 }
 
 // ============================================

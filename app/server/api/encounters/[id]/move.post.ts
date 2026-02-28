@@ -14,7 +14,7 @@
  */
 import { prisma } from '~/server/utils/prisma'
 import { loadEncounter, findCombatant, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
-import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
+import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
 import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkMoveFrequency, incrementMoveUsage } from '~/utils/moveFrequency'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
@@ -117,12 +117,10 @@ export default defineEventHandler(async (event) => {
           heavilyInjuredHpLoss = penalty.hpLost
           entity.currentHp = penalty.newHp
 
-          // Check if heavily injured penalty caused fainting
+          // Check if heavily injured penalty caused fainting (decree-005: must clear
+          // persistent/volatile conditions and reverse their CS effects)
           if (penalty.newHp === 0 && !damageResult.fainted) {
-            const conditions: StatusCondition[] = entity.statusConditions || []
-            if (!conditions.includes('Fainted')) {
-              entity.statusConditions = ['Fainted', ...conditions]
-            }
+            applyFaintStatus(target)
           }
         }
 
@@ -153,8 +151,10 @@ export default defineEventHandler(async (event) => {
         ))
 
         // Sync reversed stageModifiers when fainted (decree-005: status CS effects
-        // are reversed on faint, but syncDamageToDatabase doesn't include stageModifiers)
-        if (damageResult.fainted && entity.stageModifiers) {
+        // are reversed on faint by applyDamageToEntity/applyFaintStatus, but
+        // syncDamageToDatabase doesn't include stageModifiers — sync separately)
+        const faintedFromAnySource = damageResult.fainted || (heavilyInjuredHpLoss > 0 && entity.currentHp === 0)
+        if (faintedFromAnySource && entity.stageModifiers) {
           dbUpdates.push(syncStagesToDatabase(target, entity.stageModifiers))
         }
 
