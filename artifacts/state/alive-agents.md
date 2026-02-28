@@ -261,3 +261,8 @@
 | plan-20260228-205826/slave-3 | developer | feature-008-p0 | success | 2026-02-28T21:20:15Z | 258cda2, e0f32bb, 739fa4e, 864bac1, a2f4a75, 8bc7e87, 541420d, af10309, 8e7ec06 |
 | plan-20260228-205826/slave-4 | reviewers | feature-006-review | CHANGES_REQUIRED | 2026-02-28T21:26:00Z | feae486, a211367 |
 | plan-20260228-205826/slave-5 | reviewers | feature-010-review | CHANGES_REQUIRED | 2026-02-28T21:25:30Z | fea4820, f94d63f |
+| plan-20260228-214159/slave-1 | developer | feature-006-fix | success | 2026-02-28T21:53:00Z | 551d693, 8f2198a, 834a7cf, 5c43dcc, a5be09b, ee80342 |
+| plan-20260228-214159/slave-2 | developer | feature-010-fix+feature-011-p0 | success | 2026-02-28T22:04:00Z | 1cf86a2, d80e0eb, 0998d41, 9a7190a, b038f85, 2eba7b0, 664b574, b22102f, 4fdd15d, a9f8c41 |
+| plan-20260228-214159/slave-3 | reviewers | feature-012-rereview | CHANGES_REQUIRED | 2026-02-28T22:00:30Z | 8ff9986, 6b7cd24 |
+| plan-20260228-214159/slave-4 | reviewers | feature-007-review | CHANGES_REQUIRED | 2026-02-28T22:12:00Z | 479072d |
+| plan-20260228-214159/slave-5 | reviewers | feature-008-review | CHANGES_REQUIRED | 2026-02-28T22:05:00Z | 8d5c446 |
