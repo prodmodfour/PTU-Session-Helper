@@ -426,7 +426,7 @@ const startEncounter = async () => {
 
 const nextTurn = async () => {
   pendingBreatherShift.value = null
-  await encounterStore.nextTurn()
+  const result = await encounterStore.nextTurn()
   // Wait for Vue reactivity to process the store update
   await nextTick()
   // Broadcast the turn change via WebSocket
@@ -435,6 +435,28 @@ const nextTurn = async () => {
       type: 'encounter_update',
       data: encounterStore.encounter
     })
+  }
+
+  // GM alerts for heavily injured penalty applied at turn end
+  if (result?.heavilyInjuredPenalty) {
+    const penalty = result.heavilyInjuredPenalty
+    // Resolve combatant name from encounter state
+    const combatant = encounterStore.encounter?.combatants.find(c => c.id === penalty.combatantId)
+    const name = combatant
+      ? (combatant.type === 'pokemon'
+        ? ((combatant.entity as { nickname?: string; species: string }).nickname || (combatant.entity as { species: string }).species)
+        : (combatant.entity as { name: string }).name)
+      : 'Unknown'
+
+    if (penalty.hpLost > 0) {
+      alert(`${name} lost ${penalty.hpLost} HP from Heavily Injured penalty (Standard Action taken).`)
+    }
+    if (penalty.isDead) {
+      const cause = penalty.deathCause === 'injuries'
+        ? '10+ injuries'
+        : 'HP below death threshold'
+      alert(`${name} has DIED! Cause: ${cause}. Use the Override button on their card to revoke.`)
+    }
   }
 }
 
