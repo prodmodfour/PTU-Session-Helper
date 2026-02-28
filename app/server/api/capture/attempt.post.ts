@@ -32,6 +32,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // PTU capture rules target wild Pokemon only — owned Pokemon cannot be captured
+  if (pokemon.ownerId) {
+    throw createError({
+      statusCode: 400,
+      message: 'Cannot capture an owned Pokemon'
+    })
+  }
+
   // Look up Trainer
   const trainer = await prisma.humanCharacter.findUnique({
     where: { id: body.trainerId }
