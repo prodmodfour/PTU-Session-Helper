@@ -1,6 +1,6 @@
 ---
-generated_at: 2026-02-28T08:37:13.151Z
-total_tickets: 185
+generated_at: 2026-02-28T08:55:06.909Z
+total_tickets: 189
 open: 4
 in_progress: 85
 resolved: 92
@@ -107,9 +107,14 @@ resolved: 92
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (4)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-028 | P3 | — | — |
+| decree-need-029 | P2 | — | — |
+| decree-need-030 | P3 | — | — |
+| decree-need-031 | P4 | — | — |
 
 ## Summary by Category
 
@@ -119,5 +124,5 @@ All decree-needs addressed.
 | ptu-rule | 2 | 54 | 36 | 93 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 1 | 7 | 2 | 10 |
-| decree | 0 | 0 | 27 | 27 |
+| decree | 0 | 0 | 27 | 31 |
 | refactoring | 1 | 11 | 0 | 13 |
