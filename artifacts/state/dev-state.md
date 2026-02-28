@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-28T11:20:00
-updated_by: slave-collector (plan-20260228-131955)
+last_updated: 2026-02-28T16:55:00
+updated_by: slave-collector (plan-20260228-153856)
 ---
 
 # Dev Ecosystem State
@@ -21,7 +21,7 @@ updated_by: slave-collector (plan-20260228-131955)
 | bug-037 | P3 | **resolved** | MoveTargetModal passes targets as allCombatants — fix applied, APPROVED (code-review-213 + rules-review-189, plan-20260228-020000). Full encounter combatant list now passed correctly |
 | bug-038 | P0 | **resolved** | CRITICAL decree-016 violation: new-day endpoint cleared boundAp. Refactored from batch updateMany to per-character updates preserving boundAp. Per-character new-day endpoint also fixed. Unit tests added (6 tests). Fix cycle: Math.max(0,...) safety clamp, per-character new-day tests (9 tests). code-review-220 **APPROVED** + rules-review-196 **APPROVED** (plan-20260228-131955 slave-1). All issues from code-review-216 resolved |
 | bug-039 | P2 | **resolved** | Capture attempt endpoint allowed stealing owned Pokemon. Added ownership validation (reject if pokemon.ownerId non-null). Rate endpoint confirmed safe (read-only). Unit tests added (6 tests). Reviewed as part of code-review-216 (bug-039 portion approved), rules-review-192 **APPROVED** |
-| bug-040 | P4 | **open** | Extended-rest endpoint lacks Math.max(0,...) safety clamp on currentAp calculation. Follow-up from code-review-216 M1. Filed by slave-collector (plan-20260228-101738) |
+| bug-040 | P4 | **resolved** | Extended-rest endpoint lacks Math.max(0,...) safety clamp on currentAp calculation. Already fixed in commit 3d6a238 (bug-038 fix cycle). Ticket moved to resolved by slave-3 (plan-20260228-153856) |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
@@ -76,8 +76,10 @@ updated_by: slave-collector (plan-20260228-131955)
 | ptu-rule-119 | P4 | **resolved** | Trainer Naturewalk support for Survivalist class. Fix cycle APPROVED: code-review-218 **APPROVED** (M1: border-color no-op, non-blocking, tracked in refactoring-096) + rules-review-194 **APPROVED**. All 5 code-review-215 issues addressed |
 | ptu-rule-122 | P3 | **resolved** | Rest healing minimum 1 HP floor per decree-029. Implemented by slave-4 (plan-20260228-101738). code-review-219 **APPROVED** + rules-review-195 **APPROVED** (plan-20260228-110000 slave-3). 0 issues |
 | ptu-rule-123 | P3 | **resolved** | Significance presets capped at x5 per decree-030. Removed climactic (x6) and legendary (x8) presets. Implemented by slave-5 (plan-20260228-101738). code-review-219 **APPROVED** + rules-review-195 **APPROVED** (plan-20260228-110000 slave-3). 0 issues |
-| ptu-rule-120 | P4 | **implemented-needs-review** | Equipment-granted Naturewalk auto-derived from equipped items. 8 commits: grantedCapabilities field, utility function, Naturewalk merge, Zod schema, API responses, equipment tab UI, human combatant Naturewalk immunity. Implemented by slave-4 (plan-20260228-131955). Needs review |
-| ptu-rule-124 | P4 | **implemented-needs-review** | Replace bogus encounter budget formula citation. Research confirmed PTU Chapter 11 p.473 DOES contain the formula — reframed as "PTU guideline" with app-specific difficulty thresholds noted. 6 commits. Implemented by slave-3 (plan-20260228-131955). Needs review |
+| ptu-rule-120 | P4 | **needs-fix-cycle** | Equipment-granted Naturewalk auto-derived from equipped items. 8 commits. code-review-222 **CHANGES_REQUIRED** (H1: no unit tests for getEquipmentGrantedCapabilities + equipment Naturewalk path). rules-review-198 **APPROVED**. M1→ux-011, M2→ptu-rule-125, MED-01→ptu-rule-126 |
+| ptu-rule-124 | P4 | **resolved** | Replace bogus encounter budget formula citation. Research confirmed PTU Chapter 11 p.473 DOES contain the formula — reframed as "PTU guideline". code-review-223 **APPROVED** + rules-review-199 **APPROVED**. decree-031 compliant |
+| ptu-rule-125 | P4 | **open** | Populate grantedCapabilities on all capability-granting catalog entries (Dark Vision Goggles, Re-Breather, Gas Mask). Follow-up from code-review-222 M-02 + rules-review-198 MED-02. Filed by slave-collector (plan-20260228-153856) |
+| ptu-rule-126 | P4 | **open** | Snow Boots conditional Overland speed penalty not mechanically enforced (-1 on ice/deep snow). Follow-up from rules-review-198 MED-01. Filed by slave-collector (plan-20260228-153856) |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
@@ -85,6 +87,8 @@ updated_by: slave-collector (plan-20260228-131955)
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
 | feature-003 | P1 | **Track-A-P2-APPROVED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 APPROVED: code-review-188 APPROVED (`:deep()` fix complete). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1+P2 complete | multi-phase-parallel |
+| feature-004 | P3 | **design-complete** | Pokemon Mounting / Rider System — design spec created by slave-1 (plan-20260228-153856). 7 files in design-mounting-001/: _index.md, spec-p0.md (mount relationship, APIs, combat state), spec-p1.md (VTT linked tokens, dismount checks, Mounted Prowess), spec-p2.md (Rider class features), shared-specs.md, testing-strategy.md | multi-phase |
+| feature-005 | P3 | **design-complete** | Living Weapon System (Honedge Line) — design spec created by slave-2 (plan-20260228-153856). 7 files in design-living-weapon-001/: _index.md, spec-p0.md (wield relationship, Living Weapon capability), spec-p1.md (equipment integration, Doublade/Aegislash bonuses), spec-p2.md (shared movement, No Guard suppression, Weaponize/Soulstealer), shared-specs.md, testing-strategy.md | multi-phase |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -99,10 +103,23 @@ updated_by: slave-collector (plan-20260228-131955)
 | ux-008 | P4 | **resolved** | Focus item selection — deterministic slot priority order added to equipmentBonuses.ts. Resolved by slave-2 (plan-20260226-175938) |
 | ux-009 | P4 | **resolved** | Proactive IMMUNE tags in StatusConditionsModal — implemented by slave-4 (plan-20260227-153711). code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | ux-010 | P4 | **resolved** | Overlapping significance tier boundaries — fixed by slave-4 (plan-20260227-153711). Exclusive end values. code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
+| ux-011 | P4 | **open** | Custom item form missing grantedCapabilities input field. Follow-up from code-review-222 M-01. Filed by slave-collector (plan-20260228-153856) |
 
 ## Active Developer Work
 
-**Current task:** Session 63 collection complete. 5 slaves merged (24 commits: 3 dev + 2 reviewer). refactoring-096 (SCSS tag harmonization), ptu-rule-124 (encounter budget citation fix), ptu-rule-120 (equipment Naturewalk auto-derivation), bug-038 re-review (APPROVED), ptu-rule-107 P1 re-review (APPROVED). Smoke test PASSED. bug-038+ptu-rule-107 P1 resolved. ptu-rule-120+ptu-rule-124+refactoring-096 need review.
+**Current task:** Session 64 collection complete. 5 slaves merged (7 commits: 3 dev + 2 reviewer). Design specs for feature-004 (Mounting) and feature-005 (Living Weapon). bug-040 resolved (already fixed). ptu-rule-120 CHANGES_REQUIRED (H1: missing tests). ptu-rule-124 APPROVED. refactoring-096 CHANGES_REQUIRED (H1: CSS specificity regression). 3 follow-up tickets filed (ux-011, ptu-rule-125, ptu-rule-126).
+
+**Session 64 (2026-02-28, plan-20260228-153856):**
+- slave-3 (developer): bug-040 — 1 commit: discovered bug was already fixed in commit 3d6a238 (bug-038 fix cycle). Moved ticket to resolved → bug-040 **resolved**
+- slave-1 (developer): feature-004 — 1 commit: full multi-tier design spec for Pokemon Mounting / Rider System. 7 files in design-mounting-001/ (P0: mount relationship + API, P1: VTT linked tokens + dismount checks, P2: Rider class features) → **design-complete**
+- slave-2 (developer): feature-005 — 1 commit: full multi-tier design spec for Living Weapon System (Honedge Line). 7 files in design-living-weapon-001/ (P0: wield relationship + capability parsing, P1: equipment integration, P2: shared movement + abilities) → **design-complete**
+- slave-4 (reviewers): ptu-rule-120 — code-review-222 **CHANGES_REQUIRED** (H1: no unit tests for getEquipmentGrantedCapabilities + equipment Naturewalk path, M1: custom form gap → ux-011, M2: other catalog items → ptu-rule-125). rules-review-198 **APPROVED** (MED-01: Snow Boots speed penalty → ptu-rule-126, MED-02: catalog items → ptu-rule-125) → ptu-rule-120 **needs fix cycle**
+- slave-5 (reviewers): ptu-rule-124 — code-review-223 **APPROVED** (0 issues) + rules-review-199 **APPROVED** (0 issues). decree-031 fully compliant → ptu-rule-124 **resolved**. refactoring-096 — code-review-224 **CHANGES_REQUIRED** (H1: CSS specificity regression in player sheet, M1: stale comment) + rules-review-200 **APPROVED** → refactoring-096 **needs fix cycle**
+- **Smoke test:** SKIPPED (no app code changes — all design specs, ticket moves, and review artifacts)
+- **Merge notes:** 0 conflicts. All 5 rebased cleanly. 7 commits total (merge order: 3→1→2→4→5). 1 untracked file conflict (feature-005.md from master planner) resolved by using slave version
+- **Tickets filed:** ux-011 (custom form grantedCapabilities, code-review-222 M-01), ptu-rule-125 (catalog completeness, code-review-222 M-02 + rules-review-198 MED-02), ptu-rule-126 (Snow Boots speed penalty, rules-review-198 MED-01)
+- **Tickets resolved:** bug-040 (already fixed), ptu-rule-124 (APPROVED)
+- **Tickets needing fix cycle:** ptu-rule-120 (code-review-222 H1), refactoring-096 (code-review-224 H1+M1)
 
 **Session 63 (2026-02-28, plan-20260228-131955):**
 - slave-5 (developer): refactoring-096 — 7 commits: extracted shared _tags.scss partial, removed duplicated tag variant styles from 5 files (character detail, HumanClassesTab, ClassFeatureSection, EdgeSelectionSection, player-character-sheet), unified tag color scheme → **implemented, needs review**
@@ -659,7 +676,7 @@ updated_by: slave-collector (plan-20260228-131955)
 | refactoring-093 | P4 | **resolved** | Relocated getEffectivenessClass to typeEffectiveness.ts — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
 | refactoring-094 | P4 | **resolved** | Remove trivial combatantsOnGrid passthrough — APPROVED (code-review-213 + rules-review-189, plan-20260228-020000) |
 | refactoring-095 | P4 | **fix-cycle-needs-rereview** | Guard addEdge() against Skill Edge string injection. Fix cycle by slave-4 (plan-20260228-093200): addEdge error feedback added, unit tests for addEdge guard, app-surface.md updated. Bundled with ptu-rule-119 fix cycle. Needs re-review |
-| refactoring-096 | P4 | **implemented-needs-review** | Tag color styles harmonized: extracted shared _tags.scss partial, unified 5 tag variants across 5 files. 7 commits. Implemented by slave-5 (plan-20260228-131955). Needs review |
+| refactoring-096 | P4 | **needs-fix-cycle** | Tag color styles harmonized: extracted shared _tags.scss partial. code-review-224 **CHANGES_REQUIRED** (H1: CSS specificity regression in player sheet, M1: stale comment in _create-form-shared.scss). rules-review-200 **APPROVED**. Needs fix cycle |
 
 ## Code Health
 

@@ -241,3 +241,8 @@
 | plan-20260228-131955/slave-4 | developer | ptu-rule-120 | success | 2026-02-28T13:32:00Z | 22429c8, d388ed9, fa4b842, ee35329, 88c420a, 053fb4b, 58092ed, 4b1843a |
 | plan-20260228-131955/slave-1 | reviewers | bug-038-rereview | APPROVED | 2026-02-28T13:30:00Z | 9e3f764 |
 | plan-20260228-131955/slave-2 | reviewers | ptu-rule-107-p1-rereview | APPROVED | 2026-02-28T13:32:00Z | 4fea6d0, 962ab0a |
+| plan-20260228-153856/slave-3 | developer | bug-040 | resolved (already fixed) | 2026-02-28T15:47:00Z | 12938d5 |
+| plan-20260228-153856/slave-1 | developer | feature-004 (design) | success | 2026-02-28T15:53:30Z | bc86717 |
+| plan-20260228-153856/slave-2 | developer | feature-005 (design) | success | 2026-02-28T15:56:30Z | 9a8240d |
+| plan-20260228-153856/slave-4 | reviewers | ptu-rule-120 | CHANGES_REQUIRED | 2026-02-28T16:52:00Z | 50ee082, cea090a |
+| plan-20260228-153856/slave-5 | reviewers | ptu-rule-124+refactoring-096 | ptu-rule-124: APPROVED, refactoring-096: CHANGES_REQUIRED | 2026-02-28T16:02:00Z | e79e0dd, 3b4850f |
