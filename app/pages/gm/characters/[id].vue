@@ -617,34 +617,6 @@ const saveChanges = async () => {
   gap: $spacing-xs;
 }
 
-.tag {
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
-
-  &--class {
-    background: rgba($color-accent-violet, 0.2);
-    color: $color-accent-violet;
-  }
-
-  &--feature {
-    background: rgba($color-accent-scarlet, 0.2);
-    color: $color-accent-scarlet;
-  }
-
-  &--edge {
-    background: rgba($color-info, 0.2);
-    color: $color-info;
-  }
-
-  &--capability {
-    background: rgba($color-success, 0.15);
-    border-color: rgba($color-success, 0.3);
-    color: $color-success;
-  }
-}
-
 .info-section__hint {
   font-size: $font-size-xs;
   color: $color-text-muted;
