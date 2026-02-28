@@ -12,137 +12,122 @@ commits_reviewed:
   - 7103752
   - 062f41b
   - 5d3b632
-mechanics_verified:
-  - Skill Edge pathetic skills guard
-  - Naturewalk trainer support
-  - capabilities field data integrity
+files_reviewed:
+  - app/composables/useCharacterCreation.ts
+  - app/utils/combatantCapabilities.ts
+  - app/prisma/schema.prisma
+  - app/types/character.ts
+  - app/components/character/tabs/HumanClassesTab.vue
+  - app/pages/gm/characters/[id].vue
+  - app/server/api/characters/[id].put.ts
+  - app/server/api/characters/index.post.ts
+  - app/server/services/combatant.service.ts
+  - app/server/utils/serializers.ts
+  - app/components/character/CharacterModal.vue
 verdict: APPROVED
 issues_found:
   critical: 0
   high: 0
   medium: 1
-ptu_refs:
-  - core/02-character-creation.md#Step 3 (p.18)
-  - core/03-skills-edges-and-features.md#Skill Edges (p.41)
-  - core/04-trainer-classes.md#Survivalist (p.149)
-  - core/04-trainer-classes.md#Naturewalk immunity (p.276 equivalent at line 2800)
-  - core/10-indices-and-reference.md#Naturewalk (p.322)
-  - core/09-gear-and-items.md#Snow Boots / Jungle Boots
-reviewed_at: 2026-02-28T04:30:00Z
-follows_up: (none - first review)
+reviewed_at: 2026-02-28T08:15:00Z
+follows_up: null
 ---
 
-## Mechanics Verified
+## Review Scope
 
-### 1. Skill Edge Pathetic Skills Guard (refactoring-095)
+PTU rules correctness review for:
 
-- **Rule:** "You also may not use Edges to Rank Up any of the Skills you lowered to Pathetic Rank." (`core/02-character-creation.md`, p.18, Step 3). Additionally: "These Pathetic Skills cannot be raised above Pathetic during character creation" (p.14).
-- **Decree:** decree-027 explicitly rules: "Skill Edges cannot raise Pathetic-locked skills during character creation." This is the controlling authority.
-- **Implementation:** `addEdge()` in `useCharacterCreation.ts` (line 274-280) now rejects any string matching `/^skill edge:/i` with a user-friendly error message. The `addSkillEdge()` function (line 314-340) already checks `form.patheticSkills.includes(skill)` and blocks Pathetic skills with a decree-027 citation. The two-pronged approach prevents bypass via:
-  1. Direct string injection through `addEdge()` (e.g., typing "Skill Edge: Athletics" into a generic edge input)
-  2. Programmatic addition through `addSkillEdge()` (the intended path, which validates against patheticSkills)
-- **Analysis:** The regex `^skill edge:/i` anchors to the start of the string and is case-insensitive. This correctly catches "Skill Edge: Athletics", "skill edge: Perception", "SKILL EDGE: Combat", etc. The anchor `^` prevents false positives on strings like "Advanced Skill Edge" (which is not a real PTU edge, but the guard is appropriately conservative). The return type was changed from `void` to `string | null` to propagate errors to the UI.
-- **Edge case:** A user typing " Skill Edge: Athletics" (leading space) would bypass the guard. However, this is an acceptable risk: (a) it's a GM tool, not adversarial; (b) the string wouldn't match the `removeEdge()` Skill Edge pattern at line 286 either (`/^Skill Edge: (.+)$/`), so the skill revert-on-remove logic wouldn't fire. The mismatch is internally consistent.
-- **Status:** CORRECT. Per decree-027, this approach was ruled correct.
+1. **refactoring-095**: Guard `addEdge()` against Skill Edge string injection bypassing decree-027 pathetic skill block.
+2. **ptu-rule-119**: Trainer Naturewalk support (Survivalist class feature, PTU 04-trainer-classes.md:4688-4693).
 
-### 2. Naturewalk Trainer Support (ptu-rule-119)
+### PTU References Verified
 
-#### 2a. Survivalist Class Feature (Naturewalk Grant)
+- **PTU 02-character-creation.md** (pp. 14, 18): Pathetic skills cannot be raised during character creation.
+- **PTU 03-skills-edges-and-features.md** (p. 41): Basic Skills Edge progression (Pathetic -> Untrained applies post-creation only per decree-027).
+- **PTU 04-trainer-classes.md:4688-4693**: Survivalist class feature -- "Choose a Terrain... You gain Naturewalk for that terrain."
+- **PTU 04-trainer-classes.md:2798-2801**: Naturewalk capability definition -- "Immunity to Slowed or Stuck in its appropriate Terrains."
+- **PTU 10-indices-and-reference.md:322-325**: "Naturewalk is always listed with Terrain types in parentheses... Pokemon with Naturewalk treat all listed terrains as Basic Terrain."
+- **PTU 09-gear-and-items.md:1701-1714**: Snow Boots (Naturewalk Tundra), Jungle Boots (Naturewalk Forest) -- items can also grant trainers Naturewalk.
 
-- **Rule:** "Choose a Terrain in which you have spent at least three nights. You gain Naturewalk for that terrain" (`core/04-trainer-classes.md`, p.149, Survivalist [Class] feature). The terrains are: Grassland, Forest, Wetlands, Ocean, Tundra, Mountain, Cave, Urban, Desert.
-- **Implementation:** The `capabilities` field on `HumanCharacter` stores trainer Naturewalk as strings like `"Naturewalk (Forest)"`. This correctly mirrors the PTU format. The Survivalist grants up to 4 terrains (at 0/2/4/6 Survivalist Features), which the app handles by allowing a free-form string array. The GM manually enters capabilities via the edit UI.
-- **Status:** CORRECT. The data format matches PTU's Naturewalk notation.
+### Decree Compliance
 
-#### 2b. Naturewalk Terrain Bypass for Trainers
+- **decree-027**: Properly enforced. The `addEdge()` guard blocks `"Skill Edge: ..."` strings from the free-text edge input, closing the injection vector. The existing `addSkillEdge()` function already blocks Pathetic skills (implemented in ptu-rule-118). Both paths are now guarded.
 
-- **Rule:** "Pokemon with Naturewalk treat all listed terrains as Basic Terrain" (`core/10-indices-and-reference.md`, p.322). The Survivalist class grants Naturewalk directly to the trainer, making the trainer subject to the same Naturewalk rules as Pokemon.
-- **Implementation:** `getCombatantNaturewalks()` in `combatantCapabilities.ts` (line 195-206) now handles both Pokemon and human combatants. For Pokemon, it delegates to `getPokemonNaturewalks()` which checks both `capabilities.naturewalk` and `capabilities.otherCapabilities`. For humans, it reads `human.capabilities` and passes it through `parseNaturewalksFromOtherCaps()`, which parses the `"Naturewalk (Forest)"` format.
-- **Analysis:** The parsing regex at line 245 (`/^Naturewalk\s*\(([^)]+)\)$/i`) correctly handles:
-  - `"Naturewalk (Forest)"` -> `['Forest']`
-  - `"Naturewalk (Forest, Grassland)"` -> `['Forest', 'Grassland']`
-  - `"Naturewalk (Forest and Grassland)"` -> `['Forest', 'Grassland']`
-  - Case-insensitive matching
-- **Status:** CORRECT.
+## Rules Analysis
 
-#### 2c. Naturewalk Status Immunity for Trainers
+### refactoring-095: addEdge() Skill Edge Injection Guard
 
-- **Rule:** "Naturewalk: Immunity to Slowed or Stuck in its appropriate Terrains" (`core/04-trainer-classes.md`, line 2800, in the Rider class's Mounted Prowess feature list -- this is the PTU general Naturewalk immunity rule).
-- **Implementation:** `findNaturewalkImmuneStatuses()` (line 321-347) previously had a `if (combatant.type !== 'pokemon') return []` guard that was removed. Now it calls `getCombatantNaturewalks()` which handles both Pokemon and trainers. The function correctly:
-  1. Checks terrain is enabled and combatant has a position
-  2. Filters for Slowed/Stuck statuses only
-  3. Looks up the terrain cell at the combatant's position
-  4. Calls `naturewalkBypassesTerrain()` to check if the combatant's Naturewalk matches
-- **Status:** CORRECT. The immunity applies identically to trainers and Pokemon per PTU rules.
+**Rule correctness: CORRECT**
 
-#### 2d. Snow Boots / Jungle Boots Compatibility
+The regex `/^skill edge:/i` correctly identifies and blocks strings that match the `"Skill Edge: {skillName}"` format used by `addSkillEdge()`. This prevents a user from typing `"Skill Edge: Athletics"` into the generic edge text input to bypass the pathetic skill check.
 
-- **Rule:** "Snow Boots grant you the Naturewalk (Tundra) capability" (`core/09-gear-and-items.md`, p.1701). "Jungle Boots grant you the Naturewalk (Forest) capability" (p.1714).
-- **Implementation:** The free-form `capabilities: string[]` field supports this. A GM can add `"Naturewalk (Tundra)"` or `"Naturewalk (Forest)"` from equipment as well as from Survivalist. The parsing handles all formats identically.
-- **Status:** CORRECT. Not explicitly targeted by ptu-rule-119 but the implementation naturally supports it.
+The guard correctly:
+- Uses case-insensitive matching (`/i` flag) to prevent case-variant bypasses
+- Only checks the prefix (`^skill edge:`) -- any string starting with "Skill Edge:" is blocked
+- Does not interfere with legitimate edges (e.g., "Basic Edge", "Skill Stunt: Acrobatics" -- note "Skill Stunt" is a different format)
+- Returns a descriptive error string consistent with the existing `addSkillEdge()` return pattern
 
-### 3. Capabilities Field Data Integrity
+**Edge case verified**: "Skilled Edge" (no space before "Edge") would NOT be blocked, which is correct -- it is not the `"Skill Edge: X"` format.
 
-- **Prisma schema** (`schema.prisma` line 40-42): `capabilities String @default("[]")` with comment citing PTU p.149. Default `"[]"` is correct for JSON array.
-- **TypeScript interface** (`types/character.ts` line 238-239): `capabilities: string[]` -- matches the JSON array shape.
-- **API create** (`index.post.ts` line 41): `capabilities: JSON.stringify(body.capabilities || [])` -- defaults to empty array, correct.
-- **API update** (`[id].put.ts` line 42): `if (body.capabilities !== undefined) updateData.capabilities = JSON.stringify(body.capabilities)` -- conditional update, correct.
-- **Serializer (full)** (`serializers.ts` line 92): `capabilities: JSON.parse(character.capabilities || '[]')` -- defensive `|| '[]'` handles null/undefined from pre-migration records, correct.
-- **Serializer (summary)** (`serializers.ts` line 160): Same pattern, correct.
-- **Combatant builder** (`combatant.service.ts` line 626): `capabilities: JSON.parse(record.capabilities || '[]')` -- defensive fallback, correct.
-- **Status:** CORRECT. Full data layer coverage: Prisma -> API (create+update) -> serializers (full+summary) -> combatant builder -> TypeScript type.
+### ptu-rule-119: Trainer Naturewalk via Survivalist
 
-### 4. UI Capabilities Display and Edit
+**Rule correctness: CORRECT**
 
-- **HumanClassesTab.vue** (read-only modal view): Added `capabilities` prop, renders as green tags with `tag--capability` class. Empty state updated to include capabilities. Correct.
-- **CharacterModal.vue**: Passes `humanData.capabilities` to HumanClassesTab. Correct.
-- **gm/characters/[id].vue** (editable character sheet): Shows capabilities in Classes tab. In edit mode, provides a comma-separated text input with `onCapabilitiesChange()` handler (line 429-436) that splits, trims, and filters. In view mode, shows green tags. Shows the section when editing even if empty (to allow adding). Correct.
-- **Note on onCapabilitiesChange:** The handler uses `@change` (fires on blur/enter) rather than `@input` (fires on every keystroke). This is appropriate for comma-separated input to avoid premature splitting while the user is still typing.
+PTU 04-trainer-classes.md:4688-4693 (Survivalist class, Rank 1 feature):
+> "Choose a Terrain in which you have spent at least three nights. You gain Naturewalk for that terrain..."
 
-## Issues Found
+This confirms that trainers can gain Naturewalk through the Survivalist class. The implementation correctly:
 
-### MED-01: Trainer movement capabilities (Swim, Burrow, Sky, Overland) not extended to trainers
+1. **Stores capabilities as a flat string array** on HumanCharacter: `["Naturewalk (Forest)", "Naturewalk (Mountain)"]`. This matches the format used in `otherCapabilities` for Pokemon, enabling code reuse via `parseNaturewalksFromOtherCaps()`.
 
-**Severity:** MEDIUM
-**Files:** `app/utils/combatantCapabilities.ts` lines 15-90
+2. **Extends `getCombatantNaturewalks`** to check human capabilities. For humans, it calls `parseNaturewalksFromOtherCaps(caps)` directly on the `capabilities` array. This is the correct approach since human capabilities use the same string format as Pokemon `otherCapabilities`.
 
-The movement capability functions (`combatantCanSwim`, `combatantCanBurrow`, `combatantCanFly`, `getOverlandSpeed`, etc.) all return hardcoded defaults for non-Pokemon combatants (e.g., `return false` for swim/burrow/fly, `return 5` for overland). While Naturewalk was correctly extended, the other movement capabilities were not. This is outside the scope of ptu-rule-119 (which specifically targeted Naturewalk) and is a pre-existing limitation, but worth noting for completeness.
+3. **Removes the `combatant.type !== 'pokemon'` guard** from `findNaturewalkImmuneStatuses`. PTU 04-trainer-classes.md:2800-2801 states Naturewalk grants "Immunity to Slowed or Stuck in its appropriate Terrains" -- this applies to ALL entities with Naturewalk, not just Pokemon. The implementation correctly makes this function type-agnostic.
 
-The Snow Boots item (PTU p.1701) also lowers Overland Speed by -1 in ice/snow, which the current capabilities field cannot express (it's a conditional speed modifier, not a simple capability). This is a future enhancement consideration.
+4. **Terrain bypass via `naturewalkBypassesTerrain`** already calls `getCombatantNaturewalks`, which now works for humans. No additional changes were needed -- the function is already type-agnostic via delegation.
 
-**Impact:** LOW -- trainers rarely need Swim/Sky/Burrow capabilities in the VTT. Overland speed 5 is the standard trainer speed. No incorrect game values are produced for the implemented Naturewalk mechanic.
+**PTU items also grant Naturewalk to trainers**: Snow Boots (Tundra), Jungle Boots (Forest), per PTU 09-gear-and-items.md:1701-1714. The `capabilities` field supports these too -- the GM simply adds `"Naturewalk (Tundra)"` when the trainer equips Snow Boots. This is a correct general-purpose approach.
 
-**Recommendation:** File as a separate future ticket if trainer movement capability editing is desired.
+### Data Shape Analysis
 
-## Decree Compliance
+The `capabilities: string[]` field on HumanCharacter is appropriate:
 
-| Decree | Status | Notes |
-|--------|--------|-------|
-| decree-027 | COMPLIANT | addEdge() blocks Skill Edge injection; addSkillEdge() checks patheticSkills |
-| decree-003 | COMPLIANT | Naturewalk bypass explicitly excludes enemy-occupied rough terrain (line 267-269 comment, enforced by separate enemy-occupied logic) |
-| decree-010 | NOT AFFECTED | Multi-tag terrain system unchanged |
+- **Not overly structured**: Trainers can gain various capabilities beyond Naturewalk (e.g., Wallclimber from 04-trainer-classes.md:2798). A flat string array accommodates future capability types without schema changes.
+- **Matches Pokemon pattern**: Pokemon use `otherCapabilities: string[]` for free-form capability strings. Using the same format for humans enables code reuse.
+- **Manual entry is acceptable**: Capabilities come from class features and items, not bulk generation. Manual entry via comma-separated text input is appropriate for the low volume.
 
-## Summary
+## Issues
 
-Both tickets are implemented correctly from a PTU rules perspective:
+### MED-01: Equipment-granted Naturewalk not automatically tracked
 
-1. **refactoring-095** adds a proper guard to `addEdge()` that prevents Skill Edge string injection, enforcing decree-027's ruling that Pathetic skills cannot be raised during character creation. The regex is appropriately conservative and the return type change (`void` -> `string | null`) enables UI error feedback.
+**Rule reference:** PTU 09-gear-and-items.md:1701-1714 (Snow Boots, Jungle Boots)
 
-2. **ptu-rule-119** adds a complete `capabilities` field to the HumanCharacter data model (Prisma, TypeScript, API create/update, serializers, combatant builder) and extends the Naturewalk logic in `combatantCapabilities.ts` to check trainer capabilities alongside Pokemon capabilities. The Survivalist class grants Naturewalk per PTU p.149, and the implementation correctly applies both terrain bypass and Slowed/Stuck immunity to trainers with Naturewalk.
+Trainers can gain Naturewalk from equipped items (Snow Boots grant Naturewalk Tundra, Jungle Boots grant Naturewalk Forest). Currently, the `capabilities` field is manually edited by the GM, separate from the equipment system. If a trainer equips Jungle Boots, the GM must manually add `"Naturewalk (Forest)"` to capabilities. If the trainer unequips the boots, the GM must manually remove it.
 
-All 11 files changed are consistent with each other. The data flows correctly from database through API to client and back. The `parseNaturewalksFromOtherCaps()` function is reused for both Pokemon `otherCapabilities` and trainer `capabilities`, avoiding code duplication.
+This is acceptable for the current scope (ptu-rule-119 is specifically about Survivalist class features), but creates a consistency risk: the equipment system already tracks equipped items with stat bonuses and DR, but capabilities from equipment are not auto-derived.
 
-## Rulings
+**Not blocking**: The ticket scope is Survivalist Naturewalk, not equipment-derived capabilities. However, a follow-up ticket should be filed to track auto-deriving capabilities from equipped items.
 
-1. The `addEdge()` regex guard `/^skill edge:/i` is PTU-correct. The only legitimate path for Skill Edges is through `addSkillEdge()`, which enforces the patheticSkills check per decree-027.
+## What Looks Good (Rules Perspective)
 
-2. Trainers gaining Naturewalk via Survivalist (PTU p.149) should receive the same terrain bypass and status immunity benefits as Pokemon with Naturewalk. The implementation correctly unifies this logic.
+1. **Survivalist terrain selection is correctly modeled.** The class feature allows choosing terrains incrementally (1 at Rank 1, 2 at 2 features, 3 at 4 features, 4 at 6 features). The flat array supports adding terrains incrementally without data structure changes.
 
-3. The free-form `capabilities: string[]` storage format (with strings like `"Naturewalk (Forest)"`) is appropriate. It accommodates Survivalist class features, Snow Boots/Jungle Boots items, and any future capability sources without schema changes.
+2. **Naturewalk immunity logic is correct.** The `findNaturewalkImmuneStatuses` function correctly:
+   - Only blocks Slowed and Stuck (the two statuses PTU p.276/p.2800 specifies)
+   - Requires terrain to be enabled and combatant to have a position
+   - Checks the terrain type at the combatant's current position
+   - Uses the `NATUREWALK_TERRAIN_MAP` for terrain-to-type mapping
+
+3. **decree-027 enforcement is complete.** Both entry points for edges during character creation are now guarded:
+   - `addSkillEdge()`: Checks `patheticSkills.includes(skill)` directly
+   - `addEdge()`: Blocks `"Skill Edge: ..."` strings to prevent injection
+
+4. **Page references are accurate.** PTU p.149 corresponds to the Survivalist class in Chapter 4 (04-trainer-classes.md:4688). The comments correctly cite this reference.
 
 ## Verdict
 
-**APPROVED** -- No critical or high issues. One medium observation (MED-01) is a pre-existing limitation outside the scope of these tickets. All PTU rules are correctly implemented. Decree-027 compliance is verified. Decree-003 compatibility is maintained.
+**APPROVED** from a game logic / PTU rules perspective.
 
-## Required Changes
+The implementation correctly models Survivalist Naturewalk for trainers and the decree-027 injection guard. One MEDIUM issue (equipment-granted Naturewalk) is noted for follow-up but does not block this change.
 
-None. The implementation is correct as written.
+The code-review (code-review-215) has identified implementation-level issues (comma parsing, missing tests, UX feedback) that should be addressed before merge. The rules logic itself is sound.
