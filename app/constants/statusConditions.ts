@@ -24,6 +24,15 @@ export const ALL_STATUS_CONDITIONS: StatusCondition[] = [
 ]
 
 /**
+ * Conditions that deal tick damage at end of turn.
+ * PTU p.246-247: Burn/Poison (1 tick), Badly Poisoned (escalating),
+ * Cursed (2 ticks on Standard Action only per decree-032).
+ */
+export const TICK_DAMAGE_CONDITIONS: StatusCondition[] = [
+  'Burned', 'Poisoned', 'Badly Poisoned', 'Cursed'
+]
+
+/**
  * Conditions that set evasion to 0.
  * PTU p.246 (Frozen), p.247 (Asleep, Vulnerable):
  * "Evasion becomes 0" / "The target's evasion becomes 0"
