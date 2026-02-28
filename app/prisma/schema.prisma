@@ -229,7 +229,7 @@ model Encounter {
   defeatedEnemies        String  @default("[]") // JSON array
   xpDistributed          Boolean @default(false) // Safety flag: true after XP has been distributed
   significanceMultiplier Float   @default(1.0) // PTU significance multiplier for XP calculation (Core p.460)
-  significanceTier       String  @default("insignificant") // Preset tier label: insignificant, everyday, significant, climactic, legendary
+  significanceTier       String  @default("insignificant") // Preset tier label: insignificant, everyday, significant (decree-030: capped at x5)
 
   // Timestamps
   createdAt     DateTime @default(now())
