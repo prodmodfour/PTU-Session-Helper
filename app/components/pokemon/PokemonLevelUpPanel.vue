@@ -7,6 +7,14 @@
     <div class="level-up-panel__content">
       <div class="level-up-item">
         <strong>Stat Points:</strong> +{{ levelUpInfo.totalStatPoints }} (assign following Base Relations)
+        <button
+          v-if="pokemon && !showAllocationPanel"
+          class="btn btn--sm btn--accent allocate-btn"
+          @click="showAllocationPanel = true"
+        >
+          <PhSliders :size="14" />
+          Allocate Stats
+        </button>
       </div>
       <div v-if="levelUpInfo.totalTutorPoints > 0" class="level-up-item">
         <strong>Tutor Points:</strong> +{{ levelUpInfo.totalTutorPoints }}
@@ -26,10 +34,22 @@
         Check the Pokedex entry for possible evolution at this level.
       </div>
     </div>
+
+    <!-- Inline stat allocation panel -->
+    <StatAllocationPanel
+      v-if="showAllocationPanel && pokemon"
+      :pokemon="pokemon"
+      :points-to-allocate="levelUpInfo.totalStatPoints"
+      @allocated="handleAllocated"
+      @cancelled="showAllocationPanel = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { PhSliders } from '@phosphor-icons/vue'
+import type { Pokemon } from '~/types'
+
 interface LevelUpSummary {
   totalStatPoints: number
   allNewMoves: string[]
@@ -41,14 +61,27 @@ const props = defineProps<{
   pokemonId: string
   currentLevel: number
   targetLevel: number | undefined
+  /** Pokemon data for stat allocation (optional — allocation button hidden without it) */
+  pokemon?: Pokemon | null
+}>()
+
+const emit = defineEmits<{
+  allocated: []
 }>()
 
 const levelUpInfo = ref<LevelUpSummary | null>(null)
+const showAllocationPanel = ref(false)
+
+function handleAllocated() {
+  showAllocationPanel.value = false
+  emit('allocated')
+}
 
 // Watch for level changes — fetch level-up info from server
 watch(() => props.targetLevel, async (newLevel) => {
   if (!newLevel || newLevel <= props.currentLevel) {
     levelUpInfo.value = null
+    showAllocationPanel.value = false
     return
   }
   try {
@@ -132,6 +165,14 @@ watch(() => props.targetLevel, async (newLevel) => {
     color: $color-text-muted;
     font-size: $font-size-xs;
   }
+}
+
+.allocate-btn {
+  margin-left: $spacing-sm;
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  vertical-align: middle;
 }
 
 @keyframes slideDown {

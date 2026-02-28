@@ -52,6 +52,8 @@
         :pokemon-id="pokemon.id"
         :current-level="pokemon.level"
         :target-level="editData.level"
+        :pokemon="pokemon"
+        @allocated="loadPokemon"
       />
 
       <!-- Tabs -->
