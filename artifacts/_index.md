@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-02-28T09:44:59.161Z
+generated_at: 2026-02-28T10:23:37.056Z
 ---
 
 # Artifact Ecosystem Index
@@ -118,7 +118,7 @@ generated_at: 2026-02-28T09:44:59.161Z
 
 | Directory | Files |
 |-----------|-------|
-| reviews/ | 136 |
+| reviews/ | 138 |
 | tickets/ (all) | 193 |
 | designs/ | 12 |
 | matrix/ | 9 domains |
