@@ -176,6 +176,18 @@
         Act
       </button>
 
+      <!-- Switch Pokemon Button (visible for trainers with Pokemon, or Pokemon owned by trainers) -->
+      <button
+        v-if="canShowSwitchButton"
+        class="btn btn--sm btn--secondary"
+        title="Switch Pokemon"
+        :disabled="!isCurrent || combatant.turnState.standardActionUsed"
+        @click="$emit('switchPokemon', combatant.id)"
+      >
+        <img src="/icons/phosphor/arrow-clockwise.svg" alt="" class="btn-icon" />
+        Switch
+      </button>
+
       <button class="btn btn--sm btn--ghost" @click="$emit('remove', combatant.id)">
         Remove
       </button>
@@ -225,6 +237,7 @@ const emit = defineEmits<{
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]
   status: [combatantId: string, add: StatusCondition[], remove: StatusCondition[], override: boolean]
   openActions: [combatantId: string]
+  switchPokemon: [combatantId: string]
 }>()
 
 const { getSpriteUrl } = usePokemonSprite()
@@ -322,6 +335,19 @@ const captureRate = computed(() => {
     injuries: pokemon.injuries || 0,
     isShiny: pokemon.shiny || false
   })
+})
+
+// Show switch button for trainers who own Pokemon in encounter, or for Pokemon owned by a trainer
+const canShowSwitchButton = computed(() => {
+  if (props.combatant.type === 'human') {
+    // Trainer: show if they own any Pokemon in the encounter
+    return true
+  }
+  if (props.combatant.type === 'pokemon') {
+    const pokemon = entity.value as Pokemon
+    return !!pokemon.ownerId
+  }
+  return false
 })
 
 // Format stat name for display
@@ -606,6 +632,15 @@ const handleActClick = () => {
     color: $color-danger;
     background: rgba($color-danger, 0.2);
   }
+}
+
+// Button icon (inline SVG in buttons)
+.btn-icon {
+  width: 14px;
+  height: 14px;
+  filter: invert(1);
+  vertical-align: middle;
+  margin-right: 2px;
 }
 
 // Action rows

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration } from '~/types'
+import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, SwitchAction } from '~/types'
 import type { SignificanceTier } from '~/utils/encounterBudget'
 
 // History composable for undo/redo
@@ -225,6 +225,52 @@ export const useEncounterStore = defineStore('encounter', {
         this.encounter = response.data
       } catch (e: any) {
         this.error = e.message || 'Failed to add combatant'
+        throw e
+      }
+    },
+
+    /** Perform a full Pokemon switch (recall one, release another) as a Standard Action */
+    async switchPokemon(
+      trainerId: string,
+      recallCombatantId: string,
+      releaseEntityId: string,
+      options?: {
+        faintedSwitch?: boolean
+        forced?: boolean
+        releasePosition?: { x: number; y: number }
+      }
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{
+          data: {
+            encounter: Encounter
+            switchDetails: {
+              trainerName: string
+              recalledName: string
+              releasedName: string
+              actionCost: 'standard' | 'shift'
+              rangeToRecalled: number
+              releasedInitiative: number
+              canActThisRound: boolean
+            }
+          }
+        }>(`/api/encounters/${this.encounter.id}/switch`, {
+          method: 'POST',
+          body: {
+            trainerId,
+            recallCombatantId,
+            releaseEntityId,
+            faintedSwitch: options?.faintedSwitch ?? false,
+            forced: options?.forced ?? false,
+            releasePosition: options?.releasePosition
+          }
+        })
+        this.encounter = response.data.encounter
+        return response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to switch Pokemon'
         throw e
       }
     },
@@ -482,6 +528,10 @@ export const useEncounterStore = defineStore('encounter', {
       // League Battle declarations
       if (data.declarations !== undefined) {
         this.encounter.declarations = data.declarations
+      }
+      // Switch actions
+      if (data.switchActions !== undefined) {
+        this.encounter.switchActions = data.switchActions
       }
       this.encounter.moveLog = data.moveLog ?? this.encounter.moveLog
       if (data.significanceMultiplier !== undefined) {

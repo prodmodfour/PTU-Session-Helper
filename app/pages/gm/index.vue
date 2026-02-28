@@ -81,6 +81,7 @@
           @status="handleStatus"
           @openActions="handleOpenActions"
           @addCombatant="showAddCombatant"
+          @switchPokemon="handleSwitchPokemon"
         />
 
         <!-- Sidebar: Move Log + Significance Panel -->
@@ -136,6 +137,18 @@
         @execute-move="handleExecuteMoveWithClose"
         @execute-action="handleExecuteActionWithBreatherShift"
         @update-status="handleStatus"
+      />
+    </Teleport>
+
+    <!-- Switch Pokemon Modal -->
+    <Teleport to="body">
+      <SwitchPokemonModal
+        v-if="showSwitchModal && switchModalTrainerId && switchModalPokemonId"
+        :trainer-id="switchModalTrainerId"
+        :pokemon-combatant-id="switchModalPokemonId"
+        :trainer-entity-id="switchModalTrainerEntityId"
+        @close="showSwitchModal = false"
+        @switched="showSwitchModal = false"
       />
     </Teleport>
 
@@ -313,6 +326,10 @@ const showShortcutsHelp = ref(false)
 // XP Distribution Modal
 const showXpModal = ref(false)
 
+// Switch Pokemon Modal state
+const showSwitchModal = ref(false)
+const switchModalCombatantId = ref<string | null>(null)
+
 // GM Action Modal state - store ID only, compute fresh combatant from store
 const actionModalCombatantId = ref<string | null>(null)
 const actionModalCombatant = computed(() => {
@@ -364,6 +381,51 @@ const pendingBreatherShift = ref<BreatherShiftResult | null>(null)
 const handleOpenActions = (combatantId: string) => {
   actionModalCombatantId.value = combatantId
 }
+
+// Switch Pokemon handler — resolves trainer/pokemon IDs and opens modal
+const handleSwitchPokemon = (combatantId: string) => {
+  if (!encounter.value) return
+  const combatant = encounter.value.combatants.find(c => c.id === combatantId)
+  if (!combatant) return
+
+  switchModalCombatantId.value = combatantId
+  showSwitchModal.value = true
+}
+
+// Computed props for the switch modal
+const switchModalTrainerId = computed(() => {
+  if (!switchModalCombatantId.value || !encounter.value) return ''
+  const combatant = encounter.value.combatants.find(c => c.id === switchModalCombatantId.value)
+  if (!combatant) return ''
+  // If this is a trainer, use their combatant ID directly
+  if (combatant.type === 'human') return combatant.id
+  // If this is a Pokemon, find the trainer by ownerId
+  const pokemon = combatant.entity as { ownerId?: string }
+  if (!pokemon.ownerId) return ''
+  const trainer = encounter.value.combatants.find(
+    c => c.type === 'human' && c.entityId === pokemon.ownerId
+  )
+  return trainer?.id ?? ''
+})
+
+const switchModalPokemonId = computed(() => {
+  if (!switchModalCombatantId.value || !encounter.value) return ''
+  const combatant = encounter.value.combatants.find(c => c.id === switchModalCombatantId.value)
+  if (!combatant) return ''
+  // If this is a Pokemon, use its combatant ID
+  if (combatant.type === 'pokemon') return combatant.id
+  // If this is a trainer, find their first Pokemon in the encounter
+  const trainerPokemon = encounter.value.combatants.find(
+    c => c.type === 'pokemon' && (c.entity as { ownerId?: string }).ownerId === combatant.entityId
+  )
+  return trainerPokemon?.id ?? ''
+})
+
+const switchModalTrainerEntityId = computed(() => {
+  if (!switchModalTrainerId.value || !encounter.value) return ''
+  const trainer = encounter.value.combatants.find(c => c.id === switchModalTrainerId.value)
+  return trainer?.entityId ?? ''
+})
 
 // Wrap handleExecuteAction to handle breather shift prompt
 const handleExecuteActionWithBreatherShift = async (combatantId: string, actionType: string) => {
