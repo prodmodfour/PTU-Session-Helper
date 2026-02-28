@@ -11,7 +11,8 @@ import type {
   TurnState,
   InjuryState,
   StageSource,
-  TrainerDeclaration
+  TrainerDeclaration,
+  SwitchAction
 } from './combat';
 import type { Pokemon, HumanCharacter, PokemonType } from './character';
 import type { SignificanceTier } from '~/utils/encounterBudget';
@@ -131,6 +132,9 @@ export interface Encounter {
   // Populated during trainer_declaration phase, consumed during trainer_resolution phase
   // Cleared at the start of each new round
   declarations: TrainerDeclaration[];
+
+  /** Per-round switch action log. Cleared at round start. */
+  switchActions: SwitchAction[];
 
   // State
   isActive: boolean;

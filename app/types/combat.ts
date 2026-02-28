@@ -96,6 +96,32 @@ export interface TrainerDeclaration {
   round: number;
 }
 
+/**
+ * Tracks a switching action performed during a combat round.
+ * Used to enforce action economy and League restrictions.
+ * Cleared at the start of each new round.
+ */
+export interface SwitchAction {
+  /** Combatant ID of the trainer who performed the switch */
+  trainerId: string;
+  /** Combatant ID of the recalled Pokemon (null if release-only) */
+  recalledCombatantId: string | null;
+  /** Entity ID of the recalled Pokemon */
+  recalledEntityId: string | null;
+  /** Combatant ID of the released Pokemon (null if recall-only) */
+  releasedCombatantId: string | null;
+  /** Entity ID of the released Pokemon */
+  releasedEntityId: string | null;
+  /** Type of switch action */
+  actionType: 'full_switch' | 'fainted_switch' | 'recall_only' | 'release_only' | 'forced_switch';
+  /** Action cost */
+  actionCost: 'standard' | 'shift';
+  /** Round number */
+  round: number;
+  /** Whether forced by a move (Roar, Whirlwind, etc.) */
+  forced: boolean;
+}
+
 // PTU Injury tracking
 export interface InjuryState {
   count: number;
