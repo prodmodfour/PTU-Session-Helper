@@ -4,6 +4,8 @@ title: "Significance presets: are x6 (climactic) and x8 (legendary) tiers accept
 priority: P3
 severity: MEDIUM
 category: decree-need
+status: addressed
+decree_id: decree-030
 source: pokemon-lifecycle audit R058, encounter-tables audit R008, scenes audit R030 (plan-20260228-072000 slaves 3+4)
 created_by: slave-collector (plan-20260228-093200)
 created_at: 2026-02-28

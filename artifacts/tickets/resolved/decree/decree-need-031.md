@@ -4,6 +4,8 @@ title: "Encounter budget formula: bogus PTU citation 'Core p.473' — keep heuri
 priority: P4
 severity: LOW
 category: decree-need
+status: addressed
+decree_id: decree-031
 source: encounter-tables audit A1 R006 (plan-20260228-072000 slave-3)
 created_by: slave-collector (plan-20260228-093200)
 created_at: 2026-02-28

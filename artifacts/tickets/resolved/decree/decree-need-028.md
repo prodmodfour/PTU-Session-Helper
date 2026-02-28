@@ -4,6 +4,8 @@ title: "Rest healing minimum: should floor(maxHp/16) = 0 heal at least 1 HP?"
 priority: P3
 severity: MEDIUM
 category: decree-need
+status: addressed
+decree_id: decree-029
 source: healing audit A1 (plan-20260228-072000 slave-3)
 created_by: slave-collector (plan-20260228-093200)
 created_at: 2026-02-28

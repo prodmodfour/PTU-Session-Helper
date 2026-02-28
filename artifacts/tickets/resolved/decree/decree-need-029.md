@@ -4,6 +4,8 @@ title: "New Day: should bound AP reset at the start of a new game day?"
 priority: P2
 severity: HIGH
 category: decree-need
+status: addressed
+decree_id: decree-028
 source: healing audit A2 (plan-20260228-072000 slave-3) + bug-038 ambiguity note (plan-20260228-093200 slave-1)
 created_by: slave-collector (plan-20260228-093200)
 created_at: 2026-02-28
