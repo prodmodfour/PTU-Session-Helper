@@ -3,6 +3,7 @@ import { handleSlaves } from './slaves.mjs'
 import { handleTickets } from './tickets.mjs'
 import { handleCoverage } from './coverage.mjs'
 import { handlePanes } from './panes.mjs'
+import { handleButtonInteraction } from './buttons.mjs'
 
 const COMMAND_HANDLERS = {
   status: handleStatus,
@@ -14,6 +15,17 @@ const COMMAND_HANDLERS = {
 
 export function registerCommands(client) {
   client.on('interactionCreate', async interaction => {
+    // Handle button interactions
+    if (interaction.isButton()) {
+      try {
+        await handleButtonInteraction(interaction)
+      } catch (error) {
+        console.error('Button interaction failed:', error)
+      }
+      return
+    }
+
+    // Handle slash commands
     if (!interaction.isChatInputCommand()) return
 
     const handler = COMMAND_HANDLERS[interaction.commandName]

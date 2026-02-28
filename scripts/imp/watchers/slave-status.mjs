@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { readdirSync } from 'node:fs'
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js'
 import { config } from '../config.mjs'
 import { readJsonSafe } from '../formatters/parsers.mjs'
 import { slaveTransitionEmbed } from '../formatters/embeds.mjs'
@@ -54,7 +55,21 @@ async function checkTransition(filename) {
 
   try {
     const embed = slaveTransitionEmbed(data.slave_id || filename, oldStatus, newStatus, data)
-    await sendEvent(eventType, { embeds: [embed] })
+    const payload = { embeds: [embed] }
+
+    // Add View Logs button for completed/failed slaves
+    if (newStatus === 'completed' || newStatus === 'failed') {
+      const slaveNum = data.slave_id || filename.replace('slave-', '').replace('.json', '')
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`view_logs_${slaveNum}`)
+          .setLabel('View Logs')
+          .setStyle(ButtonStyle.Secondary)
+      )
+      payload.components = [row]
+    }
+
+    await sendEvent(eventType, payload)
   } catch (error) {
     console.error('Failed to send slave transition notification:', error.message)
   }
