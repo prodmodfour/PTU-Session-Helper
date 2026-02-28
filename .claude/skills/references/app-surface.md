@@ -85,6 +85,8 @@ CRUD + healing/rest + equipment actions.
 
 **Trainer sprites:** `constants/trainerSprites.ts` (180 curated B2W2 sprites organized into 9 categories), `composables/useTrainerSprite.ts` (avatar URL resolution from sprite key to Showdown CDN URL), `components/character/TrainerSpritePicker.vue` (modal grid picker with category filter tabs and search).
 
+**Trainer capabilities:** `HumanCharacter.capabilities` field (`string[]`, Prisma `String @default("[]")`). Stores trainer-specific capabilities like Naturewalk from Survivalist class (PTU p.149). Format: `["Naturewalk (Forest)", "Naturewalk (Mountain)"]`. Wired through serializers, combatant service, character APIs (`POST /api/characters`, `PUT /api/characters/:id`). Parsed by `combatantCapabilities.ts` (`getCombatantNaturewalks`, `naturewalkBypassesTerrain`, `findNaturewalkImmuneStatuses`) for VTT terrain movement and status immunity. UI: editable in `[id].vue` Classes tab, displayed in `HumanClassesTab.vue` and `CharacterModal.vue`.
+
 ### Pokemon (`/api/pokemon`)
 CRUD + link/unlink + healing/rest + bulk.
 - `GET/POST /api/pokemon` — list, create
