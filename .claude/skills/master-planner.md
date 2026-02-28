@@ -418,13 +418,14 @@ Report which slaves are still running, which have completed, and any failures.
 
 When M2 items are in the queue (matrix + audit complete, tickets not yet created), the master planner creates tickets **before** assigning dev work from them. This is done during Step 2:
 
-1. Read `matrix/<domain>-matrix.md` and `matrix/<domain>-audit.md`
+1. Read `matrix/<domain>/matrix.md` and `matrix/<domain>/audit/` directory
 2. Create **bug tickets** for each `Incorrect` audit item → `tickets/open/bug/bug-<NNN>.md`
 3. Create **feature tickets** for each `Missing` matrix item → `tickets/open/feature/feature-<NNN>.md`
 4. Create **feature tickets** for each `Subsystem-Missing` matrix item → `tickets/open/feature/feature-<NNN>.md` (one ticket per subsystem, not per rule — list all affected rules in the ticket body)
-5. Create **feature tickets** for each `Implemented-Unreachable` cluster → `tickets/open/feature/feature-<NNN>.md` (group by actor+view — e.g., all player-unreachable combat rules become one "Player combat interface" ticket)
-6. Create **ptu-rule tickets** for each `Approximation` audit item → `tickets/open/ptu-rule/ptu-rule-<NNN>.md`
-7. Skip `Correct`, `Out of Scope`, `Ambiguous` items
+5. Create **feature tickets** for each `Partial` matrix item → `tickets/open/feature/feature-<NNN>.md` (one ticket per gap cluster — group related Partial rules that form a coherent feature, e.g., all AoO-related Partial rules become one "Attack of Opportunity system" ticket. Include what exists vs what's missing. Use the gap descriptions in the matrix as the ticket summary.)
+6. Create **feature tickets** for each `Implemented-Unreachable` cluster → `tickets/open/feature/feature-<NNN>.md` (group by actor+view — e.g., all player-unreachable combat rules become one "Player combat interface" ticket)
+7. Create **ptu-rule tickets** for each `Approximation` audit item → `tickets/open/ptu-rule/ptu-rule-<NNN>.md`
+8. Skip `Correct`, `Out of Scope`, `Ambiguous` items
 8. All tickets include `matrix_source` frontmatter
 9. Commit tickets to master immediately (they're data, not code)
 10. Then include the newly-created tickets in the dev work queue

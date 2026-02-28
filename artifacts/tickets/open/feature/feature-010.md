@@ -1,0 +1,47 @@
+---
+id: feature-010
+title: Status Condition Automation Engine
+priority: P1
+severity: HIGH
+status: open
+domain: combat
+source: matrix-gap (Gap 1, remaining automation)
+matrix_source: combat R088, R089, R090, R091, R093, R094
+created_by: master-planner
+created_at: 2026-02-28
+---
+
+# feature-010: Status Condition Automation Engine
+
+## Summary
+
+Status conditions are tracked as labels but their mechanical effects beyond CS changes are not automated. CS auto-apply is implemented (ptu-rule-098, decree-005) and type immunities are enforced (ptu-rule-104, decree-012), but tick damage, save checks, turn restrictions, and condition-specific effects remain manual. 6 matrix rules classified as Partial.
+
+## What's Already Implemented
+
+- Burn/Paralysis/Poison CS changes auto-applied (ptu-rule-098)
+- Type-based status immunities enforced server-side (ptu-rule-104)
+- Vulnerable/Frozen/Asleep zero evasion (ptu-rule-084)
+- Status conditions displayed in UI
+
+## What's Missing
+
+| Rule | Condition | Missing Automation |
+|------|-----------|-------------------|
+| R088 | Burn | Tick damage: 1/10 max HP at end of turn on Standard Action |
+| R089 | Frozen | Turn skip, 0 evasion, save check (20- on d20), fire-move thaw |
+| R090 | Paralysis | Save check (11+ on d20 to act), turn skip on fail |
+| R091 | Poison | Tick damage: 1/10 max HP at end of turn; Badly Poisoned escalation |
+| R093 | Sleep | Turn skip, 0 evasion, save check (11+ on d20), wake on damage |
+| R094 | Confused | Save check (DC 50- on d100), self-hit DB 6 on fail |
+
+## PTU Rules
+
+- Chapter 7 (Combat) — Status Conditions section
+- Each condition has: application rules, mechanical effects, save checks, cure conditions
+- Tick damage applies at end of the afflicted's turn
+- Save checks happen at start of turn (Frozen/Paralysis/Sleep) or on action (Confused)
+
+## Implementation Scope
+
+FULL-scope feature requiring design spec. Core combat mechanic that affects turn flow.
