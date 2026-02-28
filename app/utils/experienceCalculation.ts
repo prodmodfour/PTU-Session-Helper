@@ -3,7 +3,7 @@
  *
  * Post-combat XP calculation and distribution logic (PTU Core p.460):
  * 1. Total defeated enemy levels (Trainers count as 2x level)
- * 2. Apply GM significance multiplier (1-10)
+ * 2. Apply GM significance multiplier (typically 1-5, PTU Core p.460)
  * 3. Divide by number of players (unless Boss encounter)
  * 4. XP always rounded down (floor)
  *
@@ -57,9 +57,10 @@ export const MAX_EXPERIENCE = EXPERIENCE_CHART[MAX_LEVEL]
 /**
  * Significance multiplier presets derived from encounterBudget.ts (canonical source).
  * PTU Core p.460: GM-assigned based on narrative significance.
+ * Capped at x5 per decree-030.
  *
  * Object format for template v-for="(value, key)" iteration:
- * { insignificant: 1.0, everyday: 2.0, significant: 4.0, climactic: 6.0, legendary: 8.0 }
+ * { insignificant: 1.0, everyday: 2.0, significant: 5.0 }
  */
 export const SIGNIFICANCE_PRESETS = Object.fromEntries(
   BUDGET_PRESETS.map(p => [p.tier, p.defaultMultiplier])
