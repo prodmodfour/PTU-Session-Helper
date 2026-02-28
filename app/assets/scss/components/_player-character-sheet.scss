@@ -272,6 +272,8 @@
   gap: $spacing-xs;
 }
 
+// Tag variant colors provided by global _tags.scss partial.
+// Only player-specific sizing overrides remain here.
 .player-sheet .tag {
   padding: 2px $spacing-sm;
   background: $color-bg-tertiary;
@@ -279,11 +281,6 @@
   border-radius: $border-radius-sm;
   font-size: $font-size-xs;
   color: $color-text;
-
-  &--edge {
-    border-color: rgba($color-accent-teal, 0.3);
-    color: $color-accent-teal;
-  }
 }
 
 // =============================================
