@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-02-28T08:55:06.914Z
-total_decrees: 27
-active: 27
+generated_at: 2026-02-28T09:44:59.184Z
+total_decrees: 31
+active: 31
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (27)
+## Active Decrees (31)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -38,3 +38,7 @@ superseded: 0
 | decree-025 | vtt-grid | rough-terrain-penalty-endpoint-exclusion | Exclude endpoint cells from rough terrain accuracy penalty check |
 | decree-026 | character-lifecycle | martial-artist-not-branching | Remove Martial Artist from branching classes (align with PTU RAW) |
 | decree-027 | character-lifecycle | pathetic-skill-edge-block | Block Skill Edges from raising Pathetic skills during character creation |
+| decree-028 | rest | bound-ap-new-day | Bound AP persists across New Day |
+| decree-029 | rest | rest-healing-minimum | Rest healing has a minimum of 1 HP |
+| decree-030 | encounter | significance-preset-cap | Cap significance presets at x5 per PTU RAW |
+| decree-031 | encounter | encounter-budget-formula | Replace bogus encounter budget formula with PTU-sourced guidance |

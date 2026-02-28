@@ -1,23 +1,24 @@
 ---
-generated_at: 2026-02-28T08:55:06.909Z
-total_tickets: 189
-open: 4
-in_progress: 85
-resolved: 92
+generated_at: 2026-02-28T09:44:59.178Z
+total_tickets: 193
+open: 5
+in_progress: 87
+resolved: 96
 ---
 
 # Tickets Index
 
-## Open Tickets (4)
+## Open Tickets (5)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ptu-rule-120 | ptu-rule | P4 | combat+character-lifecycle | Trainers can gain Naturewalk from equipped items (Snow Boots |
+| ptu-rule-124 | ptu-rule | P4 | — | The encounter budget uses `avgPokemonLevel * 2 * playerCount |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
 | refactoring-096 | refactoring | P4 | character-lifecycle | Tag styles (`.tag--class`, `.tag--feature`, `.tag--edge`, `. |
 
-## In-Progress Tickets (85)
+## In-Progress Tickets (87)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -66,6 +67,8 @@ resolved: 92
 | ptu-rule-092 | ptu-rule | P3 | character-lifecycle | character-lifecycle-audit.md (R024) |
 | ptu-rule-093 | ptu-rule | P3 | vtt-grid | vtt-grid-audit.md (R015) + scenes-audit.md (R018) |
 | ptu-rule-118 | ptu-rule | P3 | character-lifecycle | decree-027 |
+| ptu-rule-122 | ptu-rule | P3 | — | decree-029 |
+| ptu-rule-123 | ptu-rule | P3 | — | decree-030 |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
@@ -107,22 +110,17 @@ resolved: 92
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (4)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-028 | P3 | — | — |
-| decree-need-029 | P2 | — | — |
-| decree-need-030 | P3 | — | — |
-| decree-need-031 | P4 | — | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 0 | 12 | 26 | 39 |
-| ptu-rule | 2 | 54 | 36 | 93 |
+| bug | 0 | 12 | 26 | 40 |
+| ptu-rule | 3 | 56 | 36 | 96 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 1 | 7 | 2 | 10 |
-| decree | 0 | 0 | 27 | 31 |
+| decree | 0 | 0 | 31 | 31 |
 | refactoring | 1 | 11 | 0 | 13 |
