@@ -425,11 +425,15 @@ const cancelEditing = () => {
   router.replace({ query: {} })
 }
 
-/** Parse comma-separated capabilities string into a clean array */
+/**
+ * Parse comma-separated capabilities string into a clean array.
+ * Uses parentheses-aware split so multi-terrain entries like
+ * "Naturewalk (Forest, Grassland)" are not mangled by inner commas.
+ */
 const onCapabilitiesChange = (event: Event) => {
   const input = (event.target as HTMLInputElement).value
   const parsed = input
-    .split(',')
+    .split(/,(?![^(]*\))/)
     .map(s => s.trim())
     .filter(s => s.length > 0)
   editData.value = { ...editData.value, capabilities: parsed }
