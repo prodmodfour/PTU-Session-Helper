@@ -7,10 +7,18 @@
  *
  * Also applies Heavily Injured HP penalty when a combatant ends their turn
  * after taking a Standard Action (PTU p.250).
+ *
+ * Tick damage (Burn, Poison, Badly Poisoned, Cursed) is processed at turn end
+ * before advancing to the next combatant (PTU p.246-247, decree-032).
  */
 import { prisma } from '~/server/utils/prisma'
+import { v4 as uuidv4 } from 'uuid'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import { calculateDamage, applyDamageToEntity } from '~/server/services/combatant.service'
+import { getTickDamageEntries, getCombatantName } from '~/server/services/status-automation.service'
+import type { TickDamageResult } from '~/server/services/status-automation.service'
+import { broadcastToEncounter } from '~/server/utils/websocket'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import type { TrainerDeclaration } from '~/types/combat'
 import type { StatusCondition } from '~/types'
@@ -130,6 +138,59 @@ export default defineEventHandler(async (event) => {
             deathCause: deathResult.cause
           }
         }
+      }
+    }
+
+    // --- Tick damage processing at turn end (PTU p.246-247) ---
+    // Burn/Poison: fire every turn (took or prevented from Standard Action).
+    // Cursed: fire ONLY when Standard Action was actually taken (decree-032).
+    // Badly Poisoned: escalating damage, supersedes Poisoned.
+    // Skip during declaration phase (declaration is not a real turn).
+    const tickResults: TickDamageResult[] = []
+
+    if (currentCombatant && currentPhase !== 'trainer_declaration' && currentCombatant.entity.currentHp > 0) {
+      const standardActionTaken = currentCombatant.turnState?.standardActionUsed ?? false
+      const tickEntries = getTickDamageEntries(currentCombatant, standardActionTaken)
+
+      for (const entry of tickEntries) {
+        // Check again — a previous tick entry may have caused fainting (E2)
+        if (currentCombatant.entity.currentHp <= 0) break
+
+        const damageResult = calculateDamage(
+          entry.damage,
+          currentCombatant.entity.currentHp,
+          currentCombatant.entity.maxHp,
+          currentCombatant.entity.temporaryHp || 0,
+          currentCombatant.entity.injuries || 0
+        )
+
+        applyDamageToEntity(currentCombatant, damageResult)
+
+        tickResults.push({
+          combatantId: currentCombatant.id,
+          combatantName: getCombatantName(currentCombatant),
+          condition: entry.condition,
+          damage: entry.damage,
+          formula: entry.formula,
+          newHp: damageResult.newHp,
+          injuryGained: damageResult.injuryGained,
+          fainted: damageResult.fainted,
+          escalationRound: entry.escalationRound
+        })
+
+        // Sync tick damage to database
+        await syncEntityToDatabase(currentCombatant, {
+          currentHp: currentCombatant.entity.currentHp,
+          temporaryHp: currentCombatant.entity.temporaryHp,
+          injuries: currentCombatant.entity.injuries,
+          statusConditions: currentCombatant.entity.statusConditions,
+          ...(damageResult.injuryGained ? { lastInjuryTime: new Date() } : {})
+        })
+      }
+
+      // Increment Badly Poisoned escalation counter for next turn
+      if (currentCombatant.entity.statusConditions?.includes('Badly Poisoned')) {
+        currentCombatant.badlyPoisonedRound = (currentCombatant.badlyPoisonedRound || 1) + 1
       }
     }
 
@@ -276,19 +337,63 @@ export default defineEventHandler(async (event) => {
       updateData.declarations = JSON.stringify([])
     }
 
+    // Add tick damage events to move log
+    if (tickResults.length > 0) {
+      const moveLog = JSON.parse(encounter.moveLog || '[]')
+      for (const tick of tickResults) {
+        moveLog.push({
+          id: uuidv4(),
+          timestamp: new Date(),
+          round: encounter.currentRound,
+          actorId: tick.combatantId,
+          actorName: tick.combatantName,
+          moveName: `${tick.condition} Tick`,
+          damageClass: 'Status',
+          targets: [{
+            id: tick.combatantId,
+            name: tick.combatantName,
+            hit: true,
+            damage: tick.damage,
+            injury: tick.injuryGained
+          }],
+          notes: tick.formula
+        })
+      }
+      updateData.moveLog = JSON.stringify(moveLog)
+    }
+
     const updatedRecord = await prisma.encounter.update({
       where: { id },
       data: updateData
     })
 
+    // Broadcast tick damage events via WebSocket
+    for (const tick of tickResults) {
+      broadcastToEncounter(id, {
+        type: 'status_tick',
+        data: {
+          encounterId: id,
+          combatantId: tick.combatantId,
+          combatantName: tick.combatantName,
+          condition: tick.condition,
+          damage: tick.damage,
+          newHp: tick.newHp,
+          fainted: tick.fainted,
+          formula: tick.formula
+        }
+      })
+    }
+
     const response = buildEncounterResponse(updatedRecord, combatants, {
-      ...(clearDeclarations && { declarations: [] })
+      ...(clearDeclarations && { declarations: [] }),
+      ...(tickResults.length > 0 && { moveLog: JSON.parse(updateData.moveLog as string) })
     })
 
     return {
       success: true,
       data: response,
-      ...(heavilyInjuredPenalty && { heavilyInjuredPenalty })
+      ...(heavilyInjuredPenalty && { heavilyInjuredPenalty }),
+      ...(tickResults.length > 0 && { tickDamage: tickResults })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
