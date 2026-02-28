@@ -294,6 +294,11 @@ model SpeciesData {
   // Level-up move learnset (JSON array: [{ level: number, move: string }])
   learnset      String   @default("[]")
 
+  // Evolution triggers (JSON array of EvolutionTrigger objects)
+  // Each entry describes one possible evolution FROM this species
+  // Empty array means no further evolution possible
+  evolutionTriggers String @default("[]")
+
   // Skills (JSON object: { skillName: diceFormula })
   skills        String   @default("{}")
 
