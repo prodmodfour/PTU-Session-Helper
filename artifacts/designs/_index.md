@@ -1,6 +1,6 @@
 ---
-generated_at: 2026-02-28T11:19:24.635Z
-total_designs: 12
+generated_at: 2026-02-28T12:20:18.806Z
+total_designs: 14
 ---
 
 # Designs Index
@@ -13,6 +13,8 @@ total_designs: 12
 | design-isometric-grid-001 | vtt-grid | p0-implemented | feature-002 | FULL | FEATURE |
 | design-league-battle-001 | combat | p1-implemented | ptu-rule-107 | FULL | PTU_RULE |
 | design-level-budget-001 | scenes | p1-complete | ptu-rule-060 | NEW_FEATURE | FEATURE_GAP |
+| design-living-weapon-001 | combat | design-complete | feature-005 | FULL | FEATURE_GAP |
+| design-mounting-001 | combat | design-complete | feature-004 | FULL | FEATURE |
 | design-player-view-core-001 | player-view | p0-implemented | feature-003 | FULL | FEATURE |
 | design-player-view-infra-001 | player-view | draft | feature-003 | FULL | INFRASTRUCTURE |
 | design-player-view-integration-001 | player-view | designed | feature-003 | FULL | FEATURE |

@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-02-28T11:19:24.614Z
-total_reviews: 142
-active_count: 87
-approved_count: 51
+generated_at: 2026-02-28T12:20:18.797Z
+total_reviews: 148
+active_count: 89
+approved_count: 55
 ---
 
 # Reviews Index
 
-## Active Reviews (87)
+## Active Reviews (89)
 
 | Review ID | Verdict | Target | Reviewer | Date |
 |-----------|---------|--------|----------|------|
@@ -78,6 +78,8 @@ approved_count: 51
 | code-review-215 | CHANGES_REQUIRED | refactoring-095+ptu-rule-119 | senior-reviewer | 2026-02-28 |
 | code-review-216 | CHANGES_REQUIRED | bug-038+bug-039 | senior-reviewer | 2026-02-28 |
 | code-review-217 | CHANGES_REQUIRED | ptu-rule-107 | senior-reviewer | 2026-02-28 |
+| code-review-222 | CHANGES_REQUIRED | ptu-rule-120 | senior-reviewer | 2026-02-28 |
+| code-review-224 | CHANGES_REQUIRED | refactoring-096 | senior-reviewer | 2026-02-28 |
 | rules-review-034 | CHANGES_REQUIRED | bug-002 | game-logic-reviewer | 2026-02-18 |
 | rules-review-039 | CHANGES_REQUIRED | ptu-rule-034, ptu-rule-035 | game-logic-reviewer | 2026-02-18 |
 | rules-review-047 | MIXED | — | game-logic-reviewer | 2026-02-19 |
@@ -103,6 +105,7 @@ approved_count: 51
 
 | Review ID | Target | Reviewer | Date |
 |-----------|--------|----------|------|
+| code-review-223 | ptu-rule-124 | senior-reviewer | 2026-02-28 |
 | code-review-221 | ptu-rule-107 | senior-reviewer | 2026-02-28 |
 | code-review-220 | bug-038 | senior-reviewer | 2026-02-28 |
 | code-review-219 | ptu-rule-122+ptu-rule-123 | senior-reviewer | 2026-02-28 |
@@ -112,13 +115,12 @@ approved_count: 51
 | code-review-212 | ptu-rule-118 | senior-reviewer | 2026-02-28 |
 | code-review-211 | refactoring-092+093 | senior-reviewer | 2026-02-28 |
 | code-review-210 | ptu-rule-114+ptu-rule-116 | senior-reviewer | 2026-02-27 |
-| code-review-209 | refactoring-087, refactoring-088, ptu-rule-117, ux-009, ux-010 | senior-reviewer | 2026-02-27 |
 
 ## Stats
 
-- Active reviews: 142
-- Needs action: 87
-- Approved/Pass (active): 51
+- Active reviews: 148
+- Needs action: 89
+- Approved/Pass (active): 55
 - Archived: 297
-- Total (active + archived): 439
-- Unique targets reviewed: 62
+- Total (active + archived): 445
+- Unique targets reviewed: 65

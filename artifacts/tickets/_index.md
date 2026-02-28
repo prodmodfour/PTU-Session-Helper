@@ -1,23 +1,25 @@
 ---
-generated_at: 2026-02-28T11:19:24.630Z
-total_tickets: 195
-open: 4
-in_progress: 90
+generated_at: 2026-02-28T12:20:18.805Z
+total_tickets: 198
+open: 6
+in_progress: 91
 resolved: 96
 ---
 
 # Tickets Index
 
-## Open Tickets (4)
+## Open Tickets (6)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | feature-004 | feature | P3 | combat | feature-004: Pokemon Mounting / Rider System |
-| feature-005 | feature | P3 | combat | feature-005: Living Weapon System (Honedge Line) |
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
+| ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
+| ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
+| ux-011 | ux | P4 | character-lifecycle | ux-011: Custom item form missing grantedCapabilities input f |
 
-## In-Progress Tickets (90)
+## In-Progress Tickets (91)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -68,6 +70,7 @@ resolved: 96
 | ptu-rule-118 | ptu-rule | P3 | character-lifecycle | decree-027 |
 | ptu-rule-122 | ptu-rule | P3 | — | decree-029 |
 | ptu-rule-123 | ptu-rule | P3 | — | decree-030 |
+| feature-005 | feature | P3 | combat | user-request |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
@@ -121,8 +124,8 @@ All decree-needs addressed.
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 0 | 12 | 26 | 40 |
-| ptu-rule | 1 | 58 | 36 | 96 |
-| feature | 2 | 1 | 1 | 5 |
-| ux | 1 | 7 | 2 | 10 |
+| ptu-rule | 3 | 58 | 36 | 98 |
+| feature | 1 | 2 | 1 | 5 |
+| ux | 2 | 7 | 2 | 11 |
 | decree | 0 | 0 | 31 | 31 |
 | refactoring | 0 | 12 | 0 | 13 |
