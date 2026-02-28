@@ -143,6 +143,24 @@ describe('New Day — boundAp preservation (decree-016)', () => {
     expect(updateCall.data.lastRestReset).toBeInstanceOf(Date)
   })
 
+  it('clamps currentAp to zero when boundAp exceeds maxAp', async () => {
+    const level = 1
+    const maxAp = calculateMaxAp(level) // 5 + floor(1/5) = 5
+    const boundAp = maxAp + 3 // 8, far exceeds max
+
+    const character = { id: 'char-1', level, boundAp }
+
+    mockPrisma.humanCharacter.findMany.mockResolvedValue([character])
+    mockPrisma.humanCharacter.update.mockResolvedValue({})
+
+    const { default: handler } = await import('~/server/api/game/new-day.post')
+    await handler({ /* mock event */ } as any)
+
+    const updateCall = mockPrisma.humanCharacter.update.mock.calls[0][0]
+    // maxAp (5) - boundAp (8) = -3, clamped to 0
+    expect(updateCall.data.currentAp).toBe(0)
+  })
+
   it('sets currentAp to full maxAp when boundAp is zero', async () => {
     const character = { id: 'char-1', level: 10, boundAp: 0 }
 
