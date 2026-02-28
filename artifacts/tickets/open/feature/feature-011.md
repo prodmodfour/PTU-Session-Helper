@@ -3,7 +3,7 @@ id: feature-011
 title: Pokemon Switching Workflow
 priority: P1
 severity: HIGH
-status: open
+status: in-progress
 domain: combat
 source: matrix-gap (Gap 3)
 matrix_source: combat R049, R050, R051, R052, R053
@@ -38,3 +38,17 @@ No formal Pokemon switching workflow exists. GM can add/remove combatants manual
 ## Implementation Scope
 
 FULL-scope feature requiring design spec. Interacts with encounter store, initiative system, and VTT grid.
+
+## Design Spec
+
+Design complete: `artifacts/designs/design-pokemon-switching-001/`
+
+| Tier | Scope | Status |
+|------|-------|--------|
+| P0 | Core switch as Standard Action, 8m range check, initiative insertion, encounter store | design-complete |
+| P1 | League restriction, fainted switch as Shift Action, forced switch exemption | design-complete |
+| P2 | Immediate-act logic, separate recall/release, player view switch request | design-complete |
+
+## Resolution Log
+
+- Design spec created by slave-2 (2026-02-28)
