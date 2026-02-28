@@ -68,6 +68,18 @@ export default defineEventHandler(async (event) => {
 
     // Process targets with full PTU damage pipeline
     const dbUpdates: Promise<unknown>[] = []
+    // Collect per-target injury/death metadata for GM alerts
+    const targetResults: Array<{
+      targetId: string
+      targetName: string
+      heavilyInjured: boolean
+      heavilyInjuredHpLoss: number
+      fainted: boolean
+      isDead: boolean
+      deathCause: string | null
+      leagueSuppressed: boolean
+    }> = []
+
     const targets = body.targetIds.map((targetId: string) => {
       const target = combatants.find(c => c.id === targetId)
       if (!target) return null
@@ -145,6 +157,18 @@ export default defineEventHandler(async (event) => {
         if (damageResult.fainted && entity.stageModifiers) {
           dbUpdates.push(syncStagesToDatabase(target, entity.stageModifiers))
         }
+
+        // Collect injury/death metadata for this target
+        targetResults.push({
+          targetId,
+          targetName,
+          heavilyInjured: hiCheck.isHeavilyInjured,
+          heavilyInjuredHpLoss,
+          fainted: damageResult.fainted || (heavilyInjuredHpLoss > 0 && entity.currentHp === 0),
+          isDead: deathResult.isDead,
+          deathCause: deathResult.cause,
+          leagueSuppressed: deathResult.leagueSuppressed
+        })
       }
 
       return {
@@ -224,7 +248,11 @@ export default defineEventHandler(async (event) => {
 
     const response = buildEncounterResponse(record, combatants, { moveLog })
 
-    return { success: true, data: response }
+    return {
+      success: true,
+      data: response,
+      ...(targetResults.length > 0 && { targetResults })
+    }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
     const message = error instanceof Error ? error.message : 'Failed to execute move'

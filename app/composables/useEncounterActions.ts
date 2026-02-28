@@ -144,9 +144,26 @@ export function useEncounterActions(options: EncounterActionsOptions) {
       : moveId)
 
     encounterStore.captureSnapshot(`${getCombatantName(combatant)} used ${moveName}`)
-    await encounterStore.executeMove(combatantId, moveId, targetIds, damage, targetDamages)
+    const targetResults = await encounterStore.executeMove(combatantId, moveId, targetIds, damage, targetDamages)
     refreshUndoRedoState()
     await broadcastUpdate()
+
+    // GM alerts for move-caused death and heavily injured penalties
+    if (targetResults) {
+      for (const result of targetResults) {
+        if (result.heavilyInjured && result.heavilyInjuredHpLoss > 0) {
+          alert(`${result.targetName} is Heavily Injured! Lost ${result.heavilyInjuredHpLoss} additional HP from injury penalty.`)
+        }
+        if (result.isDead) {
+          const cause = result.deathCause === 'injuries'
+            ? '10+ injuries'
+            : 'HP below death threshold'
+          alert(`${result.targetName} has DIED! Cause: ${cause}. Use the Override button on their card to revoke.`)
+        } else if (result.leagueSuppressed) {
+          alert(`${result.targetName} would have died from HP loss, but death is suppressed in League Battle mode.`)
+        }
+      }
+    }
   }
 
   const handleExecuteAction = async (combatantId: string, actionType: string): Promise<BreatherShiftResult | undefined> => {

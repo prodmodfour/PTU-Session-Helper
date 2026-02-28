@@ -313,6 +313,7 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // Execute move
+    // Returns target injury/death results for GM alerts (null if no damage targets)
     async executeMove(
       actorId: string,
       moveId: string,
@@ -320,15 +321,37 @@ export const useEncounterStore = defineStore('encounter', {
       damage?: number,
       targetDamages?: Record<string, number>,
       notes?: string
-    ) {
-      if (!this.encounter) return
+    ): Promise<Array<{
+      targetId: string
+      targetName: string
+      heavilyInjured: boolean
+      heavilyInjuredHpLoss: number
+      fainted: boolean
+      isDead: boolean
+      deathCause: string | null
+      leagueSuppressed: boolean
+    }> | null> {
+      if (!this.encounter) return null
 
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/move`, {
+        const response = await $fetch<{
+          data: Encounter
+          targetResults?: Array<{
+            targetId: string
+            targetName: string
+            heavilyInjured: boolean
+            heavilyInjuredHpLoss: number
+            fainted: boolean
+            isDead: boolean
+            deathCause: string | null
+            leagueSuppressed: boolean
+          }>
+        }>(`/api/encounters/${this.encounter.id}/move`, {
           method: 'POST',
           body: { actorId, moveId, targetIds, damage, targetDamages, notes }
         })
         this.encounter = response.data
+        return response.targetResults ?? null
       } catch (e: any) {
         this.error = e.message || 'Failed to execute move'
         throw e
