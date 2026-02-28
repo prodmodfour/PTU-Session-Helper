@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getEffectiveMaxHp, calculateRestHealing, isDailyMoveRefreshable, calculateAvailableAp } from '~/utils/restHealing'
+import { getEffectiveMaxHp, calculateRestHealing, isDailyMoveRefreshable, calculateAvailableAp, getRestHealingInfo } from '~/utils/restHealing'
 
 describe('getEffectiveMaxHp', () => {
   it('returns raw maxHp when injuries is 0', () => {
@@ -113,9 +113,8 @@ describe('calculateRestHealing', () => {
     expect(result.reason).toBe('Already rested maximum 8 hours today')
   })
 
-  it('heals 0 HP for very low maxHp (PTU floor rounding, no minimum)', () => {
-    // 10 maxHp, 0 injuries: healAmount = floor(10/16) = 0
-    // PTU p.31: no minimum specified — low-HP entities heal 0 per rest
+  it('heals minimum 1 HP for very low maxHp (decree-029)', () => {
+    // 10 maxHp, 0 injuries: floor(10/16) = 0, but decree-029 enforces min 1
     const result = calculateRestHealing({
       currentHp: 0,
       maxHp: 10,
@@ -123,7 +122,43 @@ describe('calculateRestHealing', () => {
       restMinutesToday: 0
     })
     expect(result.canHeal).toBe(true)
-    expect(result.hpHealed).toBe(0)
+    expect(result.hpHealed).toBe(1)
+  })
+
+  it('heals minimum 1 HP for Shedinja-level maxHp (decree-029)', () => {
+    // 14 maxHp (Shedinja at level 1): floor(14/16) = 0, decree-029 enforces min 1
+    const result = calculateRestHealing({
+      currentHp: 5,
+      maxHp: 14,
+      injuries: 0,
+      restMinutesToday: 0
+    })
+    expect(result.canHeal).toBe(true)
+    expect(result.hpHealed).toBe(1)
+  })
+
+  it('heals minimum 1 HP with maxHp of 1', () => {
+    // Edge case: maxHp = 1, floor(1/16) = 0, decree-029 enforces min 1
+    const result = calculateRestHealing({
+      currentHp: 0,
+      maxHp: 1,
+      injuries: 0,
+      restMinutesToday: 0
+    })
+    expect(result.canHeal).toBe(true)
+    expect(result.hpHealed).toBe(1)
+  })
+
+  it('does not over-heal past effective max with minimum 1 HP floor', () => {
+    // 10 maxHp, 0 injuries: effectiveMax = 10, currentHp = 10 → already full
+    const result = calculateRestHealing({
+      currentHp: 10,
+      maxHp: 10,
+      injuries: 0,
+      restMinutesToday: 0
+    })
+    expect(result.canHeal).toBe(false)
+    expect(result.reason).toBe('Already at full HP')
   })
 })
 
@@ -151,6 +186,31 @@ describe('isDailyMoveRefreshable', () => {
     const lastWeek = new Date()
     lastWeek.setDate(lastWeek.getDate() - 7)
     expect(isDailyMoveRefreshable(lastWeek.toISOString())).toBe(true)
+  })
+})
+
+describe('getRestHealingInfo', () => {
+  it('reports minimum 1 hpPerRest for low maxHp (decree-029)', () => {
+    const info = getRestHealingInfo({
+      maxHp: 10,
+      injuries: 0,
+      restMinutesToday: 0,
+      lastInjuryTime: null,
+      injuriesHealedToday: 0
+    })
+    expect(info.hpPerRest).toBe(1)
+  })
+
+  it('reports correct hpPerRest for normal maxHp', () => {
+    // floor(80/16) = 5
+    const info = getRestHealingInfo({
+      maxHp: 80,
+      injuries: 0,
+      restMinutesToday: 0,
+      lastInjuryTime: null,
+      injuriesHealedToday: 0
+    })
+    expect(info.hpPerRest).toBe(5)
   })
 })
 
