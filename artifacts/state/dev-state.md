@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-28T02:45:00
-updated_by: slave-collector (plan-20260228-020000)
+last_updated: 2026-02-28T07:10:00
+updated_by: slave-collector (plan-20260228-032958)
 ---
 
 # Dev Ecosystem State
@@ -70,7 +70,7 @@ updated_by: slave-collector (plan-20260228-020000)
 | ptu-rule-116 | P4 | **resolved** | Naturewalk status condition immunity — fix cycle APPROVED (code-review-214 + rules-review-190, plan-20260228-020000). PTU page refs p.276+p.322 confirmed correct |
 | ptu-rule-118 | P3 | **resolved** | Block Skill Edges from raising Pathetic skills during creation — APPROVED (code-review-212 + rules-review-188, plan-20260228-020000). Three-layer defense: addSkillEdge guard, validation warning, UI disable. decree-027 compliant |
 | ptu-rule-117 | P4 | **resolved** | Style Expert 'Beautiful' → 'Beauty' — fixed by slave-4 (plan-20260227-153711). code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
-| ptu-rule-119 | P4 | **open** | Trainer Naturewalk not supported (Survivalist class). Filed from rules-review-186 noted limitation |
+| ptu-rule-119 | P4 | **implemented** | Trainer Naturewalk support for Survivalist class. Added capabilities field to HumanCharacter model, extended findNaturewalkImmuneStatuses() to check trainers, added capabilities UI. Implemented by slave-1 (plan-20260228-032958). Needs review |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
@@ -95,7 +95,16 @@ updated_by: slave-collector (plan-20260228-020000)
 
 ## Active Developer Work
 
-**Current task:** Session 57 collection complete. 5 slaves merged (8 commits). 3 reviewer slaves: all APPROVED (ptu-rule-118, bug-037+refactoring-094, ptu-rule-114+116-fix). 2 matrix slaves: capability remaps for 8 domains. Smoke test skipped (no code changes). 1 follow-up ticket filed (refactoring-095). All open dev tickets now resolved. 8 capability catalogs refreshed.
+**Current task:** Session 58 collection complete. 3 slaves merged (14 commits). 1 dev slave: refactoring-095 + ptu-rule-119 (6 commits, addEdge guard + trainer Naturewalk support). 2 matrix slaves: coverage re-analysis for all 8 domains (8 commits). Smoke test PASSED. No follow-up tickets. 2 tickets need review (refactoring-095, ptu-rule-119).
+
+**Session 58 (2026-02-28, plan-20260228-032958):**
+- slave-1 (developer): refactoring-095+ptu-rule-119 — 6 commits: guarded addEdge() against Skill Edge string injection (refactoring-095), added capabilities field to HumanCharacter Prisma model, extended Naturewalk checks to support trainer combatants, added capabilities UI (ptu-rule-119) → **implemented, needs review**
+- slave-2 (matrix): coverage-analyzer-group-a — re-ran coverage analysis for combat (71.9%), capture (70.3%), healing (65.0%), pokemon-lifecycle (72.2%)
+- slave-3 (matrix): coverage-analyzer-group-b — re-ran coverage analysis for character-lifecycle (73.3%), encounter-tables (77.5%), scenes (70.0%), vtt-grid (65.3%)
+- **Smoke test:** PASSED (Playwright) — GM view renders (navigation, encounter controls, group view buttons). Group view renders (lobby state). Player view renders (character selection with names, levels, classes).
+- **Merge notes:** 0 conflicts. All 3 rebased cleanly. 14 commits total
+- **Tickets filed:** none
+- **Tickets needing review:** refactoring-095, ptu-rule-119
 
 **Session 57 (2026-02-28, plan-20260228-020000):**
 - slave-1 (reviewers): ptu-rule-118 — code-review-212 **APPROVED** + rules-review-188 **APPROVED** (MED-01: addEdge bypass → refactoring-095). Three-layer defense verified correct. decree-027 compliant → ptu-rule-118 **resolved**
@@ -586,7 +595,8 @@ updated_by: slave-collector (plan-20260228-020000)
 | refactoring-090 | P4 | **resolved** | Reset usedToday on all moves during extended rest. code-review-208 APPROVED + rules-review-184 APPROVED (plan-20260227-162300 slave-1) |
 | refactoring-092 | P4 | **resolved** | Partial-update merge for modification endpoint — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
 | refactoring-093 | P4 | **resolved** | Relocated getEffectivenessClass to typeEffectiveness.ts — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
-| refactoring-094 | P4 | **in-progress** | Remove trivial combatantsOnGrid passthrough — fixed by slave-2 (plan-20260228-010000). Needs review |
+| refactoring-094 | P4 | **resolved** | Remove trivial combatantsOnGrid passthrough — APPROVED (code-review-213 + rules-review-189, plan-20260228-020000) |
+| refactoring-095 | P4 | **implemented** | Guard addEdge() against Skill Edge string injection. Added regex check rejecting `^Skill Edge:` pattern in addEdge(), forcing through addSkillEdge() path. Implemented by slave-1 (plan-20260228-032958). Needs review |
 
 ## Code Health
 

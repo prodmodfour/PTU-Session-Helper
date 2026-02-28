@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-28T02:45:00
-updated_by: slave-collector (plan-20260228-020000)
+last_updated: 2026-02-28T07:10:00
+updated_by: slave-collector (plan-20260228-032958)
 ---
 
 # Matrix Ecosystem State
@@ -9,21 +9,21 @@ updated_by: slave-collector (plan-20260228-020000)
 
 | Domain | Rules | Capabilities | Matrix | Audit | Tickets | Coverage |
 |--------|-------|-------------|--------|-------|---------|----------|
-| combat | done (135) | **FRESH** | **FRESH** | **FRESH** (53 audited: 44C/1I/6A/1AMB) | created | 83.1% (88 impl + 16 partial + 4 unreachable / 118 reachable) |
-| capture | done (33) | **FRESH** | **FRESH** | **FRESH** (21 audited: 17C/2I/1AMB) | created | 73.2% (17 impl + 4 partial + 3 unreachable / 28 reachable) |
-| healing | done (42) | **FRESH** | **FRESH** | **FRESH** (31 audited: 26C/1I/3A/1AMB) | created | 81.4% (26 impl + 5 partial / 35 reachable) |
-| pokemon-lifecycle | done (68) | **FRESH** | **FRESH** | **FRESH** (29 audited: 25C/1I/3A) | created | 72.2% (35 impl + 8 partial / 54 reachable) |
-| character-lifecycle | done (68) | **FRESH** | **FRESH** | **FRESH** (42 audited: 33C/1I/7A/1AMB) | created | 70.0% (36 impl + 2 unreachable + 10 partial / 60 reachable) |
-| encounter-tables | done (27) | **FRESH** | **FRESH** | **FRESH** (14 audited: 12C/1I/1A) | created | 90.6% (13 impl + 3 partial / 16 reachable) |
-| scenes | done (42) | **FRESH** | **FRESH** | **FRESH** (20 audited: 17C/2A/1AMB) | created | 71.7% (14 impl + 5 partial / 23 reachable) |
-| vtt-grid | done (42) | **FRESH** | **FRESH** | **FRESH** (24 audited: 20C/1I/2A/1AMB) | created | 66.2% (19 impl + 1 unreachable + 6 partial / 34 reachable) |
+| combat | done (135) | **FRESH** | **FRESH** | STALE | created | 71.9% (82 impl + 25 partial + 5 unreachable / 135 effective) |
+| capture | done (33) | **FRESH** | **FRESH** | STALE | created | 70.3% (20 impl + 2 partial + 3 unreachable / 32 effective) |
+| healing | done (42) | **FRESH** | **FRESH** | STALE | created | 65.0% (22 impl + 5 partial + 3 unreachable / 40 effective) |
+| pokemon-lifecycle | done (68) | **FRESH** | **FRESH** | STALE | created | 72.2% (35 impl + 8 partial / 54 effective) |
+| character-lifecycle | done (68) | **FRESH** | **FRESH** | STALE | created | 73.3% (38 impl + 12 partial / 60 effective) |
+| encounter-tables | done (27) | **FRESH** | **FRESH** | STALE | created | 77.5% (14 impl + 3 partial / 20 effective) |
+| scenes | done (42) | **FRESH** | **FRESH** | STALE | created | 70.0% (17 impl + 8 partial / 30 effective) |
+| vtt-grid | done (42) | **FRESH** | **FRESH** | STALE | created | 65.3% (19 impl + 9 partial / 36 effective) |
 | player-view | — | **FRESH** (new) | — | — | — | — (first-time mapping) |
 
-**Overall: Capabilities REFRESHED (session 57). All 8 domains: capabilities re-mapped after sessions 42-56 code changes. Rules + matrix + audit from session 41 are now stale relative to updated capabilities. 234 items audited across 8 domains (stale): 194 Correct, 8 Incorrect, 20 Approximation, 6 Ambiguous. 15 follow-up tickets filed from audit findings.**
+**Overall: Capabilities + Matrix REFRESHED (session 58). All 8 domains: capabilities re-mapped (session 57) + coverage matrices re-analyzed (session 58). Audit layer still stale — needs re-running against fresh matrices. Coverage scores updated to reflect accurate actor-aware gap detection against fresh capabilities. player-view domain has fresh capabilities but no rules catalog or matrix yet.**
 
 ## Active Work
 
-All 8 domains had capabilities re-mapped in session 57 (plan-20260228-020000, slaves 4+5) to account for sessions 42-56 code changes (15 sessions of new mechanics, fix cycles, and refactoring). Matrix + audit layers are now stale and need re-running against updated capabilities. player-view domain has fresh capabilities but no rules catalog or matrix yet.
+All 8 domains had coverage matrices re-analyzed in session 58 (plan-20260228-032958, slaves 2+3) against fresh capabilities from session 57. Audit layer is still stale and needs re-running against updated matrices. player-view domain has fresh capabilities but no rules catalog or matrix yet.
 
 ## Staleness Status
 

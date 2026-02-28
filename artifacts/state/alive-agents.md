@@ -217,3 +217,6 @@
 | plan-20260228-020000/slave-3 | reviewers | ptu-rule-114+116-fix | APPROVED | 2026-02-28T02:21:00Z | 38417a68, 9c53128f |
 | plan-20260228-020000/slave-4 | matrix | capability-remap-group-a | success | 2026-02-28T02:24:00Z | 0ebf5458 |
 | plan-20260228-020000/slave-5 | matrix | capability-remap-group-b | success | 2026-02-28T02:32:00Z | b35f550e |
+| plan-20260228-032958/slave-1 | developer | refactoring-095+ptu-rule-119 | success | 2026-02-28T03:42:00Z | 5d3b632, 062f41b, 7103752, 9c3c0d6, b4cb879, d8babb0 |
+| plan-20260228-032958/slave-2 | matrix | coverage-analyzer-group-a | success | 2026-02-28T04:10:00Z | 96e6ca38, e251c2e1, 4111061b, eb5f9896 |
+| plan-20260228-032958/slave-3 | matrix | coverage-analyzer-group-b | success | 2026-02-28T03:46:00Z | a7c2d584, 99c6929d, 21a19202, 8e5146d8 |
