@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-28T11:25:00
-updated_by: slave-collector (plan-20260228-110000)
+last_updated: 2026-02-28T11:20:00
+updated_by: slave-collector (plan-20260228-131955)
 ---
 
 # Dev Ecosystem State
@@ -19,7 +19,7 @@ updated_by: slave-collector (plan-20260228-110000)
 | bug-035 | P0 | **resolved** | LevelUpNotification missing phosphor SVGs. Fixed: converted to @phosphor-icons/vue Vue components. Resolved by slave-2 (plan-20260227-122512) |
 | bug-036 | P0 | **resolved** | Player view 500 error: SCSS `rgba(currentColor, 0.1)` rejected by Sass compiler. Fixed: replaced with SCSS color variables. Resolved by slave-1 (plan-20260227-131024) |
 | bug-037 | P3 | **resolved** | MoveTargetModal passes targets as allCombatants — fix applied, APPROVED (code-review-213 + rules-review-189, plan-20260228-020000). Full encounter combatant list now passed correctly |
-| bug-038 | P0 | **fix-cycle-done-needs-rereview** | CRITICAL decree-016 violation: new-day endpoint cleared boundAp. Refactored from batch updateMany to per-character updates preserving boundAp. Per-character new-day endpoint also fixed. Unit tests added (6 tests). code-review-216 CHANGES_REQUIRED → fix cycle by slave-1 (plan-20260228-110000): added per-character new-day unit tests (H1), Math.max(0,...) safety clamp on both endpoints + extended-rest (M1). Needs re-review |
+| bug-038 | P0 | **resolved** | CRITICAL decree-016 violation: new-day endpoint cleared boundAp. Refactored from batch updateMany to per-character updates preserving boundAp. Per-character new-day endpoint also fixed. Unit tests added (6 tests). Fix cycle: Math.max(0,...) safety clamp, per-character new-day tests (9 tests). code-review-220 **APPROVED** + rules-review-196 **APPROVED** (plan-20260228-131955 slave-1). All issues from code-review-216 resolved |
 | bug-039 | P2 | **resolved** | Capture attempt endpoint allowed stealing owned Pokemon. Added ownership validation (reject if pokemon.ownerId non-null). Rate endpoint confirmed safe (read-only). Unit tests added (6 tests). Reviewed as part of code-review-216 (bug-039 portion approved), rules-review-192 **APPROVED** |
 | bug-040 | P4 | **open** | Extended-rest endpoint lacks Math.max(0,...) safety clamp on currentAp calculation. Follow-up from code-review-216 M1. Filed by slave-collector (plan-20260228-101738) |
 
@@ -62,7 +62,7 @@ updated_by: slave-collector (plan-20260228-110000)
 | ptu-rule-104 | P1 | **resolved** | Type-immunity enforcement. code-review-197 APPROVED + rules-review-174 APPROVED (re-review of fix cycle 2). All type-immunity pairs correct per PTU p.239 |
 | ptu-rule-105 | P2 | **resolved** | Extended rest preserves Bound AP (clears only Drained AP) per decree-016. code-review-188 APPROVED, rules-review-165 APPROVED |
 | ptu-rule-106 | P2 | **resolved** | Extended rest duration parameter (4-8h, default 4). Scalable healing periods with 8h daily cap. Per decree-018. code-review-188 APPROVED, rules-review-165 APPROVED |
-| ptu-rule-107 | P2 | **P1-fix-cycle-done-needs-rereview** | League Battle two-phase trainer system. P0 APPROVED (code-review-202 + rules-review-178). P1 code-review-217 CHANGES_REQUIRED → fix cycle by slave-2 (plan-20260228-110000): added skipFaintedTrainers/skipUndeclaredTrainers unit tests (H1), replaced hardcoded violet with SCSS vars (M2), fixed fainted-trainer denominator (M3), updated app-surface.md (M1). Needs re-review |
+| ptu-rule-107 | P2 | **P1-APPROVED** | League Battle two-phase trainer system. P0 APPROVED (code-review-202 + rules-review-178). P1 fix cycle APPROVED: code-review-221 **APPROVED** + rules-review-197 **APPROVED** (plan-20260228-131955 slave-2). All 4 issues from code-review-217 resolved (skip function tests, SCSS vars, denominator fix, app-surface.md). P2 pending |
 | ptu-rule-108 | P2 | **resolved** | Rough terrain accuracy penalty for painted terrain. APPROVED: code-review-195 + rules-review-172 (plan-20260227-174900). MED-1: Naturewalk gap → ptu-rule-112 (existing). MED-2: "through" ambiguity → decree-need-025 |
 | ptu-rule-109 | P3 | **resolved** | Legendary species list complete. APPROVED: code-review-191 + rules-review-168. 100 total species (Meltan/Melmetal/Zarude/Enamorus added) |
 | ptu-rule-110 | P2 | **resolved** | Encounter end resets combat stages. APPROVED: code-review-191 + rules-review-168. stageModifiers + stageSources reset to defaults |
@@ -76,7 +76,8 @@ updated_by: slave-collector (plan-20260228-110000)
 | ptu-rule-119 | P4 | **resolved** | Trainer Naturewalk support for Survivalist class. Fix cycle APPROVED: code-review-218 **APPROVED** (M1: border-color no-op, non-blocking, tracked in refactoring-096) + rules-review-194 **APPROVED**. All 5 code-review-215 issues addressed |
 | ptu-rule-122 | P3 | **resolved** | Rest healing minimum 1 HP floor per decree-029. Implemented by slave-4 (plan-20260228-101738). code-review-219 **APPROVED** + rules-review-195 **APPROVED** (plan-20260228-110000 slave-3). 0 issues |
 | ptu-rule-123 | P3 | **resolved** | Significance presets capped at x5 per decree-030. Removed climactic (x6) and legendary (x8) presets. Implemented by slave-5 (plan-20260228-101738). code-review-219 **APPROVED** + rules-review-195 **APPROVED** (plan-20260228-110000 slave-3). 0 issues |
-| ptu-rule-120 | P4 | **open** | Equipment-granted Naturewalk not auto-derived from equipped items. Filed from rules-review-191 MED-01 (plan-20260228-072000) |
+| ptu-rule-120 | P4 | **implemented-needs-review** | Equipment-granted Naturewalk auto-derived from equipped items. 8 commits: grantedCapabilities field, utility function, Naturewalk merge, Zod schema, API responses, equipment tab UI, human combatant Naturewalk immunity. Implemented by slave-4 (plan-20260228-131955). Needs review |
+| ptu-rule-124 | P4 | **implemented-needs-review** | Replace bogus encounter budget formula citation. Research confirmed PTU Chapter 11 p.473 DOES contain the formula — reframed as "PTU guideline" with app-specific difficulty thresholds noted. 6 commits. Implemented by slave-3 (plan-20260228-131955). Needs review |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
@@ -101,7 +102,19 @@ updated_by: slave-collector (plan-20260228-110000)
 
 ## Active Developer Work
 
-**Current task:** Session 62 collection complete. 3 slaves merged (10 commits: 2 dev + 1 reviewer). bug-038+039 fix cycle (Math.max(0,...) + per-character new-day tests), ptu-rule-107 P1 fix cycle (skip tests + SCSS vars + denominator fix + app-surface), ptu-rule-122+123 review (both APPROVED). Smoke test PASSED. ptu-rule-122+123+bug-039 resolved. bug-038+ptu-rule-107 need re-review.
+**Current task:** Session 63 collection complete. 5 slaves merged (24 commits: 3 dev + 2 reviewer). refactoring-096 (SCSS tag harmonization), ptu-rule-124 (encounter budget citation fix), ptu-rule-120 (equipment Naturewalk auto-derivation), bug-038 re-review (APPROVED), ptu-rule-107 P1 re-review (APPROVED). Smoke test PASSED. bug-038+ptu-rule-107 P1 resolved. ptu-rule-120+ptu-rule-124+refactoring-096 need review.
+
+**Session 63 (2026-02-28, plan-20260228-131955):**
+- slave-5 (developer): refactoring-096 — 7 commits: extracted shared _tags.scss partial, removed duplicated tag variant styles from 5 files (character detail, HumanClassesTab, ClassFeatureSection, EdgeSelectionSection, player-character-sheet), unified tag color scheme → **implemented, needs review**
+- slave-3 (developer): ptu-rule-124 — 6 commits: researched PTU Chapter 11, confirmed p.473 formula exists (reframed as guideline), removed all "Core p.473" citations from code/artifacts/designs, added "(PTU guideline)" label to BudgetGuide UI → **implemented, needs review**
+- slave-4 (developer): ptu-rule-120 — 8 commits: added grantedCapabilities to equipment type+catalog, utility function, merged into getCombatantNaturewalks, Zod schema+API responses, equipment tab UI, extended Naturewalk immunity to human combatants → **implemented, needs review**
+- slave-1 (reviewers): bug-038 re-review — code-review-220 **APPROVED** (0 issues) + rules-review-196 **APPROVED** (0 issues). All code-review-216 issues resolved. decree-016/019/028 compliant → bug-038 **resolved**
+- slave-2 (reviewers): ptu-rule-107 P1 re-review — code-review-221 **APPROVED** (0 issues) + rules-review-197 **APPROVED** (0 issues). All 4 code-review-217 issues resolved. decree-021 compliant → ptu-rule-107 P1 **APPROVED**
+- **Smoke test:** PASSED (Playwright) — GM view renders (full nav, encounter controls, group view buttons). Group view renders ("Waiting for Encounter" idle state). Player view renders (character selection: Ash Lv30, Aurora, Clara, Hassan, Marilena).
+- **Merge notes:** 0 conflicts. All 5 rebased cleanly. 24 commits total (merge order: 5→3→4→1→2)
+- **Tickets filed:** none (both reviews APPROVED with 0 issues, no dev side-discoveries)
+- **Tickets resolved:** bug-038 (APPROVED by code-review-220 + rules-review-196), ptu-rule-107 P1 (APPROVED by code-review-221 + rules-review-197)
+- **Tickets needing review:** ptu-rule-120, ptu-rule-124, refactoring-096
 
 **Session 62 (2026-02-28, plan-20260228-110000):**
 - slave-1 (developer): bug-038+bug-039-fix — 3 commits: Math.max(0,...) safety clamp on currentAp in new-day + extended-rest (M1), per-character new-day unit tests (H1), ticket resolution log → **fix-cycle-done, needs re-review**
@@ -646,7 +659,7 @@ updated_by: slave-collector (plan-20260228-110000)
 | refactoring-093 | P4 | **resolved** | Relocated getEffectivenessClass to typeEffectiveness.ts — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
 | refactoring-094 | P4 | **resolved** | Remove trivial combatantsOnGrid passthrough — APPROVED (code-review-213 + rules-review-189, plan-20260228-020000) |
 | refactoring-095 | P4 | **fix-cycle-needs-rereview** | Guard addEdge() against Skill Edge string injection. Fix cycle by slave-4 (plan-20260228-093200): addEdge error feedback added, unit tests for addEdge guard, app-surface.md updated. Bundled with ptu-rule-119 fix cycle. Needs re-review |
-| refactoring-096 | P4 | **open** | Tag color inconsistency between [id].vue and HumanClassesTab.vue. Filed from code-review-215 MED-03 (plan-20260228-072000) |
+| refactoring-096 | P4 | **implemented-needs-review** | Tag color styles harmonized: extracted shared _tags.scss partial, unified 5 tag variants across 5 files. 7 commits. Implemented by slave-5 (plan-20260228-131955). Needs review |
 
 ## Code Health
 
