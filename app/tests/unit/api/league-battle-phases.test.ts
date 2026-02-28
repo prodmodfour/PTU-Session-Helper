@@ -71,8 +71,49 @@ function resetCombatantsForNewRound(combatants: any[]) {
   })
 }
 
+/**
+ * Auto-skip fainted trainers during declaration phase (edge case H1).
+ * Mirrors skipFaintedTrainers in next-turn.post.ts.
+ */
+function skipFaintedTrainers(
+  startIndex: number,
+  turnOrder: string[],
+  combatants: any[]
+): number {
+  let index = startIndex
+  while (index < turnOrder.length) {
+    const combatantId = turnOrder[index]
+    const combatant = combatants.find((c: any) => c.id === combatantId)
+    if (combatant && combatant.entity.currentHp > 0) break
+    index++
+  }
+  return index
+}
+
+/**
+ * Auto-skip trainers with no declaration during resolution phase (edge case H1).
+ * Mirrors skipUndeclaredTrainers in next-turn.post.ts.
+ */
+function skipUndeclaredTrainers(
+  startIndex: number,
+  turnOrder: string[],
+  declarations: { combatantId: string; round: number }[],
+  currentRound: number
+): number {
+  let index = startIndex
+  while (index < turnOrder.length) {
+    const combatantId = turnOrder[index]
+    const hasDeclaration = declarations.some(
+      d => d.combatantId === combatantId && d.round === currentRound
+    )
+    if (hasDeclaration) break
+    index++
+  }
+  return index
+}
+
 // Factory helpers
-const createTrainerCombatant = (id: string, name: string, speed: number) => ({
+const createTrainerCombatant = (id: string, name: string, speed: number, currentHp: number = 100) => ({
   id,
   type: 'human',
   side: 'players',
@@ -81,7 +122,7 @@ const createTrainerCombatant = (id: string, name: string, speed: number) => ({
   actionsRemaining: 2,
   shiftActionsRemaining: 1,
   tempConditions: [],
-  entity: { name },
+  entity: { name, currentHp },
   turnState: {
     hasActed: false,
     standardActionUsed: false,
@@ -125,6 +166,7 @@ function simulateNextTurn(params: {
   battleType: string
   trainerTurnOrder: string[]
   pokemonTurnOrder: string[]
+  declarations?: { combatantId: string; round: number }[]
 }) {
   const combatants = JSON.parse(JSON.stringify(params.combatants))
   let turnOrder = [...params.turnOrder]
@@ -133,6 +175,7 @@ function simulateNextTurn(params: {
   let currentPhase = params.currentPhase
   const trainerTurnOrder = [...params.trainerTurnOrder]
   const pokemonTurnOrder = [...params.pokemonTurnOrder]
+  const declarations = params.declarations ?? []
   let clearDeclarations = false
 
   // Mark current combatant as having acted
@@ -153,6 +196,15 @@ function simulateNextTurn(params: {
   const isLeagueBattle = params.battleType === 'trainer'
 
   if (isLeagueBattle) {
+    // Auto-skip fainted trainers during declaration phase
+    if (currentPhase === 'trainer_declaration') {
+      currentTurnIndex = skipFaintedTrainers(currentTurnIndex, turnOrder, combatants)
+    }
+    // Auto-skip undeclared trainers during resolution phase
+    if (currentPhase === 'trainer_resolution') {
+      currentTurnIndex = skipUndeclaredTrainers(currentTurnIndex, turnOrder, declarations, currentRound)
+    }
+
     if (currentTurnIndex >= turnOrder.length) {
       if (currentPhase === 'trainer_declaration') {
         if (trainerTurnOrder.length > 0) {
@@ -163,7 +215,25 @@ function simulateNextTurn(params: {
 
           // H1 fix: reset hasActed for ALL trainers
           resetAllTrainersForResolution(combatants, resolutionOrder)
-          resetResolvingTrainerTurnState(combatants, turnOrder[0])
+
+          // Skip undeclared trainers at the start of resolution phase
+          currentTurnIndex = skipUndeclaredTrainers(currentTurnIndex, turnOrder, declarations, currentRound)
+
+          if (currentTurnIndex >= turnOrder.length) {
+            // All trainers skipped → go straight to pokemon phase
+            if (pokemonTurnOrder.length > 0) {
+              currentPhase = 'pokemon'
+              turnOrder = [...pokemonTurnOrder]
+              currentTurnIndex = 0
+            } else {
+              currentRound++
+              currentTurnIndex = 0
+              clearDeclarations = true
+              resetCombatantsForNewRound(combatants)
+            }
+          } else {
+            resetResolvingTrainerTurnState(combatants, turnOrder[currentTurnIndex])
+          }
         } else {
           if (pokemonTurnOrder.length > 0) {
             currentPhase = 'pokemon'
@@ -188,6 +258,11 @@ function simulateNextTurn(params: {
           currentRound++
           clearDeclarations = true
           resetCombatantsForNewRound(combatants)
+
+          // If starting a new declaration phase, skip fainted trainers at the start
+          if (currentPhase === 'trainer_declaration') {
+            currentTurnIndex = skipFaintedTrainers(currentTurnIndex, turnOrder, combatants)
+          }
         }
       } else {
         currentTurnIndex = 0
@@ -201,6 +276,11 @@ function simulateNextTurn(params: {
         } else {
           currentPhase = 'pokemon'
           turnOrder = [...pokemonTurnOrder]
+        }
+
+        // Skip fainted trainers at the start of a new declaration phase
+        if (currentPhase === 'trainer_declaration') {
+          currentTurnIndex = skipFaintedTrainers(currentTurnIndex, turnOrder, combatants)
         }
       }
     } else if (currentPhase === 'trainer_resolution') {
@@ -538,6 +618,143 @@ describe('League Battle Three-Phase Flow (decree-021)', () => {
       expect(validActionTypes.includes('command_pokemon')).toBe(true)
       expect(validActionTypes.includes('switch_pokemon')).toBe(true)
       expect(validActionTypes.includes('invalid_action' as any)).toBe(false)
+    })
+  })
+
+  describe('skipFaintedTrainers: auto-skip fainted trainers during declaration', () => {
+    it('should skip a single fainted trainer during declaration', () => {
+      const trainerAlive = createTrainerCombatant('trainer-alive', 'Ash', 30, 50)
+      const trainerFainted = createTrainerCombatant('trainer-fainted', 'Brock', 60, 0)
+      const trainerAlive2 = createTrainerCombatant('trainer-alive2', 'Misty', 80, 75)
+
+      // Declaration order: [alive(30), fainted(60), alive2(80)]
+      const trainerTurnOrder = ['trainer-alive', 'trainer-fainted', 'trainer-alive2']
+
+      let state: any = {
+        combatants: [trainerAlive, trainerFainted, trainerAlive2],
+        turnOrder: [...trainerTurnOrder],
+        currentTurnIndex: 0,
+        currentRound: 1,
+        currentPhase: 'trainer_declaration',
+        battleType: 'trainer',
+        trainerTurnOrder,
+        pokemonTurnOrder: ['poke-1']
+      }
+
+      // Advance past trainer-alive's declaration
+      state = { ...state, ...simulateNextTurn(state) }
+      // Should skip trainer-fainted and land on trainer-alive2 (index 2)
+      expect(state.currentTurnIndex).toBe(2)
+      expect(state.currentPhase).toBe('trainer_declaration')
+    })
+
+    it('should skip multiple consecutive fainted trainers', () => {
+      const trainerAlive = createTrainerCombatant('trainer-alive', 'Ash', 30, 50)
+      const trainerFainted1 = createTrainerCombatant('trainer-fainted1', 'Brock', 60, 0)
+      const trainerFainted2 = createTrainerCombatant('trainer-fainted2', 'Gary', 70, 0)
+      const trainerAlive2 = createTrainerCombatant('trainer-alive2', 'Misty', 80, 75)
+
+      const trainerTurnOrder = ['trainer-alive', 'trainer-fainted1', 'trainer-fainted2', 'trainer-alive2']
+
+      let state: any = {
+        combatants: [trainerAlive, trainerFainted1, trainerFainted2, trainerAlive2],
+        turnOrder: [...trainerTurnOrder],
+        currentTurnIndex: 0,
+        currentRound: 1,
+        currentPhase: 'trainer_declaration',
+        battleType: 'trainer',
+        trainerTurnOrder,
+        pokemonTurnOrder: ['poke-1']
+      }
+
+      // Advance past trainer-alive's declaration
+      state = { ...state, ...simulateNextTurn(state) }
+      // Should skip both fainted trainers and land on trainer-alive2 (index 3)
+      expect(state.currentTurnIndex).toBe(3)
+      expect(state.currentPhase).toBe('trainer_declaration')
+    })
+
+    it('should cascade to pokemon phase when all trainers are fainted', () => {
+      const trainerFainted1 = createTrainerCombatant('trainer-f1', 'Ash', 30, 0)
+      const trainerFainted2 = createTrainerCombatant('trainer-f2', 'Brock', 60, 0)
+      const pokemon1 = createPokemonCombatant('poke-1', 'Pikachu', 90)
+
+      const trainerTurnOrder = ['trainer-f1', 'trainer-f2']
+      const pokemonTurnOrder = ['poke-1']
+
+      // Start at the end of declaration (all fainted → skip past end → cascade)
+      // We simulate by having the last alive trainer just declared, but here
+      // both are fainted from the start. Use skipFaintedTrainers directly.
+      const index = skipFaintedTrainers(0, trainerTurnOrder, [trainerFainted1, trainerFainted2])
+      expect(index).toBe(2) // past end of turnOrder
+      expect(index >= trainerTurnOrder.length).toBe(true)
+    })
+  })
+
+  describe('skipUndeclaredTrainers: auto-skip undeclared trainers during resolution', () => {
+    it('should skip a trainer with no declaration during resolution', () => {
+      const trainerFast = createTrainerCombatant('trainer-fast', 'Misty', 80, 100)
+      const trainerMid = createTrainerCombatant('trainer-mid', 'Brock', 60, 0) // fainted, no declaration
+      const trainerSlow = createTrainerCombatant('trainer-slow', 'Ash', 30, 100)
+
+      // Resolution order (high→low): [fast, mid, slow]
+      const resolutionOrder = ['trainer-fast', 'trainer-mid', 'trainer-slow']
+      // Only fast and slow declared (mid was fainted during declaration)
+      const declarations = [
+        { combatantId: 'trainer-fast', round: 1 },
+        { combatantId: 'trainer-slow', round: 1 }
+      ]
+
+      let state: any = {
+        combatants: [trainerFast, trainerMid, trainerSlow],
+        turnOrder: resolutionOrder,
+        currentTurnIndex: 0,
+        currentRound: 1,
+        currentPhase: 'trainer_resolution',
+        battleType: 'trainer',
+        trainerTurnOrder: ['trainer-slow', 'trainer-mid', 'trainer-fast'],
+        pokemonTurnOrder: ['poke-1'],
+        declarations
+      }
+
+      // Advance past trainer-fast's resolution
+      state = { ...state, ...simulateNextTurn(state) }
+      // Should skip trainer-mid (no declaration) and land on trainer-slow (index 2)
+      expect(state.currentTurnIndex).toBe(2)
+      expect(state.currentPhase).toBe('trainer_resolution')
+    })
+
+    it('should cascade to pokemon phase when all trainers have no declarations', () => {
+      // All trainers were fainted during declaration → no declarations exist
+      const resolutionOrder = ['trainer-fast', 'trainer-slow']
+      const declarations: { combatantId: string; round: number }[] = [] // empty
+
+      const index = skipUndeclaredTrainers(0, resolutionOrder, declarations, 1)
+      expect(index).toBe(2) // past end
+      expect(index >= resolutionOrder.length).toBe(true)
+    })
+
+    it('should not skip trainers who have a declaration for the current round', () => {
+      const declarations = [
+        { combatantId: 'trainer-fast', round: 1 },
+        { combatantId: 'trainer-slow', round: 1 }
+      ]
+      const resolutionOrder = ['trainer-fast', 'trainer-slow']
+
+      const index = skipUndeclaredTrainers(0, resolutionOrder, declarations, 1)
+      // trainer-fast has a declaration → should stop at index 0
+      expect(index).toBe(0)
+    })
+
+    it('should not match declarations from a different round', () => {
+      const declarations = [
+        { combatantId: 'trainer-fast', round: 1 } // declaration from round 1
+      ]
+      const resolutionOrder = ['trainer-fast', 'trainer-slow']
+
+      // Checking round 2 — no declarations match
+      const index = skipUndeclaredTrainers(0, resolutionOrder, declarations, 2)
+      expect(index).toBe(2) // skips all
     })
   })
 
