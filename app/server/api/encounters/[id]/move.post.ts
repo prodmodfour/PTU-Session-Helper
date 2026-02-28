@@ -238,15 +238,34 @@ export default defineEventHandler(async (event) => {
       standardActionUsed: true
     }
 
+    // Track defeated enemies for XP calculation
+    let defeatedEnemies = JSON.parse(record.defeatedEnemies)
+    for (const result of targetResults) {
+      if ((result.fainted || result.isDead) && result.targetId) {
+        const target = combatants.find(c => c.id === result.targetId)
+        if (target && target.side === 'enemies') {
+          defeatedEnemies = [
+            ...defeatedEnemies,
+            {
+              species: result.targetName,
+              level: target.entity.level,
+              type: target.type
+            }
+          ]
+        }
+      }
+    }
+
     await prisma.encounter.update({
       where: { id },
       data: {
         combatants: JSON.stringify(combatants),
-        moveLog: JSON.stringify(moveLog)
+        moveLog: JSON.stringify(moveLog),
+        defeatedEnemies: JSON.stringify(defeatedEnemies)
       }
     })
 
-    const response = buildEncounterResponse(record, combatants, { moveLog })
+    const response = buildEncounterResponse(record, combatants, { moveLog, defeatedEnemies })
 
     return {
       success: true,

@@ -325,12 +325,46 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Track defeated enemies for XP calculation
+    let defeatedEnemies = JSON.parse(encounter.defeatedEnemies)
+    const trackDefeated = (combatant: any) => {
+      if (combatant.side === 'enemies') {
+        const entityName = combatant.type === 'pokemon'
+          ? (combatant.entity as { nickname?: string; species: string }).nickname || (combatant.entity as { species: string }).species
+          : (combatant.entity as { name: string }).name
+        defeatedEnemies = [
+          ...defeatedEnemies,
+          { species: entityName, level: combatant.entity.level, type: combatant.type }
+        ]
+      }
+    }
+
+    // Check if heavily injured penalty defeated the current combatant
+    if (heavilyInjuredPenalty && currentCombatant) {
+      const isFainted = currentCombatant.entity.currentHp === 0
+      if (isFainted || heavilyInjuredPenalty.isDead) {
+        trackDefeated(currentCombatant)
+      }
+    }
+
+    // Check if tick damage defeated the current combatant
+    for (const tick of tickResults) {
+      if (tick.fainted) {
+        const tickCombatant = combatants.find((c: any) => c.id === tick.combatantId)
+        if (tickCombatant) {
+          trackDefeated(tickCombatant)
+        }
+        break // Only one combatant takes tick damage per turn
+      }
+    }
+
     const updateData: Record<string, unknown> = {
       currentTurnIndex,
       currentRound,
       currentPhase,
       turnOrder: JSON.stringify(turnOrder),
       combatants: JSON.stringify(combatants),
+      defeatedEnemies: JSON.stringify(defeatedEnemies),
       weather,
       weatherDuration,
       weatherSource
@@ -389,7 +423,8 @@ export default defineEventHandler(async (event) => {
 
     const response = buildEncounterResponse(updatedRecord, combatants, {
       ...(clearDeclarations && { declarations: [] }),
-      ...(tickResults.length > 0 && { moveLog: JSON.parse(updateData.moveLog as string) })
+      ...(tickResults.length > 0 && { moveLog: JSON.parse(updateData.moveLog as string) }),
+      defeatedEnemies
     })
 
     return {
