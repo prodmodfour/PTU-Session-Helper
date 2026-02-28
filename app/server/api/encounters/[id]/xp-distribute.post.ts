@@ -22,6 +22,8 @@ import {
 } from '~/utils/experienceCalculation'
 import type { RawDefeatedEnemy, XpApplicationResult } from '~/utils/experienceCalculation'
 import type { LearnsetEntry } from '~/utils/levelUpCheck'
+import { getEvolutionLevels } from '~/utils/evolutionCheck'
+import type { EvolutionTrigger } from '~/types/species'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -146,19 +148,26 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Load SpeciesData learnsets for level-up detection
+    // Load SpeciesData learnsets and evolution triggers for level-up detection
     const speciesNames = [...new Set(pokemonRecords.map(p => p.species))]
     const speciesDataRecords = await prisma.speciesData.findMany({
       where: { name: { in: speciesNames } },
-      select: { name: true, learnset: true }
+      select: { name: true, learnset: true, evolutionTriggers: true }
     })
 
     const learnsetMap = new Map<string, LearnsetEntry[]>()
+    const evolutionLevelsMap = new Map<string, number[]>()
     for (const sd of speciesDataRecords) {
       try {
         learnsetMap.set(sd.name, JSON.parse(sd.learnset) as LearnsetEntry[])
       } catch {
         learnsetMap.set(sd.name, [])
+      }
+      try {
+        const triggers: EvolutionTrigger[] = JSON.parse(sd.evolutionTriggers || '[]')
+        evolutionLevelsMap.set(sd.name, getEvolutionLevels(triggers))
+      } catch {
+        evolutionLevelsMap.set(sd.name, [])
       }
     }
 
@@ -170,12 +179,14 @@ export default defineEventHandler(async (event) => {
       const pokemon = pokemonMap.get(entry.pokemonId)!
       const learnset = learnsetMap.get(pokemon.species) ?? []
 
-      // Calculate level-ups
+      // Calculate level-ups (with evolution level detection)
+      const evolutionLevels = evolutionLevelsMap.get(pokemon.species) ?? []
       const levelResult = calculateLevelUps(
         pokemon.experience,
         pokemon.level,
         entry.xpAmount,
-        learnset
+        learnset,
+        evolutionLevels
       )
 
       // Calculate tutor points gained (levels divisible by 5)

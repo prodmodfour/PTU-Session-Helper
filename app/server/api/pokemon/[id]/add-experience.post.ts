@@ -17,6 +17,8 @@ import {
 } from '~/utils/experienceCalculation'
 import type { XpApplicationResult } from '~/utils/experienceCalculation'
 import type { LearnsetEntry } from '~/utils/levelUpCheck'
+import { getEvolutionLevels } from '~/utils/evolutionCheck'
+import type { EvolutionTrigger } from '~/types/species'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -66,10 +68,10 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Load learnset from SpeciesData for level-up move detection
+    // Load learnset and evolution triggers from SpeciesData
     const speciesData = await prisma.speciesData.findUnique({
       where: { name: pokemon.species },
-      select: { learnset: true }
+      select: { learnset: true, evolutionTriggers: true }
     })
 
     let learnset: LearnsetEntry[] = []
@@ -81,12 +83,23 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Calculate level-ups from the XP gain
+    let evolutionLevels: number[] = []
+    if (speciesData?.evolutionTriggers) {
+      try {
+        const triggers: EvolutionTrigger[] = JSON.parse(speciesData.evolutionTriggers)
+        evolutionLevels = getEvolutionLevels(triggers)
+      } catch {
+        evolutionLevels = []
+      }
+    }
+
+    // Calculate level-ups from the XP gain (with evolution level detection)
     const levelResult = calculateLevelUps(
       pokemon.experience,
       pokemon.level,
       body.amount,
-      learnset
+      learnset,
+      evolutionLevels
     )
 
     // Calculate tutor points gained (levels divisible by 5)
