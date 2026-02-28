@@ -42,9 +42,24 @@ export function useEncounterActions(options: EncounterActionsOptions) {
     const combatant = findCombatant(combatantId)
     const name = getCombatantName(combatant)
     encounterStore.captureSnapshot(`Applied ${damage} damage to ${name}`)
-    await encounterStore.applyDamage(combatantId, damage)
+    const result = await encounterStore.applyDamage(combatantId, damage)
     refreshUndoRedoState()
     await broadcastUpdate()
+
+    // GM notifications for heavily injured penalty and death
+    if (result) {
+      if (result.heavilyInjured && result.heavilyInjuredHpLoss && result.heavilyInjuredHpLoss > 0) {
+        alert(`${name} is Heavily Injured! Lost ${result.heavilyInjuredHpLoss} additional HP from injury penalty.`)
+      }
+      if (result.deathCheck?.isDead) {
+        const cause = result.deathCheck.cause === 'injuries'
+          ? '10+ injuries'
+          : 'HP below death threshold'
+        alert(`${name} has DIED! Cause: ${cause}. Use the Override button on their card to revoke.`)
+      } else if (result.deathCheck?.leagueSuppressed) {
+        alert(`${name} would have died from HP loss, but death is suppressed in League Battle mode.`)
+      }
+    }
   }
 
   const handleHeal = async (combatantId: string, amount: number, tempHp?: number, healInjuries?: number) => {
