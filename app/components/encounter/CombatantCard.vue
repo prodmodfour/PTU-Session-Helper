@@ -3,7 +3,8 @@
     class="combatant-card"
     :class="{
       'combatant-card--current': isCurrent,
-      'combatant-card--fainted': isFainted,
+      'combatant-card--fainted': isFainted && !isDead,
+      'combatant-card--dead': isDead,
       'combatant-card--player': combatant.side === 'players',
       'combatant-card--ally': combatant.side === 'allies',
       'combatant-card--enemy': combatant.side === 'enemies'
@@ -49,9 +50,27 @@
 
       <!-- Injuries indicator -->
       <div v-if="injuries > 0" class="combatant-card__injuries">
-        <span class="injury-badge" :class="{ 'injury-badge--severe': injuries >= 5 }">
+        <span class="injury-badge" :class="{
+          'injury-badge--severe': isHeavilyInjured,
+          'injury-badge--lethal': injuries >= 10
+        }">
           {{ injuries }} {{ injuries === 1 ? 'Injury' : 'Injuries' }}
         </span>
+        <span v-if="isHeavilyInjured && !isDead" class="injury-warning">
+          Heavily Injured (-{{ injuries }} HP/action)
+        </span>
+      </div>
+
+      <!-- Death indicator (GM only) -->
+      <div v-if="isDead && isGm" class="combatant-card__death">
+        <span class="death-badge">DEAD</span>
+        <button
+          class="btn btn--xs btn--ghost"
+          title="Revoke death (GM override)"
+          @click="$emit('status', combatant.id, [], ['Dead'], false)"
+        >
+          Override
+        </button>
       </div>
 
       <!-- Status Conditions -->
@@ -249,6 +268,8 @@ const spriteUrl = computed(() => {
 const tempHp = computed(() => entity.value.temporaryHp || 0)
 const injuries = computed(() => entity.value.injuries || 0)
 const isFainted = computed(() => entity.value.currentHp <= 0)
+const isDead = computed(() => (entity.value.statusConditions || []).includes('Dead'))
+const isHeavilyInjured = computed(() => injuries.value >= 5)
 const statusConditions = computed(() => entity.value.statusConditions || [])
 
 const stages = computed<StageModifiers>(() => entity.value.stageModifiers || {
@@ -378,6 +399,13 @@ const handleActClick = () => {
   &--fainted {
     opacity: 0.5;
     filter: grayscale(30%);
+  }
+
+  &--dead {
+    opacity: 0.35;
+    filter: grayscale(60%);
+    border-color: $color-danger;
+    background: rgba($color-danger, 0.05);
   }
 
   &__visual {
@@ -519,6 +547,40 @@ const handleActClick = () => {
     background: rgba($color-danger, 0.4);
     animation: pulse 1.5s infinite;
   }
+
+  &--lethal {
+    background: $color-danger;
+    color: $color-text;
+    animation: pulse 0.8s infinite;
+  }
+}
+
+// Heavily injured warning text
+.injury-warning {
+  display: inline-block;
+  margin-left: $spacing-xs;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  color: $color-warning;
+}
+
+// Death badge
+.death-badge {
+  display: inline-block;
+  padding: 2px $spacing-sm;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: $color-text;
+  background: $color-danger;
+  border-radius: $border-radius-sm;
+}
+
+.combatant-card__death {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
 }
 
 // Stage badge
