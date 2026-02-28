@@ -112,6 +112,81 @@ After each successful merge, report:
 Merged slave-<N> (<type>: <target>) — <commit_count> commits
 ```
 
+## Step 4b: Startup Smoke Test
+
+After all dev slave merges complete, verify the app actually starts and renders. **Skip this step if no dev slaves were merged** (reviewer/matrix-only collections have no code changes).
+
+Uses `playwright-cli` to open a real browser and verify pages load.
+
+1. Start the dev server in the background, capturing output:
+   ```bash
+   cd app && npm run dev > /tmp/smoke-test.log 2>&1 &
+   SMOKE_PID=$!
+   ```
+
+2. Wait up to 45 seconds for the build to complete:
+   ```bash
+   for i in $(seq 1 9); do
+     sleep 5
+     if grep -q "Nitro server built" /tmp/smoke-test.log 2>/dev/null; then
+       break
+     fi
+     if grep -qiE "(ERROR|FATAL|Cannot find module|SyntaxError|failed to resolve)" /tmp/smoke-test.log 2>/dev/null; then
+       break
+     fi
+   done
+   ```
+   Note: The actual log message is "Nuxt Nitro server built", so grep for "Nitro server built".
+
+3. If "Nitro server built" is NOT in the log, skip browser checks and go straight to step 6 (evaluate as BUILD FAILED).
+
+4. Open a browser with `playwright-cli` and verify each major view renders:
+   ```bash
+   playwright-cli open http://localhost:3000/gm
+   ```
+   Wait 5 seconds for the SPA to hydrate (the first snapshot often only shows the Nuxt DevTools overlay before Vue mounts), then capture:
+   ```bash
+   sleep 5
+   playwright-cli snapshot
+   ```
+   The snapshot outputs a YAML accessibility tree. Read the snapshot file (path shown in output) to inspect actual page content.
+
+   Navigate to the other views using `goto` (reuses the same browser session):
+   ```bash
+   playwright-cli goto http://localhost:3000/group
+   sleep 3
+   playwright-cli snapshot
+   playwright-cli goto http://localhost:3000/player
+   sleep 3
+   playwright-cli snapshot
+   ```
+
+   For each snapshot, read the YAML file and check for:
+   - **PASS indicators**: navigation elements, role-specific UI (GM controls, group tabs, player sheet), headings, buttons, links
+   - **FAIL indicators**: heading "500", "Internal Server Error" text, `[plugin:vite:css]` errors, Vue/Nuxt error overlay, snapshot with only Nuxt DevTools (< 10 lines = SPA didn't render)
+
+5. Close the browser and kill the server:
+   ```bash
+   playwright-cli close
+   kill $SMOKE_PID 2>/dev/null
+   kill $(lsof -t -i:3000) 2>/dev/null  # cleanup any orphaned processes
+   ```
+
+6. Evaluate:
+   - If build failed (no "Nitro server built") → **BUILD FAILED**
+   - If any snapshot shows errors or blank pages → **RENDER FAILED** (include which views failed)
+   - If all three views render meaningful content → **PASSED**. Continue to Step 5.
+   - On any failure:
+     - Include details in the final report under a `### Smoke Test: FAILED` section
+     - File a CRITICAL bug ticket (`artifacts/tickets/open/bug/bug-NNN.md`) with:
+       - `severity: CRITICAL`
+       - `priority: P0`
+       - `title: "Build broken after collection plan-<plan_id>"`
+       - Full error output / failing snapshot content in the ticket body
+       - List of merged dev slaves as suspects
+     - **Do NOT block** the rest of collection (state updates, cleanup still proceed)
+     - The final report MUST prominently flag: "APP DOES NOT START — fix before next dev cycle"
+
 ## Step 5: Update State Files
 
 After ALL merges are complete, make a single atomic state update commit:
@@ -264,6 +339,10 @@ For each failed slave:
 - **Skipped:** <count> slaves (failed/conflict)
 - **State files updated:** yes/no
 
+### Startup Smoke Test
+- **Result:** PASSED / FAILED
+- **Details:** (if failed, include error output here)
+
 ### Merged Slaves
 | Slave | Type | Target | Commits | Result |
 |-------|------|--------|---------|--------|
@@ -288,6 +367,24 @@ Based on updated state, the next `/create_slave_plan` should prioritize:
 ```
 
 **Then die.** This session is over.
+
+## Optional: Notify Imp Discord Bot
+
+If the Imp bot daemon is running, send notifications at key lifecycle points. These are non-blocking — always append `|| true` to avoid failing the collection if Imp is down.
+
+```bash
+# After determining merge set (Step 3 — with interactive buttons)
+node scripts/imp/notify.mjs merge_proposal '{"plan":{"plan_id":"<id>"},"merge_set":[...]}'
+
+# After each successful merge (Step 4)
+node scripts/imp/notify.mjs merge_result '{"message":"Merged slave-<N> (<type>: <target>) — <count> commits"}' || true
+
+# After smoke test (Step 4b)
+node scripts/imp/notify.mjs smoke_failure '{"message":"<details>"}' || true  # only on failure
+
+# After collection complete (Step 8)
+node scripts/imp/notify.mjs collection_complete '{"message":"plan-<id>: <merged>/<total> merged, <skipped> skipped"}' || true
+```
 
 ## What You Do NOT Do
 

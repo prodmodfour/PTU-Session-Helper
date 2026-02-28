@@ -468,6 +468,18 @@ For code changes, check `git log --oneline -10` and map to domains via `referenc
 | scenes | CRUD, activate/deactivate, entities, positioning |
 | vtt-grid | grid movement, fog of war, terrain, backgrounds |
 
+## Optional: Notify Imp Discord Bot
+
+If the Imp bot daemon is running, send notifications at key lifecycle points. Non-blocking — always append `|| true`.
+
+```bash
+# After writing slave-plan.json
+node scripts/imp/notify.mjs plan_created '{"plan_id":"<id>","total_slaves":<N>}' || true
+
+# After all slaves launched (Step 10)
+node scripts/imp/notify.mjs slaves_launched '{"plan_id":"<id>","total":<N>}' || true
+```
+
 ## What You Do NOT Do
 
 - Write code or modify app files

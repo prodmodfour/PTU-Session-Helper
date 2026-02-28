@@ -65,6 +65,9 @@ for i in $(seq 1 $N); do
 done
 
 echo "[2/2] All $N slaves launched!"
+
+# Notify Imp (non-blocking — exit 0 even if daemon is down)
+node "$WD/scripts/imp/notify.mjs" slaves_launched "{\"total\":$N}" 2>/dev/null || true
 echo ""
 echo "Session: $SESSION"
 echo "Slaves: 1 through $N"
