@@ -290,7 +290,8 @@ export async function performEvolution(input: PerformEvolutionInput): Promise<Ev
       currentSpDef: recalc.calculatedStats.specialDefense,
       currentSpeed: recalc.calculatedStats.speed,
       maxHp: recalc.maxHp,
-      currentHp: newCurrentHp
+      currentHp: newCurrentHp,
+      spriteUrl: null
       // P1 handles: abilities, moves, capabilities, skills
     }
   })
