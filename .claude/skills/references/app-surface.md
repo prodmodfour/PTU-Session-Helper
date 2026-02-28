@@ -65,6 +65,8 @@ Testable features, routes, and API endpoints for the PTU Session Helper.
 
 **Player WebSocket events:** `keepalive` / `keepalive_ack` (45s interval to prevent tunnel idle timeout), `scene_sync` (full scene data pushed to player on connect), `scene_request` (player requests current active scene), `player_action` (player submits action to GM), `player_action_ack` (GM acknowledges action — routed via pendingRequests map), `player_turn_notify` (P1 — turn notification), `player_move_request` / `player_move_response` (P1 — token movement), `group_view_request` / `group_view_response` (P1 — tab change requests).
 
+**GM WebSocket events (League Battle):** `trainer_declared` (GM broadcasts to encounter room after a trainer records a declaration), `declaration_update` (GM broadcasts updated declarations array to encounter room for Group View sync).
+
 ## API Endpoint Groups
 
 ### Characters (`/api/characters`)
@@ -131,7 +133,7 @@ CRUD + extensive combat actions.
 - `POST /api/encounters/:id/xp-calculate` — preview XP calculation (read-only breakdown + participating Pokemon)
 - `POST /api/encounters/:id/xp-distribute` — apply XP to Pokemon (updates experience, level, tutorPoints)
 
-**Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio).
+**Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio), `DeclarationPanel.vue` (GM declaration form for League Battle trainer_declaration phase — action type select, description input, submit + next turn), `DeclarationSummary.vue` (declaration list display for Group View — collapsible round declarations with resolving/resolved state indicators).
 
 **Budget system:** `utils/encounterBudget.ts` (pure PTU level budget calculator — budget formula, difficulty assessment, XP calculation, SIGNIFICANCE_PRESETS), `composables/useEncounterBudget.ts` (reactive wrapper for active encounter budget analysis).
 
