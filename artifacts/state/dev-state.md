@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-28T07:10:00
-updated_by: slave-collector (plan-20260228-032958)
+last_updated: 2026-02-28T08:30:00
+updated_by: slave-collector (plan-20260228-072000)
 ---
 
 # Dev Ecosystem State
@@ -70,7 +70,8 @@ updated_by: slave-collector (plan-20260228-032958)
 | ptu-rule-116 | P4 | **resolved** | Naturewalk status condition immunity — fix cycle APPROVED (code-review-214 + rules-review-190, plan-20260228-020000). PTU page refs p.276+p.322 confirmed correct |
 | ptu-rule-118 | P3 | **resolved** | Block Skill Edges from raising Pathetic skills during creation — APPROVED (code-review-212 + rules-review-188, plan-20260228-020000). Three-layer defense: addSkillEdge guard, validation warning, UI disable. decree-027 compliant |
 | ptu-rule-117 | P4 | **resolved** | Style Expert 'Beautiful' → 'Beauty' — fixed by slave-4 (plan-20260227-153711). code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
-| ptu-rule-119 | P4 | **implemented** | Trainer Naturewalk support for Survivalist class. Added capabilities field to HumanCharacter model, extended findNaturewalkImmuneStatuses() to check trainers, added capabilities UI. Implemented by slave-1 (plan-20260228-032958). Needs review |
+| ptu-rule-119 | P4 | **CHANGES_REQUIRED** | Trainer Naturewalk support for Survivalist class. Added capabilities field to HumanCharacter model, extended findNaturewalkImmuneStatuses() to check trainers, added capabilities UI. Implemented by slave-1 (plan-20260228-032958). Review by slave-1 (plan-20260228-072000): code-review-215 CHANGES_REQUIRED (H1: comma-split mangles multi-terrain Naturewalk, H2: no unit tests), rules-review-191 APPROVED. Fix cycle needed |
+| ptu-rule-120 | P4 | **open** | Equipment-granted Naturewalk not auto-derived from equipped items. Filed from rules-review-191 MED-01 (plan-20260228-072000) |
 
 ### Feature Tickets (`tickets/feature/`)
 | Ticket | Priority | Status | Summary | Design Complexity |
@@ -95,7 +96,17 @@ updated_by: slave-collector (plan-20260228-032958)
 
 ## Active Developer Work
 
-**Current task:** Session 58 collection complete. 3 slaves merged (14 commits). 1 dev slave: refactoring-095 + ptu-rule-119 (6 commits, addEdge guard + trainer Naturewalk support). 2 matrix slaves: coverage re-analysis for all 8 domains (8 commits). Smoke test PASSED. No follow-up tickets. 2 tickets need review (refactoring-095, ptu-rule-119).
+**Current task:** Session 59 collection complete. 4 slaves merged (10 commits). 1 reviewer slave: refactoring-095+ptu-rule-119 CHANGES_REQUIRED (code-review-215 H1+H2, rules-review-191 APPROVED). 3 matrix slaves: re-audited all 8 domains. 2 follow-up tickets filed (ptu-rule-120, refactoring-096). Tickets needing fix cycle: refactoring-095, ptu-rule-119.
+
+**Session 59 (2026-02-28, plan-20260228-072000):**
+- slave-1 (reviewers): refactoring-095+ptu-rule-119 — code-review-215 **CHANGES_REQUIRED** (H1: comma-split mangles multi-terrain Naturewalk, H2: no unit tests, M1: addEdge return silently ignored, M2: app-surface.md not updated, M3: tag border-color missing) + rules-review-191 **APPROVED** (M1: equipment Naturewalk → ptu-rule-120). Fix cycle needed
+- slave-2 (matrix): audit-combat+capture — re-audited combat (52 items: 40 correct, 3 incorrect, 4 approximation) and capture (26 items: 22 correct, 1 incorrect, 1 approximation)
+- slave-3 (matrix): audit-healing+pokemon+encounter — re-audited healing (32 items: 25 correct, 3 incorrect, 2 approximation, 2 ambiguous), pokemon-lifecycle (26 items: 22 correct, 1 incorrect, 2 approximation, 1 ambiguous), encounter-tables (14 items: 9 correct, 1 incorrect, 3 approximation, 1 ambiguous)
+- slave-4 (matrix): audit-charlc+scenes+vtt — re-audited character-lifecycle (34 items: 29 correct, 1 incorrect, 4 approximation), scenes (22 items: 19 correct, 3 approximation), vtt-grid (27 items: 22 correct, 5 approximation)
+- **Smoke test:** SKIPPED (no dev slaves — all reviewers + matrix)
+- **Merge notes:** 0 conflicts. All 4 rebased cleanly. 10 commits total
+- **Tickets filed:** ptu-rule-120 (equipment-granted Naturewalk, from rules-review-191 MED-01), refactoring-096 (tag color inconsistency, from code-review-215 MED-03)
+- **Tickets needing fix cycle:** refactoring-095, ptu-rule-119 (CHANGES_REQUIRED from code-review-215)
 
 **Session 58 (2026-02-28, plan-20260228-032958):**
 - slave-1 (developer): refactoring-095+ptu-rule-119 — 6 commits: guarded addEdge() against Skill Edge string injection (refactoring-095), added capabilities field to HumanCharacter Prisma model, extended Naturewalk checks to support trainer combatants, added capabilities UI (ptu-rule-119) → **implemented, needs review**
@@ -596,7 +607,8 @@ updated_by: slave-collector (plan-20260228-032958)
 | refactoring-092 | P4 | **resolved** | Partial-update merge for modification endpoint — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
 | refactoring-093 | P4 | **resolved** | Relocated getEffectivenessClass to typeEffectiveness.ts — code-review-211 APPROVED + rules-review-187 APPROVED (plan-20260228-010000 slave-4) |
 | refactoring-094 | P4 | **resolved** | Remove trivial combatantsOnGrid passthrough — APPROVED (code-review-213 + rules-review-189, plan-20260228-020000) |
-| refactoring-095 | P4 | **implemented** | Guard addEdge() against Skill Edge string injection. Added regex check rejecting `^Skill Edge:` pattern in addEdge(), forcing through addSkillEdge() path. Implemented by slave-1 (plan-20260228-032958). Needs review |
+| refactoring-095 | P4 | **CHANGES_REQUIRED** | Guard addEdge() against Skill Edge string injection. Added regex check rejecting `^Skill Edge:` pattern in addEdge(), forcing through addSkillEdge() path. Implemented by slave-1 (plan-20260228-032958). Review by slave-1 (plan-20260228-072000): code-review-215 CHANGES_REQUIRED (MED-01: return value silently ignored, MED-02: app-surface.md not updated, MED-03: tag border-color missing), rules-review-191 APPROVED (decree-027 compliant). Fix cycle needed |
+| refactoring-096 | P4 | **open** | Tag color inconsistency between [id].vue and HumanClassesTab.vue. Filed from code-review-215 MED-03 (plan-20260228-072000) |
 
 ## Code Health
 
@@ -610,6 +622,19 @@ updated_by: slave-collector (plan-20260228-032958)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-02-28, session 59 — plan-20260228-072000)
+
+**Slave collection plan-20260228-072000:** 4 slaves merged (10 commits total, 0 conflicts)
+- **slave-1** (reviewers): refactoring-095+ptu-rule-119 — code-review-215 **CHANGES_REQUIRED** (H1: comma-split mangles multi-terrain, H2: no unit tests, M1: silent addEdge rejection, M2: app-surface.md, M3: tag border-color) + rules-review-191 **APPROVED** (M1: equipment Naturewalk → ptu-rule-120). Fix cycle needed
+- **slave-2** (matrix): audit-combat+capture — 52+26 items audited. combat: 40C/3I/4A (decree-021 non-compliant). capture: 22C/1I/1A (R018 owned Pokemon capturable)
+- **slave-3** (matrix): audit-healing+pokemon+encounter — 32+26+14 items. healing: 25C/3I/2A/2Amb (R033 CRITICAL: new-day boundAp). pokemon-lifecycle: 22C/1I/2A/1Amb. encounter-tables: 9C/1I/3A/1Amb
+- **slave-4** (matrix): audit-charlc+scenes+vtt — 34+22+27 items. character-lifecycle: 29C/1I/4A. scenes: 19C/3A. vtt-grid: 22C/5A
+
+**Tickets filed:** ptu-rule-120 (equipment Naturewalk), refactoring-096 (tag color inconsistency)
+**Tickets needing fix cycle:** refactoring-095, ptu-rule-119
+**Smoke test:** SKIPPED (no dev slaves)
+**Audit completion:** All 8 domains now have FRESH audits. Full pipeline FRESH.
 
 ## Session Summary (2026-02-27, session 55 — plan-20260227-162300)
 

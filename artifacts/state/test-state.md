@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-02-28T07:10:00
-updated_by: slave-collector (plan-20260228-032958)
+last_updated: 2026-02-28T08:30:00
+updated_by: slave-collector (plan-20260228-072000)
 ---
 
 # Matrix Ecosystem State
@@ -9,21 +9,31 @@ updated_by: slave-collector (plan-20260228-032958)
 
 | Domain | Rules | Capabilities | Matrix | Audit | Tickets | Coverage |
 |--------|-------|-------------|--------|-------|---------|----------|
-| combat | done (135) | **FRESH** | **FRESH** | STALE | created | 71.9% (82 impl + 25 partial + 5 unreachable / 135 effective) |
-| capture | done (33) | **FRESH** | **FRESH** | STALE | created | 70.3% (20 impl + 2 partial + 3 unreachable / 32 effective) |
-| healing | done (42) | **FRESH** | **FRESH** | STALE | created | 65.0% (22 impl + 5 partial + 3 unreachable / 40 effective) |
-| pokemon-lifecycle | done (68) | **FRESH** | **FRESH** | STALE | created | 72.2% (35 impl + 8 partial / 54 effective) |
-| character-lifecycle | done (68) | **FRESH** | **FRESH** | STALE | created | 73.3% (38 impl + 12 partial / 60 effective) |
-| encounter-tables | done (27) | **FRESH** | **FRESH** | STALE | created | 77.5% (14 impl + 3 partial / 20 effective) |
-| scenes | done (42) | **FRESH** | **FRESH** | STALE | created | 70.0% (17 impl + 8 partial / 30 effective) |
-| vtt-grid | done (42) | **FRESH** | **FRESH** | STALE | created | 65.3% (19 impl + 9 partial / 36 effective) |
+| combat | done (135) | **FRESH** | **FRESH** | **FRESH** (52 audited: 40C/3I/4A) | created | 71.9% (82 impl + 25 partial + 5 unreachable / 135 effective) |
+| capture | done (33) | **FRESH** | **FRESH** | **FRESH** (26 audited: 22C/1I/1A) | created | 70.3% (20 impl + 2 partial + 3 unreachable / 32 effective) |
+| healing | done (42) | **FRESH** | **FRESH** | **FRESH** (32 audited: 25C/3I/2A/2Amb) | created | 65.0% (22 impl + 5 partial + 3 unreachable / 40 effective) |
+| pokemon-lifecycle | done (68) | **FRESH** | **FRESH** | **FRESH** (26 audited: 22C/1I/2A/1Amb) | created | 72.2% (35 impl + 8 partial / 54 effective) |
+| character-lifecycle | done (68) | **FRESH** | **FRESH** | **FRESH** (34 audited: 29C/1I/4A) | created | 73.3% (38 impl + 12 partial / 60 effective) |
+| encounter-tables | done (27) | **FRESH** | **FRESH** | **FRESH** (14 audited: 9C/1I/3A/1Amb) | created | 77.5% (14 impl + 3 partial / 20 effective) |
+| scenes | done (42) | **FRESH** | **FRESH** | **FRESH** (22 audited: 19C/3A) | created | 70.0% (17 impl + 8 partial / 30 effective) |
+| vtt-grid | done (42) | **FRESH** | **FRESH** | **FRESH** (27 audited: 22C/5A) | created | 65.3% (19 impl + 9 partial / 36 effective) |
 | player-view | — | **FRESH** (new) | — | — | — | — (first-time mapping) |
 
-**Overall: Capabilities + Matrix REFRESHED (session 58). All 8 domains: capabilities re-mapped (session 57) + coverage matrices re-analyzed (session 58). Audit layer still stale — needs re-running against fresh matrices. Coverage scores updated to reflect accurate actor-aware gap detection against fresh capabilities. player-view domain has fresh capabilities but no rules catalog or matrix yet.**
+**Overall: Full pipeline FRESH (session 59). All 8 domains: capabilities re-mapped (session 57) + coverage matrices re-analyzed (session 58) + audits re-run (session 59). All domains now have FRESH Rules + Capabilities + Matrix + Audit. Ready for M2 ticket creation where needed. player-view domain has fresh capabilities but no rules catalog or matrix yet.**
 
 ## Active Work
 
-All 8 domains had coverage matrices re-analyzed in session 58 (plan-20260228-032958, slaves 2+3) against fresh capabilities from session 57. Audit layer is still stale and needs re-running against updated matrices. player-view domain has fresh capabilities but no rules catalog or matrix yet.
+All 8 domains now fully audited in session 59 (plan-20260228-072000, slaves 2+3+4) against fresh matrices from session 58. Full pipeline is FRESH for all 8 domains. player-view domain has fresh capabilities but no rules catalog or matrix yet.
+
+Session 59 audit highlights:
+- **combat:** 3 incorrect (R035 League two-phase HIGH, R082 Struggle Expert MEDIUM, R113 Sprint action LOW), 4 approximation. decree-021 non-compliant
+- **capture:** 1 incorrect (R018 owned Pokemon capturable HIGH), 1 approximation
+- **healing:** 3 incorrect (R033 new-day boundAp CRITICAL, R015 fainted clearing HIGH, R007 no min-1 MEDIUM), 2 ambiguous
+- **pokemon-lifecycle:** 1 incorrect (R058 significance floor vs round HIGH), 2 approximation, 1 ambiguous
+- **encounter-tables:** 1 incorrect (R008 significance presets HIGH), 3 approximation, 1 ambiguous
+- **character-lifecycle:** 1 incorrect (R041 MEDIUM), 4 approximation
+- **scenes:** 0 incorrect, 3 approximation
+- **vtt-grid:** 0 incorrect, 5 approximation (R003 multi-tile HIGH)
 
 ## Staleness Status
 
