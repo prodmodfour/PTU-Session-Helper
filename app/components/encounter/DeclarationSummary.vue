@@ -90,12 +90,12 @@ function formatActionType(type: string): string {
   user-select: none;
   font-size: $font-size-sm;
   font-weight: 600;
-  color: #a78bfa;
+  color: $color-accent-violet-light;
   border-bottom: 1px solid $glass-border;
   transition: background 0.15s ease;
 
   &:hover {
-    background: rgba(#7c3aed, 0.08);
+    background: rgba($color-accent-violet, 0.08);
   }
 
   .rotated {
@@ -122,9 +122,9 @@ function formatActionType(type: string): string {
   }
 
   &.is-resolving {
-    background: rgba(#7c3aed, 0.15);
-    border-left: 3px solid #7c3aed;
-    box-shadow: inset 0 0 12px rgba(#7c3aed, 0.1);
+    background: rgba($color-accent-violet, 0.15);
+    border-left: 3px solid $color-accent-violet;
+    box-shadow: inset 0 0 12px rgba($color-accent-violet, 0.1);
   }
 
   &.is-resolved {
@@ -165,8 +165,8 @@ function formatActionType(type: string): string {
   }
 
   &--use_feature {
-    background: rgba(#7c3aed, 0.2);
-    color: #a78bfa;
+    background: rgba($color-accent-violet, 0.2);
+    color: $color-accent-violet-light;
   }
 
   &--orders {

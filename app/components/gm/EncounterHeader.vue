@@ -370,9 +370,9 @@ const handleSourceChange = (event: Event) => {
     border: 1px solid $border-color-default;
   }
   &--phase {
-    background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+    background: linear-gradient(135deg, $color-accent-violet 0%, $color-accent-violet-light 100%);
     color: #fff;
-    box-shadow: 0 0 8px rgba(#7c3aed, 0.4);
+    box-shadow: 0 0 8px rgba($color-accent-violet, 0.4);
   }
   &--yellow {
     background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);

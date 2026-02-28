@@ -271,7 +271,7 @@ const emit = defineEmits<{
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, $color-accent-violet 0%, $color-accent-violet-light 100%);
   color: #fff;
   padding: 2px $spacing-sm;
   border-radius: $border-radius-sm;

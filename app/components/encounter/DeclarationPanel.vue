@@ -111,12 +111,12 @@ async function submitDeclaration() {
 
 <style lang="scss" scoped>
 .declaration-panel {
-  background: linear-gradient(135deg, rgba(#7c3aed, 0.12) 0%, rgba(#a78bfa, 0.06) 100%);
-  border: 2px solid rgba(#7c3aed, 0.4);
+  background: linear-gradient(135deg, rgba($color-accent-violet, 0.12) 0%, rgba($color-accent-violet-light, 0.06) 100%);
+  border: 2px solid rgba($color-accent-violet, 0.4);
   border-radius: $border-radius-lg;
   padding: $spacing-lg;
   margin-bottom: $spacing-lg;
-  box-shadow: 0 0 16px rgba(#7c3aed, 0.2);
+  box-shadow: 0 0 16px rgba($color-accent-violet, 0.2);
 }
 
 .declaration-header {
@@ -124,7 +124,7 @@ async function submitDeclaration() {
   align-items: center;
   gap: $spacing-sm;
   margin-bottom: $spacing-md;
-  color: #a78bfa;
+  color: $color-accent-violet-light;
   font-weight: 600;
 }
 
@@ -188,7 +188,7 @@ async function submitDeclaration() {
 
   &:focus {
     outline: none;
-    border-color: #7c3aed;
+    border-color: $color-accent-violet;
   }
 }
 
@@ -208,7 +208,7 @@ async function submitDeclaration() {
 
   &:focus {
     outline: none;
-    border-color: #7c3aed;
+    border-color: $color-accent-violet;
   }
 }
 
@@ -218,7 +218,7 @@ async function submitDeclaration() {
   justify-content: center;
   gap: $spacing-xs;
   padding: $spacing-sm $spacing-lg;
-  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, $color-accent-violet 0%, $color-accent-violet-light 100%);
   color: #fff;
   border: none;
   border-radius: $border-radius-sm;
@@ -229,7 +229,7 @@ async function submitDeclaration() {
   margin-top: $spacing-xs;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 0 12px rgba(#7c3aed, 0.5);
+    box-shadow: 0 0 12px rgba($color-accent-violet, 0.5);
   }
 
   &:disabled {
