@@ -6,6 +6,8 @@ severity: MEDIUM
 domain: pokemon-lifecycle
 source: design-pokemon-evolution-001/spec-p0.md (section 3.1.3)
 created_by: slave-collector (plan-20260228-173500)
+status: addressed
+decree_id: decree-035
 ---
 
 # decree-need-035: Base Relations — Raw vs Nature-Adjusted

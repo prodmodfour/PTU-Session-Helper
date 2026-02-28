@@ -6,6 +6,8 @@ severity: LOW
 domain: combat
 source: design-pokemon-switching-001/spec-p1.md (Section I)
 created_by: slave-collector (plan-20260228-173500)
+status: addressed
+decree_id: decree-034
 ---
 
 # decree-need-034: Forced Switch and Recall Range

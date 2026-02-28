@@ -6,6 +6,8 @@ severity: MEDIUM
 domain: combat
 source: design-status-automation-001/spec-p0.md (decision D1)
 created_by: slave-collector (plan-20260228-173500)
+status: addressed
+decree_id: decree-032
 ---
 
 # decree-need-032: Cursed Tick — Prevented Action Trigger

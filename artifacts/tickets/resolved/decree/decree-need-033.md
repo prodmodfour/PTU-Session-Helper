@@ -6,6 +6,8 @@ severity: MEDIUM
 domain: combat
 source: design-pokemon-switching-001/spec-p1.md (Section H)
 created_by: slave-collector (plan-20260228-173500)
+status: addressed
+decree_id: decree-033
 ---
 
 # decree-need-033: Fainted Switch Timing

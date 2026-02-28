@@ -6,6 +6,8 @@ severity: MEDIUM
 domain: pokemon-lifecycle
 source: design-pokemon-evolution-001/spec-p1.md (section 2.2)
 created_by: slave-collector (plan-20260228-173500)
+status: addressed
+decree_id: decree-036
 ---
 
 # decree-need-036: Stone Evolution Move Learning
