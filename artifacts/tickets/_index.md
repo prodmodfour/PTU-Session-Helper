@@ -1,28 +1,28 @@
 ---
-generated_at: 2026-02-28T07:53:45.002Z
-total_tickets: 182
-open: 5
-in_progress: 81
+generated_at: 2026-02-28T08:37:13.151Z
+total_tickets: 185
+open: 4
+in_progress: 85
 resolved: 92
 ---
 
 # Tickets Index
 
-## Open Tickets (5)
+## Open Tickets (4)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ptu-rule-120 | ptu-rule | P4 | combat+character-lifecycle | Trainers can gain Naturewalk from equipped items (Snow Boots |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
-| refactoring-095 | refactoring | P4 | character-lifecycle | refactoring-095: Guard addEdge() against Skill Edge string i |
 | refactoring-096 | refactoring | P4 | character-lifecycle | Tag styles (`.tag--class`, `.tag--feature`, `.tag--edge`, `. |
 
-## In-Progress Tickets (81)
+## In-Progress Tickets (85)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
 | bug-036 | bug | P0 | player-view | smoke-test (plan-20260227-122512) |
+| bug-038 | bug | P0 | healing | healing-audit-report (R033, 2026-02-28) |
 | ptu-rule-096 | ptu-rule | P0 | vtt | decree-002 |
 | ptu-rule-097 | ptu-rule | P0 | vtt | decree-003 |
 | bug-033 | bug | P0 | build | dev-server-error-log |
@@ -38,6 +38,7 @@ resolved: 92
 | ptu-rule-103 | ptu-rule | P1 | vtt | decree-011 |
 | ptu-rule-104 | ptu-rule | P1 | combat | decree-012 |
 | refactoring-001 | refactoring | P1 | vtt | decree-010 |
+| bug-039 | bug | P2 | capture | capture-audit-report (R018, 2026-02-28) |
 | ptu-rule-107 | ptu-rule | P2 | combat | decree-021 |
 | ptu-rule-108 | ptu-rule | P2 | vtt-grid | rules-review-160 M2 + rules-review-162 M1 |
 | bug-001 | bug | P2 | csv-import | code-review-034 |
@@ -86,12 +87,14 @@ resolved: 92
 | ptu-rule-114 | ptu-rule | P4 | combat | rules-review-169 (ptu-rule-099+104 re-review, note on breather mechanics) |
 | ptu-rule-116 | ptu-rule | P4 | vtt-grid | rules-review-181 (scope boundary note) |
 | ptu-rule-117 | ptu-rule | P4 | character-lifecycle | rules-review-183 MEDIUM-001 (pre-existing issue from commit 69f53a0) |
+| ptu-rule-119 | ptu-rule | P4 | combat+vtt-grid | rules-review-186 (noted limitation) |
 | ux-009 | ux | P4 | combat | rules-review-163 M-1 |
 | ux-010 | ux | P4 | encounter-tables | rules-review-171 M1 |
 | refactoring-086 | refactoring | P4 | combat | code-review-189 MED-1, code-review-191 M1 |
 | refactoring-087 | refactoring | P4 | vtt-grid | code-review-190 MED-1 |
 | refactoring-088 | refactoring | P4 | vtt-grid | code-review-195 MED-1 |
 | refactoring-091 | refactoring | P4 | character-lifecycle | code-review-203 M1 |
+| refactoring-095 | refactoring | P4 | character-lifecycle | rules-review-188 MED-01 |
 | ptu-rule-081 | ptu-rule | P4 | combat | rules-review-115 M2 |
 | ptu-rule-082 | ptu-rule | P4 | pokemon-lifecycle | rules-review-118 (MEDIUM observation) |
 | ptu-rule-083 | ptu-rule | P4 | vtt-grid | rules-review-144 RULING-1 |
@@ -112,9 +115,9 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 0 | 10 | 26 | 37 |
-| ptu-rule | 2 | 53 | 36 | 92 |
+| bug | 0 | 12 | 26 | 39 |
+| ptu-rule | 2 | 54 | 36 | 93 |
 | feature | 0 | 1 | 1 | 3 |
 | ux | 1 | 7 | 2 | 10 |
 | decree | 0 | 0 | 27 | 27 |
-| refactoring | 2 | 10 | 0 | 13 |
+| refactoring | 1 | 11 | 0 | 13 |
