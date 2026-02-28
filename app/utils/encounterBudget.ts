@@ -40,7 +40,7 @@ export interface BudgetCalcResult {
   }
 }
 
-export type SignificanceTier = 'insignificant' | 'everyday' | 'significant' | 'climactic' | 'legendary'
+export type SignificanceTier = 'insignificant' | 'everyday' | 'significant'
 
 export interface SignificancePreset {
   tier: SignificanceTier
@@ -69,6 +69,10 @@ export interface BudgetAnalysis {
 // CONSTANTS
 // ============================================
 
+/**
+ * Significance presets capped at x5 per PTU Core p.460 and decree-030.
+ * GMs who want values above x5 can use the custom input in the UI.
+ */
 export const SIGNIFICANCE_PRESETS: SignificancePreset[] = [
   {
     tier: 'insignificant',
@@ -87,23 +91,9 @@ export const SIGNIFICANCE_PRESETS: SignificancePreset[] = [
   {
     tier: 'significant',
     label: 'Significant',
-    multiplierRange: { min: 4.0, max: 4.99 },
-    defaultMultiplier: 4.0,
-    description: 'Gym leaders, rival encounters, mini-bosses (PTU: x4-x5)'
-  },
-  {
-    tier: 'climactic',
-    label: 'Climactic',
-    multiplierRange: { min: 5.0, max: 6.99 },
-    defaultMultiplier: 6.0,
-    description: 'Tournament finals, legendary encounters, arc finales (extended)'
-  },
-  {
-    tier: 'legendary',
-    label: 'Legendary',
-    multiplierRange: { min: 7.0, max: 10.0 },
-    defaultMultiplier: 8.0,
-    description: 'Campaign-defining battles, one-of-a-kind showdowns (extended)'
+    multiplierRange: { min: 4.0, max: 5.0 },
+    defaultMultiplier: 5.0,
+    description: 'Gym leaders, rival encounters, legendary battles, arc finales (PTU: x4-x5)'
   }
 ]
 
