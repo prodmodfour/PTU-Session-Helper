@@ -56,15 +56,17 @@
             <span>{{ milestone.message }}</span>
           </div>
 
-          <!-- Evolution Eligibility -->
-          <div
+          <!-- Evolution Eligibility — now clickable -->
+          <button
             v-for="evoLevel in entry.evolutionLevels"
             :key="`evo-${evoLevel}`"
-            class="levelup-detail-item levelup-detail-item--evolution"
+            class="levelup-detail-item levelup-detail-item--evolution levelup-detail-item--clickable"
+            @click="$emit('evolve-click', { pokemonId: entry.pokemonId, species: entry.species })"
           >
             <PhArrowCircleUp :size="14" class="detail-icon" />
-            <span>Evolution may be available at Level {{ evoLevel }}!</span>
-          </div>
+            <span>Evolution available at Level {{ evoLevel }}!</span>
+            <PhCaretRight :size="12" class="action-icon" />
+          </button>
         </div>
       </div>
     </div>
@@ -80,6 +82,7 @@ import {
   PhSword,
   PhLightning,
   PhArrowCircleUp,
+  PhCaretRight,
 } from '@phosphor-icons/vue'
 import type { XpApplicationResult } from '~/utils/experienceCalculation'
 
@@ -97,6 +100,10 @@ interface LevelUpEntryDisplay {
 
 const props = defineProps<{
   results: XpApplicationResult[]
+}>()
+
+defineEmits<{
+  'evolve-click': [payload: { pokemonId: string; species: string }]
 }>()
 
 /**

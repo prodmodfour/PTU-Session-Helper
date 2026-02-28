@@ -105,4 +105,26 @@
     color: $color-warning;
     font-weight: 600;
   }
+
+  &--clickable {
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all $transition-fast;
+    width: 100%;
+    text-align: left;
+
+    &:hover {
+      background: rgba($color-warning, 0.15);
+      border-color: rgba($color-warning, 0.3);
+    }
+
+    .action-icon {
+      margin-left: auto;
+      opacity: 0.5;
+    }
+
+    &:hover .action-icon {
+      opacity: 1;
+    }
+  }
 }
