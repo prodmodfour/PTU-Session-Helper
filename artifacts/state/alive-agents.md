@@ -228,3 +228,8 @@
 | plan-20260228-093200/slave-2 | developer | bug-039 | success | 2026-02-28T09:38:12Z | d98c4c9, afd453a, 015fdd0 |
 | plan-20260228-093200/slave-3 | developer | ptu-rule-107-p1 | success | 2026-02-28T09:46:00Z | 4faef76, c46ad18, 2e47c3a, 904c765, 1f8aec1, 3bae724, d6d69f3, 790ebdc |
 | plan-20260228-093200/slave-4 | developer | ptu-rule-119+refactoring-095-fix | success | 2026-02-28T10:02:00Z | c9d442c, e507367, a922d48, 8899e68, 1ccbc71, 91664e2 |
+| plan-20260228-101738/slave-4 | developer | ptu-rule-122 | success | 2026-02-28T10:22:30Z | 9f03df5, 06d4a67 |
+| plan-20260228-101738/slave-5 | developer | ptu-rule-123 | success | 2026-02-28T10:24:30Z | cd7061d, f5a6a22, 3c67187, 6c23966, 7f2a874 |
+| plan-20260228-101738/slave-1 | reviewers | bug-038+bug-039 | CHANGES_REQUIRED | 2026-02-28T10:25:30Z | a980aa3, 496b3ae |
+| plan-20260228-101738/slave-2 | reviewers | ptu-rule-107-p1 | CHANGES_REQUIRED | 2026-02-28T10:25:00Z | 8a792b2, 79fcd60 |
+| plan-20260228-101738/slave-3 | reviewers | ptu-rule-119+refactoring-095-rereview | APPROVED | 2026-02-28T10:28:00Z | 816d99d, 29c9ced |
