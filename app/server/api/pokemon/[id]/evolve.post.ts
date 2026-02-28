@@ -22,6 +22,7 @@
  */
 import { performEvolution } from '~/server/services/evolution.service'
 import type { Stats } from '~/server/services/evolution.service'
+import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -76,6 +77,23 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    // Guard: reject evolution if Pokemon is in an active encounter
+    const activeEncounters = await prisma.encounter.findMany({
+      where: { isActive: true },
+      select: { combatants: true, id: true }
+    })
+
+    for (const encounter of activeEncounters) {
+      const combatants = JSON.parse(encounter.combatants) as Array<{ entityId?: string }>
+      const isInEncounter = combatants.some(c => c.entityId === id)
+      if (isInEncounter) {
+        throw createError({
+          statusCode: 409,
+          message: 'Cannot evolve a Pokemon that is in an active encounter. End the encounter first.'
+        })
+      }
+    }
+
     const result = await performEvolution({
       pokemonId: id,
       targetSpecies: body.targetSpecies,
