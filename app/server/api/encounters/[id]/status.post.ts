@@ -72,8 +72,10 @@ export default defineEventHandler(async (event) => {
 
     // PTU p.276: Naturewalk grants immunity to Slowed/Stuck on matching terrain.
     // Check if the combatant is on terrain that matches their Naturewalk.
+    // Applies to both Pokemon (species Naturewalk) and trainers (Survivalist class
+    // feature PTU p.149, or equipment-granted Naturewalk like Snow Boots/Jungle Boots).
     // Like type immunity, this can be overridden by the GM.
-    if (addStatuses.length > 0 && combatant.type === 'pokemon') {
+    if (addStatuses.length > 0) {
       const terrainCells: TerrainCell[] = record.terrainEnabled
         ? (JSON.parse(record.terrainState || '{}').cells ?? [])
         : []
