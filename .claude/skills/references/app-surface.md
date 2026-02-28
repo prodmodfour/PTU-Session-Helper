@@ -115,6 +115,7 @@ CRUD + extensive combat actions.
 - `POST /api/encounters/:id/end` — end combat
 - `POST /api/encounters/:id/next-turn` — advance turn
 - `POST /api/encounters/:id/declare` — record trainer declaration (League Battle)
+- `POST /api/encounters/:id/switch` — full Pokemon switch (recall + release) as Standard Action with 8m range check, initiative insertion, action economy enforcement
 - `POST /api/encounters/:id/combatants` — add combatant
 - `DELETE /api/encounters/:id/combatants/:combatantId` — remove combatant
 - `POST /api/encounters/:id/damage` — apply damage
@@ -135,9 +136,11 @@ CRUD + extensive combat actions.
 - `POST /api/encounters/:id/xp-calculate` — preview XP calculation (read-only breakdown + participating Pokemon)
 - `POST /api/encounters/:id/xp-distribute` — apply XP to Pokemon (updates experience, level, tutorPoints)
 
-**Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `EvolutionConfirmModal.vue` (stat redistribution + confirmation for Pokemon evolution — Base Relations validation, HP preview, GM override), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio), `DeclarationPanel.vue` (GM declaration form for League Battle trainer_declaration phase — action type select, description input, submit + next turn), `DeclarationSummary.vue` (declaration list display for Group View — collapsible round declarations with resolving/resolved state indicators).
+**Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `EvolutionConfirmModal.vue` (stat redistribution + confirmation for Pokemon evolution — Base Relations validation, HP preview, GM override), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio), `DeclarationPanel.vue` (GM declaration form for League Battle trainer_declaration phase — action type select, description input, submit + next turn), `DeclarationSummary.vue` (declaration list display for Group View — collapsible round declarations with resolving/resolved state indicators), `SwitchPokemonModal.vue` (Pokemon switching modal — shows recalled Pokemon, loads bench from trainer roster, select replacement with sprite/level/HP display).
 
 **Evolution utilities:** `utils/evolutionCheck.ts` (pure eligibility check — level/item/trigger validation, getEvolutionLevels, EvolutionStats type, validateBaseRelations re-export), `types/species.ts` (EvolutionTrigger interface — toSpecies, targetStage, minimumLevel, requiredItem, itemMustBeHeld).
+
+**Switching system:** `composables/useSwitching.ts` (getBenchPokemon, canSwitch pre-validation, executeSwitch), `server/services/switching.service.ts` (10-step validation, range check, initiative insertion, combatant removal). Switch button on `CombatantCard.vue` for trainers and owned Pokemon. WebSocket event: `pokemon_switched` (server -> all clients). `switchActions` field on Encounter model (JSON, cleared per round).
 
 **Budget system:** `utils/encounterBudget.ts` (pure PTU level budget calculator — budget formula, difficulty assessment, XP calculation, SIGNIFICANCE_PRESETS), `composables/useEncounterBudget.ts` (reactive wrapper for active encounter budget analysis).
 
@@ -240,6 +243,7 @@ Export/import for offline character management.
 | `server/services/combatant.service.ts` | Combatant builder, damage pipeline, calculateCurrentInitiative (CS-modified speed for initiative) |
 | `server/services/encounter.service.ts` | Encounter CRUD, reorderInitiativeAfterSpeedChange (decree-006), saveInitiativeReorder |
 | `server/services/status-automation.service.ts` | Tick damage calculation for status conditions (Burned, Poisoned, Badly Poisoned, Cursed). Pure functions: calculateTickDamage, calculateBadlyPoisonedDamage, getTickDamageEntries. TICK_DAMAGE_CONDITIONS constant in `constants/statusConditions.ts`. Integrated into `next-turn.post.ts` (fires before turn advance). WebSocket event: `status_tick` (server → all clients). `badlyPoisonedRound` field on Combatant model tracks escalation. |
+| `server/services/switching.service.ts` | Pokemon switching logic — validateSwitch (10-step chain), checkRecallRange (8m PTU diagonal), insertIntoTurnOrder (full contact + league), removeCombatantFromEncounter, markActionUsed, buildSwitchAction |
 | `server/services/entity-update.service.ts` | Entity update broadcasting |
 | `server/services/grid-placement.service.ts` | VTT grid placement and size-to-token mapping |
 | `server/utils/csv-parser.ts` | Reusable CSV parser (parseCSV, getCell, parseNumber) |
