@@ -3,12 +3,13 @@ id: feature-007
 title: Pokemon Level-Up Allocation UI
 priority: P1
 severity: HIGH
-status: open
+status: in-progress
 domain: pokemon-lifecycle
 source: matrix-gap (GAP-PLC-2)
 matrix_source: pokemon-lifecycle R014, R015, R027, R028
 created_by: master-planner
 created_at: 2026-02-28
+design_ref: artifacts/designs/design-level-up-allocation-001/
 ---
 
 # feature-007: Pokemon Level-Up Allocation UI
@@ -43,3 +44,26 @@ FULL-scope feature requiring design spec. Interacts with existing `PokemonLevelU
 - `app/components/pokemon/LevelUpNotification.vue` — add action buttons
 - `app/server/api/pokemon/` — stat allocation + ability assignment endpoints
 - `app/composables/` — level-up allocation logic
+
+## Design Reference
+
+Full design spec: [`design-level-up-allocation-001`](../../../designs/design-level-up-allocation-001/_index.md)
+
+### Priority Tiers
+
+- **P0:** Stat point allocation with Base Relations validation (R027)
+  - `app/utils/baseRelations.ts` — validation utility (shared with evolution)
+  - `POST /api/pokemon/:id/allocate-stats` — stat allocation endpoint
+  - `app/composables/useLevelUpAllocation.ts` — client-side state
+  - `app/components/pokemon/StatAllocationPanel.vue` — interactive UI
+- **P1:** Ability assignment at levels 20/40 + move learning (R014, R015, R028)
+  - `POST /api/pokemon/:id/assign-ability` — ability assignment endpoint
+  - `POST /api/pokemon/:id/learn-move` — move learning endpoint
+  - `app/components/pokemon/AbilityAssignmentPanel.vue` — ability picker
+  - `app/components/pokemon/MoveLearningPanel.vue` — move selection UI
+
+## Resolution Log
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-02-28 | a873c1a | Design spec created (5 files in design-level-up-allocation-001/) |
