@@ -136,8 +136,6 @@ export default defineEventHandler(async (event) => {
     // Move to next turn
     currentTurnIndex++
 
-    const isLeagueBattle = encounter.battleType === 'trainer'
-
     // Parse declarations for edge case handling (fainted trainers, missing declarations)
     const declarations: TrainerDeclaration[] = JSON.parse(encounter.declarations || '[]')
 
