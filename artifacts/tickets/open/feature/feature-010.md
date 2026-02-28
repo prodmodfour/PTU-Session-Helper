@@ -53,10 +53,19 @@ Design spec created: `artifacts/designs/design-status-automation-001/`
 
 | Tier | Scope | Status |
 |------|-------|--------|
-| P0 | Tick damage (Burn/Poison/Badly Poisoned/Cursed) at turn end | design-complete |
+| P0 | Tick damage (Burn/Poison/Badly Poisoned/Cursed) at turn end | implemented |
 | P1 | Save checks (Frozen/Paralysis/Sleep/Confused) with turn gating | design-complete |
 | P2 | Auto-cure (fire thaw, wake on damage), weather modifiers, ability reference | design-complete |
 
 ## Resolution Log
 
 - 2026-02-28: Design spec `design-status-automation-001` created with 3 priority tiers, shared specs, and testing strategy
+- 2026-02-28: P0 implemented — tick damage at turn end for Burn/Poison/Badly Poisoned/Cursed
+  - 7c389d8: status-automation.service.ts with pure calculation functions
+  - cfbfd7f: badlyPoisonedRound field on Combatant interface
+  - 922f56b: badlyPoisonedRound initialized in combatant builder
+  - b5ef1a2: TICK_DAMAGE_CONDITIONS constant
+  - 5fd16e5: tick damage integration in next-turn.post.ts
+  - f03a8df: status_tick WebSocket event handler
+  - a40ff0f: 23 unit tests for tick damage functions
+  - 01ea9aa: badlyPoisonedRound management in status.post.ts
