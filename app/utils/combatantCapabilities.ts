@@ -1,6 +1,7 @@
 import type { Combatant, Pokemon, HumanCharacter, TerrainType, TerrainCell, StatusCondition } from '~/types'
 import { NATUREWALK_TERRAIN_MAP } from '~/constants/naturewalk'
 import type { NaturewalkTerrain } from '~/constants/naturewalk'
+import { getEquipmentGrantedCapabilities } from '~/utils/equipmentBonuses'
 
 /**
  * Shared utility functions for querying combatant movement capabilities.
@@ -197,12 +198,20 @@ export function getCombatantNaturewalks(combatant: Combatant): ReadonlyArray<str
     return getPokemonNaturewalks(combatant.entity as Pokemon)
   }
 
-  // Human combatant — check trainer capabilities (Survivalist Naturewalk, PTU p.149)
+  // Human combatant — merge manual capabilities with equipment-derived capabilities.
+  // Manual: Survivalist Naturewalk (PTU p.149), stored on HumanCharacter.capabilities.
+  // Equipment: Snow Boots → Naturewalk (Tundra), Jungle Boots → Naturewalk (Forest)
+  //            (PTU 09-gear-and-items.md p.293), derived from EquippedItem.grantedCapabilities.
   const human = combatant.entity as HumanCharacter
-  const caps = human.capabilities
-  if (!caps || caps.length === 0) return []
+  const manualCaps = human.capabilities ?? []
+  const equipmentCaps = getEquipmentGrantedCapabilities(human.equipment ?? {})
 
-  return parseNaturewalksFromOtherCaps(caps)
+  const allCaps = [...manualCaps, ...equipmentCaps]
+  if (allCaps.length === 0) return []
+
+  // Parse and deduplicate terrain names from all capability sources
+  const terrains = parseNaturewalksFromOtherCaps(allCaps)
+  return Array.from(new Set(terrains))
 }
 
 /**
