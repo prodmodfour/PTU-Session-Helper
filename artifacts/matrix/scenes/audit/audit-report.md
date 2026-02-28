@@ -116,7 +116,7 @@ matrix_version: 2026-02-28T03:00:00Z
 
 ### R029 — Encounter Creation Baseline (Budget Formula)
 
-- **Rule:** PTU Core p.473: "Multiply the average Pokemon Level of PCs by 2 = level budget per player. Multiply by number of trainers = total level budget."
+- **Rule:** PTU Encounter Creation Guide (Chapter 11): "Multiply the average Pokemon Level of PCs by 2 = baseline per player. Multiply by number of trainers = total levels to distribute." (This is a GM guideline for everyday encounters, not a hard formula.)
 - **Expected behavior:** Budget = avgPokemonLevel * 2 * playerCount
 - **Actual behavior:** `calculateEncounterBudget` computes `baselinePerPlayer = avgLevel * 2`, `totalBudget = baselinePerPlayer * players` (`app/utils/encounterBudget.ts:130-146`)
 - **Classification:** Correct

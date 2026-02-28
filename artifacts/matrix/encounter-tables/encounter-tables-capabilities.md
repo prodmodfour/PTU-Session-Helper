@@ -255,7 +255,7 @@ files_read: 24
 - **name:** Encounter Budget Calculator
 - **type:** utility
 - **location:** `app/utils/encounterBudget.ts` -- calculateEncounterBudget
-- **game_concept:** PTU Level Budget formula (Core p.473)
+- **game_concept:** PTU encounter budget guideline (Encounter Creation Guide, Chapter 11)
 - **description:** Calculates encounter level budget: averagePokemonLevel * 2 * playerCount. Pure function with typed input/output and breakdown.
 - **inputs:** BudgetCalcInput: { averagePokemonLevel, playerCount }
 - **outputs:** BudgetCalcResult: { totalBudget, levelBudgetPerPlayer, breakdown }
