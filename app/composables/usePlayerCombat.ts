@@ -310,12 +310,21 @@ export function usePlayerCombat() {
   /**
    * Request to switch Pokemon.
    * Sends a player_action WebSocket message for GM approval.
+   *
+   * P2 Section M: Enhanced to include recall combatant ID and replacement name
+   * so GM can see the full switch request details.
    */
-  const requestSwitchPokemon = (pokemonId: string): void => {
+  const requestSwitchPokemon = (
+    releaseEntityId: string,
+    releaseName: string,
+    recallCombatantId?: string
+  ): void => {
     const request: PlayerActionRequest = {
       ...buildBaseRequest(),
       action: 'switch_pokemon',
-      pokemonId
+      pokemonId: releaseEntityId,
+      pokemonName: releaseName,
+      targetIds: recallCombatantId ? [recallCombatantId] : undefined
     }
     send({ type: 'player_action', data: request })
   }

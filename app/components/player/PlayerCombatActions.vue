@@ -223,7 +223,7 @@
           v-for="pokemon in switchablePokemon"
           :key="pokemon.id"
           class="combat-actions__panel-row combat-actions__panel-row--pokemon"
-          @click="handleRequestSwitch(pokemon.id)"
+          @click="handleRequestSwitch(pokemon)"
         >
           <img
             :src="getSpriteUrl(pokemon.species, pokemon.shiny)"
@@ -531,10 +531,20 @@ const handleRequestItem = (itemId: string, itemName: string) => {
   showToast(`Requested: Use ${itemName}`)
 }
 
-const handleRequestSwitch = (pokemonId: string) => {
-  requestSwitchPokemon(pokemonId)
+const handleRequestSwitch = (pokemon: { id: string; nickname: string | null; species: string }) => {
+  // Find the player's active Pokemon combatant to recall
+  const activePokemonCombatant = myActiveCombatant.value?.type === 'pokemon'
+    ? myActiveCombatant.value
+    : null
+  const recallId = activePokemonCombatant?.id
+
+  requestSwitchPokemon(
+    pokemon.id,
+    pokemon.nickname || pokemon.species,
+    recallId
+  )
   showSwitchPanel.value = false
-  showToast('Requested: Switch Pokemon')
+  showToast(`Requested: Switch to ${pokemon.nickname || pokemon.species}`)
 }
 
 const handleRequestManeuver = (maneuverId: string, maneuverName: string) => {
