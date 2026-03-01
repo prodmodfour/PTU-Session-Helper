@@ -7,7 +7,7 @@ import { prisma } from '~/server/utils/prisma'
 import { rollDie } from '~/utils/diceRoller'
 import { calculateCurrentInitiative } from '~/server/services/combatant.service'
 import type { Combatant, Encounter, GridConfig } from '~/types'
-import type { TrainerDeclaration, SwitchAction } from '~/types/combat'
+import type { TrainerDeclaration, SwitchAction, OutOfTurnAction } from '~/types/combat'
 import type { SignificanceTier } from '~/utils/encounterBudget'
 
 // Prisma encounter record type (matches Prisma schema)
@@ -42,6 +42,8 @@ interface EncounterRecord {
   fogOfWarState: string
   declarations: string
   switchActions: string
+  pendingActions: string
+  holdQueue: string
   terrainEnabled: boolean
   terrainState: string
   gridIsometric: boolean
@@ -78,6 +80,8 @@ export interface ParsedEncounter {
   currentPhase: 'trainer_declaration' | 'trainer_resolution' | 'pokemon'
   declarations: TrainerDeclaration[]
   switchActions: SwitchAction[]
+  pendingOutOfTurnActions: OutOfTurnAction[]
+  holdQueue: Array<{ combatantId: string; holdUntilInitiative: number | null }>
   createdAt: Date
   updatedAt: Date
 }
@@ -206,6 +210,9 @@ export function buildEncounterResponse(
     declarations?: TrainerDeclaration[]
     // Per-round switch actions
     switchActions?: SwitchAction[]
+    // Out-of-turn actions (feature-016)
+    pendingOutOfTurnActions?: OutOfTurnAction[]
+    holdQueue?: Array<{ combatantId: string; holdUntilInitiative: number | null }>
   }
 ): ParsedEncounter {
   const turnOrder = options?.turnOrder ?? JSON.parse(record.turnOrder) as string[]
@@ -249,6 +256,8 @@ export function buildEncounterResponse(
     currentPhase: (options?.currentPhase ?? record.currentPhase ?? 'pokemon') as 'trainer_declaration' | 'trainer_resolution' | 'pokemon',
     declarations: options?.declarations ?? JSON.parse(record.declarations || '[]'),
     switchActions: options?.switchActions ?? JSON.parse(record.switchActions || '[]'),
+    pendingOutOfTurnActions: options?.pendingOutOfTurnActions ?? JSON.parse(record.pendingActions || '[]'),
+    holdQueue: options?.holdQueue ?? JSON.parse(record.holdQueue || '[]'),
     createdAt: record.createdAt,
     updatedAt: record.updatedAt
   }

@@ -209,6 +209,12 @@ model Encounter {
   // Cleared at the start of each new round
   switchActions     String @default("[]")
 
+  // Out-of-turn action system (feature-016)
+  // JSON array of OutOfTurnAction — pending actions awaiting GM resolution
+  pendingActions    String @default("[]")
+  // JSON array of { combatantId, holdUntilInitiative } — held action queue (P1 scope)
+  holdQueue         String @default("[]")
+
   // State
   isActive      Boolean  @default(true)
   isPaused      Boolean  @default(false)
