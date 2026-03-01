@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, SwitchAction } from '~/types'
+import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, SwitchAction, StatusCondition } from '~/types'
 import type { OutOfTurnAction, AoOTrigger, InterruptTrigger } from '~/types/combat'
 import type { GridPosition } from '~/types/spatial'
 import type { SignificanceTier } from '~/utils/encounterBudget'
@@ -583,6 +583,49 @@ export const useEncounterStore = defineStore('encounter', {
         this.encounter = response.data
       } catch (e: any) {
         this.error = e.message || 'Failed to heal combatant'
+        throw e
+      }
+    },
+
+    /** Use a healing item on a combatant */
+    async useItem(
+      itemName: string,
+      userId: string,
+      targetId: string,
+      options?: { targetAccepts?: boolean }
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{
+          success: boolean
+          data: Encounter
+          itemResult: {
+            itemName: string
+            userName: string
+            targetName: string
+            hpHealed?: number
+            conditionsCured?: StatusCondition[]
+            revived?: boolean
+            repulsive?: boolean
+            refused: boolean
+          }
+        }>(`/api/encounters/${this.encounter.id}/use-item`, {
+          method: 'POST',
+          body: {
+            itemName,
+            userId,
+            targetId,
+            targetAccepts: options?.targetAccepts ?? true
+          }
+        })
+
+        if (response.data) {
+          this.encounter = response.data
+        }
+        return response.itemResult
+      } catch (e: any) {
+        this.error = e.message || 'Failed to use item'
         throw e
       }
     },
