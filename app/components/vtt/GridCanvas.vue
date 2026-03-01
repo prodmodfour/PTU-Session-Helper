@@ -278,7 +278,6 @@ const rendering = useGridRendering({
   getTerrainCostAt: movement.getTerrainCostAt,
   getTerrainCostForCombatant: movement.getTerrainCostForCombatant,
   isValidMove: movement.isValidMove,
-  flankingMap
 })
 
 // Marquee pixel rect for visual overlay (in screen coordinates)
@@ -392,11 +391,6 @@ watch(() => interaction.selectedTokenId.value, () => {
 
 // Re-render when external movement preview changes
 watch(() => props.externalMovementPreview, () => {
-  rendering.render()
-}, { deep: true })
-
-// Re-render when flanking state changes
-watch(flankingMap, () => {
   rendering.render()
 }, { deep: true })
 
