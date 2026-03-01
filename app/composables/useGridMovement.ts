@@ -1,5 +1,6 @@
 import type { GridPosition, Combatant, Pokemon, TerrainType, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
 import { areAdjacent } from '~/utils/adjacency'
+import { AOO_BLOCKING_CONDITIONS } from '~/types/combat'
 import { useTerrainStore } from '~/stores/terrain'
 import { useRangeParser } from '~/composables/useRangeParser'
 import {
@@ -590,6 +591,15 @@ export function useGridMovement(options: UseGridMovementOptions) {
 
       // Must be an enemy
       if (!isEnemySide(mover.side, other.side)) continue
+
+      // Check reactor eligibility (MED-001)
+      // Skip fainted, dead, or status-blocked combatants
+      if (other.entity.currentHp <= 0) continue
+      const conditions: string[] = other.entity.statusConditions ?? []
+      if (conditions.includes('Fainted') || conditions.includes('Dead')) continue
+      if (AOO_BLOCKING_CONDITIONS.some(bc => conditions.includes(bc))) continue
+      // Skip if AoO already used this round
+      if (other.outOfTurnUsage?.aooUsed) continue
 
       // Check if was adjacent before but not after
       const wasBefore = areAdjacent(from, moverSize, token.position, token.size)
