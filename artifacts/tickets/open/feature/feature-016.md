@@ -3,12 +3,13 @@ id: feature-016
 title: Priority / Interrupt / Attack of Opportunity System
 priority: P2
 severity: MEDIUM
-status: open
+status: in-progress
 domain: combat+vtt-grid
 source: matrix-gap (combat Gap 2 + VTT SG-5)
 matrix_source: combat R040, R046, R047, R048, R110, R116, R117, vtt-grid R031
 created_by: master-planner
 created_at: 2026-02-28
+design_spec: artifacts/designs/design-priority-interrupt-001/
 ---
 
 # feature-016: Priority / Interrupt / Attack of Opportunity System
@@ -43,6 +44,32 @@ No mechanism for out-of-turn actions. PTU has three categories: Priority (act be
 
 FULL-scope feature requiring design spec. This is a fundamental combat system change affecting turn flow.
 
+## Design Spec
+
+**Status:** design-complete (2026-03-01)
+**Location:** `artifacts/designs/design-priority-interrupt-001/`
+
+### Tier Breakdown
+
+| Tier | Scope | Rules | Est. Commits |
+|------|-------|-------|-------------|
+| P0 | AoO trigger detection, out-of-turn engine, VTT grid integration | R110, R031 | 6-8 |
+| P1 | Priority (Standard/Limited/Advanced), Interrupt framework, Hold Action | R040, R046, R047, R048 | 8-10 |
+| P2 | Intercept Melee/Ranged, Disengage maneuver | R116, R117, ptu-rule-095 | 8-10 |
+
+### Key Architecture Decisions
+
+1. **GM-driven resolution model** — system detects opportunities, GM accepts/declines
+2. **Pending action queue** — `OutOfTurnAction[]` on Encounter, persisted in DB
+3. **Client-side between-turns state** — Priority declaration window without server phase
+4. **Backward-compatible** — all new fields optional with defaults
+
 ## Related Tickets
 
-- ptu-rule-095 (P4, open): Disengage maneuver — explicitly deferred until AoO is implemented
+- ptu-rule-095 (P4, open): Disengage maneuver — absorbed into P2 of this design
+
+## Resolution Log
+
+| Date | Action | Commits | Files |
+|------|--------|---------|-------|
+| 2026-03-01 | Design spec written | ea1ef69b, 425a2a3f, e09525eb, fb161da1, 2bdc3ab5 | 6 design spec files |
