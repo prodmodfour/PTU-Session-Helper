@@ -82,6 +82,8 @@
           @openActions="handleOpenActions"
           @addCombatant="showAddCombatant"
           @switchPokemon="handleSwitchPokemon"
+          @faintedSwitch="handleFaintedSwitch"
+          @forceSwitch="handleForceSwitch"
         />
 
         <!-- Sidebar: Move Log + Significance Panel -->
@@ -147,6 +149,7 @@
         :trainer-id="switchModalTrainerId"
         :pokemon-combatant-id="switchModalPokemonId"
         :trainer-entity-id="switchModalTrainerEntityId"
+        :mode="switchModalMode"
         @close="showSwitchModal = false"
         @switched="handleSwitchCompleted"
       />
@@ -329,6 +332,7 @@ const showXpModal = ref(false)
 // Switch Pokemon Modal state
 const showSwitchModal = ref(false)
 const switchModalCombatantId = ref<string | null>(null)
+const switchModalMode = ref<'standard' | 'fainted' | 'forced'>('standard')
 
 // GM Action Modal state - store ID only, compute fresh combatant from store
 const actionModalCombatantId = ref<string | null>(null)
@@ -391,6 +395,31 @@ const handleSwitchPokemon = (combatantId: string) => {
   // Capture undo snapshot before opening modal (pre-switch state)
   encounterStore.captureSnapshot('Switch Pokemon')
   switchModalCombatantId.value = combatantId
+  switchModalMode.value = 'standard'
+  showSwitchModal.value = true
+}
+
+// Fainted switch handler (P1 Section H) — Shift Action for fainted Pokemon
+const handleFaintedSwitch = (combatantId: string) => {
+  if (!encounter.value) return
+  const combatant = encounter.value.combatants.find(c => c.id === combatantId)
+  if (!combatant) return
+
+  encounterStore.captureSnapshot('Fainted Switch')
+  switchModalCombatantId.value = combatantId
+  switchModalMode.value = 'fainted'
+  showSwitchModal.value = true
+}
+
+// Force switch handler (P1 Section I) — GM-triggered, no action cost
+const handleForceSwitch = (combatantId: string) => {
+  if (!encounter.value) return
+  const combatant = encounter.value.combatants.find(c => c.id === combatantId)
+  if (!combatant) return
+
+  encounterStore.captureSnapshot('Force Switch')
+  switchModalCombatantId.value = combatantId
+  switchModalMode.value = 'forced'
   showSwitchModal.value = true
 }
 
