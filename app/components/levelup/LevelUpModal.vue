@@ -210,13 +210,13 @@ const steps = computed((): string[] => {
   // Skills (always present -- read-only overview of caps per decree-037)
   s.push('skills')
 
-  // Edges (if any even levels crossed or bonus Skill Edges)
-  if (summary.value && (summary.value.totalEdges > 0 || summary.value.bonusSkillEdges > 0)) {
+  // Edges (if base edges, bonus Skill Edges, or milestone bonus edges)
+  if (levelUp.regularEdgesTotal.value > 0 || levelUp.bonusSkillEdgeEntries.value.length > 0) {
     s.push('edges')
   }
 
-  // Features (if any odd levels 3+ crossed or milestone bonus features)
-  if (summary.value && summary.value.totalFeatures > 0) {
+  // Features (if base features or milestone bonus features)
+  if (levelUp.featuresTotal.value > 0) {
     s.push('features')
   }
 
