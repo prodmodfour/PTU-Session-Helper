@@ -101,6 +101,7 @@ CRUD + link/unlink + healing/rest + bulk.
 - `POST /api/pokemon/:id/heal-injury` — heal injury
 - `POST /api/pokemon/:id/new-day` — reset daily limits
 - `POST /api/pokemon/:id/add-experience` — manual/training XP grant with level-up detection
+- `POST /api/pokemon/:id/allocate-stats` — allocate stat points with Base Relations validation (incremental or batch mode, PTU HP formula, decree-035)
 - `POST /api/pokemon/:id/evolution-check` — check evolution eligibility (level/item/triggers)
 - `POST /api/pokemon/:id/evolve` — perform evolution (species, stats, HP recalc, encounter-active guard)
 - `POST /api/pokemon/bulk-action` — bulk archive/delete
@@ -139,6 +140,8 @@ CRUD + extensive combat actions.
 **Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `EvolutionConfirmModal.vue` (stat redistribution + confirmation for Pokemon evolution — Base Relations validation, HP preview, GM override), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio), `DeclarationPanel.vue` (GM declaration form for League Battle trainer_declaration phase — action type select, description input, submit + next turn), `DeclarationSummary.vue` (declaration list display for Group View — collapsible round declarations with resolving/resolved state indicators), `SwitchPokemonModal.vue` (Pokemon switching modal — shows recalled Pokemon, loads bench from trainer roster, select replacement with sprite/level/HP display).
 
 **Evolution utilities:** `utils/evolutionCheck.ts` (pure eligibility check — level/item/trigger validation, getEvolutionLevels, EvolutionStats type, validateBaseRelations re-export), `types/species.ts` (EvolutionTrigger interface — toSpecies, targetStage, minimumLevel, requiredItem, itemMustBeHeld).
+
+**Level-up stat allocation:** `utils/baseRelations.ts` (pure PTU Base Relations Rule utilities — buildStatTiers, validateBaseRelations, getValidAllocationTargets, extractStatPoints with warnings, formatStatName; decree-035 ordering), `composables/useLevelUpAllocation.ts` (reactive stat allocation workflow — pending allocation, validation, valid targets, budget tracking, submit to server), `components/pokemon/StatAllocationPanel.vue` (interactive stat point allocation UI — tier display, +/- controls, validation feedback, partial allocation with confirmation).
 
 **Switching system:** `composables/useSwitching.ts` (getBenchPokemon, canSwitch pre-validation, executeSwitch), `server/services/switching.service.ts` (10-step validation, range check, initiative insertion, combatant removal). Switch button on `CombatantCard.vue` for trainers and owned Pokemon. WebSocket event: `pokemon_switched` (server -> all clients). `switchActions` field on Encounter model (JSON, cleared per round).
 
