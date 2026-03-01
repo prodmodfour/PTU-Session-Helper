@@ -129,12 +129,15 @@ export interface EvolutionMoveResult {
  * that their new form learns at a Level lower than their minimum Level
  * for Evolution but that their previous form could not learn."
  *
- * decree-036: For stone evolutions (no minimum level), use currentLevel
- * as the upper bound instead.
+ * Level-based evolutions: use strictly less than (entry.level < evolutionMinLevel)
+ * per PTU wording "at a Level lower than their minimum Level."
+ *
+ * decree-036: For stone evolutions (no minimum level / evolutionMinLevel is null),
+ * use currentLevel as the upper bound with <= comparison.
  *
  * Algorithm:
- * 1. Determine the level ceiling: minimumLevel if set, else currentLevel (decree-036)
- * 2. Get new-form moves at levels <= ceiling
+ * 1. For level-based evolutions: include moves where entry.level < evolutionMinLevel
+ * 2. For stone evolutions (decree-036): include moves where entry.level <= currentLevel
  * 3. Exclude moves that appear anywhere in the old-form learnset
  * 4. Exclude moves the Pokemon already knows
  *
@@ -149,9 +152,6 @@ export function getEvolutionMoves(input: {
 }): EvolutionMoveResult {
   const { oldLearnset, newLearnset, evolutionMinLevel, currentLevel, currentMoves } = input
 
-  // Level ceiling: use minimumLevel if set, else currentLevel (decree-036 for stone evos)
-  const levelCeiling = evolutionMinLevel ?? currentLevel
-
   // All move names from old species' learnset (any level)
   const oldMoveNames = new Set(
     oldLearnset.map(entry => entry.move.toLowerCase())
@@ -162,10 +162,15 @@ export function getEvolutionMoves(input: {
     currentMoves.map(name => name.toLowerCase())
   )
 
-  // Filter new learnset: at or below ceiling, not in old learnset, not already known
+  // Filter new learnset based on evolution type:
+  // Level-based: strictly less than evolutionMinLevel (PTU: "at a Level lower than")
+  // Stone/item (decree-036): at or below currentLevel
   const availableMoves = newLearnset
     .filter(entry => {
-      if (entry.level > levelCeiling) return false
+      const meetsLevelCriteria = evolutionMinLevel !== null
+        ? entry.level < evolutionMinLevel
+        : entry.level <= currentLevel
+      if (!meetsLevelCriteria) return false
       if (oldMoveNames.has(entry.move.toLowerCase())) return false
       if (knownMoves.has(entry.move.toLowerCase())) return false
       return true
