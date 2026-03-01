@@ -4,7 +4,7 @@ ticket_id: feature-013
 category: FEATURE
 scope: FULL
 domain: vtt-grid
-status: p2-implemented
+status: p2-fix-implemented
 priority: P1
 decrees:
   - decree-002
@@ -149,7 +149,7 @@ Addresses code-review-242 findings (CRIT-1, HIGH-1, HIGH-2, MED-1, MED-2).
 |---------|--------|---------|
 | K. AoE hit detection for multi-cell targets | DONE | 380c916e |
 | K. Close Blast origin from multi-cell attacker | DONE | 380c916e |
-| L. Flanking geometry for large tokens | DONE | 9e74b813 |
+| L. Flanking geometry for large tokens | REMOVED (fix cycle) | 9e74b813 → f4d4fbb1 |
 | M. Edge-to-edge distance utility extraction | DONE | 42114b5e |
 | M. Measurement store token-aware distance | DONE | 58e93651 |
 | M. Interaction callers pass token metadata | DONE | 96fedddc |
@@ -159,10 +159,24 @@ Addresses code-review-242 findings (CRIT-1, HIGH-1, HIGH-2, MED-1, MED-2).
 
 **Key decisions:**
 - ptuDistanceTokensBBox extracted to gridDistance.ts as a standalone utility (shared by useRangeParser and measurement store)
-- isFlankingTarget uses angle-based geometry (>= 135 degrees) from target center via closestCellPair, suitable for any token size
+- ~~isFlankingTarget uses angle-based geometry~~ REMOVED in fix cycle — duplicated flankingGeometry.ts with incorrect algorithm
 - Measurement store tracks token origin+size at both start and end positions; distance getter switches to edge-to-edge when multi-cell tokens are present
 - AoE measurement overlay draws dashed outlines around multi-cell tokens whose footprints overlap the affected area
 - Distance mode draws measurement lines between token centers (not cell centers) for multi-cell tokens
+
+### P2 Fix Cycle — 2026-03-01 (branch: slave/1-dev-feature-013-p2-fix-20260301)
+
+Addresses code-review-261 (CRIT-1, HIGH-1, MED-1) and rules-review-237 (HIGH-1, MED-1).
+
+| Issue | Severity | Fix | Commits |
+|-------|----------|-----|---------|
+| CRIT-1: isFlankingTarget duplicates flankingGeometry.ts | CRITICAL | Removed — canonical system in flankingGeometry.ts | f4d4fbb1 |
+| HIGH-1 (code): Isometric overlay missing multi-cell | HIGH | Added token metadata + footprint rendering | 97786f60 |
+| MED-1 (code): endMeasurement cleanup asymmetry | MEDIUM | Reset token metadata in endMeasurement() | 668f22bc |
+| HIGH-1 (rules): isFlankingTarget wrong PTU rules | HIGH | Same as CRIT-1 | f4d4fbb1 |
+| MED-1 (rules): getBlastEdgeOrigin not integrated | MEDIUM | Documented as P3 follow-up with TODO | 990c641a |
+
+**Files changed:** `app/composables/useRangeParser.ts`, `app/stores/measurement.ts`, `app/composables/useIsometricOverlays.ts`, `app/composables/useIsometricRendering.ts`, `app/components/vtt/IsometricCanvas.vue`
 
 ## Atomized Files
 

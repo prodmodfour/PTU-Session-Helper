@@ -118,5 +118,23 @@ FULL-scope feature requiring design spec. Affects core VTT systems: token render
 
 **Summary:**
 - Section K: New isTargetHitByAoE() checks if any cell of a multi-cell target's footprint overlaps AoE affected cells; getBlastEdgeOrigin() returns the correct edge cell of a multi-cell attacker for Close Blast origin
-- Section L: New isFlankingTarget() checks if two attackers flank a multi-cell target using angle-based geometry from target center, with closestCellPair for positioning and ptuDistanceTokens for melee adjacency
+- Section L: ~~New isFlankingTarget()~~ Removed in fix cycle — duplicated flankingGeometry.ts with incorrect algorithm
 - Section M: Measurement store tracks token sizes at both endpoints; distance getter uses ptuDistanceTokensBBox for edge-to-edge measurement; interaction composables pass token metadata; rendering highlights multi-cell token footprints hit by AoE and draws distance lines between token centers
+
+### P2 Fix Cycle: code-review-261 + rules-review-237 (2026-03-01)
+
+**Branch:** `slave/1-dev-feature-013-p2-fix-20260301`
+
+| Commit | Description | Files |
+|--------|-------------|-------|
+| f4d4fbb1 | fix: remove duplicate isFlankingTarget from useRangeParser | `app/composables/useRangeParser.ts` |
+| 668f22bc | fix: reset token metadata in endMeasurement to match clearMeasurement | `app/stores/measurement.ts` |
+| 97786f60 | feat: add multi-cell token footprint support to isometric measurement overlay | `app/composables/useIsometricOverlays.ts`, `app/composables/useIsometricRendering.ts`, `app/components/vtt/IsometricCanvas.vue` |
+| 990c641a | docs: document getBlastEdgeOrigin as P3 follow-up for multi-cell Close Blast | `app/composables/useRangeParser.ts` |
+
+**Review issues addressed:**
+- CRIT-1 (code-review-261): Removed isFlankingTarget from useRangeParser.ts — it duplicated flankingGeometry.ts with a wrong angle-based algorithm that violated PTU p.232 flanking rules
+- HIGH-1 (code-review-261): Added multi-cell token metadata to isometric measurement overlay — origin marker centered on footprint, distance lines between token centers, dashed outlines, AoE footprint highlighting
+- MED-1 (code-review-261): endMeasurement() now resets all token metadata fields (startTokenOrigin, startTokenSize, endTokenOrigin, endTokenSize) to match clearMeasurement()
+- HIGH-1 (rules-review-237): Same root cause as CRIT-1 — resolved by removing isFlankingTarget
+- MED-1 (rules-review-237): getBlastEdgeOrigin documented as P3 follow-up with TODO at close-blast case in getAffectedCells
