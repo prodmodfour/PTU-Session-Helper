@@ -19,7 +19,7 @@ import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server
 import { getTickDamageEntries, getCombatantName } from '~/server/services/status-automation.service'
 import type { TickDamageResult } from '~/server/services/status-automation.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
-import { expirePendingActions, cleanupResolvedActions, checkHoldQueue, removeFromHoldQueue } from '~/server/services/out-of-turn.service'
+import { expirePendingActions, cleanupResolvedActions, checkHoldQueue } from '~/server/services/out-of-turn.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import type { TrainerDeclaration } from '~/types/combat'
 import type { StatusCondition } from '~/types'
