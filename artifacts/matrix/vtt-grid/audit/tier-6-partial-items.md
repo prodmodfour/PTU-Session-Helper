@@ -33,9 +33,8 @@
 
 - **Rule:** "Tripped: Must spend a Shift Action getting up before further actions."
 - **Expected behavior:** Tripped consumes shift action to stand.
-- **Actual behavior:** Status conditions are tracked on the combatant model. However, Tripped does NOT consume a shift action in the grid system. There is no "stand up" mechanic in grid interaction — the combatant can move normally despite being Tripped. The `applyMovementModifiers` function does not check for Tripped status.
-- **Classification:** Approximation
-- **Severity:** LOW — Tripped is a status tracked in combat but not enforced as a movement cost. GM must manually enforce.
+- **Actual behavior:** `useGridMovement.ts` — `applyMovementModifiers` checks both `conditions.includes('Tripped')` and `tempConditions.includes('Tripped')` and returns 0 (zero speed). Since the Shift Action IS movement in PTU, a Tripped combatant cannot move on the grid. The GM removes Tripped via the status system when the combatant uses their Shift to stand up. The AoO system already has a `stand_up` trigger type that fires when Tripped is removed while adjacent to enemies. Tripped can come from statusConditions (Trip maneuver, Blindness) or tempConditions (Take a Breather — cleared at next turn).
+- **Classification:** Correct — Tripped condition IS mechanically enforced. Movement is blocked, stand-up triggers AoO detection.
 
 ### R026 — Speed CS Affect Movement
 
