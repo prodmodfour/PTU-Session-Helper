@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-01T12:35:00
-updated_by: slave-collector (plan-20260301-115518)
+last_updated: 2026-03-01T13:45:00
+updated_by: slave-collector (plan-20260301-130000)
 ---
 
 # Dev Ecosystem State
@@ -92,15 +92,15 @@ updated_by: slave-collector (plan-20260301-115518)
 | feature-004 | P3 | **design-complete** | Pokemon Mounting / Rider System — design spec created by slave-1 (plan-20260228-153856). 7 files in design-mounting-001/: _index.md, spec-p0.md (mount relationship, APIs, combat state), spec-p1.md (VTT linked tokens, dismount checks, Mounted Prowess), spec-p2.md (Rider class features), shared-specs.md, testing-strategy.md | multi-phase |
 | feature-005 | P3 | **design-complete** | Living Weapon System (Honedge Line) — design spec created by slave-2 (plan-20260228-153856). 7 files in design-living-weapon-001/: _index.md, spec-p0.md (wield relationship, Living Weapon capability), spec-p1.md (equipment integration, Doublade/Aegislash bonuses), spec-p2.md (shared movement, No Guard suppression, Weaponize/Soulstealer), shared-specs.md, testing-strategy.md | multi-phase |
 | feature-006 | P1 | **P1-APPROVED** | Pokemon Evolution System — P0 APPROVED. P1 fix cycle done (plan-20260301-110550). P1 re-review: code-review-240 **APPROVED** (0 blocking issues) + rules-review-216 **APPROVED** (12 mechanics verified, decree-035/036/038 compliant). All tiers complete through P1 | multi-phase |
-| feature-007 | P1 | **P1-fix-cycle-done** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle done by slave-1 (plan-20260301-115518): 8 commits — categorizeAbilities boundary fix (C1), learn-move response + double-cast removal (H1), inline error display replacing alert() (H2), milestone ordering enforcement (rules-review-214 H1), distinct emit types (M1), one-time init for currentMoves (M2), shared SCSS keyframes (M3), ticket/design updates. All code-review-238 + rules-review-214 issues resolved. Needs re-review | multi-phase |
-| feature-008 | P1 | **P1-fix-cycle-done** | Trainer Level-Up Milestone Workflow — P0 APPROVED. P1 fix cycle done by slave-2 (plan-20260301-115518): 5 commits — Skill Edge rank-ups in effective skills/payload/summary (C1), class choice warning at milestone levels (M2), app-surface.md update (H1), extracted shared SCSS partial (M1), ticket/design updates. All code-review-239 + rules-review-215 issues resolved. Needs re-review | multi-phase |
+| feature-007 | P1 | **P1-APPROVED** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle APPROVED: code-review-243 **APPROVED** (M1: loose MoveDetail types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (all 9 mechanics verified, 0 issues). All code-review-238 + rules-review-214 issues resolved. P2 pending | multi-phase |
+| feature-008 | P1 | **P1-APPROVED** | Trainer Level-Up Milestone Workflow — P0 APPROVED. P1 fix cycle APPROVED: code-review-244 **APPROVED** (0 issues) + rules-review-220 **APPROVED** (12 mechanics verified, all 4 decrees compliant, 0 issues). All code-review-239 + rules-review-215 issues resolved. P2 pending | multi-phase |
 | feature-010 | P1 | **resolved** | Status Condition Automation Engine — P0 implemented. Fix cycle completed: M1 (app-surface.md) fixed by slave-2 (plan-20260228-214159). Ticket moved to resolved. code-review-227 all issues resolved, rules-review-203 APPROVED | multi-phase |
 | feature-011 | P1 | **P1-APPROVED** | Pokemon Switching Workflow — P0 APPROVED. P1 reviewed: code-review-241 **APPROVED** (H1: CombatantCard 841 lines → refactoring-108, M1: switchModalPokemonId multi-fainted, M2: app-surface.md). rules-review-217 **APPROVED** (M1: forced switch vs Trapped → decree-need-038, M2: Whirlwind references → bug-041, M3: design spec Whirlwind → bug-041). All non-blocking issues ticketed | multi-phase |
 | feature-012 | P1 | **APPROVED** | Death & Heavily Injured Automation — fix cycle 3 APPROVED. code-review-233 **APPROVED** + rules-review-209 **APPROVED** (re-review by slave-3, plan-20260301-084803). All code-review-228 + rules-review-204 issues resolved. Feature complete | single-phase |
-| feature-009 | P1 | **design-complete** | Trainer XP & Advancement Tracking — design spec created by slave-5 (plan-20260301-093000). 5 files in design-trainer-xp-001/: _index.md, shared-specs.md, spec-p0.md (XP model, award/deduct, auto-level trigger), spec-p1.md (capture XP, batch distribution, quest XP), testing-strategy.md. Tightly coupled with feature-008 | multi-phase |
-| feature-013 | P1 | **P0-needs-fix-cycle** | Multi-Tile Token System — P0 reviewed: code-review-242 **CHANGES_REQUIRED** (CRIT-1: inconsistent isometric depth sorting center, H1: no bounds clamping on NxN highlight, H2: sizeCategory.ts unused dead code, M1: app-surface.md, M2: single-point elevation for NxN, M3: misleading commit msg). rules-review-218 **APPROVED** (M1: A* single-cell pathfinding → P1). Needs fix cycle | multi-phase |
+| feature-009 | P1 | **P0-implemented** | Trainer XP & Advancement Tracking — P0 implemented by slave-2 (plan-20260301-130000): 10 commits — trainerExperience.ts utility, Prisma schema (trainerXp + capturedSpecies), types/serializers/PUT, POST /api/characters/:id/xp + GET xp-history endpoints, useTrainerXp composable, TrainerXpPanel component, CharacterModal/sheet integration, esbuild fix, 47 unit tests (T1-T4), ticket/design updates. Needs review | multi-phase |
+| feature-013 | P1 | **P0-fix-cycle-done** | Multi-Tile Token System — P0 fix cycle done by slave-1 (plan-20260301-130000): 5 commits — consistent token.size/2 center for depth sorting (CRIT-1), bounds checking on NxN footprint highlights (H1), wired sizeCategory.ts in useGridMovement (H2), app-surface.md update (M1), per-cell elevation in isometric NxN highlight (M2). All code-review-242 issues addressed. Needs re-review | multi-phase |
 | feature-014 | P1 | **design-complete** | VTT Flanking Detection — design spec created by slave-7 (plan-20260301-093000). 7 files in design-flanking-001/: _index.md, shared-specs.md, spec-p0.md (flanking geometry, visual indicator, +2 accuracy), spec-p1.md (multi-tile, diagonal, 3+ attackers), spec-p2.md (auto-detect, auto-apply), testing-strategy.md. P1 depends on feature-013 | multi-phase |
-| feature-016 | P2 | **design-complete** | Priority / Interrupt / Attack of Opportunity System — design spec created by slave-3 (plan-20260301-115518). 6 files in design-priority-interrupt-001/: _index.md, shared-specs.md, spec-p0.md (AoO trigger detection + resolution), spec-p1.md (Priority actions, Interrupt, Hold Action), spec-p2.md (Intercept Melee/Ranged, Disengage). Covers 8 matrix rules (R040, R046, R047, R048, R110, R116, R117, vtt-grid R031) | multi-phase |
+| feature-016 | P2 | **P0-implemented** | Priority / Interrupt / Attack of Opportunity System — P0 implemented by slave-3 (plan-20260301-130000): 9 commits — out-of-turn action types, AoO trigger constants, adjacency utilities, out-of-turn service, AoO detect/resolve endpoints, Prisma schema changes, grid movement + round reset + WebSocket integration, AoO prompt component + encounter store updates, pendingOutOfTurnActions in WS state. Needs review | multi-phase |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -121,23 +121,21 @@ updated_by: slave-collector (plan-20260301-115518)
 
 ## Active Developer Work
 
-**Current task:** Session 72 collection complete. 6 slaves merged (25 commits, 0 conflicts after renumbering review artifacts). 3 dev slaves (feature-007-p1-fix 8 commits, feature-008-p1-fix 5 commits, feature-016-design 6 commits). 3 reviewer slaves (feature-006-p1-rereview APPROVED, feature-011-p1-review APPROVED, feature-013-p0-review CHANGES_REQUIRED). Smoke test PASSED. 3 follow-up tickets filed (refactoring-108, decree-need-038, bug-041).
+**Current task:** Session 73 collection complete. 5 slaves merged (28 commits, 1 conflict resolved — review artifact renumbering). 3 dev slaves (feature-013-p0-fix 5 commits, feature-009-p0 10 commits, feature-016-p0 9 commits). 2 reviewer slaves (feature-007-p1-rereview APPROVED, feature-008-p1-rereview APPROVED). Smoke test PASSED. 2 follow-up tickets filed (refactoring-109, refactoring-110).
 
-**Session 72 (2026-03-01, plan-20260301-115518):**
-- **slave-1** (developer): feature-007-p1-fix — 8 commits: Fix cycle for Pokemon Level-Up Allocation P1 (code-review-238 + rules-review-214). categorizeAbilities boundary fix (C1), learn-move response + double-cast removal (H1), inline error display replacing alert() (H2), milestone ordering enforcement (rules-review-214 H1), distinct emit types (M1), one-time init for currentMoves (M2), shared SCSS keyframes (M3), ticket/design updates. → **fix-cycle-done, needs re-review**
-- **slave-2** (developer): feature-008-p1-fix — 5 commits: Fix cycle for Trainer Level-Up Milestone Workflow P1 (code-review-239 + rules-review-215). Skill Edge rank-ups in effective skills/payload/summary (C1), class choice warning at milestone levels (M2), app-surface.md update (H1), extracted shared SCSS partial (M1), ticket/design updates. → **fix-cycle-done, needs re-review**
-- **slave-3** (developer): feature-016-design — 6 commits: Full multi-tier design spec for Priority/Interrupt/AoO system. 6 files in design-priority-interrupt-001/: shared-specs, spec-p0 (AoO triggers + resolution), spec-p1 (Priority + Interrupt + Hold Action), spec-p2 (Intercept Melee/Ranged + Disengage), testing-strategy, ticket update. Covers 8 matrix rules. → **design-complete**
-- **slave-4** (reviewers): feature-006-p1-rereview — code-review-240 **APPROVED** (0 blocking issues, all 6 code-review-237 issues + decree-038 compliance verified) + rules-review-216 **APPROVED** (12 mechanics verified, decree-035/036/038 compliant). → feature-006 **P1-APPROVED**
-- **slave-5** (reviewers): feature-011-p1-review — code-review-241 **APPROVED** (H1: CombatantCard 841 lines → refactoring-108, M1: multi-fainted-Pokemon limitation, M2: app-surface.md) + rules-review-217 **APPROVED** (M1: forced switch vs Trapped → decree-need-038, M2+M3: Whirlwind references → bug-041). → feature-011 **P1-APPROVED**
-- **slave-6** (reviewers): feature-013-p0-review — code-review-242 **CHANGES_REQUIRED** (CRIT-1: inconsistent isometric depth sorting center, H1: no bounds clamping on NxN highlight, H2: sizeCategory.ts unused, M1-M3) + rules-review-218 **APPROVED** (M1: A* single-cell → P1). → feature-013 **P0-needs-fix-cycle**
+**Session 73 (2026-03-01, plan-20260301-130000):**
+- **slave-1** (developer): feature-013-p0-fix — 5 commits: Fix cycle for Multi-Tile Token System P0 (code-review-242). Consistent token.size/2 center for isometric depth sorting (CRIT-1), bounds checking on NxN footprint highlight loops (H1), wired sizeCategory.ts in useGridMovement (H2), app-surface.md update (M1), ticket/design log updates. → **fix-cycle-done, needs re-review**
+- **slave-2** (developer): feature-009-p0 — 10 commits: Trainer XP & Advancement Tracking P0. trainerExperience.ts utility, Prisma schema (trainerXp + capturedSpecies), types/serializers/PUT, POST /api/characters/:id/xp + GET xp-history, useTrainerXp composable, TrainerXpPanel component, CharacterModal/sheet integration, esbuild JSDoc fix, 47 unit tests (T1-T4), ticket/design updates. → **P0-implemented, needs review**
+- **slave-3** (developer): feature-016-p0 — 9 commits: AoO trigger detection + resolution engine. out-of-turn types, AoO trigger constants, adjacency utilities, out-of-turn service, AoO detect/resolve endpoints, Prisma schema changes, grid movement + round reset + WS integration, AoO prompt component + encounter store updates, pendingOutOfTurnActions in WS state. → **P0-implemented, needs review**
+- **slave-4** (reviewers): feature-007-p1-rereview — code-review-243 **APPROVED** (M1: MoveDetail loose types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (9 mechanics verified, 0 issues, all 7 previous issues resolved). → feature-007 **P1-APPROVED**
+- **slave-5** (reviewers): feature-008-p1-rereview — code-review-244 **APPROVED** (0 issues) + rules-review-220 **APPROVED** (12 mechanics verified, all 4 decrees compliant, 0 issues). → feature-008 **P1-APPROVED**
 
-**Smoke test:** PASSED (Playwright) — GM view renders (full nav + encounter controls). Group view renders (initiative list). Player view renders (character selection).
-**Merge notes:** Review artifact naming collisions resolved — slaves 4/5/6 all created code-review-240 + rules-review-216. Renumbered during rebase: slave-4 kept 240/216, slave-5 → 241/217, slave-6 → 242/218. 25 commits total.
-**Tickets filed:** refactoring-108 (CombatantCard switch button extraction), decree-need-038 (Roar vs Trapped), bug-041 (Whirlwind Force Switch references per decree-034)
-**Tickets resolved:** feature-006 P1 (APPROVED), feature-011 P1 (APPROVED)
-**Tickets needing fix cycle:** feature-013 P0 (code-review-242 CRIT-1+H1+H2+M1-M3)
-**Tickets needing re-review:** feature-007 P1 (fix cycle done), feature-008 P1 (fix cycle done)
-**New designs:** feature-016 (Priority/Interrupt/AoO)
+**Smoke test:** PASSED (Playwright) — GM view renders (full nav + encounter controls). Group view renders (initiative list + Pokemon data). Player view renders (character selection).
+**Merge notes:** Review artifact naming collision resolved — slaves 4 and 5 both created code-review-243 + rules-review-219. Slave 5 renumbered to code-review-244 + rules-review-220. Slave 5 branch squashed to single commit with corrected filenames. 28 commits total across 5 slaves.
+**Tickets filed:** refactoring-109 (MoveDetail loose types), refactoring-110 (canAssignAbility UX)
+**Tickets resolved:** feature-007 P1 (APPROVED), feature-008 P1 (APPROVED)
+**Tickets needing re-review:** feature-013 P0 (fix cycle done)
+**Tickets needing review:** feature-009 P0 (new implementation), feature-016 P0 (new implementation)
 
 **Session 70 (2026-03-01, plan-20260301-093000):**
 - **slave-1** (reviewers): feature-011-rereview — code-review-236 **APPROVED** (M1: spurious 'Bound' check → refactoring-105) + rules-review-212 **APPROVED** (M1: Sleep/Asleep classification → decree-need-037). All 11 issues from code-review-232 + rules-review-208 resolved. → feature-011 **P0-APPROVED**
@@ -513,6 +511,14 @@ updated_by: slave-collector (plan-20260301-115518)
 | code-review-242 | feature-013 P0 (Multi-Tile Token System) | CHANGES_REQUIRED (1C: depth sorting inconsistency, 2H: bounds + dead code, 3M) | senior-reviewer | 2026-03-01 |
 | rules-review-218 | feature-013 P0 (Multi-Tile Token System) | APPROVED (1M: A* single-cell → P1, 8 mechanics verified) | game-logic-reviewer | 2026-03-01 |
 
+### Session 73 Reviews (plan-20260301-130000)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-243 | feature-007 P1 re-review (Pokemon Level-Up Allocation fix cycle) | APPROVED (2M: MoveDetail types → refactoring-109, canAssignAbility UX → refactoring-110) | senior-reviewer | 2026-03-01 |
+| rules-review-219 | feature-007 P1 re-review (Pokemon Level-Up Allocation fix cycle) | APPROVED (9 mechanics verified, 0 issues, all 7 previous issues resolved) | game-logic-reviewer | 2026-03-01 |
+| code-review-244 | feature-008 P1 re-review (Trainer Level-Up Milestone fix cycle) | APPROVED (0 issues, all 4 code-review-239 issues resolved) | senior-reviewer | 2026-03-01 |
+| rules-review-220 | feature-008 P1 re-review (Trainer Level-Up Milestone fix cycle) | APPROVED (12 mechanics verified, all 4 decrees compliant, 0 issues) | game-logic-reviewer | 2026-03-01 |
+
 ### Session 71 Reviews (plan-20260301-110550)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
@@ -821,6 +827,22 @@ updated_by: slave-collector (plan-20260301-115518)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-03-01, session 73 — plan-20260301-130000)
+
+**Slave collection plan-20260301-130000:** 5 slaves merged (28 commits, 1 conflict resolved — review artifact renumbering)
+- **slave-1** (developer): feature-013-p0-fix — 5 commits: consistent depth sorting center (CRIT-1), bounds checking on NxN highlight (H1), wired sizeCategory.ts in useGridMovement (H2), app-surface.md (M1), ticket/design updates. → **fix-cycle-done, needs re-review**
+- **slave-2** (developer): feature-009-p0 — 10 commits: Trainer XP system P0. trainerExperience.ts utility, Prisma schema, types/serializers, XP + xp-history endpoints, useTrainerXp composable, TrainerXpPanel component, integration, 47 unit tests, ticket/design updates. → **P0-implemented, needs review**
+- **slave-3** (developer): feature-016-p0 — 9 commits: AoO trigger detection + resolution engine. Types, constants, adjacency utilities, out-of-turn service, AoO detect/resolve endpoints, schema changes, grid/round/WS integration, AoO prompt + store updates. → **P0-implemented, needs review**
+- **slave-4** (reviewers): feature-007-p1-rereview — code-review-243 **APPROVED** (M1→refactoring-109, M2→refactoring-110) + rules-review-219 **APPROVED** (9 mechanics, 0 issues). → feature-007 **P1-APPROVED**
+- **slave-5** (reviewers): feature-008-p1-rereview — code-review-244 **APPROVED** (0 issues) + rules-review-220 **APPROVED** (12 mechanics, 4 decrees, 0 issues). → feature-008 **P1-APPROVED**
+
+**Smoke test:** PASSED — GM/Group/Player all render correctly.
+**Merge notes:** Review artifact collision (slaves 4+5 both created code-review-243 + rules-review-219). Slave 5 renumbered to 244/220 and squashed to single commit.
+**Tickets filed:** refactoring-109 (MoveDetail loose types), refactoring-110 (canAssignAbility UX)
+**Tickets resolved:** feature-007 P1 (APPROVED), feature-008 P1 (APPROVED)
+**New implementations:** feature-009 P0 (Trainer XP), feature-016 P0 (AoO system)
+**Fix cycles done:** feature-013 P0
 
 ## Session Summary (2026-03-01, session 72 — plan-20260301-115518)
 
