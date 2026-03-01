@@ -1,6 +1,9 @@
 import { prisma } from '~/server/utils/prisma'
 import { calculateCaptureRate, attemptCapture, getCaptureDescription } from '~/utils/captureRate'
 import { isLegendarySpecies } from '~/constants/legendarySpecies'
+import { applyTrainerXp, isNewSpecies } from '~/utils/trainerExperience'
+import type { TrainerXpResult } from '~/utils/trainerExperience'
+import { broadcast } from '~/server/utils/websocket'
 import type { StatusCondition } from '~/types'
 
 interface CaptureAttemptRequest {
@@ -100,6 +103,10 @@ export default defineEventHandler(async (event) => {
     criticalHit
   )
 
+  // Track species XP data for the response
+  let speciesXpAwarded = false
+  let speciesXpResult: TrainerXpResult | null = null
+
   // If captured, auto-link Pokemon to trainer and update origin
   if (captureResult.success) {
     await prisma.pokemon.update({
@@ -109,6 +116,43 @@ export default defineEventHandler(async (event) => {
         origin: 'captured'
       }
     })
+
+    // Check for new species -> +1 trainer XP (PTU Core p.461)
+    const trainerRecord = await prisma.humanCharacter.findUnique({
+      where: { id: body.trainerId },
+      select: { capturedSpecies: true, trainerXp: true, level: true, name: true }
+    })
+
+    if (trainerRecord) {
+      const existingSpecies: string[] = JSON.parse(trainerRecord.capturedSpecies || '[]')
+      const normalizedSpecies = pokemon.species.toLowerCase().trim()
+
+      if (isNewSpecies(pokemon.species, existingSpecies)) {
+        const updatedSpecies = [...existingSpecies, normalizedSpecies]
+
+        const xpCalc = applyTrainerXp({
+          currentXp: trainerRecord.trainerXp,
+          currentLevel: trainerRecord.level,
+          xpToAdd: 1
+        })
+
+        await prisma.humanCharacter.update({
+          where: { id: body.trainerId },
+          data: {
+            capturedSpecies: JSON.stringify(updatedSpecies),
+            trainerXp: xpCalc.newXp,
+            level: xpCalc.newLevel
+          }
+        })
+
+        speciesXpAwarded = true
+        speciesXpResult = xpCalc
+
+        if (xpCalc.levelsGained > 0) {
+          broadcast({ type: 'character_update', data: { characterId: body.trainerId } })
+        }
+      }
+    }
   }
 
   return {
@@ -139,7 +183,12 @@ export default defineEventHandler(async (event) => {
         id: trainer.id,
         name: trainer.name,
         level: trainer.level
-      }
+      },
+      speciesXp: captureResult.success ? {
+        awarded: speciesXpAwarded,
+        species: pokemon.species,
+        xpResult: speciesXpResult
+      } : undefined
     }
   }
 })
