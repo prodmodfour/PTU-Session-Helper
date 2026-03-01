@@ -91,6 +91,7 @@ function getTerrainAwareSpeed(combatant: Combatant, terrainType: string): number
  *
  * PTU Rules:
  * - Stuck: cannot Shift at all — effective speed 0 (PTU 1.05 p.231)
+ * - Tripped: must spend Shift Action to stand up — effective speed 0 (PTU 1.05 p.251)
  * - Slowed: reduce all movement speeds by half
  * - Speed CS: additive bonus/penalty of half stage value (PTU 1.05 p.234), min 2
  * - Sprint (tempCondition): +50% movement speed for the turn
@@ -103,6 +104,15 @@ export function applyMovementModifiers(combatant: Combatant, speed: number): num
   // Stuck: cannot Shift at all (PTU 1.05 p.231, p.253)
   // Early-return so no downstream modifier (Speed CS, Sprint, min floor) can override
   if (conditions.includes('Stuck')) {
+    return 0
+  }
+
+  // Tripped: must spend Shift Action to stand up before moving (PTU 1.05 p.251)
+  // "needs to spend a Shift Action getting up before they can take further actions"
+  // Since the Shift Action IS movement in PTU, a Tripped combatant cannot move
+  // on the grid. The GM removes Tripped via the status system when the combatant
+  // uses their Shift to stand up.
+  if (conditions.includes('Tripped')) {
     return 0
   }
 
@@ -194,7 +204,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * Get movement speed for a combatant, considering:
    * 1. Terrain-aware speed selection (Swim for water, Burrow for earth, Overland default)
    * 2. Path-based speed averaging when crossing terrain boundaries (PTU p.231, decree-011)
-   * 3. Movement-modifying conditions (Stuck, Slowed)
+   * 3. Movement-modifying conditions (Stuck, Tripped, Slowed)
    * 4. Combat stage speed modifier
    * 5. Sprint maneuver (+50%)
    *
@@ -273,7 +283,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
     // Calculate averaged base speed from terrain types
     const averagedBase = calculateAveragedSpeed(combatant, terrainTypes)
 
-    // Apply movement modifiers (Stuck, Slowed, Speed CS, Sprint)
+    // Apply movement modifiers (Stuck, Tripped, Slowed, Speed CS, Sprint)
     return applyMovementModifiers(combatant, averagedBase)
   }
 
@@ -516,7 +526,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * - Blocking terrain prevents movement through it
    * - Water terrain blocks non-swimming combatants (cost 1 with swim per decree-008)
    * - Earth terrain blocks non-burrowing combatants
-   * - Movement conditions (Stuck, Slowed) reduce effective speed
+   * - Movement conditions (Stuck, Tripped, Slowed) reduce effective speed
    */
   const isValidMove = (
     fromPos: GridPosition,

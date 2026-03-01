@@ -124,6 +124,50 @@ describe('applyMovementModifiers', () => {
     })
   })
 
+  describe('Tripped condition', () => {
+    it('should return 0 for Tripped combatant (PTU p.251: must stand up first)', () => {
+      const combatant = makeCombatant({ statusConditions: ['Tripped'] })
+      expect(applyMovementModifiers(combatant, 5)).toBe(0)
+    })
+
+    it('should return 0 regardless of base speed', () => {
+      const combatant = makeCombatant({ statusConditions: ['Tripped'] })
+      expect(applyMovementModifiers(combatant, 1)).toBe(0)
+      expect(applyMovementModifiers(combatant, 10)).toBe(0)
+      expect(applyMovementModifiers(combatant, 100)).toBe(0)
+    })
+
+    it('should override Speed CS +6 (Tripped wins)', () => {
+      const combatant = makeCombatant({
+        statusConditions: ['Tripped'],
+        stageModifiers: { speed: 6 }
+      })
+      expect(applyMovementModifiers(combatant, 5)).toBe(0)
+    })
+
+    it('should override Sprint (Tripped wins)', () => {
+      const combatant = makeCombatant({
+        statusConditions: ['Tripped'],
+        tempConditions: ['Sprint']
+      })
+      expect(applyMovementModifiers(combatant, 5)).toBe(0)
+    })
+
+    it('Stuck + Tripped: both block movement (returns 0)', () => {
+      const combatant = makeCombatant({
+        statusConditions: ['Stuck', 'Tripped']
+      })
+      expect(applyMovementModifiers(combatant, 5)).toBe(0)
+    })
+
+    it('Tripped + Slowed: Tripped wins (returns 0 immediately)', () => {
+      const combatant = makeCombatant({
+        statusConditions: ['Tripped', 'Slowed']
+      })
+      expect(applyMovementModifiers(combatant, 5)).toBe(0)
+    })
+  })
+
   describe('Slowed condition', () => {
     it('should halve movement speed', () => {
       const combatant = makeCombatant({ statusConditions: ['Slowed'] })
