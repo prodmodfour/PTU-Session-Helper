@@ -406,6 +406,11 @@ export function useTrainerLevelUp() {
       const names = unresolvedMilestones.map(m => m.name).join(', ')
       w.push(`Milestone choice(s) not made: ${names}`)
     }
+    // Informational: class choice available but not selected
+    if (classChoiceLevels.value.length > 0 && newClassChoices.value.length === 0) {
+      const levels = classChoiceLevels.value.join(', ')
+      w.push(`(Info) Class choice available at level ${levels} but not selected`)
+    }
     return w
   })
 
