@@ -4,7 +4,7 @@ ticket_id: feature-011
 category: FEATURE
 scope: FULL
 domain: combat
-status: p0-implemented
+status: p1-implemented
 decrees:
   - decree-006
   - decree-021
@@ -88,9 +88,9 @@ PTU Core p.229-230 (Switching section):
 | D | Initiative slot handling for switched Pokemon | NOT_IMPLEMENTED | Add/remove doesn't manage turn order | **P0** |
 | E | Encounter store actions for switching | NOT_IMPLEMENTED | Store only has addCombatant/removeCombatant | **P0** |
 | F | Basic GM UI for switching | NOT_IMPLEMENTED | No switch action in combat UI | **P0** |
-| G | League switch restriction (cannot command rest of round) | NOT_IMPLEMENTED | canBeCommanded exists but never set by switching | **P1** |
-| H | Fainted switch as Shift Action | NOT_IMPLEMENTED | Fainted replacement uses generic add/remove | **P1** |
-| I | Forced switch exemption (Roar, etc.) | NOT_IMPLEMENTED | No forced switch path | **P1** |
+| G | League switch restriction (cannot command rest of round) | IMPLEMENTED | canBeCommanded set by switch endpoint, auto-skip in next-turn | **P1** |
+| H | Fainted switch as Shift Action | IMPLEMENTED | Fainted switch with Shift Action cost enforcement | **P1** |
+| I | Forced switch exemption (Roar, etc.) | IMPLEMENTED | Force Switch button, no action cost, bypasses Trapped | **P1** |
 | J | Standard Action to recall/release two at once | NOT_IMPLEMENTED | No batch recall/release | **P1** |
 | K | Released Pokemon immediate-act logic | NOT_IMPLEMENTED | No check for passed initiative count | **P2** |
 | L | Recall/Release as separate tracked Shift Actions | NOT_IMPLEMENTED | No individual recall/release endpoints | **P2** |

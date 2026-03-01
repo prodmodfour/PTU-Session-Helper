@@ -46,7 +46,7 @@ Design complete: `artifacts/designs/design-pokemon-switching-001/`
 | Tier | Scope | Status |
 |------|-------|--------|
 | P0 | Core switch as Standard Action, 8m range check, initiative insertion, encounter store | implemented |
-| P1 | League restriction, fainted switch as Shift Action, forced switch exemption | design-complete |
+| P1 | League restriction, fainted switch as Shift Action, forced switch exemption | implemented |
 | P2 | Immediate-act logic, separate recall/release, player view switch request | design-complete |
 
 ## Resolution Log
@@ -69,3 +69,16 @@ Design complete: `artifacts/designs/design-pokemon-switching-001/`
   - b59db4f: H1/H2 — add undo snapshot + encounter_update broadcast for switch (pages/gm/index.vue)
   - 01e8a18: M1/M3 — fix switch button visibility and disabled logic (CombatantCard.vue)
   - c4f1885: M2/MEDIUM-001 — correct Whirlwind comment per decree-034, document over-fetch (combat.ts, useSwitching.ts)
+- 2026-03-01: P1 implemented — League switch restriction, fainted switch, forced switch
+  - ef1938db: switching.service.ts — add validateFaintedSwitch, validateForcedSwitch, canSwitchedPokemonBeCommanded, extend buildSwitchAction for fainted/forced types
+  - ee433cd3: switch.post.ts — handle fainted/forced/standard modes with mode-dependent validation and action cost
+  - 7f4fe996: encounter store — update switchDetails type to include 'none' cost
+  - 70259449: next-turn.post.ts — skipUncommandablePokemon auto-skip in League pokemon phase (4 transition points)
+  - 1a3a8260: InitiativeTracker.vue — dim uncommandable Pokemon with "Cannot Act" label
+  - 8c9d0ced: useSwitching.ts — add canFaintedSwitch client-side pre-validation
+  - 64e109ea: SwitchPokemonModal.vue — add mode prop (standard/fainted/forced) with mode-specific UI
+  - 41b02658: CombatantCard.vue — add Fainted Switch and Force Switch buttons with enable/disable logic
+  - fb48e76a: CombatantSides.vue — propagate faintedSwitch and forceSwitch events
+  - 47386599: pages/gm/index.vue — wire handleFaintedSwitch and handleForceSwitch handlers
+  - 66d46579: pages/gm/index.vue — resolve fainted Pokemon for fainted switch modal
+  - cbbca0ff: CombatantCard.vue — show "Cannot Act (Switched In)" badge on uncommandable Pokemon
