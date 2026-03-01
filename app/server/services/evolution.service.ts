@@ -191,7 +191,7 @@ export function recalculateStats(input: {
 
 export interface AbilityRemapResult {
   /** Automatically remapped abilities (positional match found) */
-  remappedAbilities: Array<{ name: string; effect: string }>
+  remappedAbilities: Array<{ name: string; effect: string; oldName: string }>
   /** Abilities that need GM decision (index mismatch or missing in new list) */
   needsResolution: Array<{
     oldAbility: string
@@ -237,7 +237,8 @@ export function remapAbilities(
       // Positional match exists in new species
       remappedAbilities.push({
         name: newSpeciesAbilities[oldIndex],
-        effect: '' // Effect will be looked up from AbilityData
+        effect: '', // Effect will be looked up from AbilityData
+        oldName: ability.name
       })
     } else {
       // Old index out of bounds for new species list — GM must choose

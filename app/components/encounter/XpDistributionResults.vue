@@ -92,7 +92,6 @@
       :nature-name="evolutionModal.natureName"
       :required-item="evolutionModal.requiredItem"
       :item-must-be-held="evolutionModal.itemMustBeHeld"
-      :current-abilities="evolutionModal.currentAbilities"
       :current-moves="evolutionModal.currentMoves"
       :ability-remap="evolutionModal.abilityRemap"
       :evolution-moves="evolutionModal.evolutionMoves"
@@ -146,7 +145,6 @@ const evolutionModal = reactive({
   natureName: '',
   requiredItem: null as string | null,
   itemMustBeHeld: false,
-  currentAbilities: [] as Array<{ name: string; effect: string }>,
   currentMoves: [] as Array<Record<string, unknown>>,
   abilityRemap: emptyAbilityRemap as AbilityRemapResult,
   evolutionMoves: emptyEvolutionMoves as EvolutionMoveResult
@@ -175,7 +173,6 @@ const pendingPokemonData = ref<{
 
 // Stash check data for branching evolution selection
 const lastCheckData = ref<{
-  currentAbilities: Array<{ name: string; effect: string }>
   currentMoves: Array<Record<string, unknown>>
 } | null>(null)
 
@@ -200,7 +197,6 @@ function openEvolutionConfirmModal(
   evolutionModal.natureName = pokemon.nature.name
   evolutionModal.requiredItem = evo.requiredItem
   evolutionModal.itemMustBeHeld = evo.itemMustBeHeld
-  evolutionModal.currentAbilities = lastCheckData.value?.currentAbilities || []
   evolutionModal.currentMoves = lastCheckData.value?.currentMoves || []
   evolutionModal.abilityRemap = evo.abilityRemap || emptyAbilityRemap
   evolutionModal.evolutionMoves = evo.evolutionMoves || emptyEvolutionMoves
@@ -225,7 +221,6 @@ async function handleEvolveClick(payload: { pokemonId: string; species: string }
         currentSpecies: string
         currentLevel: number
         heldItem: string | null
-        currentAbilities: Array<{ name: string; effect: string }>
         currentMoves: Array<Record<string, unknown>>
         available: EvolutionOptionData[]
       }
@@ -238,7 +233,6 @@ async function handleEvolveClick(payload: { pokemonId: string; species: string }
 
     // Stash P1 check data
     lastCheckData.value = {
-      currentAbilities: checkResponse.data.currentAbilities,
       currentMoves: checkResponse.data.currentMoves
     }
 

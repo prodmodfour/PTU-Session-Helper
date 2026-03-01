@@ -13,7 +13,7 @@
         :key="'remap-' + idx"
         class="ability-change"
       >
-        <span class="ability-change__old">{{ getOldAbilityName(idx) }}</span>
+        <span class="ability-change__old">{{ ability.oldName }}</span>
         <PhArrowRight :size="14" />
         <span class="ability-change__new">{{ ability.name }}</span>
       </div>
@@ -71,7 +71,6 @@ import type { AbilityRemapResult } from '~/server/services/evolution.service'
 
 const props = defineProps<{
   abilityRemap: AbilityRemapResult
-  currentAbilities: Array<{ name: string; effect: string }>
   abilityResolutions: string[]
 }>()
 
@@ -84,13 +83,6 @@ const noChanges = computed(() => {
     && props.abilityRemap.preservedAbilities.length === 0
     && props.abilityRemap.needsResolution.length === 0
 })
-
-function getOldAbilityName(remapIndex: number): string {
-  if (remapIndex < props.currentAbilities.length) {
-    return props.currentAbilities[remapIndex].name
-  }
-  return '???'
-}
 
 function handleResolutionChange(idx: number, value: string): void {
   const updated = [...props.abilityResolutions]

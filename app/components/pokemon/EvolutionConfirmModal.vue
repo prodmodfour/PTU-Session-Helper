@@ -66,7 +66,6 @@
           <div v-if="currentStep === 2" class="step-content">
             <EvolutionAbilityStep
               :ability-remap="abilityRemap"
-              :current-abilities="currentAbilities"
               :ability-resolutions="abilityResolutions"
               @update:resolutions="abilityResolutions = $event"
             />
@@ -197,7 +196,6 @@ const props = defineProps<{
   requiredItem: string | null
   itemMustBeHeld: boolean
   // P1 props
-  currentAbilities: Array<{ name: string; effect: string }>
   currentMoves: MoveDetail[]
   abilityRemap: AbilityRemapResult
   evolutionMoves: EnrichedEvolutionMoves

@@ -202,7 +202,6 @@
       :nature-name="pokemon.nature.name"
       :required-item="evolutionModal.requiredItem"
       :item-must-be-held="evolutionModal.itemMustBeHeld"
-      :current-abilities="evolutionModal.currentAbilities"
       :current-moves="evolutionModal.currentMoves"
       :ability-remap="evolutionModal.abilityRemap"
       :evolution-moves="evolutionModal.evolutionMoves"
@@ -321,7 +320,6 @@ const evolutionModal = reactive({
   targetRawBaseStats: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 } as Stats,
   requiredItem: null as string | null,
   itemMustBeHeld: false,
-  currentAbilities: [] as Array<{ name: string; effect: string }>,
   currentMoves: [] as Array<Record<string, unknown>>,
   abilityRemap: emptyAbilityRemap as AbilityRemapResult,
   evolutionMoves: emptyEvolutionMoves as EvolutionMoveResult
@@ -352,7 +350,6 @@ function openEvolutionModal(evo: EvolutionOption, checkData?: EvolutionCheckData
   evolutionModal.targetRawBaseStats = evo.targetBaseStats
   evolutionModal.requiredItem = evo.requiredItem
   evolutionModal.itemMustBeHeld = evo.itemMustBeHeld
-  evolutionModal.currentAbilities = checkData?.currentAbilities || pokemon.value?.abilities || []
   evolutionModal.currentMoves = checkData?.currentMoves || pokemon.value?.moves || []
   evolutionModal.abilityRemap = evo.abilityRemap || emptyAbilityRemap
   evolutionModal.evolutionMoves = evo.evolutionMoves || emptyEvolutionMoves
@@ -360,7 +357,6 @@ function openEvolutionModal(evo: EvolutionOption, checkData?: EvolutionCheckData
 }
 
 interface EvolutionCheckData {
-  currentAbilities: Array<{ name: string; effect: string }>
   currentMoves: Array<Record<string, unknown>>
 }
 
@@ -380,7 +376,6 @@ const checkEvolution = async () => {
     const response = await $fetch<{
       success: boolean
       data: {
-        currentAbilities: Array<{ name: string; effect: string }>
         currentMoves: Array<Record<string, unknown>>
         available: EvolutionOption[]
         ineligible: Array<{
@@ -397,7 +392,6 @@ const checkEvolution = async () => {
 
     // Stash P1 check data
     lastCheckData.value = {
-      currentAbilities: response.data.currentAbilities,
       currentMoves: response.data.currentMoves
     }
 
