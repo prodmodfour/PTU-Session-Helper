@@ -4,7 +4,7 @@ ticket_id: feature-009
 category: FEATURE_GAP
 scope: FULL
 domain: character-lifecycle
-status: design-complete
+status: p0-implemented
 affected_files:
   - app/prisma/schema.prisma
   - app/types/character.ts
@@ -154,7 +154,27 @@ model HumanCharacter {
 
 ## Implementation Log
 
-(Design phase -- no implementation yet)
+### P0 — Core Trainer XP Model (2026-03-01)
+
+**Branch:** `slave/2-dev-feature-009-p0-20260301`
+
+| Section | Files | Commit |
+|---------|-------|--------|
+| A. Schema migration | `app/prisma/schema.prisma` | `ffd4e2fa` |
+| A. Type update + serializers | `app/types/character.ts`, `app/server/utils/serializers.ts`, `app/server/api/characters/[id].put.ts` | `7a4aceea` |
+| B. Pure utility | `app/utils/trainerExperience.ts` (NEW) | `9f2116f8` |
+| B. XP endpoints | `app/server/api/characters/[id]/xp.post.ts` (NEW), `xp-history.get.ts` (NEW) | `13fc558f` |
+| C. Composable | `app/composables/useTrainerXp.ts` (NEW) | `6c0db88d` |
+| D. XP panel | `app/components/character/TrainerXpPanel.vue` (NEW) | `1044a780` |
+| D. Integration | `app/pages/gm/characters/[id].vue`, `app/components/character/CharacterModal.vue` | `2eff700b` |
+| Tests | T1-T4: 47 tests across 3 files | `b9f174bb` |
+
+**All P0 edge cases handled:**
+- Multi-level jumps (e.g., bank 8 + 15 = 23 -> 2 levels, bank 3)
+- Max level cap (50) with excess XP preserved in bank
+- Negative XP deduction with floor at 0
+- WebSocket broadcast on level change
+- LevelUpModal integration via pendingLevelUp/event chain
 
 ---
 

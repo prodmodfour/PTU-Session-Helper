@@ -62,3 +62,14 @@ FULL-scope feature. Tightly coupled with feature-008 (Level-Up Workflow) — whe
 ## Resolution Log
 
 - 2026-03-01: Design spec created — `design-trainer-xp-001/` with _index, shared-specs, spec-p0, spec-p1, testing-strategy
+- 2026-03-01: P0 implementation complete — 9 commits on `slave/2-dev-feature-009-p0-20260301`
+  - `9f2116f8` feat: add trainerExperience.ts pure utility
+  - `ffd4e2fa` feat: add trainerXp/capturedSpecies to schema
+  - `7a4aceea` feat: add to types, serializers, PUT endpoint
+  - `13fc558f` feat: add XP management endpoints (xp.post, xp-history.get)
+  - `6c0db88d` feat: add useTrainerXp composable
+  - `1044a780` feat: add TrainerXpPanel component
+  - `2eff700b` feat: integrate into character sheet and CharacterModal
+  - `ff0c62f9` fix: JSDoc comment esbuild parse error
+  - `b9f174bb` test: 47 unit tests (T1-T4)
+  - Files changed: 10 (4 new, 6 modified) + 3 test files
