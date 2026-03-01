@@ -3,7 +3,8 @@ id: feature-020
 title: Healing Item System
 priority: P2
 severity: MEDIUM
-status: open
+status: design-complete
+design_spec: design-healing-items-001
 domain: healing
 source: matrix-gap (GAP-HEAL-2)
 matrix_source: healing R039, R040, R041
@@ -36,3 +37,17 @@ No item usage system exists for healing items. Potions, status cure items, and o
 ## Implementation Scope
 
 FULL-scope feature requiring design spec. Needs item catalog, inventory tracking, and combat action integration.
+
+## Design Spec
+
+Design spec: `artifacts/designs/design-healing-items-001/`
+
+| Tier | Scope |
+|------|-------|
+| P0 | Item catalog constants, apply-item service (HP restoration), API endpoint, store action, basic GM UI |
+| P1 | Status cure items, revive items, Full Restore combined, repulsive items |
+| P2 | Standard Action enforcement, target action forfeit, self-use Full-Round, adjacency requirement, inventory consumption |
+
+## Resolution Log
+
+- 2026-03-01: Design spec created (`design-healing-items-001`). Status set to design-complete.
