@@ -420,15 +420,17 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * Returns undefined when there's no terrain to avoid unnecessary pathfinding overhead.
    * The returned function is bound to the specific combatant's capabilities.
    *
-   * When tokenSize > 1, returns a footprint-aware getter that aggregates terrain cost
-   * across all NxN cells at the given origin position.
+   * Always returns a SINGLE-CELL getter. The A* and flood-fill algorithms in
+   * usePathfinding.ts already iterate the full NxN footprint at each step,
+   * calling this getter for every cell in the footprint. Returning a
+   * footprint-aware getter here would cause double-counting (the pathfinding
+   * iterates NxN cells, each of which would itself iterate NxN — checking
+   * terrain at cells the token doesn't actually occupy).
+   *
+   * The tokenSize parameter is accepted for API compatibility but ignored.
    */
-  const getTerrainCostGetter = (combatantId?: string, tokenSize?: number): TerrainCostGetter | undefined => {
+  const getTerrainCostGetter = (combatantId?: string, _tokenSize?: number): TerrainCostGetter | undefined => {
     if (terrainStore.terrainCount === 0) return undefined
-    const size = tokenSize ?? 1
-    if (combatantId && size > 1) {
-      return (x: number, y: number) => getTerrainCostForFootprint(x, y, size, combatantId)
-    }
     if (combatantId) {
       return (x: number, y: number) => getTerrainCostForCombatant(x, y, combatantId)
     }
