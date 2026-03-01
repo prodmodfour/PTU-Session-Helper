@@ -4,7 +4,7 @@ ticket_id: feature-009
 category: FEATURE_GAP
 scope: FULL
 domain: character-lifecycle
-status: p0-implemented
+status: p1-implemented
 affected_files:
   - app/prisma/schema.prisma
   - app/types/character.ts
@@ -22,6 +22,7 @@ new_files:
   - app/composables/useTrainerXp.ts
   - app/components/character/TrainerXpPanel.vue
   - app/components/encounter/TrainerXpSection.vue
+  - app/components/scene/QuestXpDialog.vue
 ---
 
 
@@ -187,6 +188,25 @@ model HumanCharacter {
 | xp-history returns negative xpToNextLevel at max level | MEDIUM | Return null at max level (50) | `3211428f` |
 | Duplicate award logic in TrainerXpPanel | MEDIUM | Extract shared processXpAward() helper | `b7a9da6a` |
 | console.log in XP endpoint | MEDIUM | Remove audit log (data available in API response) | `5522a5dc` |
+
+### P1 — Integration: Capture XP, Encounter XP, Quest XP (2026-03-01)
+
+**Branch:** `slave/2-dev-feature-009-p1-20260301`
+
+| Section | Files | Commit |
+|---------|-------|--------|
+| E. Capture species XP hook | `app/server/api/capture/attempt.post.ts` (modified) | `8a93024b` |
+| F. Batch trainer XP endpoint | `app/server/api/encounters/[id]/trainer-xp-distribute.post.ts` (NEW) | `03e2d081` |
+| F. Store extension | `app/stores/encounterXp.ts` (modified) | `035d0662` |
+| F. Significance mapping | `app/utils/trainerExperience.ts` (modified) | `a84ad956` |
+| F. TrainerXpSection component | `app/components/encounter/TrainerXpSection.vue` (NEW) | `66339904` |
+| F. XpDistributionModal integration | `app/components/encounter/XpDistributionModal.vue` (modified) | `fa9ee6cf` |
+| G. Quest XP dialog | `app/components/scene/QuestXpDialog.vue` (NEW), `app/pages/gm/scenes/[id].vue` (modified) | `256a0304` |
+
+**All P1 sections implemented:**
+- Capture XP: +1 trainer XP on new species, speciesXp in capture response
+- Encounter XP: TrainerXpSection in XpDistributionModal with per-trainer input, level-up preview, quick-set, significance-based suggestion
+- Quest XP: QuestXpDialog component in scene detail with per-character preview, sequential API calls
 
 ---
 

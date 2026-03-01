@@ -80,3 +80,15 @@ FULL-scope feature. Tightly coupled with feature-008 (Level-Up Workflow) — whe
   - `ed7fb197` fix: resolve stale character data in CharacterModal after XP award (H1)
   - `72d3d565` docs: add trainer XP endpoints and components to app-surface.md (H2)
   - Files changed: 4 (xp.post.ts, xp-history.get.ts, TrainerXpPanel.vue, CharacterModal.vue, app-surface.md)
+- 2026-03-01: P1 implementation complete — 7 commits on `slave/2-dev-feature-009-p1-20260301`
+  - `8a93024b` feat: award +1 trainer XP on new species capture
+  - `03e2d081` feat: add batch trainer XP distribute endpoint
+  - `035d0662` feat: add distributeTrainerXp action to encounterXp store
+  - `a84ad956` feat: add SIGNIFICANCE_TO_TRAINER_XP mapping
+  - `66339904` feat: create TrainerXpSection component for post-encounter XP
+  - `fa9ee6cf` feat: integrate TrainerXpSection into XpDistributionModal
+  - `256a0304` feat: add quest XP dialog to scene detail view
+  - Files changed: 7 (3 new, 4 modified)
+  - Section E: capture/attempt.post.ts extended with species XP logic
+  - Section F: TrainerXpSection.vue, trainer-xp-distribute.post.ts, encounterXp store, XpDistributionModal integration
+  - Section G: QuestXpDialog.vue, scenes/[id].vue extended with Award Quest XP
