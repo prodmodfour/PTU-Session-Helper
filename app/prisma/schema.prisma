@@ -72,6 +72,14 @@ model HumanCharacter {
   goals         String?
   location      String?  // Location/area where this NPC is found
 
+  // Trainer Experience Bank (PTU Core p.461)
+  // Accumulates XP from GM awards, captures, quests. Auto-levels at 10.
+  trainerXp        Int      @default(0)
+
+  // Captured species history for +1 XP tracking
+  // JSON array of lowercase species names: ["pikachu", "charmander"]
+  capturedSpecies  String   @default("[]")
+
   // Library
   isInLibrary   Boolean  @default(true)
   notes         String?
