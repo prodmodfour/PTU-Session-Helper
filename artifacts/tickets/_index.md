@@ -1,19 +1,18 @@
 ---
-generated_at: 2026-03-01T10:47:26.938Z
-total_tickets: 233
-open: 23
-in_progress: 98
-resolved: 103
+generated_at: 2026-03-01T11:42:21.677Z
+total_tickets: 237
+open: 21
+in_progress: 101
+resolved: 104
 ---
 
 # Tickets Index
 
-## Open Tickets (23)
+## Open Tickets (21)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-127 | ptu-rule | P1 | character-lifecycle | Per decree-037, trainers should NOT receive an automatic +1  |
-| feature-013 | feature | P1 | vtt-grid | feature-013: Multi-Tile Token System |
 | feature-016 | feature | P2 | combat+vtt-grid | feature-016: Priority / Interrupt / Attack of Opportunity Sy |
 | feature-017 | feature | P2 | capture | feature-017: Poke Ball Type System |
 | feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
@@ -24,7 +23,6 @@ resolved: 103
 | feature-023 | feature | P2 | player-view+capture+healing | feature-023: Player Capture & Healing Interfaces |
 | feature-004 | feature | P3 | combat | feature-004: Pokemon Mounting / Rider System |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
-| decree-need-037 | decree | P3 | combat | Decree Needed: Sleep/Asleep Classification — Volatile or Per |
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
@@ -36,7 +34,7 @@ resolved: 103
 | refactoring-102 | refactoring | P4 | pokemon-lifecycle | Extract EvolutionSelectionModal from duplicated branching ev |
 | refactoring-105 | refactoring | P4 | combat | Remove Spurious 'Bound' Condition Check from Trapped Validat |
 
-## In-Progress Tickets (98)
+## In-Progress Tickets (101)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -53,6 +51,7 @@ resolved: 103
 | feature-009 | feature | P1 | character-lifecycle | matrix-gap (SG-2) |
 | feature-011 | feature | P1 | combat | matrix-gap (Gap 3) |
 | feature-012 | feature | P1 | combat | matrix-gap (combat R076, R080, R081 + healing R016, R030) |
+| feature-013 | feature | P1 | vtt-grid | matrix-gap (VTT SG-1) |
 | feature-014 | feature | P1 | vtt-grid+combat | matrix-gap (combat Gap 4 + VTT SG-2) |
 | bug-002 | bug | P1 | — | code-review-035 |
 | ptu-rule-038 | ptu-rule | P1 | healing | — |
@@ -67,6 +66,7 @@ resolved: 103
 | bug-039 | bug | P2 | capture | capture-audit-report (R018, 2026-02-28) |
 | ptu-rule-107 | ptu-rule | P2 | combat | decree-021 |
 | ptu-rule-108 | ptu-rule | P2 | vtt-grid | rules-review-160 M2 + rules-review-162 M1 |
+| refactoring-106 | refactoring | P2 | combat | decree-038 |
 | bug-001 | bug | P2 | csv-import | code-review-034 |
 | bug-030 | bug | P2 | player-view | code-review-159 M3 |
 | ptu-rule-030 | ptu-rule | P2 | pokemon-generation | — |
@@ -94,6 +94,7 @@ resolved: 103
 | ptu-rule-118 | ptu-rule | P3 | character-lifecycle | decree-027 |
 | ptu-rule-122 | ptu-rule | P3 | — | decree-029 |
 | ptu-rule-123 | ptu-rule | P3 | — | decree-030 |
+| ptu-rule-128 | ptu-rule | P3 | combat | decree-038 |
 | feature-005 | feature | P3 | combat | user-request |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
@@ -139,19 +140,17 @@ resolved: 103
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-037 | P3 | combat | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 0 | 12 | 26 | 40 |
-| ptu-rule | 4 | 58 | 36 | 99 |
-| feature | 10 | 9 | 3 | 23 |
-| ux | 3 | 7 | 2 | 12 |
-| decree | 1 | 0 | 36 | 37 |
-| refactoring | 5 | 12 | 0 | 22 |
+| ptu-rule | 4 | 59 | 36 | 100 |
+| feature | 9 | 10 | 3 | 23 |
+| ux | 3 | 7 | 2 | 13 |
+| decree | 0 | 0 | 37 | 37 |
+| refactoring | 5 | 13 | 0 | 24 |

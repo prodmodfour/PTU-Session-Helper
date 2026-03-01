@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-01T10:47:26.948Z
-total_decrees: 37
-active: 37
+generated_at: 2026-03-01T11:42:21.690Z
+total_decrees: 38
+active: 38
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (37)
+## Active Decrees (38)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -48,3 +48,4 @@ superseded: 0
 | decree-035 | pokemon-lifecycle | base-relations-nature-adjusted | Use nature-adjusted base stats for Base Relations ordering |
 | decree-036 | pokemon-lifecycle | stone-evolution-move-learning | Stone evolutions learn new-form moves at or below current level |
 | decree-037 | character-lifecycle | skill-ranks-via-edges-only | Skill ranks come from Edge slots only, not automatic per-level grants |
+| decree-038 | combat | sleep-classification-and-condition-behavior-decoupling | Decouple condition behaviors from categories; Sleep is volatile but persists through recall and encounter end |

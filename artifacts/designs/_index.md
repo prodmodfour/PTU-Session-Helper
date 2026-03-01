@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-01T10:47:26.942Z
+generated_at: 2026-03-01T11:42:21.681Z
 total_designs: 22
 ---
 
@@ -17,12 +17,12 @@ total_designs: 22
 | design-level-up-allocation-001 | — | — | — | — | — |
 | design-living-weapon-001 | combat | design-complete | feature-005 | FULL | FEATURE_GAP |
 | design-mounting-001 | combat | design-complete | feature-004 | FULL | FEATURE |
-| design-multi-tile-tokens-001 | vtt-grid | design-complete | feature-013 | FULL | FEATURE |
+| design-multi-tile-tokens-001 | vtt-grid | p0-implemented | feature-013 | FULL | FEATURE |
 | design-player-view-core-001 | player-view | p0-implemented | feature-003 | FULL | FEATURE |
 | design-player-view-infra-001 | player-view | draft | feature-003 | FULL | INFRASTRUCTURE |
 | design-player-view-integration-001 | player-view | designed | feature-003 | FULL | FEATURE |
 | design-pokemon-evolution-001 | — | — | — | — | — |
-| design-pokemon-switching-001 | combat | p0-implemented | feature-011 | FULL | FEATURE |
+| design-pokemon-switching-001 | combat | p1-implemented | feature-011 | FULL | FEATURE |
 | design-status-automation-001 | combat | p0-implemented | feature-010 | FULL | FEATURE |
 | design-testability-001 | combat | implemented | — | PARTIAL | FEATURE_GAP |
 | design-trainer-level-up-001 | character-lifecycle | p1-implemented | feature-008 | FULL | FEATURE_GAP |
