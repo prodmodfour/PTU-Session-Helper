@@ -18,7 +18,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
 import { loadEncounter, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
-import { resolveAoOAction } from '~/server/services/out-of-turn.service'
+import { resolveAoOAction, canUseAoO } from '~/server/services/out-of-turn.service'
 import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
@@ -85,8 +85,23 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Resolve the action (updates pending actions and combatant usage)
+    // Re-validate reactor eligibility before accepting (CRIT-001)
+    // The reactor may have fainted or gained a blocking condition since the AoO was triggered
     const accepted = resolution === 'accept'
+    if (accepted) {
+      const reactor = combatants.find(c => c.id === action.actorId)
+      if (reactor) {
+        const eligibility = canUseAoO(reactor)
+        if (!eligibility.allowed) {
+          throw createError({
+            statusCode: 400,
+            message: `Cannot execute AoO: ${eligibility.reason}`
+          })
+        }
+      }
+    }
+
+    // Resolve the action (updates pending actions and combatant usage)
     const { updatedActions, updatedCombatants } = resolveAoOAction(
       pendingActions,
       combatants,
