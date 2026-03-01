@@ -112,6 +112,8 @@
     transition: all $transition-fast;
     width: 100%;
     text-align: left;
+    font: inherit;
+    color: inherit;
 
     &:hover {
       background: rgba($color-warning, 0.15);
@@ -126,6 +128,18 @@
     &:hover .action-icon {
       opacity: 1;
     }
+  }
+
+  // Color-specific hover for clickable move items
+  &--move#{&}--clickable:hover {
+    background: rgba($color-success, 0.15);
+    border-color: rgba($color-success, 0.3);
+  }
+
+  // Color-specific hover for clickable ability items
+  &--ability#{&}--clickable:hover {
+    background: rgba($color-accent-pink, 0.15);
+    border-color: rgba($color-accent-pink, 0.3);
   }
 }
 

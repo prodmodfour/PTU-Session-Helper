@@ -44,25 +44,28 @@
             <span>+{{ entry.totalTutorPoints }} Tutor {{ entry.totalTutorPoints === 1 ? 'Point' : 'Points' }}</span>
           </div>
 
-          <!-- New Moves -->
-          <div
-            v-for="(move, index) in entry.allNewMoves"
-            :key="'move-' + index"
-            class="levelup-detail-item levelup-detail-item--move"
+          <!-- New Moves — clickable action to open move learning -->
+          <button
+            v-if="entry.allNewMoves.length > 0"
+            class="levelup-detail-item levelup-detail-item--move levelup-detail-item--clickable"
+            @click="$emit('learn-move', { pokemonId: entry.pokemonId, moves: entry.allNewMoves })"
           >
             <PhSword :size="14" class="detail-icon" />
-            <span>New Move: {{ move }}</span>
-          </div>
+            <span>{{ entry.allNewMoves.length }} New {{ entry.allNewMoves.length === 1 ? 'Move' : 'Moves' }} Available</span>
+            <PhCaretRight :size="12" class="action-icon" />
+          </button>
 
-          <!-- Ability Milestones -->
-          <div
+          <!-- Ability Milestones — clickable action to open assignment -->
+          <button
             v-for="milestone in entry.abilityMilestones"
             :key="`ability-${milestone.level}`"
-            class="levelup-detail-item levelup-detail-item--ability"
+            class="levelup-detail-item levelup-detail-item--ability levelup-detail-item--clickable"
+            @click="$emit('assign-ability', { pokemonId: entry.pokemonId, milestone })"
           >
             <PhLightning :size="14" class="detail-icon" />
             <span>{{ milestone.message }}</span>
-          </div>
+            <PhCaretRight :size="12" class="action-icon" />
+          </button>
 
           <!-- Evolution Eligibility — now clickable -->
           <button
@@ -113,6 +116,8 @@ const props = defineProps<{
 
 defineEmits<{
   'evolve-click': [payload: { pokemonId: string; species: string }]
+  'assign-ability': [payload: { pokemonId: string; milestone: { level: number; type: 'second' | 'third'; message: string } }]
+  'learn-move': [payload: { pokemonId: string; moves: string[] }]
 }>()
 
 /**
