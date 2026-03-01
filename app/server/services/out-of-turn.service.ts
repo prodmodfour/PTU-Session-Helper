@@ -311,6 +311,24 @@ export function autoDeclineFaintedReactor(
   })
 }
 
+/**
+ * Remove resolved/declined/expired actions from previous rounds.
+ * Keeps only pending actions (current round) and resolved actions from
+ * the current round (for reference). Prevents indefinite accumulation.
+ * Returns a new array.
+ */
+export function cleanupResolvedActions(
+  pendingActions: OutOfTurnAction[],
+  currentRound: number
+): OutOfTurnAction[] {
+  return pendingActions.filter(action => {
+    // Always keep pending actions
+    if (action.status === 'pending') return true
+    // Keep resolved/declined/expired actions from the current round only
+    return action.round === currentRound
+  })
+}
+
 // ============================================
 // DEFAULT VALUES
 // ============================================

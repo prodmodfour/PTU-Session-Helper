@@ -19,7 +19,7 @@ import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server
 import { getTickDamageEntries, getCombatantName } from '~/server/services/status-automation.service'
 import type { TickDamageResult } from '~/server/services/status-automation.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
-import { expirePendingActions } from '~/server/services/out-of-turn.service'
+import { expirePendingActions, cleanupResolvedActions } from '~/server/services/out-of-turn.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import type { TrainerDeclaration } from '~/types/combat'
 import type { StatusCondition } from '~/types'
@@ -393,10 +393,12 @@ export default defineEventHandler(async (event) => {
       updateData.switchActions = JSON.stringify([])
 
       // Expire pending out-of-turn actions from the previous round (Section D3)
+      // and clean up resolved/declined/expired actions from past rounds (MED-004)
       const pendingActions = JSON.parse(encounter.pendingActions || '[]')
       if (pendingActions.length > 0) {
         const expiredActions = expirePendingActions(pendingActions, encounter.currentRound)
-        updateData.pendingActions = JSON.stringify(expiredActions)
+        const cleanedActions = cleanupResolvedActions(expiredActions, currentRound)
+        updateData.pendingActions = JSON.stringify(cleanedActions)
       }
     }
 
