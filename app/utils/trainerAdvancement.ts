@@ -9,7 +9,7 @@
  * Reference: PTU Core Chapter 3 — Trainers (pp. 19-21)
  *
  * Advancement schedule per level:
- * - Every level: +1 stat point, +1 skill rank
+ * - Every level: +1 stat point
  * - Even levels: +1 Edge
  * - Odd levels (3+): +1 Feature
  * - Levels 2, 6, 12: Bonus Skill Edge
@@ -21,6 +21,9 @@
  * - Level 20: Veteran milestone
  * - Level 30: Elite milestone
  * - Level 40: Champion milestone
+ *
+ * Note: Per decree-037, trainers do NOT receive automatic skill ranks per level.
+ * Skill ranks come from Skill Edges only (PTU Core p.19, p.52).
  */
 
 import type { SkillRankName } from '~/constants/trainerStats'
@@ -34,8 +37,6 @@ export interface TrainerLevelUpInfo {
   newLevel: number
   /** Stat points gained this level (always 1 per PTU p.19) */
   statPointsGained: number
-  /** Skill ranks gained this level (always 1 -- feature or general, GM decides) */
-  skillRanksGained: number
   /** Edges gained this level: 1 on even levels, 0 on odd */
   edgesGained: number
   /** Features gained this level: 1 on odd levels (3+), 0 on even, 0 at levels 1-2 */
@@ -92,7 +93,6 @@ export interface TrainerAdvancementSummary {
   fromLevel: number
   toLevel: number
   totalStatPoints: number
-  totalSkillRanks: number
   totalEdges: number
   totalFeatures: number
   bonusSkillEdges: number
@@ -249,7 +249,6 @@ export function computeTrainerLevelUp(level: number): TrainerLevelUpInfo {
   return {
     newLevel: level,
     statPointsGained: 1,
-    skillRanksGained: 1,
     edgesGained: isEven ? 1 : 0,
     featuresGained: (isOdd && level >= 3) ? 1 : 0,
     bonusSkillEdge: [2, 6, 12].includes(level),
@@ -286,7 +285,6 @@ export function summarizeTrainerAdvancement(
       fromLevel: 0,
       toLevel: 0,
       totalStatPoints: 0,
-      totalSkillRanks: 0,
       totalEdges: 0,
       totalFeatures: 0,
       bonusSkillEdges: 0,
@@ -303,7 +301,6 @@ export function summarizeTrainerAdvancement(
     fromLevel,
     toLevel,
     totalStatPoints: infos.reduce((sum, i) => sum + i.statPointsGained, 0),
-    totalSkillRanks: infos.reduce((sum, i) => sum + i.skillRanksGained, 0),
     totalEdges: infos.reduce((sum, i) => sum + i.edgesGained, 0),
     totalFeatures: infos.reduce((sum, i) => sum + i.featuresGained, 0),
     bonusSkillEdges: infos.filter(i => i.bonusSkillEdge).length,
