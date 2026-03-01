@@ -36,6 +36,7 @@ import {
   buildSwitchAction
 } from '~/server/services/switching.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
+import { RECALL_CLEARED_CONDITIONS } from '~/constants/statusConditions'
 import type { SwitchAction } from '~/types/combat'
 
 export default defineEventHandler(async (event) => {
@@ -155,6 +156,25 @@ export default defineEventHandler(async (event) => {
       record.currentTurnIndex,
       recallCombatantId
     )
+
+    // 2b. Apply recall side-effects on the recalled Pokemon's DB record
+    // PTU p.247-248: volatile conditions cleared, temp HP lost, combat stages reset
+    const recalledDbRecord = await prisma.pokemon.findUnique({
+      where: { id: recalledCombatant.entityId }
+    })
+    if (recalledDbRecord) {
+      const currentStatuses: string[] = JSON.parse(recalledDbRecord.statusConditions || '[]')
+      const recallClearedSet = new Set(RECALL_CLEARED_CONDITIONS as string[])
+      const persistentOnly = currentStatuses.filter(s => !recallClearedSet.has(s))
+      await prisma.pokemon.update({
+        where: { id: recalledCombatant.entityId },
+        data: {
+          statusConditions: JSON.stringify(persistentOnly),
+          temporaryHp: 0,
+          stageModifiers: JSON.stringify({})
+        }
+      })
+    }
 
     // 3. Build new combatant from DB entity
     const releasedEntity = buildPokemonEntityFromRecord(releasedPokemonRecord!)
