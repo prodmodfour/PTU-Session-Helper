@@ -1,9 +1,9 @@
 /**
  * POST /api/encounters/:id/end
  *
- * Ends an encounter, deactivating it and clearing volatile conditions
- * from all combatants per PTU p.247: "Volatile Afflictions are cured
- * completely at the end of the encounter."
+ * Ends an encounter, deactivating it and clearing conditions with
+ * clearsOnEncounterEnd flag per decree-038. Uses per-condition behavior
+ * flags instead of category membership.
  *
  * Also clears bound AP for human combatants per PTU Core p.59:
  * "[Stratagem] Features may only be bound during combat and
@@ -12,7 +12,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
 import { createDefaultStageModifiers } from '~/server/services/combatant.service'
-import { VOLATILE_CONDITIONS } from '~/constants/statusConditions'
+import { ENCOUNTER_END_CLEARED_CONDITIONS } from '~/constants/statusConditions'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { resetSceneUsage } from '~/utils/moveFrequency'
 import { calculateSceneEndAp } from '~/utils/restHealing'
@@ -20,13 +20,13 @@ import type { Combatant, StatusCondition } from '~/types'
 import type { Move, Pokemon } from '~/types/character'
 
 /**
- * Remove volatile conditions from a combatant's entity.
+ * Remove conditions that clear at encounter end from a combatant's entity.
+ * Uses per-condition clearsOnEncounterEnd flags (decree-038).
  * Returns the updated status conditions array (new reference, no mutation).
  */
-function clearVolatileConditions(conditions: StatusCondition[]): StatusCondition[] {
-  return conditions.filter(
-    (s: StatusCondition) => !(VOLATILE_CONDITIONS as StatusCondition[]).includes(s)
-  )
+function clearEncounterEndConditions(conditions: StatusCondition[]): StatusCondition[] {
+  const toClear = new Set<string>(ENCOUNTER_END_CLEARED_CONDITIONS)
+  return conditions.filter((s: StatusCondition) => !toClear.has(s))
 }
 
 export default defineEventHandler(async (event) => {
@@ -53,13 +53,13 @@ export default defineEventHandler(async (event) => {
 
     const combatants: Combatant[] = JSON.parse(encounter.combatants)
 
-    // PTU p.247: clear volatile conditions and reset scene-frequency moves at encounter end
+    // decree-038: clear conditions with clearsOnEncounterEnd flag, reset scene-frequency moves
     // PTU p.235: combat stages are encounter-scoped — reset to defaults
     const defaultStages = createDefaultStageModifiers()
 
     const updatedCombatants = combatants.map(combatant => {
       const currentConditions: StatusCondition[] = combatant.entity?.statusConditions || []
-      const clearedConditions = clearVolatileConditions(currentConditions)
+      const clearedConditions = clearEncounterEndConditions(currentConditions)
 
       // Reset scene-frequency moves for Pokemon combatants
       let updatedEntity = combatant.entity
@@ -105,7 +105,7 @@ export default defineEventHandler(async (event) => {
     for (const c of updatedCombatants) {
       if (!c.entityId) continue
 
-      // Sync volatile condition clearing + stage reset for all entities
+      // Sync encounter-end condition clearing + stage reset for all entities
       syncPromises.push(syncEntityToDatabase(c, {
         statusConditions: c.entity?.statusConditions || [],
         stageModifiers: { ...defaultStages }
