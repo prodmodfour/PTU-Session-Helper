@@ -228,6 +228,7 @@
 <script setup lang="ts">
 import type { Move, Combatant } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
+import { useFlankingDetection } from '~/composables/useFlankingDetection'
 
 const { getCombatantName } = useCombatantDisplay()
 const encounterStore = useEncounterStore()
@@ -254,6 +255,9 @@ const targetsRef = toRef(props, 'targets')
 const allEncounterCombatants = computed((): Combatant[] =>
   encounterStore.encounter?.combatants ?? []
 )
+
+// Flanking detection for evasion penalty (PTU p.232)
+const { getFlankingPenalty } = useFlankingDetection(allEncounterCombatants)
 
 // Use the extracted composable for all calculations
 const {
@@ -293,7 +297,9 @@ const {
   // Confirmation
   canConfirm,
   getConfirmData
-} = useMoveCalculation(moveRef, actorRef, targetsRef, allEncounterCombatants)
+} = useMoveCalculation(moveRef, actorRef, targetsRef, allEncounterCombatants, {
+  getFlankingPenalty
+})
 
 // Helper to check if a target is in range
 const isTargetInRange = (targetId: string): boolean => {
