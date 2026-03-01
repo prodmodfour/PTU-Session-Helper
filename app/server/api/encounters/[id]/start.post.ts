@@ -52,7 +52,12 @@ export default defineEventHandler(async (event) => {
         hasActed: false,
         actionsRemaining: 2,
         shiftActionsRemaining: 1,
-        turnState: baseTurnState
+        turnState: baseTurnState,
+        // Initialize out-of-turn action state (feature-016)
+        outOfTurnUsage: { aooUsed: false, priorityUsed: false, interruptUsed: false },
+        disengaged: false,
+        holdAction: { isHolding: false, holdUntilInitiative: null, holdUsedThisRound: false },
+        skipNextRound: false
       }
 
       // Reset scene-frequency usage for Pokemon (new encounter = new scene)
