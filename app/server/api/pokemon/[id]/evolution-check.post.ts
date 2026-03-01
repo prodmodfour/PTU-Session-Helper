@@ -4,13 +4,20 @@
  * Check which evolutions are available for a Pokemon based on its
  * current state (level, held item) and species evolution triggers.
  *
- * Returns available and ineligible evolutions with reasons.
+ * Returns available and ineligible evolutions with reasons,
+ * plus P1 data for ability remapping and move learning:
+ * - Current Pokemon's abilities and moves
+ * - Old species ability list and learnset
+ * - Target species ability list and learnset (per available evolution)
+ *
  * No side effects — read-only check.
  *
  * PTU Core Chapter 5, p.202
  */
 import { prisma } from '~/server/utils/prisma'
 import { checkEvolutionEligibility } from '~/utils/evolutionCheck'
+import { remapAbilities } from '~/server/services/evolution.service'
+import { getEvolutionMoves } from '~/utils/evolutionCheck'
 import type { EvolutionTrigger } from '~/types/species'
 
 export default defineEventHandler(async (event) => {
@@ -24,14 +31,16 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Fetch Pokemon
+    // Fetch Pokemon with P1-relevant fields
     const pokemon = await prisma.pokemon.findUnique({
       where: { id },
       select: {
         id: true,
         species: true,
         level: true,
-        heldItem: true
+        heldItem: true,
+        abilities: true,
+        moves: true
       }
     })
 
@@ -42,10 +51,15 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Fetch SpeciesData for evolution triggers
+    // Fetch full SpeciesData for current species (triggers + abilities + learnset)
     const speciesData = await prisma.speciesData.findUnique({
       where: { name: pokemon.species },
-      select: { evolutionTriggers: true }
+      select: {
+        evolutionTriggers: true,
+        abilities: true,
+        numBasicAbilities: true,
+        learnset: true
+      }
     })
 
     if (!speciesData) {
@@ -70,7 +84,16 @@ export default defineEventHandler(async (event) => {
       evolutionTriggers: triggers
     })
 
-    // Fetch target species base stats for available evolutions (used by the UI modal)
+    // Parse current Pokemon abilities and moves
+    const currentAbilities: Array<{ name: string; effect: string }> = JSON.parse(pokemon.abilities || '[]')
+    const currentMoves: Array<{ name: string }> = JSON.parse(pokemon.moves || '[]')
+    const currentMoveNames = currentMoves.map(m => m.name)
+
+    // Parse old species data
+    const oldSpeciesAbilities: string[] = JSON.parse(speciesData.abilities || '[]')
+    const oldLearnset: Array<{ level: number; move: string }> = JSON.parse(speciesData.learnset || '[]')
+
+    // Fetch target species data for available evolutions (extended for P1)
     const targetSpeciesNames = [
       ...result.available.map(a => a.toSpecies),
       ...result.ineligible.map(i => i.toSpecies)
@@ -81,7 +104,9 @@ export default defineEventHandler(async (event) => {
           select: {
             name: true, type1: true, type2: true,
             baseHp: true, baseAttack: true, baseDefense: true,
-            baseSpAtk: true, baseSpDef: true, baseSpeed: true
+            baseSpAtk: true, baseSpDef: true, baseSpeed: true,
+            abilities: true, numBasicAbilities: true,
+            learnset: true
           }
         })
       : []
@@ -94,8 +119,30 @@ export default defineEventHandler(async (event) => {
         currentSpecies: pokemon.species,
         currentLevel: pokemon.level,
         heldItem: pokemon.heldItem,
+        // P1: current Pokemon state for modal
+        currentAbilities,
+        currentMoves,
+        // P1: old species data for ability remapping and move learning
+        oldSpeciesAbilities,
         available: result.available.map(a => {
           const target = targetSpeciesMap.get(a.toSpecies)
+          const targetAbilities: string[] = target ? JSON.parse(target.abilities || '[]') : []
+          const targetLearnset: Array<{ level: number; move: string }> = target
+            ? JSON.parse(target.learnset || '[]')
+            : []
+
+          // Pre-compute ability remapping for the modal
+          const abilityRemap = remapAbilities(currentAbilities, oldSpeciesAbilities, targetAbilities)
+
+          // Pre-compute evolution moves
+          const evolutionMoves = getEvolutionMoves({
+            oldLearnset,
+            newLearnset: targetLearnset,
+            evolutionMinLevel: a.trigger.minimumLevel,
+            currentLevel: pokemon.level,
+            currentMoves: currentMoveNames
+          })
+
           return {
             toSpecies: a.toSpecies,
             targetStage: a.trigger.targetStage,
@@ -106,7 +153,12 @@ export default defineEventHandler(async (event) => {
               hp: target.baseHp, attack: target.baseAttack, defense: target.baseDefense,
               specialAttack: target.baseSpAtk, specialDefense: target.baseSpDef, speed: target.baseSpeed
             } : null,
-            targetTypes: target ? [target.type1, target.type2].filter(Boolean) : []
+            targetTypes: target ? [target.type1, target.type2].filter(Boolean) : [],
+            // P1: ability remapping data
+            targetAbilities,
+            abilityRemap,
+            // P1: evolution move data
+            evolutionMoves
           }
         }),
         ineligible: result.ineligible.map(i => ({
