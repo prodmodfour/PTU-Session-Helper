@@ -61,3 +61,14 @@ Low — current manual approach works. This is a convenience/consistency improve
 - `app/server/api/encounters/[id]/status.post.ts` — extended Naturewalk immunity to human combatants
 
 **Additional fix:** The Naturewalk Slowed/Stuck immunity check in the status endpoint was previously gated to Pokemon only. Extended to all combatant types since trainers can also have Naturewalk (Survivalist class or equipment).
+
+### Fix Cycle (code-review-222 H1)
+
+**Commit:**
+- `3e6ba29` test: add unit tests for equipment-granted Naturewalk capabilities
+
+**Files changed:**
+- `app/tests/unit/utils/equipmentBonuses.test.ts` — NEW: 12 tests for getEquipmentGrantedCapabilities (empty equipment, single/multiple items, deduplication, mixed fields, slot ordering)
+- `app/tests/unit/utils/combatantCapabilities.test.ts` — EXTENDED: +19 tests (equipment-derived Naturewalk via getCombatantNaturewalks, manual+equipment merge, deduplication, bypass terrain, status immunity)
+
+**Total test coverage:** 31 new tests across 2 files, all passing.
