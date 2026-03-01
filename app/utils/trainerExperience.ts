@@ -106,3 +106,14 @@ export const TRAINER_XP_SUGGESTIONS = {
   major: { label: 'Major', xp: 4, description: 'Significant non-milestone event' },
   critical: { label: 'Critical', xp: 5, description: 'Near-milestone battle or major story event' }
 } as const
+
+/**
+ * Maps encounter significance tiers to suggested trainer XP.
+ * PTU Core p.461: GM decides trainer XP, these are guidelines.
+ * Uses the same SignificanceTier type as encounterBudget.ts.
+ */
+export const SIGNIFICANCE_TO_TRAINER_XP: Record<string, number> = {
+  insignificant: 0,
+  everyday: 1,
+  significant: 3
+}
