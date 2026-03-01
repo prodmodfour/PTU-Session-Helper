@@ -11,7 +11,8 @@
  */
 
 import type { StatusCondition } from '~/types'
-import { PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS } from '~/constants/statusConditions'
+import { STATUS_CONDITION_DEFS } from '~/constants/statusConditions'
+import type { StatusConditionDef } from '~/constants/statusConditions'
 
 // Special conditions with specific modifiers
 const STUCK_CONDITIONS: StatusCondition[] = ['Stuck']
@@ -105,7 +106,8 @@ export function calculateCaptureRate(input: CaptureRateInput): CaptureRateResult
   const shinyModifier = isShiny ? -10 : 0
   const legendaryModifier = isLegendary ? -30 : 0
 
-  // Status condition modifiers
+  // Status condition modifiers — uses category from STATUS_CONDITION_DEFS (decree-038).
+  // Persistent = +10, Volatile = +5 per PTU capture rules.
   // Poisoned and Badly Poisoned are variants of the same affliction (PTU p.246);
   // only one should contribute +10 to capture rate, never both.
   let statusModifier = 0
@@ -114,7 +116,9 @@ export function calculateCaptureRate(input: CaptureRateInput): CaptureRateResult
   let hasPoisonBonus = false
 
   for (const condition of statusConditions) {
-    if (PERSISTENT_CONDITIONS.includes(condition)) {
+    const def: StatusConditionDef | undefined = STATUS_CONDITION_DEFS[condition]
+
+    if (def?.category === 'persistent') {
       if (condition === 'Poisoned' || condition === 'Badly Poisoned') {
         if (!hasPoisonBonus) {
           statusModifier += 10
@@ -123,7 +127,7 @@ export function calculateCaptureRate(input: CaptureRateInput): CaptureRateResult
       } else {
         statusModifier += 10
       }
-    } else if (VOLATILE_CONDITIONS.includes(condition)) {
+    } else if (def?.category === 'volatile') {
       statusModifier += 5
     }
 
