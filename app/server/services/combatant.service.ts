@@ -5,7 +5,7 @@
  * Entity builders (Prisma record → typed entity) live in entity-builder.service.ts.
  */
 
-import { ALL_STATUS_CONDITIONS, PERSISTENT_CONDITIONS, VOLATILE_CONDITIONS, getStatusCsEffect } from '~/constants/statusConditions'
+import { ALL_STATUS_CONDITIONS, FAINT_CLEARED_CONDITIONS, getStatusCsEffect } from '~/constants/statusConditions'
 import { getEffectiveMaxHp } from '~/utils/restHealing'
 import { v4 as uuidv4 } from 'uuid'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
@@ -161,26 +161,26 @@ export function applyDamageToEntity(
 }
 
 /**
- * Apply Fainted status to a combatant, clearing persistent/volatile conditions
- * and reversing their CS effects (decree-005, PTU p.248).
+ * Apply Fainted status to a combatant, clearing conditions with clearsOnFaint
+ * flag and reversing their CS effects (decree-005, decree-038, PTU p.248).
  *
  * Use this whenever a combatant faints from ANY source (damage, heavily injured
  * penalty, tick damage, etc.) to ensure consistent faint handling.
  */
 export function applyFaintStatus(combatant: Combatant): void {
   const entity = combatant.entity
-  const conditionsToClear = [...PERSISTENT_CONDITIONS, ...VOLATILE_CONDITIONS] as StatusCondition[]
+  const faintClearedSet = new Set<string>(FAINT_CLEARED_CONDITIONS)
 
   // Reverse CS effects from conditions being cleared (decree-005)
   const conditionsBeingCleared = (entity.statusConditions || []).filter(
-    (s: StatusCondition) => conditionsToClear.includes(s)
+    (s: StatusCondition) => faintClearedSet.has(s)
   )
   for (const condition of conditionsBeingCleared) {
     reverseStatusCsEffects(combatant, condition)
   }
 
   const survivingConditions = (entity.statusConditions || []).filter(
-    (s: StatusCondition) => !conditionsToClear.includes(s) && s !== 'Fainted'
+    (s: StatusCondition) => !faintClearedSet.has(s) && s !== 'Fainted'
   )
   entity.statusConditions = ['Fainted', ...survivingConditions]
 }
