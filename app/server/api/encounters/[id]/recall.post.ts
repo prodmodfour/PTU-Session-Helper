@@ -21,7 +21,8 @@ import {
   checkRecallRange,
   removeCombatantFromEncounter,
   markActionUsed,
-  checkRecallReleasePair
+  checkRecallReleasePair,
+  canSwitchedPokemonBeCommanded
 } from '~/server/services/switching.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
 import { RECALL_CLEARED_CONDITIONS } from '~/constants/statusConditions'
@@ -202,6 +203,19 @@ export default defineEventHandler(async (event) => {
 
     // Build final switch actions array
     const updatedSwitchActions = [...existingSwitchActions, ...newSwitchActions]
+
+    // Section N: Check if recall+release pair now forms a switch (recall after release)
+    const pairCheckAfter = checkRecallReleasePair(updatedSwitchActions, trainerId, record.currentRound)
+    if (pairCheckAfter.countsAsSwitch && isLeague) {
+      // Apply League switch restriction to previously released Pokemon
+      for (const releasedEntityId of pairCheckAfter.releasedEntityIds) {
+        const released = currentCombatants.find(c => c.entityId === releasedEntityId)
+        if (released) {
+          const canBeCommanded = canSwitchedPokemonBeCommanded(true, false, false)
+          released.turnState.canBeCommanded = canBeCommanded
+        }
+      }
+    }
 
     // Persist to DB
     const updatedRecord = await prisma.encounter.update({
