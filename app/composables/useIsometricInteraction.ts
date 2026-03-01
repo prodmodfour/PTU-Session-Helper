@@ -315,9 +315,14 @@ export function useIsometricInteraction(options: UseIsometricInteractionOptions)
     if (event.button === 0) {
       const gridPos = screenToGrid(event.clientX, event.clientY)
 
-      // Measurement mode
+      // Measurement mode — pass token metadata for edge-to-edge distance
       if (measurementStore.mode !== 'none') {
-        measurementStore.startMeasurement(gridPos)
+        const tokenAtStart = getTokenAtGridPosition(gridPos)
+        measurementStore.startMeasurement(
+          gridPos,
+          tokenAtStart?.position,
+          tokenAtStart?.size
+        )
         options.render()
         return
       }
@@ -458,9 +463,14 @@ export function useIsometricInteraction(options: UseIsometricInteractionOptions)
       }
     }
 
-    // Measurement mode
+    // Measurement mode — pass token metadata for edge-to-edge distance
     if (measurementStore.isActive) {
-      measurementStore.updateMeasurement(gridPos)
+      const tokenAtEnd = getTokenAtGridPosition(gridPos)
+      measurementStore.updateMeasurement(
+        gridPos,
+        tokenAtEnd?.position,
+        tokenAtEnd?.size
+      )
       options.render()
     }
 

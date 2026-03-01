@@ -164,7 +164,13 @@ export function useGridInteraction(options: UseGridInteractionOptions) {
 
       // If in measurement mode, start measuring
       if (measurementStore.mode !== 'none') {
-        measurementStore.startMeasurement(gridPos)
+        // Pass token metadata for edge-to-edge distance on multi-cell tokens
+        const tokenAtStart = getTokenAtPosition(gridPos)
+        measurementStore.startMeasurement(
+          gridPos,
+          tokenAtStart?.position,
+          tokenAtStart?.size
+        )
         options.render()
         return
       }
@@ -303,9 +309,14 @@ export function useGridInteraction(options: UseGridInteractionOptions) {
       }
     }
 
-    // Handle measurement mode
+    // Handle measurement mode — pass token metadata for edge-to-edge distance
     if (measurementStore.isActive) {
-      measurementStore.updateMeasurement(gridPos)
+      const tokenAtEnd = getTokenAtPosition(gridPos)
+      measurementStore.updateMeasurement(
+        gridPos,
+        tokenAtEnd?.position,
+        tokenAtEnd?.size
+      )
       options.render()
     }
 
