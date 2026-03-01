@@ -276,3 +276,10 @@
 | plan-20260301-084803/slave-3 | reviewers | feature-012-rereview | APPROVED | 2026-03-01T09:00:00Z | d0ceddf, b9b8d24 |
 | plan-20260301-084803/slave-4 | reviewers | feature-007-rereview | APPROVED | 2026-03-01T09:12:30Z | 0866d0c, 997d5d5 |
 | plan-20260301-084803/slave-5 | reviewers | feature-008-rereview | APPROVED | 2026-03-01T09:12:00Z | f477775, cc143c3 |
+| plan-20260301-093000/slave-1 | reviewers | feature-011-rereview | APPROVED | 2026-03-01T09:44:00Z | 836f0929, 3ebeb98d |
+| plan-20260301-093000/slave-2 | reviewers | feature-006-p1-review | CHANGES_REQUIRED | 2026-03-01T09:45:00Z | 9c2985b9, a5764aa7 |
+| plan-20260301-093000/slave-3 | developer | feature-007-p1 | success | 2026-03-01T09:46:00Z | d1cd4197, 2669e244, ef9b9e94, a20e2ff3, da1fcef5, 43d8c40d, c14dbddf, 1d7828fc, 555f9b74, dcf67640, 7ea7658e, 3bbbb00d, f6fb2051 |
+| plan-20260301-093000/slave-4 | developer | feature-008-p1 | success | 2026-03-01T09:47:00Z | 140af576, 190c2088, 29f3c602, 4a97f625, 2d11a86a, d2fe7f9c, 18a912ac, 2dceceed, e49cb3a5, 2b215c1a, 16aa4770 |
+| plan-20260301-093000/slave-5 | developer | feature-009-design | success | 2026-03-01T09:47:00Z | 91b73627 |
+| plan-20260301-093000/slave-6 | developer | feature-013-design | success | 2026-03-01T09:43:00Z | 63a87452 |
+| plan-20260301-093000/slave-7 | developer | feature-014-design | success | 2026-03-01T09:56:00Z | 8cce5c0e |
