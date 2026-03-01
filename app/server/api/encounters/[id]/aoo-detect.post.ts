@@ -108,8 +108,8 @@ export default defineEventHandler(async (event) => {
     const existingPending = JSON.parse(record.pendingActions || '[]')
     const allPending = [...existingPending, ...triggeredActions]
 
-    // Save to database
-    await prisma.encounter.update({
+    // Save to database and re-fetch to avoid stale record (MED-003)
+    const updatedRecord = await prisma.encounter.update({
       where: { id },
       data: {
         pendingActions: JSON.stringify(allPending)
@@ -127,7 +127,7 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const response = buildEncounterResponse(record, combatants, {
+    const response = buildEncounterResponse(updatedRecord, combatants, {
       pendingOutOfTurnActions: allPending
     })
 
