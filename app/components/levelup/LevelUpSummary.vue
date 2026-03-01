@@ -35,23 +35,6 @@
       </div>
     </div>
 
-    <!-- Skill Changes -->
-    <div v-if="skillChanges.length" class="summary-section">
-      <h4 class="summary-section__title">Skills</h4>
-      <div class="summary-section__list">
-        <div
-          v-for="change in skillChanges"
-          :key="change.name"
-          class="summary-item summary-item--changed"
-        >
-          <span class="summary-item__label">{{ change.name }}</span>
-          <span class="summary-item__value">
-            {{ change.from }} -> {{ change.to }}
-          </span>
-        </div>
-      </div>
-    </div>
-
     <!-- P1 Indicators -->
     <div v-if="p1Indicators.length" class="summary-section summary-section--p1">
       <h4 class="summary-section__title">Coming in P1</h4>
@@ -83,10 +66,18 @@
 </template>
 
 <script setup lang="ts">
-import type { Stats, SkillRank } from '~/types/character'
+import type { Stats } from '~/types/character'
 import type { StatPoints } from '~/composables/useCharacterCreation'
-import type { PtuSkillName } from '~/constants/trainerSkills'
 import type { TrainerAdvancementSummary } from '~/utils/trainerAdvancement'
+
+const statDefinitions = [
+  { key: 'hp' as const, label: 'HP' },
+  { key: 'attack' as const, label: 'Attack' },
+  { key: 'defense' as const, label: 'Defense' },
+  { key: 'specialAttack' as const, label: 'Sp. Attack' },
+  { key: 'specialDefense' as const, label: 'Sp. Defense' },
+  { key: 'speed' as const, label: 'Speed' }
+]
 
 interface Props {
   /** Character name */
@@ -100,9 +91,6 @@ interface Props {
   /** Current and updated maxHp */
   currentMaxHp: number
   updatedMaxHp: number
-  /** Skill rank choices */
-  skillChoices: PtuSkillName[]
-  currentSkills: Record<string, SkillRank>
   /** Warnings about incomplete allocations */
   warnings: string[]
   /** Advancement summary for P1 indicators */
@@ -110,19 +98,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-const RANK_PROGRESSION: readonly SkillRank[] = [
-  'Pathetic', 'Untrained', 'Novice', 'Adept', 'Expert', 'Master'
-] as const
-
-const statDefinitions = [
-  { key: 'hp' as const, label: 'HP' },
-  { key: 'attack' as const, label: 'Attack' },
-  { key: 'defense' as const, label: 'Defense' },
-  { key: 'specialAttack' as const, label: 'Sp. Attack' },
-  { key: 'specialDefense' as const, label: 'Sp. Defense' },
-  { key: 'speed' as const, label: 'Speed' }
-]
 
 /** Compute stat change rows */
 const statChanges = computed(() =>
@@ -135,27 +110,7 @@ const statChanges = computed(() =>
   }))
 )
 
-/** Compute skill change rows (only skills that changed) */
-const skillChanges = computed(() => {
-  // Track cumulative rank-ups per skill
-  const rankUps: Record<string, number> = {}
-  for (const skill of props.skillChoices) {
-    rankUps[skill] = (rankUps[skill] ?? 0) + 1
-  }
-
-  return Object.entries(rankUps).map(([skillName, ups]) => {
-    const baseRank = (props.currentSkills[skillName] as SkillRank) ?? 'Untrained'
-    const baseIndex = RANK_PROGRESSION.indexOf(baseRank)
-    const newIndex = Math.min(baseIndex + ups, RANK_PROGRESSION.length - 1)
-    return {
-      name: skillName,
-      from: baseRank,
-      to: RANK_PROGRESSION[newIndex]
-    }
-  })
-})
-
-/** P1 feature/edge/milestone indicators */
+/** P1 feature/edge/milestone/skill indicators */
 const p1Indicators = computed(() => {
   if (!props.summary) return []
   const indicators: string[] = []
@@ -163,7 +118,7 @@ const p1Indicators = computed(() => {
     indicators.push(`${props.summary.totalEdges} edge(s) to select (P1)`)
   }
   if (props.summary.bonusSkillEdges > 0) {
-    indicators.push(`${props.summary.bonusSkillEdges} bonus Skill Edge(s) to select (P1)`)
+    indicators.push(`${props.summary.bonusSkillEdges} bonus Skill Edge(s) to select — grants skill ranks (P1)`)
   }
   if (props.summary.totalFeatures > 0) {
     indicators.push(`${props.summary.totalFeatures} feature(s) to select (P1)`)
