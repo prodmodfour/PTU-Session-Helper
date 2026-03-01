@@ -79,3 +79,11 @@ This is a FULL-scope feature requiring a multi-tier design spec before implement
 | 2026-03-01 | 250c0b4 | P1 Fix: MEDIUM — extract buildSelectedMoveList to shared utility (deduplicate ConfirmModal/MoveStep) |
 | 2026-03-01 | b2cd8c2 | P1 Fix: MEDIUM — show ability effect descriptions in resolution dropdown |
 | 2026-03-01 | 3e0b77e | P1 Fix: MEDIUM — update app-surface.md with P1 evolution additions |
+| 2026-03-01 | e36f5b1 | P2: Everstone/Eviolite evolution prevention in eligibility check |
+| 2026-03-01 | 52878c5 | P2: Item consumption — stone from trainer inventory, held item clearing |
+| 2026-03-01 | f82bc48 | P2: Post-evolution undo — snapshot capture, undo endpoint, useEvolutionUndo composable |
+| 2026-03-01 | 1de3db6 | P2: Evolution history logging in Pokemon notes |
+| 2026-03-01 | 63633ee | P2: Gender-specific + move-specific evolution triggers (type, seed parser, check, service) |
+| 2026-03-01 | 339a0d9 | P2: UI — prevention alert, undo button, item consumption in evolve request |
+| 2026-03-01 | 4d4651e | P2: XpDistributionResults updated for P2 features |
+| 2026-03-01 | 35cb1af | P2: Expose requiredGender/requiredMove in evolution check response |
