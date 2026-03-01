@@ -448,6 +448,9 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
   /**
    * Draw all tokens in depth order (painter's algorithm).
    * Sprites are billboarded: drawn upright regardless of camera rotation.
+   *
+   * Multi-cell tokens sort by the center of their footprint so that
+   * larger tokens draw in the correct order relative to adjacent 1x1 tokens.
    */
   const drawTokens = (
     ctx: CanvasRenderingContext2D,
@@ -460,12 +463,16 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
     const combatants = options.combatants?.value
     if (!tokens || tokens.length === 0) return
 
-    // Sort tokens by depth for correct draw order
+    // Sort tokens by depth for correct draw order.
+    // Use center of NxN footprint for depth calculation so multi-cell
+    // tokens sort correctly against adjacent smaller tokens.
     const tokensWithDepth = tokens.map(token => {
       const elevation = options.getTokenElevation
         ? options.getTokenElevation(token.combatantId)
         : (token.elevation ?? 0)
-      const { rx, ry } = rotateCoords(token.position.x, token.position.y, angle, gridW, gridH)
+      const centerX = token.position.x + (token.size - 1) / 2
+      const centerY = token.position.y + (token.size - 1) / 2
+      const { rx, ry } = rotateCoords(centerX, centerY, angle, gridW, gridH)
       return { token, depth: rx + ry + elevation, elevation }
     })
     tokensWithDepth.sort((a, b) => a.depth - b.depth)
@@ -661,6 +668,8 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
 
   /**
    * Draw movement preview arrow in isometric space.
+   * Uses the center of the NxN footprint for both origin and destination
+   * so multi-cell tokens have correctly positioned arrows.
    */
   const drawMovementArrow = (
     ctx: CanvasRenderingContext2D,
@@ -670,6 +679,10 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
     gridH: number,
     cellSize: number
   ) => {
+    // Look up the token to get its footprint size
+    const token = options.tokens?.value?.find(t => t.combatantId === preview.combatantId)
+    const tokenSize = token?.size ?? 1
+
     const fromElev = options.getTokenElevation
       ? options.getTokenElevation(preview.combatantId)
       : 0
@@ -677,20 +690,37 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
       ? options.getTerrainElevation(preview.toPosition.x, preview.toPosition.y)
       : 0
 
+    // Use center of NxN footprint for arrow endpoints
+    const fromCenterX = preview.fromPosition.x + tokenSize / 2
+    const fromCenterY = preview.fromPosition.y + tokenSize / 2
+    const toCenterX = preview.toPosition.x + tokenSize / 2
+    const toCenterY = preview.toPosition.y + tokenSize / 2
+
     const from = worldToScreen(
-      preview.fromPosition.x + 0.5,
-      preview.fromPosition.y + 0.5,
-      fromElev,
+      fromCenterX, fromCenterY, fromElev,
       angle, gridW, gridH, cellSize
     )
     const to = worldToScreen(
-      preview.toPosition.x + 0.5,
-      preview.toPosition.y + 0.5,
-      toElev,
+      toCenterX, toCenterY, toElev,
       angle, gridW, gridH, cellSize
     )
 
     const color = preview.isValid ? VALID_MOVE_COLOR : INVALID_MOVE_COLOR
+    const bgColor = preview.isValid
+      ? 'rgba(0, 255, 255, 0.15)'
+      : 'rgba(255, 80, 80, 0.15)'
+
+    // Highlight all cells of the destination footprint (NxN)
+    for (let dx = 0; dx < tokenSize; dx++) {
+      for (let dy = 0; dy < tokenSize; dy++) {
+        drawCellHighlight(
+          ctx,
+          { x: preview.toPosition.x + dx, y: preview.toPosition.y + dy },
+          toElev, angle, gridW, gridH, cellSize,
+          bgColor, color
+        )
+      }
+    }
 
     // Dashed line
     ctx.save()
