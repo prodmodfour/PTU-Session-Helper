@@ -54,10 +54,38 @@ export interface EvolutionChanges {
   newSize: string
 }
 
+/** Complete pre-evolution snapshot for undo support */
+export interface PokemonSnapshot {
+  species: string
+  type1: string
+  type2: string | null
+  baseHp: number
+  baseAttack: number
+  baseDefense: number
+  baseSpAtk: number
+  baseSpDef: number
+  baseSpeed: number
+  currentAttack: number
+  currentDefense: number
+  currentSpAtk: number
+  currentSpDef: number
+  currentSpeed: number
+  maxHp: number
+  currentHp: number
+  spriteUrl: string | null
+  abilities: string
+  moves: string
+  capabilities: string
+  skills: string
+  heldItem: string | null
+}
+
 export interface EvolutionResult {
   success: boolean
   pokemon: Record<string, unknown>
   changes: EvolutionChanges
+  /** P2: Pre-evolution snapshot for undo support */
+  undoSnapshot: PokemonSnapshot
 }
 
 export interface ConsumeItemInput {
@@ -391,6 +419,32 @@ export async function performEvolution(input: PerformEvolutionInput): Promise<Ev
     }
   }
 
+  // 3b. Capture pre-evolution snapshot for undo (P2)
+  const undoSnapshot: PokemonSnapshot = {
+    species: pokemon.species,
+    type1: pokemon.type1,
+    type2: pokemon.type2,
+    baseHp: pokemon.baseHp,
+    baseAttack: pokemon.baseAttack,
+    baseDefense: pokemon.baseDefense,
+    baseSpAtk: pokemon.baseSpAtk,
+    baseSpDef: pokemon.baseSpDef,
+    baseSpeed: pokemon.baseSpeed,
+    currentAttack: pokemon.currentAttack,
+    currentDefense: pokemon.currentDefense,
+    currentSpAtk: pokemon.currentSpAtk,
+    currentSpDef: pokemon.currentSpDef,
+    currentSpeed: pokemon.currentSpeed,
+    maxHp: pokemon.maxHp,
+    currentHp: pokemon.currentHp,
+    spriteUrl: pokemon.spriteUrl,
+    abilities: pokemon.abilities,
+    moves: pokemon.moves,
+    capabilities: pokemon.capabilities,
+    skills: pokemon.skills,
+    heldItem: pokemon.heldItem
+  }
+
   // 4. Fetch the target species data
   const targetSpeciesData = await prisma.speciesData.findUnique({ where: { name: targetSpecies } })
   if (!targetSpeciesData) {
@@ -549,6 +603,7 @@ export async function performEvolution(input: PerformEvolutionInput): Promise<Ev
   return {
     success: true,
     pokemon: updated as unknown as Record<string, unknown>,
-    changes
+    changes,
+    undoSnapshot
   }
 }

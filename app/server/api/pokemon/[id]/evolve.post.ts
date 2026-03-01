@@ -207,7 +207,8 @@ export default defineEventHandler(async (event) => {
       success: true,
       data: {
         pokemon: result.pokemon,
-        changes: result.changes
+        changes: result.changes,
+        undoSnapshot: result.undoSnapshot
       }
     }
   } catch (error: unknown) {
