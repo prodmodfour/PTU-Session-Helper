@@ -215,6 +215,11 @@ export default defineEventHandler(async (event) => {
       if (currentPhase === 'trainer_resolution') {
         currentTurnIndex = skipUndeclaredTrainers(currentTurnIndex, turnOrder, declarations, currentRound)
       }
+      // Auto-skip Pokemon that cannot be commanded this round (P1 Section G)
+      // PTU p.229: switched-in Pokemon in League Battles cannot act unless forced/fainted switch
+      if (currentPhase === 'pokemon') {
+        currentTurnIndex = skipUncommandablePokemon(currentTurnIndex, turnOrder, combatants)
+      }
 
       if (currentTurnIndex >= turnOrder.length) {
         if (currentPhase === 'trainer_declaration') {
@@ -240,6 +245,8 @@ export default defineEventHandler(async (event) => {
                 currentPhase = 'pokemon'
                 turnOrder = [...pokemonTurnOrder]
                 currentTurnIndex = 0
+                // Skip uncommandable Pokemon at start of pokemon phase (P1 Section G)
+                currentTurnIndex = skipUncommandablePokemon(currentTurnIndex, turnOrder, combatants)
               } else {
                 // No pokemon either → new round
                 currentRound++
@@ -258,6 +265,8 @@ export default defineEventHandler(async (event) => {
               currentPhase = 'pokemon'
               turnOrder = [...pokemonTurnOrder]
               currentTurnIndex = 0
+              // Skip uncommandable Pokemon at start of pokemon phase (P1 Section G)
+              currentTurnIndex = skipUncommandablePokemon(currentTurnIndex, turnOrder, combatants)
             } else {
               // No trainers, no pokemon → new round
               currentRound++
@@ -273,6 +282,8 @@ export default defineEventHandler(async (event) => {
             currentPhase = 'pokemon'
             turnOrder = [...pokemonTurnOrder]
             currentTurnIndex = 0
+            // Skip uncommandable Pokemon at start of pokemon phase (P1 Section G)
+            currentTurnIndex = skipUncommandablePokemon(currentTurnIndex, turnOrder, combatants)
           } else {
             // No Pokemon → start new round with trainer declarations
             currentPhase = trainerTurnOrder.length > 0 ? 'trainer_declaration' : 'pokemon'
@@ -547,6 +558,37 @@ function skipUndeclaredTrainers(
     )
     if (hasDeclaration) break
     index++
+  }
+  return index
+}
+
+/**
+ * Auto-skip Pokemon that cannot be commanded this round (P1 Section G).
+ * PTU p.229: "they cannot command the Pokemon that was Released as part
+ * of the Switch for the remainder of the Round"
+ *
+ * This occurs when a Pokemon was switched in during a League Battle
+ * and the switch was NOT a fainted/forced switch.
+ * Skips only non-fainted Pokemon with canBeCommanded=false.
+ * Marks skipped Pokemon as having acted (they lose their turn).
+ */
+function skipUncommandablePokemon(
+  startIndex: number,
+  turnOrder: string[],
+  combatants: any[]
+): number {
+  let index = startIndex
+  while (index < turnOrder.length) {
+    const combatantId = turnOrder[index]
+    const combatant = combatants.find((c: any) => c.id === combatantId)
+    if (!combatant) { index++; continue }
+    // Only skip if cannot be commanded AND not fainted (fainted skip is separate)
+    if (combatant.turnState?.canBeCommanded === false && combatant.entity.currentHp > 0) {
+      combatant.hasActed = true
+      index++
+      continue
+    }
+    break
   }
   return index
 }
