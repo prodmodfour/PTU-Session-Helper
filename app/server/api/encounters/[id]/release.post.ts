@@ -85,6 +85,24 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: 'Trainer combatant not found' })
     }
 
+    // 2b. Turn validation: current combatant must be the trainer or one of their Pokemon
+    // PTU p.229: release can only be performed "on either the Trainer's or the Pokemon's Initiative"
+    const currentTurnCombatantId = turnOrder[record.currentTurnIndex]
+    if (currentTurnCombatantId) {
+      const isTrainerTurn = currentTurnCombatantId === trainerId
+      const isOwnedPokemonTurn = combatants.some(c =>
+        c.id === currentTurnCombatantId &&
+        c.type === 'pokemon' &&
+        (c.entity as { ownerId?: string }).ownerId === trainer.entityId
+      )
+      if (!isTrainerTurn && !isOwnedPokemonTurn) {
+        throw createError({
+          statusCode: 400,
+          message: 'Release can only be performed on the trainer\'s or their Pokemon\'s turn'
+        })
+      }
+    }
+
     // 3. Section N: Cannot release a Pokemon that was recalled this round
     const pairCheckBefore = checkRecallReleasePair(existingSwitchActions, trainerId, record.currentRound)
     for (const entityId of pokemonEntityIds) {

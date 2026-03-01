@@ -78,6 +78,25 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: 'Trainer combatant not found' })
     }
 
+    // 2b. Turn validation: current combatant must be the trainer or one of their Pokemon
+    // PTU p.229: recall can only be performed "on either the Trainer's or the Pokemon's Initiative"
+    const currentTurnCombatantId = turnOrder[record.currentTurnIndex]
+    if (currentTurnCombatantId) {
+      const isTrainerTurn = currentTurnCombatantId === trainerId
+      const isOwnedPokemonTurn = pokemonCombatantIds.includes(currentTurnCombatantId) ||
+        combatants.some(c =>
+          c.id === currentTurnCombatantId &&
+          c.type === 'pokemon' &&
+          (c.entity as { ownerId?: string }).ownerId === trainer.entityId
+        )
+      if (!isTrainerTurn && !isOwnedPokemonTurn) {
+        throw createError({
+          statusCode: 400,
+          message: 'Recall can only be performed on the trainer\'s or their Pokemon\'s turn'
+        })
+      }
+    }
+
     // 3-4. Validate each Pokemon
     for (const combatantId of pokemonCombatantIds) {
       const pokemon = combatants.find(c => c.id === combatantId)
