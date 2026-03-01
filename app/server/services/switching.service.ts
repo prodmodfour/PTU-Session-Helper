@@ -657,3 +657,119 @@ export function canSwitchedPokemonBeCommanded(
   // League Battle standard switch: cannot be commanded this round
   return false
 }
+
+// ============================================
+// ADJACENT PLACEMENT (P2 — Section L)
+// ============================================
+
+/**
+ * Find a grid position adjacent to the trainer for releasing a Pokemon.
+ * Checks all 8 surrounding cells (and further if all adjacent are occupied).
+ *
+ * PTU p.229: Released Pokemon is placed adjacent to the trainer
+ * when no recalled Pokemon position is available to inherit.
+ */
+export function findAdjacentPosition(
+  trainerPosition: GridPosition,
+  occupiedCells: Set<string>,
+  tokenSize: number,
+  gridWidth: number,
+  gridHeight: number
+): GridPosition {
+  // Check adjacent cells in priority order: right, below, left, above, then diagonals
+  const offsets = [
+    { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 },
+    { x: 1, y: 1 }, { x: -1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: -1 }
+  ]
+
+  for (const offset of offsets) {
+    const pos = {
+      x: trainerPosition.x + offset.x,
+      y: trainerPosition.y + offset.y
+    }
+    if (canFitAt(pos, tokenSize, gridWidth, gridHeight, occupiedCells)) {
+      return pos
+    }
+  }
+
+  // Expand search: try radius 2
+  for (let radius = 2; radius <= 5; radius++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        if (Math.abs(dx) < radius && Math.abs(dy) < radius) continue // Skip inner cells (already checked)
+        const pos = {
+          x: trainerPosition.x + dx,
+          y: trainerPosition.y + dy
+        }
+        if (canFitAt(pos, tokenSize, gridWidth, gridHeight, occupiedCells)) {
+          return pos
+        }
+      }
+    }
+  }
+
+  // Absolute fallback: trainer's position
+  return { x: trainerPosition.x, y: trainerPosition.y }
+}
+
+/**
+ * Check if a token of given size can fit at a position without
+ * overlapping occupied cells or exceeding grid bounds.
+ */
+function canFitAt(
+  pos: GridPosition,
+  tokenSize: number,
+  gridWidth: number,
+  gridHeight: number,
+  occupiedCells: Set<string>
+): boolean {
+  if (pos.x < 0 || pos.y < 0) return false
+  if (pos.x + tokenSize > gridWidth || pos.y + tokenSize > gridHeight) return false
+  for (let dx = 0; dx < tokenSize; dx++) {
+    for (let dy = 0; dy < tokenSize; dy++) {
+      if (occupiedCells.has(`${pos.x + dx},${pos.y + dy}`)) return false
+    }
+  }
+  return true
+}
+
+// ============================================
+// RECALL+RELEASE PAIR DETECTION (P2 — Section N)
+// ============================================
+
+/**
+ * Check if a trainer has performed both a recall and a release this round.
+ * If so, the combined actions count as a Switch for League restriction purposes.
+ *
+ * Also enforces: cannot Recall and Release the same Pokemon in one round.
+ *
+ * PTU p.229: "Recalling and then Releasing by using two Shift Actions in
+ * one Round still counts as a Switch, even if they are declared as separate
+ * actions, and you may not do this to Recall and then Release the same
+ * Pokemon in one round."
+ */
+export function checkRecallReleasePair(
+  switchActions: SwitchAction[],
+  trainerId: string,
+  round: number
+): {
+  countsAsSwitch: boolean
+  recalledEntityIds: string[]
+  releasedEntityIds: string[]
+} {
+  const trainerActions = switchActions.filter(
+    a => a.trainerId === trainerId && a.round === round
+  )
+
+  const recalledEntityIds = trainerActions
+    .filter(a => a.recalledEntityId !== null)
+    .map(a => a.recalledEntityId!)
+
+  const releasedEntityIds = trainerActions
+    .filter(a => a.releasedEntityId !== null)
+    .map(a => a.releasedEntityId!)
+
+  const countsAsSwitch = recalledEntityIds.length > 0 && releasedEntityIds.length > 0
+
+  return { countsAsSwitch, recalledEntityIds, releasedEntityIds }
+}
