@@ -36,16 +36,20 @@ export function categorizeAbilities(
   speciesAbilities: string[],
   numBasicAbilities: number
 ): CategorizedAbility[] {
+  // High ability exists only when there are entries beyond Basic AND Advanced
+  // i.e., length must be strictly greater than numBasicAbilities + 1
+  // (at least one Basic, at least one Advanced, and one High)
+  const hasHighAbility = speciesAbilities.length > numBasicAbilities + 1
+
   return speciesAbilities.map((name, index) => {
     let category: AbilityCategory
 
     if (index < numBasicAbilities) {
       category = 'Basic'
-    } else if (index < speciesAbilities.length - 1) {
+    } else if (!hasHighAbility || index < speciesAbilities.length - 1) {
       category = 'Advanced'
     } else {
-      // Last ability is High (when there are abilities beyond Basic)
-      category = speciesAbilities.length > numBasicAbilities ? 'High' : 'Basic'
+      category = 'High'
     }
 
     return { name, category }
