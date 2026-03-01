@@ -1,14 +1,14 @@
 ---
-generated_at: 2026-03-01T16:42:26.582Z
-total_tickets: 251
-open: 30
+generated_at: 2026-03-01T18:00:59.406Z
+total_tickets: 253
+open: 32
 in_progress: 102
 resolved: 105
 ---
 
 # Tickets Index
 
-## Open Tickets (30)
+## Open Tickets (32)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
@@ -21,6 +21,7 @@ resolved: 105
 | feature-021 | feature | P2 | character-lifecycle | feature-021: Derived Capability Calculations |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
 | feature-023 | feature | P2 | player-view+capture+healing | feature-023: Player Capture & Healing Interfaces |
+| decree-need-039 | decree | P2 | combat | Decree-Need-039: Flanking evasion penalty application order  |
 | bug-041 | bug | P3 | — | bug-041: Remove Whirlwind references from Force Switch UI pe |
 | ptu-rule-129 | ptu-rule | P3 | combat | ptu-rule-129: Roar's forced recall must respect the Trapped  |
 | feature-004 | feature | P3 | combat | feature-004: Pokemon Mounting / Rider System |
@@ -42,6 +43,7 @@ resolved: 105
 | refactoring-101 | refactoring | P4 | pokemon-lifecycle | Deduplicate type-badge SCSS across evolution components |
 | refactoring-102 | refactoring | P4 | pokemon-lifecycle | Extract EvolutionSelectionModal from duplicated branching ev |
 | refactoring-105 | refactoring | P4 | combat | Remove Spurious 'Bound' Condition Check from Trapped Validat |
+| refactoring-115 | refactoring | P4 | combat | Refactoring-115: switching.service.ts exceeds 800-line limit |
 
 ## In-Progress Tickets (102)
 
@@ -150,9 +152,11 @@ resolved: 105
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (1)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-039 | P2 | combat | — |
 
 ## Summary by Category
 
@@ -162,5 +166,5 @@ All decree-needs addressed.
 | ptu-rule | 7 | 59 | 36 | 103 |
 | feature | 8 | 11 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
-| decree | 0 | 0 | 38 | 38 |
-| refactoring | 9 | 13 | 0 | 31 |
+| decree | 1 | 0 | 38 | 39 |
+| refactoring | 10 | 13 | 0 | 32 |

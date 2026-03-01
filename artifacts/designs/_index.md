@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-01T16:42:26.585Z
+generated_at: 2026-03-01T18:00:59.409Z
 total_designs: 23
 ---
 
@@ -28,5 +28,5 @@ total_designs: 23
 | design-testability-001 | combat | implemented | — | PARTIAL | FEATURE_GAP |
 | design-trainer-level-up-001 | character-lifecycle | p1-fix-applied | feature-008 | FULL | FEATURE_GAP |
 | design-trainer-sprites-001 | character-lifecycle | implemented | feature-001 | SINGLE_PHASE | FEATURE_GAP |
-| design-trainer-xp-001 | character-lifecycle | p0-implemented | feature-009 | FULL | FEATURE_GAP |
+| design-trainer-xp-001 | character-lifecycle | p1-implemented | feature-009 | FULL | FEATURE_GAP |
 | design-xp-system-001 | pokemon-lifecycle | implemented | ptu-rule-055 | FULL | FEATURE_GAP |
