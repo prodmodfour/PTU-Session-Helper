@@ -6,7 +6,12 @@
           <h2>Level Up: {{ character.name }}</h2>
           <span class="level-badge">Level {{ character.level }} -> {{ targetLevel }}</span>
         </div>
-        <button class="modal__close" @click="$emit('cancel')">x</button>
+        <div class="modal__header-right">
+          <span class="step-indicator">
+            {{ currentStepLabel }} ({{ currentStepIndex + 1 }}/{{ steps.length }})
+          </span>
+          <button class="modal__close" @click="$emit('cancel')">x</button>
+        </div>
       </div>
 
       <div class="modal__body">
@@ -14,19 +19,30 @@
         <div v-if="summary" class="advancement-banner">
           <div class="advancement-banner__item">
             <span class="advancement-banner__label">Stat Points</span>
-            <span class="advancement-banner__value">+{{ summary.totalStatPoints }}</span>
+            <span class="advancement-banner__value">+{{ levelUp.statPointsTotal.value }}</span>
           </div>
-          <div v-if="summary.totalEdges > 0" class="advancement-banner__item advancement-banner__item--p1">
-            <span class="advancement-banner__label">Edges (P1)</span>
-            <span class="advancement-banner__value">+{{ summary.totalEdges }}</span>
+          <div v-if="levelUp.regularEdgesTotal.value > 0 || levelUp.bonusSkillEdgeEntries.value.length > 0" class="advancement-banner__item">
+            <span class="advancement-banner__label">Edges</span>
+            <span class="advancement-banner__value">+{{ levelUp.regularEdgesTotal.value + levelUp.bonusSkillEdgeEntries.value.length }}</span>
           </div>
-          <div v-if="summary.totalFeatures > 0" class="advancement-banner__item advancement-banner__item--p1">
-            <span class="advancement-banner__label">Features (P1)</span>
-            <span class="advancement-banner__value">+{{ summary.totalFeatures }}</span>
+          <div v-if="levelUp.featuresTotal.value > 0" class="advancement-banner__item">
+            <span class="advancement-banner__label">Features</span>
+            <span class="advancement-banner__value">+{{ levelUp.featuresTotal.value }}</span>
+          </div>
+          <div v-if="summary.milestones.length > 0" class="advancement-banner__item">
+            <span class="advancement-banner__label">Milestones</span>
+            <span class="advancement-banner__value">{{ summary.milestones.length }}</span>
           </div>
         </div>
 
         <!-- Step Content -->
+        <LevelUpMilestoneSection
+          v-if="currentStep === 'milestones'"
+          :milestones="summary?.milestones ?? []"
+          :milestone-choices="levelUp.milestoneChoices.value"
+          @set-milestone-choice="levelUp.setMilestoneChoice"
+        />
+
         <LevelUpStatSection
           v-if="currentStep === 'stats'"
           :current-stats="character.stats"
@@ -40,6 +56,52 @@
           @decrement-stat="levelUp.decrementStat"
         />
 
+        <LevelUpSkillSection
+          v-if="currentStep === 'skills'"
+          :current-skills="character.skills"
+          :skill-choices="[]"
+          :total-ranks="0"
+          :ranks-remaining="0"
+          :target-level="targetLevel"
+          :caps-unlocked="summary?.skillRankCapsUnlocked ?? []"
+          :get-effective-skill-rank="levelUp.getEffectiveSkillRank"
+          :can-rank-up-skill="() => false"
+        />
+
+        <LevelUpEdgeSection
+          v-if="currentStep === 'edges'"
+          :effective-skills="levelUp.effectiveSkills.value"
+          :regular-edges-total="levelUp.regularEdgesTotal.value"
+          :bonus-skill-edges="levelUp.bonusSkillEdgeEntries.value"
+          :edge-choices="levelUp.edgeChoices.value"
+          :bonus-skill-edge-choices="levelUp.bonusSkillEdgeChoices.value"
+          :target-level="targetLevel"
+          @add-edge="levelUp.addEdge"
+          @remove-edge="levelUp.removeEdge"
+          @add-bonus-skill-edge="levelUp.addBonusSkillEdge"
+          @remove-bonus-skill-edge="levelUp.removeBonusSkillEdge"
+        />
+
+        <LevelUpFeatureSection
+          v-if="currentStep === 'features'"
+          :current-features="character.features"
+          :feature-choices="levelUp.featureChoices.value"
+          :total-features="levelUp.featuresTotal.value"
+          :trainer-classes="[...character.trainerClasses, ...levelUp.newClassChoices.value]"
+          @add-feature="levelUp.addFeature"
+          @remove-feature="levelUp.removeFeature"
+        />
+
+        <LevelUpClassSection
+          v-if="currentStep === 'classes'"
+          :current-classes="character.trainerClasses"
+          :max-classes="MAX_TRAINER_CLASSES"
+          :class-choice-levels="levelUp.classChoiceLevels.value"
+          :new-class-choices="levelUp.newClassChoices.value"
+          @add-class="levelUp.addClass"
+          @remove-class="levelUp.removeClass"
+        />
+
         <LevelUpSummary
           v-if="currentStep === 'summary'"
           :character-name="character.name"
@@ -51,6 +113,12 @@
           :updated-max-hp="levelUp.updatedMaxHp.value"
           :warnings="levelUp.warnings.value"
           :summary="summary"
+          :edge-choices="levelUp.edgeChoices.value"
+          :bonus-skill-edge-choices="levelUp.bonusSkillEdgeChoices.value"
+          :feature-choices="levelUp.featureChoices.value"
+          :new-class-choices="levelUp.newClassChoices.value"
+          :milestone-choices="levelUp.milestoneChoices.value"
+          :current-skills="character.skills"
         />
       </div>
 
@@ -91,6 +159,7 @@
 <script setup lang="ts">
 import type { HumanCharacter } from '~/types/character'
 import type { TrainerAdvancementSummary } from '~/utils/trainerAdvancement'
+import { MAX_TRAINER_CLASSES } from '~/constants/trainerClasses'
 
 interface Props {
   /** The character being leveled up (current state) */
@@ -125,22 +194,59 @@ onUnmounted(() => {
 const summary = computed((): TrainerAdvancementSummary | null => levelUp.summary.value)
 
 // --- Step Navigation ---
-// P0 steps: stats -> summary
-// P1 will add: edges (includes Skill Edge rank allocation per decree-037), features, classes, milestones
+// Order: milestones (if any) -> stats -> skills -> edges (if any) -> features (if any) -> classes (if any) -> summary
+// Milestones first because they affect edge/feature/stat counts.
 const steps = computed((): string[] => {
-  const s = ['stats']
-  // P1 additions:
-  // if (summary.value && (summary.value.totalEdges > 0 || summary.value.bonusSkillEdges > 0)) s.push('edges')
-  // if (summary.value && summary.value.totalFeatures > 0) s.push('features')
-  // if (summary.value && summary.value.classChoicePrompts.length > 0) s.push('classes')
-  // if (summary.value && summary.value.milestones.length > 0) s.push('milestones')
+  const s: string[] = []
+
+  // Milestones first (they affect edge/feature counts)
+  if (summary.value && summary.value.milestones.length > 0) {
+    s.push('milestones')
+  }
+
+  // Stats (always present)
+  s.push('stats')
+
+  // Skills (always present -- read-only overview of caps per decree-037)
+  s.push('skills')
+
+  // Edges (if any even levels crossed or bonus Skill Edges)
+  if (summary.value && (summary.value.totalEdges > 0 || summary.value.bonusSkillEdges > 0)) {
+    s.push('edges')
+  }
+
+  // Features (if any odd levels 3+ crossed or milestone bonus features)
+  if (summary.value && summary.value.totalFeatures > 0) {
+    s.push('features')
+  }
+
+  // Class choice (if levels 5 or 10 crossed)
+  if (summary.value && summary.value.classChoicePrompts.length > 0) {
+    s.push('classes')
+  }
+
+  // Summary always last
   s.push('summary')
+
   return s
 })
+
+/** Human-readable step label for the header indicator */
+const STEP_LABELS: Record<string, string> = {
+  milestones: 'Milestones',
+  stats: 'Stats',
+  skills: 'Skills',
+  edges: 'Edges',
+  features: 'Features',
+  classes: 'Classes',
+  summary: 'Summary'
+}
 
 const currentStepIndex = ref(0)
 
 const currentStep = computed(() => steps.value[currentStepIndex.value] ?? 'stats')
+
+const currentStepLabel = computed(() => STEP_LABELS[currentStep.value] ?? currentStep.value)
 
 const hasPreviousStep = computed(() => currentStepIndex.value > 0)
 const hasNextStep = computed(() => currentStepIndex.value < steps.value.length - 1)
@@ -199,6 +305,12 @@ function applyLevelUp(): void {
     }
   }
 
+  &__header-right {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
   &__close {
     background: none;
     border: none;
@@ -246,6 +358,15 @@ function applyLevelUp(): void {
   border-radius: $border-radius-sm;
 }
 
+.step-indicator {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-tertiary;
+  border: 1px solid $border-color-default;
+  border-radius: $border-radius-sm;
+}
+
 .advancement-banner {
   display: flex;
   gap: $spacing-md;
@@ -263,11 +384,6 @@ function applyLevelUp(): void {
     padding: $spacing-sm;
     background: $color-bg-tertiary;
     border-radius: $border-radius-sm;
-
-    &--p1 {
-      opacity: 0.5;
-      border: 1px dashed $border-color-default;
-    }
   }
 
   &__label {
