@@ -1,21 +1,21 @@
 ---
-generated_at: 2026-02-28T22:29:13.772Z
-total_tickets: 227
-open: 21
+generated_at: 2026-03-01T08:33:12.617Z
+total_tickets: 229
+open: 23
 in_progress: 96
 resolved: 103
 ---
 
 # Tickets Index
 
-## Open Tickets (21)
+## Open Tickets (23)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| ptu-rule-127 | ptu-rule | P1 | character-lifecycle | Per decree-037, trainers should NOT receive an automatic +1  |
 | feature-009 | feature | P1 | character-lifecycle | feature-009: Trainer XP & Advancement Tracking |
 | feature-013 | feature | P1 | vtt-grid | feature-013: Multi-Tile Token System |
 | feature-014 | feature | P1 | vtt-grid+combat | feature-014: VTT Flanking Detection |
-| decree-need-028 | decree | P1 | character-lifecycle | decree-need-028: Automatic Skill Rank Per Level vs Edge-Base |
 | feature-016 | feature | P2 | combat+vtt-grid | feature-016: Priority / Interrupt / Attack of Opportunity Sy |
 | feature-017 | feature | P2 | capture | feature-017: Poke Ball Type System |
 | feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
@@ -33,6 +33,8 @@ resolved: 103
 | ux-011 | ux | P4 | character-lifecycle | ux-011: Custom item form missing grantedCapabilities input f |
 | refactoring-099 | refactoring | P4 | — | refactoring-099: Extract XP actions from encounter.ts store  |
 | refactoring-100 | refactoring | P4 | — | When a combatant faints from any damage source, `applyDamage |
+| refactoring-101 | refactoring | P4 | pokemon-lifecycle | Deduplicate type-badge SCSS across evolution components |
+| refactoring-102 | refactoring | P4 | pokemon-lifecycle | Extract EvolutionSelectionModal from duplicated branching ev |
 
 ## In-Progress Tickets (96)
 
@@ -135,19 +137,17 @@ resolved: 103
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-028 | P1 | character-lifecycle | automatic-skill-rank-per-level |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 0 | 12 | 26 | 40 |
-| ptu-rule | 3 | 58 | 36 | 98 |
+| ptu-rule | 4 | 58 | 36 | 99 |
 | feature | 12 | 7 | 3 | 23 |
 | ux | 3 | 7 | 2 | 12 |
-| decree | 1 | 0 | 36 | 37 |
-| refactoring | 2 | 12 | 0 | 17 |
+| decree | 0 | 0 | 36 | 36 |
+| refactoring | 4 | 12 | 0 | 19 |

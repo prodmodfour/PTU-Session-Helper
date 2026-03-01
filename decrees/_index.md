@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-02-28T22:29:13.789Z
-total_decrees: 36
-active: 36
+generated_at: 2026-03-01T08:33:12.623Z
+total_decrees: 37
+active: 37
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (36)
+## Active Decrees (37)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -47,3 +47,4 @@ superseded: 0
 | decree-034 | combat | roar-recall-range-and-whirlwind-push | Roar uses its own 6m recall range; Whirlwind is a push, not a forced switch |
 | decree-035 | pokemon-lifecycle | base-relations-nature-adjusted | Use nature-adjusted base stats for Base Relations ordering |
 | decree-036 | pokemon-lifecycle | stone-evolution-move-learning | Stone evolutions learn new-form moves at or below current level |
+| decree-037 | character-lifecycle | skill-ranks-via-edges-only | Skill ranks come from Edge slots only, not automatic per-level grants |
