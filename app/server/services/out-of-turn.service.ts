@@ -1,23 +1,24 @@
 /**
  * Out-of-Turn Action Service (feature-016)
  *
- * Central service for Attack of Opportunity detection, eligibility, and resolution.
- * Pure functions where possible. All five AoO trigger types from PTU p.241.
+ * Central service for all out-of-turn action mechanics:
+ * - Attack of Opportunity (P0): detection, eligibility, resolution
+ * - Hold Action (P1): declare hold, release held, check hold queue
+ * - Priority Actions (P1): standard, limited, advanced variants
+ * - Interrupt Actions (P1): generic framework for interrupt triggers
  *
- * PTU p.241 AoO rules:
- * - Free Action + Interrupt triggered by specific adjacent-foe actions
- * - Struggle Attack (AC 4, 1d8+6 Physical Typeless Melee)
- * - Once per round per combatant
- * - Cannot be used by Sleeping, Flinched, or Paralyzed combatants
- * - AoO itself does NOT trigger further AoOs (no recursion)
+ * Pure functions where possible. All five AoO trigger types from PTU p.241.
  */
 
 import { v4 as uuidv4 } from 'uuid'
 import type { Combatant, GridPosition } from '~/types'
 import type {
   AoOTrigger,
+  InterruptTrigger,
   OutOfTurnAction,
-  OutOfTurnUsage
+  OutOfTurnUsage,
+  OutOfTurnCategory,
+  HoldActionState
 } from '~/types/combat'
 import { AOO_BLOCKING_CONDITIONS } from '~/types/combat'
 import { AOO_TRIGGER_MAP } from '~/constants/aooTriggers'
@@ -327,6 +328,320 @@ export function cleanupResolvedActions(
     // Keep resolved/declined/expired actions from the current round only
     return action.round === currentRound
   })
+}
+
+// ============================================
+// HOLD ACTION (P1 — PTU p.227)
+// ============================================
+
+/**
+ * Get default HoldActionState.
+ */
+export function getDefaultHoldActionState(): HoldActionState {
+  return {
+    isHolding: false,
+    holdUntilInitiative: null,
+    holdUsedThisRound: false
+  }
+}
+
+/**
+ * Check if a combatant can hold their action.
+ * PTU p.227: Can only hold once per round, must be on their turn, and must not have acted.
+ */
+export function canHoldAction(combatant: Combatant): { allowed: boolean; reason?: string } {
+  // Must not have acted yet this turn
+  if (combatant.hasActed) {
+    return { allowed: false, reason: 'Combatant has already acted this turn' }
+  }
+
+  // Must not have HP <= 0
+  if (combatant.entity.currentHp <= 0) {
+    return { allowed: false, reason: 'Fainted combatants cannot hold actions' }
+  }
+
+  // Check once-per-round hold limit
+  const holdState = combatant.holdAction ?? getDefaultHoldActionState()
+  if (holdState.holdUsedThisRound) {
+    return { allowed: false, reason: 'Hold action already used this round' }
+  }
+
+  // Cannot hold if already holding (shouldn't happen, but safety)
+  if (holdState.isHolding) {
+    return { allowed: false, reason: 'Already holding an action' }
+  }
+
+  return { allowed: true }
+}
+
+/**
+ * Apply a hold action to a combatant.
+ * Returns updated combatant and new hold queue entry.
+ * Does NOT mutate inputs.
+ */
+export function applyHoldAction(
+  combatant: Combatant,
+  holdUntilInitiative: number | null
+): {
+  updatedCombatant: Combatant
+  holdQueueEntry: { combatantId: string; holdUntilInitiative: number | null }
+} {
+  const updatedCombatant: Combatant = {
+    ...combatant,
+    turnState: {
+      ...combatant.turnState,
+      isHolding: true
+    },
+    holdAction: {
+      isHolding: true,
+      holdUntilInitiative,
+      holdUsedThisRound: true
+    },
+    // Mark as acted so turn progression can advance past them
+    hasActed: true
+  }
+
+  return {
+    updatedCombatant,
+    holdQueueEntry: {
+      combatantId: combatant.id,
+      holdUntilInitiative
+    }
+  }
+}
+
+/**
+ * Release a held action. Returns updated combatant with full action economy.
+ * Does NOT mutate input.
+ */
+export function releaseHeldAction(combatant: Combatant): Combatant {
+  return {
+    ...combatant,
+    turnState: {
+      ...combatant.turnState,
+      isHolding: false,
+      hasActed: false,
+      standardActionUsed: false,
+      shiftActionUsed: false,
+      swiftActionUsed: false
+    },
+    holdAction: {
+      ...(combatant.holdAction ?? getDefaultHoldActionState()),
+      isHolding: false
+    },
+    hasActed: false,
+    actionsRemaining: 2,
+    shiftActionsRemaining: 1
+  }
+}
+
+/**
+ * Check the hold queue to see if any held combatants should be released.
+ * Returns the first combatant whose holdUntilInitiative has been reached
+ * by the current initiative value.
+ *
+ * Per decree-006: holdUntilInitiative is an absolute initiative value,
+ * not a position in the turn order.
+ */
+export function checkHoldQueue(
+  holdQueue: Array<{ combatantId: string; holdUntilInitiative: number | null }>,
+  currentInitiative: number
+): { combatantId: string } | null {
+  for (const entry of holdQueue) {
+    if (entry.holdUntilInitiative !== null && currentInitiative <= entry.holdUntilInitiative) {
+      return { combatantId: entry.combatantId }
+    }
+  }
+  return null
+}
+
+/**
+ * Remove a combatant from the hold queue. Returns new array.
+ */
+export function removeFromHoldQueue(
+  holdQueue: Array<{ combatantId: string; holdUntilInitiative: number | null }>,
+  combatantId: string
+): Array<{ combatantId: string; holdUntilInitiative: number | null }> {
+  return holdQueue.filter(entry => entry.combatantId !== combatantId)
+}
+
+// ============================================
+// PRIORITY ACTIONS (P1 — PTU p.228)
+// ============================================
+
+/**
+ * Check if a combatant can use a Priority action.
+ *
+ * Standard: must not have acted, once per round
+ * Limited: must not have acted, once per round
+ * Advanced: once per round (CAN have already acted)
+ */
+export function canUsePriority(
+  combatant: Combatant,
+  variant: 'standard' | 'limited' | 'advanced'
+): { allowed: boolean; reason?: string } {
+  // Must have HP > 0
+  if (combatant.entity.currentHp <= 0) {
+    return { allowed: false, reason: 'Fainted combatants cannot use Priority' }
+  }
+
+  // Once per round
+  const usage = combatant.outOfTurnUsage ?? getDefaultOutOfTurnUsage()
+  if (usage.priorityUsed) {
+    return { allowed: false, reason: 'Priority already used this round' }
+  }
+
+  // Standard and Limited require the combatant has not acted
+  if (variant !== 'advanced' && combatant.hasActed) {
+    return { allowed: false, reason: 'Combatant has already acted this round' }
+  }
+
+  // Cannot use Priority while holding (F2 edge case)
+  const holdState = combatant.holdAction ?? getDefaultHoldActionState()
+  if (holdState.isHolding) {
+    return { allowed: false, reason: 'Cannot use Priority while holding an action' }
+  }
+
+  return { allowed: true }
+}
+
+/**
+ * Apply a Standard Priority action.
+ * The combatant gets a full turn immediately. Their original position
+ * in the turn order should be skipped.
+ * Returns updated combatant.
+ */
+export function applyStandardPriority(combatant: Combatant): Combatant {
+  return {
+    ...combatant,
+    outOfTurnUsage: {
+      ...(combatant.outOfTurnUsage ?? getDefaultOutOfTurnUsage()),
+      priorityUsed: true
+    },
+    // Full action economy for the inserted turn
+    hasActed: false,
+    actionsRemaining: 2,
+    shiftActionsRemaining: 1,
+    turnState: {
+      ...combatant.turnState,
+      hasActed: false,
+      standardActionUsed: false,
+      shiftActionUsed: false,
+      swiftActionUsed: false,
+      isHolding: false
+    }
+  }
+}
+
+/**
+ * Apply a Limited Priority action.
+ * Only the Priority action is taken (Standard Action consumed).
+ * Rest of turn happens at normal initiative.
+ * Returns updated combatant.
+ */
+export function applyLimitedPriority(combatant: Combatant): Combatant {
+  return {
+    ...combatant,
+    outOfTurnUsage: {
+      ...(combatant.outOfTurnUsage ?? getDefaultOutOfTurnUsage()),
+      priorityUsed: true
+    },
+    turnState: {
+      ...combatant.turnState,
+      standardActionUsed: true
+    }
+  }
+}
+
+/**
+ * Apply an Advanced Priority action.
+ * Only the Priority action is taken. If the combatant has already acted,
+ * they forfeit their next round turn (skipNextRound = true).
+ * Returns updated combatant.
+ */
+export function applyAdvancedPriority(combatant: Combatant): Combatant {
+  const alreadyActed = combatant.hasActed
+  return {
+    ...combatant,
+    outOfTurnUsage: {
+      ...(combatant.outOfTurnUsage ?? getDefaultOutOfTurnUsage()),
+      priorityUsed: true
+    },
+    // If they already acted, they forfeit next round
+    skipNextRound: alreadyActed ? true : combatant.skipNextRound
+  }
+}
+
+// ============================================
+// INTERRUPT ACTIONS (P1 — PTU p.228)
+// ============================================
+
+/**
+ * Check if a combatant can use an Interrupt action.
+ * Once per round. Cannot use if fainted.
+ */
+export function canUseInterrupt(combatant: Combatant): { allowed: boolean; reason?: string } {
+  // Must have HP > 0
+  if (combatant.entity.currentHp <= 0) {
+    return { allowed: false, reason: 'Fainted combatants cannot use Interrupt' }
+  }
+
+  // Once per round
+  const usage = combatant.outOfTurnUsage ?? getDefaultOutOfTurnUsage()
+  if (usage.interruptUsed) {
+    return { allowed: false, reason: 'Interrupt already used this round' }
+  }
+
+  return { allowed: true }
+}
+
+/**
+ * Create a pending Interrupt action.
+ * Returns a new OutOfTurnAction in 'pending' status for GM resolution.
+ */
+export function createInterruptAction(
+  actorId: string,
+  triggerId: string,
+  triggerType: InterruptTrigger,
+  triggerDescription: string,
+  round: number,
+  triggerContext?: OutOfTurnAction['triggerContext']
+): OutOfTurnAction {
+  return {
+    id: uuidv4(),
+    category: 'interrupt',
+    actorId,
+    triggerId,
+    triggerType,
+    triggerDescription,
+    round,
+    status: 'pending',
+    triggerContext
+  }
+}
+
+/**
+ * Mark a combatant as having used their Interrupt this round.
+ * Returns updated combatant. Does NOT mutate input.
+ *
+ * Per spec F3: In League Battles, if a Pokemon uses an Interrupt,
+ * it gives up its turn next round (skipNextRound = true).
+ */
+export function applyInterruptUsage(
+  combatant: Combatant,
+  isLeagueBattle: boolean
+): Combatant {
+  return {
+    ...combatant,
+    outOfTurnUsage: {
+      ...(combatant.outOfTurnUsage ?? getDefaultOutOfTurnUsage()),
+      interruptUsed: true
+    },
+    // League Battle Pokemon forfeit next round turn (F3)
+    skipNextRound: isLeagueBattle && combatant.type === 'pokemon'
+      ? true
+      : combatant.skipNextRound
+  }
 }
 
 // ============================================
