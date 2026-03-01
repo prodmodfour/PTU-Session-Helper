@@ -10,6 +10,8 @@
 
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
 import { sortByInitiativeWithRollOff } from '~/server/services/encounter.service'
+import { prisma } from '~/server/utils/prisma'
+import { RECALL_CLEARED_CONDITIONS } from '~/constants/statusConditions'
 import type { Combatant } from '~/types'
 import type { SwitchAction } from '~/types/combat'
 import type { GridPosition } from '~/types/spatial'
@@ -731,6 +733,36 @@ function canFitAt(
     }
   }
   return true
+}
+
+// ============================================
+// RECALL SIDE-EFFECTS
+// ============================================
+
+/**
+ * Apply recall side-effects to a Pokemon's DB record.
+ * PTU p.247-248: volatile conditions cleared, temp HP lost, combat stages reset.
+ *
+ * Shared by switch.post.ts and recall.post.ts to avoid duplicated logic.
+ */
+export async function applyRecallSideEffects(entityId: string): Promise<void> {
+  const dbRecord = await prisma.pokemon.findUnique({
+    where: { id: entityId }
+  })
+  if (!dbRecord) return
+
+  const currentStatuses: string[] = JSON.parse(dbRecord.statusConditions || '[]')
+  const recallClearedSet = new Set(RECALL_CLEARED_CONDITIONS as string[])
+  const persistentOnly = currentStatuses.filter(s => !recallClearedSet.has(s))
+
+  await prisma.pokemon.update({
+    where: { id: entityId },
+    data: {
+      statusConditions: JSON.stringify(persistentOnly),
+      temporaryHp: 0,
+      stageModifiers: JSON.stringify({})
+    }
+  })
 }
 
 // ============================================

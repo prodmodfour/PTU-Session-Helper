@@ -22,10 +22,10 @@ import {
   removeCombatantFromEncounter,
   markActionUsed,
   checkRecallReleasePair,
-  canSwitchedPokemonBeCommanded
+  canSwitchedPokemonBeCommanded,
+  applyRecallSideEffects
 } from '~/server/services/switching.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
-import { RECALL_CLEARED_CONDITIONS } from '~/constants/statusConditions'
 import type { SwitchAction } from '~/types/combat'
 
 export default defineEventHandler(async (event) => {
@@ -164,22 +164,7 @@ export default defineEventHandler(async (event) => {
       currentTurnIndex = removalResult.currentTurnIndex
 
       // Apply recall side-effects on DB record
-      const dbRecord = await prisma.pokemon.findUnique({
-        where: { id: pokemon.entityId }
-      })
-      if (dbRecord) {
-        const currentStatuses: string[] = JSON.parse(dbRecord.statusConditions || '[]')
-        const recallClearedSet = new Set(RECALL_CLEARED_CONDITIONS as string[])
-        const persistentOnly = currentStatuses.filter(s => !recallClearedSet.has(s))
-        await prisma.pokemon.update({
-          where: { id: pokemon.entityId },
-          data: {
-            statusConditions: JSON.stringify(persistentOnly),
-            temporaryHp: 0,
-            stageModifiers: JSON.stringify({})
-          }
-        })
-      }
+      await applyRecallSideEffects(pokemon.entityId)
 
       // Build switch action record
       newSwitchActions.push({
