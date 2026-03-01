@@ -349,10 +349,46 @@ function handleReplaceMove(payload: { oldMoveName: string; newMove: EvolutionMov
   addedMoves.value = [...addedMoves.value, payload.newMove]
 }
 
+/**
+ * Check if the trainer has the required stone in inventory.
+ * Returns true if the stone is present (quantity > 0), false otherwise.
+ */
+async function checkStoneInInventory(): Promise<boolean> {
+  if (!props.requiredItem || props.itemMustBeHeld || !props.ownerId) return true
+  try {
+    const response = await $fetch<{
+      success: boolean
+      data: { inventory: Array<{ name: string; quantity: number }> }
+    }>(`/api/characters/${props.ownerId}`)
+    if (!response.success) return false
+    return response.data.inventory.some(
+      item => item.name.toLowerCase() === props.requiredItem!.toLowerCase() && item.quantity > 0
+    )
+  } catch {
+    return false
+  }
+}
+
 async function handleEvolve(): Promise<void> {
   if (!canEvolve.value) return
   evolving.value = true
   try {
+    // H3: Check stone availability and offer GM override if missing
+    let skipInventoryCheck = false
+    if (props.requiredItem && !props.itemMustBeHeld && props.ownerId) {
+      const hasStone = await checkStoneInInventory()
+      if (!hasStone) {
+        const override = confirm(
+          `${props.requiredItem} not found in trainer's inventory. Evolve anyway without consuming a stone?`
+        )
+        if (!override) {
+          evolving.value = false
+          return
+        }
+        skipInventoryCheck = true
+      }
+    }
+
     const response = await $fetch<{ success: boolean; data: Record<string, unknown> }>(
       `/api/pokemon/${props.pokemonId}/evolve`,
       {
@@ -369,12 +405,12 @@ async function handleEvolve(): Promise<void> {
           moves: addedMoves.value.length > 0 || removedMoves.value.length > 0
             ? selectedMoveList.value
             : undefined,
-          // P2: Item consumption
+          // P2: Item consumption (skipped if GM overrides missing stone)
           ...(props.requiredItem && !props.itemMustBeHeld && props.ownerId ? {
             consumeItem: {
               ownerId: props.ownerId,
               itemName: props.requiredItem,
-              skipInventoryCheck: false
+              skipInventoryCheck
             }
           } : {}),
           // P2: Held item consumption (default true for held-item evolutions)
