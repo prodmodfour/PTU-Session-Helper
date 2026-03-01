@@ -3,7 +3,7 @@ id: feature-023
 title: Player Capture & Healing Interfaces
 priority: P2
 severity: MEDIUM
-status: open
+status: design-complete
 domain: player-view+capture+healing
 source: matrix-gap (GAP-CAP-1 + GAP-HEAL-1)
 matrix_source: capture R004, R027, R032, healing R018, R019, R024
@@ -32,7 +32,23 @@ Capture and healing features are implemented for GM view but unreachable from pl
 
 FULL-scope feature requiring design spec. Extends the player view system (feature-003). Needs player action submission → GM approval workflow via WebSocket.
 
+## Design Spec
+
+- **Design ID:** design-player-capture-healing-001
+- **Location:** `artifacts/designs/design-player-capture-healing-001/`
+- **Tiers:** P0 (action request extensions + GM panel), P1 (capture UI), P2 (healing UI)
+- **New files:** 5 (PlayerCapturePanel, PlayerHealingPanel, PlayerRequestPanel, usePlayerCapture, usePlayerHealing)
+- **Modified files:** 7
+- **Estimated commits:** 12-16
+
 ## Related Tickets
 
 - feature-003 (all tracks complete): Player View core infrastructure
 - feature-016 (P2): AoO system — player actions need interrupt awareness
+- feature-020 (design-complete): Healing item system — P2 integrates if implemented
+
+## Resolution Log
+
+| Date | Action | Details |
+|------|--------|---------|
+| 2026-03-01 | Design spec created | design-player-capture-healing-001 with P0/P1/P2 tiers, shared-specs, testing-strategy |
