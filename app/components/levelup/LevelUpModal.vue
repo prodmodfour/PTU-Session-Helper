@@ -409,42 +409,26 @@ function applyLevelUp(): void {
   }
 }
 
-// Shared button styles
 .btn {
+  @include levelup-btn;
+  // Modal footer uses larger padding than section buttons
   padding: $spacing-sm $spacing-lg;
-  border: 1px solid transparent;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
   font-weight: 600;
-  cursor: pointer;
-  transition: all $transition-fast;
 
   &--primary {
-    background: $gradient-sv-cool;
-    color: $color-text;
-    border-color: transparent;
+    @include levelup-btn-primary;
 
-    &:hover {
-      opacity: 0.9;
+    &:hover:not(:disabled) {
       transform: translateY(-1px);
     }
 
     &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
       transform: none;
     }
   }
 
   &--secondary {
-    background: $color-bg-tertiary;
-    color: $color-text-secondary;
-    border-color: $border-color-default;
-
-    &:hover {
-      background: $color-bg-hover;
-      color: $color-text;
-    }
+    @include levelup-btn-secondary;
   }
 }
 

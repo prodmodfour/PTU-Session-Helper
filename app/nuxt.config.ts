@@ -70,7 +70,7 @@ export default defineNuxtConfig({
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@use "~/assets/scss/_variables.scss" as *; @use "~/assets/scss/_difficulty.scss" as *; @use "~/assets/scss/_pokemon-sheet.scss" as *; @use "~/assets/scss/_modal.scss" as *; @use "~/assets/scss/_sheet.scss" as *;'
+          additionalData: '@use "~/assets/scss/_variables.scss" as *; @use "~/assets/scss/_difficulty.scss" as *; @use "~/assets/scss/_pokemon-sheet.scss" as *; @use "~/assets/scss/_modal.scss" as *; @use "~/assets/scss/_sheet.scss" as *; @use "~/assets/scss/_level-up-shared.scss" as *;'
         }
       }
     }

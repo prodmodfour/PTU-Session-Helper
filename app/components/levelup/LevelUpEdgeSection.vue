@@ -323,15 +323,10 @@ function removeBonusByLevel(level: number): void {
 }
 
 .counter {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-  padding: $spacing-xs $spacing-sm;
-  background: $color-bg-tertiary;
-  border-radius: $border-radius-sm;
+  @include levelup-counter;
 
   &--full {
-    color: $color-success;
-    background: rgba($color-success, 0.1);
+    @include levelup-counter-full;
   }
 }
 
@@ -460,19 +455,12 @@ function removeBonusByLevel(level: number): void {
 }
 
 .selected-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
+  @include levelup-selected-tags;
   margin-top: $spacing-sm;
 }
 
 .tag {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
+  @include levelup-tag;
 
   &--edge {
     background: rgba($color-success, 0.1);
@@ -487,63 +475,23 @@ function removeBonusByLevel(level: number): void {
   }
 
   &__remove {
-    background: none;
-    border: none;
-    color: $color-text-muted;
-    cursor: pointer;
-    padding: 0;
-    font-size: $font-size-md;
-    line-height: 1;
-
-    &:hover {
-      color: $color-danger;
-    }
+    @include levelup-tag-remove;
   }
 }
 
-// Shared button styles (matching LevelUpModal patterns)
 .btn {
-  padding: $spacing-xs $spacing-sm;
-  border: 1px solid transparent;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all $transition-fast;
+  @include levelup-btn;
 
   &--primary {
-    background: $gradient-sv-cool;
-    color: $color-text;
-
-    &:hover:not(:disabled) {
-      opacity: 0.9;
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    @include levelup-btn-primary;
   }
 
   &--secondary {
-    background: $color-bg-tertiary;
-    color: $color-text-secondary;
-    border-color: $border-color-default;
-
-    &:hover:not(:disabled) {
-      background: $color-bg-hover;
-      color: $color-text;
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    @include levelup-btn-secondary;
   }
 
   &--sm {
-    padding: $spacing-xs $spacing-sm;
-    font-size: $font-size-xs;
+    @include levelup-btn-sm;
   }
 }
 </style>
