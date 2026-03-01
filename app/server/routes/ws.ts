@@ -486,6 +486,20 @@ export default defineWebSocketHandler({
           broadcast(event, peer)
           break
 
+        case 'aoo_triggered':
+          // AoO opportunity detected, broadcast to all viewers in encounter
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
+        case 'aoo_resolved':
+          // AoO resolved (accepted/declined), broadcast to all viewers
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
         case 'movement_preview':
           // GM previewing a move, broadcast to group views
           if (clientInfo?.role === 'gm' && clientInfo.encounterId) {

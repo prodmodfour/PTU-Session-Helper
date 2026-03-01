@@ -19,6 +19,7 @@ import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server
 import { getTickDamageEntries, getCombatantName } from '~/server/services/status-automation.service'
 import type { TickDamageResult } from '~/server/services/status-automation.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
+import { expirePendingActions } from '~/server/services/out-of-turn.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import type { TrainerDeclaration } from '~/types/combat'
 import type { StatusCondition } from '~/types'
@@ -85,6 +86,12 @@ export default defineEventHandler(async (event) => {
       // Temp conditions persist through declaration and are cleared during resolution.
       if (currentPhase !== 'trainer_declaration') {
         currentCombatant.tempConditions = []
+      }
+
+      // Clear Disengage flag at turn end (only lasts for the current turn's shift)
+      // Section D2: disengaged cleared on turn end
+      if (currentPhase !== 'trainer_declaration') {
+        currentCombatant.disengaged = false
       }
 
       // --- Heavily Injured penalty on Standard Action (PTU p.250) ---
@@ -384,6 +391,13 @@ export default defineEventHandler(async (event) => {
     if (clearDeclarations) {
       updateData.declarations = JSON.stringify([])
       updateData.switchActions = JSON.stringify([])
+
+      // Expire pending out-of-turn actions from the previous round (Section D3)
+      const pendingActions = JSON.parse(encounter.pendingActions || '[]')
+      if (pendingActions.length > 0) {
+        const expiredActions = expirePendingActions(pendingActions, encounter.currentRound)
+        updateData.pendingActions = JSON.stringify(expiredActions)
+      }
     }
 
     // Add tick damage events to move log
@@ -514,6 +528,13 @@ function resetCombatantsForNewRound(combatants: any[]) {
       canBeCommanded: true,
       isHolding: false
     }
+    // Reset out-of-turn action usage for new round (feature-016)
+    c.outOfTurnUsage = {
+      aooUsed: false,
+      priorityUsed: false,
+      interruptUsed: false
+    }
+    c.disengaged = false
   })
 }
 

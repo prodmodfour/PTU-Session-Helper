@@ -1,4 +1,5 @@
 import type { GridPosition, Combatant, Pokemon, TerrainType, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
+import { areAdjacent } from '~/utils/adjacency'
 import { useTerrainStore } from '~/stores/terrain'
 import { useRangeParser } from '~/composables/useRangeParser'
 import {
@@ -554,6 +555,54 @@ export function useGridMovement(options: UseGridMovementOptions) {
     }
   }
 
+  /**
+   * Check which adjacent enemies would get an AoO opportunity
+   * if a combatant moves from `from` to `to`.
+   *
+   * Returns combatant IDs of enemies who were adjacent at `from`
+   * and are no longer adjacent at `to` (shift_away trigger).
+   *
+   * This is a CLIENT-SIDE preview. The actual trigger detection
+   * and resolution happens server-side via /api/encounters/:id/aoo-detect.
+   *
+   * Respects the disengaged flag (Disengage maneuver exempts from AoO).
+   */
+  const getAoOTriggersForMove = (
+    combatantId: string,
+    from: GridPosition,
+    to: GridPosition
+  ): string[] => {
+    const mover = findCombatant(combatantId)
+    if (!mover) return []
+
+    // Disengaged combatants do not trigger shift_away AoO
+    if (mover.disengaged) return []
+
+    const moverSize = mover.tokenSize || 1
+    const triggeredEnemyIds: string[] = []
+
+    // Check each enemy token for adjacency shift
+    for (const token of options.tokens.value) {
+      if (token.combatantId === combatantId) continue
+
+      const other = findCombatant(token.combatantId)
+      if (!other) continue
+
+      // Must be an enemy
+      if (!isEnemySide(mover.side, other.side)) continue
+
+      // Check if was adjacent before but not after
+      const wasBefore = areAdjacent(from, moverSize, token.position, token.size)
+      const isAfter = areAdjacent(to, moverSize, token.position, token.size)
+
+      if (wasBefore && !isAfter) {
+        triggeredEnemyIds.push(token.combatantId)
+      }
+    }
+
+    return triggeredEnemyIds
+  }
+
   return {
     calculateMoveDistance,
     calculateTerrainAwarePathCost,
@@ -569,6 +618,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
     getTerrainCostGetter,
     isValidMove,
     findCombatant,
+    getAoOTriggersForMove,
     DEFAULT_MOVEMENT_SPEED
   }
 }
