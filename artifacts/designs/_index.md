@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-01T20:11:40.633Z
+generated_at: 2026-03-01T21:23:20.157Z
 total_designs: 23
 ---
 
@@ -17,7 +17,7 @@ total_designs: 23
 | design-level-up-allocation-001 | — | — | — | — | — |
 | design-living-weapon-001 | combat | design-complete | feature-005 | FULL | FEATURE_GAP |
 | design-mounting-001 | combat | design-complete | feature-004 | FULL | FEATURE |
-| design-multi-tile-tokens-001 | vtt-grid | p1-implemented | feature-013 | FULL | FEATURE |
+| design-multi-tile-tokens-001 | vtt-grid | p2-implemented | feature-013 | FULL | FEATURE |
 | design-player-view-core-001 | player-view | p0-implemented | feature-003 | FULL | FEATURE |
 | design-player-view-infra-001 | player-view | draft | feature-003 | FULL | INFRASTRUCTURE |
 | design-player-view-integration-001 | player-view | designed | feature-003 | FULL | FEATURE |

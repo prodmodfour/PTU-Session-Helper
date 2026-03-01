@@ -1,8 +1,8 @@
 ---
-generated_at: 2026-03-01T20:11:40.627Z
-total_tickets: 255
+generated_at: 2026-03-01T21:23:20.153Z
+total_tickets: 257
 open: 34
-in_progress: 102
+in_progress: 104
 resolved: 105
 ---
 
@@ -13,7 +13,6 @@ resolved: 105
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-127 | ptu-rule | P1 | character-lifecycle | Per decree-037, trainers should NOT receive an automatic +1  |
-| ptu-rule-131 | ptu-rule | P2 | combat | ptu-rule-131: Expert+ Combat skill not handled for AoO Strug |
 | feature-017 | feature | P2 | capture | feature-017: Poke Ball Type System |
 | feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
 | feature-019 | feature | P2 | vtt-grid | feature-019: VTT Status-Movement Integration |
@@ -22,15 +21,15 @@ resolved: 105
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
 | feature-023 | feature | P2 | player-view+capture+healing | feature-023: Player Capture & Healing Interfaces |
 | decree-need-039 | decree | P2 | combat | Decree-Need-039: Flanking evasion penalty application order  |
-| bug-041 | bug | P3 | — | bug-041: Remove Whirlwind references from Force Switch UI pe |
+| ptu-rule-131 | ptu-rule | P2 | combat |  |
 | ptu-rule-129 | ptu-rule | P3 | combat | ptu-rule-129: Roar's forced recall must respect the Trapped  |
-| ptu-rule-132 | ptu-rule | P3 | — | ptu-rule-132: Evolution species XP not hooked into capturedS |
 | feature-004 | feature | P3 | combat | feature-004: Pokemon Mounting / Rider System |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
 | refactoring-108 | refactoring | P3 | — | refactoring-108: Extract switch button computeds from Combat |
 | refactoring-112 | refactoring | P3 | combat | Refactoring-112: Decompose encounter store into focused sub- |
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
 | refactoring-114 | refactoring | P3 | character-lifecycle | refactoring-114: Rename capturedSpecies to ownedSpecies for  |
+| refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
 | ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
@@ -46,8 +45,9 @@ resolved: 105
 | refactoring-105 | refactoring | P4 | combat | Remove Spurious 'Bound' Condition Check from Trapped Validat |
 | refactoring-115 | refactoring | P4 | combat | Refactoring-115: switching.service.ts exceeds 800-line limit |
 | refactoring-116 | refactoring | P4 | — | refactoring-116: XpDistributionModal.vue exceeds 800-line fi |
+| refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
 
-## In-Progress Tickets (102)
+## In-Progress Tickets (104)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -97,6 +97,7 @@ resolved: 105
 | ptu-rule-111 | ptu-rule | P2 | combat | rules-review-161 M3 |
 | ptu-rule-113 | ptu-rule | P2 | vtt | decree-023 |
 | feature-002 | feature | P2 | vtt-grid | — |
+| bug-041 | bug | P3 | — | rules-review-217 MEDIUM-002 + MEDIUM-003 |
 | ptu-rule-086 | ptu-rule | P3 | capture | capture-audit.md (capture-R005) |
 | ptu-rule-087 | ptu-rule | P3 | pokemon-lifecycle | pokemon-lifecycle-audit.md (R022) |
 | ptu-rule-088 | ptu-rule | P3 | encounter-tables | encounter-tables-audit.md (R008) |
@@ -109,6 +110,7 @@ resolved: 105
 | ptu-rule-122 | ptu-rule | P3 | — | decree-029 |
 | ptu-rule-123 | ptu-rule | P3 | — | decree-030 |
 | ptu-rule-128 | ptu-rule | P3 | combat | decree-038 |
+| ptu-rule-132 | ptu-rule | P3 | — | rules-review-233 HIGH-1 |
 | feature-005 | feature | P3 | combat | user-request |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
@@ -164,9 +166,9 @@ resolved: 105
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 12 | 26 | 41 |
-| ptu-rule | 8 | 59 | 36 | 104 |
+| bug | 0 | 13 | 26 | 41 |
+| ptu-rule | 7 | 60 | 36 | 104 |
 | feature | 8 | 11 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
 | decree | 1 | 0 | 38 | 39 |
-| refactoring | 11 | 13 | 0 | 33 |
+| refactoring | 13 | 13 | 0 | 35 |
