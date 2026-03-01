@@ -299,6 +299,9 @@ export function useGridMovement(options: UseGridMovementOptions) {
    * Per decree-003: Movement cannot end on any occupied square.
    * This list is used to validate the FINAL position only — movement
    * THROUGH these cells is always allowed.
+   *
+   * Multi-cell tokens: iterates token.size for dx/dy to include all
+   * cells in the NxN footprint. Verified correct for P0 multi-tile.
    */
   const getOccupiedCells = (excludeCombatantId?: string): GridPosition[] => {
     const occupied: GridPosition[] = []

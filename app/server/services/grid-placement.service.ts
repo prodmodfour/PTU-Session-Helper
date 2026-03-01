@@ -62,6 +62,8 @@ export function buildOccupiedCellsSet(combatants: Combatant[]): Set<string> {
 /**
  * Check if a token of the given size can fit at (x, y) without overlapping
  * occupied cells or exceeding grid bounds.
+ * Multi-cell tokens: checks all NxN cells for bounds and stacking.
+ * Verified correct for P0 multi-tile.
  */
 function canFit(
   x: number,

@@ -105,7 +105,9 @@ export function useGridInteraction(options: UseGridInteractionOptions) {
   }
 
   /**
-   * Get token at a grid position
+   * Get token at a grid position.
+   * Multi-cell tokens: checks full NxN footprint via position.x+size-1
+   * bounds. Verified correct for P0 multi-tile.
    */
   const getTokenAtPosition = (gridPos: GridPosition): TokenData | undefined => {
     return options.tokens.value.find(token => {
