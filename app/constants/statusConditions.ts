@@ -83,18 +83,22 @@ export const STATUS_CONDITION_DEFS: Record<StatusCondition, StatusConditionDef> 
 
   // === Volatile conditions ===
   // PTU p.247: normally cured by recall and at encounter end
+  // Exception: Sleep persists through recall and encounter end (decree-038).
+  // Sleep is cured only by: save checks (DC 16), taking damage, items, Pokemon Center.
   'Asleep': {
     name: 'Asleep',
     category: 'volatile',
-    clearsOnRecall: true,
-    clearsOnEncounterEnd: true,
+    clearsOnRecall: false,
+    clearsOnEncounterEnd: false,
     clearsOnFaint: true
   },
+  // Bad Sleep clears when Sleep is cured (PTU p.247: "if the target is cured of Sleep,
+  // they are also cured of Bad Sleep"). Shares Sleep's persistence behavior.
   'Bad Sleep': {
     name: 'Bad Sleep',
     category: 'volatile',
-    clearsOnRecall: true,
-    clearsOnEncounterEnd: true,
+    clearsOnRecall: false,
+    clearsOnEncounterEnd: false,
     clearsOnFaint: true
   },
   'Confused': {
