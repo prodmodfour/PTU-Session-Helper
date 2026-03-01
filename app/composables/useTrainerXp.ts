@@ -3,9 +3,9 @@
  * Wraps API calls with reactive state and level-up detection.
  *
  * Usage:
- *   const { awardXp, deductXp, isProcessing, pendingLevelUp, clearPendingLevelUp } = useTrainerXp()
- *   const result = await awardXp(characterId, 3, 'Encounter reward')
- *   if (pendingLevelUp.value) { /* open LevelUpModal */ }
+ *   const composable = useTrainerXp()
+ *   const result = await composable.awardXp(characterId, 3, 'Encounter reward')
+ *   // Check composable.pendingLevelUp.value to open LevelUpModal
  */
 
 import type { TrainerXpResult } from '~/utils/trainerExperience'
