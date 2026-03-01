@@ -131,6 +131,7 @@ import { PhSword, PhSpinner, PhWarning, PhCheck } from '@phosphor-icons/vue'
 import type { Pokemon, Move } from '~/types'
 
 interface MoveDetail {
+  id?: string
   name: string
   type: string
   damageClass: string
@@ -251,11 +252,8 @@ async function learnMove(moveName: string, replaceIndex: number | null) {
     )
 
     if (response.success) {
-      // Update local move list
-      const newMove = {
-        ...response.data.learnedMove,
-        id: `learned-${Date.now()}`
-      } as unknown as Move
+      // Update local move list — server returns a complete Move with real DB id
+      const newMove = response.data.learnedMove as Move
 
       if (replaceIndex !== null) {
         currentMoves.value = currentMoves.value.map((m, i) =>

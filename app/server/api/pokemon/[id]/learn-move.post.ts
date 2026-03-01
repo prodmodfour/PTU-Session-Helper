@@ -73,6 +73,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const newMove = {
+      id: moveData.id,
       name: moveData.name,
       type: moveData.type,
       damageClass: moveData.damageClass,
