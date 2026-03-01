@@ -4,7 +4,7 @@ ticket_id: feature-013
 category: FEATURE
 scope: FULL
 domain: vtt-grid
-status: design-complete
+status: p0-implemented
 priority: P1
 decrees:
   - decree-002
@@ -33,7 +33,8 @@ affected_files:
   - app/types/character.ts
   - app/server/services/grid-placement.service.ts
   - app/server/services/combatant.service.ts
-new_files: []
+new_files:
+  - app/utils/sizeCategory.ts
 ---
 
 # Design: Multi-Tile Token System
@@ -74,7 +75,9 @@ This design implements only square footprints (NxN). Non-square shapes (serpent 
 | Terrain cost multi-cell | MISSING | Reads terrain at single origin cell |
 | AoE hit detection multi-cell targets | MISSING | Checks single cell per target |
 | Measurement from multi-cell tokens | EXISTS | `ptuDistanceTokens()` handles this |
-| Isometric multi-cell rendering | MISSING | Isometric projection for multi-cell tokens not implemented |
+| Isometric multi-cell rendering | P0-DONE | Depth sorting, sprite scaling, movement arrow all use footprint center |
+| Client-side size utility | P0-DONE | `sizeCategory.ts` with sizeToFootprint(), getFootprintCells(), isFootprintInBounds() |
+| 2D movement preview footprint | P0-DONE | drawMovementPreview highlights full NxN footprint at destination |
 
 ## Tier Summary
 
@@ -83,6 +86,25 @@ This design implements only square footprints (NxN). Non-square shapes (serpent 
 | P0 | A. Size field propagation, B. Multi-cell token rendering (2D + isometric), C. Cell occupation tracking, D. Placement collision detection, E. No-stacking validation for multi-cell destinations | [spec-p0.md](spec-p0.md) | Medium |
 | P1 | F. Multi-cell A* pathfinding, G. Multi-cell movement range (flood-fill), H. Multi-cell terrain cost averaging, I. Fog of war per-cell reveal for large footprints, J. Movement preview for large tokens | [spec-p1.md](spec-p1.md) | High |
 | P2 | K. AoE coverage for multi-tile targets, L. Flanking geometry for large tokens, M. Measurement from nearest edge | [spec-p2.md](spec-p2.md) | Medium |
+
+## Implementation Log
+
+### P0 — 2026-03-01 (branch: slave/3-dev-feature-013-p0-20260301)
+
+| Section | Status | Commits |
+|---------|--------|---------|
+| A. sizeCategory.ts utility | DONE | 188f9174 |
+| B. 2D movement preview footprint | DONE | c69d7391 |
+| C. Isometric multi-cell rendering | DONE | a9d7f3b6 |
+| D. Cell occupation tracking (verify) | DONE | 88536d04 |
+| E. Placement collision (verify) | DONE | 88536d04 |
+
+**Files changed:** `app/utils/sizeCategory.ts` (new), `app/composables/useGridRendering.ts`, `app/composables/useIsometricRendering.ts`, `app/composables/useGridMovement.ts`, `app/composables/useGridInteraction.ts`, `app/server/services/grid-placement.service.ts`
+
+**Key decisions:**
+- Isometric depth sorting uses center of NxN footprint (not origin or max corner) for balanced draw order
+- Token positioning/scaling in drawSingleToken already used token.size correctly; no changes needed
+- Existing multi-cell support in D-E sections verified correct; only documentation comments added
 
 ## Atomized Files
 

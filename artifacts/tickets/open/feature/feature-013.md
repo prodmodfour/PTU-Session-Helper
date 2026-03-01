@@ -3,7 +3,7 @@ id: feature-013
 title: Multi-Tile Token System
 priority: P1
 severity: HIGH
-status: open
+status: in-progress
 domain: vtt-grid
 source: matrix-gap (VTT SG-1)
 matrix_source: vtt-grid R003
@@ -45,3 +45,22 @@ FULL-scope feature requiring design spec. Affects core VTT systems: token render
 - `app/stores/encounterGrid.ts` — cell occupation tracking
 - `app/stores/fogOfWar.ts` — multi-cell fog reveal
 - `app/types/encounter.ts` — combatant size field
+
+## Resolution Log
+
+### P0: Core Multi-Tile Rendering and Collision (2026-03-01)
+
+**Branch:** `slave/3-dev-feature-013-p0-20260301`
+
+| Commit | Description | Files |
+|--------|-------------|-------|
+| 188f9174 | feat: add client-side sizeCategory.ts utility | `app/utils/sizeCategory.ts` (NEW) |
+| c69d7391 | feat: highlight full NxN footprint in 2D movement preview | `app/composables/useGridRendering.ts` |
+| a9d7f3b6 | feat: update isometric rendering for multi-cell token support | `app/composables/useIsometricRendering.ts` |
+| 88536d04 | docs: add multi-tile verification comments | `useGridMovement.ts`, `useGridInteraction.ts`, `grid-placement.service.ts` |
+
+**Summary:**
+- Section A: Created `sizeCategory.ts` with SizeCategory type, SIZE_FOOTPRINT_MAP, sizeToFootprint(), getFootprintCells(), isFootprintInBounds()
+- Section B: Updated 2D movement preview to highlight full NxN destination footprint; arrow targets footprint center
+- Section C: Updated isometric depth sorting to use footprint center; movement arrow uses NxN footprint center; destination cells highlighted as NxN diamond overlay
+- Sections D-E: Verified getOccupiedCells, getTokenAtPosition, canFit, isValidMove all handle multi-cell NxN footprints correctly (no code changes needed)
