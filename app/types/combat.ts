@@ -118,7 +118,7 @@ export interface SwitchAction {
   actionCost: 'standard' | 'shift';
   /** Round number */
   round: number;
-  /** Whether forced by a move (Roar, Whirlwind, etc.) */
+  /** Whether forced by a move with recall mechanics (Roar, etc.) -- per decree-034, only moves with explicit recall text qualify */
   forced: boolean;
 }
 

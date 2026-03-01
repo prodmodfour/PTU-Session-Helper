@@ -17,6 +17,11 @@ export function useSwitching() {
    * Get a trainer's bench Pokemon (owned, not in encounter, not fainted).
    * Fetches the trainer's full Pokemon roster from API, then filters out
    * those already in the encounter and those with 0 HP.
+   *
+   * NOTE: Over-fetches via the full character endpoint since a dedicated
+   * `/api/characters/:id/pokemon` endpoint does not exist yet. This works
+   * correctly but transfers unnecessary character data (stats, skills,
+   * features, equipment, inventory). P1 optimization target.
    */
   async function getBenchPokemon(trainerEntityId: string): Promise<Pokemon[]> {
     try {
