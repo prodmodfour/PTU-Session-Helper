@@ -18,7 +18,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { v4 as uuidv4 } from 'uuid'
 import { loadEncounter, buildEncounterResponse, getEntityName } from '~/server/services/encounter.service'
-import { resolveAoOAction, canUseAoO } from '~/server/services/out-of-turn.service'
+import { resolveAoOAction, canUseAoO, autoDeclineFaintedReactor } from '~/server/services/out-of-turn.service'
 import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { broadcastToEncounter } from '~/server/utils/websocket'
@@ -102,7 +102,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Resolve the action (updates pending actions and combatant usage)
-    const { updatedActions, updatedCombatants } = resolveAoOAction(
+    let { updatedActions, updatedCombatants } = resolveAoOAction(
       pendingActions,
       combatants,
       actionId,
@@ -173,6 +173,29 @@ export default defineEventHandler(async (event) => {
             hit: hitResult,
             fainted: damageResult.fainted,
             isDead: deathResult.isDead
+          }
+
+          // Apply faint status if trigger target fainted (MED-002)
+          if (damageResult.fainted) {
+            applyFaintStatus(trigger)
+          }
+        }
+
+        // Auto-decline remaining pending AoOs for fainted trigger target (MED-002)
+        // If the trigger target fainted from this Struggle Attack, other reactors
+        // with pending AoOs targeting the same trigger should be auto-declined
+        if (trigger.entity.currentHp <= 0) {
+          const faintedTriggerId = trigger.id
+          const hasPendingForFainted = updatedActions.some(
+            a => a.triggerId === faintedTriggerId && a.status === 'pending'
+          )
+          if (hasPendingForFainted) {
+            updatedActions = updatedActions.map(a => {
+              if (a.triggerId === faintedTriggerId && a.status === 'pending') {
+                return { ...a, status: 'declined' as const }
+              }
+              return a
+            })
           }
         }
 
