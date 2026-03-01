@@ -90,3 +90,9 @@ Design complete: `artifacts/designs/design-pokemon-switching-001/`
   - 9b68b2a3: recallPokemon/releasePokemon store actions + executeRecall/executeRelease composable methods
   - 5b2b4a89: Section N — recall-after-release League restriction in recall.post.ts
   - 5952f702: Section M — enhanced requestSwitchPokemon with recall combatant ID + release name
+- 2026-03-01: P2 fix cycle — code-review-249 (CRIT-001, H1, H2, M2, M3)
+  - 2106cccd: CRIT-001 — add pokemon_recalled/pokemon_released WebSocket handlers + type definitions (useWebSocket.ts, types/api.ts)
+  - c68503cb: M2 — extract applyRecallSideEffects into switching.service.ts, remove duplication from switch.post.ts and recall.post.ts
+  - 8559a1c1: H2 — add turn validation to recall.post.ts and release.post.ts (current combatant must be trainer or their Pokemon)
+  - c0884c42: M3 — use findPlacementPosition as grid-wide fallback in findAdjacentPosition instead of overlapping trainer position
+  - 3e9a417d: H1 — update app-surface.md with recall/release endpoints, WS events, expanded switching system description
