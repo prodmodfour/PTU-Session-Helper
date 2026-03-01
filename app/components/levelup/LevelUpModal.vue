@@ -244,6 +244,13 @@ const STEP_LABELS: Record<string, string> = {
 
 const currentStepIndex = ref(0)
 
+// Guard: clamp index if step list shrinks (e.g., milestone choice changes)
+watch(steps, (newSteps) => {
+  if (currentStepIndex.value >= newSteps.length) {
+    currentStepIndex.value = Math.max(0, newSteps.length - 1)
+  }
+})
+
 const currentStep = computed(() => steps.value[currentStepIndex.value] ?? 'stats')
 
 const currentStepLabel = computed(() => STEP_LABELS[currentStep.value] ?? currentStep.value)
