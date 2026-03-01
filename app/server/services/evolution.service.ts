@@ -174,6 +174,96 @@ export function recalculateStats(input: {
 }
 
 // ============================================
+// ABILITY REMAPPING (R032)
+// ============================================
+
+export interface AbilityRemapResult {
+  /** Automatically remapped abilities (positional match found) */
+  remappedAbilities: Array<{ name: string; effect: string }>
+  /** Abilities that need GM decision (index mismatch or missing in new list) */
+  needsResolution: Array<{
+    oldAbility: string
+    reason: string
+    options: Array<{ name: string }>
+  }>
+  /** Non-species abilities preserved as-is (not found in old species list) */
+  preservedAbilities: Array<{ name: string; effect: string }>
+}
+
+/**
+ * Remap a Pokemon's abilities from the old species' ability list to the new species'.
+ *
+ * PTU p.202: "Abilities change to match the Ability in the same spot
+ * in the Evolution's Ability List."
+ *
+ * Algorithm:
+ * 1. For each current ability, find its index in the old species' ability list
+ * 2. If found and a corresponding index exists in the new list, remap positionally
+ * 3. If found but index >= new list length, flag for GM resolution
+ * 4. If not found in old list, preserve as-is (non-species ability, e.g. from Features)
+ *
+ * Pure function — no DB access.
+ */
+export function remapAbilities(
+  currentAbilities: Array<{ name: string; effect: string }>,
+  oldSpeciesAbilities: string[],
+  newSpeciesAbilities: string[]
+): AbilityRemapResult {
+  const remappedAbilities: AbilityRemapResult['remappedAbilities'] = []
+  const needsResolution: AbilityRemapResult['needsResolution'] = []
+  const preservedAbilities: AbilityRemapResult['preservedAbilities'] = []
+
+  for (const ability of currentAbilities) {
+    const oldIndex = oldSpeciesAbilities.findIndex(
+      name => name.toLowerCase() === ability.name.toLowerCase()
+    )
+
+    if (oldIndex === -1) {
+      // Not in old species list — preserve as-is (Feature-granted or custom)
+      preservedAbilities.push({ ...ability })
+    } else if (oldIndex < newSpeciesAbilities.length) {
+      // Positional match exists in new species
+      remappedAbilities.push({
+        name: newSpeciesAbilities[oldIndex],
+        effect: '' // Effect will be looked up from AbilityData
+      })
+    } else {
+      // Old index out of bounds for new species list — GM must choose
+      needsResolution.push({
+        oldAbility: ability.name,
+        reason: `Ability slot ${oldIndex + 1} does not exist in the new species' ability list`,
+        options: newSpeciesAbilities.map(name => ({ name }))
+      })
+    }
+  }
+
+  return { remappedAbilities, needsResolution, preservedAbilities }
+}
+
+/**
+ * Look up effect text for an ability from the AbilityData table.
+ */
+export async function lookupAbilityEffect(abilityName: string): Promise<string> {
+  const ability = await prisma.abilityData.findUnique({ where: { name: abilityName } })
+  return ability?.effect ?? ''
+}
+
+/**
+ * Enrich ability entries with their effect text from AbilityData.
+ * Returns new array (does not mutate input).
+ */
+export async function enrichAbilityEffects(
+  abilities: Array<{ name: string; effect: string }>
+): Promise<Array<{ name: string; effect: string }>> {
+  const enriched: Array<{ name: string; effect: string }> = []
+  for (const ability of abilities) {
+    const effect = await lookupAbilityEffect(ability.name)
+    enriched.push({ name: ability.name, effect: effect || ability.effect })
+  }
+  return enriched
+}
+
+// ============================================
 // EVOLUTION EXECUTION
 // ============================================
 
