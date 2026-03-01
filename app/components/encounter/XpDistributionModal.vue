@@ -185,6 +185,14 @@
           <p class="empty-state__hint">XP can only be distributed to Pokemon that participated.</p>
         </div>
 
+        <!-- Trainer XP Section (after Pokemon XP, before Apply) -->
+        <TrainerXpSection
+          v-if="calculationResult && participatingTrainers.length > 0"
+          :participating-trainers="participatingTrainers"
+          :suggested-xp="suggestedTrainerXp"
+          @update:allocations="trainerXpAllocations = $event"
+        />
+
         <!-- Loading state -->
         <div v-if="isCalculating" class="loading-state">
           Calculating XP...
@@ -239,6 +247,7 @@ import {
   type XpCalculationResult,
   type XpApplicationResult
 } from '~/utils/experienceCalculation'
+import { SIGNIFICANCE_TO_TRAINER_XP } from '~/utils/trainerExperience'
 import type { Encounter } from '~/types'
 
 interface ParticipatingPokemon {
@@ -296,6 +305,9 @@ const distributionResults = ref<XpApplicationResult[]>([])
 const totalDistributed = ref(0)
 const xpAllocations = ref<Map<string, number>>(new Map())
 
+// Trainer XP allocation state
+const trainerXpAllocations = ref<Map<string, number>>(new Map())
+
 // Defeated enemies from encounter
 const defeatedEnemies = computed(() => props.encounter.defeatedEnemies)
 
@@ -329,6 +341,32 @@ const effectiveMultiplier = computed(() => {
 
 // XP per player from the latest calculation
 const xpPerPlayer = computed(() => calculationResult.value?.totalXpPerPlayer ?? 0)
+
+// Participating trainers (player-side human combatants)
+const participatingTrainers = computed(() => {
+  return props.encounter.combatants
+    .filter(c => c.side === 'players' && c.type === 'human')
+    .map(c => ({
+      id: c.entityId,
+      name: c.name,
+      level: (c.entity as { level?: number }).level ?? 1,
+      trainerXp: (c.entity as { trainerXp?: number }).trainerXp ?? 0
+    }))
+})
+
+// Suggested trainer XP based on encounter significance tier
+const suggestedTrainerXp = computed(() => {
+  const tier = props.encounter.significanceTier
+  if (tier && tier in SIGNIFICANCE_TO_TRAINER_XP) {
+    return SIGNIFICANCE_TO_TRAINER_XP[tier]
+  }
+  // Fallback: map from multiplier using closest tier
+  const preset = selectedPreset.value
+  if (preset !== 'custom' && preset in SIGNIFICANCE_TO_TRAINER_XP) {
+    return SIGNIFICANCE_TO_TRAINER_XP[preset]
+  }
+  return 1
+})
 
 // Group participating Pokemon by owner
 const playerGroups = computed((): PlayerGroup[] => {
@@ -370,15 +408,18 @@ const hasOverAllocation = computed(() => {
   return playerGroups.value.some(group => getPlayerRemaining(group.ownerId) < 0)
 })
 
-// Can apply: has at least some XP allocated and no over-allocations
+// Can apply: has at least some XP allocated (Pokemon or trainer) and no over-allocations
 const canApply = computed(() => {
   if (isDistributing.value || isCalculating.value) return false
   if (hasOverAllocation.value) return false
 
-  const totalAllocated = Array.from(xpAllocations.value.values()).reduce(
+  const totalPokemonXp = Array.from(xpAllocations.value.values()).reduce(
     (sum, val) => sum + val, 0
   )
-  return totalAllocated > 0
+  const totalTrainerXp = Array.from(trainerXpAllocations.value.values()).reduce(
+    (sum, val) => sum + val, 0
+  )
+  return totalPokemonXp > 0 || totalTrainerXp > 0
 })
 
 // Get XP allocation for a specific Pokemon
@@ -467,21 +508,40 @@ const handleApply = async () => {
   isDistributing.value = true
 
   try {
-    // Build distribution array (only Pokemon with XP > 0)
+    // Build Pokemon distribution array (only Pokemon with XP > 0)
     const distribution = Array.from(xpAllocations.value.entries())
       .filter(([, xp]) => xp > 0)
       .map(([pokemonId, xpAmount]) => ({ pokemonId, xpAmount }))
 
-    const result = await encounterXpStore.distributeXp({
-      encounterId: encounterStore.encounter!.id,
-      significanceMultiplier: effectiveMultiplier.value,
-      playerCount: safePlayerCount.value,
-      isBossEncounter: isBossEncounter.value,
-      distribution
-    })
+    let pokemonResult = { results: [] as XpApplicationResult[], totalXpDistributed: 0 }
 
-    distributionResults.value = result.results
-    totalDistributed.value = result.totalXpDistributed
+    // Distribute Pokemon XP first (if any)
+    if (distribution.length > 0) {
+      pokemonResult = await encounterXpStore.distributeXp({
+        encounterId: encounterStore.encounter!.id,
+        significanceMultiplier: effectiveMultiplier.value,
+        playerCount: safePlayerCount.value,
+        isBossEncounter: isBossEncounter.value,
+        distribution
+      })
+    }
+
+    // Distribute trainer XP (if any allocated)
+    if (trainerXpAllocations.value.size > 0) {
+      const trainerDistribution = Array.from(trainerXpAllocations.value.entries())
+        .filter(([, xp]) => xp > 0)
+        .map(([characterId, xpAmount]) => ({ characterId, xpAmount }))
+
+      if (trainerDistribution.length > 0) {
+        await encounterXpStore.distributeTrainerXp({
+          encounterId: encounterStore.encounter!.id,
+          distribution: trainerDistribution
+        })
+      }
+    }
+
+    distributionResults.value = pokemonResult.results
+    totalDistributed.value = pokemonResult.totalXpDistributed
     phase.value = 'results'
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Failed to distribute XP'
