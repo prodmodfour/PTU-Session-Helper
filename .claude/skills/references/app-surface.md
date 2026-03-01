@@ -70,11 +70,13 @@ Testable features, routes, and API endpoints for the PTU Session Helper.
 ## API Endpoint Groups
 
 ### Characters (`/api/characters`)
-CRUD + healing/rest + equipment actions.
+CRUD + healing/rest + equipment + XP actions.
 - `GET/POST /api/characters` — list, create
 - `GET/PUT/DELETE /api/characters/:id` — read, update, delete
 - `GET /api/characters/:id/equipment` — current equipment slots + aggregate bonuses
 - `PUT /api/characters/:id/equipment` — equip/unequip items (Zod-validated)
+- `POST /api/characters/:id/xp` — award/deduct trainer XP (auto-level at 10 XP, bank clamp, level cap 50)
+- `GET /api/characters/:id/xp-history` — current trainer XP state (bank, level, xpToNextLevel, capturedSpecies)
 - `POST /api/characters/:id/rest` — 30-min rest
 - `POST /api/characters/:id/extended-rest` — 4h+ rest
 - `POST /api/characters/:id/pokemon-center` — full heal
@@ -84,6 +86,8 @@ CRUD + healing/rest + equipment actions.
 - `POST /api/characters/import-csv` — CSV import
 
 **Key equipment components:** `HumanEquipmentTab.vue` (equipment slot management — equip/unequip/custom items, catalog dropdown, combat bonuses summary), `EquipmentCatalogBrowser.vue` (modal catalog browser with slot filtering, search, and direct equip-to-character). Constants in `constants/equipment.ts` (catalog, slot labels, stat labels). Bonuses utility in `utils/equipmentBonuses.ts`.
+
+**Trainer XP:** `utils/trainerExperience.ts` (pure XP logic — `applyTrainerXp` bank calculation with multi-level jump, `isNewSpecies` check, `TRAINER_XP_SUGGESTIONS` per decree-030 x5 cap, `TRAINER_MAX_LEVEL` 50, `TRAINER_XP_PER_LEVEL` 10), `composables/useTrainerXp.ts` (reactive wrapper — `awardXp`, `deductXp`, `clearPendingLevelUp`, processing/error state), `components/character/TrainerXpPanel.vue` (quick award buttons +1/+2/+3/+5, deduct -1, custom amount/reason input, progress bar, max level indicator; emits `xp-changed` and `level-up`). Integration: embedded in `CharacterModal.vue` view mode for human characters, emits `refresh` to parent on XP change.
 
 **Trainer level-up:** `utils/trainerAdvancement.ts` (pure advancement logic — `computeTrainerLevelUp`, `computeTrainerAdvancement`, `summarizeTrainerAdvancement`, milestone definitions, lifestyle stat point calculation), `composables/useTrainerLevelUp.ts` (reactive workflow state — stat allocation, edge/feature/class selection, milestone choices, effective skills tracking with bonus + regular Skill Edge rank-ups, maxHp preview, update payload builder, warnings), `components/levelup/LevelUpModal.vue` (wizard modal — milestones -> stats -> skills -> edges -> features -> classes -> summary steps, conditional step visibility based on advancement levels crossed), `components/levelup/LevelUpStatSection.vue` (stat point allocation with evasion preview), `components/levelup/LevelUpSkillSection.vue` (skill rank cap overview — read-only per decree-037, shows skill caps unlocked at L2/6/12), `components/levelup/LevelUpMilestoneSection.vue` (milestone radio choices at L5/10/20/30/40 — Amateur/Capable/Veteran/Elite/Champion with lifestyle stat points, bonus edges, or general feature options), `components/levelup/LevelUpEdgeSection.vue` (regular edge input + Skill Edge shortcut + bonus Skill Edges at L2/6/12 with rank restriction — cannot raise to newly unlocked rank), `components/levelup/LevelUpFeatureSection.vue` (free-text feature input at odd levels 3+, class hint display, existing features collapsible), `components/levelup/LevelUpClassSection.vue` (searchable class picker at L5/10 with branching specialization per decree-022, max 4 classes, Martial Artist non-branching per decree-026), `components/levelup/LevelUpSummary.vue` (review step — stat changes, milestone choices, edges, skill rank-ups from all Skill Edges, features, classes, warnings). Integration: level watcher in `CharacterModal.vue` and `gm/characters/[id].vue` intercepts level increase, opens LevelUpModal, applies results to editData with `isApplyingLevelUp` guard to prevent double-trigger.
 
