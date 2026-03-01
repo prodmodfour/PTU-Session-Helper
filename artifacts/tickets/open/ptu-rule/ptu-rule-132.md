@@ -3,7 +3,7 @@ ticket_id: ptu-rule-132
 category: ptu-rule
 priority: P3
 severity: MEDIUM
-status: open
+status: in-progress
 source: rules-review-233 HIGH-1
 created_by: slave-collector (plan-20260301-184039)
 created_at: 2026-03-01
@@ -33,3 +33,9 @@ The `capturedSpecies` field and `isNewSpecies()` utility are already built for t
 ## Impact
 
 The app under-awards trainer XP when a Pokemon evolves into a species the trainer hasn't previously owned. The data model supports the fix — only the wiring is missing. Hatching XP is separately deferred until the breeding/hatching system exists.
+
+## Resolution Log
+
+- **Commit:** c0dc34bd — `feat: hook evolution species XP into capturedSpecies tracking`
+- **Files changed:** `app/server/api/pokemon/[id]/evolve.post.ts`
+- **Approach:** Added species XP logic after successful evolution, following the exact pattern from `attempt.post.ts` lines 120-155. Imports `applyTrainerXp` and `isNewSpecies` from `trainerExperience.ts`. Loads owning trainer's `capturedSpecies`, checks if evolved species is new, awards +1 XP, appends normalized species name, broadcasts `character_update` on level-up. Returns `speciesXp` in response data.
