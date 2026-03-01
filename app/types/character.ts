@@ -275,6 +275,10 @@ export interface HumanCharacter {
   goals?: string;
   location?: string;
 
+  // Trainer Experience (PTU Core p.461)
+  trainerXp: number;            // Experience bank (0-9 normally)
+  capturedSpecies: string[];     // Species captured by this trainer (lowercase)
+
   // Library
   isInLibrary: boolean;
   notes?: string;

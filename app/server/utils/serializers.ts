@@ -115,6 +115,9 @@ export function serializeCharacter(character: CharacterWithPokemon) {
     personality: character.personality,
     goals: character.goals,
     location: character.location,
+    // Trainer Experience
+    trainerXp: character.trainerXp,
+    capturedSpecies: JSON.parse(character.capturedSpecies || '[]'),
     // Library
     isInLibrary: character.isInLibrary,
     notes: character.notes,
@@ -183,6 +186,9 @@ export function serializeCharacterSummary(character: CharacterWithPokemonSummary
     personality: character.personality,
     goals: character.goals,
     location: character.location,
+    // Trainer Experience
+    trainerXp: character.trainerXp,
+    capturedSpecies: JSON.parse(character.capturedSpecies || '[]'),
     // Library
     isInLibrary: character.isInLibrary,
     notes: character.notes,
