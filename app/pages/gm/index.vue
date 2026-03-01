@@ -148,7 +148,7 @@
         :pokemon-combatant-id="switchModalPokemonId"
         :trainer-entity-id="switchModalTrainerEntityId"
         @close="showSwitchModal = false"
-        @switched="showSwitchModal = false"
+        @switched="handleSwitchCompleted"
       />
     </Teleport>
 
@@ -388,8 +388,24 @@ const handleSwitchPokemon = (combatantId: string) => {
   const combatant = encounter.value.combatants.find(c => c.id === combatantId)
   if (!combatant) return
 
+  // Capture undo snapshot before opening modal (pre-switch state)
+  encounterStore.captureSnapshot('Switch Pokemon')
   switchModalCombatantId.value = combatantId
   showSwitchModal.value = true
+}
+
+// Called after a successful switch — broadcast update and refresh undo/redo
+const handleSwitchCompleted = async () => {
+  showSwitchModal.value = false
+  refreshUndoRedoState()
+  // Broadcast encounter_update via WebSocket for group/player views
+  await nextTick()
+  if (encounterStore.encounter) {
+    send({
+      type: 'encounter_update',
+      data: encounterStore.encounter
+    })
+  }
 }
 
 // Computed props for the switch modal
