@@ -106,8 +106,8 @@ CRUD + link/unlink + healing/rest + bulk.
 - `POST /api/pokemon/:id/allocate-stats` — allocate stat points with Base Relations validation (incremental or batch mode, PTU HP formula, decree-035)
 - `POST /api/pokemon/:id/assign-ability` — assign ability at Level 20/40 milestone (validates level, ability count, pool membership, fetches effect from AbilityData)
 - `POST /api/pokemon/:id/learn-move` — learn move from learnset (validates MoveData, no duplicates, 6-move max, add or replace by index)
-- `POST /api/pokemon/:id/evolution-check` — check evolution eligibility (level/item/triggers)
-- `POST /api/pokemon/:id/evolve` — perform evolution (species, stats, HP recalc, encounter-active guard)
+- `POST /api/pokemon/:id/evolution-check` — check evolution eligibility (level/item/triggers) + P1: ability remap preview, evolution move list with MoveData enrichment, resolution options with effects
+- `POST /api/pokemon/:id/evolve` — perform evolution (species, stats, HP recalc, encounter-active guard) + P1: accepts abilities array (GM-resolved), moves array (final move list), updates capabilities and skills from target species
 - `POST /api/pokemon/bulk-action` — bulk archive/delete
 
 ### Encounters (`/api/encounters`)
@@ -141,9 +141,9 @@ CRUD + extensive combat actions.
 - `POST /api/encounters/:id/xp-calculate` — preview XP calculation (read-only breakdown + participating Pokemon)
 - `POST /api/encounters/:id/xp-distribute` — apply XP to Pokemon (updates experience, level, tutorPoints)
 
-**Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `EvolutionConfirmModal.vue` (stat redistribution + confirmation for Pokemon evolution — Base Relations validation, HP preview, GM override), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio), `DeclarationPanel.vue` (GM declaration form for League Battle trainer_declaration phase — action type select, description input, submit + next turn), `DeclarationSummary.vue` (declaration list display for Group View — collapsible round declarations with resolving/resolved state indicators), `SwitchPokemonModal.vue` (Pokemon switching modal — shows recalled Pokemon, loads bench from trainer roster, select replacement with sprite/level/HP display).
+**Key encounter components:** `SignificancePanel.vue` (significance preset selector, difficulty adjustment, XP breakdown), `XpDistributionModal.vue` (post-combat XP allocation per player/Pokemon), `LevelUpNotification.vue` (aggregated level-up details shown after XP distribution), `EvolutionConfirmModal.vue` (multi-step evolution wizard — 4 steps: stat redistribution, ability resolution, move learning, summary; Base Relations validation, HP preview, GM override; delegates to `EvolutionStatStep.vue`, `EvolutionAbilityStep.vue`, `EvolutionMoveStep.vue`), `BudgetIndicator.vue` (encounter difficulty bar/label based on level budget ratio), `DeclarationPanel.vue` (GM declaration form for League Battle trainer_declaration phase — action type select, description input, submit + next turn), `DeclarationSummary.vue` (declaration list display for Group View — collapsible round declarations with resolving/resolved state indicators), `SwitchPokemonModal.vue` (Pokemon switching modal — shows recalled Pokemon, loads bench from trainer roster, select replacement with sprite/level/HP display).
 
-**Evolution utilities:** `utils/evolutionCheck.ts` (pure eligibility check — level/item/trigger validation, getEvolutionLevels, EvolutionStats type, validateBaseRelations re-export), `types/species.ts` (EvolutionTrigger interface — toSpecies, targetStage, minimumLevel, requiredItem, itemMustBeHeld).
+**Evolution utilities:** `utils/evolutionCheck.ts` (pure eligibility check — level/item/trigger validation, getEvolutionLevels, getEvolutionMoves with decree-036 stone vs level-based comparison, buildSelectedMoveList, EvolutionStats/EvolutionMoveDetail/EvolutionMoveResult types, validateBaseRelations re-export), `types/species.ts` (EvolutionTrigger interface — toSpecies, targetStage, minimumLevel, requiredItem, itemMustBeHeld). **Evolution sub-components:** `EvolutionStatStep.vue` (stat point allocation with base stat comparison), `EvolutionAbilityStep.vue` (auto-remap display, preserved abilities, GM resolution dropdown with effects), `EvolutionMoveStep.vue` (current/available moves, add/replace/remove workflow). WebSocket event: `pokemon_evolved` (server -> all clients).
 
 **Level-up stat allocation:** `utils/baseRelations.ts` (pure PTU Base Relations Rule utilities — buildStatTiers, validateBaseRelations, getValidAllocationTargets, extractStatPoints with warnings, formatStatName; decree-035 ordering), `composables/useLevelUpAllocation.ts` (reactive stat allocation workflow — pending allocation, validation, valid targets, budget tracking, submit to server, pendingAbilityMilestone, pendingNewMoves, hasPendingActions), `components/pokemon/StatAllocationPanel.vue` (interactive stat point allocation UI — tier display, +/- controls, validation feedback, partial allocation with confirmation).
 
@@ -250,7 +250,7 @@ Export/import for offline character management.
 | File | Purpose |
 |------|---------|
 | `server/services/pokemon-generator.service.ts` | Canonical Pokemon creation — generatePokemonData, createPokemonRecord, buildPokemonCombatant |
-| `server/services/evolution.service.ts` | Pokemon evolution — extractStatPoints, recalculateStats, performEvolution (species, types, stats, HP, spriteUrl) |
+| `server/services/evolution.service.ts` | Pokemon evolution — extractStatPoints, recalculateStats, remapAbilities (positional R032), enrichAbilityEffects (batch), performEvolution (species, types, stats, HP, spriteUrl, abilities, moves, capabilities, skills) |
 | `server/services/rest-healing.service.ts` | Extended rest move refresh — refreshDailyMoves, refreshDailyMovesForOwnedPokemon |
 | `server/services/csv-import.service.ts` | CSV import parsing (trainer/pokemon sheets) and DB creation |
 | `server/services/entity-builder.service.ts` | Prisma record → typed entity (buildPokemonEntityFromRecord, buildHumanEntityFromRecord) |
