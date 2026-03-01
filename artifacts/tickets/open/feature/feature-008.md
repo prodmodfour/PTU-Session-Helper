@@ -76,3 +76,15 @@ FULL-scope feature requiring design spec. Should build on the existing character
   - `6cc57b8` docs: update spec-p0 Section E to note skill ranks deferred to P1 per decree-037
   - `167d7c0` refactor: extract STAT_DEFINITIONS and RANK_PROGRESSION to shared constants (M1-M2)
   - `1fba52e` docs: add trainer level-up files to app-surface.md (M3)
+- 2026-03-01: **P0 APPROVED** — code-review-235 + rules-review-211 passed
+- 2026-03-01: **P1 implemented** — 10 commits on branch `slave/4-dev-feature-008-p1-20260301-093000`:
+  - `140af576` feat: extend useTrainerLevelUp composable with P1 state (edge/feature/class/milestone)
+  - `190c2088` feat: add LevelUpMilestoneSection.vue component (milestone radio choices at L5/10/20/30/40)
+  - `29f3c602` feat: add LevelUpEdgeSection.vue component (regular edges + bonus Skill Edges at L2/6/12)
+  - `4a97f625` feat: add LevelUpFeatureSection.vue component (free-text features at odd levels 3+)
+  - `2d11a86a` feat: add LevelUpClassSection.vue component (searchable class picker at L5/10)
+  - `d2fe7f9c` feat: update LevelUpSummary.vue to display all P1 choices
+  - `18a912ac` feat: wire P1 sections into LevelUpModal step navigation
+  - `2dceceed` fix: use milestone-aware totals for edge/feature step visibility
+  - `e49cb3a5` fix: guard step index against step list shrinkage
+  - `2b215c1a` chore: remove unused MilestoneOption import

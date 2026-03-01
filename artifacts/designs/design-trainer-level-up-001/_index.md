@@ -4,7 +4,7 @@ ticket_id: feature-008
 category: FEATURE_GAP
 scope: FULL
 domain: character-lifecycle
-status: p0-implemented
+status: p1-implemented
 affected_files:
   - app/components/character/CharacterModal.vue
   - app/pages/gm/characters/[id].vue
@@ -189,3 +189,32 @@ Branch: `slave/3-dev-feature-008-p0-20260228-205826` (8 commits)
    - `app/components/levelup/LevelUpMilestoneSection.vue` -- lifestyle bonus choice
    - Expand `trainerAdvancement.ts` with milestone choice logic
    - Unit tests for milestone choices
+
+### P1 — Implemented 2026-03-01
+
+Branch: `slave/4-dev-feature-008-p1-20260301-093000` (10 commits)
+
+| Commit | Description | Files |
+|--------|-------------|-------|
+| `140af576` | Extend composable with P1 state | `app/composables/useTrainerLevelUp.ts` (modified) |
+| `190c2088` | LevelUpMilestoneSection.vue | `app/components/levelup/LevelUpMilestoneSection.vue` (new) |
+| `29f3c602` | LevelUpEdgeSection.vue | `app/components/levelup/LevelUpEdgeSection.vue` (new) |
+| `4a97f625` | LevelUpFeatureSection.vue | `app/components/levelup/LevelUpFeatureSection.vue` (new) |
+| `2d11a86a` | LevelUpClassSection.vue | `app/components/levelup/LevelUpClassSection.vue` (new) |
+| `d2fe7f9c` | Update LevelUpSummary for P1 | `app/components/levelup/LevelUpSummary.vue` (modified) |
+| `18a912ac` | Wire P1 into LevelUpModal | `app/components/levelup/LevelUpModal.vue` (modified) |
+| `2dceceed` | Fix milestone-aware step visibility | `app/components/levelup/LevelUpModal.vue` (modified) |
+| `e49cb3a5` | Guard step index on list shrinkage | `app/components/levelup/LevelUpModal.vue` (modified) |
+| `2b215c1a` | Remove unused import | `app/composables/useTrainerLevelUp.ts` (modified) |
+
+**P1 deliverables:**
+- Milestone choices at levels 5/10/20/30/40 with radio button selection
+- Regular edge selection at even levels with free-text + Skill Edge shortcut
+- Bonus Skill Edges at levels 2/6/12 with rank restriction enforcement
+- Feature selection at odd levels 3+ with class reference display
+- Class choice at levels 5/10 with searchable picker and branching support
+- Milestone bonus integration (edges/features/stat points from lifestyle choices)
+- Updated summary showing all P1 choices
+- Step navigation: milestones -> stats -> skills -> edges -> features -> classes -> summary
+- Reactive step visibility based on milestone-aware computed totals
+- Decree compliance: decree-022 (branching suffix), decree-026 (Martial Artist), decree-027 (Pathetic creation-only)
