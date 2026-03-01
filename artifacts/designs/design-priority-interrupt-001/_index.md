@@ -4,7 +4,7 @@
 **Feature Ticket:** feature-016
 **Priority:** P2
 **Domain:** combat + vtt-grid
-**Status:** p0-implemented
+**Status:** p1-implemented
 **Created:** 2026-03-01
 
 ## Overview
@@ -17,10 +17,10 @@ This design implements the PTU 1.05 out-of-turn action system: Attack of Opportu
 |------|-------|--------|------|--------|
 | R110 | Attack of Opportunity | combat | P0 | Implemented |
 | R031 | AoO Movement Trigger | vtt-grid | P0 | Implemented |
-| R040 | Initiative — Holding Action | combat | P1 | Designed |
-| R046 | Priority Action Rules | combat | P1 | Designed |
-| R047 | Priority Limited/Advanced Variants | combat | P1 | Designed |
-| R048 | Interrupt Actions | combat | P1 | Designed |
+| R040 | Initiative — Holding Action | combat | P1 | Implemented |
+| R046 | Priority Action Rules | combat | P1 | Implemented |
+| R047 | Priority Limited/Advanced Variants | combat | P1 | Implemented |
+| R048 | Interrupt Actions | combat | P1 | Implemented |
 | R116 | Intercept Melee | combat | P2 | Designed |
 | R117 | Intercept Ranged | combat | P2 | Designed |
 | ptu-rule-095 | Disengage Maneuver | combat | P2 | Designed |
@@ -107,3 +107,4 @@ All new fields use optional types with defaults. Existing encounters work withou
 | 2026-03-01 | ALL | Design complete | N/A | Full design spec written |
 | 2026-03-01 | P0 | Implementation complete | 77f08598..416039c2 (8 commits) | 6 new files, 5 modified files. AoO trigger detection, out-of-turn engine, VTT grid integration, GM prompt UI, encounter store, WebSocket events |
 | 2026-03-01 | P0 | Fix cycle (code-review-247) | 40a1bfda..e43fe165 (8 commits) | CRIT-001: reactor eligibility re-validation. H1-H3: input validation, DB4 damage base, app-surface. M1-M4: client preview eligibility, auto-decline on faint, stale record, action cleanup |
+| 2026-03-01 | P1 | Implementation complete | 062b217a..0c4b0972 (11 commits) | 6 new files: hold-action.post.ts, release-hold.post.ts, priority.post.ts, interrupt.post.ts, HoldActionButton.vue, PriorityActionPanel.vue. 7 modified: combat.ts, encounter.ts, out-of-turn.service.ts, next-turn.post.ts, start.post.ts, encounter store, ws.ts. Also fixed ptu-rule-131 (Expert+ Combat AoO). |
