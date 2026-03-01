@@ -3,12 +3,13 @@ id: feature-017
 title: Poke Ball Type System
 priority: P2
 severity: MEDIUM
-status: open
+status: design-complete
 domain: capture
 source: matrix-gap (GAP-CAP-2)
 matrix_source: capture R020, R021, R022, R023, R024, R025, R026
 created_by: master-planner
 created_at: 2026-02-28
+design_spec: design-poke-ball-types-001
 ---
 
 # feature-017: Poke Ball Type System
@@ -41,6 +42,24 @@ No Poke Ball type system exists. The capture rate endpoint uses a flat base rate
 
 FULL-scope feature requiring design spec. Needs ball type catalog, capture rate formula integration, and selection UI.
 
+## Design Spec
+
+[design-poke-ball-types-001](../../../designs/design-poke-ball-types-001/_index.md)
+
+Three-tier design:
+- **P0**: Ball type catalog (25 balls), base modifier integration into capture roll, ballType API parameter
+- **P1**: Conditional ball logic (Timer, Quick, Level, Heavy, Fast, Love, Net, Dusk, Moon, Lure, Repeat, Nest, Dive)
+- **P2**: Ball selection UI, post-capture effects (Heal Ball, Friend Ball, Luxury Ball), enhanced capture display
+
+Related decrees: decree-013 (1d100 system), decree-014 (Stuck/Slow separate), decree-015 (real max HP).
+
 ## Note
 
 ptu-rule-050 (resolved) only removed dead `pokeBallType` code. The actual ball type system was never implemented.
+
+## Resolution Log
+
+| Date | Action | Details |
+|------|--------|---------|
+| 2026-03-01 | Design spec created | design-poke-ball-types-001 with 6 files: _index.md, spec-p0.md, spec-p1.md, spec-p2.md, shared-specs.md, testing-strategy.md |
+| 2026-03-01 | Status changed | open -> design-complete |
