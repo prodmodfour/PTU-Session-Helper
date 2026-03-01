@@ -188,6 +188,29 @@
         Switch
       </button>
 
+      <!-- Fainted Switch Button (visible when a trainer's Pokemon is fainted) -->
+      <button
+        v-if="canShowFaintedSwitchButton"
+        class="btn btn--sm btn--warning"
+        title="Switch Fainted Pokemon (Shift Action)"
+        :disabled="isFaintedSwitchDisabled"
+        @click="$emit('faintedSwitch', combatant.id)"
+      >
+        <img src="/icons/phosphor/arrow-clockwise.svg" alt="" class="btn-icon" />
+        Fainted Switch
+      </button>
+
+      <!-- Force Switch Button (GM-triggered, for move effects like Roar/Whirlwind) -->
+      <button
+        v-if="canShowForceSwitchButton"
+        class="btn btn--sm btn--accent"
+        title="Force Switch (Roar, Whirlwind, etc.)"
+        @click="$emit('forceSwitch', combatant.id)"
+      >
+        <img src="/icons/phosphor/arrow-clockwise.svg" alt="" class="btn-icon" />
+        Force Switch
+      </button>
+
       <button class="btn btn--sm btn--ghost" @click="$emit('remove', combatant.id)">
         Remove
       </button>
@@ -238,6 +261,8 @@ const emit = defineEmits<{
   status: [combatantId: string, add: StatusCondition[], remove: StatusCondition[], override: boolean]
   openActions: [combatantId: string]
   switchPokemon: [combatantId: string]
+  faintedSwitch: [combatantId: string]
+  forceSwitch: [combatantId: string]
 }>()
 
 const { getSpriteUrl } = usePokemonSprite()
@@ -394,6 +419,72 @@ const isSwitchDisabled = computed(() => {
   }
 
   return true
+})
+
+/**
+ * Show fainted switch button when:
+ * - Combatant is a trainer who has a fainted Pokemon in the encounter
+ * - OR combatant is a fainted Pokemon owned by a trainer
+ */
+const canShowFaintedSwitchButton = computed(() => {
+  if (props.combatant.type === 'human') {
+    const trainerEntityId = props.combatant.entityId
+    const encounterStore = useEncounterStore()
+    return encounterStore.encounter?.combatants.some(
+      c => c.type === 'pokemon' &&
+        (c.entity as Pokemon).ownerId === trainerEntityId &&
+        c.entity.currentHp <= 0
+    ) ?? false
+  }
+  if (props.combatant.type === 'pokemon') {
+    const pokemon = entity.value as Pokemon
+    return pokemon.ownerId && pokemon.currentHp <= 0
+  }
+  return false
+})
+
+/**
+ * Disable fainted switch when:
+ * - Not the trainer's turn
+ * - Trainer's Shift Action already used
+ */
+const isFaintedSwitchDisabled = computed(() => {
+  const encounterStore = useEncounterStore()
+  const encounter = encounterStore.encounter
+  if (!encounter) return true
+
+  const currentId = encounter.turnOrder[encounter.currentTurnIndex]
+
+  // Find the trainer
+  let trainerCombatantId: string
+  if (props.combatant.type === 'human') {
+    trainerCombatantId = props.combatant.id
+  } else {
+    const pokemon = entity.value as Pokemon
+    const trainer = encounter.combatants.find(
+      c => c.type === 'human' && c.entityId === pokemon.ownerId
+    )
+    if (!trainer) return true
+    trainerCombatantId = trainer.id
+  }
+
+  // Must be the trainer's turn
+  if (currentId !== trainerCombatantId) return true
+
+  // Trainer must have Shift Action
+  const trainer = encounter.combatants.find(c => c.id === trainerCombatantId)
+  return trainer?.turnState.shiftActionUsed ?? true
+})
+
+/**
+ * Show force switch button for Pokemon that are owned by a trainer.
+ * GM can trigger this on any Pokemon to simulate Roar/Whirlwind effects.
+ * Only shown on Pokemon combatants (not trainers).
+ */
+const canShowForceSwitchButton = computed(() => {
+  if (props.combatant.type !== 'pokemon') return false
+  const pokemon = entity.value as Pokemon
+  return !!pokemon.ownerId
 })
 
 // Format stat name for display
