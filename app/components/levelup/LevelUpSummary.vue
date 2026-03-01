@@ -5,6 +5,21 @@
       {{ characterName }}: Level {{ fromLevel }} -> Level {{ toLevel }}
     </p>
 
+    <!-- Milestone Choices -->
+    <div v-if="milestoneChoiceDetails.length" class="summary-section">
+      <h4 class="summary-section__title">Milestones</h4>
+      <div class="summary-section__list">
+        <div
+          v-for="ms in milestoneChoiceDetails"
+          :key="ms.level"
+          class="summary-item summary-item--changed"
+        >
+          <span class="summary-item__label">{{ ms.name }} (L{{ ms.level }})</span>
+          <span class="summary-item__value">{{ ms.choiceLabel }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Stat Changes -->
     <div class="summary-section">
       <h4 class="summary-section__title">Stats</h4>
@@ -35,17 +50,63 @@
       </div>
     </div>
 
-    <!-- P1 Indicators -->
-    <div v-if="p1Indicators.length" class="summary-section summary-section--p1">
-      <h4 class="summary-section__title">Coming in P1</h4>
+    <!-- Edges -->
+    <div v-if="allEdgeDisplayItems.length" class="summary-section">
+      <h4 class="summary-section__title">New Edges</h4>
+      <div class="summary-section__tags">
+        <span
+          v-for="(edge, i) in allEdgeDisplayItems"
+          :key="i"
+          class="summary-tag"
+          :class="{ 'summary-tag--skill': edge.isSkillEdge }"
+        >
+          {{ edge.label }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Skill Rank-Ups (from bonus Skill Edges) -->
+    <div v-if="skillRankUpDetails.length" class="summary-section">
+      <h4 class="summary-section__title">Skill Rank-Ups (from Skill Edges)</h4>
       <div class="summary-section__list">
         <div
-          v-for="(indicator, i) in p1Indicators"
+          v-for="(rankUp, i) in skillRankUpDetails"
           :key="i"
-          class="summary-item summary-item--p1"
+          class="summary-item summary-item--changed"
         >
-          <span class="summary-item__label">{{ indicator }}</span>
+          <span class="summary-item__label">{{ rankUp.skill }}</span>
+          <span class="summary-item__value">
+            {{ rankUp.from }} -> {{ rankUp.to }}
+          </span>
         </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div v-if="featureChoices.length" class="summary-section">
+      <h4 class="summary-section__title">New Features</h4>
+      <div class="summary-section__tags">
+        <span
+          v-for="(feat, i) in featureChoices"
+          :key="i"
+          class="summary-tag summary-tag--feature"
+        >
+          {{ feat }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Classes -->
+    <div v-if="newClassChoices.length" class="summary-section">
+      <h4 class="summary-section__title">New Classes</h4>
+      <div class="summary-section__tags">
+        <span
+          v-for="cls in newClassChoices"
+          :key="cls"
+          class="summary-tag summary-tag--class"
+        >
+          {{ cls }}
+        </span>
       </div>
     </div>
 
@@ -66,10 +127,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Stats } from '~/types/character'
+import type { Stats, SkillRank } from '~/types/character'
 import type { StatPoints } from '~/composables/useCharacterCreation'
 import type { TrainerAdvancementSummary } from '~/utils/trainerAdvancement'
-import { STAT_DEFINITIONS } from '~/constants/trainerStats'
+import type { BonusSkillEdgeChoice } from '~/composables/useTrainerLevelUp'
+import { STAT_DEFINITIONS, RANK_PROGRESSION } from '~/constants/trainerStats'
 
 interface Props {
   /** Character name */
@@ -85,8 +147,20 @@ interface Props {
   updatedMaxHp: number
   /** Warnings about incomplete allocations */
   warnings: string[]
-  /** Advancement summary for P1 indicators */
+  /** Advancement summary */
   summary: TrainerAdvancementSummary | null
+  /** P1: Edge choices */
+  edgeChoices: string[]
+  /** P1: Bonus Skill Edge choices */
+  bonusSkillEdgeChoices: BonusSkillEdgeChoice[]
+  /** P1: Feature choices */
+  featureChoices: string[]
+  /** P1: New class choices */
+  newClassChoices: string[]
+  /** P1: Milestone choices (level -> choiceId) */
+  milestoneChoices: Record<number, string>
+  /** P1: Character's current skills (for rank-up display) */
+  currentSkills: Record<string, SkillRank>
 }
 
 const props = defineProps<Props>()
@@ -102,28 +176,50 @@ const statChanges = computed(() =>
   }))
 )
 
-/** P1 feature/edge/milestone/skill indicators */
-const p1Indicators = computed(() => {
+/** Milestone choice details for display */
+const milestoneChoiceDetails = computed(() => {
   if (!props.summary) return []
-  const indicators: string[] = []
-  if (props.summary.totalEdges > 0) {
-    indicators.push(`${props.summary.totalEdges} edge(s) to select (P1)`)
-  }
-  if (props.summary.bonusSkillEdges > 0) {
-    indicators.push(`${props.summary.bonusSkillEdges} bonus Skill Edge(s) to select — grants skill ranks (P1)`)
-  }
-  if (props.summary.totalFeatures > 0) {
-    indicators.push(`${props.summary.totalFeatures} feature(s) to select (P1)`)
-  }
-  if (props.summary.milestones.length > 0) {
-    const names = props.summary.milestones.map(m => m.name).join(', ')
-    indicators.push(`Milestone(s): ${names} (P1)`)
-  }
-  if (props.summary.classChoicePrompts.length > 0) {
-    indicators.push(`Class choice at level(s) ${props.summary.classChoicePrompts.join(', ')} (P1)`)
-  }
-  return indicators
+  return props.summary.milestones
+    .filter(m => props.milestoneChoices[m.level])
+    .map(m => {
+      const choiceId = props.milestoneChoices[m.level]
+      const choice = m.choices.find(c => c.id === choiceId)
+      return {
+        level: m.level,
+        name: m.name,
+        choiceLabel: choice?.label ?? choiceId
+      }
+    })
 })
+
+/** Combined edge display items (regular + bonus skill edges) */
+const allEdgeDisplayItems = computed(() => {
+  const items: Array<{ label: string; isSkillEdge: boolean }> = []
+  for (const edge of props.edgeChoices) {
+    items.push({ label: edge, isSkillEdge: edge.startsWith('Skill Edge:') })
+  }
+  for (const choice of props.bonusSkillEdgeChoices) {
+    items.push({
+      label: `Skill Edge: ${choice.skill} (Bonus L${choice.fromLevel})`,
+      isSkillEdge: true
+    })
+  }
+  return items
+})
+
+/** Skill rank-up details from bonus Skill Edges */
+const skillRankUpDetails = computed(() =>
+  props.bonusSkillEdgeChoices.map(choice => {
+    const baseRank = (props.currentSkills[choice.skill] ?? 'Untrained') as string
+    const baseIndex = RANK_PROGRESSION.indexOf(baseRank)
+    const newIndex = Math.min(baseIndex + 1, RANK_PROGRESSION.length - 1)
+    return {
+      skill: choice.skill,
+      from: baseRank,
+      to: RANK_PROGRESSION[newIndex]
+    }
+  })
+)
 </script>
 
 <style lang="scss" scoped>
@@ -163,9 +259,10 @@ const p1Indicators = computed(() => {
     gap: $spacing-xs;
   }
 
-  &--p1 {
-    border-color: rgba($color-info, 0.3);
-    background: rgba($color-info, 0.05);
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
   }
 
   &--warnings {
@@ -189,10 +286,6 @@ const p1Indicators = computed(() => {
     background: rgba($color-warning, 0.1);
   }
 
-  &--p1 {
-    background: rgba($color-info, 0.1);
-  }
-
   &__label {
     font-size: $font-size-sm;
     color: $color-text;
@@ -212,6 +305,33 @@ const p1Indicators = computed(() => {
   &__unchanged {
     color: $color-text-muted;
     font-style: italic;
+  }
+}
+
+.summary-tag {
+  display: inline-block;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+  background: rgba($color-success, 0.1);
+  border: 1px solid rgba($color-success, 0.3);
+  color: $color-text;
+
+  &--skill {
+    background: rgba($color-warning, 0.1);
+    border-color: rgba($color-warning, 0.3);
+    color: $color-warning;
+  }
+
+  &--feature {
+    background: rgba($color-accent-violet, 0.1);
+    border-color: rgba($color-accent-violet, 0.3);
+  }
+
+  &--class {
+    background: rgba($color-accent-violet, 0.15);
+    border-color: rgba($color-accent-violet, 0.4);
+    color: $color-accent-violet;
   }
 }
 
