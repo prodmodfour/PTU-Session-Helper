@@ -9,6 +9,7 @@
       'vtt-token--ally': side === 'allies',
       'vtt-token--enemy': side === 'enemies',
       'vtt-token--fainted': isFainted,
+      'vtt-token--flanked': isFlanked,
       'vtt-token--own': isOwnToken,
       'vtt-token--pending-move': isPendingMove,
     }"
@@ -84,6 +85,8 @@ const props = defineProps<{
   isoScreenY?: number
   /** Token elevation level (displayed as badge) */
   elevation?: number
+  /** Flanking detection: this token is currently flanked by enemies */
+  isFlanked?: boolean
   /** Player mode: highlights this token as belonging to the current player */
   isOwnToken?: boolean
   /** Player mode: shows pulsing pending state for a move request */
@@ -229,6 +232,19 @@ const handleClick = (event: MouseEvent) => {
   &--fainted {
     opacity: 0.5;
     filter: grayscale(0.8);
+  }
+
+  // Flanking indicator: pulsing dashed border (PTU p.232)
+  &--flanked {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border: 2px dashed rgba(255, 100, 50, 0.7);
+      border-radius: $border-radius-sm;
+      pointer-events: none;
+      animation: flanking-pulse 1.5s ease-in-out infinite;
+    }
   }
 
   // Player mode: own token highlight (colored border ring)
@@ -379,5 +395,10 @@ const handleClick = (event: MouseEvent) => {
     opacity: 0.6;
     transform: scale(0.95);
   }
+}
+
+@keyframes flanking-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 </style>
