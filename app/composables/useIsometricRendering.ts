@@ -710,15 +710,22 @@ export function useIsometricRendering(options: UseIsometricRenderingOptions) {
       ? 'rgba(0, 255, 255, 0.15)'
       : 'rgba(255, 80, 80, 0.15)'
 
-    // Highlight all cells of the destination footprint (NxN)
+    // Highlight all cells of the destination footprint (NxN) with bounds checking
     for (let dx = 0; dx < tokenSize; dx++) {
       for (let dy = 0; dy < tokenSize; dy++) {
-        drawCellHighlight(
-          ctx,
-          { x: preview.toPosition.x + dx, y: preview.toPosition.y + dy },
-          toElev, angle, gridW, gridH, cellSize,
-          bgColor, color
-        )
+        const cellX = preview.toPosition.x + dx
+        const cellY = preview.toPosition.y + dy
+        if (cellX >= 0 && cellX < gridW && cellY >= 0 && cellY < gridH) {
+          const cellElev = options.getTerrainElevation
+            ? options.getTerrainElevation(cellX, cellY)
+            : toElev
+          drawCellHighlight(
+            ctx,
+            { x: cellX, y: cellY },
+            cellElev, angle, gridW, gridH, cellSize,
+            bgColor, color
+          )
+        }
       }
     }
 

@@ -480,13 +480,17 @@ export function useGridRendering(options: UseGridRenderingOptions) {
     if (distance > 0) {
       for (let dx = 0; dx < tokenSize; dx++) {
         for (let dy = 0; dy < tokenSize; dy++) {
-          drawCellHighlight(ctx, {
-            x: target.x + dx,
-            y: target.y + dy,
-            cellSize,
-            fillColor: bgColor,
-            strokeColor: arrowColor
-          })
+          const cellX = target.x + dx
+          const cellY = target.y + dy
+          if (cellX >= 0 && cellX < gridWidth && cellY >= 0 && cellY < gridHeight) {
+            drawCellHighlight(ctx, {
+              x: cellX,
+              y: cellY,
+              cellSize,
+              fillColor: bgColor,
+              strokeColor: arrowColor
+            })
+          }
         }
       }
 
@@ -597,15 +601,20 @@ export function useGridRendering(options: UseGridRenderingOptions) {
 
     // Highlight ALL cells the token would occupy at the destination (NxN footprint)
     if (preview.distance > 0) {
+      const { width: extGridWidth, height: extGridHeight } = options.config.value
       for (let dx = 0; dx < tokenSize; dx++) {
         for (let dy = 0; dy < tokenSize; dy++) {
-          drawCellHighlight(ctx, {
-            x: preview.toPosition.x + dx,
-            y: preview.toPosition.y + dy,
-            cellSize,
-            fillColor: bgColor,
-            strokeColor: arrowColor
-          })
+          const cellX = preview.toPosition.x + dx
+          const cellY = preview.toPosition.y + dy
+          if (cellX >= 0 && cellX < extGridWidth && cellY >= 0 && cellY < extGridHeight) {
+            drawCellHighlight(ctx, {
+              x: cellX,
+              y: cellY,
+              cellSize,
+              fillColor: bgColor,
+              strokeColor: arrowColor
+            })
+          }
         }
       }
 
