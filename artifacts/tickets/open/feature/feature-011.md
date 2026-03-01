@@ -61,3 +61,11 @@ Design complete: `artifacts/designs/design-pokemon-switching-001/`
   - 664b574: encounter store switchPokemon action + Switch button on CombatantCard
   - b22102f: switchActions lifecycle (clear on new round, init on start)
   - 4fdd15d: app-surface.md updated
+- 2026-03-01: P0 review fixes — code-review-232 (6 issues) + rules-review-208 (5 issues), 11 total resolved
+  - 10954c3: CRITICAL-001 — add Trapped condition check to validateSwitch (switching.service.ts)
+  - f233312: add RECALL_CLEARED_CONDITIONS constant (constants/statusConditions.ts)
+  - a04fa2a: HIGH-001/HIGH-002/MEDIUM-002 — clear volatile conditions, tempHP, stages on recall (switch.post.ts)
+  - 91081cf: C1 — handle pokemon_switched WebSocket event client-side (useWebSocket.ts)
+  - b59db4f: H1/H2 — add undo snapshot + encounter_update broadcast for switch (pages/gm/index.vue)
+  - 01e8a18: M1/M3 — fix switch button visibility and disabled logic (CombatantCard.vue)
+  - c4f1885: M2/MEDIUM-001 — correct Whirlwind comment per decree-034, document over-fetch (combat.ts, useSwitching.ts)
