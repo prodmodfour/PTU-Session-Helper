@@ -100,6 +100,102 @@ export function getEvolutionLevels(triggers: EvolutionTrigger[]): number[] {
 }
 
 // ============================================
+// EVOLUTION MOVE LEARNING (R033)
+// ============================================
+
+export interface LearnsetEntry {
+  level: number
+  move: string
+}
+
+export interface EvolutionMoveResult {
+  /** Moves available to learn immediately upon evolution */
+  availableMoves: Array<{
+    name: string
+    level: number
+  }>
+  /** Current move count */
+  currentMoveCount: number
+  /** Maximum moves allowed (PTU: 6) */
+  maxMoves: number
+  /** Slots available for new moves */
+  slotsAvailable: number
+}
+
+/**
+ * Get moves that become available upon evolution.
+ *
+ * PTU p.202: "When Pokemon Evolve, they can immediately learn any Moves
+ * that their new form learns at a Level lower than their minimum Level
+ * for Evolution but that their previous form could not learn."
+ *
+ * decree-036: For stone evolutions (no minimum level), use currentLevel
+ * as the upper bound instead.
+ *
+ * Algorithm:
+ * 1. Determine the level ceiling: minimumLevel if set, else currentLevel (decree-036)
+ * 2. Get new-form moves at levels <= ceiling
+ * 3. Exclude moves that appear anywhere in the old-form learnset
+ * 4. Exclude moves the Pokemon already knows
+ *
+ * Pure function — no DB access.
+ */
+export function getEvolutionMoves(input: {
+  oldLearnset: LearnsetEntry[]
+  newLearnset: LearnsetEntry[]
+  evolutionMinLevel: number | null
+  currentLevel: number
+  currentMoves: string[]
+}): EvolutionMoveResult {
+  const { oldLearnset, newLearnset, evolutionMinLevel, currentLevel, currentMoves } = input
+
+  // Level ceiling: use minimumLevel if set, else currentLevel (decree-036 for stone evos)
+  const levelCeiling = evolutionMinLevel ?? currentLevel
+
+  // All move names from old species' learnset (any level)
+  const oldMoveNames = new Set(
+    oldLearnset.map(entry => entry.move.toLowerCase())
+  )
+
+  // Current moves the Pokemon knows (case-insensitive)
+  const knownMoves = new Set(
+    currentMoves.map(name => name.toLowerCase())
+  )
+
+  // Filter new learnset: at or below ceiling, not in old learnset, not already known
+  const availableMoves = newLearnset
+    .filter(entry => {
+      if (entry.level > levelCeiling) return false
+      if (oldMoveNames.has(entry.move.toLowerCase())) return false
+      if (knownMoves.has(entry.move.toLowerCase())) return false
+      return true
+    })
+    .map(entry => ({
+      name: entry.move,
+      level: entry.level
+    }))
+
+  // Deduplicate by name (a move might appear at multiple levels)
+  const seen = new Set<string>()
+  const deduped = availableMoves.filter(move => {
+    const key = move.name.toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  const currentMoveCount = currentMoves.length
+  const maxMoves = 6
+
+  return {
+    availableMoves: deduped,
+    currentMoveCount,
+    maxMoves,
+    slotsAvailable: Math.max(0, maxMoves - currentMoveCount)
+  }
+}
+
+// ============================================
 // STAT TYPES (shared between client and server)
 // ============================================
 
