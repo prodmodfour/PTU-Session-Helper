@@ -1,5 +1,6 @@
 /**
- * Composable for managing Pokemon level-up stat allocation.
+ * Composable for managing Pokemon level-up stat allocation,
+ * ability assignment, and move learning.
  *
  * Provides reactive state for:
  * - Current stat point allocation (extracted from Pokemon data)
@@ -7,9 +8,14 @@
  * - Which stats are valid targets for the next point
  * - Base Relations validation result
  * - Allocation submission
+ * - Ability milestone detection (Level 20/40)
+ * - New moves available from learnset
+ * - Overall pending actions tracking
  *
  * PTU Core p.198: Base Relations Rule
  * PTU Core p.198: Stat point budget = level + 10
+ * PTU Core p.200: Level 20 = Second Ability, Level 40 = Third Ability
+ * PTU Core p.200: Max 6 moves
  */
 
 import type { Ref } from 'vue'
@@ -161,6 +167,48 @@ export function useLevelUpAllocation(pokemonRef: Ref<Pokemon | null>) {
     error.value = null
   }
 
+  // --- Ability Milestone State (P1) ---
+
+  /** Check if an ability milestone is pending */
+  const pendingAbilityMilestone = computed((): 'second' | 'third' | null => {
+    if (!pokemonRef.value) return null
+    const abilities = pokemonRef.value.abilities || []
+    if (pokemonRef.value.level >= 40 && abilities.length < 3) return 'third'
+    if (pokemonRef.value.level >= 20 && abilities.length < 2) return 'second'
+    return null
+  })
+
+  // --- Move Learning State (P1) ---
+
+  /** New moves available from learnset at the current level */
+  const pendingNewMoves = ref<string[]>([])
+
+  /** Fetch learnset moves for the current level from the server */
+  async function checkNewMoves() {
+    if (!pokemonRef.value) return
+    try {
+      const response = await $fetch<{
+        success: boolean
+        data: { allNewMoves?: string[] }
+      }>(`/api/pokemon/${pokemonRef.value.id}/level-up-check`, {
+        method: 'POST',
+        body: { targetLevel: pokemonRef.value.level }
+      })
+      if (response.success) {
+        pendingNewMoves.value = response.data.allNewMoves || []
+      }
+    } catch {
+      pendingNewMoves.value = []
+    }
+  }
+
+  /** Whether the full level-up workflow has pending actions */
+  const hasPendingActions = computed(() => {
+    return unallocatedPoints.value > 0 ||
+           pendingAbilityMilestone.value !== null ||
+           pendingNewMoves.value.length > 0
+  })
+
   return {
     // State
     pendingAllocation: readonly(pendingAllocation),
@@ -184,6 +232,16 @@ export function useLevelUpAllocation(pokemonRef: Ref<Pokemon | null>) {
     deallocatePoint,
     resetAllocation,
     submitAllocation,
-    cancelAllocation
+    cancelAllocation,
+
+    // Ability Milestone (P1)
+    pendingAbilityMilestone,
+
+    // Move Learning (P1)
+    pendingNewMoves: readonly(pendingNewMoves),
+    checkNewMoves,
+
+    // Overall status
+    hasPendingActions
   }
 }
