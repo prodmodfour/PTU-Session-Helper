@@ -97,6 +97,12 @@ export default defineEventHandler(async (event) => {
         updatedCombatant = applyStandardPriority(combatant)
         // Insert the combatant's full turn at the current position
         turnOrder.splice(currentTurnIndex, 0, combatantId)
+        // Remove the combatant's original entry to prevent duplicate turn.
+        // The original is now shifted right by 1, so find it after currentTurnIndex.
+        const originalIndex = turnOrder.indexOf(combatantId, currentTurnIndex + 1)
+        if (originalIndex !== -1) {
+          turnOrder.splice(originalIndex, 1)
+        }
         turnInserted = true
         break
       }
