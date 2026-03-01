@@ -502,6 +502,34 @@ export default defineWebSocketHandler({
           }
           break
 
+        case 'priority_declared':
+          // Priority action declared between turns (P1)
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
+        case 'hold_action':
+          // Combatant holding their action (P1)
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
+        case 'hold_released':
+          // Held action released at target initiative (P1)
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
+        case 'interrupt_triggered':
+          // Interrupt action triggered during another's turn (P1)
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
         case 'movement_preview':
           // GM previewing a move, broadcast to group views
           if (clientInfo?.role === 'gm' && clientInfo.encounterId) {
