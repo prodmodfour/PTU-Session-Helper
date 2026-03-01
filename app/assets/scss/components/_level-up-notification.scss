@@ -132,7 +132,7 @@
 .allocate-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: $spacing-xs;
   margin-left: auto;
   padding: 2px $spacing-sm;
   font-size: $font-size-xs;
