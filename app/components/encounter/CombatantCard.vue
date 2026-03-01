@@ -73,6 +73,11 @@
         </button>
       </div>
 
+      <!-- League switch restriction indicator (P1 Section G) -->
+      <div v-if="isGm && isUncommandable" class="combatant-card__uncommandable">
+        Cannot Act (Switched In)
+      </div>
+
       <!-- Status Conditions (Dead/Fainted filtered — they have dedicated UI) -->
       <div v-if="displayStatusConditions.length > 0" class="combatant-card__status">
         <span
@@ -306,6 +311,9 @@ const spriteUrl = computed(() => {
 const tempHp = computed(() => entity.value.temporaryHp || 0)
 const injuries = computed(() => entity.value.injuries || 0)
 const isFainted = computed(() => entity.value.currentHp <= 0)
+const isUncommandable = computed(() =>
+  props.combatant.turnState?.canBeCommanded === false && entity.value.currentHp > 0
+)
 const isDead = computed(() => (entity.value.statusConditions || []).includes('Dead'))
 const isHeavilyInjured = computed(() => injuries.value >= 5)
 const statusConditions = computed(() => entity.value.statusConditions || [])
@@ -687,6 +695,18 @@ const handleActClick = () => {
     color: $color-accent-violet;
     font-weight: normal;
     margin-left: 2px;
+  }
+
+  &__uncommandable {
+    display: inline-block;
+    padding: 2px $spacing-sm;
+    margin-bottom: $spacing-xs;
+    font-size: $font-size-xs;
+    font-weight: 600;
+    color: $color-warning;
+    background: rgba($color-warning, 0.15);
+    border: 1px solid rgba($color-warning, 0.3);
+    border-radius: $border-radius-sm;
   }
 
   &__capture-rate {
