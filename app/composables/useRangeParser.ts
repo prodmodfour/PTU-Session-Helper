@@ -466,56 +466,6 @@ export function useRangeParser() {
   }
 
   /**
-   * Check if two attackers are flanking a multi-cell target.
-   *
-   * PTU p.232: Flanking requires attackers on opposite sides of the target.
-   * For multi-cell targets, we use the closest cell of each attacker to the
-   * target footprint and compute the angle from the target's center. The
-   * attackers flank if the angle between them is >= 135 degrees (3pi/4).
-   *
-   * Both attackers must be adjacent (melee range, distance <= 1) to the target.
-   *
-   * @param attackerA - First attacker's footprint
-   * @param attackerB - Second attacker's footprint
-   * @param target - Target's footprint
-   * @returns true if attackerA and attackerB flank the target
-   */
-  function isFlankingTarget(
-    attackerA: TokenFootprint,
-    attackerB: TokenFootprint,
-    target: TokenFootprint
-  ): boolean {
-    // Both attackers must be adjacent (melee range) to the target
-    const distA = ptuDistanceTokens(attackerA, target)
-    const distB = ptuDistanceTokens(attackerB, target)
-    if (distA > 1 || distB > 1) return false
-
-    // Find the closest cell of each attacker to the target
-    const pairA = closestCellPair(attackerA, target)
-    const pairB = closestCellPair(attackerB, target)
-
-    // Calculate target center (fractional for even-sized tokens)
-    const targetCenterX = target.position.x + (target.size - 1) / 2
-    const targetCenterY = target.position.y + (target.size - 1) / 2
-
-    // Compute angle from target center to each attacker's closest cell
-    const angleA = Math.atan2(
-      pairA.from.y - targetCenterY,
-      pairA.from.x - targetCenterX
-    )
-    const angleB = Math.atan2(
-      pairB.from.y - targetCenterY,
-      pairB.from.x - targetCenterX
-    )
-
-    // Check if the angle difference is >= 135 degrees (opposite-ish sides)
-    let angleDiff = Math.abs(angleA - angleB)
-    if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff
-
-    return angleDiff >= (3 * Math.PI / 4)
-  }
-
-  /**
    * Check if a multi-cell target is hit by an AoE.
    *
    * A target is hit if ANY cell of its NxN footprint overlaps with the
@@ -583,7 +533,6 @@ export function useRangeParser() {
     ptuDistanceTokens,
     closestCellPair,
     getAffectedCells,
-    isFlankingTarget,
     isTargetHitByAoE,
     getBlastEdgeOrigin,
     // Re-exported from usePathfinding for backwards compatibility
