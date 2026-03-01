@@ -3,7 +3,7 @@ id: feature-020
 title: Healing Item System
 priority: P2
 severity: MEDIUM
-status: design-complete
+status: in-progress
 design_spec: design-healing-items-001
 domain: healing
 source: matrix-gap (GAP-HEAL-2)
@@ -51,3 +51,11 @@ Design spec: `artifacts/designs/design-healing-items-001/`
 ## Resolution Log
 
 - 2026-03-01: Design spec created (`design-healing-items-001`). Status set to design-complete.
+- 2026-03-01: P0 implementation complete (6 commits):
+  - `c0940d17` Section A: Healing item catalog constants (`app/constants/healingItems.ts`)
+  - `10677a83` Section B: Healing item service (`app/server/services/healing-item.service.ts`)
+  - `1f6bc2c4` Section C: Use-item API endpoint (`app/server/api/encounters/[id]/use-item.post.ts`)
+  - `fa366600` Section D: Encounter store useItem action (`app/stores/encounter.ts`)
+  - `3cbd84e2` Section E: useHealingItems composable (`app/composables/useHealingItems.ts`)
+  - `4ecf6b19` Section E: UseItemModal component (`app/components/encounter/UseItemModal.vue`)
+  - `ca6034d7` Section E: CombatantCard integration (Use Item button + modal wiring)

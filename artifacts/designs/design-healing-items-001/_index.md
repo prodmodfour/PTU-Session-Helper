@@ -4,7 +4,7 @@ ticket_id: feature-020
 category: FEATURE
 scope: FULL
 domain: healing
-status: design-complete
+status: p0-implemented
 decrees:
   - decree-017
   - decree-029
