@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, SwitchAction } from '~/types'
+import type { OutOfTurnAction, AoOTrigger } from '~/types/combat'
+import type { GridPosition } from '~/types/spatial'
 import type { SignificanceTier } from '~/utils/encounterBudget'
 
 // History composable for undo/redo
@@ -109,6 +111,24 @@ export const useEncounterStore = defineStore('encounter', {
       return (state.encounter.declarations ?? []).find(
         d => d.combatantId === currentId && d.round === state.encounter!.currentRound
       ) ?? null
+    },
+
+    /** Pending AoO actions awaiting GM resolution (feature-016) */
+    pendingAoOs: (state): OutOfTurnAction[] => {
+      return (state.encounter?.pendingOutOfTurnActions ?? [])
+        .filter(a => a.category === 'aoo' && a.status === 'pending')
+    },
+
+    /** All pending out-of-turn actions (AoO, Priority, Interrupt) */
+    pendingOutOfTurnActions: (state): OutOfTurnAction[] => {
+      return (state.encounter?.pendingOutOfTurnActions ?? [])
+        .filter(a => a.status === 'pending')
+    },
+
+    /** Whether there are any pending AoO actions to show */
+    hasAoOPrompts: (state): boolean => {
+      return (state.encounter?.pendingOutOfTurnActions ?? [])
+        .some(a => a.category === 'aoo' && a.status === 'pending')
     },
   },
 
@@ -533,6 +553,13 @@ export const useEncounterStore = defineStore('encounter', {
       if (data.switchActions !== undefined) {
         this.encounter.switchActions = data.switchActions
       }
+      // Out-of-turn actions (feature-016)
+      if (data.pendingOutOfTurnActions !== undefined) {
+        this.encounter.pendingOutOfTurnActions = data.pendingOutOfTurnActions
+      }
+      if (data.holdQueue !== undefined) {
+        this.encounter.holdQueue = data.holdQueue
+      }
       this.encounter.moveLog = data.moveLog ?? this.encounter.moveLog
       if (data.significanceMultiplier !== undefined) {
         this.encounter.significanceMultiplier = data.significanceMultiplier
@@ -555,6 +582,9 @@ export const useEncounterStore = defineStore('encounter', {
           existing.side = incomingCombatant.side
           existing.position = incomingCombatant.position
           existing.turnState = incomingCombatant.turnState
+          // Out-of-turn action state (feature-016)
+          existing.outOfTurnUsage = incomingCombatant.outOfTurnUsage
+          existing.disengaged = incomingCombatant.disengaged
           // Update entity properties
           Object.assign(existing.entity, incomingCombatant.entity)
         } else {
@@ -743,6 +773,75 @@ export const useEncounterStore = defineStore('encounter', {
         this.encounter = response.data
       } catch (e: any) {
         this.error = e.message || 'Failed to set weather'
+        throw e
+      }
+    },
+
+    // ===========================================
+    // Attack of Opportunity (feature-016)
+    // ===========================================
+
+    /** Detect AoO triggers for a given action */
+    async detectAoO(
+      actorId: string,
+      triggerType: AoOTrigger,
+      context?: {
+        previousPosition?: GridPosition
+        newPosition?: GridPosition
+        maneuverTargetIds?: string[]
+        hasAdjacentTarget?: boolean
+      }
+    ) {
+      if (!this.encounter) return null
+
+      try {
+        const response = await $fetch<{
+          data: {
+            triggeredActions: OutOfTurnAction[]
+            encounter: Encounter
+          }
+        }>(`/api/encounters/${this.encounter.id}/aoo-detect`, {
+          method: 'POST',
+          body: {
+            actorId,
+            triggerType,
+            ...context
+          }
+        })
+        this.encounter = response.data.encounter
+        return response.data.triggeredActions
+      } catch (e: any) {
+        this.error = e.message || 'Failed to detect AoO triggers'
+        throw e
+      }
+    },
+
+    /** Resolve a pending AoO (accept or decline) */
+    async resolveAoO(actionId: string, resolution: 'accept' | 'decline', damageRoll?: number) {
+      if (!this.encounter) return null
+
+      try {
+        const response = await $fetch<{
+          data: {
+            encounter: Encounter
+            resolution: 'accept' | 'decline'
+            struggleAttack?: {
+              actorId: string
+              targetId: string
+              damage: number
+              hit: boolean
+              fainted: boolean
+              isDead: boolean
+            }
+          }
+        }>(`/api/encounters/${this.encounter.id}/aoo-resolve`, {
+          method: 'POST',
+          body: { actionId, resolution, damageRoll }
+        })
+        this.encounter = response.data.encounter
+        return response.data
+      } catch (e: any) {
+        this.error = e.message || 'Failed to resolve AoO'
         throw e
       }
     },
