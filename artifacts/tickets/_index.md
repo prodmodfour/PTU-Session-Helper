@@ -1,6 +1,6 @@
 ---
-generated_at: 2026-03-01T13:45:02.649Z
-total_tickets: 243
+generated_at: 2026-03-01T14:24:55.249Z
+total_tickets: 244
 open: 23
 in_progress: 102
 resolved: 105
@@ -156,4 +156,4 @@ All decree-needs addressed.
 | feature | 8 | 11 | 3 | 23 |
 | ux | 3 | 7 | 2 | 13 |
 | decree | 0 | 0 | 38 | 38 |
-| refactoring | 6 | 13 | 0 | 27 |
+| refactoring | 6 | 13 | 0 | 28 |
