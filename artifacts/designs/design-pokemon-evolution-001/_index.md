@@ -4,7 +4,7 @@
 **Feature Ticket:** feature-006
 **Priority:** P1
 **Domain:** pokemon-lifecycle
-**Status:** p0-implemented
+**Status:** p1-implemented
 **Created:** 2026-02-28
 
 ## Scope
@@ -96,3 +96,14 @@ Full PTU 1.05 Pokemon evolution mechanics: detection, species change, stat recal
 | 2026-02-28 | 4d2cc37 | P0: UI — clickable evolution entries in LevelUpNotification |
 | 2026-02-28 | 2849aec | P0: UI — Evolve button on Pokemon sheet page |
 | 2026-02-28 | 5ce760c | P0: Refactor — shared validateBaseRelations + EvolutionStats type |
+| 2026-03-01 | b589480 | P1: Service — remapAbilities() for positional ability remapping (R032) |
+| 2026-03-01 | 34b1684 | P1: Utility — getEvolutionMoves() for evolution move learning (R033, decree-036) |
+| 2026-03-01 | 24d6bfb | P1: Service — extend performEvolution with abilities, moves, capabilities, skills |
+| 2026-03-01 | 30851f4 | P1: UI — multi-step evolution modal with 3 sub-components |
+| 2026-03-01 | 900c49d | P1: WebSocket — pokemon_evolved broadcast |
+| 2026-03-01 | 5bb174d | P1 Fix: strict `<` for level-based moves, `<=` for stone (decree-036) |
+| 2026-03-01 | ea4c3c4 | P1 Fix: oldName tracking in remapped abilities |
+| 2026-03-01 | 12d500b | P1 Fix: batch enrichAbilityEffects N+1 query |
+| 2026-03-01 | 250c0b4 | P1 Fix: shared buildSelectedMoveList utility |
+| 2026-03-01 | b2cd8c2 | P1 Fix: ability effect descriptions in resolution dropdown |
+| 2026-03-01 | 3e0b77e | P1 Fix: app-surface.md updated |

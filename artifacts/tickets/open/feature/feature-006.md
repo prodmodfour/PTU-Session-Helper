@@ -73,3 +73,9 @@ This is a FULL-scope feature requiring a multi-tier design spec before implement
 | 2026-03-01 | 30851f4 | P1: UI — multi-step evolution modal (stat/ability/move/summary) with 3 sub-components |
 | 2026-03-01 | 39f47e9 | P1: UI — update Pokemon sheet + XpDistributionResults callers for P1 props |
 | 2026-03-01 | 900c49d | P1: WebSocket — pokemon_evolved broadcast to all clients |
+| 2026-03-01 | 5bb174d | P1 Fix: CRITICAL — use strict `<` for level-based evolution moves, `<=` only for stone evolutions (decree-036) |
+| 2026-03-01 | ea4c3c4 | P1 Fix: HIGH — track oldName in remapped abilities to fix index mismatch with Feature-granted abilities |
+| 2026-03-01 | 12d500b | P1 Fix: HIGH — batch enrichAbilityEffects() into single findMany query (N+1 elimination) |
+| 2026-03-01 | 250c0b4 | P1 Fix: MEDIUM — extract buildSelectedMoveList to shared utility (deduplicate ConfirmModal/MoveStep) |
+| 2026-03-01 | b2cd8c2 | P1 Fix: MEDIUM — show ability effect descriptions in resolution dropdown |
+| 2026-03-01 | 3e0b77e | P1 Fix: MEDIUM — update app-surface.md with P1 evolution additions |
