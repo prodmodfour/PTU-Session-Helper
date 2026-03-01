@@ -629,23 +629,27 @@ export function createInterruptAction(
  * Mark a combatant as having used their Interrupt this round.
  * Returns updated combatant. Does NOT mutate input.
  *
- * Per spec F3: In League Battles, if a Pokemon uses an Interrupt,
- * it gives up its turn next round (skipNextRound = true).
+ * Per PTU p.229 + spec F3: In League Battles, only switched-in Pokemon
+ * that cannot be commanded this round (canBeCommanded=false) forfeit
+ * their next round turn when using an Interrupt. Regular Pokemon
+ * using Interrupts do NOT lose their next turn.
  */
 export function applyInterruptUsage(
   combatant: Combatant,
   isLeagueBattle: boolean
 ): Combatant {
+  // Only switched-in Pokemon (canBeCommanded=false) forfeit next turn (PTU p.229)
+  const isUncommandablePokemon = isLeagueBattle
+    && combatant.type === 'pokemon'
+    && combatant.turnState?.canBeCommanded === false
+
   return {
     ...combatant,
     outOfTurnUsage: {
       ...(combatant.outOfTurnUsage ?? getDefaultOutOfTurnUsage()),
       interruptUsed: true
     },
-    // League Battle Pokemon forfeit next round turn (F3)
-    skipNextRound: isLeagueBattle && combatant.type === 'pokemon'
-      ? true
-      : combatant.skipNextRound
+    skipNextRound: isUncommandablePokemon ? true : combatant.skipNextRound
   }
 }
 
