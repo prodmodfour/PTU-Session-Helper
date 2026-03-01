@@ -26,6 +26,7 @@
 import { performEvolution } from '~/server/services/evolution.service'
 import type { Stats } from '~/server/services/evolution.service'
 import { prisma } from '~/server/utils/prisma'
+import { notifyPokemonEvolved } from '~/server/utils/websocket'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -153,6 +154,16 @@ export default defineEventHandler(async (event) => {
       skipBaseRelations: body.skipBaseRelations === true,
       abilities,
       moves
+    })
+
+    // Broadcast evolution to all connected clients
+    const ownerId = (result.pokemon as Record<string, unknown>).ownerId as string | null
+    notifyPokemonEvolved({
+      pokemonId: id,
+      previousSpecies: result.changes.previousSpecies,
+      newSpecies: result.changes.newSpecies,
+      ownerId: ownerId ?? null,
+      changes: result.changes
     })
 
     return {

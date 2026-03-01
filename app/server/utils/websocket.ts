@@ -156,3 +156,17 @@ export function notifySceneGroupUpdated(sceneId: string, group: unknown) {
 export function notifySceneGroupDeleted(sceneId: string, groupId: string) {
   broadcastToGroupAndPlayers('scene_group_deleted', { sceneId, groupId })
 }
+
+// Evolution-related broadcast (sent to all clients)
+export function notifyPokemonEvolved(data: {
+  pokemonId: string
+  previousSpecies: string
+  newSpecies: string
+  ownerId: string | null
+  changes: unknown
+}) {
+  broadcast({
+    type: 'pokemon_evolved',
+    data
+  })
+}

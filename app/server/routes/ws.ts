@@ -481,6 +481,11 @@ export default defineWebSocketHandler({
           broadcast(event, peer)
           break
 
+        case 'pokemon_evolved':
+          // Pokemon evolved — broadcast to all clients
+          broadcast(event, peer)
+          break
+
         case 'movement_preview':
           // GM previewing a move, broadcast to group views
           if (clientInfo?.role === 'gm' && clientInfo.encounterId) {
