@@ -257,6 +257,10 @@ const allEncounterCombatants = computed((): Combatant[] =>
 )
 
 // Flanking detection for evasion penalty (PTU p.232)
+// Intentional separate instance: MoveTargetModal is rendered by GMActionModal,
+// not as a child of GridCanvas, so it cannot access GridCanvas's exposed
+// getFlankingPenalty. The computed chain is lightweight (O(n^2) over ~4-10
+// combatants) and this also provides correct behavior in non-VTT encounters.
 const { getFlankingPenalty } = useFlankingDetection(allEncounterCombatants)
 
 // Use the extracted composable for all calculations
