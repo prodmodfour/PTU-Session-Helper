@@ -73,3 +73,4 @@ FULL-scope feature requiring design spec. This is a fundamental combat system ch
 | Date | Action | Commits | Files |
 |------|--------|---------|-------|
 | 2026-03-01 | Design spec written | ea1ef69b, 425a2a3f, e09525eb, fb161da1, 2bdc3ab5 | 6 design spec files |
+| 2026-03-01 | P0 implemented | 77f08598, 215e8769, b12d7b93, c56f485a, a6895c1a, 3edcfc2d, 8b577107, 416039c2 | 6 new: out-of-turn.service.ts, adjacency.ts, aooTriggers.ts, aoo-detect.post.ts, aoo-resolve.post.ts, AoOPrompt.vue. 5 modified: combat.ts, encounter.ts, encounter store, useGridMovement.ts, next-turn.post.ts, ws.ts, schema.prisma, encounter.service.ts |

@@ -4,7 +4,7 @@
 **Feature Ticket:** feature-016
 **Priority:** P2
 **Domain:** combat + vtt-grid
-**Status:** design-complete
+**Status:** p0-implemented
 **Created:** 2026-03-01
 
 ## Overview
@@ -15,8 +15,8 @@ This design implements the PTU 1.05 out-of-turn action system: Attack of Opportu
 
 | Rule | Title | Domain | Tier | Status |
 |------|-------|--------|------|--------|
-| R110 | Attack of Opportunity | combat | P0 | Designed |
-| R031 | AoO Movement Trigger | vtt-grid | P0 | Designed |
+| R110 | Attack of Opportunity | combat | P0 | Implemented |
+| R031 | AoO Movement Trigger | vtt-grid | P0 | Implemented |
 | R040 | Initiative — Holding Action | combat | P1 | Designed |
 | R046 | Priority Action Rules | combat | P1 | Designed |
 | R047 | Priority Limited/Advanced Variants | combat | P1 | Designed |
@@ -105,3 +105,4 @@ All new fields use optional types with defaults. Existing encounters work withou
 | Date | Tier | Action | Commits | Notes |
 |------|------|--------|---------|-------|
 | 2026-03-01 | ALL | Design complete | N/A | Full design spec written |
+| 2026-03-01 | P0 | Implementation complete | 77f08598..416039c2 (8 commits) | 6 new files, 5 modified files. AoO trigger detection, out-of-turn engine, VTT grid integration, GM prompt UI, encounter store, WebSocket events |
