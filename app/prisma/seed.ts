@@ -254,7 +254,7 @@ interface SpeciesRow {
  */
 function parseEvoLineSpeciesAndTrigger(lineText: string): { speciesName: string; triggerText: string } {
   // Known trigger keywords that mark the boundary between species name and trigger
-  const triggerKeywords = /\b(Minimum|Holding|Water Stone|Fire Stone|Thunderstone|Leaf Stone|Moon Stone|Sun Stone|Shiny Stone|Dusk Stone|Dawn Stone|Ice Stone|Oval Stone|Prism Scale|Deepseatooth|Deepseascale|King's Rock|Metal Coat|Electirizer|Magmarizer|Protector|Reaper Cloth|Razor Claw|Razor Fang|Dragon Scale|Up-Grade|Dubious Disc|Sachet|Whipped Dream|Link Cable Stone)\b/i
+  const triggerKeywords = /\b(Minimum|Holding|Learn|Male|Female|Water Stone|Fire Stone|Thunderstone|Leaf Stone|Moon Stone|Sun Stone|Shiny Stone|Dusk Stone|Dawn Stone|Ice Stone|Oval Stone|Prism Scale|Deepseatooth|Deepseascale|King's Rock|Metal Coat|Electirizer|Magmarizer|Protector|Reaper Cloth|Razor Claw|Razor Fang|Dragon Scale|Up-Grade|Dubious Disc|Sachet|Whipped Dream|Link Cable Stone)\b/i
 
   const triggerMatch = lineText.match(triggerKeywords)
   if (triggerMatch && triggerMatch.index !== undefined) {
