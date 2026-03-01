@@ -51,7 +51,7 @@ FULL-scope feature requiring design spec. Should build on the existing character
 | P0 | Advancement logic, stat/skill allocation, level-up modal | `trainerAdvancement.ts`, `useTrainerLevelUp.ts`, `LevelUpModal.vue`, `LevelUpStatSection.vue`, `LevelUpSkillSection.vue`, `LevelUpSummary.vue` |
 | P1 | Edges, features, class choice, lifestyle milestones | `LevelUpEdgeSection.vue`, `LevelUpFeatureSection.vue`, `LevelUpClassSection.vue`, `LevelUpMilestoneSection.vue` |
 
-**Applicable decrees:** decree-022 (branching class suffix), decree-026 (Martial Artist not branching), decree-027 (Pathetic block creation-only, lifted during level-up)
+**Applicable decrees:** decree-022 (branching class suffix), decree-026 (Martial Artist not branching), decree-027 (Pathetic block creation-only, lifted during level-up), decree-037 (skill ranks from Edge slots only, not automatic per-level)
 
 ## Resolution Log
 
@@ -65,3 +65,14 @@ FULL-scope feature requiring design spec. Should build on the existing character
   - `8bc7e87` feat: add LevelUpModal.vue component (new file)
   - `541420d` feat: integrate level-up detection into gm/characters/[id].vue
   - `af10309` feat: integrate level-up detection into CharacterModal.vue
+- 2026-03-01: **P0 fix cycle** — 10 commits on branch `slave/3-dev-feature-008-fix-20260228-233710` (code-review-230 + rules-review-206 + decree-037):
+  - `e3e1052` fix: prevent double modal open on level-up completion (C1 — isApplyingLevelUp guard in CharacterModal.vue and [id].vue)
+  - `dfe26ee` fix: cap evasion at +6 in level-up stat preview (H1 — Math.min(..., 6) in LevelUpStatSection.vue)
+  - `5fd0dfa` fix: heal currentHp to new max when trainer was at full HP on level-up (H2 — wasAtFullHp detection in useTrainerLevelUp.ts)
+  - `699dfa7` refactor: remove skillRanksGained from trainer advancement per decree-037 (trainerAdvancement.ts)
+  - `149dd43` refactor: remove skill rank allocation from useTrainerLevelUp per decree-037 (useTrainerLevelUp.ts)
+  - `1d872b1` refactor: remove skills step from LevelUpModal wizard per decree-037 (LevelUpModal.vue)
+  - `e6fdcca` refactor: remove skill changes from LevelUpSummary per decree-037 (LevelUpSummary.vue)
+  - `6cc57b8` docs: update spec-p0 Section E to note skill ranks deferred to P1 per decree-037
+  - `167d7c0` refactor: extract STAT_DEFINITIONS and RANK_PROGRESSION to shared constants (M1-M2)
+  - `1fba52e` docs: add trainer level-up files to app-surface.md (M3)
