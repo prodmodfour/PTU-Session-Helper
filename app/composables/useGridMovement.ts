@@ -394,12 +394,41 @@ export function useGridMovement(options: UseGridMovementOptions) {
   }
 
   /**
+   * Get terrain cost for a multi-cell footprint at position (x, y).
+   * Returns the maximum terrain cost across all cells in the footprint.
+   * Returns Infinity if ANY cell is impassable.
+   */
+  const getTerrainCostForFootprint = (
+    x: number,
+    y: number,
+    size: number,
+    combatantId: string
+  ): number => {
+    let maxCost = 0
+    for (let fx = 0; fx < size; fx++) {
+      for (let fy = 0; fy < size; fy++) {
+        const cellCost = getTerrainCostForCombatant(x + fx, y + fy, combatantId)
+        if (!isFinite(cellCost)) return Infinity
+        maxCost = Math.max(maxCost, cellCost)
+      }
+    }
+    return maxCost
+  }
+
+  /**
    * Get a combatant-aware terrain cost getter function, or undefined if no terrain is active.
    * Returns undefined when there's no terrain to avoid unnecessary pathfinding overhead.
    * The returned function is bound to the specific combatant's capabilities.
+   *
+   * When tokenSize > 1, returns a footprint-aware getter that aggregates terrain cost
+   * across all NxN cells at the given origin position.
    */
-  const getTerrainCostGetter = (combatantId?: string): TerrainCostGetter | undefined => {
+  const getTerrainCostGetter = (combatantId?: string, tokenSize?: number): TerrainCostGetter | undefined => {
     if (terrainStore.terrainCount === 0) return undefined
+    const size = tokenSize ?? 1
+    if (combatantId && size > 1) {
+      return (x: number, y: number) => getTerrainCostForFootprint(x, y, size, combatantId)
+    }
     if (combatantId) {
       return (x: number, y: number) => getTerrainCostForCombatant(x, y, combatantId)
     }
