@@ -108,15 +108,15 @@ const statDefinitions = [
   { key: 'speed' as const, label: 'Speed' }
 ]
 
-/** Compute evasions from updated stats (uses calculated stats per PTU rules) */
+/** Compute evasions from updated stats (uses calculated stats per PTU rules, capped at +6 per PTU Core p.15) */
 const evasions = computed(() => {
   const def = props.currentStats.defense + props.allocations.defense
   const spDef = props.currentStats.specialDefense + props.allocations.specialDefense
   const spd = props.currentStats.speed + props.allocations.speed
   return {
-    physical: Math.floor(def / 5),
-    special: Math.floor(spDef / 5),
-    speed: Math.floor(spd / 5)
+    physical: Math.min(Math.floor(def / 5), 6),
+    special: Math.min(Math.floor(spDef / 5), 6),
+    speed: Math.min(Math.floor(spd / 5), 6)
   }
 })
 </script>
