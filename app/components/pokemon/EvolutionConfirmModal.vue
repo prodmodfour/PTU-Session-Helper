@@ -6,12 +6,13 @@
           <h3>
             <PhArrowCircleUp :size="20" class="header-icon" />
             Evolve {{ pokemonName }}
+            <span class="step-indicator">Step {{ currentStep }} / {{ totalSteps }}</span>
           </h3>
           <button class="modal__close" @click="$emit('close')">&times;</button>
         </div>
 
         <div class="modal__body">
-          <!-- Species change summary -->
+          <!-- Species change summary (always visible) -->
           <div class="evolution-summary">
             <div class="evolution-summary__from">
               <span class="species-name">{{ currentSpecies }}</span>
@@ -42,95 +43,101 @@
             <span>Requires: {{ requiredItem }}{{ itemMustBeHeld ? ' (must be held)' : '' }}</span>
           </div>
 
-          <!-- Stat comparison and redistribution -->
-          <div class="stat-section">
-            <h4 class="stat-section__title">
-              Stat Point Redistribution
-              <span class="stat-section__total" :class="{ 'stat-section__total--invalid': !isPointTotalValid }">
-                {{ currentPointTotal }} / {{ requiredPointTotal }}
-              </span>
-            </h4>
-
-            <div class="stat-grid">
-              <div class="stat-grid__header">
-                <span>Stat</span>
-                <span>Old Base</span>
-                <span>New Base</span>
-                <span>Points</span>
-                <span>Final</span>
-              </div>
-
-              <div
-                v-for="stat in statKeys"
-                :key="stat"
-                class="stat-row"
-                :class="{ 'stat-row--violation': statHasViolation(stat) }"
-              >
-                <span class="stat-row__label">{{ STAT_LABELS[stat] }}</span>
-                <span class="stat-row__old-base">{{ oldBaseStats[stat] }}</span>
-                <span class="stat-row__new-base" :class="{
-                  'stat-row__new-base--up': newNatureAdjustedBase[stat] > oldBaseStats[stat],
-                  'stat-row__new-base--down': newNatureAdjustedBase[stat] < oldBaseStats[stat]
-                }">
-                  {{ newNatureAdjustedBase[stat] }}
-                </span>
-                <div class="stat-row__points">
-                  <button
-                    class="btn btn--sm btn--danger"
-                    :disabled="statPointInputs[stat] <= 0"
-                    @click="decrementStat(stat)"
-                  >-</button>
-                  <span class="stat-row__point-value">{{ statPointInputs[stat] }}</span>
-                  <button
-                    class="btn btn--sm btn--success"
-                    @click="incrementStat(stat)"
-                  >+</button>
-                </div>
-                <span class="stat-row__final">
-                  {{ newNatureAdjustedBase[stat] + statPointInputs[stat] }}
-                </span>
-              </div>
-            </div>
-
-            <!-- HP display -->
-            <div class="hp-preview">
-              <span class="hp-preview__label">Max HP:</span>
-              <span class="hp-preview__old">{{ currentMaxHp }}</span>
-              <PhArrowRight :size="14" />
-              <span class="hp-preview__new" :class="{
-                'hp-preview__new--up': newMaxHp > currentMaxHp,
-                'hp-preview__new--down': newMaxHp < currentMaxHp
-              }">
-                {{ newMaxHp }}
-              </span>
-            </div>
+          <!-- STEP 1: Stat Redistribution -->
+          <div v-if="currentStep === 1" class="step-content">
+            <EvolutionStatStep
+              :old-base-stats="oldBaseStats"
+              :new-nature-adjusted-base="newNatureAdjustedBase"
+              :stat-point-inputs="statPointInputs"
+              :current-max-hp="currentMaxHp"
+              :new-max-hp="newMaxHp"
+              :required-point-total="requiredPointTotal"
+              :current-point-total="currentPointTotal"
+              :is-point-total-valid="isPointTotalValid"
+              :violations="violations"
+              :skip-base-relations="skipBaseRelations"
+              @increment="incrementStat"
+              @decrement="decrementStat"
+              @update:skip-base-relations="skipBaseRelations = $event"
+            />
           </div>
 
-          <!-- Base Relations violations -->
-          <div v-if="violations.length > 0" class="violations-section">
-            <h4 class="violations-section__title">
-              <PhWarning :size="16" />
-              Base Relations Violations
+          <!-- STEP 2: Ability Resolution -->
+          <div v-if="currentStep === 2" class="step-content">
+            <EvolutionAbilityStep
+              :ability-remap="abilityRemap"
+              :current-abilities="currentAbilities"
+              :ability-resolutions="abilityResolutions"
+              @update:resolutions="abilityResolutions = $event"
+            />
+          </div>
+
+          <!-- STEP 3: Move Learning -->
+          <div v-if="currentStep === 3" class="step-content">
+            <EvolutionMoveStep
+              :current-moves="currentMoves"
+              :evolution-moves="evolutionMoves"
+              :added-moves="addedMoves"
+              :removed-moves="removedMoves"
+              :evolution-move-details="evolutionMoveDetails"
+              @add-move="addEvolutionMove"
+              @remove-move="removeNewMove"
+              @replace-move="handleReplaceMove"
+            />
+          </div>
+
+          <!-- STEP 4: Summary -->
+          <div v-if="currentStep === 4" class="step-content">
+            <h4 class="step-title">
+              <PhClipboardText :size="16" />
+              Evolution Summary
             </h4>
-            <ul>
-              <li v-for="(v, i) in violations" :key="i">{{ v }}</li>
-            </ul>
-            <label class="violations-override">
-              <input v-model="skipBaseRelations" type="checkbox" />
-              Override Base Relations (GM discretion)
-            </label>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <span class="summary-item__label">Species</span>
+                <span>{{ currentSpecies }} -> {{ targetSpecies }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-item__label">Max HP</span>
+                <span>{{ currentMaxHp }} -> {{ newMaxHp }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-item__label">Abilities</span>
+                <span>{{ finalAbilities.map(a => a.name).join(', ') || 'None' }}</span>
+              </div>
+              <div v-if="addedMoveNames.length > 0" class="summary-item">
+                <span class="summary-item__label">New Moves</span>
+                <span>{{ addedMoveNames.join(', ') }}</span>
+              </div>
+              <div v-if="removedMoveNames.length > 0" class="summary-item">
+                <span class="summary-item__label">Replaced Moves</span>
+                <span>{{ removedMoveNames.join(', ') }}</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="modal__footer">
           <button class="btn btn--secondary" @click="$emit('close')">Cancel</button>
           <button
+            v-if="currentStep > 1"
+            class="btn btn--secondary"
+            @click="currentStep--"
+          >Back</button>
+          <button
+            v-if="currentStep < totalSteps"
             class="btn btn--primary"
-            :disabled="!canEvolve"
+            :disabled="!canProceed"
+            @click="currentStep++"
+          >Next</button>
+          <button
+            v-if="currentStep === totalSteps"
+            class="btn btn--primary"
+            :disabled="!canEvolve || evolving"
             @click="handleEvolve"
           >
             <PhArrowCircleUp :size="16" />
-            Evolve
+            {{ evolving ? 'Evolving...' : 'Confirm Evolution' }}
           </button>
         </div>
       </div>
@@ -143,11 +150,37 @@ import {
   PhArrowCircleUp,
   PhArrowRight,
   PhInfo,
-  PhWarning
+  PhClipboardText
 } from '@phosphor-icons/vue'
 import { applyNatureToBaseStats } from '~/constants/natures'
 import { validateBaseRelations } from '~/utils/evolutionCheck'
 import type { EvolutionStats as Stats } from '~/utils/evolutionCheck'
+import type { AbilityRemapResult } from '~/server/services/evolution.service'
+
+interface MoveDetail {
+  name: string
+  type: string
+  damageClass: string
+  frequency: string
+  ac: number | null
+  damageBase: number | null
+  range: string
+  effect: string
+}
+
+interface EvolutionMoveWithDetail {
+  name: string
+  level: number
+  detail: MoveDetail | null
+}
+
+/** Evolution moves result enriched with MoveData detail from the endpoint */
+interface EnrichedEvolutionMoves {
+  availableMoves: EvolutionMoveWithDetail[]
+  currentMoveCount: number
+  maxMoves: number
+  slotsAvailable: number
+}
 
 const props = defineProps<{
   pokemonId: string
@@ -155,20 +188,19 @@ const props = defineProps<{
   currentSpecies: string
   currentTypes: string[]
   targetSpecies: string
-  /** Target species types from evolution-check endpoint */
   targetTypes: string[]
   currentLevel: number
   currentMaxHp: number
-  /** Nature-adjusted base stats (from Pokemon record) */
   oldBaseStats: Stats
-  /** Raw base stats of the target species (from evolution-check endpoint) */
   targetRawBaseStats: Stats
-  /** Pokemon's nature name */
   natureName: string
-  /** Required item for this evolution (null if level-only) */
   requiredItem: string | null
-  /** Whether the item must be held */
   itemMustBeHeld: boolean
+  // P1 props
+  currentAbilities: Array<{ name: string; effect: string }>
+  currentMoves: MoveDetail[]
+  abilityRemap: AbilityRemapResult
+  evolutionMoves: EnrichedEvolutionMoves
 }>()
 
 const emit = defineEmits<{
@@ -176,32 +208,40 @@ const emit = defineEmits<{
   evolved: [result: Record<string, unknown>]
 }>()
 
-const STAT_LABELS: Record<string, string> = {
-  hp: 'HP',
-  attack: 'Attack',
-  defense: 'Defense',
-  specialAttack: 'Sp. Atk',
-  specialDefense: 'Sp. Def',
-  speed: 'Speed'
-}
-
 const statKeys = ['hp', 'attack', 'defense', 'specialAttack', 'specialDefense', 'speed'] as const
+
+// Step management
+const currentStep = ref(1)
+const totalSteps = 4
 
 // State
 const skipBaseRelations = ref(false)
 const evolving = ref(false)
 
-// Stat point inputs — initialized with even distribution
+// Stat point inputs
 const statPointInputs = reactive<Record<string, number>>({
-  hp: 0,
-  attack: 0,
-  defense: 0,
-  specialAttack: 0,
-  specialDefense: 0,
-  speed: 0
+  hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
 })
 
-// Initialize stat points on mount
+// Ability resolution selections
+const abilityResolutions = ref<string[]>([])
+
+// Move management
+const addedMoves = ref<EvolutionMoveWithDetail[]>([])
+const removedMoves = ref<string[]>([])
+
+// Build detail map from the enriched evolution moves (pre-fetched by endpoint)
+const evolutionMoveDetails = computed(() => {
+  const details = new Map<string, MoveDetail>()
+  for (const move of props.evolutionMoves.availableMoves) {
+    if (move.detail) {
+      details.set(move.name, move.detail)
+    }
+  }
+  return details
+})
+
+// Initialize on mount
 onMounted(() => {
   const totalPoints = props.currentLevel + 10
   const perStat = Math.floor(totalPoints / 6)
@@ -213,71 +253,119 @@ onMounted(() => {
   statPointInputs.specialAttack = perStat + (remainder > 3 ? 1 : 0)
   statPointInputs.specialDefense = perStat + (remainder > 4 ? 1 : 0)
   statPointInputs.speed = perStat
+
+  abilityResolutions.value = props.abilityRemap.needsResolution.map(() => '')
 })
 
-// Computed: new base stats with nature applied
+// Computed values
 const newNatureAdjustedBase = computed((): Stats => {
   return applyNatureToBaseStats(props.targetRawBaseStats, props.natureName)
 })
 
-// Computed: required point total
 const requiredPointTotal = computed(() => props.currentLevel + 10)
 
-// Computed: current point total
 const currentPointTotal = computed(() => {
   return statKeys.reduce((sum, key) => sum + statPointInputs[key], 0)
 })
 
-// Computed: is point total valid
 const isPointTotalValid = computed(() => currentPointTotal.value === requiredPointTotal.value)
 
-// Computed: new max HP
 const newMaxHp = computed(() => {
   const hpStat = newNatureAdjustedBase.value.hp + statPointInputs.hp
   return props.currentLevel + (hpStat * 3) + 10
 })
 
-// Computed: Base Relations violations
 const violations = computed((): string[] => {
   const points: Stats = {
-    hp: statPointInputs.hp,
-    attack: statPointInputs.attack,
-    defense: statPointInputs.defense,
-    specialAttack: statPointInputs.specialAttack,
-    specialDefense: statPointInputs.specialDefense,
-    speed: statPointInputs.speed
+    hp: statPointInputs.hp, attack: statPointInputs.attack,
+    defense: statPointInputs.defense, specialAttack: statPointInputs.specialAttack,
+    specialDefense: statPointInputs.specialDefense, speed: statPointInputs.speed
   }
   return validateBaseRelations(newNatureAdjustedBase.value, points)
 })
 
-// Computed: can evolve
+const finalAbilities = computed((): Array<{ name: string; effect: string }> => {
+  const result: Array<{ name: string; effect: string }> = []
+  for (const ability of props.abilityRemap.remappedAbilities) {
+    result.push({ ...ability })
+  }
+  for (let i = 0; i < props.abilityRemap.needsResolution.length; i++) {
+    const selectedName = abilityResolutions.value[i]
+    if (selectedName) {
+      result.push({ name: selectedName, effect: '' })
+    }
+  }
+  for (const ability of props.abilityRemap.preservedAbilities) {
+    result.push({ ...ability })
+  }
+  return result
+})
+
+const selectedMoveList = computed((): MoveDetail[] => {
+  const removedSet = new Set(removedMoves.value.map(n => n.toLowerCase()))
+  const kept = props.currentMoves.filter(m => !removedSet.has(m.name.toLowerCase()))
+  const added: MoveDetail[] = addedMoves.value.map(m => {
+    const detail = m.detail || evolutionMoveDetails.value.get(m.name)
+    return {
+      name: m.name, type: detail?.type || 'Normal',
+      damageClass: detail?.damageClass || 'Status', frequency: detail?.frequency || 'At-Will',
+      ac: detail?.ac ?? null, damageBase: detail?.damageBase ?? null,
+      range: detail?.range || 'Melee', effect: detail?.effect || ''
+    }
+  })
+  return [...kept, ...added]
+})
+
+const allAbilitiesResolved = computed(() => {
+  return props.abilityRemap.needsResolution.every(
+    (_, i) => abilityResolutions.value[i] !== ''
+  )
+})
+
+const addedMoveNames = computed(() => addedMoves.value.map(m => m.name))
+const removedMoveNames = computed(() => removedMoves.value)
+
+const canProceed = computed((): boolean => {
+  if (currentStep.value === 1) {
+    return isPointTotalValid.value && (violations.value.length === 0 || skipBaseRelations.value)
+  }
+  if (currentStep.value === 2) return allAbilitiesResolved.value
+  if (currentStep.value === 3) return selectedMoveList.value.length <= 6
+  return true
+})
+
 const canEvolve = computed(() => {
   if (!isPointTotalValid.value) return false
   if (violations.value.length > 0 && !skipBaseRelations.value) return false
+  if (!allAbilitiesResolved.value) return false
+  if (selectedMoveList.value.length > 6) return false
   if (evolving.value) return false
   return true
 })
 
-// Check if a specific stat has a violation
-function statHasViolation(stat: string): boolean {
-  return violations.value.some(v => v.includes(stat))
-}
-
-// Stat point controls
-function incrementStat(stat: string): void {
-  statPointInputs[stat]++
-}
-
+function incrementStat(stat: string): void { statPointInputs[stat]++ }
 function decrementStat(stat: string): void {
-  if (statPointInputs[stat] > 0) {
-    statPointInputs[stat]--
-  }
+  if (statPointInputs[stat] > 0) statPointInputs[stat]--
 }
 
-// Perform evolution
+function addEvolutionMove(move: EvolutionMoveWithDetail): void {
+  if (selectedMoveList.value.length >= 6) return
+  addedMoves.value = [...addedMoves.value, move]
+}
+
+function removeNewMove(moveName: string): void {
+  addedMoves.value = addedMoves.value.filter(
+    m => m.name.toLowerCase() !== moveName.toLowerCase()
+  )
+}
+
+function handleReplaceMove(payload: { oldMoveName: string; newMove: EvolutionMoveWithDetail }): void {
+  removedMoves.value = [...removedMoves.value, payload.oldMoveName]
+  addedMoves.value = [...addedMoves.value, payload.newMove]
+}
+
 async function handleEvolve(): Promise<void> {
   if (!canEvolve.value) return
-
   evolving.value = true
   try {
     const response = await $fetch<{ success: boolean; data: Record<string, unknown> }>(
@@ -287,18 +375,18 @@ async function handleEvolve(): Promise<void> {
         body: {
           targetSpecies: props.targetSpecies,
           statPoints: {
-            hp: statPointInputs.hp,
-            attack: statPointInputs.attack,
-            defense: statPointInputs.defense,
-            specialAttack: statPointInputs.specialAttack,
-            specialDefense: statPointInputs.specialDefense,
-            speed: statPointInputs.speed
+            hp: statPointInputs.hp, attack: statPointInputs.attack,
+            defense: statPointInputs.defense, specialAttack: statPointInputs.specialAttack,
+            specialDefense: statPointInputs.specialDefense, speed: statPointInputs.speed
           },
-          skipBaseRelations: skipBaseRelations.value
+          skipBaseRelations: skipBaseRelations.value,
+          abilities: finalAbilities.value,
+          moves: addedMoves.value.length > 0 || removedMoves.value.length > 0
+            ? selectedMoveList.value
+            : undefined
         }
       }
     )
-
     if (response.success) {
       emit('evolved', response.data)
       emit('close')
@@ -313,247 +401,6 @@ async function handleEvolve(): Promise<void> {
 </script>
 
 <style lang="scss" scoped>
-.evolution-modal {
-  max-width: 600px;
-
-  .header-icon {
-    color: $color-warning;
-    vertical-align: middle;
-  }
-}
-
-.evolution-summary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-lg;
-  padding: $spacing-md;
-  margin-bottom: $spacing-md;
-  background: rgba($color-bg-tertiary, 0.5);
-  border-radius: $border-radius-md;
-
-  &__from,
-  &__to {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: $spacing-xs;
-  }
-
-  .species-name {
-    font-size: $font-size-lg;
-    font-weight: 600;
-    color: $color-text;
-  }
-
-  .type-badges {
-    display: flex;
-    gap: $spacing-xs;
-  }
-
-  .type-badge {
-    font-size: $font-size-xs;
-    padding: 2px $spacing-sm;
-    border-radius: $border-radius-full;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: $color-text;
-
-    &--fire { background: $type-fire; }
-    &--water { background: $type-water; }
-    &--grass { background: $type-grass; }
-    &--electric { background: $type-electric; }
-    &--ice { background: $type-ice; }
-    &--fighting { background: $type-fighting; }
-    &--poison { background: $type-poison; }
-    &--ground { background: $type-ground; }
-    &--flying { background: $type-flying; }
-    &--psychic { background: $type-psychic; }
-    &--bug { background: $type-bug; }
-    &--rock { background: $type-rock; }
-    &--ghost { background: $type-ghost; }
-    &--dragon { background: $type-dragon; }
-    &--dark { background: $type-dark; }
-    &--steel { background: $type-steel; }
-    &--fairy { background: $type-fairy; }
-    &--normal { background: $type-normal; }
-  }
-}
-
-.evolution-arrow {
-  color: $color-warning;
-  flex-shrink: 0;
-}
-
-.evolution-item-note {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
-  margin-bottom: $spacing-md;
-  background: rgba($color-info, 0.1);
-  border: 1px solid rgba($color-info, 0.3);
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
-  color: $color-info;
-}
-
-.stat-section {
-  &__title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: $font-size-sm;
-    font-weight: 600;
-    color: $color-text;
-    margin-bottom: $spacing-sm;
-  }
-
-  &__total {
-    font-weight: 700;
-    color: $color-success;
-
-    &--invalid {
-      color: $color-danger;
-    }
-  }
-}
-
-.stat-grid {
-  border: 1px solid $border-color-subtle;
-  border-radius: $border-radius-md;
-  overflow: hidden;
-
-  &__header {
-    display: grid;
-    grid-template-columns: 1fr 0.7fr 0.7fr 1.2fr 0.7fr;
-    gap: $spacing-xs;
-    padding: $spacing-sm $spacing-md;
-    background: $color-bg-tertiary;
-    font-size: $font-size-xs;
-    font-weight: 600;
-    color: $color-text-muted;
-    text-transform: uppercase;
-  }
-}
-
-.stat-row {
-  display: grid;
-  grid-template-columns: 1fr 0.7fr 0.7fr 1.2fr 0.7fr;
-  gap: $spacing-xs;
-  align-items: center;
-  padding: $spacing-sm $spacing-md;
-  border-top: 1px solid $border-color-subtle;
-  font-size: $font-size-sm;
-
-  &--violation {
-    background: rgba($color-danger, 0.08);
-  }
-
-  &__label {
-    font-weight: 500;
-    color: $color-text;
-  }
-
-  &__old-base {
-    color: $color-text-muted;
-    text-align: center;
-  }
-
-  &__new-base {
-    text-align: center;
-    font-weight: 600;
-
-    &--up { color: $color-success; }
-    &--down { color: $color-danger; }
-  }
-
-  &__points {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  &__point-value {
-    min-width: 28px;
-    text-align: center;
-    font-weight: 600;
-    color: $color-accent-teal;
-  }
-
-  &__final {
-    text-align: center;
-    font-weight: 700;
-    color: $color-text;
-  }
-}
-
-.hp-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  margin-top: $spacing-md;
-  padding: $spacing-sm $spacing-md;
-  background: rgba($color-bg-tertiary, 0.5);
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
-
-  &__label {
-    font-weight: 600;
-    color: $color-text;
-  }
-
-  &__old {
-    color: $color-text-muted;
-  }
-
-  &__new {
-    font-weight: 700;
-
-    &--up { color: $color-success; }
-    &--down { color: $color-danger; }
-  }
-}
-
-.violations-section {
-  margin-top: $spacing-md;
-  padding: $spacing-md;
-  background: rgba($color-danger, 0.08);
-  border: 1px solid rgba($color-danger, 0.3);
-  border-radius: $border-radius-md;
-
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: $spacing-xs;
-    font-size: $font-size-sm;
-    font-weight: 600;
-    color: $color-danger;
-    margin-bottom: $spacing-sm;
-  }
-
-  ul {
-    margin: 0;
-    padding-left: $spacing-lg;
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-    line-height: 1.6;
-  }
-}
-
-.violations-override {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-top: $spacing-sm;
-  font-size: $font-size-sm;
-  color: $color-text-muted;
-  cursor: pointer;
-
-  input[type="checkbox"] {
-    accent-color: $color-warning;
-  }
-}
+@import '~/assets/scss/components/evolution-modal';
+@import '~/assets/scss/components/type-badges';
 </style>
