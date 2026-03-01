@@ -2,173 +2,170 @@
 review_id: rules-review-233
 review_type: rules
 reviewer: game-logic-reviewer
-trigger: bug-fix
-target_report: feature-013
-domain: vtt-grid
+trigger: design-implementation
+target_report: feature-009
+domain: character-lifecycle
 commits_reviewed:
-  - 03b34d77
-  - 71b581d0
-  - fdbfe5ac
-  - 6adfe6a8
-  - 5431b516
-  - 9801a7a5
+  - 43d2467b
+  - 1f49fd3e
+  - 8b774ec7
+  - 929545e7
+  - 76c5c6a0
+  - 08605245
+  - 21492bca
+  - be53980e
 mechanics_verified:
-  - multi-cell-footprint-terrain-cost-aggregation
-  - multi-cell-flood-fill-movement-range
-  - multi-cell-astar-pathfinding
-  - multi-cell-speed-averaging
-  - multi-cell-fog-of-war-reveal
-  - multi-cell-validate-movement
-  - ptu-diagonal-movement-multi-cell
-  - no-stacking-multi-cell
+  - trainer-xp-bank
+  - trainer-xp-per-level
+  - capture-species-xp
+  - significance-to-trainer-xp
+  - batch-trainer-xp-distribution
+  - quest-xp-award
+  - level-cap
+  - multi-level-jump
 verdict: APPROVED
 issues_found:
   critical: 0
-  high: 0
-  medium: 0
+  high: 1
+  medium: 2
 ptu_refs:
-  - core/07-combat.md#footprint-size
-  - core/07-combat.md#slow-terrain
-  - core/07-combat.md#rough-terrain
-  - core/07-combat.md#movement-capability-averaging
-  - core/07-combat.md#diagonal-movement
-reviewed_at: 2026-03-01T19:15:00Z
-follows_up: rules-review-226
+  - core/11-running-the-game.md#p461-trainer-levels-and-milestones
+  - core/11-running-the-game.md#p461-calculating-trainer-experience
+  - core/07-combat.md#p259-encounter-example
+  - errata-2.md
+decrees_checked:
+  - decree-030 (significance preset cap at x5)
+  - decree-037 (skill ranks from Edge slots only)
+reviewed_at: 2026-03-01T19:30:00Z
+follows_up: rules-review-229
 ---
 
 ## Mechanics Verified
 
-### 1. Multi-Cell Terrain Cost Aggregation (CRIT-1 Fix)
+### 1. Trainer XP Bank (10 XP = 1 Level)
 
-- **Rule:** "When Shifting through Slow Terrain, Trainers and their Pokemon treat every square meter as two square meters instead." (`core/07-combat.md` p.231). For multi-cell tokens, the maximum terrain cost across ALL occupied cells applies to each movement step. Per shared-specs.md, the spec calls for a combined approach: pathfinding handles spatial checks (bounds, blocked) while the terrain cost getter handles terrain-specific logic.
-- **Previous Issue (CRIT-1 from rules-review-226):** The footprint-aware terrain getter AND the pathfinding both iterated NxN footprints, creating a double-footprint effect (N^2 * N^2 cells checked instead of N^2). Terrain at cells the token does NOT occupy was incorrectly influencing movement cost.
-- **Fix (commit 03b34d77):** `getTerrainCostGetter()` in `useGridMovement.ts` (line 439) now ALWAYS returns a single-cell getter (`getTerrainCostForCombatant`), regardless of `tokenSize`. The `_tokenSize` parameter is accepted for API compatibility but ignored. The A* and flood-fill algorithms in `usePathfinding.ts` handle the full NxN footprint iteration at each step (lines 101-117 in flood-fill, lines 402-422 in A*), calling the single-cell getter for each cell in the footprint. This eliminates the double-counting bug.
-- **Verification:** For a 2x2 token at origin (3,0): A* checks cells (3,0), (4,0), (3,1), (4,1) and calls `getTerrainCostForCombatant(cellX, cellY, combatantId)` for each. The getter returns the terrain cost for exactly that one cell, including Naturewalk bypass and capability-specific passability (swim/burrow). The max across all 4 cells becomes the step multiplier. No cells outside the actual footprint are checked.
-- **Status:** CORRECT. The double-footprint bug is eliminated. The approach chosen (option B from rules-review-226) is clean and consistent: pathfinding owns all footprint iteration, getter owns per-cell capability logic.
+- **Rule:** "Whenever a Trainer reaches 10 Experience or higher, they immediately subtract 10 Experience from their Experience Bank and gain 1 Level." (`core/11-running-the-game.md`, p.461)
+- **Implementation:** `applyTrainerXp()` in `app/utils/trainerExperience.ts:44-85` computes `levelsFromXp = Math.floor(rawTotal / 10)` and `remainingXp = rawTotal - (levelsFromXp * 10)`. Multi-level jumps are handled correctly (e.g., bank 8 + 15 = 23 -> 2 levels gained, bank 3). Level capped at `TRAINER_MAX_LEVEL` (50) with excess XP returning to bank.
+- **Status:** CORRECT
 
-### 2. Multi-Cell Flood-Fill Movement Range (HIGH-1 Fix)
+### 2. Milestone Independence
 
-- **Rule:** Same footprint passability rule as A*. The movement range overlay must show positions where the token's NxN footprint fits entirely within passable terrain and grid bounds.
-- **Previous Issue (HIGH-1 from rules-review-226 / CRIT-1 from code-review-250):** All 5 production call sites for `getMovementRangeCells` and `getMovementRangeCellsWithAveraging` did not pass `tokenSize` or `gridBounds`, causing the flood-fill to treat all tokens as 1x1 for range display.
-- **Fix (commit 71b581d0):** All 6 call sites (2 in `useGridRendering.ts:drawMovementRange`, 2 in `useGridRendering.ts:drawExternalMovementPreview`, 2 in `IsometricCanvas.vue:movementRangeCells`) now pass `tokenSize` (extracted from `token.size ?? 1`) and `gridBounds` (from config width/height). Positional arguments for elevation getters are explicitly passed as `undefined` where not available to maintain correct parameter alignment.
-- **Verification:** In `drawMovementRange()` (lines 440-441): `const tokenSize = token.size ?? 1; const gridBounds = { width: options.config.value.width, height: options.config.value.height }`. These are passed to both `getMovementRangeCellsWithAveraging` (line 458-459) and `getMovementRangeCells` (line 467). In `IsometricCanvas.vue` (lines 139-140): same extraction, passed to both flood-fill variants (lines 168-169 and 183-184). In `drawExternalMovementPreview()` (line 620): `extGridBounds` with same width/height, passed to both flood-fill calls (lines 633-634 and 642).
-- **Status:** CORRECT. All flood-fill call sites now pass tokenSize and gridBounds. The movement range overlay will correctly reflect footprint-aware reachability for Large/Huge/Gigantic tokens.
+- **Rule:** "Leveling Up through a Milestone does not affect your Experience Bank." (`core/11-running-the-game.md`, p.461)
+- **Implementation:** The XP bank system is entirely separate from milestone level-ups. `applyTrainerXp()` only processes XP bank changes, not milestone events. Milestones are handled through the level-up modal in feature-008, which directly sets the level without touching `trainerXp`.
+- **Status:** CORRECT
 
-### 3. Multi-Cell A* Pathfinding
+### 3. Capture Species XP (+1 XP for New Species)
 
-- **Rule:** Per PTU p.231: a token's footprint moves as a unit. All occupied cells must be passable at each step. The terrain cost multiplier is the max across all occupied cells (Slow Terrain doubles cost per cell; if ANY cell is Slow, the whole step costs double).
-- **Implementation:** `calculatePathCost()` in `usePathfinding.ts` (lines 279-465) accepts `tokenSize` (default 1). Neighbor exploration (lines 399-422) iterates `fx` 0 to size-1 and `fy` 0 to size-1, checking each footprint cell against `blockedSet` and `getTerrainCost`. Uses `maxTerrainMultiplier` across the footprint. Destination pre-check (lines 293-302) validates the full footprint before A* begins.
-- **PTU diagonal rule preserved:** Lines 429-435 apply the alternating 1m/2m diagonal cost based on parity, independent of token size. This is correct -- the diagonal rule applies to the origin cell's movement step, not per-footprint-cell.
-- **Status:** CORRECT. Unchanged from previous review; the A* core was already correct. The fix cycle addressed the terrain cost getter and call sites, not the A* itself.
+- **Rule:** "There is only one automatic source of experience: Pokemon. Whenever a Trainer catches, hatches, or evolves a Pokemon species they did not previously own, they gain +1 Experience." (`core/11-running-the-game.md`, p.461)
+- **Implementation:** `app/server/api/capture/attempt.post.ts:120-155` checks `isNewSpecies(pokemon.species, existingSpecies)` after a successful capture, awards +1 XP via `applyTrainerXp()`, appends normalized species to `capturedSpecies` JSON array, and broadcasts `character_update` on level-up. The `isNewSpecies()` utility (`trainerExperience.ts:91-94`) performs case-insensitive, whitespace-trimmed comparison. Stored species are normalized (`toLowerCase().trim()`) before persistence.
+- **Status:** CORRECT for captures. See HIGH-1 below for the missing evolution/hatching hooks (documented deferral in design).
 
-### 4. Multi-Cell Speed Averaging (MED-1 Fix)
+### 4. Species Deduplication
 
-- **Rule:** Per PTU p.231 and decree-011: "When using multiple different Movement Capabilities in one turn, such as using Overland on a beach and then Swim in the water, average the Capabilities and use that value." For multi-cell tokens, terrain types under ALL footprint cells must be considered, not just the origin.
-- **Previous Issue (MED-1 from rules-review-226):** `getAveragedSpeedForPath()` only checked terrain at origin cells along the path, missing terrain types under the rest of the footprint.
-- **Fix (commit 6adfe6a8):** `getAveragedSpeedForPath()` in `useGridMovement.ts` (lines 260-271) now looks up the moving token's size and iterates the full NxN footprint at each path position:
-  ```typescript
-  const tokenSize = movingToken?.size || 1
-  for (const pos of path) {
-    for (let fx = 0; fx < tokenSize; fx++) {
-      for (let fy = 0; fy < tokenSize; fy++) {
-        terrainTypes.add(terrainStore.getTerrainAt(pos.x + fx, pos.y + fy))
-      }
-    }
-  }
-  ```
-- **Verification:** For a 2x2 token traversing a path where the origin cells are all on land but one footprint cell touches water, the `terrainTypes` set will now include both 'normal' and 'water', triggering the speed averaging logic. This correctly averages Overland and Swim speeds per decree-011.
-- **Consistency check:** The flood-fill variant `getMovementRangeCellsWithAveraging()` also collects terrain types from all footprint cells (lines 619-624 in usePathfinding.ts). Both path-based and flood-fill-based averaging now use the same footprint-aware terrain type collection.
-- **Status:** CORRECT. Speed averaging is now fully footprint-aware in both code paths.
+- **Rule:** PTU says "species they did not previously own" -- once owned, the +1 XP was earned. The species remains "known" permanently.
+- **Implementation:** The `capturedSpecies` list only grows, never shrinks. Releasing a captured Pokemon does not remove the species from the list. Case-insensitive comparison via `isNewSpecies()` prevents duplicates from formatting differences. Each trainer has their own independent `capturedSpecies` list.
+- **Status:** CORRECT
 
-### 5. Multi-Cell Fog of War Reveal (MED-2 Documentation)
+### 5. GM-Decided Trainer XP After Encounters
 
-- **Rule:** No explicit PTU rule for fog of war. The design spec says large tokens should reveal fog from ALL occupied cells, not just the origin. The `revealFootprintArea()` action uses Chebyshev distance from the nearest footprint cell.
-- **Previous Issue (MED-2 from rules-review-226):** `revealFootprintArea()` was defined but not wired to any movement handler.
-- **Fix (commit 5431b516):** The action remains unwired, but is now annotated with a detailed NOTE (lines 157-162 in `fogOfWar.ts`) explaining that the caller (encounter-level auto-reveal on movement) requires fog vision radius configuration that is outside P1 multi-tile scope. A follow-up is specified for when fog auto-reveal is implemented.
-- **Assessment:** This is an acceptable deferral. The `revealFootprintArea()` algorithm itself is mathematically correct (verified in rules-review-226). The auto-reveal-on-movement feature is not currently active for ANY token size (1x1 included), so this is not a regression from P1. When fog auto-reveal is implemented, it should use `revealFootprintArea()` for multi-cell tokens.
-- **Status:** CORRECT (algorithm). DEFERRED (wiring). Not a blocker for P1 approval.
+- **Rule:** "Like with Pokemon Experience, GMs will have to decide how much Trainer Experience to grant after each encounter; and again, we encourage GMs to consider narrative significance and challenge as the main determining factors." (`core/11-running-the-game.md`, p.461)
+- **Implementation:** The batch endpoint `trainer-xp-distribute.post.ts` accepts an arbitrary per-trainer `xpAmount` decided by the GM. It does NOT apply any formula. The `TrainerXpSection.vue` component provides a suggestion based on significance tier but allows per-trainer override. The GM has full control.
+- **Status:** CORRECT
 
-### 6. Multi-Cell validateMovement (HIGH-3 Fix)
+### 6. Significance-to-Trainer-XP Mapping
 
-- **Rule:** Destination validation must check ALL cells in the NxN footprint for blocked cells, impassable terrain, and grid bounds.
-- **Previous Issue (HIGH-3 from code-review-250):** `validateMovement()` only checked `to.x, to.y` (single cell) and did not pass `tokenSize` or `gridBounds` to the flood-fill call.
-- **Fix (commit fdbfe5ac):** `validateMovement()` in `usePathfinding.ts` (lines 196-258) now accepts `tokenSize` (default 1) and `gridBounds` parameters. The destination check (lines 211-238) iterates all footprint cells, checking each against grid bounds, blocked set, and terrain cost. The flood-fill call (lines 242-246) forwards `size` and `gridBounds`.
-- **Verification:** The bounds check uses `cellX >= gridBounds.width` (exclusive), consistent with the flood-fill's `nx + size > gridBounds.width`. For a 2x2 token at destination (9,0) on a 10x10 grid: cells (9,0) and (9,1) pass bounds check, but cell (10,0) fails `cellX >= gridBounds.width` (10 >= 10). This is correct -- column 10 does not exist on a 10-wide grid.
-- **Status:** CORRECT. Full footprint validation at destination, consistent bounds checking, and multi-cell-aware flood-fill call.
+- **Rule (PTU p.461):**
+  - "A scuffle with weak or average wild Pokemon shouldn't be worth any Trainer experience most of the time." (0 XP)
+  - "An average encounter with other Trainers or with stronger wild Pokemon usually merits 1 or 2 Experience at most." (1-2 XP)
+  - "Significant battles that do not quite merit a Milestone award by themselves should award 3, 4, or even 5 Experience." (3-5 XP)
+- **Implementation:** `SIGNIFICANCE_TO_TRAINER_XP` in `trainerExperience.ts:115-119` maps:
+  - `insignificant: 0` -- matches "shouldn't be worth any"
+  - `everyday: 1` -- matches "usually merits 1 or 2" (conservative default)
+  - `significant: 3` -- matches "should award 3, 4, or even 5" (mid-range default)
+- **Per decree-030:** All suggested values cap at 5. The `TRAINER_XP_SUGGESTIONS` table (`trainerExperience.ts:101-108`) ranges from 0-5, respecting the x5 cap.
+- **Status:** CORRECT
 
-### 7. PTU Diagonal Movement for Multi-Cell
+### 7. Batch Distribution Safety
 
-- **Rule:** "The first square you move diagonally in a turn counts as 1 meter. The second counts as 2 meters. The third counts as 1 meter again." (`core/07-combat.md` p.231).
-- **Implementation:** Both A* (line 429-435) and flood-fill (lines 123-129) use `currentParity` toggling: `baseCost = currentParity === 0 ? 1 : 2; newParity = 1 - currentParity`. Cardinal moves preserve parity. This is independent of token size.
-- **Status:** CORRECT. Unchanged by the fix cycle; already verified in rules-review-226.
+- **Rule:** Sequential application prevents race conditions. Each trainer update reads fresh DB state, computes XP, and writes atomically.
+- **Implementation:** `trainer-xp-distribute.post.ts:54-99` processes entries in a `for` loop (sequential, not `Promise.all`). Each iteration fetches the character, computes via `applyTrainerXp()`, and updates the DB. Zero-XP entries are skipped. Missing characters throw 404.
+- **Status:** CORRECT
 
-### 8. No-Stacking Rule for Multi-Cell (decree-003)
+### 8. Quest XP from Scene Tools
 
-- **Rule:** Per decree-003: tokens are passable during movement, but cannot end movement on any occupied square. For multi-cell tokens, ALL destination footprint cells must be unoccupied.
-- **Implementation:** `isValidMove()` (lines 536-539) builds `occupiedSet` from `getOccupiedCells(combatantId)` and checks `destCells = getFootprintCells(toPos.x, toPos.y, tokenSize)` against it. Pathfinding uses empty `blockedCells` list (line 551), allowing pass-through.
-- **Status:** CORRECT. Unchanged by the fix cycle; already verified in rules-review-226.
+- **Rule:** PTU p.461 says "Experience for Trainers can and should also come from non-combat goals and achievements as well, both as a party and as individuals." The quest XP dialog provides exactly this for scene-based narrative awards.
+- **Implementation:** `QuestXpDialog.vue` awards XP to all scene characters sequentially via the existing `POST /api/characters/:id/xp` endpoint. Input validated client-side (`min="1" max="20"`, disabled when `!xpAmount || xpAmount < 1`). Level-up preview uses `applyTrainerXp()` for accurate bank+level prediction.
+- **Status:** CORRECT
 
-### 9. Test Coverage (MED-2 Fix)
+### 9. Level Cap (50)
 
-- **Previous Issue (MED-2 from code-review-250):** Empty test case with no assertions.
-- **Fix (commit 9801a7a5):** The test "should route 2x2 token around obstacle that blocks footprint" now uses valid geometry: 2x2 token from (0,0) to (4,0) with (2,1) blocked. Verifies: (1) 1x1 baseline path costs 4 (straight east), (2) 2x2 detour path costs more than 4, (3) path starts at (0,0) and ends at (4,0).
-- **PTU correctness of test:** The blocked cell at (2,1) falls within the 2x2 footprint at origin (2,0) which covers (2,0), (3,0), (2,1), (3,1). The 2x2 token cannot pass through origin (2,0) and must detour, while the 1x1 token is unaffected. The test correctly validates this distinction.
-- **Status:** CORRECT. Meaningful assertions that verify multi-cell obstacle routing.
+- **Rule:** Practical PTU trainer level cap is 50 (trainerAdvancement.ts milestones end at level 50).
+- **Implementation:** `TRAINER_MAX_LEVEL = 50` in `trainerExperience.ts:14`. When `currentLevel >= 50`, `applyTrainerXp()` returns 0 levels gained but still accumulates the bank. When approaching 50, `maxLevelsGainable` prevents exceeding it, with overflow XP preserved in bank.
+- **Status:** CORRECT
 
-## Issue Resolution Tracking
+### 10. Decree Compliance
 
-### From rules-review-226 (previous game logic review)
+- **decree-030 (significance preset cap at x5):** The `TRAINER_XP_SUGGESTIONS` table caps at 5 XP for the "Critical" tier. The `SIGNIFICANCE_TO_TRAINER_XP` mapping has a max of 3 (for "significant" tier). Both respect the decree. The per-trainer input in `TrainerXpSection.vue` has `max="10"` which exceeds 5, but this is the HTML input maximum for the XP bank amount (not the significance preset), and PTU allows the GM to decide any amount -- the 5 cap applies to suggested presets, not manual input.
+- **decree-037 (skill ranks from Edge slots only):** Not directly applicable to P1 XP mechanics, but noted as checked. Level-ups triggered by trainer XP will flow through the existing LevelUpModal (feature-008) which respects this decree.
+- **Status:** COMPLIANT
 
-| ID | Severity | Description | Status |
-|----|----------|-------------|--------|
-| CRIT-1 | CRITICAL | Double-footprint terrain cost bug | RESOLVED by commit 03b34d77. Single-cell getter now used; pathfinding handles footprint iteration. |
-| HIGH-1 | HIGH | Movement range not multi-cell aware (call sites missing tokenSize/gridBounds) | RESOLVED by commit 71b581d0. All 6 call sites now pass tokenSize and gridBounds. |
-| MED-1 | MEDIUM | getAveragedSpeedForPath missing footprint terrain types | RESOLVED by commit 6adfe6a8. Full NxN footprint iterated at each path position. |
-| MED-2 | MEDIUM | revealFootprintArea not wired to movement events | RESOLVED by commit 5431b516 (documented deferral). Auto-reveal not active for any token size; follow-up noted. |
+## Issues
 
-### From code-review-250 (previous code quality review)
+### HIGH-1: Evolution Species XP Not Implemented
 
-| ID | Severity | Description | Status |
-|----|----------|-------------|--------|
-| CRIT-1 | CRITICAL | 5 flood-fill call sites missing tokenSize/gridBounds | RESOLVED by commit 71b581d0. |
-| HIGH-1 | HIGH | IsometricCanvas missing tokenSize to getTerrainCostGetter | RESOLVED by commit 03b34d77 (getTerrainCostGetter now ignores tokenSize; always returns single-cell getter). |
-| HIGH-2 | HIGH | useGridRendering terrain cost getter not footprint-aware | RESOLVED by combined fix (03b34d77 + 71b581d0). Pathfinding handles footprint iteration; single-cell getter is correct. |
-| HIGH-3 | HIGH | validateMovement not updated for multi-cell tokens | RESOLVED by commit fdbfe5ac. Full footprint destination check + tokenSize/gridBounds forwarded. |
-| MED-1 | MEDIUM | revealFootprintArea not wired | RESOLVED by commit 5431b516 (documented deferral). |
-| MED-2 | MEDIUM | Empty test case (no assertions) | RESOLVED by commit 9801a7a5. Proper 2x2 obstacle routing test. |
+- **Severity:** HIGH
+- **Type:** Missing mechanic (documented deferral)
+- **Rule:** "Whenever a Trainer catches, **hatches, or evolves** a Pokemon species they did not previously own, they gain +1 Experience." (`core/11-running-the-game.md`, p.461)
+- **Code:** `app/server/api/pokemon/[id]/evolve.post.ts` does not check `capturedSpecies` or call `applyTrainerXp()`.
+- **Analysis:** The P1 implementation only hooks into the capture flow (`attempt.post.ts`). The evolution endpoint (`evolve.post.ts`) does not award +1 species XP when evolving into a species the trainer has never owned. The design index (`_index.md`, Out of Scope section) explicitly documents this: "Evolution XP: PTU grants +1 XP for evolving a species not previously owned. The capturedSpecies field will track this, but evolution XP hookup is deferred until the evolution system is reviewed." Hatching is also deferred as the breeding/hatching system does not exist yet.
+- **Verdict:** This is a known, documented gap -- NOT a regression introduced by P1. The data model (`capturedSpecies`) is ready to support it. However, the PTU rule IS clear, and this gap means the app under-awards trainer XP. Filing a ticket is required per Lesson 2 (always file tickets for pre-existing/deferred issues).
+- **Ticket:** Recommend a `ptu-rule` ticket for evolution species XP hookup. Priority P3 (the `capturedSpecies` infrastructure exists; it's a hookup-only change in `evolve.post.ts`).
 
-## Regression Check
+### MEDIUM-1: Batch Endpoint Missing Server-Side xpAmount Upper Bound
 
-Checked for potential regressions introduced by the fix cycle:
+- **Severity:** MEDIUM
+- **Type:** Validation gap
+- **Code:** `app/server/api/encounters/[id]/trainer-xp-distribute.post.ts:37` validates `entry.xpAmount < 0` but has no upper bound. The individual XP endpoint (`xp.post.ts:33-34`) validates `body.amount < -100 || body.amount > 100`.
+- **Analysis:** The HTML input in `TrainerXpSection.vue` has `max="10"` but the `handleInput` function only clamps to `Math.max(0, ...)` with no upper bound enforcement. A crafted request could send `xpAmount: 1000`. While the GM is a trusted user, the individual endpoint already validates a -100 to 100 range. Consistency requires matching validation.
+- **Impact:** No game logic incorrectness (the GM decides XP amounts per PTU rules), but inconsistent validation between the two XP endpoints.
 
-1. **Single-cell tokens unaffected:** `getTerrainCostGetter` always returns single-cell getter (was already the behavior for size=1). Flood-fill functions default `tokenSize=1` and `gridBounds=undefined`, preserving unbounded 1x1 exploration. `validateMovement` defaults `tokenSize=1`. Backwards compatibility tests in the test file verify 1x1 behavior explicitly.
+### MEDIUM-2: app-surface.md Not Updated for P1 Additions
 
-2. **Naturewalk/Swim/Burrow capability checks preserved:** The single-cell getter `getTerrainCostForCombatant` is used by the pathfinding for each footprint cell. This correctly applies combatant-specific capability checks (Naturewalk bypass, swim passability, burrow passability) per-cell within the footprint. No capability-specific logic was lost by removing the footprint-aware getter.
-
-3. **Elevation handling unchanged:** Elevation is still read from the origin cell `(nx, ny)`, not per-footprint-cell. This simplification was ruled acceptable in rules-review-226 and remains unchanged.
-
-4. **getTerrainCostForFootprint still available:** The `getTerrainCostForFootprint` function was not removed, only the `getTerrainCostGetter` branching that returned it. It remains available for any future use case that needs footprint-level cost aggregation outside of pathfinding.
-
-5. **IsometricCanvas.vue terrain getter call:** Line 141 calls `movement.getTerrainCostGetter(selectedId)` without `tokenSize`. Since `getTerrainCostGetter` now ignores `_tokenSize`, this is functionally identical to passing it. No regression.
-
-## Rulings
-
-1. **Single-cell getter + pathfinding footprint iteration is the correct architecture:** The A* and flood-fill iterate the full NxN footprint at each step, calling the single-cell terrain getter for each cell. This ensures that combatant-specific capabilities (Naturewalk, Swim, Burrow) are correctly evaluated per-cell. The alternative (footprint-aware getter + single-cell pathfinding) would have required duplicating capability logic into the getter and was the source of the CRIT-1 double-counting bug. The fix correctly eliminates the source of the bug.
-
-2. **Terrain cost aggregation model (max across footprint) remains CORRECT per PTU:** Per PTU p.231, "every square meter" in Slow Terrain costs double. A multi-cell token entering a step where any footprint cell is Slow pays the doubled cost for the entire step. Using `maxTerrainMultiplier` across footprint cells faithfully implements this rule.
-
-3. **revealFootprintArea deferral is acceptable:** Fog auto-reveal on movement is not currently implemented for any token size. Wiring `revealFootprintArea` requires a vision radius system that is outside P1 scope. The algorithm is correct; only the wiring is deferred.
-
-4. **Per decree-011:** Speed averaging is now correctly footprint-aware in both the A* path analysis (`getAveragedSpeedForPath`) and the flood-fill variant (`getMovementRangeCellsWithAveraging`). Both iterate all NxN cells at each path position to collect terrain types.
-
-5. **Per decree-003 (referenced from rules-review-226):** Token pass-through during pathfinding is correctly maintained (empty `blockedCells`). No-stacking check at destination covers the full footprint. Unchanged by fix cycle.
+- **Severity:** MEDIUM
+- **Type:** Documentation gap
+- **Code:** `.claude/skills/references/app-surface.md` does not reference:
+  - `POST /api/encounters/:id/trainer-xp-distribute` endpoint
+  - `TrainerXpSection.vue` component
+  - `QuestXpDialog.vue` component
+  - `SIGNIFICANCE_TO_TRAINER_XP` mapping in `trainerExperience.ts`
+  - `distributeTrainerXp` store action in `encounterXp.ts`
+- **Analysis:** The encounter endpoint section (line 148-151) lists `xp-calculate` and `xp-distribute` but not `trainer-xp-distribute`. The Trainer XP section (line 90) describes P0 components but not P1 additions.
+- **Impact:** Future matrix analysis and capability mapping will miss these components, leading to incomplete test coverage.
 
 ## Summary
 
-All 4 issues from rules-review-226 (1 CRIT, 1 HIGH, 2 MED) and all 6 issues from code-review-250 (1 CRIT, 3 HIGH, 2 MED) are resolved. The fix cycle chose a clean architectural approach: the terrain cost getter always returns single-cell results, and the pathfinding algorithms own all footprint iteration. This eliminates the double-footprint CRITICAL bug and creates a clear separation of concerns. No regressions were found -- single-cell tokens, capability-specific terrain checks, diagonal movement rules, and elevation handling are all preserved. The test suite now includes a meaningful 2x2 obstacle routing test with proper assertions.
+P1 implements the three trainer XP sources (capture species +1, post-encounter batch distribution, quest XP from scenes) correctly per PTU 1.05 p.461. The core XP bank mechanic (10 XP = 1 level, multi-level jumps, level cap at 50) from P0 is correctly used in all three new integration points. The `SIGNIFICANCE_TO_TRAINER_XP` mapping provides reasonable defaults within PTU's stated ranges. All values comply with decree-030's x5 significance cap.
+
+The one HIGH issue (evolution species XP not hooked) is a documented design deferral, not a P1 regression. The field name is even called `capturedSpecies` which is slightly misleading (it should track evolved/hatched species too), but the infrastructure supports it when the evolution hookup is added.
+
+Code quality is solid: sequential processing prevents race conditions in batch distribution, immutable Map patterns used for allocation state, proper error handling with try/catch in all API calls, WebSocket broadcasts on level changes for real-time sync.
+
+## Rulings
+
+1. **`SIGNIFICANCE_TO_TRAINER_XP` values are reasonable defaults.** PTU gives ranges, not exact values. The mapping of insignificant=0, everyday=1, significant=3 falls within PTU's stated guidelines. The GM can always override per PTU p.461: "GMs will have to decide how much Trainer Experience to grant."
+
+2. **Quest XP max of 20 is acceptable.** The `QuestXpDialog.vue` input has `max="20"` which exceeds the 0-5 range for encounter XP, but quest/milestone XP is not subject to the same guidelines. PTU p.461 says "Experience for Trainers can and should also come from non-combat goals and achievements." The GM has discretion on amounts.
+
+3. **Per decree-030, all significance PRESETS cap at x5.** The `TRAINER_XP_SUGGESTIONS` table caps at 5. The per-trainer manual input does NOT need to cap at 5 -- that constraint applies to the significance multiplier presets, not to the raw XP amount the GM decides to award.
+
+4. **Evolution species XP is correctly deferred, not a P1 bug.** The design explicitly scopes hatching and evolution XP out of P1. However, a ticket should be filed to ensure it enters the pipeline.
 
 ## Verdict
 
-**APPROVED**
+**APPROVED** -- All P1 mechanics are correctly implemented per PTU 1.05. No critical issues. The HIGH-1 issue is a documented deferral (not a P1 regression) that needs a ticket. The two MEDIUM issues are validation and documentation gaps that should be addressed but do not block approval.
 
-All mechanics verified correct. All issues from both previous reviews resolved. No new issues found. No regressions detected. The P1 multi-tile token movement integration is ready for merge.
+## Recommended Actions
+
+1. **File ticket** for evolution species XP hookup (`evolve.post.ts` needs `capturedSpecies` check + `applyTrainerXp(+1)` on new species). Priority P3. Category: `ptu-rule`.
+2. **Add server-side xpAmount upper bound** to `trainer-xp-distribute.post.ts` (match the individual endpoint's 100 cap). Non-blocking.
+3. **Update app-surface.md** with P1 components and endpoints. Non-blocking.
