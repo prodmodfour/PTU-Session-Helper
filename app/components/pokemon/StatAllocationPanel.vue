@@ -86,7 +86,7 @@
       </button>
       <button
         class="btn btn--primary btn--sm"
-        :disabled="unallocatedPoints > 0 || !validation?.valid || isSaving"
+        :disabled="isAllocationEmpty || !validation?.valid || isSaving"
         @click="handleSubmit"
       >
         {{ isSaving ? 'Saving...' : 'Apply Allocation' }}
@@ -135,12 +135,26 @@ const {
   cancelAllocation
 } = useLevelUpAllocation(pokemonRef)
 
+/** True when no pending points have been allocated (all zeros) */
+const isAllocationEmpty = computed(() => {
+  return STAT_KEYS.every(key => pendingAllocation.value[key] === 0)
+})
+
 // Auto-start allocation when mounted
 onMounted(() => {
   startAllocation()
 })
 
 async function handleSubmit() {
+  // Confirm partial allocation if there are unallocated points remaining
+  if (unallocatedPoints.value > 0) {
+    const confirmed = window.confirm(
+      `You have ${unallocatedPoints.value} unallocated stat point(s) remaining. ` +
+      `Apply partial allocation anyway?`
+    )
+    if (!confirmed) return
+  }
+
   const success = await submitAllocation()
   if (success) {
     emit('allocated')
