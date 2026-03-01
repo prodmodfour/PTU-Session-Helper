@@ -69,15 +69,7 @@
 import type { Stats } from '~/types/character'
 import type { StatPoints } from '~/composables/useCharacterCreation'
 import type { TrainerAdvancementSummary } from '~/utils/trainerAdvancement'
-
-const statDefinitions = [
-  { key: 'hp' as const, label: 'HP' },
-  { key: 'attack' as const, label: 'Attack' },
-  { key: 'defense' as const, label: 'Defense' },
-  { key: 'specialAttack' as const, label: 'Sp. Attack' },
-  { key: 'specialDefense' as const, label: 'Sp. Defense' },
-  { key: 'speed' as const, label: 'Speed' }
-]
+import { STAT_DEFINITIONS } from '~/constants/trainerStats'
 
 interface Props {
   /** Character name */
@@ -101,7 +93,7 @@ const props = defineProps<Props>()
 
 /** Compute stat change rows */
 const statChanges = computed(() =>
-  statDefinitions.map(stat => ({
+  STAT_DEFINITIONS.map(stat => ({
     key: stat.key,
     label: stat.label,
     oldValue: props.currentStats[stat.key] ?? 0,

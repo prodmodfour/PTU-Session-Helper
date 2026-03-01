@@ -99,14 +99,9 @@ defineEmits<{
   decrementStat: [stat: keyof StatPoints]
 }>()
 
-const statDefinitions = [
-  { key: 'hp' as const, label: 'HP' },
-  { key: 'attack' as const, label: 'Attack' },
-  { key: 'defense' as const, label: 'Defense' },
-  { key: 'specialAttack' as const, label: 'Sp. Attack' },
-  { key: 'specialDefense' as const, label: 'Sp. Defense' },
-  { key: 'speed' as const, label: 'Speed' }
-]
+import { STAT_DEFINITIONS } from '~/constants/trainerStats'
+
+const statDefinitions = STAT_DEFINITIONS
 
 /** Compute evasions from updated stats (uses calculated stats per PTU rules, capped at +6 per PTU Core p.15) */
 const evasions = computed(() => {

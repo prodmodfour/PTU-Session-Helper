@@ -20,6 +20,27 @@ export const TOTAL_STAT_POINTS = 10
 export const MAX_POINTS_PER_STAT = 5
 
 /**
+ * Stat definitions used across level-up and creation UI.
+ * Shared by LevelUpStatSection, LevelUpSummary, and StatAllocationSection.
+ */
+export const STAT_DEFINITIONS = [
+  { key: 'hp' as const, label: 'HP' },
+  { key: 'attack' as const, label: 'Attack' },
+  { key: 'defense' as const, label: 'Defense' },
+  { key: 'specialAttack' as const, label: 'Sp. Attack' },
+  { key: 'specialDefense' as const, label: 'Sp. Defense' },
+  { key: 'speed' as const, label: 'Speed' }
+] as const
+
+/**
+ * Skill rank progression order.
+ * Shared by LevelUpSkillSection, and any future skill rank UI.
+ */
+export const RANK_PROGRESSION: readonly string[] = [
+  'Pathetic', 'Untrained', 'Novice', 'Adept', 'Expert', 'Master'
+] as const
+
+/**
  * Calculate total stat points available at a given trainer level.
  *
  * PTU Core p. 19-21:

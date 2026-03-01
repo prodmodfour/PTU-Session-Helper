@@ -77,7 +77,7 @@
 import type { Stats } from '~/types/character'
 import type { StatPoints } from '~/composables/useCharacterCreation'
 import type { CreationWarning } from '~/utils/characterCreationValidation'
-import { BASE_HP, BASE_OTHER, MAX_POINTS_PER_STAT } from '~/constants/trainerStats'
+import { BASE_HP, BASE_OTHER, MAX_POINTS_PER_STAT, STAT_DEFINITIONS } from '~/constants/trainerStats'
 
 interface Props {
   statPoints: StatPoints
@@ -97,14 +97,11 @@ defineEmits<{
   decrement: [stat: keyof StatPoints]
 }>()
 
-const statDefinitions = [
-  { key: 'hp' as const, label: 'HP', base: BASE_HP },
-  { key: 'attack' as const, label: 'Attack', base: BASE_OTHER },
-  { key: 'defense' as const, label: 'Defense', base: BASE_OTHER },
-  { key: 'specialAttack' as const, label: 'Sp. Attack', base: BASE_OTHER },
-  { key: 'specialDefense' as const, label: 'Sp. Defense', base: BASE_OTHER },
-  { key: 'speed' as const, label: 'Speed', base: BASE_OTHER }
-]
+const BASE_STATS: Record<string, number> = { hp: BASE_HP }
+const statDefinitions = STAT_DEFINITIONS.map(s => ({
+  ...s,
+  base: BASE_STATS[s.key] ?? BASE_OTHER
+}))
 </script>
 
 <style lang="scss" scoped>

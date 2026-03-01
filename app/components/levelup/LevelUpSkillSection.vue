@@ -79,6 +79,7 @@
 import type { SkillRank } from '~/types/character'
 import type { PtuSkillName } from '~/constants/trainerSkills'
 import type { SkillRankName } from '~/constants/trainerStats'
+import { RANK_PROGRESSION } from '~/constants/trainerStats'
 import { PTU_SKILL_CATEGORIES } from '~/constants/trainerSkills'
 
 interface Props {
@@ -106,10 +107,6 @@ defineEmits<{
   addSkillRank: [skill: PtuSkillName]
   removeSkillRank: [index: number]
 }>()
-
-const RANK_PROGRESSION: readonly SkillRank[] = [
-  'Pathetic', 'Untrained', 'Novice', 'Adept', 'Expert', 'Master'
-] as const
 
 interface SkillDisplay {
   name: PtuSkillName
