@@ -35,6 +35,8 @@ export interface EvolutionIneligible {
 export interface EvolutionEligibilityResult {
   available: EvolutionAvailable[]
   ineligible: EvolutionIneligible[]
+  /** Set when evolution is blocked by a prevention item (Everstone, Eviolite) */
+  preventedByItem?: string
 }
 
 // ============================================
@@ -58,6 +60,23 @@ export function checkEvolutionEligibility(input: EvolutionCheckInput): Evolution
   const { currentLevel, heldItem, evolutionTriggers } = input
   const available: EvolutionAvailable[] = []
   const ineligible: EvolutionIneligible[] = []
+
+  // Everstone/Eviolite prevention — blocks ALL evolution paths
+  const preventionItems = ['Everstone', 'Eviolite']
+  const preventionMatch = preventionItems.find(
+    item => heldItem?.toLowerCase() === item.toLowerCase()
+  )
+  if (preventionMatch) {
+    return {
+      available: [],
+      ineligible: evolutionTriggers.map(t => ({
+        toSpecies: t.toSpecies,
+        trigger: t,
+        reason: `Pokemon is holding an ${preventionMatch} (evolution prevented)`
+      })),
+      preventedByItem: preventionMatch
+    }
+  }
 
   for (const trigger of evolutionTriggers) {
     const reasons: string[] = []
