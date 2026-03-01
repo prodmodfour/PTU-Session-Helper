@@ -250,7 +250,7 @@ export const useEncounterStore = defineStore('encounter', {
               trainerName: string
               recalledName: string
               releasedName: string
-              actionCost: 'standard' | 'shift'
+              actionCost: 'standard' | 'shift' | 'none'
               rangeToRecalled: number
               releasedInitiative: number
               canActThisRound: boolean
