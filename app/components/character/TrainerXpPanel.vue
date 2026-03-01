@@ -128,9 +128,8 @@ const progressPercent = computed(() =>
   Math.min(100, (props.character.trainerXp / 10) * 100)
 )
 
-async function handleAward(amount: number) {
+async function processXpAward(amount: number, reason: string) {
   try {
-    const reason = `Quick award: ${amount > 0 ? '+' : ''}${amount}`
     const result = await awardXp(props.character.id, amount, reason)
 
     emit('xp-changed', { newXp: result.newXp, newLevel: result.newLevel })
@@ -146,39 +145,29 @@ async function handleAward(amount: number) {
         }
       })
     }
+
+    return result
   } catch (e) {
     alert(`Failed to award XP: ${e instanceof Error ? e.message : 'Unknown error'}`)
+    throw e
   }
+}
+
+async function handleAward(amount: number) {
+  const reason = `Quick award: ${amount > 0 ? '+' : ''}${amount}`
+  await processXpAward(amount, reason)
 }
 
 async function handleCustomAward() {
   if (!customAmount.value || customAmount.value === 0) return
 
-  try {
-    const reason = customReason.value || `Custom: ${customAmount.value > 0 ? '+' : ''}${customAmount.value}`
-    const result = await awardXp(props.character.id, customAmount.value, reason)
+  const reason = customReason.value || `Custom: ${customAmount.value > 0 ? '+' : ''}${customAmount.value}`
+  await processXpAward(customAmount.value, reason)
 
-    emit('xp-changed', { newXp: result.newXp, newLevel: result.newLevel })
-
-    if (result.levelsGained > 0) {
-      emit('level-up', {
-        oldLevel: result.previousLevel,
-        newLevel: result.newLevel,
-        character: {
-          ...props.character,
-          level: result.newLevel,
-          trainerXp: result.newXp
-        }
-      })
-    }
-
-    // Reset custom input
-    showCustomInput.value = false
-    customAmount.value = null
-    customReason.value = ''
-  } catch (e) {
-    alert(`Failed to award XP: ${e instanceof Error ? e.message : 'Unknown error'}`)
-  }
+  // Reset custom input
+  showCustomInput.value = false
+  customAmount.value = null
+  customReason.value = ''
 }
 </script>
 
