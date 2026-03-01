@@ -181,7 +181,7 @@
         v-if="canShowSwitchButton"
         class="btn btn--sm btn--secondary"
         title="Switch Pokemon"
-        :disabled="!isCurrent || combatant.turnState.standardActionUsed"
+        :disabled="isSwitchDisabled"
         @click="$emit('switchPokemon', combatant.id)"
       >
         <img src="/icons/phosphor/arrow-clockwise.svg" alt="" class="btn-icon" />
@@ -340,14 +340,60 @@ const captureRate = computed(() => {
 // Show switch button for trainers who own Pokemon in encounter, or for Pokemon owned by a trainer
 const canShowSwitchButton = computed(() => {
   if (props.combatant.type === 'human') {
-    // Trainer: show if they own any Pokemon in the encounter
-    return true
+    // Trainer: show only if they own at least one Pokemon in the encounter
+    const trainerEntityId = props.combatant.entityId
+    const encounterStore = useEncounterStore()
+    return encounterStore.encounter?.combatants.some(
+      c => c.type === 'pokemon' && (c.entity as Pokemon).ownerId === trainerEntityId
+    ) ?? false
   }
   if (props.combatant.type === 'pokemon') {
     const pokemon = entity.value as Pokemon
     return !!pokemon.ownerId
   }
   return false
+})
+
+/**
+ * Determine if the switch button should be disabled.
+ * Switch can be initiated on either the trainer's or their Pokemon's turn,
+ * and the Standard Action is consumed on whichever combatant's turn it is.
+ */
+const isSwitchDisabled = computed(() => {
+  const encounterStore = useEncounterStore()
+  const encounter = encounterStore.encounter
+  if (!encounter) return true
+
+  const currentId = encounter.turnOrder[encounter.currentTurnIndex]
+
+  if (props.combatant.type === 'human') {
+    // Trainer card: check if it's the trainer's turn or any of their Pokemon's turns
+    const trainerEntityId = props.combatant.entityId
+    const isTrainerTurn = currentId === props.combatant.id
+    const isOwnedPokemonTurn = encounter.combatants.some(
+      c => c.id === currentId && c.type === 'pokemon' && (c.entity as Pokemon).ownerId === trainerEntityId
+    )
+    if (!isTrainerTurn && !isOwnedPokemonTurn) return true
+
+    // Check Standard Action on the initiating combatant (whoever's turn it is)
+    const initiator = encounter.combatants.find(c => c.id === currentId)
+    return initiator?.turnState.standardActionUsed ?? true
+  }
+
+  if (props.combatant.type === 'pokemon') {
+    // Pokemon card: check if it's this Pokemon's turn or its trainer's turn
+    const pokemon = entity.value as Pokemon
+    const isPokemonTurn = currentId === props.combatant.id
+    const isTrainerTurn = encounter.combatants.some(
+      c => c.id === currentId && c.type === 'human' && c.entityId === pokemon.ownerId
+    )
+    if (!isPokemonTurn && !isTrainerTurn) return true
+
+    const initiator = encounter.combatants.find(c => c.id === currentId)
+    return initiator?.turnState.standardActionUsed ?? true
+  }
+
+  return true
 })
 
 // Format stat name for display
