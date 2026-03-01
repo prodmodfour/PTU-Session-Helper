@@ -2,13 +2,15 @@
  * POST /api/pokemon/:id/evolve
  *
  * Perform a Pokemon evolution. Changes species, types, base stats,
- * calculated stats, maxHp, and currentHp.
+ * calculated stats, maxHp, currentHp, abilities, moves, capabilities, and skills.
  *
  * Input:
  * {
  *   targetSpecies: string,
  *   statPoints: { hp, attack, defense, specialAttack, specialDefense, speed },
- *   skipBaseRelations?: boolean  // GM override
+ *   skipBaseRelations?: boolean,  // GM override
+ *   abilities?: Array<{ name: string; effect: string }>,  // GM-resolved ability selection
+ *   moves?: Array<MoveDetail>  // Final move list after learning/replacing (max 6)
  * }
  *
  * Validation:
@@ -17,6 +19,7 @@
  * - Stat points must total level + 10
  * - Base Relations must be satisfied (unless skipBaseRelations)
  * - Level/held-item requirements must be met
+ * - Moves array max length 6
  *
  * PTU Core Chapter 5, p.202
  */
@@ -76,6 +79,55 @@ export default defineEventHandler(async (event) => {
     speed: body.statPoints.speed
   }
 
+  // Validate optional abilities array
+  let abilities: Array<{ name: string; effect: string }> | undefined
+  if (body.abilities !== undefined) {
+    if (!Array.isArray(body.abilities)) {
+      throw createError({
+        statusCode: 400,
+        message: 'abilities must be an array'
+      })
+    }
+    for (const ability of body.abilities) {
+      if (!ability.name || typeof ability.name !== 'string') {
+        throw createError({
+          statusCode: 400,
+          message: 'Each ability must have a name string'
+        })
+      }
+    }
+    abilities = body.abilities.map((a: { name: string; effect?: string }) => ({
+      name: a.name,
+      effect: a.effect ?? ''
+    }))
+  }
+
+  // Validate optional moves array
+  let moves: Array<Record<string, unknown>> | undefined
+  if (body.moves !== undefined) {
+    if (!Array.isArray(body.moves)) {
+      throw createError({
+        statusCode: 400,
+        message: 'moves must be an array'
+      })
+    }
+    if (body.moves.length > 6) {
+      throw createError({
+        statusCode: 400,
+        message: 'Pokemon cannot know more than 6 moves'
+      })
+    }
+    for (const move of body.moves) {
+      if (!move.name || typeof move.name !== 'string') {
+        throw createError({
+          statusCode: 400,
+          message: 'Each move must have a name string'
+        })
+      }
+    }
+    moves = body.moves
+  }
+
   try {
     // Guard: reject evolution if Pokemon is in an active encounter
     const activeEncounters = await prisma.encounter.findMany({
@@ -98,7 +150,9 @@ export default defineEventHandler(async (event) => {
       pokemonId: id,
       targetSpecies: body.targetSpecies,
       statPoints,
-      skipBaseRelations: body.skipBaseRelations === true
+      skipBaseRelations: body.skipBaseRelations === true,
+      abilities,
+      moves
     })
 
     return {
