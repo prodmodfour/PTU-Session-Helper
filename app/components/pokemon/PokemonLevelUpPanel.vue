@@ -117,6 +117,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   allocated: []
+  abilityAssigned: [ability: { name: string; effect: string }]
+  moveLearned: [move: { name: string }]
 }>()
 
 const levelUpInfo = ref<LevelUpSummary | null>(null)
@@ -168,14 +170,14 @@ function handleAllocated() {
   emit('allocated')
 }
 
-function handleAbilityAssigned() {
+function handleAbilityAssigned(ability: { name: string; effect: string }) {
   showAbilityPanel.value = false
-  emit('allocated') // Trigger parent refresh
+  emit('abilityAssigned', ability)
 }
 
-function handleMoveLearned() {
+function handleMoveLearned(move: { name: string }) {
   // Keep panel open for learning additional moves
-  // Parent can refresh on next save
+  emit('moveLearned', move)
 }
 
 // Watch for level changes — fetch level-up info from server

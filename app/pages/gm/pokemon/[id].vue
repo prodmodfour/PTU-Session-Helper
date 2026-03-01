@@ -54,6 +54,8 @@
         :target-level="editData.level"
         :pokemon="pokemon"
         @allocated="loadPokemon"
+        @ability-assigned="loadPokemon"
+        @move-learned="loadPokemon"
       />
 
       <!-- Tabs -->
