@@ -176,6 +176,18 @@ model HumanCharacter {
 - WebSocket broadcast on level change
 - LevelUpModal integration via pendingLevelUp/event chain
 
+### P0 Fix Cycle — code-review-246 (2026-03-01)
+
+**Branch:** `slave/2-dev-feature-009-p0-fix-20260301`
+
+| Issue | Severity | Fix | Commit |
+|-------|----------|-----|--------|
+| Stale data in CharacterModal after XP award | HIGH | Add refresh emit, update editData from payload | `ed7fb197` |
+| app-surface.md missing XP endpoints/components | HIGH | Document xp.post, xp-history.get, TrainerXpPanel, useTrainerXp | `72d3d565` |
+| xp-history returns negative xpToNextLevel at max level | MEDIUM | Return null at max level (50) | `3211428f` |
+| Duplicate award logic in TrainerXpPanel | MEDIUM | Extract shared processXpAward() helper | `b7a9da6a` |
+| console.log in XP endpoint | MEDIUM | Remove audit log (data available in API response) | `5522a5dc` |
+
 ---
 
 ## Implementation Order

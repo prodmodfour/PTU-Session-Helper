@@ -73,3 +73,10 @@ FULL-scope feature. Tightly coupled with feature-008 (Level-Up Workflow) — whe
   - `ff0c62f9` fix: JSDoc comment esbuild parse error
   - `b9f174bb` test: 47 unit tests (T1-T4)
   - Files changed: 10 (4 new, 6 modified) + 3 test files
+- 2026-03-01: P0 fix cycle (code-review-246 CHANGES_REQUIRED, rules-review-222 APPROVED)
+  - `5522a5dc` fix: remove console.log from XP endpoint (M3)
+  - `3211428f` fix: return null xpToNextLevel at max trainer level (M1)
+  - `b7a9da6a` refactor: extract shared processXpAward helper in TrainerXpPanel (M2)
+  - `ed7fb197` fix: resolve stale character data in CharacterModal after XP award (H1)
+  - `72d3d565` docs: add trainer XP endpoints and components to app-surface.md (H2)
+  - Files changed: 4 (xp.post.ts, xp-history.get.ts, TrainerXpPanel.vue, CharacterModal.vue, app-surface.md)
