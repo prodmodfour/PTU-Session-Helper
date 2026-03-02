@@ -130,20 +130,20 @@ export default defineEventHandler(async (event) => {
     let inventoryConsumed = false
     let remainingQuantity: number | undefined
 
-    if (!skipInventory) {
-      // Resolve the trainer who owns the item
-      const trainer = user.type === 'human'
-        ? user
-        : findTrainerForPokemon(combatants, user)
+    // Resolve the trainer who owns the item (hoisted — used for both check and deduction)
+    const itemTrainer = user.type === 'human'
+      ? user
+      : findTrainerForPokemon(combatants, user)
 
-      if (!trainer) {
+    if (!skipInventory) {
+      if (!itemTrainer) {
         throw createError({
           statusCode: 400,
           message: 'Cannot determine which trainer owns the item'
         })
       }
 
-      const trainerEntity = trainer.entity as HumanCharacter
+      const trainerEntity = itemTrainer.entity as HumanCharacter
       const trainerInventory: InventoryItem[] = trainerEntity.inventory || []
       const inventoryItem = trainerInventory.find(
         inv => inv.name === body.itemName
@@ -199,44 +199,38 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // P2: Deduct from inventory after successful application
-    if (!skipInventory) {
-      const trainer = user.type === 'human'
-        ? user
-        : findTrainerForPokemon(combatants, user)
-
-      if (trainer) {
-        const trainerEntity = trainer.entity as HumanCharacter
-        const updatedInventory = (trainerEntity.inventory || []).map(
-          (inv: InventoryItem) => {
-            if (inv.name === body.itemName) {
-              return { ...inv, quantity: inv.quantity - 1 }
-            }
-            return inv
+    // P2: Deduct from inventory after successful application (reuses hoisted itemTrainer)
+    if (!skipInventory && itemTrainer) {
+      const trainerEntity = itemTrainer.entity as HumanCharacter
+      const updatedInventory = (trainerEntity.inventory || []).map(
+        (inv: InventoryItem) => {
+          if (inv.name === body.itemName) {
+            return { ...inv, quantity: inv.quantity - 1 }
           }
-        ).filter((inv: InventoryItem) => inv.quantity > 0)
+          return inv
+        }
+      ).filter((inv: InventoryItem) => inv.quantity > 0)
 
-        // Update the entity in the combatant (immutable)
-        trainer.entity = {
-          ...trainer.entity,
-          inventory: updatedInventory
-        } as HumanCharacter
+      // Update the entity in the combatant (immutable)
+      itemTrainer.entity = {
+        ...itemTrainer.entity,
+        inventory: updatedInventory
+      } as HumanCharacter
 
-        // Persist inventory to DB
-        await prisma.humanCharacter.update({
-          where: { id: trainer.entityId },
-          data: {
-            inventory: JSON.stringify(updatedInventory)
-          }
-        })
+      // Persist inventory to DB
+      await prisma.humanCharacter.update({
+        where: { id: itemTrainer.entityId },
+        data: {
+          inventory: JSON.stringify(updatedInventory)
+        }
+      })
 
-        // Track remaining quantity for response
-        const after = updatedInventory.find(
-          (inv: InventoryItem) => inv.name === body.itemName
-        )
-        remainingQuantity = after ? after.quantity : 0
-        inventoryConsumed = true
-      }
+      // Track remaining quantity for response
+      const after = updatedInventory.find(
+        (inv: InventoryItem) => inv.name === body.itemName
+      )
+      remainingQuantity = after ? after.quantity : 0
+      inventoryConsumed = true
     }
 
     // Sync target to database (HP, status conditions, stage modifiers for CS reversal)
