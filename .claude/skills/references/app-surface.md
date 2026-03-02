@@ -229,7 +229,9 @@ Read-only combat math endpoint.
 ### Capture (`/api/capture`)
 Action-only. Both endpoints accept optional `ballType` parameter (key in POKE_BALL_CATALOG, default: `'Basic Ball'`).
 - `POST /api/capture/rate` — calculate capture rate with ball modifier breakdown
-- `POST /api/capture/attempt` — execute capture with ball modifier applied to roll
+- `POST /api/capture/attempt` — execute capture with ball modifier applied to roll; server validates AC 6 gate when `accuracyRoll` is provided (rejects with 400 on miss)
+
+**Accuracy gate (PTU p.214):** Poke Ball throws are AC 6 Status Attack Rolls. `rollAccuracyCheck()` returns `{ roll, isNat1, isNat20, hits, total }`. Natural 1 always misses, natural 20 always hits, otherwise roll >= 6 required. On miss, the Standard Action is consumed but no capture attempt occurs. Both `handleApproveCapture` (GM-side) and `attempt.post.ts` (server-side) enforce this gate. The ack to the player includes `accuracyHit: boolean` so the UI can distinguish misses from capture failures.
 
 **Poke Ball system (feature-017):** `constants/pokeBalls.ts` (POKE_BALL_CATALOG — 25 PTU ball types with base modifiers, condition descriptions, post-capture effects; PokeBallDef interface, PokeBallCategory type, BallConditionContext interface, calculateBallModifier — returns base + conditional modifier breakdown, getBallsByCategory, getBallDef, getAvailableBallNames, DEFAULT_BALL_TYPE), `utils/pokeBallConditions.ts` (evaluateBallCondition — pure condition evaluator for 13 conditional balls: Timer/Quick/Level/Heavy/Fast/Love/Net/Dusk/Moon/Lure/Repeat/Nest/Dive; returns modifier + conditionMet + description), `composables/useCapture.ts` (getCaptureRate, calculateCaptureRateLocal, attemptCapture, getAvailableBalls, rollAccuracyCheck — all accept ballType parameter).
 
