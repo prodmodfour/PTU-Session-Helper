@@ -640,12 +640,16 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    /** Use a healing item on a combatant */
+    /** Use a healing item on a combatant (P2: action economy + inventory) */
     async useItem(
       itemName: string,
       userId: string,
       targetId: string,
-      options?: { targetAccepts?: boolean }
+      options?: {
+        targetAccepts?: boolean
+        /** GM override: skip inventory check/consumption */
+        skipInventory?: boolean
+      }
     ) {
       if (!this.encounter) return
 
@@ -662,6 +666,10 @@ export const useEncounterStore = defineStore('encounter', {
             revived?: boolean
             repulsive?: boolean
             refused: boolean
+            actionCost?: 'standard' | 'full_round'
+            targetForfeitsActions?: boolean
+            inventoryConsumed?: boolean
+            remainingQuantity?: number
           }
         }>(`/api/encounters/${this.encounter.id}/use-item`, {
           method: 'POST',
@@ -669,7 +677,8 @@ export const useEncounterStore = defineStore('encounter', {
             itemName,
             userId,
             targetId,
-            targetAccepts: options?.targetAccepts ?? true
+            targetAccepts: options?.targetAccepts ?? true,
+            ...(options?.skipInventory && { skipInventory: true })
           }
         })
 
