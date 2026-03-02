@@ -165,7 +165,7 @@ const cancelCapture = () => {
   &__targets {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: $spacing-xs;
   }
 
   &__hint {
