@@ -24,7 +24,7 @@
           <PhTarget :size="14" />
           Throw {{ req.ballType }} at {{ req.targetPokemonName }}
           <span v-if="req.captureRatePreview != null" class="player-requests__rate">
-            (Rate: {{ req.captureRatePreview }}%)
+            (Capture Rate: {{ req.captureRatePreview }})
           </span>
         </template>
 
