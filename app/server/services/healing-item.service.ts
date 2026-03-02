@@ -241,8 +241,8 @@ function applyReviveItem(
 
   // Set HP based on item type
   if (item.hpAmount) {
-    // Revive: sets to fixed amount (e.g., 20 HP), capped at effective max
-    entity.currentHp = Math.min(item.hpAmount, effectiveMax)
+    // Revive: sets to fixed amount (e.g., 20 HP), capped at effective max, minimum 1
+    entity.currentHp = Math.max(1, Math.min(item.hpAmount, effectiveMax))
     effects.hpHealed = entity.currentHp
   } else if (item.healToPercent) {
     // Revival Herb: sets to percentage of effective max HP (e.g., 50%)
