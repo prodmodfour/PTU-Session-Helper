@@ -145,13 +145,15 @@ function validateMountPreconditions(
 export function executeMount(
   combatants: Combatant[],
   riderId: string,
-  mountId: string
+  mountId: string,
+  skipCheck?: boolean
 ): MountResult {
   const { rider, mount } = validateMountPreconditions(combatants, riderId, mountId)
 
   const actionCost = getMountActionCost(rider)
   const checkAutoSuccess = hasMountedProwess(rider)
-  const checkRequired = !checkAutoSuccess
+  // GM override: skipCheck bypasses the DC 10 mounting check
+  const checkRequired = skipCheck ? false : !checkAutoSuccess
 
   const mountMovement = getMovementSpeedForMount(mount)
 
@@ -264,7 +266,8 @@ export function executeDismount(
   riderId: string,
   forced: boolean,
   gridWidth: number,
-  gridHeight: number
+  gridHeight: number,
+  _skipCheck?: boolean
 ): DismountResult {
   const rider = combatants.find(c => c.id === riderId)
   if (!rider) {

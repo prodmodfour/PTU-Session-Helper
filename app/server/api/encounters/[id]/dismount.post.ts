@@ -46,12 +46,14 @@ export default defineEventHandler(async (event) => {
     const gridHeight = record.gridHeight || 20
 
     // Execute dismount (validates preconditions, returns new combatant array)
+    // skipCheck accepted for forward compatibility (P1 dismount checks on damage/push)
     const dismountResult = executeDismount(
       combatants,
       body.riderId,
       body.forced ?? false,
       gridWidth,
-      gridHeight
+      gridHeight,
+      body.skipCheck
     )
 
     // Persist updated combatants

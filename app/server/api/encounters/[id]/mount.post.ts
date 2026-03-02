@@ -44,7 +44,8 @@ export default defineEventHandler(async (event) => {
     const mountResult = executeMount(
       combatants,
       body.riderId,
-      body.mountId
+      body.mountId,
+      body.skipCheck
     )
 
     // Persist updated combatants
