@@ -92,7 +92,7 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
             }
           })
         } catch (actionError: any) {
-          // Non-blocking — action economy tracking is best-effort
+          setHandlerError('Ball missed but Standard Action could not be consumed — adjust action economy manually')
         }
 
         // Refresh encounter state after action economy change
