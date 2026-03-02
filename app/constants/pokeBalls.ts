@@ -116,7 +116,7 @@ export interface PokeBallDef {
 // POKE BALL CATALOG
 // ============================================
 
-export const POKE_BALL_CATALOG: Record<string, PokeBallDef> = {
+export const POKE_BALL_CATALOG = {
   // === Basic Balls ===
   'Basic Ball': {
     id: 1,
@@ -343,7 +343,7 @@ export const POKE_BALL_CATALOG: Record<string, PokeBallDef> = {
     description: 'A decorative Poke Ball often given out during special events.',
     cost: 0,
   },
-} as const
+} as const satisfies Record<string, PokeBallDef>
 
 /**
  * Default ball type when none is specified.
