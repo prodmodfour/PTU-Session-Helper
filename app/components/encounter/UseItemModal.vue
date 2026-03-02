@@ -23,7 +23,7 @@
               class="form-select"
             >
               <option v-for="c in targetCombatants" :key="c.id" :value="c.id">
-                {{ getCombatantName(c) }} ({{ c.entity.currentHp }}/{{ c.entity.maxHp }} HP)
+                {{ getCombatantName(c) }} ({{ c.entity.currentHp }}/{{ getEffectiveMaxHp(c.entity.maxHp, c.entity.injuries || 0) }} HP)
               </option>
             </select>
           </div>
@@ -106,7 +106,8 @@
 
 <script setup lang="ts">
 import { PhFirstAidKit, PhHeart } from '@phosphor-icons/vue'
-import type { Combatant, Pokemon, HumanCharacter, StatusCondition } from '~/types'
+import { getEffectiveMaxHp } from '~/utils/restHealing'
+import type { Combatant, StatusCondition } from '~/types'
 import type { HealingItemDef } from '~/constants/healingItems'
 
 const props = defineProps<{
@@ -126,6 +127,7 @@ const emit = defineEmits<{
 
 const encounterStore = useEncounterStore()
 const healingItems = useHealingItems()
+const { getCombatantName } = useCombatantDisplay()
 
 // State
 const selectedTargetId = ref('')
@@ -185,14 +187,6 @@ watch(selectedTargetId, () => {
   result.value = null
   errorMessage.value = ''
 })
-
-function getCombatantName(combatant: Combatant): string {
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    return pokemon.nickname || pokemon.species
-  }
-  return (combatant.entity as HumanCharacter).name
-}
 
 async function handleApply() {
   if (!selectedItemName.value || !selectedTargetId.value) return
