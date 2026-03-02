@@ -4,7 +4,7 @@
 **Feature Ticket:** feature-016
 **Priority:** P2
 **Domain:** combat + vtt-grid
-**Status:** p1-implemented
+**Status:** p2-implemented
 **Created:** 2026-03-01
 
 ## Overview
@@ -21,9 +21,9 @@ This design implements the PTU 1.05 out-of-turn action system: Attack of Opportu
 | R046 | Priority Action Rules | combat | P1 | Implemented |
 | R047 | Priority Limited/Advanced Variants | combat | P1 | Implemented |
 | R048 | Interrupt Actions | combat | P1 | Implemented |
-| R116 | Intercept Melee | combat | P2 | Designed |
-| R117 | Intercept Ranged | combat | P2 | Designed |
-| ptu-rule-095 | Disengage Maneuver | combat | P2 | Designed |
+| R116 | Intercept Melee | combat | P2 | Implemented |
+| R117 | Intercept Ranged | combat | P2 | Implemented |
+| ptu-rule-095 | Disengage Maneuver | combat | P2 | Implemented |
 
 ## Tier Summary
 
@@ -109,3 +109,4 @@ All new fields use optional types with defaults. Existing encounters work withou
 | 2026-03-01 | P0 | Fix cycle (code-review-247) | 40a1bfda..e43fe165 (8 commits) | CRIT-001: reactor eligibility re-validation. H1-H3: input validation, DB4 damage base, app-surface. M1-M4: client preview eligibility, auto-decline on faint, stale record, action cleanup |
 | 2026-03-01 | P1 | Implementation complete | 062b217a..0c4b0972 (11 commits) | 6 new files: hold-action.post.ts, release-hold.post.ts, priority.post.ts, interrupt.post.ts, HoldActionButton.vue, PriorityActionPanel.vue. 7 modified: combat.ts, encounter.ts, out-of-turn.service.ts, next-turn.post.ts, start.post.ts, encounter store, ws.ts. Also fixed ptu-rule-131 (Expert+ Combat AoO). |
 | 2026-03-01 | P1 | Fix cycle (code-review-259 + rules-review-235) | 828ec965..e6c161a1 (10 commits) | 2C+4H+5M addressed. CRIT-001: betweenTurns wired in. CRIT-002: Standard Priority duplicate removed. HIGH-001: holdReleaseTriggered returned. HIGH-002: hold advances turn. HIGH-003: Advanced Priority standardActionUsed. HIGH-004: unused import. rules-HIGH-002: skipNextRound narrowed. MED-003: decline before eligibility. MED-004: checkHoldQueue returns all. MED-005: Priority filter to getter. MED-001: app-surface updated. MED-002: refactoring-117 already filed. |
+| 2026-03-02 | P2 | Implementation complete | 93f0017f..e2c202e9 (8 commits) | 5 new files: intercept-melee.post.ts, intercept-ranged.post.ts, lineOfAttack.ts, disengage.post.ts, InterceptPrompt.vue. 5 modified: combatManeuvers.ts (Maneuver interface + Disengage + provokesAoO), combat.ts (INTERCEPT_BLOCKING_CONDITIONS), character.ts (loyalty), out-of-turn.service.ts (Intercept detection/resolution), useGridMovement.ts (1m clamp), encounter store (actions + getters). Covers R116, R117, ptu-rule-095. |
