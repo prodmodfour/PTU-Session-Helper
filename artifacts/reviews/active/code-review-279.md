@@ -18,137 +18,230 @@ commits_reviewed:
 files_reviewed:
   - app/server/services/intercept.service.ts
   - app/server/services/out-of-turn.service.ts
-  - app/utils/lineOfAttack.ts
-  - app/components/encounter/InterceptPrompt.vue
   - app/server/api/encounters/[id]/intercept-melee.post.ts
   - app/server/api/encounters/[id]/intercept-ranged.post.ts
   - app/server/api/encounters/[id]/disengage.post.ts
-  - app/types/combat.ts
+  - app/utils/lineOfAttack.ts
   - app/utils/gridDistance.ts
-  - .claude/skills/references/app-surface.md
+  - app/components/encounter/InterceptPrompt.vue
+  - app/types/combat.ts
 verdict: APPROVED
 issues_found:
   critical: 0
   high: 0
-  medium: 0
+  medium: 2
 reviewed_at: 2026-03-02T13:15:00Z
 follows_up: code-review-273
 ---
 
 ## Review Scope
 
-Re-review of feature-016 P2 fix cycle: 9 commits (cf8d511f through 8cbc7e7f) addressing all 7 issues from code-review-273 (1C/3H/3M). Verified each fix against the original issue description by reading the actual source files.
+Re-review of the feature-016 P2 fix cycle. 9 commits addressing all 7 issues from code-review-273 (1C/3H/3M). Verifying that each fix is correct, complete, and does not introduce regressions.
 
-Decrees checked: decree-002 (PTU alternating diagonal), decree-003 (passability), decree-040 (flanking penalty ordering). No violations found.
+Decrees checked: decree-002 (alternating diagonal), decree-003 (passability), decree-006 (dynamic initiative). No violations.
 
-## Verification of code-review-273 Issues
+## Previous Issues Resolution
 
-### CRIT-001: canIntercept Full Action check `&&` changed to `||` -- RESOLVED
+### CRIT-001 (code-review-273): `canIntercept` `&&` vs `||` -- RESOLVED
 
-**File:** `app/server/services/intercept.service.ts` line 94
+**Fix commit:** cf8d511f
 
+**Current code** (`intercept.service.ts` line 94):
 ```typescript
 if (ts.standardActionUsed || ts.shiftActionUsed) {
   return { allowed: false, reason: 'No Full Action available (Standard + Shift required)' }
 }
 ```
 
-Verified: The `||` operator correctly blocks Intercept when EITHER action has been consumed. The comment on line 92 ("If EITHER action is already consumed, the Full Action is unavailable") documents the intent. This matches PTU p.227: "Full Actions take both your Standard Action and Shift Action." Commit cf8d511f.
+Changed from `&&` to `||`. Now correctly blocks Intercept when either action is consumed. Comment on line 92 documents the logic.
 
-### HIGH-001: Step-by-step movement now uses PTU alternating diagonal cost -- RESOLVED
+**Status:** RESOLVED
 
-**File:** `app/server/services/intercept.service.ts` lines 583-601 (melee failure) and lines 689-702 (ranged failure)
+### HIGH-001 (code-review-273): Step-by-step movement ignores diagonal cost -- RESOLVED
 
-Both failure loops now track `diagCount` and compute `stepCost = isDiag ? (diagCount % 2 === 0 ? 1 : 2) : 1`. The first diagonal costs 1m, the second costs 2m, alternating per decree-002. The loop correctly breaks if `moved + stepCost > shiftDistance`, preventing over-movement. Commit a97ca619.
+**Fix commit:** a97ca619
 
-### HIGH-002: Distance calculations now use `ptuDistanceTokensBBox` -- RESOLVED
+Both failure-case movement loops in `intercept.service.ts` now implement alternating diagonal cost tracking:
 
-**File:** `app/server/services/intercept.service.ts`
+`resolveInterceptMelee` (lines 585-601):
+```typescript
+let diagCount = 0
+while (moved < shiftDistance) {
+  const isDiag = dirX !== 0 && dirY !== 0
+  const stepCost = isDiag ? (diagCount % 2 === 0 ? 1 : 2) : 1
+  if (moved + stepCost > shiftDistance) break
+  cx = nextX; cy = nextY
+  moved += stepCost
+  if (isDiag) diagCount++
+}
+```
 
-All distance measurements now use bounding-box distance:
-- `detectInterceptMelee` line 284: `ptuDistanceTokensBBox` with interceptor and target token sizes
-- `resolveInterceptMelee` line 517: DC calculation uses bbox distance
-- `resolveInterceptRanged` line 670: distance to target square uses bbox distance
+`resolveInterceptRanged` (lines 690-702): Identical pattern.
 
-**File:** `app/utils/lineOfAttack.ts`
+The implementation is clean and correct. The `diagCount` variable is properly scoped to each resolution call. Cardinal-only movement correctly costs 1 per step.
 
-New `getLineOfAttackCellsMultiTile` function (line 41) draws Bresenham line from center-of-footprint to center-of-footprint via `tokenCenter()` helper. The `canReachLineOfAttack` function (line 129) uses `ptuDistanceTokensBBox` with `interceptorSize` parameter.
+**Status:** RESOLVED
 
-**File:** `app/components/encounter/InterceptPrompt.vue`
+### HIGH-002 (code-review-273): Multi-tile distance uses raw deltas -- RESOLVED
 
-`calculateDistance` (line 164) uses `ptuDistanceTokensBBox` with `tokenSize` from both interceptor and target.
+**Fix commit:** ed381d37
 
-Commit ed381d37.
+All distance calculations now use `ptuDistanceTokensBBox` with token sizes. Verified at all five call sites:
+1. `detectInterceptMelee` range check (line 284)
+2. `resolveInterceptMelee` DC calculation (line 517)
+3. `resolveInterceptRanged` distance to target square (line 670)
+4. `canReachLineOfAttack` in `lineOfAttack.ts` (line 129)
+5. `InterceptPrompt.vue` `calculateDistance` (line 164)
 
-### HIGH-003: intercept.service.ts extracted from out-of-turn.service.ts -- RESOLVED
+Additionally, `lineOfAttack.ts` now provides `getLineOfAttackCellsMultiTile` (lines 41-51) which computes center-of-footprint for multi-tile tokens via the `tokenCenter` helper (lines 22-26), resolving MED-002 as well.
 
-**File sizes verified:**
-- `intercept.service.ts`: 732 lines (new file, all P2 Intercept logic)
-- `out-of-turn.service.ts`: 752 lines (retains P0 AoO + P1 Hold/Priority/Interrupt)
+**Status:** RESOLVED
 
-Both are under the 800-line limit. `out-of-turn.service.ts` re-exports all intercept functions at lines 665-679 for backward compatibility. Existing API endpoints (`intercept-melee.post.ts`, `intercept-ranged.post.ts`) import from `out-of-turn.service.ts` and continue to work through re-exports.
+### HIGH-003 (code-review-273): `out-of-turn.service.ts` exceeds 800-line limit -- RESOLVED
 
-Note: There is a circular dependency between the two service files (`intercept.service.ts` imports `getDefaultOutOfTurnUsage` from `out-of-turn.service.ts`, which re-exports from `intercept.service.ts`). This is safe in ES modules because `getDefaultOutOfTurnUsage` is a hoisted `function` declaration, but it is worth being aware of for future refactoring. Not blocking.
+**Fix commit:** fc1b0dc2
 
-Commit fc1b0dc2. Also resolves refactoring-120.
+`out-of-turn.service.ts` reduced from 1361 to 752 lines. `intercept.service.ts` created at 732 lines. Both under the 800-line threshold.
 
-### MED-001: `intercept-ranged.post.ts` now requires `actionId` -- RESOLVED
+Extracted to `intercept.service.ts`:
+- Types: `InterceptMeleeDetectionParams`, `InterceptRangedDetectionParams`
+- Eligibility: `canIntercept`, `checkInterceptLoyalty`, `canInterceptMove`
+- Detection: `detectInterceptMelee`, `detectInterceptRanged`
+- Resolution: `resolveInterceptMelee`, `resolveInterceptRanged`
+- Geometry: `calculatePushDirection`
+- Helpers: `getCombatantSpeed`, `isAllyCombatant`, `getDisplayName`
 
-**File:** `app/server/api/encounters/[id]/intercept-ranged.post.ts` line 54
+`out-of-turn.service.ts` re-exports all symbols (lines 665-679) for backward compatibility. Existing import paths in endpoints still work via re-exports.
 
+**Status:** RESOLVED
+
+### MED-001 (code-review-273): `actionId` silently skipped in `intercept-ranged.post.ts` -- RESOLVED
+
+**Fix commit:** 0ab897c2
+
+`intercept-ranged.post.ts` line 54 now requires `actionId`:
 ```typescript
 if (!interceptorId || !targetSquare || !attackerId || !actionId || skillCheck === undefined) {
 ```
 
-`actionId` is now included in the required field validation. Without it, the request is rejected with a 400 error. This prevents the loyalty check and line-of-attack validation from being silently skipped. Commit 0ab897c2.
+Previously `actionId` was not in the required-fields check, allowing requests without it to bypass loyalty and line-of-attack validation. Now a 400 error is returned if `actionId` is missing.
 
-### MED-002: `lineOfAttack.ts` Bresenham accounts for multi-tile origin -- RESOLVED
+**Status:** RESOLVED
 
-**File:** `app/utils/lineOfAttack.ts`
+### MED-002 (code-review-273): Bresenham ignores multi-tile origin -- RESOLVED
 
-The new `getLineOfAttackCellsMultiTile` function (lines 41-51) computes center-of-footprint for both attacker and target using `tokenCenter()` (lines 22-26), then passes the centers to the Bresenham algorithm. The original `getLineOfAttackCells` remains unchanged for callers that provide raw positions.
+**Fix commit:** ed381d37
 
-The center formula `Math.floor((size - 1) / 2)` is correct: 1x1 returns position unchanged, 2x2 returns the top-left center (floor), 3x3 returns the true center. Commit ed381d37.
+`lineOfAttack.ts` now exports `getLineOfAttackCellsMultiTile` (line 41) which uses `tokenCenter` to compute the center cell of each token's footprint before passing to Bresenham. Detection and endpoint validation both use this function.
 
-### MED-003: InterceptPrompt.vue emit includes `targetSquare` -- RESOLVED
+The `tokenCenter` helper (line 22) correctly handles:
+- 1x1 tokens: returns position unchanged
+- Even-sized tokens (2x2): uses `Math.floor((size-1)/2)` = 0, returns top-left (consistent flooring)
+- Odd-sized tokens (3x3): returns (1,1) offset = true center
 
-**File:** `app/components/encounter/InterceptPrompt.vue` line 116
+`canReachLineOfAttack` now accepts `interceptorSize` parameter and uses `ptuDistanceTokensBBox` for edge-to-edge distance to each intermediate cell.
 
+**Status:** RESOLVED
+
+### MED-003 (code-review-273): InterceptPrompt.vue emit missing `targetSquare` -- RESOLVED
+
+**Fix commit:** 0ab897c2
+
+The `interceptRanged` emit signature now includes `targetSquare: GridPosition` (line 116):
 ```typescript
 interceptRanged: [actionId: string, interceptorId: string, attackerId: string, targetSquare: GridPosition, skillCheck: number]
 ```
 
-The emit now includes `targetSquare: GridPosition`. The `confirmIntercept` function (line 218-222) calls `getBestTargetSquare(action)` which computes the optimal interception square using `getLineOfAttackCellsMultiTile` and `canReachLineOfAttack`. If no square is reachable, the emit is suppressed (line 221: `if (!targetSquare) return`). Commit 0ab897c2.
+The `getBestTargetSquare` function (lines 178-199) auto-selects the closest reachable square on the line of attack using `getLineOfAttackCellsMultiTile` + `canReachLineOfAttack`. The `confirmIntercept` function (line 220) calls `getBestTargetSquare` and includes the result in the emit.
+
+**Status:** RESOLVED
+
+## New Issues
+
+### MED-001: `distanceMoved` reports theoretical budget instead of actual meters in failure paths
+
+**File:** `app/server/services/intercept.service.ts` lines 628 and 676
+
+In `resolveInterceptMelee` failure path (line 628):
+```typescript
+distanceMoved: shiftDistance
+```
+
+The `shiftDistance` is `Math.floor(skillCheck / 3)` -- the theoretical movement budget. But the actual movement (`moved` variable in the step loop at line 599) may be less when:
+- Diagonal cost eats the remaining budget (e.g., budget=2, diagonal costs 1+2=3, only 1 cell moved)
+- Target position blocks further movement (line 596)
+
+Similarly in `resolveInterceptRanged` failure path (line 676):
+```typescript
+distanceMoved: Math.min(maxShift, distanceToTarget)
+```
+
+The `maxShift` is `Math.floor(skillCheck / 2)`, but the actual `moved` from the step loop may be less.
+
+**Impact:** Game-state positions are always correct (computed from cx/cy). Only the response/log `distanceMoved` field is potentially inflated. The move log message uses this value ("shifted Xm toward target") so it could display an incorrect number to the GM.
+
+**Suggested fix:** Return `moved` instead of `shiftDistance`/`maxShift` in the failure path.
+
+### MED-002: `getBestTargetSquare` in InterceptPrompt.vue uses hardcoded speed=20 for square selection
+
+**File:** `app/components/encounter/InterceptPrompt.vue` lines 193-196
+
+```typescript
+// Use a generous speed estimate for finding the best square
+// (actual speed enforcement happens server-side)
+const speed = 20
+const result = canReachLineOfAttack(
+  interceptor.position, speed, attackLine, interceptor.tokenSize || 1
+)
+```
+
+The hardcoded `speed=20` means `canReachLineOfAttack` always finds the closest intermediate cell regardless of the interceptor's actual movement range. The comment explains this is intentional ("actual speed enforcement happens server-side"), but the "best square" determination should ideally use the actual speed so the client selects a square the interceptor can actually reach within their movement.
+
+In practice this is harmless -- the server validates the target square is on the line of attack and the resolution function handles the actual movement. But if the interceptor has speed 3 and the nearest reachable square is 5m away, the client sends a square it cannot reach, and the resolution correctly handles the movement (interceptor shifts as far as they can toward it).
+
+**Impact:** Low -- server handles correctly regardless. UI feedback is potentially misleading for edge cases.
 
 ## What Looks Good
 
-1. **Fix granularity is correct.** 9 focused commits, one per issue or logical group. Each commit message cites the specific review issue being addressed (e.g., "Fixes code-review-273 CRIT-001 and rules-review-249 CRIT-001").
+1. **Immutability discipline is maintained.** All `intercept.service.ts` functions use spread patterns. No mutation of input arrays or combatant objects.
 
-2. **Immutability discipline maintained throughout.** All combatant updates use `combatants.map(c => { return { ...c, ... } })` spread patterns. No direct mutation in any of the fix commits.
+2. **File extraction is clean.** Clear separation: `out-of-turn.service.ts` handles AoO/Hold/Priority/Interrupt framework (752 lines), `intercept.service.ts` handles Intercept detection and resolution (732 lines). Re-exports maintain backward compatibility.
 
-3. **Extraction is clean and backward-compatible.** The re-export pattern in `out-of-turn.service.ts` (lines 665-679) means no other files needed import path changes. Both API endpoints still import from `out-of-turn.service.ts`.
+3. **Server-side `getCombatantSpeed` mirrors client-side `applyMovementModifiers`.** Same modifier order, same formulas, same edge case handling (min floor, negative CS min 2).
 
-4. **`getCombatantSpeed` mirrors the composable faithfully.** Stuck (return 0), Tripped (return 0), Slowed (half), Speed CS (truncated half-stage additive), Sprint (+50%), minimum floor (1 if base > 0) -- all match `applyMovementModifiers` in `useGridMovement.ts` exactly.
+4. **`tokenCenter` helper is mathematically correct** for line-of-attack computation with multi-tile tokens.
 
-5. **Bad Sleep rationale comments are well-written.** Both `AOO_BLOCKING_CONDITIONS` and `INTERCEPT_BLOCKING_CONDITIONS` now have JSDoc comments citing PTU p.249 and explaining why Bad Sleep is a variant of Asleep.
+5. **Error handling is thorough** in both API endpoints with appropriate HTTP status codes.
 
-6. **`app-surface.md` updated comprehensively.** Both the endpoint section (3 new entries) and the system description section (new "Intercept/Disengage system" paragraph) are accurate and detailed.
+6. **Type safety is strong.** `getLineOfAttackCellsMultiTile` has clear parameter types. `InterceptPrompt.vue` emit signature is properly typed with named tuple elements.
 
-7. **Multi-tile token support is thorough.** Center-of-footprint for line-of-attack, bbox distance for detection/DC/reachability, `tokenSize` parameter threaded through all functions. The approach is consistent with the existing `ptuDistanceTokensBBox` utility.
+7. **JSDoc comments on blocking condition arrays** provide clear PTU rule citations.
 
-8. **InterceptPrompt auto-selects best target square.** The `getBestTargetSquare` function uses a generous speed (20) to find the closest reachable square, delegating actual enforcement to the server. This is a pragmatic approach that avoids duplicating speed calculation on the client.
+8. **Commit granularity is excellent.** Each commit addresses exactly one review issue with clear references to the issue codes.
+
+9. **Move log entries** follow the established pattern with all required fields.
+
+10. **WebSocket broadcasts** are present for all three actions, maintaining Group view synchronization.
+
+## Summary
+
+All 7 issues from code-review-273 have been resolved:
+- CRIT-001: `&&` to `||` (cf8d511f)
+- HIGH-001: Alternating diagonal in step loops (a97ca619)
+- HIGH-002: `ptuDistanceTokensBBox` for multi-tile (ed381d37)
+- HIGH-003: Service extraction to 752+732 lines (fc1b0dc2)
+- MED-001: `actionId` required in intercept-ranged (0ab897c2)
+- MED-002: Multi-tile line-of-attack via `tokenCenter` (ed381d37)
+- MED-003: `targetSquare` in InterceptPrompt emit (0ab897c2)
+
+Two new MEDIUM issues found:
+1. `distanceMoved` reports theoretical budget instead of actual movement
+2. `getBestTargetSquare` uses hardcoded speed=20
+
+Neither blocks approval. Both are cosmetic/UI-level concerns that do not affect game state correctness.
 
 ## Verdict
 
 **APPROVED**
 
-All 7 issues from code-review-273 have been resolved correctly:
-- CRIT-001: `&&` to `||` fix is correct
-- HIGH-001: Alternating diagonal cost applied in both failure loops
-- HIGH-002: Bbox distance used throughout
-- HIGH-003: File extracted, both under 800 lines
-- MED-001: `actionId` required in validation
-- MED-002: Multi-tile Bresenham uses center-of-footprint
-- MED-003: `targetSquare` in emit with auto-selection
-
-No new issues introduced. Code quality, immutability, and project patterns are maintained.
+All CRITICAL and HIGH issues from code-review-273 are resolved. The fix cycle is clean, well-structured, and does not introduce regressions. The two new MEDIUM issues are acceptable follow-ups.
