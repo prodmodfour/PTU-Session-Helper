@@ -3,7 +3,7 @@ id: docs-015
 title: "Slim root CLAUDE.md — replace data models and PTU section with cross-references"
 priority: P0
 severity: MEDIUM
-status: open
+status: resolved
 domain: workflow
 source: plan-descendant-claude-md-rollout
 created_by: user
