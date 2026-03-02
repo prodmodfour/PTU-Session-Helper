@@ -336,11 +336,24 @@ const handleKeyboardShortcuts = (event: KeyboardEvent) => {
   }
 }
 
-// P2: Flanking detection for list view CombatantCards
+// P2: Flanking detection for list view CombatantCards and WebSocket broadcast.
 // Separate instance from GridCanvas (which has its own for the VTT tokens).
 // Both use the same computed combatants so results are identical.
 const allCombatants = computed(() => encounter.value?.combatants ?? [])
-const { isTargetFlanked } = useFlankingDetection(allCombatants)
+const { flankingMap, isTargetFlanked } = useFlankingDetection(allCombatants, {
+  onFlankingChanged: () => {
+    // Broadcast full flanking map to group/player views via WebSocket
+    if (isConnected.value && encounterStore.encounter) {
+      send({
+        type: 'flanking_update',
+        data: {
+          encounterId: encounterStore.encounter.id,
+          flankingMap: flankingMap.value,
+        },
+      })
+    }
+  },
+})
 
 // View state
 const activeView = ref<'list' | 'grid'>('list')

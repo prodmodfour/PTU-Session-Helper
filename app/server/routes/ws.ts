@@ -537,6 +537,13 @@ export default defineWebSocketHandler({
           }
           break
 
+        case 'flanking_update':
+          // GM broadcasts flanking state changes to group/player views (P2)
+          if (clientInfo?.role === 'gm' && clientInfo.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
         case 'scene_update':
           // Scene data changed, broadcast to group and player views
           if (clientInfo?.role === 'gm') {

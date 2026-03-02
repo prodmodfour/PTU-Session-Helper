@@ -1,4 +1,5 @@
 import type { WebSocketEvent, Encounter, Pokemon, HumanCharacter, MoveLogEntry, MovementPreview } from '~/types'
+import type { FlankingMap } from '~/types/combat'
 import { isPokemon } from '~/types'
 import { getConnectionType } from '~/utils/connectionType'
 
@@ -34,6 +35,8 @@ export function useWebSocket() {
   const lastError = ref<string | null>(null)
   const latencyMs = ref<number | null>(null)
   const movementPreview = ref<MovementPreview | null>(null)
+  /** P2: Received flanking map from GM broadcast */
+  const receivedFlankingMap = ref<FlankingMap>({})
   const messageListeners = new Set<(message: WebSocketEvent) => void>()
 
   // Stored identity for auto re-identification on reconnect
@@ -216,6 +219,13 @@ export function useWebSocket() {
         movementPreview.value = message.data
         break
 
+      case 'flanking_update':
+        // P2: GM broadcast flanking state — store for group/player views
+        if (message.data && typeof message.data === 'object' && 'flankingMap' in message.data) {
+          receivedFlankingMap.value = (message.data as { flankingMap: FlankingMap }).flankingMap
+        }
+        break
+
       case 'serve_map':
         getGroupViewStore().setServedMap(message.data)
         break
@@ -305,6 +315,8 @@ export function useWebSocket() {
     lastError: readonly(lastError),
     latencyMs: readonly(latencyMs),
     movementPreview: readonly(movementPreview),
+    /** P2: Flanking map received from GM via WebSocket */
+    receivedFlankingMap: readonly(receivedFlankingMap),
     connect,
     disconnect,
     resetAndReconnect,
