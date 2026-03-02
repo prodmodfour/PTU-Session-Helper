@@ -17,9 +17,9 @@ If you need Pokemon, call one of these. Never build Pokemon records ad-hoc in AP
 
 | Pattern | Services |
 |---|---|
-| **Pure functions** (no DB, no side effects) | encounter-generation, status-automation, grid-placement |
+| **Pure functions** (no DB, no side effects) | encounter-generation, status-automation, grid-placement, ball-condition |
 | **DB writers** (read/write Prisma) | pokemon-generator, entity-update, entity-builder, rest-healing, scene, csv-import, evolution |
-| **Hybrid** (pure logic + DB persist) | combatant, switching, healing-item, out-of-turn, intercept |
+| **Hybrid** (pure logic + DB persist) | combatant, switching, healing-item, out-of-turn, intercept, mounting |
 | **Orchestrators** (coordinate other services) | encounter |
 
 ## Service Inventory
@@ -42,6 +42,8 @@ If you need Pokemon, call one of these. Never build Pokemon records ad-hoc in AP
 | `scene.service.ts` | ~74 | Scene-end AP restoration for characters |
 | `status-automation.service.ts` | ~151 | Tick damage at turn end (Burn, Poison, Badly Poisoned, Cursed) |
 | `switching.service.ts` | ~812 | Pokemon switch validation, recall range, initiative insertion, action tracking |
+| `ball-condition.service.ts` | ~185 | Build Poke Ball condition context from encounter state for conditional ball modifiers |
+| `mounting.service.ts` | ~454 | Trainer-Pokemon mount/dismount logic, movement sharing, faint auto-dismount |
 
 ## Dependency Map
 
@@ -55,6 +57,8 @@ switching ---------> grid-placement (findPlacementPosition)
 healing-item ------> combatant (applyHealingToEntity, updateStatusConditions)
 intercept ---------> out-of-turn (getDefaultOutOfTurnUsage)
 out-of-turn -------> intercept (detect/resolve intercept functions)
+ball-condition ----> encounter (encounter state for context building)
+mounting ----------> combatant (mount state on combatants)
 ```
 
 ## Gotchas

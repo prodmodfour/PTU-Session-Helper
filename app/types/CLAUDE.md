@@ -7,10 +7,10 @@
 | File | Lines | Source | Key Types |
 |------|-------|--------|-----------|
 | `index.ts` | 44 | Barrel re-export | Exports all below |
-| `combat.ts` | 256 | Hand-written | StatusCondition, ActionType, TurnPhase, StageModifiers, TurnState, CombatSide, OutOfTurnAction |
+| `combat.ts` | 281 | Hand-written | StatusCondition, ActionType, TurnPhase, StageModifiers, TurnState, CombatSide, OutOfTurnAction, MountState |
 | `spatial.ts` | 131 | Hand-written | GridPosition, GridConfig, TokenState, TerrainCell, TerrainFlags, MovementPath, RangeType, ParsedRange |
 | `character.ts` | 289 | Prisma-derived | HumanCharacter, Pokemon, Move, Ability, Stats, EquipmentSlots, PokemonOrigin |
-| `encounter.ts` | 211 | Prisma-derived | Combatant, Encounter, MoveLogEntry, EncounterSnapshot, LibraryFilters |
+| `encounter.ts` | 216 | Prisma-derived | Combatant (includes mountState), Encounter, MoveLogEntry, EncounterSnapshot, LibraryFilters |
 | `scene.ts` | 61 | Hand-written | Scene, SceneCharacter, ScenePokemon, SceneGroup, GroupViewTab, SceneModifier |
 | `habitat.ts` | 97 | Hand-written | EncounterTable, TableModification, RarityPreset, DensityTier (includes runtime constants) |
 | `template.ts` | 29 | Hand-written | TemplateCombatant, EncounterTemplate |
@@ -37,7 +37,7 @@
 Pokemon / HumanCharacter  (DB entities, character.ts)
   -> wrapped by Combatant  (encounter.ts)
      adds: type discriminator, initiative, TurnState, InjuryState,
-           StageSource[], evasions, GridPosition, OutOfTurnUsage
+           StageSource[], evasions, GridPosition, OutOfTurnUsage, MountState
   -> contained in Encounter (encounter.ts)
      holds: combatants[], turnOrder, declarations, moveLog,
             pendingOutOfTurnActions, gridConfig, weather

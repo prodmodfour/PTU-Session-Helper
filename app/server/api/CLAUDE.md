@@ -1,6 +1,6 @@
 # API CLAUDE.md
 
-Context for working within the Nitro REST API layer (`app/server/api/`). 151 endpoint files across 14 domain directories.
+Context for working within the Nitro REST API layer (`app/server/api/`). 153 endpoint files across 14 domain directories.
 
 ## Directory Layout
 
@@ -11,7 +11,7 @@ api/
   characters/          # 17 endpoints — CRUD + rest/healing/xp + equipment
   encounter-tables/    # 18 endpoints — tables + entries + modifications (deeply nested)
   encounter-templates/ # 7 endpoints  — CRUD + load from template
-  encounters/          # 51 endpoints — CRUD + combat actions (damage, status, turns, etc.)
+  encounters/          # 53 endpoints — CRUD + combat actions (damage, status, turns, mount/dismount, etc.)
   game/                # 1 endpoint   — new-day reset
   group/               # 8 endpoints  — map, tab sync, wild-spawn
   moves/               # 1 endpoint   — batch move lookup
@@ -58,10 +58,10 @@ Simple CRUD endpoints may work directly with Prisma + serializer utilities from 
 
 | API Directory | Primary Service(s) |
 |--------------|-------------------|
-| encounters/ | encounter.service, combatant.service, out-of-turn.service, intercept.service, switching.service, status-automation.service |
+| encounters/ | encounter.service, combatant.service, out-of-turn.service, intercept.service, switching.service, status-automation.service, mounting.service |
 | pokemon/ | pokemon-generator.service, evolution.service, entity-update.service |
 | characters/ | entity-update.service, rest-healing.service, csv-import.service |
-| capture/ | Utility functions in `utils/captureRate` (no dedicated service) |
+| capture/ | ball-condition.service, utility functions in `utils/captureRate` |
 | scenes/ | scene.service |
 | encounter-tables/ | Direct Prisma (simple CRUD) + encounter-generation.service (generate endpoint) |
 | encounter-templates/ | pokemon-generator.service, combatant.service (load endpoint) |
