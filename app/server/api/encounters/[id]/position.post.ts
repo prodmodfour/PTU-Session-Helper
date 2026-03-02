@@ -1,4 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
+import { ptuDiagonalDistance } from '~/utils/gridDistance'
 import type { GridConfig, GridPosition, Combatant } from '~/types'
 
 interface PositionUpdateBody {
@@ -67,10 +68,55 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Update position
-    combatants[combatantIndex] = {
-      ...combatants[combatantIndex],
-      position: body.position
+    // Calculate movement distance for mount movement tracking (feature-004)
+    const movingCombatant = combatants[combatantIndex]
+    const oldPosition = movingCombatant.position
+    let distanceMoved = 0
+    if (oldPosition) {
+      distanceMoved = ptuDiagonalDistance(
+        body.position.x - oldPosition.x,
+        body.position.y - oldPosition.y
+      )
+    }
+
+    // Linked movement for mounted pairs (feature-004, PTU p.218)
+    // When a mounted combatant moves, their partner moves too and
+    // movementRemaining is decremented on both mount states.
+    if (movingCombatant.mountState) {
+      const partnerId = movingCombatant.mountState.partnerId
+      const partnerIndex = combatants.findIndex(c => c.id === partnerId)
+
+      // Update moving combatant with new position and decremented movement
+      const newMovementRemaining = Math.max(0, movingCombatant.mountState.movementRemaining - distanceMoved)
+      combatants[combatantIndex] = {
+        ...movingCombatant,
+        position: body.position,
+        mountState: {
+          ...movingCombatant.mountState,
+          movementRemaining: newMovementRemaining
+        }
+      }
+
+      // Update partner with same position and synced movement
+      if (partnerIndex !== -1) {
+        const partner = combatants[partnerIndex]
+        combatants[partnerIndex] = {
+          ...partner,
+          position: { ...body.position },
+          ...(partner.mountState ? {
+            mountState: {
+              ...partner.mountState,
+              movementRemaining: newMovementRemaining
+            }
+          } : {})
+        }
+      }
+    } else {
+      // Non-mounted: standard single-combatant position update
+      combatants[combatantIndex] = {
+        ...movingCombatant,
+        position: body.position
+      }
     }
 
     // Save to database
