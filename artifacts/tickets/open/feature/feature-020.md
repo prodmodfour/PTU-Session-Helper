@@ -88,3 +88,10 @@ Design spec: `artifacts/designs/design-healing-items-001/`
   - `10b984c0` Section N: Add skipInventory to encounter store useItem (`app/stores/encounter.ts`)
   - `bb11dd01` Section N: Add skipInventory passthrough to useHealingItems composable
   - `7fe5cb55` UI: UseItemModal P2 updates (action cost, inventory qty, GM mode, adjacency, disabled states)
+- 2026-03-02: code-review-287 CHANGES_REQUIRED (1C, 2H, 2M). rules-review-263 APPROVED (0 issues).
+- 2026-03-02: P2 fix cycle complete (4 commits, all 5 issues addressed):
+  - `9ee31c52` H1: Add turn validation to use-item endpoint (`app/server/api/encounters/[id]/use-item.post.ts`)
+  - `d55e225e` H2: Deduplicate trainer lookup — hoist to single `itemTrainer` variable (`app/server/api/encounters/[id]/use-item.post.ts`)
+  - `f4baf3ee` M2: Case-insensitive inventory item name matching (`app/server/api/encounters/[id]/use-item.post.ts`, `app/components/encounter/UseItemModal.vue`)
+  - `474bc3e5` C1: Extract UseItemModal SCSS to `_use-item-modal.scss` (971 -> 625 lines)
+  - `2f30d9c3` M1: Add checkItemRange, findTrainerForPokemon to app-surface.md

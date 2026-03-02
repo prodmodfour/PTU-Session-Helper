@@ -226,5 +226,44 @@ Branch: `slave/3-dev-feature-020-p2-20260302`
 
 ### Deviations from Spec
 - Used `ptuDistanceTokensBBox` instead of simple `ptuDiagonalDistance` for adjacency check — handles multi-cell tokens correctly per decree-002
-- Turn validation (user must be current turn combatant or have held action) not implemented — the GM is the sole UI user and can use items on behalf of any combatant. Adding turn-based restriction would limit GM flexibility. Can be added in a future iteration if needed.
+- ~~Turn validation not implemented~~ (addressed in P2 fix cycle)
 - Medic Training edge check uses case-insensitive `includes('medic training')` to be forgiving of data entry variations
+
+## P2 Fix Cycle (2026-03-02)
+
+Branch: `slave/1-dev-feature-020-p2-fix-20260302`
+Review: code-review-287 CHANGES_REQUIRED (1C, 2H, 2M). rules-review-263 APPROVED (0 issues).
+
+### H1: Turn Validation
+- **Commit:** `9ee31c52`
+- **File:** `app/server/api/encounters/[id]/use-item.post.ts` (modified)
+- Added turn validation: verifies user is current turn combatant or has held action
+- Only enforced when encounter is active (`record.isActive`) — pre-combat setup not blocked
+- Parses `record.turnOrder` from JSON, checks `turnOrder[currentTurnIndex] === body.userId`
+
+### H2: Deduplicate Trainer Lookup
+- **Commit:** `d55e225e`
+- **File:** `app/server/api/encounters/[id]/use-item.post.ts` (modified)
+- Hoisted trainer resolution to single `itemTrainer` variable before inventory check block
+- Reused for both pre-check validation and post-application inventory deduction
+- Eliminated fragile duplicate `findTrainerForPokemon` call
+
+### M2: Case-Insensitive Inventory Matching
+- **Commit:** `f4baf3ee`
+- **Files:** `app/server/api/encounters/[id]/use-item.post.ts`, `app/components/encounter/UseItemModal.vue` (modified)
+- All inventory item name comparisons now use `.toLowerCase()` for robust matching
+- Server: inventory check, deduction, and remaining quantity lookups
+- Client: `getItemQuantity()` in UseItemModal
+
+### C1: Extract SCSS to Partial File
+- **Commit:** `474bc3e5`
+- **Files:** `app/components/encounter/UseItemModal.vue` (modified), `app/assets/scss/components/_use-item-modal.scss` (new)
+- Extracted ~350 lines of scoped SCSS into `_use-item-modal.scss` partial
+- Component reduced from 971 lines to 625 lines (well under 800-line limit)
+- Follows established pattern (same as MoveTargetModal)
+
+### M1: App Surface Documentation
+- **Commit:** `2f30d9c3`
+- **File:** `.claude/skills/references/app-surface.md` (modified)
+- Added `checkItemRange` and `findTrainerForPokemon` to healing-item.service.ts entries
+- Updated both the service table row and the feature-020 description block
