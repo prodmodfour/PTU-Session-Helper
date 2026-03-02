@@ -12,6 +12,8 @@
       'vtt-token--flanked': isFlanked,
       'vtt-token--own': isOwnToken,
       'vtt-token--pending-move': isPendingMove,
+      'vtt-token--mounted-rider': isMountedRider,
+      'vtt-token--mounted-mount': isMountedMount,
     }"
     :style="tokenStyle"
     :data-testid="`vtt-token-${token.combatantId}`"
@@ -54,11 +56,17 @@
     <div v-if="elevation && elevation > 0" class="vtt-token__elevation-badge">
       Z{{ elevation }}
     </div>
+
+    <!-- Mount Rider Badge (shown on mount tokens carrying a rider) -->
+    <div v-if="isMountedMount" class="vtt-token__mount-badge" title="Carrying rider">
+      <PhPersonSimpleRun :size="10" weight="bold" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Combatant, CombatSide, Pokemon, HumanCharacter } from '~/types'
+import { PhPersonSimpleRun } from '@phosphor-icons/vue'
 
 interface TokenData {
   combatantId: string
@@ -183,6 +191,15 @@ const hpColorClass = computed(() => {
   return 'hp-low'
 })
 
+// Mount state indicators (feature-004 P1)
+const isMountedRider = computed(() =>
+  props.combatant?.mountState?.isMounted === true
+)
+const isMountedMount = computed(() =>
+  props.combatant?.mountState?.isMounted === false &&
+  !!props.combatant?.mountState?.partnerId
+)
+
 // Methods
 const handleSpriteError = (event: Event) => {
   if (isPokemon.value) {
@@ -257,6 +274,18 @@ const handleClick = (event: MouseEvent) => {
   // Player mode: pending move pulsing animation
   &--pending-move {
     animation: token-pulse 1.5s ease-in-out infinite;
+  }
+
+  // Mount state: rider token (rendered small on top of mount via VTTMountedToken)
+  &--mounted-rider {
+    opacity: 0.7;
+  }
+
+  // Mount state: mount carrying a rider (subtle glow outline)
+  &--mounted-mount {
+    outline: 2px solid rgba(100, 200, 255, 0.5);
+    outline-offset: 1px;
+    border-radius: $border-radius-sm;
   }
 
   // Current turn glow - color based on side
@@ -384,6 +413,20 @@ const handleClick = (event: MouseEvent) => {
   font-size: 8px;
   font-weight: 700;
   color: $color-accent-teal;
+}
+
+.vtt-token__mount-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(100, 200, 255, 0.8);
+  padding: 2px;
+  border-radius: 3px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
 }
 
 @keyframes token-pulse {
