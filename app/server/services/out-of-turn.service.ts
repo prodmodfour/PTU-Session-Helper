@@ -722,8 +722,10 @@ export function canIntercept(combatant: Combatant): { allowed: boolean; reason?:
   }
 
   // Must have Full Action available (Standard + Shift)
+  // PTU p.227: "Full Actions take both your Standard Action and Shift Action"
+  // If EITHER action is already consumed, the Full Action is unavailable
   const ts = combatant.turnState
-  if (ts.standardActionUsed && ts.shiftActionUsed) {
+  if (ts.standardActionUsed || ts.shiftActionUsed) {
     return { allowed: false, reason: 'No Full Action available (Standard + Shift required)' }
   }
 
