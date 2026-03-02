@@ -102,7 +102,7 @@
 import { ref } from 'vue'
 import type { OutOfTurnAction } from '~/types/combat'
 import type { Combatant } from '~/types/encounter'
-import { ptuDiagonalDistance } from '~/utils/gridDistance'
+import { ptuDistanceTokensBBox } from '~/utils/gridDistance'
 
 const props = defineProps<{
   pendingIntercepts: OutOfTurnAction[]
@@ -159,9 +159,9 @@ function calculateDistance(action: OutOfTurnAction): number {
   const target = targetId ? props.combatants.find(c => c.id === targetId) : null
 
   if (!interceptor?.position || !target?.position) return 0
-  return ptuDiagonalDistance(
-    target.position.x - interceptor.position.x,
-    target.position.y - interceptor.position.y
+  return ptuDistanceTokensBBox(
+    { position: interceptor.position, size: interceptor.tokenSize || 1 },
+    { position: target.position, size: target.tokenSize || 1 }
   )
 }
 

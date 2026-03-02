@@ -11,7 +11,44 @@
  */
 
 import type { GridPosition } from '~/types/spatial'
-import { ptuDiagonalDistance } from '~/utils/gridDistance'
+import { ptuDistanceTokensBBox } from '~/utils/gridDistance'
+
+/**
+ * Compute the center cell of a token footprint (floored for even-sized tokens).
+ * For 1x1 tokens, returns the position unchanged.
+ * For 2x2 tokens at (0,0), returns (0,0) -- floor of (0.5,0.5).
+ * For 3x3 tokens at (0,0), returns (1,1) -- center cell.
+ */
+function tokenCenter(position: GridPosition, size: number): GridPosition {
+  if (size <= 1) return position
+  const offset = Math.floor((size - 1) / 2)
+  return { x: position.x + offset, y: position.y + offset }
+}
+
+/**
+ * Get all grid cells on the line of attack between two tokens,
+ * drawn from the center of each token's footprint.
+ *
+ * For multi-tile tokens, the attack line originates from the center
+ * of the attacker's footprint to the center of the target's footprint.
+ *
+ * @param attackerPos - Attacker's anchor (top-left) position
+ * @param attackerSize - Attacker's token footprint size
+ * @param targetPos - Target's anchor (top-left) position
+ * @param targetSize - Target's token footprint size
+ * @returns Array of grid positions along the line
+ */
+export function getLineOfAttackCellsMultiTile(
+  attackerPos: GridPosition,
+  attackerSize: number,
+  targetPos: GridPosition,
+  targetSize: number
+): GridPosition[] {
+  return getLineOfAttackCells(
+    tokenCenter(attackerPos, attackerSize),
+    tokenCenter(targetPos, targetSize)
+  )
+}
 
 /**
  * Get all grid cells on the line between two positions using Bresenham's algorithm.
@@ -61,19 +98,21 @@ export function getLineOfAttackCells(
  * Check if a combatant can reach any cell on the line of attack
  * within their movement range.
  *
- * Uses PTU diagonal distance to calculate movement cost.
+ * Uses PTU bbox distance (edge-to-edge) for multi-tile token support.
  * Excludes the attacker's cell and the target's cell from valid interception squares
  * (the interceptor must step INTO the path, not stand on the endpoints).
  *
  * @param interceptorPos - The interceptor's current grid position
  * @param interceptorSpeed - The interceptor's movement speed in meters
  * @param attackLine - All cells on the line of attack (from getLineOfAttackCells)
+ * @param interceptorSize - Token footprint size (default 1)
  * @returns Whether the interceptor can reach the line, the best (closest) square, and distance
  */
 export function canReachLineOfAttack(
   interceptorPos: GridPosition,
   interceptorSpeed: number,
-  attackLine: GridPosition[]
+  attackLine: GridPosition[],
+  interceptorSize: number = 1
 ): { canReach: boolean; bestSquare: GridPosition | null; distanceToSquare: number } {
   if (attackLine.length < 3) {
     // Line too short (only attacker + target, no intermediate cells)
@@ -87,9 +126,9 @@ export function canReachLineOfAttack(
   let bestDistance = Infinity
 
   for (const cell of intermediateCells) {
-    const distance = ptuDiagonalDistance(
-      cell.x - interceptorPos.x,
-      cell.y - interceptorPos.y
+    const distance = ptuDistanceTokensBBox(
+      { position: interceptorPos, size: interceptorSize },
+      { position: cell, size: 1 }
     )
 
     if (distance <= interceptorSpeed && distance < bestDistance) {
@@ -110,15 +149,19 @@ export function canReachLineOfAttack(
  * Returns all intermediate cells within the interceptor's movement range,
  * sorted by distance (closest first).
  *
+ * Uses PTU bbox distance (edge-to-edge) for multi-tile token support.
+ *
  * @param interceptorPos - The interceptor's current grid position
  * @param interceptorSpeed - The interceptor's movement speed in meters
  * @param attackLine - All cells on the line of attack
+ * @param interceptorSize - Token footprint size (default 1)
  * @returns Array of reachable cells with distances, sorted by distance
  */
 export function getReachableInterceptionSquares(
   interceptorPos: GridPosition,
   interceptorSpeed: number,
-  attackLine: GridPosition[]
+  attackLine: GridPosition[],
+  interceptorSize: number = 1
 ): Array<{ cell: GridPosition; distance: number }> {
   if (attackLine.length < 3) return []
 
@@ -128,9 +171,9 @@ export function getReachableInterceptionSquares(
   const reachable: Array<{ cell: GridPosition; distance: number }> = []
 
   for (const cell of intermediateCells) {
-    const distance = ptuDiagonalDistance(
-      cell.x - interceptorPos.x,
-      cell.y - interceptorPos.y
+    const distance = ptuDistanceTokensBBox(
+      { position: interceptorPos, size: interceptorSize },
+      { position: cell, size: 1 }
     )
 
     if (distance <= interceptorSpeed) {

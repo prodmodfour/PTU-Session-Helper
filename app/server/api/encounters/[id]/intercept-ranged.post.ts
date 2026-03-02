@@ -21,7 +21,7 @@ import {
   resolveInterceptRanged,
   getDefaultOutOfTurnUsage
 } from '~/server/services/out-of-turn.service'
-import { getLineOfAttackCells } from '~/utils/lineOfAttack'
+import { getLineOfAttackCellsMultiTile } from '~/utils/lineOfAttack'
 import { broadcastToEncounter } from '~/server/utils/websocket'
 import type { OutOfTurnAction } from '~/types/combat'
 import type { GridPosition } from '~/types/spatial'
@@ -119,9 +119,12 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Validate target square is on the line of attack (G2)
+    // Validate target square is on the line of attack (G2, center-to-center for multi-tile)
     if (attacker.position && originalTarget?.position) {
-      const attackLine = getLineOfAttackCells(attacker.position, originalTarget.position)
+      const attackLine = getLineOfAttackCellsMultiTile(
+        attacker.position, attacker.tokenSize || 1,
+        originalTarget.position, originalTarget.tokenSize || 1
+      )
       const isOnLine = attackLine.some(c => c.x === targetSquare.x && c.y === targetSquare.y)
       if (!isOnLine) {
         throw createError({

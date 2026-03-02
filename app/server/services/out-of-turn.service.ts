@@ -30,8 +30,8 @@ import {
   wasAdjacentBeforeMove
 } from '~/utils/adjacency'
 import { isEnemySide } from '~/utils/combatSides'
-import { ptuDiagonalDistance } from '~/utils/gridDistance'
-import { getLineOfAttackCells, canReachLineOfAttack } from '~/utils/lineOfAttack'
+import { ptuDiagonalDistance, ptuDistanceTokensBBox } from '~/utils/gridDistance'
+import { getLineOfAttackCellsMultiTile, canReachLineOfAttack } from '~/utils/lineOfAttack'
 
 // ============================================
 // TYPES
@@ -852,11 +852,11 @@ export function detectInterceptMelee(params: InterceptMeleeDetectionParams): Out
     // Must pass general Intercept eligibility
     if (!canIntercept(interceptor).allowed) continue
 
-    // Must be within movement range of the target
+    // Must be within movement range of the target (edge-to-edge for multi-tile tokens)
     const speed = getCombatantSpeed(interceptor)
-    const distance = ptuDiagonalDistance(
-      target.position.x - interceptor.position.x,
-      target.position.y - interceptor.position.y
+    const distance = ptuDistanceTokensBBox(
+      { position: interceptor.position, size: interceptor.tokenSize },
+      { position: target.position, size: target.tokenSize }
     )
     if (distance > speed) continue
 
@@ -925,8 +925,11 @@ export function detectInterceptRanged(params: InterceptRangedDetectionParams): O
     return results
   }
 
-  // Get the line of attack
-  const attackLine = getLineOfAttackCells(attacker.position, target.position)
+  // Get the line of attack (center-to-center for multi-tile tokens)
+  const attackLine = getLineOfAttackCellsMultiTile(
+    attacker.position, attacker.tokenSize,
+    target.position, target.tokenSize
+  )
   if (attackLine.length < 3) return results // Need intermediate cells
 
   const targetName = getDisplayName(target)
@@ -942,9 +945,9 @@ export function detectInterceptRanged(params: InterceptRangedDetectionParams): O
     // Must pass general Intercept eligibility
     if (!canIntercept(interceptor).allowed) continue
 
-    // Must be able to reach a cell on the line of attack
+    // Must be able to reach a cell on the line of attack (edge-to-edge for multi-tile)
     const speed = getCombatantSpeed(interceptor)
-    const reachCheck = canReachLineOfAttack(interceptor.position, speed, attackLine)
+    const reachCheck = canReachLineOfAttack(interceptor.position, speed, attackLine, interceptor.tokenSize)
     if (!reachCheck.canReach) continue
 
     // Loyalty check for Pokemon
@@ -1083,10 +1086,10 @@ export function resolveInterceptMelee(
     return { updatedCombatants: combatants, interceptSuccess: false, distanceMoved: 0, dcRequired: 0 }
   }
 
-  // Calculate distance and DC
-  const distance = ptuDiagonalDistance(
-    target.position.x - interceptor.position.x,
-    target.position.y - interceptor.position.y
+  // Calculate distance (edge-to-edge for multi-tile tokens) and DC
+  const distance = ptuDistanceTokensBBox(
+    { position: interceptor.position, size: interceptor.tokenSize },
+    { position: target.position, size: target.tokenSize }
   )
   const dcRequired = 3 * distance
 
@@ -1236,10 +1239,10 @@ export function resolveInterceptRanged(
   // Calculate max shift distance
   const maxShift = Math.floor(skillCheck / 2)
 
-  // Calculate distance to target square
-  const distanceToTarget = ptuDiagonalDistance(
-    targetSquare.x - interceptor.position.x,
-    targetSquare.y - interceptor.position.y
+  // Calculate distance to target square (edge-to-edge for multi-tile interceptors)
+  const distanceToTarget = ptuDistanceTokensBBox(
+    { position: interceptor.position, size: interceptor.tokenSize },
+    { position: targetSquare, size: 1 }
   )
 
   const reachedTarget = maxShift >= distanceToTarget
