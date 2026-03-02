@@ -51,7 +51,7 @@ function evaluateTimerBall(
 ): BallConditionResult {
   const round = context.encounterRound ?? 1
   const roundsElapsed = Math.max(0, round - 1)
-  const rawConditional = -(5 * roundsElapsed)
+  const rawConditional = roundsElapsed > 0 ? -(5 * roundsElapsed) : 0
   // Total = base(+5) + conditional. Cap total at -20.
   // So conditional must be capped at -25 (since +5 + (-25) = -20).
   const conditional = Math.max(-25, rawConditional)
@@ -161,7 +161,7 @@ function evaluateHeavyBall(
   }
 
   const classesAboveOne = Math.max(0, wc - 1)
-  const modifier = -(5 * classesAboveOne)
+  const modifier = classesAboveOne > 0 ? -(5 * classesAboveOne) : 0
   const conditionMet = classesAboveOne > 0
 
   return {
