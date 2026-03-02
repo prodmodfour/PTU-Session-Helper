@@ -336,6 +336,14 @@ const handleKeyboardShortcuts = (event: KeyboardEvent) => {
   }
 }
 
+// Computed from store
+const encounter = computed(() => encounterStore.encounter)
+const currentCombatant = computed(() => encounterStore.currentCombatant)
+const playerCombatants = computed(() => encounterStore.playerCombatants)
+const allyCombatants = computed(() => encounterStore.allyCombatants)
+const enemyCombatants = computed(() => encounterStore.enemyCombatants)
+const moveLog = computed(() => encounterStore.moveLog.slice().reverse())
+
 // P2: Flanking detection for list view CombatantCards and WebSocket broadcast.
 // Separate instance from GridCanvas (which has its own for the VTT tokens).
 // Both use the same computed combatants so results are identical.
@@ -381,14 +389,6 @@ const actionModalCombatant = computed(() => {
   if (!actionModalCombatantId.value || !encounter.value) return null
   return encounter.value.combatants.find(c => c.id === actionModalCombatantId.value) || null
 })
-
-// Computed from store
-const encounter = computed(() => encounterStore.encounter)
-const currentCombatant = computed(() => encounterStore.currentCombatant)
-const playerCombatants = computed(() => encounterStore.playerCombatants)
-const allyCombatants = computed(() => encounterStore.allyCombatants)
-const enemyCombatants = computed(() => encounterStore.enemyCombatants)
-const moveLog = computed(() => encounterStore.moveLog.slice().reverse())
 
 // Grid config with fallback defaults
 const gridConfig = computed(() => encounter.value?.gridConfig ?? {
