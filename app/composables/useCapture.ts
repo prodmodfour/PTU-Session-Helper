@@ -230,6 +230,11 @@ export function useCapture() {
    * PTU p.214: AC 6 Status Attack Roll.
    * Natural 1 always misses. Natural 20 always hits.
    * Roll >= 6 hits, roll < 6 misses.
+   *
+   * NOTE: This currently rolls a flat d20 without accuracy/evasion modifiers.
+   * Per decree-042 and PTU p.214, the full accuracy system applies to Poke Ball
+   * throws (thrower accuracy stages, target Speed Evasion, flanking, rough terrain).
+   * Implementation of those modifiers is tracked as ptu-rule-131.
    */
   function rollAccuracyCheck(): {
     roll: number
@@ -243,6 +248,7 @@ export function useCapture() {
     const isNat20 = roll === 20
 
     // PTU p.214: Natural 1 always misses, Natural 20 always hits, otherwise AC 6
+    // TODO(ptu-rule-131): Apply thrower accuracy stages and target Speed Evasion
     const hits = isNat1 ? false : (isNat20 ? true : roll >= 6)
 
     return {
@@ -250,7 +256,7 @@ export function useCapture() {
       isNat1,
       isNat20,
       hits,
-      total: roll // Add trainer's accuracy modifiers if needed
+      total: roll // TODO(ptu-rule-131): Add trainer's accuracy modifiers, subtract target evasion
     }
   }
 
