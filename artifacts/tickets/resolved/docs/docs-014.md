@@ -3,7 +3,7 @@ id: docs-014
 title: "Slim app/CLAUDE.md — replace domain detail with cross-references"
 priority: P0
 severity: MEDIUM
-status: open
+status: resolved
 domain: workflow
 source: plan-descendant-claude-md-rollout
 created_by: user
