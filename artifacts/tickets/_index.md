@@ -1,14 +1,14 @@
 ---
-generated_at: 2026-03-02T10:47:29.352Z
-total_tickets: 261
-open: 31
+generated_at: 2026-03-02T11:32:43.725Z
+total_tickets: 262
+open: 32
 in_progress: 107
 resolved: 109
 ---
 
 # Tickets Index
 
-## Open Tickets (31)
+## Open Tickets (32)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
@@ -27,6 +27,7 @@ resolved: 109
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
 | refactoring-114 | refactoring | P3 | character-lifecycle | refactoring-114: Rename capturedSpecies to ownedSpecies for  |
 | refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
+| refactoring-120 | refactoring | P3 | combat | refactoring-120: Extract intercept logic from out-of-turn.se |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
 | ptu-rule-130 | ptu-rule | P4 | combat | PTU-Rule-130: Fainted recall+release pair should not apply L |
@@ -74,17 +75,16 @@ resolved: 109
 | ptu-rule-104 | ptu-rule | P1 | combat | decree-012 |
 | refactoring-001 | refactoring | P1 | vtt | decree-010 |
 | bug-039 | bug | P2 | capture | capture-audit-report (R018, 2026-02-28) |
-| bug-042 | bug | P2 | — | code-review-264 HIGH-001 |
 | ptu-rule-107 | ptu-rule | P2 | combat | decree-021 |
 | ptu-rule-108 | ptu-rule | P2 | vtt-grid | rules-review-160 M2 + rules-review-162 M1 |
 | feature-016 | feature | P2 | combat+vtt-grid | matrix-gap (combat Gap 2 + VTT SG-5) |
 | feature-017 | feature | P2 | capture | matrix-gap (GAP-CAP-2) |
 | feature-019 | feature | P2 | vtt-grid | matrix-gap (VTT SG-4) |
 | feature-020 | feature | P2 | healing | matrix-gap (GAP-HEAL-2) |
-| feature-023 | feature | P2 | player-view+capture+healing | matrix-gap (GAP-CAP-1 + GAP-HEAL-1) |
 | refactoring-106 | refactoring | P2 | combat | decree-038 |
 | bug-001 | bug | P2 | csv-import | code-review-034 |
 | bug-030 | bug | P2 | player-view | code-review-159 M3 |
+| bug-042 | bug | P2 | — | code-review-264 HIGH-001 |
 | ptu-rule-030 | ptu-rule | P2 | pokemon-generation | — |
 | ptu-rule-034 | ptu-rule | P2 | healing | — |
 | ptu-rule-035 | ptu-rule | P2 | healing | — |
@@ -99,6 +99,7 @@ resolved: 109
 | ptu-rule-111 | ptu-rule | P2 | combat | rules-review-161 M3 |
 | ptu-rule-113 | ptu-rule | P2 | vtt | decree-023 |
 | feature-002 | feature | P2 | vtt-grid | — |
+| feature-023 | feature | P2 | player-view+capture+healing | matrix-gap (GAP-CAP-1 + GAP-HEAL-1) |
 | ptu-rule-086 | ptu-rule | P3 | capture | capture-audit.md (capture-R005) |
 | ptu-rule-087 | ptu-rule | P3 | pokemon-lifecycle | pokemon-lifecycle-audit.md (R022) |
 | ptu-rule-088 | ptu-rule | P3 | encounter-tables | encounter-tables-audit.md (R008) |
@@ -169,4 +170,4 @@ All decree-needs addressed.
 | feature | 4 | 15 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
 | decree | 0 | 0 | 39 | 39 |
-| refactoring | 14 | 13 | 0 | 36 |
+| refactoring | 15 | 13 | 0 | 37 |
