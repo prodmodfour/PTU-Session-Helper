@@ -3,7 +3,7 @@ id: docs-013
 title: "Add CLAUDE.md for app/components/scene/"
 priority: P0
 severity: MEDIUM
-status: open
+status: resolved
 domain: scenes
 source: plan-descendant-claude-md-rollout
 created_by: user
