@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-02T14:48:25.946Z
-total_decrees: 41
-active: 41
+generated_at: 2026-03-02T16:39:33.626Z
+total_decrees: 43
+active: 42
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (41)
+## Active Decrees (42)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -52,3 +52,4 @@ superseded: 0
 | decree-039 | combat | roar-blocked-by-trapped | Roar's forced recall does not override the Trapped condition |
 | decree-040 | combat | flanking-penalty-after-evasion-cap | Flanking -2 evasion penalty applies after the evasion cap, not before |
 | decree-041 | healing | awakening-item-inclusion | Keep Awakening at $200 as a standard single-condition cure item |
+| decree-042 | capture | pokeball-accuracy-modifiers | Apply full accuracy system to Poke Ball throws |

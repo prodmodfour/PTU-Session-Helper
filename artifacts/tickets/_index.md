@@ -1,32 +1,24 @@
 ---
-generated_at: 2026-03-02T14:48:25.939Z
-total_tickets: 284
-open: 40
+generated_at: 2026-03-02T16:39:33.620Z
+total_tickets: 285
+open: 32
 in_progress: 114
-resolved: 111
+resolved: 120
 ---
 
 # Tickets Index
 
-## Open Tickets (40)
+## Open Tickets (32)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | docs-003 | docs | P0 | state-management | docs-003: Add CLAUDE.md for app/stores/ |
 | docs-007 | docs | P0 | testing | docs-007: Add CLAUDE.md for app/tests/ |
-| docs-009 | docs | P0 | workflow | docs-009: Add CLAUDE.md for artifacts/ |
-| docs-010 | docs | P0 | workflow | docs-010: Add CLAUDE.md for decrees/ |
-| docs-011 | docs | P0 | server | docs-011: Add CLAUDE.md for app/server/api/ |
-| docs-012 | docs | P0 | types | docs-012: Add CLAUDE.md for app/types/ |
-| docs-013 | docs | P0 | scenes | docs-013: Add CLAUDE.md for app/components/scene/ |
-| docs-014 | docs | P0 | workflow | docs-014: Slim app/CLAUDE.md — replace domain detail with cr |
-| docs-015 | docs | P0 | workflow | docs-015: Slim root CLAUDE.md — replace data models and PTU  |
-| docs-016 | docs | P0 | server | docs-016: Add cross-references to app/server/CLAUDE.md |
 | ptu-rule-127 | ptu-rule | P1 | character-lifecycle | Per decree-037, trainers should NOT receive an automatic +1  |
 | feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
 | feature-021 | feature | P2 | character-lifecycle | feature-021: Derived Capability Calculations |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
-| ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` ret |
+| ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
 | bug-044 | bug | P3 | capture | `useCapture.ts` (line ~192) references `/api/encounters/${en |
 | ptu-rule-129 | ptu-rule | P3 | combat | ptu-rule-129: Roar's forced recall must respect the Trapped  |
 | feature-004 | feature | P3 | combat | feature-004: Pokemon Mounting / Rider System |
@@ -184,6 +176,6 @@ All decree-needs addressed.
 | ptu-rule | 6 | 59 | 38 | 105 |
 | feature | 4 | 15 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
-| decree | 0 | 0 | 40 | 40 |
+| decree | 0 | 0 | 41 | 41 |
 | refactoring | 14 | 13 | 1 | 41 |
-| docs | 10 | 6 | 0 | 16 |
+| docs | 2 | 6 | 8 | 16 |
