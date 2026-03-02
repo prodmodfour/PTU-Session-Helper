@@ -11,6 +11,8 @@
  * P2: Post-capture effects populated.
  */
 
+import { evaluateBallCondition } from '~/utils/pokeBallConditions'
+
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
@@ -379,25 +381,32 @@ export function getBallDef(ballType: string): PokeBallDef | undefined {
 
 /**
  * Calculate the total ball modifier (base + conditional).
- * P0: Returns base modifier only (no condition evaluation).
- * P1: Evaluates condition function if present.
+ * Evaluates the ball's condition function if one exists.
+ *
+ * @param ballType Key in POKE_BALL_CATALOG
+ * @param context Optional context for evaluating conditional modifiers
+ * @returns Breakdown of base + conditional modifiers with description
  */
 export function calculateBallModifier(
   ballType: string,
-  _context?: Partial<BallConditionContext>
-): { total: number; base: number; conditional: number; conditionMet: boolean } {
+  context?: Partial<BallConditionContext>
+): { total: number; base: number; conditional: number; conditionMet: boolean; description?: string } {
   const ball = POKE_BALL_CATALOG[ballType]
   if (!ball) {
     return { total: 0, base: 0, conditional: 0, conditionMet: false }
   }
 
-  // P0: Base modifier only, no condition evaluation
-  // P1: Will evaluate ball.condition(context) here
+  // Evaluate conditional modifier via the condition engine
+  const condResult = evaluateBallCondition(ballType, context ?? {})
+
+  const total = ball.modifier + condResult.modifier
+
   return {
-    total: ball.modifier,
+    total,
     base: ball.modifier,
-    conditional: 0,
-    conditionMet: false,
+    conditional: condResult.modifier,
+    conditionMet: condResult.conditionMet,
+    description: condResult.description,
   }
 }
 
