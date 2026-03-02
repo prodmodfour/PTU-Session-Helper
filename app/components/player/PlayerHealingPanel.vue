@@ -250,7 +250,7 @@ const healTargets = computed((): Combatant[] => {
     const maxHp = c.type === 'pokemon'
       ? (c.entity as Pokemon).maxHp
       : (c.entity as HumanCharacter).maxHp
-    return hp < maxHp || hp <= 0
+    return hp < maxHp
   })
 })
 
