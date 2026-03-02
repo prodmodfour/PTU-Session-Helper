@@ -356,3 +356,8 @@
 | plan-20260302-084714/slave-2 | developer | feature-020-fix | success | 2026-03-02T08:56:00Z | 188a1257, 50e5a29d, c5847923, cae215af, 976d9bc6, 0f9c38a3 |
 | plan-20260302-084714/slave-1 | developer | feature-014-p1 | success | 2026-03-02T09:00:00Z | 08b0b415, 9fb0a8ea, d694d209, 98ef7972, 04253486 |
 | plan-20260302-084714/slave-3 | developer | feature-016-p2 | success | 2026-03-02T09:04:00Z | 93f0017f, b28f9ac2, ee7d9430, 329c550b, c2ebac70, d7ce2f76, 4acd3635, e2c202e9, 99c269bf |
+| plan-20260302-110035/slave-3 | reviewers | feature-020-rereview | APPROVED | 2026-03-02T11:14:00Z | c1178e4a, 340a27c6 |
+| plan-20260302-110035/slave-4 | reviewers | feature-014-p1-review | APPROVED | 2026-03-02T11:18:00Z | c13354fe, 51fe7bec |
+| plan-20260302-110035/slave-5 | reviewers | feature-016-p2-review | CHANGES_REQUIRED | 2026-03-02T11:13:00Z | 05017be4, e8402974 |
+| plan-20260302-110035/slave-1 | developer | bug-042-rewrite | success | 2026-03-02T11:09:00Z | d72808c9, fd4a9a53, 659d877f |
+| plan-20260302-110035/slave-2 | developer | feature-023-fix | success | 2026-03-02T11:17:00Z | 63770d47, bfad2740, ce8fcdb6, b7afbec3, 8b11354e, 8da9df17, 4f0d480a, ca004e37, 212f51a0, a009a89c |
