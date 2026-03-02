@@ -226,14 +226,30 @@ export function useCapture() {
   }
 
   /**
-   * Roll accuracy check for throwing a Poke Ball
-   * AC 6, range = 4 + Athletics rank
+   * Roll accuracy check for throwing a Poke Ball.
+   * PTU p.214: AC 6 Status Attack Roll.
+   * Natural 1 always misses. Natural 20 always hits.
+   * Roll >= 6 hits, roll < 6 misses.
    */
-  function rollAccuracyCheck(): { roll: number; isNat20: boolean; total: number } {
+  function rollAccuracyCheck(): {
+    roll: number
+    isNat1: boolean
+    isNat20: boolean
+    hits: boolean
+    total: number
+  } {
     const roll = Math.floor(Math.random() * 20) + 1
+    const isNat1 = roll === 1
+    const isNat20 = roll === 20
+
+    // PTU p.214: Natural 1 always misses, Natural 20 always hits, otherwise AC 6
+    const hits = isNat1 ? false : (isNat20 ? true : roll >= 6)
+
     return {
       roll,
-      isNat20: roll === 20,
+      isNat1,
+      isNat20,
+      hits,
       total: roll // Add trainer's accuracy modifiers if needed
     }
   }
