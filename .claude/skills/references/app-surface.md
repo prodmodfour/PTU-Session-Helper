@@ -222,9 +222,11 @@ Read-only combat math endpoint.
 - `POST /api/encounters/:id/calculate-damage` — compute full PTU 9-step damage formula (STAB, type effectiveness, stages, crit) with detailed breakdown. Also computes dynamic evasion (physical, special, speed) from stage-modified stats and accuracy threshold. Does not modify encounter state.
 
 ### Capture (`/api/capture`)
-Action-only.
-- `POST /api/capture/rate` — calculate capture rate
-- `POST /api/capture/attempt` — execute capture
+Action-only. Both endpoints accept optional `ballType` parameter (key in POKE_BALL_CATALOG, default: `'Basic Ball'`).
+- `POST /api/capture/rate` — calculate capture rate with ball modifier breakdown
+- `POST /api/capture/attempt` — execute capture with ball modifier applied to roll
+
+**Poke Ball system (feature-017):** `constants/pokeBalls.ts` (POKE_BALL_CATALOG — 25 PTU ball types with base modifiers, condition descriptions, post-capture effects; PokeBallDef interface, PokeBallCategory type, BallConditionContext interface, calculateBallModifier — returns base + conditional modifier breakdown, getBallsByCategory, getBallDef, getAvailableBallNames, DEFAULT_BALL_TYPE), `utils/pokeBallConditions.ts` (evaluateBallCondition — pure condition evaluator for 13 conditional balls: Timer/Quick/Level/Heavy/Fast/Love/Net/Dusk/Moon/Lure/Repeat/Nest/Dive; returns modifier + conditionMet + description), `composables/useCapture.ts` (getCaptureRate, calculateCaptureRateLocal, attemptCapture, getAvailableBalls, rollAccuracyCheck — all accept ballType parameter).
 
 ### Group View State (`/api/group`)
 Get/set/clear pattern.
