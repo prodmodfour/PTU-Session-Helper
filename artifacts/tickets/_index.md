@@ -1,22 +1,24 @@
 ---
-generated_at: 2026-03-02T08:37:50.478Z
-total_tickets: 259
-open: 30
+generated_at: 2026-03-02T10:47:29.352Z
+total_tickets: 261
+open: 31
 in_progress: 107
-resolved: 108
+resolved: 109
 ---
 
 # Tickets Index
 
-## Open Tickets (30)
+## Open Tickets (31)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-127 | ptu-rule | P1 | character-lifecycle | Per decree-037, trainers should NOT receive an automatic +1  |
+| bug-043 | bug | P2 | capture | The `rollAccuracyCheck()` function in `useCapture.ts` rolls  |
 | feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
 | feature-021 | feature | P2 | character-lifecycle | feature-021: Derived Capability Calculations |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
 | ptu-rule-131 | ptu-rule | P2 | combat |  |
+| bug-044 | bug | P3 | capture | `useCapture.ts` (line ~192) references `/api/encounters/${en |
 | ptu-rule-129 | ptu-rule | P3 | combat | ptu-rule-129: Roar's forced recall must respect the Trapped  |
 | feature-004 | feature | P3 | combat | feature-004: Pokemon Mounting / Rider System |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
@@ -25,7 +27,6 @@ resolved: 108
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
 | refactoring-114 | refactoring | P3 | character-lifecycle | refactoring-114: Rename capturedSpecies to ownedSpecies for  |
 | refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
-| ptu-rule-095 | ptu-rule | P4 | vtt-grid | ptu-rule-095: Disengage maneuver missing from combatManeuver |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
 | ptu-rule-130 | ptu-rule | P4 | combat | PTU-Rule-130: Fainted recall+release pair should not apply L |
@@ -163,8 +164,8 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 0 | 13 | 27 | 42 |
-| ptu-rule | 7 | 59 | 37 | 104 |
+| bug | 2 | 13 | 27 | 44 |
+| ptu-rule | 6 | 59 | 38 | 104 |
 | feature | 4 | 15 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
 | decree | 0 | 0 | 39 | 39 |
