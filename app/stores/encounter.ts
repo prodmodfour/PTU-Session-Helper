@@ -789,6 +789,8 @@ export const useEncounterStore = defineStore('encounter', {
           // P1: Hold Action and skipNextRound state
           existing.holdAction = incomingCombatant.holdAction
           existing.skipNextRound = incomingCombatant.skipNextRound
+          // Mount state (feature-004)
+          existing.mountState = incomingCombatant.mountState
           // Update entity properties
           Object.assign(existing.entity, incomingCombatant.entity)
         } else {
