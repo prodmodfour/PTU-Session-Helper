@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. Descendant CLAUDE.md files exist in `app/`, `app/server/`, `scripts/`, and `ux-sessions/` for domain-specific context.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. Descendant CLAUDE.md files exist in 17 directories for domain-specific context: `app/`, `app/components/encounter/`, `app/components/scene/`, `app/components/vtt/`, `app/composables/`, `app/prisma/`, `app/server/`, `app/server/api/`, `app/server/services/`, `app/stores/`, `app/tests/`, `app/types/`, `artifacts/`, `books/markdown/`, `decrees/`, `scripts/`, `ux-sessions/`.
 
 ## Tech Stack
 - **Framework**: Nuxt 3 (SPA mode, `ssr: false`)
@@ -32,16 +32,8 @@ app/
 └── assets/scss/     # Global styles and variables
 ```
 
-## Data Models (14 Prisma models)
-- **HumanCharacter**: Players or NPCs with stats, rest/healing tracking, linked to their Pokemon
-- **Pokemon**: Separate sheets with stats, moves, abilities, origin field, linked to owning character
-- **Encounter**: Three-sided combat (Players, Allies, Enemies) with initiative, VTT grid config, fog/terrain state
-- **MoveData / AbilityData / SpeciesData**: Reference data for game mechanics
-- **EncounterTable / EncounterTableEntry / TableModification / ModificationEntry**: Weighted spawn tables
-- **EncounterTemplate**: Saved encounter setups for reuse
-- **Scene**: Narrative scenes with characters, Pokemon, groups, weather, habitat link
-- **GroupViewState**: Singleton tracking active tab and scene
-- **AppSettings**: Damage mode, VTT defaults
+## Data Models
+14 Prisma models -- see `app/prisma/CLAUDE.md` for schema relationships, origin enum, JSON field conventions, and seed sources.
 
 ## Icons & Sprites
 - **Use Phosphor Icons** instead of emojis for UI elements (installed at project root)
@@ -85,11 +77,7 @@ app/
 - **Don't wait to be asked** - Proactively commit after completing meaningful work
 
 ## PTU Rules Reference
-
-The `books/markdown/` directory contains the complete PTU 1.05 ruleset. When implementing game logic, reference:
-- `core/` for mechanics and rules (12 chapter files: `01-introduction.md` through `11-running-the-game.md`)
-- `pokedexes/` for Pokemon stats and data (per-Pokemon files in `gen1/` through `gen8/` + `hisui/`)
-- `errata-2.md` for rule corrections
+Complete PTU 1.05 ruleset in `books/markdown/` -- see `books/markdown/CLAUDE.md` for chapter-to-topic lookup table, pokedex format, and authority chain (decrees > errata > core text).
 
 ## Feature Development Pattern
 
