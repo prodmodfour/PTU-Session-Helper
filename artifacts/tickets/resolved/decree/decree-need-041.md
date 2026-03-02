@@ -9,6 +9,8 @@ source: code-review-281 M2 + rules-review-257 observation
 created_by: slave-collector (plan-20260302-150500)
 created_at: 2026-03-02
 blocks: ptu-rule-131
+status: addressed
+decree_id: decree-042
 ---
 
 ## Ambiguity
