@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-02T13:37:22.868Z
+generated_at: 2026-03-02T13:54:17.638Z
 ---
 
 # Artifact Ecosystem Index
@@ -8,10 +8,10 @@ generated_at: 2026-03-02T13:37:22.868Z
 
 | Category | Count |
 |----------|-------|
-| Active reviews (CHANGES_REQUIRED/FAIL) | 124 |
-| Open tickets | 88 |
-| In-progress tickets | 58 |
-| Open decree-needs | 0 |
+| Active reviews (CHANGES_REQUIRED/FAIL) | 127 |
+| Open tickets | 92 |
+| In-progress tickets | 59 |
+| Open decree-needs | 1 |
 
 ## Open Tickets by Priority
 
@@ -20,8 +20,8 @@ generated_at: 2026-03-02T13:37:22.868Z
 | P0 | 2 |
 | P1 | 9 |
 | P2 | 13 |
-| P3 | 25 |
-| P4 | 39 |
+| P3 | 26 |
+| P4 | 42 |
 
 ## Active Reviews Requiring Action
 
@@ -120,6 +120,8 @@ generated_at: 2026-03-02T13:37:22.868Z
 | code-review-267 | CHANGES_REQUIRED | feature-020 |
 | code-review-270 | CHANGES_REQUIRED | feature-023 |
 | code-review-273 | CHANGES_REQUIRED | feature-016 |
+| code-review-277 | CHANGES_REQUIRED | feature-017 |
+| code-review-278 | CHANGES_REQUIRED | feature-020 |
 | rules-review-034 | CHANGES_REQUIRED | bug-002 |
 | rules-review-039 | CHANGES_REQUIRED | ptu-rule-034, ptu-rule-035 |
 | rules-review-047 | MIXED | — |
@@ -150,14 +152,15 @@ generated_at: 2026-03-02T13:37:22.868Z
 | rules-review-237 | CHANGES_REQUIRED | feature-013 |
 | rules-review-246 | CHANGES_REQUIRED | feature-023 |
 | rules-review-249 | CHANGES_REQUIRED | feature-016 |
+| rules-review-254 | CHANGES_REQUIRED | feature-020 |
 | rules-review-test-integrity-001 | CHANGES_REQUIRED | — |
 
 ## Artifact Counts
 
 | Directory | Files |
 |-----------|-------|
-| reviews/ | 250 |
-| tickets/ (all) | 262 |
+| reviews/ | 258 |
+| tickets/ (all) | 267 |
 | designs/ | 26 |
 | matrix/ | 9 domains |
 | refactoring/ | 86 |

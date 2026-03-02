@@ -1,19 +1,18 @@
 ---
-generated_at: 2026-03-02T13:37:22.888Z
-total_tickets: 262
-open: 31
-in_progress: 107
+generated_at: 2026-03-02T13:54:17.664Z
+total_tickets: 267
+open: 30
+in_progress: 108
 resolved: 110
 ---
 
 # Tickets Index
 
-## Open Tickets (31)
+## Open Tickets (30)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-127 | ptu-rule | P1 | character-lifecycle | Per decree-037, trainers should NOT receive an automatic +1  |
-| bug-043 | bug | P2 | capture | The `rollAccuracyCheck()` function in `useCapture.ts` rolls  |
 | feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
 | feature-021 | feature | P2 | character-lifecycle | feature-021: Derived Capability Calculations |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
@@ -44,7 +43,7 @@ resolved: 110
 | refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
 | refactoring-119 | refactoring | P4 | — | refactoring-119: Update stale interrupt.post.ts file header  |
 
-## In-Progress Tickets (107)
+## In-Progress Tickets (108)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -83,6 +82,7 @@ resolved: 110
 | refactoring-106 | refactoring | P2 | combat | decree-038 |
 | bug-001 | bug | P2 | csv-import | code-review-034 |
 | bug-030 | bug | P2 | player-view | code-review-159 M3 |
+| bug-043 | bug | P2 | capture | rules-review-246 PRE-EXISTING-001 |
 | ptu-rule-030 | ptu-rule | P2 | pokemon-generation | — |
 | ptu-rule-034 | ptu-rule | P2 | healing | — |
 | ptu-rule-035 | ptu-rule | P2 | healing | — |
@@ -156,17 +156,19 @@ resolved: 110
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (1)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-040 | P2 | healing | — |
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 2 | 13 | 27 | 44 |
+| bug | 1 | 14 | 27 | 44 |
 | ptu-rule | 6 | 59 | 38 | 104 |
 | feature | 4 | 15 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
-| decree | 0 | 0 | 39 | 39 |
-| refactoring | 14 | 13 | 1 | 37 |
+| decree | 0 | 0 | 39 | 40 |
+| refactoring | 14 | 13 | 1 | 41 |
