@@ -10,6 +10,7 @@ import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterRe
 import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
 import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
+import { clearMountOnFaint } from '~/server/services/mounting.service'
 import type { StatusCondition } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -111,6 +112,21 @@ export default defineEventHandler(async (event) => {
       await syncStagesToDatabase(combatant, entity.stageModifiers)
     }
 
+    // Auto-dismount on faint (feature-004, PTU p.218)
+    // When a combatant faints, clear mount state and place rider adjacent if mount fainted
+    let mountDismounted = false
+    if (faintedFromAnySource && combatant.mountState) {
+      const gridWidth = record.gridWidth || 20
+      const gridHeight = record.gridHeight || 20
+      const mountResult = clearMountOnFaint(combatants, body.combatantId, gridWidth, gridHeight)
+      mountDismounted = mountResult.dismounted
+      // Update combatants array in-place for subsequent save
+      if (mountResult.dismounted) {
+        combatants.length = 0
+        mountResult.combatants.forEach((c: any) => combatants.push(c))
+      }
+    }
+
     // Track defeated enemies for XP
     let defeatedEnemies = JSON.parse(record.defeatedEnemies)
     const isDefeated = faintedFromAnySource || deathCheck.isDead
@@ -143,7 +159,9 @@ export default defineEventHandler(async (event) => {
           isDead: deathCheck.isDead,
           cause: deathCheck.cause,
           leagueSuppressed: deathCheck.leagueSuppressed
-        }
+        },
+        // Mount auto-dismount on faint (feature-004)
+        mountDismounted
       }
     }
   } catch (error: unknown) {
