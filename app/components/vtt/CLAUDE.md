@@ -43,8 +43,12 @@ Decrees binding on this code (see `decrees/` at project root):
 - **Water terrain cost** (decree-008): specific movement cost for water cells
 - **Multi-tag terrain** (decree-010): cells with multiple terrain types
 - **Mixed-terrain averaging** (decree-011): cost averaging across multi-terrain cells
+- **Diagonal lines** (decree-009): shortened via `maxDiagonalCells()` — line AoE diagonal limit
 - **Burst AoE diagonal** (decree-023): burst area calculation with diagonals
 - **Diagonal cone corner** (decree-024): corner-cell inclusion for cone shapes
+- **Edge-to-edge distance** (decree-002): `ptuDistanceTokensBBox()` for multi-cell token distance
+- **Movement modifiers**: Stuck=0, Tripped=0, Slowed=half, Sprint=+50%, Disengaged=max 1m
+- **AoO detection**: shift-away trigger check in `useGridMovement` (lines 639-682)
 - **Rough terrain endpoint exclusion** (decree-025): accuracy penalty scope
 - **Flanking after evasion cap** (decree-040): flanking penalty application
 
