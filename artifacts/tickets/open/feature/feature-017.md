@@ -68,3 +68,13 @@ ptu-rule-050 (resolved) only removed dead `pokeBallType` code. The actual ball t
 | 2026-03-02 | P0 implemented | Section C: `bb0acb53` app/server/api/capture/rate.post.ts, attempt.post.ts (ballType param, ball breakdown in response) |
 | 2026-03-02 | P0 implemented | Section D: `2efb67d8` app/composables/useCapture.ts (ballType support, getAvailableBalls, updated interfaces) |
 | 2026-03-02 | Status changed | design-complete -> in-progress (P0 complete, P1/P2 pending) |
+| 2026-03-02 | P0 review fixes | `0d3e04e3` M1: as const satisfies on POKE_BALL_CATALOG |
+| 2026-03-02 | P0 review fixes | `3c6a2145` H1: ball modifier integration tests in captureAttempt.test.ts |
+| 2026-03-02 | P0 review fixes | `be690131` M2: document pokeBalls.ts in app-surface.md |
+| 2026-03-02 | P1 implemented | Section E: `a666acf4` app/utils/pokeBallConditions.ts (13 conditional evaluators, registry pattern) |
+| 2026-03-02 | P1 implemented | Section E: `7e2683d5` app/constants/pokeBalls.ts (calculateBallModifier wired to condition engine) |
+| 2026-03-02 | P1 implemented | Section F-H: `fe01dda7` app/server/api/capture/attempt.post.ts (auto-populate context from DB) |
+| 2026-03-02 | P1 implemented | Section F-H: `1986921d` app/server/api/capture/rate.post.ts (condition context in rate preview) |
+| 2026-03-02 | P1 implemented | Section F-H: `57d396e0` app/composables/useCapture.ts (pass conditionContext to API) |
+| 2026-03-02 | P1 tests | `91c77ae9` 85 unit tests for all 13 conditional evaluators + integration |
+| 2026-03-02 | Status unchanged | in-progress (P0+P1 complete, P2 pending) |

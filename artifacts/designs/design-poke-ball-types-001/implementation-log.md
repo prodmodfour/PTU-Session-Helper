@@ -58,3 +58,99 @@ All changes are backward compatible. New parameters default to 'Basic Ball' (+0 
 - Ball type selection UI
 - Post-capture effects (Heal Ball, Friend Ball, Luxury Ball)
 - Capture result display with ball-specific messaging
+
+---
+
+## P0 Review Fixes
+
+**Status:** Completed
+**Date:** 2026-03-02
+**Branch:** slave/3-dev-feature-017-p1-20260302
+
+| Commit | Issue | Files Changed | Description |
+|--------|-------|---------------|-------------|
+| `0d3e04e3` | M1 | app/constants/pokeBalls.ts | `as const satisfies Record<string, PokeBallDef>` for proper type safety |
+| `3c6a2145` | H1 | app/tests/unit/api/captureAttempt.test.ts | 4 ball modifier integration tests with vi.hoisted mock pattern |
+| `be690131` | M2 | .claude/skills/references/app-surface.md | Poke Ball system documentation in Capture API section |
+
+---
+
+## P1: Conditional Ball Logic
+
+**Status:** Implemented
+**Date:** 2026-03-02
+**Branch:** slave/3-dev-feature-017-p1-20260302
+
+### Commits
+
+| Commit | Section | Files Changed | Description |
+|--------|---------|---------------|-------------|
+| `a666acf4` | E | app/utils/pokeBallConditions.ts (new) | 13 conditional evaluators with registry pattern |
+| `7e2683d5` | E | app/constants/pokeBalls.ts | calculateBallModifier wired to evaluateBallCondition |
+| `fe01dda7` | F-H | app/server/api/capture/attempt.post.ts | Auto-populate context from DB (encounter round, species data, active Pokemon) |
+| `1986921d` | F-H | app/server/api/capture/rate.post.ts | Condition context support in rate preview |
+| `57d396e0` | F-H | app/composables/useCapture.ts | Pass conditionContext and encounterId to API |
+| `7c2a4f90` | — | app/tests/unit/api/captureAttempt.test.ts | Updated tests for context parameter |
+| `2302c95f` | — | app/utils/pokeBallConditions.ts | Fix -0 edge case in Timer/Heavy Ball |
+| `91c77ae9` | — | app/tests/unit/utils/pokeBallConditions.test.ts (new) | 85 unit tests for all evaluators |
+
+### Section Details
+
+**E. Conditional Ball Logic Engine** — `app/utils/pokeBallConditions.ts`
+- Pure function evaluators for all 13 conditional ball types
+- Registry pattern: `BALL_CONDITION_EVALUATORS` maps ball name to evaluator function
+- Public API: `evaluateBallCondition(ballName, context)` returns `{ modifier, conditionMet, description }`
+- `calculateBallModifier()` in pokeBalls.ts now calls the evaluator and sums base + conditional
+
+**F. Round-Dependent Balls**
+- Timer Ball: -5 per round elapsed, conditional capped at -25 (total = base +5 + (-25) = -20)
+- Quick Ball: degrades from base -20 (round 1) to 0 (round 4+) via cumulative +5/+10/+20
+
+**G. Stat-Comparison Balls**
+- Level Ball: -20 if target level < half of active Pokemon level
+- Heavy Ball: -5 per Weight Class above 1 (WC 1=0, WC 6=-25)
+- Fast Ball: -20 if highest movement capability > 7
+
+**H. Context-Dependent Balls**
+- Love Ball: -30 if same evo line + opposite gender (genderless rejected)
+- Net Ball: -20 if target is Water or Bug type
+- Dusk Ball: -20 in dark/low-light (GM flag)
+- Moon Ball: -20 if target evolves with Evolution Stone
+- Lure Ball: -20 if target was baited (GM flag)
+- Repeat Ball: -20 if trainer already owns target species
+- Nest Ball: -20 if target is under level 10
+- Dive Ball: -20 if underwater/underground (GM flag)
+
+### API Layer Context Auto-Population
+
+`buildConditionContext()` in attempt.post.ts auto-populates from DB:
+- `encounterRound` from encounter.currentRound
+- `targetLevel`, `targetGender`, `targetSpecies` from Pokemon record
+- `targetTypes` from speciesData.type1/type2
+- `targetWeightClass` from speciesData.weightClass
+- `targetMovementSpeed` from max(overland, swim, sky)
+- `targetEvolvesWithStone` from evolutionTriggers (stone keyword detection)
+- `targetEvoLine` from species name + evolutionTriggers toSpecies
+- `activePokemonLevel/Gender/EvoLine` from trainer's non-fainted combatant
+- `trainerOwnsSpecies` from pokemon.count query
+- GM overrides via `conditionContext` in request body
+
+### SpeciesData Schema
+
+No schema changes needed. All required fields (types, weightClass, overland/swim/sky, evolutionTriggers) already exist. `evolvesWithStone` and `evolutionLine` are derived at runtime from existing fields rather than adding new columns.
+
+### Test Coverage
+
+85 unit tests covering all 13 evaluators + integration with calculateBallModifier:
+- Condition met/not met for each ball type
+- Missing data graceful fallbacks
+- Boundary values (level thresholds, round caps, WC scaling)
+- Case-insensitive type and species matching
+- Empty arrays, undefined fields
+
+### Deferred to P2
+
+- Ball type selection UI
+- Post-capture effects (Heal Ball full heal, Friend Ball +1 loyalty, Luxury Ball raised happiness)
+- Full evolution line traversal (currently uses species + direct evolutions only)
+- Scene-linked isDarkOrLowLight auto-detection
