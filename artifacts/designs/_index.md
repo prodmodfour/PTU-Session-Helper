@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-02T20:04:19.876Z
+generated_at: 2026-03-02T21:34:43.642Z
 total_designs: 26
 ---
 
@@ -23,7 +23,7 @@ total_designs: 26
 | design-player-view-core-001 | player-view | p0-implemented | feature-003 | FULL | FEATURE |
 | design-player-view-infra-001 | player-view | draft | feature-003 | FULL | INFRASTRUCTURE |
 | design-player-view-integration-001 | player-view | designed | feature-003 | FULL | FEATURE |
-| design-poke-ball-types-001 | capture | p1-implemented | feature-017 | FULL | FEATURE |
+| design-poke-ball-types-001 | capture | implemented | feature-017 | FULL | FEATURE |
 | design-pokemon-evolution-001 | — | — | — | — | — |
 | design-pokemon-switching-001 | combat | p2-implemented | feature-011 | FULL | FEATURE |
 | design-priority-interrupt-001 | — | — | — | — | — |
