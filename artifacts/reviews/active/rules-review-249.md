@@ -1,250 +1,200 @@
 ---
 review_id: rules-review-249
-review_type: rules
+review_type: game-logic
 reviewer: game-logic-reviewer
 trigger: design-implementation
 target_report: feature-016
 domain: combat+vtt-grid
 commits_reviewed:
+  - a264318f
+  - c26b81c9
+  - f938c5ac
+  - b7bdf700
+  - c5dcbb11
+  - 0eee0c38
   - 96754870
   - 1cb2f713
-  - f938c5ac
-  - c26b81c9
-  - 93f0017f
-  - e2c202e9
-  - 98ef7972
-mechanics_verified:
-  - intercept-melee-detection
-  - intercept-melee-resolution
-  - intercept-ranged-detection
-  - intercept-ranged-resolution
-  - intercept-blocking-conditions
-  - intercept-loyalty-requirement
-  - intercept-priority-speed-check
-  - intercept-cannot-miss-filter
-  - intercept-full-action-cost
-  - disengage-maneuver
-  - disengage-aoo-exemption
-  - disengage-movement-clamp
-  - line-of-attack-bresenham
-  - ptu-diagonal-distance-usage
+  - 9c12315f
+files_reviewed:
+  - app/server/services/out-of-turn.service.ts
+  - app/utils/lineOfAttack.ts
+  - app/components/encounter/InterceptPrompt.vue
+  - app/server/api/encounters/[id]/intercept-melee.post.ts
+  - app/server/api/encounters/[id]/intercept-ranged.post.ts
+  - app/server/api/encounters/[id]/disengage.post.ts
+  - app/constants/combatManeuvers.ts
+  - app/types/combat.ts
+  - app/types/character.ts
+  - books/markdown/core/07-combat.md (PTU p.241-242 reference)
 verdict: CHANGES_REQUIRED
 issues_found:
-  critical: 0
-  high: 1
+  critical: 1
+  high: 2
   medium: 2
-ptu_refs:
-  - core/07-combat.md#Page-228 (Full Action definition)
-  - core/07-combat.md#Page-242 (Intercept Melee)
-  - core/07-combat.md#Page-242 (Intercept Ranged)
-  - core/07-combat.md#Page-242 (Intercept Additional Rules)
-  - core/07-combat.md#Page-241 (Disengage)
-reviewed_at: 2026-03-02T12:15:00Z
+reviewed_at: 2026-03-02T11:35:00Z
 follows_up: rules-review-240
 ---
 
-## Mechanics Verified
+## Review Scope
 
-### 1. Intercept Melee Detection (R116)
+PTU rules compliance review for P2 of feature-016: Intercept Melee (R116, PTU p.242), Intercept Ranged (R117, PTU p.242), and Disengage Maneuver (PTU p.241, ptu-rule-095). Verified against the PTU 1.05 ruleset in `books/markdown/core/07-combat.md`.
 
-- **Rule:** "Trigger: An ally within Movement range is hit by an adjacent foe." (`core/07-combat.md#Page-242`)
-- **Implementation:** `detectInterceptMelee()` in `out-of-turn.service.ts` (line 823-888). Checks: (1) move can miss, (2) attacker is adjacent to target via `areAdjacent()`, (3) each potential interceptor is an ally of the target, (4) interceptor is within movement range of the target using `ptuDiagonalDistance()`, (5) passes `canIntercept()` eligibility, (6) loyalty check for Pokemon, (7) speed check for priority/interrupt moves.
-- **Status:** CORRECT. All trigger conditions match PTU p.242. Movement range uses PTU diagonal distance (decree-002 compliant). Adjacency check correctly validates melee context.
+Decrees verified: decree-002 (PTU alternating diagonal), decree-003 (passability), decree-006 (dynamic initiative). Decree-002 is violated by the movement step loops (see HIGH-001).
 
-### 2. Intercept Melee Resolution (R116)
+## PTU Rules Verified
 
-- **Rule:** "You must make an Acrobatics or Athletics Check, with a DC equal to three times the number of meters they have to move to reach the triggering Ally; If you succeed, you Push the triggering Ally 1 Meter away from you, and Shift to occupy their space, and are hit by the triggering attack. On Failure to make the Check, the user still Shifts a number of meters equal a third of their check result." (`core/07-combat.md#Page-242`)
-- **Implementation:** `resolveInterceptMelee()` in `out-of-turn.service.ts` (lines 1064-1194). DC = `3 * distance` (line 1089). Success: push ally 1m away via `calculatePushDirection()`, interceptor shifts to ally's old position (line 1104). Failure: shift `floor(skillCheck / 3)` meters toward target (line 1141).
-- **Status:** CORRECT. DC formula matches (3x meters). Success path correctly pushes ally 1m and moves interceptor to their space. Failure shift of `floor(check/3)` correctly implements "a third of their check result" with implicit floor. Action economy correctly consumes Standard + Shift actions and sets `interruptUsed = true`.
+### Intercept Melee (PTU p.242, lines 1247-1265)
 
-### 3. Intercept Ranged Detection (R117)
+| Rule Element | PTU Text | Implementation | Correct? |
+|---|---|---|---|
+| Action cost | "Full Action, Interrupt" | Consumes Standard + Shift + Interrupt | YES |
+| Trigger | "An ally within Movement range is hit by an adjacent foe" | `detectInterceptMelee` checks adjacency + movement range | YES |
+| DC | "three times the number of meters they have to move to reach the triggering Ally" | `dcRequired = 3 * distance` | YES (but see HIGH-002 re: multi-tile) |
+| Success | "Push the triggering Ally 1 Meter away from you, and Shift to occupy their space, and are hit by the triggering attack" | `resolveInterceptMelee` pushes ally, shifts interceptor to ally's old position | YES |
+| Failure | "still Shifts a number of meters equal a third of their check result" | `Math.floor(skillCheck / 3)` | YES |
+| AoE note | "If the 1 meter push does not remove them from the Area of Effect, the Intercept has no effect" | Not implemented (deferred per spec Section D4) | ACCEPTABLE -- edge case, documented |
+| "always be hit" | "Intercepts may not be used to move the Intercepting Pokemon or Trainer OUT of the way of an attack" | Detection excludes `interceptor.id === targetId` | YES |
 
-- **Rule:** "Trigger: A Ranged X-Target attack passes within your Movement Range." (`core/07-combat.md#Page-242`)
-- **Implementation:** `detectInterceptRanged()` in `out-of-turn.service.ts` (lines 906-976). Checks: (1) move can miss, (2) move `targetCount === 1` (single target), (3) attacker NOT adjacent to target (confirming ranged), (4) Bresenham line of attack has intermediate cells, (5) interceptor can reach at least one intermediate cell via `canReachLineOfAttack()`.
-- **Status:** NEEDS REVIEW -- see MED-001 below. The `targetCount !== 1` restriction limits this to single-target only, but PTU says "Ranged X-Target" which includes multi-target moves (e.g., "2 Targets"). See medium issue MED-001.
+### Intercept Ranged (PTU p.242, lines 1266-1278)
 
-### 4. Intercept Ranged Resolution (R117)
+| Rule Element | PTU Text | Implementation | Correct? |
+|---|---|---|---|
+| Action cost | "Full Action, Interrupt" | Consumes Standard + Shift + Interrupt | YES |
+| Trigger | "A Ranged X-Target attack passes within your Movement Range" | `detectInterceptRanged` checks line-of-attack reachability | YES |
+| Square selection | "Select a Square within your Movement Range that lies directly between the source of the attack and the target" | `getLineOfAttackCells` with endpoint exclusion (`slice(1, -1)`) | YES |
+| Shift distance | "Shift a number of Meters equal to half the result" | `Math.floor(skillCheck / 2)` | YES |
+| Success condition | "If you succeed, you take the attack instead" | `reachedTarget = maxShift >= distanceToTarget` | YES |
+| Failure | "you still Shift a number of Meters equal to half the result" | Same shift calc for both success and failure | YES |
 
-- **Rule:** "Make an Acrobatics or Athletics Check; you may Shift a number of Meters equal to half the result towards the chosen square. If you succeed, you take the attack instead of its intended target. If you fail, you still Shift a number of Meters equal to half the result." (`core/07-combat.md#Page-242`)
-- **Implementation:** `resolveInterceptRanged()` in `out-of-turn.service.ts` (lines 1206-1288). Shift distance = `floor(skillCheck / 2)` (line 1229). Success = `maxShift >= distanceToTarget` (line 1237). Both success and failure cases move the interceptor by `distanceMoved` meters (capped at distance to target).
-- **Status:** CORRECT. The shift distance formula `floor(check/2)` correctly implements "half the result." Success determination is correctly based on whether the shift reaches the target square, not a DC. Both outcomes apply the shift movement as specified. Action economy correctly consumed.
+### Shared Intercept Rules (PTU p.242, lines 1279-1298)
 
-### 5. Intercept Blocking Conditions
+| Rule Element | PTU Text | Implementation | Correct? |
+|---|---|---|---|
+| Loyalty 3+ | "Pokemon must have a Loyalty of 3 or greater" | `checkInterceptLoyalty`: `loyalty < 3` blocks | YES |
+| Loyalty 6 for non-trainer | "may only Intercept attacks against their Trainer. At Loyalty 6, Pokemon may Intercept for any Ally" | `loyalty < 6` checks `target.entityId !== ownerId` | YES |
+| Priority/Interrupt speed check | "only Intercept against Priority and Interrupt Moves if they are faster than the user" | `canInterceptMove`: `interceptor.initiative <= attacker.initiative` blocks | YES |
+| Cannot-miss moves | "Moves that cannot miss (such as Aura Sphere or Swift) cannot be Intercepted" | `if (!move.canMiss) return results` | YES |
+| Blocking conditions | "Asleep, Confused, Enraged, Frozen, Stuck, Paralyzed, or otherwise unable to move" | `INTERCEPT_BLOCKING_CONDITIONS` includes all six + Bad Sleep | YES |
 
-- **Rule:** "Pokemon and Trainers cannot attempt Intercepts if they are Asleep, Confused, Enraged, Frozen, Stuck, Paralyzed, or otherwise unable to move." (`core/07-combat.md#Page-242`)
-- **Implementation:** `INTERCEPT_BLOCKING_CONDITIONS` in `types/combat.ts` (line 165-167): `['Asleep', 'Bad Sleep', 'Confused', 'Enraged', 'Frozen', 'Stuck', 'Paralyzed']`. Checked in `canIntercept()` (lines 699-736).
-- **Status:** CORRECT. All six named conditions are present. `Bad Sleep` is correctly included as a variant of Asleep. The `canIntercept()` function also checks for Fainted/Dead and HP <= 0 as additional guards. The "or otherwise unable to move" clause is implicitly covered by the Stuck condition and the HP/Fainted checks.
+### Disengage (PTU p.241, line 1150-1153)
 
-### 6. Intercept Loyalty Requirement
-
-- **Rule:** "Pokemon must have a Loyalty of 3 or greater to make Intercept Melee and Intercept Range Maneuvers, and may only Intercept attacks against their Trainer. At Loyalty 6, Pokemon may Intercept for any Ally." (`core/07-combat.md#Page-242`)
-- **Implementation:** `checkInterceptLoyalty()` in `out-of-turn.service.ts` (lines 743-765). Non-Pokemon always allowed. Pokemon with `loyalty < 3` rejected. Pokemon with `3 <= loyalty < 6` can only intercept when `target.entityId === pokemon.ownerId` (i.e., their trainer). Pokemon with `loyalty >= 6` can intercept for any ally.
-- **Status:** CORRECT. All three loyalty thresholds are correctly implemented. The trainer-only restriction at Loyalty 3-5 correctly checks `target.entityId !== ownerId`. Default loyalty of 0 (via `?? 0`) correctly prevents Pokemon without loyalty data from intercepting.
-
-### 7. Intercept Priority/Interrupt Speed Check
-
-- **Rule:** "Pokemon and Trainers may only Intercept against Priority and Interrupt Moves if they are faster than the user of those Moves." (`core/07-combat.md#Page-242`)
-- **Implementation:** `canInterceptMove()` in `out-of-turn.service.ts` (lines 771-785). Checks `interceptor.initiative <= attacker.initiative` for priority/interrupt moves.
-- **Status:** CORRECT. The rule says "faster than" which maps to strictly greater initiative. The code uses `<=` to block when interceptor is equal or slower, allowing only when strictly greater. This correctly implements "faster than" since equal speed does not count as faster. Per decree-006, initiative is dynamically updated on speed changes.
-
-### 8. Intercept Cannot-Miss Move Filter
-
-- **Rule:** "Moves that cannot miss (such as Aura Sphere or Swift) cannot be Intercepted." (`core/07-combat.md#Page-242`)
-- **Implementation:** Both `detectInterceptMelee()` (line 828) and `detectInterceptRanged()` (line 911) check `if (!move.canMiss) return results` early, filtering out cannot-miss moves before any eligibility checks.
-- **Status:** CORRECT. Early return prevents Intercept opportunities from being generated for cannot-miss moves.
-
-### 9. Intercept Full Action Cost
-
-- **Rule:** "Full Actions take both your Standard Action and Shift Action for a turn." (`core/07-combat.md#Page-228`). Intercept is listed as "Action: Full Action, Interrupt."
-- **Implementation:** `canIntercept()` in `out-of-turn.service.ts` (lines 724-728):
-  ```typescript
-  const ts = combatant.turnState
-  if (ts.standardActionUsed && ts.shiftActionUsed) {
-    return { allowed: false, reason: 'No Full Action available (Standard + Shift required)' }
-  }
-  ```
-- **Status:** INCORRECT -- see HIGH-001 below. Uses `&&` instead of `||`.
-
-### 10. Disengage Maneuver
-
-- **Rule:** "Maneuver: Disengage. Action: Shift. Effect: You may Shift 1 Meter. Shifting this way does not provoke an Attack of Opportunity." (`core/07-combat.md#Page-241`)
-- **Implementation:** `disengage.post.ts` (lines 48-68). Validates shift action is available (`shiftActionUsed` check). Sets `disengaged = true` and `shiftActionUsed = true`. Move log records action type as `'shift'`.
-- **Status:** CORRECT. Consumes Shift Action, sets disengaged flag for AoO exemption. The `COMBAT_MANEUVERS` entry in `combatManeuvers.ts` correctly lists `actionType: 'shift'`, `ac: null`, and descriptive text.
-
-### 11. Disengage + AoO Integration
-
-- **Rule:** Disengage movement does not provoke AoO (`core/07-combat.md#Page-241`).
-- **Implementation:** P0 established the `disengaged` flag check in `validateTriggerPreconditions()` at `out-of-turn.service.ts` (line 157): `if (actor.disengaged) return false` for `shift_away` triggers. Client-side mirror in `useGridMovement.ts` (line 648): `if (mover.disengaged) return []`.
-- **Status:** CORRECT. Both server and client correctly exempt disengaged combatants from shift_away AoO triggers.
-
-### 12. Disengage Movement Clamp
-
-- **Rule:** "You may Shift 1 Meter." (`core/07-combat.md#Page-241`) -- Disengage limits movement to 1m.
-- **Implementation:** `useGridMovement.ts` (lines 206-208): `if (combatant.disengaged) { return Math.min(modifiedSpeed, 1) }`. Also applied in second speed computation path (lines 254-256).
-- **Status:** CORRECT. Movement speed is clamped to 1m when the disengaged flag is set. Uses `Math.min(modifiedSpeed, 1)` so it never exceeds 1m regardless of base speed.
-
-### 13. Line-of-Attack (Bresenham's Algorithm)
-
-- **Rule:** "Select a Square within your Movement Range that lies directly between the source of the attack and the target of the attack." (`core/07-combat.md#Page-242`)
-- **Implementation:** `getLineOfAttackCells()` in `lineOfAttack.ts` (lines 24-58). Standard Bresenham's line algorithm from attacker to target. `canReachLineOfAttack()` (lines 73-106) excludes first (attacker) and last (target) cells, finds the closest reachable intermediate cell within movement range.
-- **Status:** CORRECT. Bresenham's algorithm is a standard and appropriate choice for determining which grid cells lie "directly between" two positions. Excluding endpoints is correct since the interceptor must step INTO the path between source and target, not stand on the source or target cell. Distance calculations use `ptuDiagonalDistance` per decree-002.
-
-### 14. PTU Diagonal Distance Usage
-
-- **Rule:** Per decree-002, all grid distances use PTU alternating diagonal rule.
-- **Implementation:** All distance calculations in detection and resolution functions use `ptuDiagonalDistance()` from `gridDistance.ts`. This includes: interceptor-to-target distance for Melee DC calculation, interceptor movement range checks, and Ranged line-of-attack reachability.
-- **Status:** CORRECT. Consistent use of PTU diagonal distance throughout.
-
----
+| Rule Element | PTU Text | Implementation | Correct? |
+|---|---|---|---|
+| Action cost | "Action: Shift" | `shiftActionUsed = true` | YES |
+| Effect | "Shift 1 Meter" | Movement clamped to 1m via `combatant.disengaged` check in `useGridMovement` | YES |
+| AoO exemption | "does not provoke an Attack of Opportunity" | `if (actor.disengaged) return false` in shift_away trigger check | YES |
+| Turn-scoped flag | Disengage lasts for this turn only | `disengaged = false` at turn-end and round-start in `next-turn.post.ts` | YES |
 
 ## Issues
 
-### HIGH-001: `canIntercept()` Full Action check uses wrong boolean operator
+### CRITICAL
 
-**Severity:** HIGH
-**File:** `app/server/services/out-of-turn.service.ts`, lines 724-728
-**Rule:** PTU p.228: "Full Actions take both your Standard Action and Shift Action for a turn."
+#### CRIT-001: Full Action eligibility check allows Intercept when one action already spent
 
-The `canIntercept()` function checks:
+**Rule:** PTU p.242: "Action: Full Action, Interrupt" -- PTU p.227: "Full Actions take both your Standard Action and Shift Action for a turn."
+
+**File:** `app/server/services/out-of-turn.service.ts` line 726
+
+The `canIntercept` function checks `ts.standardActionUsed && ts.shiftActionUsed`. This only blocks when BOTH actions are used. A Full Action requires BOTH Standard AND Shift to be available. If a combatant used their Standard Action (attacked) but not their Shift, the `&&` check passes, and the system incorrectly allows the Intercept -- consuming the already-spent Standard Action a second time.
+
+Per PTU rules, you cannot perform a Full Action if either your Standard or Shift action is already consumed. The check must be `||`.
+
+### HIGH
+
+#### HIGH-001: Movement step loops violate decree-002 (PTU alternating diagonal)
+
+**Rule:** decree-002 (PTU alternating diagonal for all distance calculations). PTU p.231: Diagonals alternate 1m/2m.
+
+**Files:** `app/server/services/out-of-turn.service.ts` lines 1151-1163 and 1251-1258
+
+Both Intercept Melee (failure: `floor(check/3)` shift) and Intercept Ranged (failure: `floor(check/2)` shift) use step-by-step movement that counts every step as 1 meter, even when moving diagonally. Per decree-002, diagonal movement costs alternate between 1m and 2m.
+
+**Example violation:** Interceptor at (0,0), target at (3,3). Direction is (1,1) -- pure diagonal. With `shiftDistance=3`, the code moves 3 cells diagonally to (3,3). But per PTU alternating diagonal: step 1 costs 1m, step 2 costs 2m, step 3 costs 1m. Total = 4m. The combatant only has 3m of movement, so they should stop at (2,2) (costing 1+2=3m).
+
+This produces incorrect final positions.
+
+#### HIGH-002: Intercept Melee DC uses point distance instead of token-aware distance for multi-tile tokens
+
+**Rule:** PTU p.242: "DC equal to three times the number of meters they have to move to reach the triggering Ally"
+
+**File:** `app/server/services/out-of-turn.service.ts` lines 1085-1088
+
+The DC calculation uses `ptuDiagonalDistance(target.position.x - interceptor.position.x, ...)` which measures top-left-to-top-left distance. For a Large (2x2) interceptor at (0,0) and a 1x1 target at (2,0), the raw delta distance is 2m. But the nearest cell of the 2x2 interceptor to the target is (1,0), which is only 1m away. The DC should be 3x1=3, not 3x2=6.
+
+`ptuDistanceTokensBBox` in `gridDistance.ts` already computes the correct bounding-box distance between multi-tile tokens. It should be used here.
+
+### MEDIUM
+
+#### MED-001: `getCombatantSpeed` does not apply movement modifiers (Slowed, Speed CS, Sprint)
+
+**Rule:** PTU p.231: Movement speed is affected by Slowed (half speed), Speed Combat Stages, and Sprint (+50%).
+
+**File:** `app/server/services/out-of-turn.service.ts` lines 801-807
+
 ```typescript
-if (ts.standardActionUsed && ts.shiftActionUsed) {
-  return { allowed: false, reason: 'No Full Action available (Standard + Shift required)' }
+function getCombatantSpeed(combatant: Combatant): number {
+  if (combatant.type === 'pokemon') {
+    const pokemon = combatant.entity as Pokemon
+    return pokemon.capabilities?.overland || 5
+  }
+  return 5
 }
 ```
 
-This uses `&&` (AND), meaning it only blocks Intercept when **both** actions have already been consumed. However, a Full Action requires **both** Standard and Shift to be available. If a combatant has already used their Standard Action but not their Shift (or vice versa), the function would incorrectly allow the Intercept.
+This returns the raw base Overland speed for Pokemon and hardcoded 5 for humans. It does not apply movement modifiers that affect the combatant's effective movement range. A Slowed combatant with Overland 6 has effective speed 3, but the detection would still use 6, creating false-positive Intercept opportunities for combatants who cannot actually move that far.
 
-**Correct logic:**
-```typescript
-if (ts.standardActionUsed || ts.shiftActionUsed) {
-  return { allowed: false, reason: 'No Full Action available (Standard + Shift required)' }
-}
-```
+The `applyMovementModifiers` function in `useGridMovement.ts` already handles all these modifiers and is exported as a pure function. Apply it to the base speed.
 
-**Impact:** A combatant who has already used their Standard Action could still attempt an Intercept, violating the Full Action requirement. This would allow illegal Intercepts in mid-turn scenarios.
+#### MED-002: `INTERCEPT_BLOCKING_CONDITIONS` includes `'Bad Sleep'` which is not explicitly listed in PTU rules
 
----
+**Rule:** PTU p.242: "Asleep, Confused, Enraged, Frozen, Stuck, Paralyzed, or otherwise unable to move."
 
-### MED-001: Intercept Ranged restricted to single-target but PTU says "X-Target"
+**File:** `app/types/combat.ts` lines 165-167
 
-**Severity:** MEDIUM
-**File:** `app/server/services/out-of-turn.service.ts`, line 914
-**Rule:** PTU p.242: "Trigger: A Ranged X-Target attack passes within your Movement Range."
+'Bad Sleep' is included in the blocking conditions array but is not explicitly named in the PTU text. Including it is a correct interpretation -- 'Bad Sleep' is a variant of Asleep per PTU status definitions, and the PTU text's "Asleep" logically encompasses it. The `AOO_BLOCKING_CONDITIONS` array already includes it for consistency. However, the rationale should be documented with a comment to prevent future reviewers from questioning the inclusion.
 
-The detection function checks:
-```typescript
-if (move.targetCount !== 1) return results
-```
+## What Looks Good (PTU Compliance)
 
-This restricts Intercept Ranged to single-target attacks only. However, PTU uses "X-Target" notation to mean any attack that targets a specific number of targets (1 Target, 2 Targets, 3 Targets, etc.), as opposed to AoE attacks (Cone, Burst, Line, Blast). A "Ranged 2 Targets" move like Water Shuriken would be excluded by this check, but per RAW it qualifies as a "Ranged X-Target attack."
+1. **Intercept Melee DC formula is correct.** `DC = 3 * distance` matches PTU p.242 exactly: "DC equal to three times the number of meters."
 
-The practical question is whether intercepting one target out of a multi-target attack makes mechanical sense. The RAW is ambiguous here -- the interceptor can only occupy one square and take one hit, so for multi-target it would only protect one of the targets.
+2. **Intercept Melee success resolution is faithful.** Push ally 1m away + shift to ally's old position + interceptor takes the hit. All three effects are implemented correctly per PTU.
 
-**Recommendation:** File a `decree-need` ticket for human ruling on whether "X-Target" should include multi-target (2+) ranged attacks for Intercept Ranged, or only single-target. The current implementation is a reasonable conservative interpretation but may miss RAW-valid intercept opportunities.
+3. **Intercept Melee failure shift is correctly calculated.** `floor(skillCheck / 3)` matches "a third of their check result" (PTU rounds down by convention).
 
----
+4. **Intercept Ranged shift formula is correct.** `floor(skillCheck / 2)` matches "half the result" and "half the result" on both success and failure paths.
 
-### MED-002: Intercept Ranged does not validate the target square lies between attacker and target
+5. **Intercept Ranged success condition is correct.** Reaching the chosen square = taking the attack instead. Not reaching = still shifting but original target takes the hit.
 
-**Severity:** MEDIUM
-**File:** `app/server/api/encounters/[id]/intercept-ranged.post.ts`, lines 122-132
-**Rule:** PTU p.242: "Select a Square within your Movement Range that lies **directly between** the source of the attack and the target of the attack."
+6. **Loyalty requirements are correctly tiered.** Loyalty < 3 blocks entirely. Loyalty 3-5 allows only for trainer (via `ownerId`/`entityId` match). Loyalty 6+ allows for any ally.
 
-The endpoint validates the target square is "on the line of attack" (line 125):
-```typescript
-const isOnLine = attackLine.some(c => c.x === targetSquare.x && c.y === targetSquare.y)
-```
+7. **Priority/Interrupt move speed check uses initiative correctly.** "Faster than the user" = higher initiative. `interceptor.initiative <= attacker.initiative` blocks correctly (must be strictly greater).
 
-This validation only fires when `attacker.position && originalTarget?.position` are both available. If `originalTarget` is not found (e.g., the pending action was declined or the action ID is missing), the validation is skipped entirely (line 123 conditional). In that edge case, any target square would be accepted without verifying it's on the line of attack.
+8. **Cannot-miss move exclusion is correct.** The `canMiss` flag on the move object is checked before generating any Intercept opportunity.
 
-**Recommendation:** Make the validation mandatory. If the original target cannot be determined, reject the request rather than proceeding without line-of-attack validation:
+9. **INTERCEPT_BLOCKING_CONDITIONS covers all PTU-listed conditions.** Asleep, Confused, Enraged, Frozen, Stuck, Paralyzed are all present.
 
-```typescript
-if (!attacker.position || !originalTarget?.position) {
-  throw createError({
-    statusCode: 400,
-    message: 'Cannot validate line of attack: original target position unavailable'
-  })
-}
-```
+10. **Disengage is PTU-accurate.** Shift Action, 1m movement, no AoO provocation. All three elements match PTU p.241 verbatim.
 
----
+11. **Disengage action type is correct.** The Maneuver entry uses `actionType: 'shift'` and `actionLabel: 'Shift Action'`, matching PTU "Action: Shift."
 
-## Decree Compliance
-
-| Decree | Status | Notes |
-|--------|--------|-------|
-| decree-002 (PTU diagonal distance) | COMPLIANT | All distance calculations use `ptuDiagonalDistance()` |
-| decree-003 (token passability) | NOT DIRECTLY TESTED | Push direction in Intercept Melee checks occupied cells but does not explicitly reference rough terrain for enemy squares. The push is 1m (single cell), so passability rules are less relevant here. No violation. |
-| decree-006 (dynamic initiative) | COMPLIANT | Speed check in `canInterceptMove()` uses `interceptor.initiative` which is dynamically updated per decree-006 |
-| decree-040 (flanking after cap) | NOT APPLICABLE | No evasion calculations in P2 scope |
-
-## Summary
-
-The P2 implementation of Intercept Melee/Ranged and Disengage is largely faithful to PTU 1.05 rules. The core formulas are correct:
-
-- **Intercept Melee:** DC = 3x distance, success push + swap, failure shift = floor(check/3)
-- **Intercept Ranged:** Shift = floor(check/2), success = reaching target square
-- **Disengage:** Shift Action, 1m clamp, AoO exemption via disengaged flag
-
-The loyalty requirements (3+ for trainer, 6 for any ally), blocking conditions (Asleep, Confused, Enraged, Frozen, Stuck, Paralyzed), priority/interrupt speed check, and cannot-miss move filter are all correctly implemented.
-
-One HIGH issue exists: the Full Action availability check in `canIntercept()` uses `&&` instead of `||`, which would allow illegal Intercepts when only one of the two required actions has been consumed. Two MEDIUM issues: the single-target restriction for Intercept Ranged may be narrower than PTU RAW intended, and the line-of-attack validation can be bypassed when the original target is not found.
-
-## Rulings
-
-1. **Intercept Melee failure shift distance:** `floor(check/3)` is the correct interpretation of "a third of their check result." PTU does not specify rounding, and flooring is the standard PTU convention for fractional results.
-2. **Intercept Ranged success condition:** Success is determined by whether `floor(check/2) >= distance_to_chosen_square`, matching the PTU text that success means reaching the chosen square.
-3. **Bresenham's algorithm for "directly between":** Bresenham's line is an appropriate algorithm for determining cells that lie directly between two grid positions. This is a standard approach in tactical grid systems.
+12. **Line-of-attack calculation correctly excludes endpoints.** The attacker's cell and target's cell are excluded from intermediate cells, matching PTU "between the source...and the target."
 
 ## Verdict
 
 **CHANGES_REQUIRED**
 
-HIGH-001 must be fixed before approval -- the `&&` to `||` change in `canIntercept()` is a single-character fix that prevents illegal Intercepts. MED-001 should produce a `decree-need` ticket for future clarification. MED-002 should harden the validation path.
+CRIT-001 (Full Action `&&` vs `||`) is a rules-breaking bug. PTU explicitly states a Full Action requires both Standard and Shift. The current implementation allows Intercept with only one action remaining.
+
+HIGH-001 (diagonal movement cost) violates decree-002 which mandates PTU alternating diagonal for ALL distance calculations. The step loops do not alternate diagonal costs, producing incorrect final positions.
+
+HIGH-002 (multi-tile DC) produces incorrect DCs for Large/Huge/Gigantic Pokemon, making Intercept unfairly difficult for them. The codebase already has the correct utility function (`ptuDistanceTokensBBox`).
+
+MED-001 (missing movement modifiers) creates false-positive Intercept opportunities for Slowed or debuffed combatants.
 
 ## Required Changes
 
-1. **[HIGH-001]** Fix `canIntercept()` in `app/server/services/out-of-turn.service.ts` line 726: change `ts.standardActionUsed && ts.shiftActionUsed` to `ts.standardActionUsed || ts.shiftActionUsed`.
-2. **[MED-001]** File a `decree-need` ticket for whether "Ranged X-Target" in Intercept Ranged should include multi-target (2+) attacks, or only single-target. Current implementation is acceptable as conservative interpretation pending ruling.
-3. **[MED-002]** In `app/server/api/encounters/[id]/intercept-ranged.post.ts`, make the line-of-attack validation mandatory instead of conditionally skipped. If original target position is unavailable, reject the request with a 400 error.
+1. **CRIT-001:** Fix `canIntercept` to use `||` instead of `&&` for the Standard/Shift action check.
+2. **HIGH-001:** Apply PTU alternating diagonal cost tracking in both movement step loops (`resolveInterceptMelee` failure and `resolveInterceptRanged` failure).
+3. **HIGH-002:** Use `ptuDistanceTokensBBox` for distance calculations in detection and DC.
+4. **MED-001:** Apply `applyMovementModifiers` to `getCombatantSpeed` results.
+5. **MED-002:** Add a comment documenting the 'Bad Sleep' inclusion rationale.
