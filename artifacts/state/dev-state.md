@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-03T04:50:00
-updated_by: slave-collector (plan-20260303-040754)
+last_updated: 2026-03-03T05:40:00
+updated_by: slave-collector (plan-20260302-180611)
 ---
 
 # Dev Ecosystem State
@@ -84,7 +84,7 @@ updated_by: slave-collector (plan-20260303-040754)
 | ptu-rule-124 | P4 | **resolved** | Replace bogus encounter budget formula citation. Research confirmed PTU Chapter 11 p.473 DOES contain the formula — reframed as "PTU guideline". code-review-223 **APPROVED** + rules-review-199 **APPROVED**. decree-031 compliant |
 | ptu-rule-125 | P4 | **open** | Populate grantedCapabilities on all capability-granting catalog entries (Dark Vision Goggles, Re-Breather, Gas Mask). Follow-up from code-review-222 M-02 + rules-review-198 MED-02. Filed by slave-collector (plan-20260228-153856) |
 | ptu-rule-126 | P4 | **open** | Snow Boots conditional Overland speed penalty not mechanically enforced (-1 on ice/deep snow). Follow-up from rules-review-198 MED-01. Filed by slave-collector (plan-20260228-153856) |
-| ptu-rule-127 | P1 | **resolved** | Remove automatic skill rank per level per decree-037. Resolved by slave-3 (plan-20260228-233710) as part of feature-008 fix cycle. skillRanksGained removed from trainerAdvancement.ts, LevelUpSkillSection disabled, skills step removed from wizard |
+| ptu-rule-127 | P1 | **in-progress** | Remove automatic skill rank per level per decree-037. Originally resolved by slave-3 (plan-20260228-233710). Additional cleanup by slave-1 (plan-20260302-180611): 5 commits — removed skills step from wizard, updated spec-p0/shared-specs/testing-strategy, removed LevelUpSkillSection reference from RANK_PROGRESSION comment. Needs completion |
 | ptu-rule-128 | P3 | **resolved** | Sleep does not clear on recall or encounter end. Resolved by slave-6 (plan-20260301-110550). Asleep and Bad Sleep set to clearsOnRecall: false, clearsOnEncounterEnd: false. Part of decree-038 compliance |
 | ptu-rule-130 | P4 | **open** | Fainted recall+release pair should not apply League switch restriction — pair detection hardcodes isFaintedSwitch: false. Source: rules-review-225 M1. Filed by slave-collector (plan-20260301-143720) |
 | ptu-rule-131 | P2 | **resolved** | Expert+ Combat skill AoO Struggle Attack — fixed by slave-2 (plan-20260301-184039). AC 3/DB 5 for Expert+ Combat instead of hardcoded AC 4/DB 4. Commit 62c6822c. Part of feature-016 P1 implementation |
@@ -96,7 +96,7 @@ updated_by: slave-collector (plan-20260303-040754)
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
 | feature-003 | P1 | **Track-A-P2-APPROVED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 APPROVED: code-review-188 APPROVED (`:deep()` fix complete). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1+P2 complete | multi-phase-parallel |
-| feature-004 | P3 | **P0-implemented** | Pokemon Mounting / Rider System — design spec created by slave-1 (plan-20260228-153856). P0 implemented by slave-5 (plan-20260303-040754): 15 commits (MountState interface, mountingRules utility, mounting.service, mount/dismount endpoints, movement sharing, faint auto-dismount, WS sync). Needs review | multi-phase |
+| feature-004 | P3 | **P0-CHANGES_REQUIRED** | Pokemon Mounting / Rider System — design spec created by slave-1 (plan-20260228-153856). P0 implemented by slave-5 (plan-20260303-040754): 15 commits. Reviewed by slave-4 (plan-20260302-180611): code-review-285 **CHANGES_REQUIRED** (1 CRIT: client-side linked movement desync, 2 HIGH: skipCheck dead param, movementRemaining not decremented locally, 3 MED) + rules-review-261 **APPROVED** (all 14 mechanics correct, decree-003/004 compliant, 2 MED deferred to P1). Needs fix cycle | multi-phase |
 | feature-005 | P3 | **design-complete** | Living Weapon System (Honedge Line) — design spec created by slave-2 (plan-20260228-153856). 7 files in design-living-weapon-001/: _index.md, spec-p0.md (wield relationship, Living Weapon capability), spec-p1.md (equipment integration, Doublade/Aegislash bonuses), spec-p2.md (shared movement, No Guard suppression, Weaponize/Soulstealer), shared-specs.md, testing-strategy.md | multi-phase |
 | feature-006 | P1 | **P2-APPROVED** | Pokemon Evolution System — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-255 **APPROVED** + rules-review-231 **APPROVED** (re-review by slave-4, plan-20260301-170000). All code-review-248 + rules-review-224 issues verified resolved. Feature complete | multi-phase |
 | feature-007 | P1 | **P1-APPROVED** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle APPROVED: code-review-243 **APPROVED** (M1: loose MoveDetail types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (all 9 mechanics verified, 0 issues). All code-review-238 + rules-review-214 issues resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
@@ -111,8 +111,8 @@ updated_by: slave-collector (plan-20260303-040754)
 
 | feature-017 | P2 | **P1-fix-cycle-done** | Poke Ball Type System — P0 APPROVED. P1 CHANGES_REQUIRED: code-review-277 (2H+3M). Fix cycle applied by slave-4 (plan-20260303-040754): 5 commits (extracted buildConditionContext to ball-condition.service, passed conditionContext to client calc, removed dead property, 55 unit tests). rules-review-253 **APPROVED**. Needs re-review | multi-phase |
 | feature-019 | P2 | **APPROVED** | VTT Status-Movement Integration — Tripped combatants blocked from VTT movement (R025). Stuck (R022) and Slowed (R024) pre-existing. Reviewed by slave-7 (plan-20260301-223500): code-review-265 **APPROVED** (0 issues, PTU faithful, consistent pattern, thorough documentation) + rules-review-241 **APPROVED** (all 3 mechanics verified correct, 46 tests passing, 0 issues). Feature complete | partial |
-| feature-020 | P2 | **P1-APPROVED** | Healing Item System — P0 APPROVED. P1 APPROVED: code-review-284 **APPROVED** + rules-review-260 **APPROVED** (re-review by slave-3, plan-20260303-040754). All code-review-278 + rules-review-254 issues verified resolved. P2 remaining | multi-phase |
-| feature-023 | P2 | **P1-APPROVED** | Player Capture & Healing Interfaces — P0 APPROVED. P1 APPROVED: code-review-282 **APPROVED** + rules-review-258 **APPROVED** (re-review by slave-1, plan-20260303-040754). All code-review-280 + rules-review-256 issues verified resolved. P2 remaining | multi-phase |
+| feature-020 | P2 | **P2-implemented** | Healing Item System — P0 APPROVED. P1 APPROVED. P2 implemented by slave-3 (plan-20260302-180611): 8 commits (forfeit action fields in TurnState, checkItemRange/findTrainerForPokemon, P2 combat rules in use-item endpoint, forfeit consumption in next-turn, skipInventory in store+composable, UseItemModal P2 UI). Needs review | multi-phase |
+| feature-023 | P2 | **P2-implemented** | Player Capture & Healing Interfaces — P0 APPROVED. P1 APPROVED. P2 implemented by slave-2 (plan-20260302-180611): 3 commits (PlayerHealingPanel component with breather + healing item tabs, wired into PlayerCombatActions, design/ticket updates). Needs review | multi-phase |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -135,7 +135,18 @@ updated_by: slave-collector (plan-20260303-040754)
 
 ## Active Developer Work
 
-**Current task:** Session 89 collection complete. 6 slaves merged (32 commits). 3 reviewer re-reviews (all APPROVED), 3 dev slaves (feature-017 fix cycle, feature-004 P0, docs gap fixes). Smoke test PASSED. No conflicts.
+**Current task:** Session 90 collection complete. 4 slaves merged (18 commits). 3 dev slaves (ptu-rule-127 cleanup, feature-023 P2, feature-020 P2) + 1 reviewer slave (feature-004 P0 review). Smoke test PASSED. No conflicts.
+
+**Session 90 (2026-03-03, plan-20260302-180611):**
+- **slave-1** (developer): ptu-rule-127 — 5 commits: Additional decree-037 cleanup. Removed skills step from level-up wizard, updated spec-p0/shared-specs/testing-strategy to remove skillRanksGained references. → **in-progress**
+- **slave-2** (developer): feature-023-p2 — 3 commits: Player Healing UI (P2). PlayerHealingPanel component with breather and healing item tabs, wired into PlayerCombatActions. → **P2-implemented, needs review**
+- **slave-3** (developer): feature-020-p2 — 8 commits: Healing Items combat integration (P2). Forfeit action fields in TurnState, checkItemRange/findTrainerForPokemon, P2 combat rules in use-item endpoint, forfeit consumption in next-turn, skipInventory in store+composable, UseItemModal P2 UI. → **P2-implemented, needs review**
+- **slave-4** (reviewers): feature-004-p0-review — 2 commits: code-review-285 **CHANGES_REQUIRED** (1 CRIT + 2 HIGH + 3 MED: client-side linked movement desync, skipCheck dead param, movementRemaining not decremented, app-surface.md, duplicate speed function, mutation pattern) + rules-review-261 **APPROVED** (all 14 mechanics correct, 2 MED deferred to P1).
+
+**Smoke test:** PASSED (Playwright) — GM view renders (full nav + encounter). Group view renders (initiative tracker). Player view renders (character selection). No issues.
+**Tickets needing review:** feature-020 P2 (first implementation), feature-023 P2 (first implementation)
+**Tickets needing fix cycle:** feature-004 P0 (code-review-285 1C+2H+3M)
+**Rules approved:** feature-004 P0 (rules-review-261 APPROVED)
 
 **Session 89 (2026-03-03, plan-20260303-040754):**
 - **slave-1** (reviewers): feature-023-p1-rereview — code-review-282 **APPROVED** + rules-review-258 **APPROVED**. All code-review-280 + rules-review-256 issues verified resolved. → feature-023 **P1-APPROVED**
@@ -741,6 +752,12 @@ updated_by: slave-collector (plan-20260303-040754)
 
 ## Review Status
 
+### Session 90 Reviews (plan-20260302-180611)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-285 | feature-004 P0 (Pokemon Mounting System) | CHANGES_REQUIRED (1 CRIT: client-side linked movement desync, 2 HIGH: skipCheck dead param, movementRemaining not decremented locally, 3 MED: app-surface.md, duplicate speed func, mutation pattern) | senior-reviewer | 2026-03-03 |
+| rules-review-261 | feature-004 P0 (Pokemon Mounting System) | APPROVED (all 14 mechanics correct, decree-003/004 compliant, 2 MED deferred to P1: Push + Confusion dismount triggers) | game-logic-reviewer | 2026-03-03 |
+
 ### Session 89 Reviews (plan-20260303-040754)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
@@ -1140,6 +1157,19 @@ updated_by: slave-collector (plan-20260303-040754)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-03-03, session 90 — plan-20260302-180611)
+
+**Slave collection plan-20260302-180611:** 4 slaves merged (18 commits total). No conflicts. All slaves completed successfully.
+- **slave-1** (developer): ptu-rule-127 — 5 commits: Additional decree-037 cleanup. Removed skills step from wizard, updated spec-p0/shared-specs/testing-strategy, removed LevelUpSkillSection reference from RANK_PROGRESSION comment. → **in-progress**
+- **slave-2** (developer): feature-023-p2 — 3 commits: Player Healing UI (P2). PlayerHealingPanel component with breather + healing item tabs, wired Heal button into PlayerCombatActions. → **P2-implemented, needs review**
+- **slave-3** (developer): feature-020-p2 — 8 commits: Healing Items combat integration (P2). Forfeit action fields in TurnState, checkItemRange/findTrainerForPokemon in healing-item.service, P2 combat rules in use-item endpoint, forfeit consumption in next-turn, skipInventory in store/composable, UseItemModal P2 UI with action costs/inventory/disabled states. → **P2-implemented, needs review**
+- **slave-4** (reviewers): feature-004-p0-review — 2 commits: code-review-285 **CHANGES_REQUIRED** (CRIT-001: client-side linked movement desync, HIGH-001: skipCheck dead param, HIGH-002: movementRemaining not decremented locally, MED-001/002/003: app-surface.md, duplicate speed func, mutation pattern) + rules-review-261 **APPROVED** (all 14 mechanics correct, decree-003/004 compliant). → feature-004 **P0-CHANGES_REQUIRED**
+
+**Smoke test:** PASSED
+**Tickets needing review:** feature-020 P2 (first implementation), feature-023 P2 (first implementation)
+**Tickets needing fix cycle:** feature-004 P0 (code-review-285 1C+2H+3M)
+**Rules approved:** feature-004 P0 (rules-review-261 APPROVED)
 
 ## Session Summary (2026-03-03, session 89 — plan-20260303-040754)
 
