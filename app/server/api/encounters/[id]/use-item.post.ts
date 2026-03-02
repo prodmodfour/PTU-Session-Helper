@@ -14,7 +14,7 @@
 import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse }
   from '~/server/services/encounter.service'
 import { syncHealingToDatabase } from '~/server/services/entity-update.service'
-import { applyHealingItem, validateItemApplication, getEntityDisplayName }
+import { applyHealingItem, getEntityDisplayName }
   from '~/server/services/healing-item.service'
 import { HEALING_ITEM_CATALOG } from '~/constants/healingItems'
 import { broadcastToEncounter } from '~/server/utils/websocket'
@@ -71,13 +71,7 @@ export default defineEventHandler(async (event) => {
     const user = findCombatant(combatants, body.userId)
     const target = findCombatant(combatants, body.targetId)
 
-    // Validate item can be applied to target
-    const validationError = validateItemApplication(body.itemName, target)
-    if (validationError) {
-      throw createError({ statusCode: 400, message: validationError })
-    }
-
-    // Apply item
+    // Apply item (applyHealingItem validates internally)
     const itemResult = applyHealingItem(body.itemName, target)
 
     if (!itemResult.success) {
