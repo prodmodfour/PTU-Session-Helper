@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
+import { clearMountOnRemoval } from '~/server/services/mounting.service'
 
 export default defineEventHandler(async (event) => {
   const encounterId = getRouterParam(event, 'id')
@@ -25,7 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Parse combatants and turn orders
-  const combatants = JSON.parse(encounter.combatants || '[]')
+  let combatants = JSON.parse(encounter.combatants || '[]')
   const turnOrder = JSON.parse(encounter.turnOrder || '[]')
   const trainerTurnOrder = JSON.parse(encounter.trainerTurnOrder || '[]')
   const pokemonTurnOrder = JSON.parse(encounter.pokemonTurnOrder || '[]')
@@ -41,6 +42,9 @@ export default defineEventHandler(async (event) => {
   }
 
   combatants.splice(combatantIndex, 1)
+
+  // Clear mount state on partner if the removed combatant was part of a mounted pair (feature-004)
+  combatants = clearMountOnRemoval(combatants, combatantId)
 
   // Remove from all turn orders
   const turnOrderIndex = turnOrder.indexOf(combatantId)
