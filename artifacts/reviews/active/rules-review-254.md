@@ -1,7 +1,7 @@
 ---
 review_id: rules-review-254
 review_type: rules
-reviewer: game-logic-reviewer
+reviewer: senior-reviewer
 trigger: design-implementation
 target_report: feature-020
 domain: healing
@@ -12,176 +12,126 @@ commits_reviewed:
   - 64ba1d60
   - 1ff9d7ea
   - 7d2f48f9
-  - 3f2a833f
   - fc9a8108
-mechanics_verified:
-  - potion-hp-restoration
-  - super-potion-hp-restoration
-  - hyper-potion-hp-restoration
-  - antidote-poison-cure
-  - paralyze-heal-cure
-  - burn-heal-cure
-  - ice-heal-cure
-  - awakening-sleep-cure
-  - full-heal-all-persistent-cure
-  - full-restore-combined
-  - revive-fainted-restore
-  - revival-herb-percentage-restore
-  - energy-powder-repulsive-restorative
-  - energy-root-repulsive-restorative
-  - heal-powder-repulsive-cure
-  - injury-cap-on-item-healing
-  - no-min-1-floor-for-items
-  - fainted-exclusion-from-non-revive-items
-  - status-cs-reversal-on-cure
-  - badly-poisoned-round-reset
-verdict: APPROVED
+  - 3f2a833f
+files_reviewed:
+  - app/constants/healingItems.ts
+  - app/server/services/healing-item.service.ts
+  - app/composables/useHealingItems.ts
+  - app/tests/unit/services/healing-item.service.test.ts
+verdict: CHANGES_REQUIRED
 issues_found:
   critical: 0
-  high: 0
+  high: 1
   medium: 0
-ptu_refs:
-  - core/09-gear-and-items.md#p276-basic-restoratives
-  - core/07-combat.md#p246-status-afflictions
-  - core/07-combat.md#p247-volatile-afflictions
-  - core/07-combat.md#p248-other-afflictions
-  - core/04-trainer-classes.md#apothecary-patch-cure
-  - errata-2.md#p7-affliction-techniques
-reviewed_at: 2026-03-02T14:30:00Z
+reviewed_at: 2026-03-02T15:30:00Z
 follows_up: rules-review-247
 ---
 
-## Mechanics Verified
+## Review Scope
 
-### 1. Potion HP Restoration
-- **Rule:** "Heals 20 Hit Points" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `HEALING_ITEM_CATALOG['Potion'].hpAmount = 20`, applied via `applyHealingToEntity(target, { amount: 20 })` which caps at effective max HP.
-- **Status:** CORRECT
+PTU rules correctness review of P1 healing item implementation (feature-020). Verified all healing item catalog entries against PTU 1.05 p.276 (Basic Restoratives), status cure mechanics against p.246-248 (Status Afflictions), revive mechanics against p.248 (Fainting), and injury cap against p.250 (Injuries and healing).
 
-### 2. Super Potion HP Restoration
-- **Rule:** "Heals 35 Hit Points" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `HEALING_ITEM_CATALOG['Super Potion'].hpAmount = 35`, cost $380.
-- **Status:** CORRECT
+Decree compliance verified: decree-005 (status CS auto-apply), decree-017 (effective max HP cap), decree-029 (rest healing minimum -- correctly NOT applied to items).
 
-### 3. Hyper Potion HP Restoration
-- **Rule:** "Heals 70 Hit Points" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `HEALING_ITEM_CATALOG['Hyper Potion'].hpAmount = 70`, cost $800.
-- **Status:** CORRECT
+## PTU Rule Verification
 
-### 4. Antidote (Poison Cure)
-- **Rule:** "Cures Poison" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `curesConditions: ['Poisoned', 'Badly Poisoned']`. Cost $200. Including Badly Poisoned is correct because PTU p.247 describes Badly Poisoned as an escalation of Poison ("a more severe version"), so "Cures Poison" encompasses both variants. `badlyPoisonedRound` is reset to 0 when Badly Poisoned is cured (line 212-214 of `healing-item.service.ts`).
-- **Status:** CORRECT
+### 1. Restorative Items (PTU p.276) -- CORRECT
+- **Potion** (20 HP, $200): Matches PTU exactly
+- **Super Potion** (35 HP, $380): Matches PTU exactly
+- **Hyper Potion** (70 HP, $800): Matches PTU exactly
+- **Energy Powder** (25 HP, $150, Repulsive): Matches PTU exactly
+- **Energy Root** (70 HP, $500, Repulsive): Matches PTU exactly
+- All restoratives correctly capped at effective max HP per decree-017
 
-### 5. Paralyze Heal
-- **Rule:** "Cures Paralysis" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `curesConditions: ['Paralyzed']`, cost $200. Uses `updateStatusConditions()` which auto-reverses the -4 Speed CS per decree-005. Test confirms CS reversal (test line 442-454).
-- **Status:** CORRECT
+### 2. Status Cure Items (PTU p.276) -- CORRECT (with one exception)
+- **Antidote** ($200): Cures Poison. Implementation cures both Poisoned and Badly Poisoned. PTU p.247: "Badly Poisoned is a more severe version of Poison" -- curing both under "Cures Poison" is the correct interpretation.
+- **Paralyze Heal** ($200): Cures Paralysis. Correctly reverses -4 Speed CS per decree-005.
+- **Burn Heal** ($200): Cures Burns. Correctly reverses -2 Defense CS per decree-005.
+- **Ice Heal** ($200): Cures Freezing. Correctly modeled.
+- **Full Heal** ($450): "Cures all Persistent Status Afflictions." Correctly uses `curesAllPersistent: true` which resolves to Burned, Frozen, Paralyzed, Poisoned, Badly Poisoned. Correctly does NOT cure volatile conditions (Confused, Asleep, etc.).
+- **Heal Powder** ($350, Repulsive): Same as Full Heal. Correctly modeled.
+- **Awakening** ($200): NOT IN PTU 1.05. See issue H1 below.
 
-### 6. Burn Heal
-- **Rule:** "Cures Burns" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `curesConditions: ['Burned']`, cost $200. `updateStatusConditions()` auto-reverses -2 Defense CS per decree-005. Test confirms CS reversal (test line 425-440).
-- **Status:** CORRECT
+### 3. Full Restore (PTU p.276) -- CORRECT
+- "Heals a Pokemon for 80 Hit Points and cures any Status Afflictions" ($1450)
+- Implementation: `hpAmount: 80, curesAllStatus: true` -- CORRECT
+- `curesAllStatus` resolves to all conditions except Fainted and Dead -- CORRECT interpretation. PTU "Status Afflictions" refers to Persistent and Volatile conditions (p.246-247), not the Fainted state (p.248, separate section).
+- Correctly does NOT revive from Fainted. PTU provides separate Revive items for that purpose. Matches video game behavior.
+- Application order (cure first, then heal) is correct for CS reversal consistency.
 
-### 7. Ice Heal
-- **Rule:** "Cures Freezing" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `curesConditions: ['Frozen']`, cost $200. Frozen sets evasion to 0 (per ZERO_EVASION_CONDITIONS in statusConditions.ts); evasion restoration is handled by the existing evasion recalculation on status change.
-- **Status:** CORRECT
+### 4. Revive Items (PTU p.276) -- CORRECT
+- **Revive** ($300): "Revives fainted Pokemon and sets to 20 Hit Points." Implementation: `hpAmount: 20, canRevive: true` -- CORRECT. HP correctly capped at effective max per decree-017.
+- **Revival Herb** ($350, Repulsive): "Revives Pokemon and sets to 50% Hit Points." Implementation: `healToPercent: 50, canRevive: true, repulsive: true` -- CORRECT. Floor rounding applied. Minimum 1 HP guard present (reasonable house-rule extension for extreme injury cases).
 
-### 8. Awakening (Sleep Cure)
-- **Rule:** Not explicitly in the p.276 Basic Restoratives table. However, Awakening is referenced in: (1) Apothecary Patch Cure, `core/04-trainer-classes.md` p.4207: "You create an Antidote, Paralyze Heal, Awakening, Burn Heal, Ice Heal, or Potion"; (2) PokeMart inventory, `core/11-running-the-game.md` p.3140: "Awakenings, Burn Heals, Ice Heals"; (3) errata-2.md Affliction Techniques lists all cure items but not Awakening specifically. The omission from the p.276 table appears to be a typographic/layout error in the source book, as the item is referenced normatively elsewhere in the same book.
-- **Implementation:** `curesConditions: ['Asleep', 'Bad Sleep']`, cost $200. Including Bad Sleep is correct because PTU p.247 states: "if the target is cured of Sleep, they are also cured of Bad Sleep." Since Awakening cures Sleep, Bad Sleep must also be cured. The design spec documents this rationale.
-- **Status:** CORRECT (reasonable interpretation of a rulebook table omission, supported by multiple cross-references)
+### 5. Faint Mechanics (PTU p.248) -- CORRECT
+- "When a Pokemon becomes Fainted, they are automatically cured of all Persistent and Volatile Status Conditions." The implementation correctly handles this by:
+  - Revive items only need to remove Fainted (other conditions already cleared on faint)
+  - Non-revive items correctly reject fainted targets
+  - Full Restore correctly cannot be used on fainted targets (no revive capability)
+- "Potions and other healing items may still bring a Pokemon above 0 Hit Points, but it remains Fainted for another 10 minutes." -- The implementation correctly prevents non-revive items from being used on fainted targets, which is the simpler and more practical approach for a digital tool.
 
-### 9. Full Heal
-- **Rule:** "Cures all Persistent Status Afflictions" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `curesAllPersistent: true`, cost $450. `resolveConditionsToCure()` filters against the hardcoded persistent list `['Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned']` which matches the `PERSISTENT_CONDITIONS` derived from `statusConditions.ts`. Volatile conditions (Confused, Asleep, etc.) are correctly NOT cured by Full Heal. Test confirms this (test line 183-193).
-- **Status:** CORRECT
+### 6. Item Refusal (PTU p.276) -- CORRECT
+- PTU: "Pokemon may refuse items from their Trainer." The `targetAccepts: false` mechanism correctly models this with no item consumption on refusal.
 
-### 10. Full Restore (Combined HP + Status Cure)
-- **Rule:** "Heals a Pokemon for 80 Hit Points and cures any Status Afflictions" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `category: 'combined'`, `hpAmount: 80`, `curesAllStatus: true`, cost $1450. `curesAllStatus` flag in `resolveConditionsToCure()` clears all conditions except Fainted and Dead (line 231-233 of healingItems.ts). This is correct because PTU p.248 states Fainted/Dead are "not true Status Afflictions" and "Moves, items, features, and other effects that heal Status Afflictions cannot fix these effects." Application order (cure first, then heal HP) is correct so CS reversals happen before HP healing. The Full Restore does NOT revive fainted Pokemon -- test confirms rejection (test line 674-683).
-- **Status:** CORRECT
+### 7. Status CS Effects (decree-005) -- CORRECT
+- Cure items correctly delegate to `updateStatusConditions()` which handles CS reversal with source tracking
+- Burn cure reverses -2 Defense CS
+- Paralysis cure reverses -4 Speed CS
+- Poison cure reverses -2 Special Defense CS
+- `badlyPoisonedRound` counter correctly reset to 0 when Badly Poisoned is cured
+- Test suite verifies CS reversal for Burn, Paralysis, and Full Heal (all persistent)
 
-### 11. Revive
-- **Rule:** "Revives fainted Pokemon and sets to 20 Hit Points" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `category: 'revive'`, `hpAmount: 20`, `canRevive: true`, cost $300. `applyReviveItem()` explicitly removes Fainted from `statusConditions`, then sets `currentHp = Math.min(item.hpAmount, effectiveMax)`. HP is capped at effective max HP (respecting injury cap per decree-017). Does NOT go through `applyHealingToEntity` to avoid double Fainted-removal logic. Test confirms 20 HP restoration (test line 526-538) and cap at effective max when injuries reduce it below 20 (test line 541-555).
-- **Status:** CORRECT
+### 8. Injury Cap on Healing (decree-017) -- CORRECT
+- All HP healing (restoratives, combined, revives) correctly uses `getEffectiveMaxHp(maxHp, injuries)` to cap healing at injury-reduced max
+- Test verifies injury cap on Potion validation (2 injuries reducing max from 45 to 35)
+- Revive caps at effective max: `Math.min(item.hpAmount, effectiveMax)`
+- Revival Herb uses `Math.floor(effectiveMax * 0.5)`
 
-### 12. Revival Herb
-- **Rule:** "Revives Pokemon and sets to 50% Hit Points - Repulsive" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `category: 'revive'`, `healToPercent: 50`, `canRevive: true`, `repulsive: true`, cost $350. `applyReviveItem()` computes `Math.max(1, Math.floor(effectiveMax * 50 / 100))` for the HP amount. The `Math.max(1, ...)` ensures at least 1 HP is restored. This is a reasonable safeguard for edge cases where `floor(effectiveMax * 0.5) = 0` (e.g., a Pokemon with heavily injury-reduced effective max HP). Note: per decree-029, the min-1 floor applies to rest healing only, NOT items. However, this specific case is about a revive item that is supposed to restore to "50% Hit Points" -- setting a revived Pokemon to 0 HP would be nonsensical (it would immediately re-faint). The `Math.max(1, ...)` here is a correctness guard, not a violation of decree-029.
-- **Status:** CORRECT
+### 9. Rest Healing Minimum NOT Applied to Items (decree-029) -- CORRECT
+- decree-029 establishes minimum 1 HP for rest healing. The ruling explicitly states "rest healing has a minimum of 1 HP" -- this applies to the rest healing formula, not to items. Items heal their stated amounts, and if the effective max is low, the item simply heals less. The implementation correctly does NOT apply a universal minimum 1 HP to all items (only Revival Herb has a minimum 1 guard for the edge case of extremely high injuries with percentage-based healing).
 
-### 13. Energy Powder (Repulsive Restorative)
-- **Rule:** "Heals 25 Hit Points - Repulsive" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `hpAmount: 25`, `repulsive: true`, cost $150.
-- **Status:** CORRECT
+## Issues
 
-### 14. Energy Root (Repulsive Restorative)
-- **Rule:** "Heals 70 Hit Points - Repulsive" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `hpAmount: 70`, `repulsive: true`, cost $500.
-- **Status:** CORRECT
+### HIGH
 
-### 15. Heal Powder (Repulsive All-Persistent Cure)
-- **Rule:** "Cure all Persistent Status Afflictions - Repulsive" (`core/09-gear-and-items.md#p276`)
-- **Implementation:** `curesAllPersistent: true`, `repulsive: true`, cost $350.
-- **Status:** CORRECT
+**H1: Awakening item not in PTU 1.05 rulebook**
 
-### 16. Injury Cap on Item Healing (decree-017)
-- **Rule:** Per decree-017: "The injury HP cap (p.250) is universal and cannot be bypassed by any healing source." Each injury reduces effective max HP by 1/10th.
-- **Implementation:** All HP healing flows through `applyHealingToEntity()` which calls `getEffectiveMaxHp(maxHp, injuries)` and caps HP at the result. For revive items, `applyReviveItem()` independently computes `effectiveMax` and applies `Math.min(hpAmount, effectiveMax)`. Both paths correctly enforce the injury cap. Test confirms injury cap on Revive (test line 541-555) and Revival Herb (test line 587-600).
-- **Status:** CORRECT
+File: `app/constants/healingItems.ts`, lines 107-113
 
-### 17. No Min-1 HP Floor for Items (decree-029)
-- **Rule:** Per decree-029: "Rest healing has a minimum of 1 HP" -- but explicitly scoped to rest healing. Items can heal 0 if at effective max HP.
-- **Implementation:** The healing item service does NOT apply any min-1 floor to HP healing amounts. Validation rejects items when target is at full HP (returns error), so the 0-heal case is prevented by validation rather than by a floor. Revive items have a `Math.max(1, ...)` for the percentage-based Revival Herb, but this is a separate concern (preventing a revive that would set HP to 0, which would immediately re-faint the Pokemon -- a logical impossibility, not a healing floor).
-- **Status:** CORRECT
+The PTU 1.05 p.276 Basic Restoratives table lists exactly 14 items. There is no "Awakening" in this list. The PTU approach to curing Sleep is:
+1. Full Heal ($450) -- cures all Persistent conditions. However, Asleep is volatile (PTU p.247), so Full Heal intentionally does NOT cure Sleep.
+2. Full Restore ($1450) -- cures "any Status Afflictions" including volatiles. This DOES cure Sleep.
+3. Save checks -- Pokemon can attempt DC 16 check at start of turn (PTU p.247).
+4. Taking damage -- "Sleep is cured if the sleeping target takes damage" (PTU p.247).
 
-### 18. Fainted Exclusion from Non-Revive Items
-- **Rule:** PTU p.248: "Potions and other healing items may still bring a Pokemon above 0 Hit Points, but it remains Fainted for another 10 minutes." However, the p.276 table defines specific items: Revive/Revival Herb explicitly revive, while potions/cures are used on active (non-fainted) targets. PTU p.248 also says "items, features, and other effects that heal Status Afflictions cannot fix [Fainted/Dead]."
-- **Implementation:** `validateItemApplication()` blocks non-revive items on fainted targets (line 59-61): "Cannot use {item.name} on a fainted target." Revive items require fainted status (line 51-57). Full Restore with `curesAllStatus` correctly excludes Fainted and Dead from the cure list (line 232 of healingItems.ts). This is a reasonable interpretation -- in-combat, the system enforces that only Revive items work on fainted Pokemon. The p.248 text about Potions on fainted Pokemon describes a specific edge case (out-of-combat or special circumstances), which the GM can handle via the raw heal endpoint if needed.
-- **Status:** CORRECT
+The absence of a cheap targeted sleep cure in PTU 1.05 is a deliberate design choice. Sleep is intended to be harder to cure with items than persistent conditions (which have cheap targeted cures). Adding Awakening at $200 fundamentally changes the PTU item economy around Sleep.
 
-### 19. Status CS Reversal on Cure (decree-005)
-- **Rule:** Per decree-005: "When Burn is cured, reverse only the Burn-sourced stages." Auto-apply/reverse CS effects for Burn (-2 Def), Paralysis (-4 Spd), Poison (-2 SpDef).
-- **Implementation:** `applyCureEffects()` calls `updateStatusConditions(target, [], conditionsToCure)` which handles CS reversal via decree-005 source tracking in `combatant.service.ts`. Tests verify CS reversal for Burn Heal (defense -2 to 0, test line 425-440), Paralyze Heal (speed -4 to 0, test line 442-454), Full Heal (multiple conditions, test line 475-496), and Full Restore (combined cure + heal, test line 631-672).
-- **Status:** CORRECT
+The Awakening exists in the Pokemon video games but was not included in PTU 1.05's item catalog. The developer's implementation log claims it was "referenced in spec section F item list" but section F of spec-p1.md does not mention Awakening, and the shared-specs canonical item table (14 items) does not include it.
 
-### 20. Badly Poisoned Round Reset
-- **Rule:** When Badly Poisoned is cured, the escalating damage counter should reset. PTU p.246: Badly Poisoned damage increases each round. Curing and re-poisoning should start the counter fresh.
-- **Implementation:** `applyCureEffects()` resets `target.badlyPoisonedRound = 0` when `conditionsToCure.includes('Badly Poisoned')` (line 212-214). The combined item path also handles this via `applyCureEffects()`. Tests verify: Antidote (test line 412-422), Full Restore (test line 721-731).
-- **Status:** CORRECT
+Required resolution: Either remove Awakening from the catalog (aligning with PTU 1.05 and the design spec), or file a `decree-need` ticket for human ruling on whether to include this as a house-rule extension. Non-PTU items require explicit human authorization.
 
-## Summary
+## What Looks Good
 
-All 16 PTU healing items in the P1 catalog have been verified against the rulebook. Every HP amount, cost, condition cure target, and behavioral flag matches the PTU 1.05 p.276 Basic Restoratives table (with one justified exception: Awakening is not in the p.276 table but is referenced normatively in Chapters 4 and 11). The implementation correctly:
+1. **All 14 PTU items correctly modeled**: Every item in the PTU 1.05 p.276 Basic Restoratives table has accurate HP amounts, condition targets, costs, and categories.
 
-1. **HP healing values** match PTU exactly: Potion 20, Super Potion 35, Hyper Potion 70, Full Restore 80, Energy Powder 25, Energy Root 70, Revive 20, Revival Herb 50%.
-2. **Costs** match PTU exactly for all 16 items.
-3. **Status cure targets** match PTU: each item cures only its designated conditions. Full Heal cures persistent only. Full Restore cures persistent + volatile (not Fainted/Dead). Awakening cures Sleep + Bad Sleep per PTU p.247 linkage.
-4. **Injury cap** (decree-017) is enforced on all healing paths.
-5. **No min-1 HP floor** on items (decree-029 scoped to rest only).
-6. **CS auto-reversal** (decree-005) via `updateStatusConditions()`.
-7. **Fainted/Dead exclusion** from `curesAllStatus` per PTU p.248.
-8. **Repulsive flag** correctly set on Energy Powder, Energy Root, Heal Powder, Revival Herb.
-9. **Revive validation** correctly requires Fainted status; non-revive items reject Fainted targets.
-10. **Full Restore application order** (cure first, then heal) ensures CS effects are reversed before HP is applied.
+2. **Persistent vs Volatile distinction correct**: Full Heal correctly targets only persistent conditions. Full Restore correctly targets all status afflictions (both persistent and volatile, excluding Fainted/Dead). This distinction is critical to PTU rules and is implemented precisely.
 
-## Rulings
+3. **Antidote covers Badly Poisoned**: The interpretation that Antidote cures both Poisoned and Badly Poisoned (since Badly Poisoned is a "more severe version of Poison" per PTU p.247) is the correct PTU reading.
 
-No new rulings needed. All mechanics are clearly specified by PTU RAW or existing decrees.
+4. **Full Restore does not revive**: The distinction between Full Restore (heals + cures status, but not Fainted) and Revive (specifically removes Fainted) matches both PTU item descriptions and video game behavior. "Status Afflictions" in PTU p.276 refers to Persistent and Volatile conditions, not the Fainted state.
 
-**Applicable decrees verified:**
-- decree-005 (Status CS auto-apply/reverse): Correctly integrated via `updateStatusConditions()`.
-- decree-017 (Injury cap on all healing): Correctly enforced on all HP healing paths.
-- decree-029 (Min-1 HP for rest only, NOT items): Correctly NOT applied to item healing.
-- decree-038 (Sleep persistence/behavior flags): Awakening correctly cures both Asleep and Bad Sleep.
+5. **Decree compliance is thorough**: decree-005 CS reversal, decree-017 effective max HP cap, and decree-029 rest minimum (correctly NOT applied to items) are all properly respected.
+
+6. **Repulsive flag correctly deferred**: PTU p.276 says repulsive medicines "decrease a Pokemon's loyalty with repeated use." Since loyalty is not tracked, the flag is stored and displayed without mechanical effect. This is the correct approach.
+
+7. **Test coverage verifies PTU mechanics**: The test suite includes specific verification of CS reversal per decree-005, injury cap per decree-017, Revival Herb percentage rounding, and Full Restore condition curing order.
 
 ## Verdict
 
-**APPROVED** -- 0 issues found. All 20 mechanics verified against PTU 1.05 rulebook, errata, and active decrees. The healing item catalog, service logic, validation, and cure resolution all correctly implement PTU rules. Test coverage (748 lines) exercises all item categories, edge cases (injury cap, CS reversal, Badly Poisoned reset, Full Restore on fainted rejection), and confirms expected behavior.
+**CHANGES_REQUIRED**
 
-## Required Changes
+One rules issue requires resolution:
+- **H1**: Awakening item is not in PTU 1.05. Must be removed or authorized via decree. This is a house-rule-level addition that changes PTU's intended item balance around Sleep curing.
 
-None.
+All other 14 PTU items are correctly implemented with verified PTU page references. Status cure mechanics, revive logic, Full Restore behavior, faint mechanics, injury caps, and decree compliance are all verified correct.
