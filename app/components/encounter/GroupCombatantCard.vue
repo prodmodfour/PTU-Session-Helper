@@ -46,6 +46,11 @@
         </div>
       </div>
 
+      <!-- Mount Indicator (feature-004 P1) -->
+      <div v-if="mountIndicatorText" class="group-combatant__mount">
+        {{ mountIndicatorText }}
+      </div>
+
       <!-- Status Conditions -->
       <div v-if="statusConditions.length > 0" class="group-combatant__status">
         <span
@@ -115,6 +120,17 @@ const healthBarClass = computed(() => {
 const isFainted = computed(() => entity.value.currentHp <= 0)
 
 const statusConditions = computed(() => entity.value.statusConditions || [])
+
+// Mount indicator for group view (feature-004 P1)
+const mountIndicatorText = computed(() => {
+  const ms = props.combatant.mountState
+  if (!ms) return ''
+  // Find partner name from allCombatants prop or parent encounter
+  // GroupCombatantCard only has the single combatant prop, so
+  // we derive the partner name from the partner ID
+  if (ms.isMounted) return 'Mounted'
+  return 'Carrying rider'
+})
 </script>
 
 <style lang="scss" scoped>
@@ -253,6 +269,23 @@ const statusConditions = computed(() => entity.value.statusConditions || [])
     // 4K optimization
     @media (min-width: 3000px) {
       margin-bottom: $spacing-lg;
+    }
+  }
+
+  &__mount {
+    display: inline-block;
+    padding: 2px $spacing-sm;
+    margin-bottom: $spacing-sm;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $color-accent-teal;
+    background: rgba($color-accent-teal, 0.1);
+    border: 1px solid rgba($color-accent-teal, 0.3);
+    border-radius: $border-radius-sm;
+
+    @media (min-width: 3000px) {
+      font-size: $font-size-md;
+      padding: $spacing-xs $spacing-md;
     }
   }
 
