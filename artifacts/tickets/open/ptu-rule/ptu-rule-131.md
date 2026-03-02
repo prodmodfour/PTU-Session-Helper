@@ -22,7 +22,7 @@ The Poke Ball check should call `calculateAccuracyThreshold(6, trainerAccuracySt
 
 This is a pre-existing gap identified during the bug-043 review (AC 6 enforcement fix). The bug-043 fix correctly scoped to just enforcing the AC 6 threshold. Unifying with the central utility is a separate concern.
 
-**Blocked by decree-need-041:** Whether Poke Ball throws (item use as "AC 6 Status Attack Roll", NOT a Move) should apply target evasion and attacker accuracy stages. If the decree rules "flat check only", this ticket becomes a smaller refactor (use the utility with evasion=0, accuracyStage=0). If the decree rules "apply modifiers", the full utility integration applies.
+**decree-042 resolved:** Poke Ball throws use the full accuracy system — thrower's accuracy stages, target's Speed Evasion, flanking penalties, and rough terrain modifiers all apply. This means the full utility integration is required with real modifier values, not zeros.
 
 ## Current State (two separate systems)
 
@@ -33,8 +33,9 @@ This is a pre-existing gap identified during the bug-043 review (AC 6 enforcemen
 
 - PTU p.236: "An Accuracy Roll is always simply 1d20, but is modified by the user's Accuracy and by certain Moves and other effects."
 - PTU p.214: Poke Ball throws are "AC6 Status Attack Roll"
-- PTU p.234: "Evasion helps Pokemon avoid being hit by moves" — Poke Ball throws are NOT moves
-- rules-review-257 observation: Community convention treats AC 6 as a flat check
+- PTU ch9 p.271: "Resolve the attack like you would any other."
+- PTU ch9 p.1810 (Snag Machine): "-2 penalty on all Poke Ball attack rolls" — confirms Poke Ball throws are modifiable attack rolls
+- **decree-042**: Full accuracy system applies (accuracy stages, Speed Evasion, flanking, terrain)
 
 ## Affected Files
 
@@ -43,10 +44,10 @@ This is a pre-existing gap identified during the bug-043 review (AC 6 enforcemen
 
 ## Suggested Fix
 
-1. Await decree-need-041 ruling on evasion/accuracy applicability
-2. Refactor `rollAccuracyCheck()` to call `calculateAccuracyThreshold(6, accuracyStage, evasion)` with parameters determined by the decree
-3. Update server-side validation to use the same threshold calculation
-4. If modifiers apply: accept combatant data (accuracy stage, target speed evasion) as parameters
+1. Refactor `rollAccuracyCheck()` to call `calculateAccuracyThreshold(6, trainerAccuracyStage, targetSpeedEvasion)` with real modifier values
+2. Pass thrower's accuracy combat stages and target's Speed Evasion into the capture flow
+3. Apply flanking and rough terrain penalties consistent with the move accuracy system
+4. Update server-side validation in `capture/attempt.post.ts` to mirror the same threshold calculation
 
 ## Impact
 
