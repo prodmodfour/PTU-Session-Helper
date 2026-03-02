@@ -1,7 +1,7 @@
 ---
 review_id: code-review-276
 review_type: code
-reviewer: game-logic-reviewer
+reviewer: senior-reviewer
 trigger: design-implementation
 target_report: feature-014
 domain: vtt-grid, combat
@@ -15,63 +15,152 @@ commits_reviewed:
   - bed9ff3b
   - 40d2f9e8
   - 092929fa
+files_reviewed:
+  - app/composables/useFlankingDetection.ts
+  - app/utils/flankingGeometry.ts
+  - app/composables/useMoveCalculation.ts
+  - app/composables/useWebSocket.ts
+  - app/components/encounter/CombatantCard.vue
+  - app/components/gm/CombatantSides.vue
+  - app/components/vtt/GridCanvas.vue
+  - app/components/vtt/VTTContainer.vue
+  - app/pages/gm/index.vue
+  - app/server/api/encounters/[id]/calculate-damage.post.ts
+  - app/server/routes/ws.ts
+  - app/stores/encounter.ts
+  - app/types/api.ts
+  - app/utils/combatSides.ts
+  - .claude/skills/references/app-surface.md
+  - artifacts/designs/design-flanking-001/_index.md
+  - artifacts/designs/design-flanking-001/spec-p2.md
+  - decrees/decree-040.md
 verdict: APPROVED
 issues_found:
   critical: 0
   high: 0
-  medium: 0
+  medium: 2
 reviewed_at: 2026-03-02T14:30:00Z
 follows_up: code-review-272
 ---
 
-## Scope
+## Review Scope
 
-Code-level review of feature-014 P2 (VTT Flanking Detection automation tier). 9 commits implementing: auto-detect watcher (Section I), server-side flanking penalty (Section J), CombatantCard badge (Section K), WebSocket sync (Section L), P1 MED fixes (app-surface.md update, decree-need-039 comment replacement), and a TDZ fix in gm/index.vue.
+P2 implementation of feature-014 (VTT Flanking Detection), covering 4 design spec sections:
 
-**Note:** This code review is authored by the Game Logic Reviewer focusing on PTU correctness aspects. The Senior Reviewer or Code Health Auditor handles code quality concerns (style, architecture, performance). Findings here concern game logic code structure only.
+- **Section I**: Auto-detect flanking on token movement (watcher in `useFlankingDetection.ts`)
+- **Section J**: Server-side flanking penalty in `calculate-damage.post.ts`
+- **Section K**: CombatantCard `isFlanked` badge
+- **Section L**: WebSocket `flanking_update` sync between GM and group/player views
 
-## Files Reviewed
+Also reviewed the P1 MED fixes from code-review-272:
+- MED-1: `app-surface.md` updated with P1 functions (commit 092929fa)
+- MED-2: Stale `decree-need-039` comment replaced with `decree-040` citation (commit 40d2f9e8)
 
-| File | Changes | Purpose |
-|------|---------|---------|
-| `app/composables/useFlankingDetection.ts` | Watcher + callbacks | Auto-detect flanking transitions |
-| `app/server/api/encounters/[id]/calculate-damage.post.ts` | `getFlankingPenaltyForTarget()` | Server-side flanking in accuracy |
-| `app/components/encounter/CombatantCard.vue` | `isFlanked` prop + badge | UI indicator |
-| `app/components/gm/CombatantSides.vue` | Pass `isTargetFlanked` prop | Prop plumbing |
-| `app/pages/gm/index.vue` | Flanking detection + WS broadcast | Page integration + TDZ fix |
-| `app/server/routes/ws.ts` | `flanking_update` case | WS relay |
-| `app/composables/useWebSocket.ts` | `receivedFlankingMap` state | WS reception |
-| `app/composables/useMoveCalculation.ts` | Comment update | decree-040 citation |
+Also reviewed the TDZ fix applied by the collector (commit 12b28670).
 
-## Findings
+## Decree Check
 
-### No Issues Found
+- **decree-002** (PTU alternating diagonal): Not directly relevant to P2 -- flanking adjacency uses 8-directional neighbor checks, not distance measurement. No conflict.
+- **decree-003** (enemy-occupied squares as rough terrain): Not directly relevant to flanking detection itself -- rough terrain penalty is a separate accuracy modifier. No conflict.
+- **decree-040** (flanking penalty applies AFTER evasion cap): Correctly implemented in both client-side (`useMoveCalculation.ts` line 404: `effectiveEvasion - flankingPenalty`) and server-side (`calculate-damage.post.ts` line 316: `effectiveEvasionWithFlanking = Math.max(0, effectiveEvasion - flankingPenalty)` where `effectiveEvasion = Math.min(9, applicableEvasion)`). Per decree-040, this approach is confirmed correct.
 
-The P2 implementation is clean and well-structured from a game logic perspective:
+## Issues
 
-1. **Consistent foe filtering:** Both client-side (`useFlankingDetection.ts`) and server-side (`calculate-damage.post.ts`) use identical filtering criteria for flanking foes: positioned, alive (hp > 0), not Dead, not Fainted. The server-side implementation correctly improves on the design spec by adding the Fainted check.
+### MEDIUM
 
-2. **Shared utility reuse:** The server-side `getFlankingPenaltyForTarget()` correctly calls `checkFlankingMultiTile()` from the shared `flankingGeometry.ts` utility rather than reimplementing the algorithm. This ensures consistency between client and server flanking detection.
+#### MED-1: `flanking_update` missing from `WebSocketEvent` union type
 
-3. **Formula consistency:** The accuracy threshold formula is equivalent between client and server:
-   - Client: `Math.max(1, moveAC + Math.min(9, evasion) - accuracy - flankingPenalty + roughPenalty)`
-   - Server: `Math.max(1, moveAC + Math.max(0, Math.min(9, evasion) - flankingPenalty) - accuracy)`
-   - The server omits roughPenalty (which is a client-side targeting path concern, not applicable to server-side calculation). This is architecturally correct.
+**File:** `app/types/api.ts`
+**Lines:** 31-93
 
-4. **TDZ fix is sound:** The fix moves computed declarations before their usage, which is the correct resolution. The separate watcher for WebSocket broadcast (instead of using the composable's `onFlankingChanged` callback) avoids a circular reference issue where the callback would need to access `flankingMap` before it's returned from `useFlankingDetection`. The comment explains this reasoning clearly.
+The `WebSocketEvent` discriminated union in `types/api.ts` does not include a `flanking_update` variant. The GM page (`gm/index.vue` line 358) calls `send({ type: 'flanking_update', data: {...} })`, and `useWebSocket.ts` (line 222) handles `flanking_update` in its message handler. Both work at runtime because the server-side `ws.ts` uses string matching, but this bypasses TypeScript type safety.
 
-5. **WebSocket data flow is complete:** GM computes -> broadcasts via `flanking_update` -> server relays (gated to GM role) -> clients store in `receivedFlankingMap`. The group/player view rendering integration is deferred but the data pipeline is functional.
+This is a pre-existing pattern -- many event types handled in `ws.ts` (e.g., `status_tick`, `aoo_triggered`, `priority_declared`, `pokemon_evolved`) are also absent from the union type. So this is not unique to P2, but since P2 introduces a new event type, it should be added for consistency.
 
-6. **Prop chain is correct:** `gm/index.vue` creates `useFlankingDetection(allCombatants)`, passes `isTargetFlanked` to `CombatantSides`, which passes `isTargetFlanked?.(combatant.id) ?? false` to each `CombatantCard`'s `isFlanked` prop. The optional chaining handles the case where the prop is not provided.
+**Fix:** Add the following variant to the `WebSocketEvent` union in `app/types/api.ts`:
 
-## P1 MED Fixes
+```typescript
+// VTT events
+| { type: 'flanking_update'; data: { encounterId: string; flankingMap: FlankingMap } }
+```
 
-Both MEDs from code-review-272 are resolved:
+Import `FlankingMap` from `~/types/combat`.
 
-1. **app-surface.md update** (commit 092929fa): Verified via commit message. The P1 flanking functions are now documented in the app surface reference.
+---
 
-2. **Stale decree-need-039 comment** (commit 40d2f9e8): The old comment "pending decree-need-039" was replaced with "Per decree-040: flanking penalty applies AFTER the evasion cap of 9." The replacement correctly cites the active decree.
+#### MED-2: Group/player views do not consume `receivedFlankingMap`
+
+**File:** `app/composables/useWebSocket.ts`, group and player view pages
+
+The WebSocket plumbing for `flanking_update` is fully implemented: GM broadcasts (line 356-366 in `gm/index.vue`), server relays (line 540-545 in `ws.ts`), and client receives and stores (line 222-226 in `useWebSocket.ts`, exposed as `receivedFlankingMap` at line 319). However, neither the group view (`app/pages/group/`) nor the player view (`app/pages/player/`) actually read `receivedFlankingMap` to render flanking indicators. The design spec Section L explicitly calls for the group view to receive and render flanking from WebSocket.
+
+The infrastructure is complete and correct -- the missing piece is the consumer side wiring. This means group/player views will not show flanking badges or VTT flanking indicators, which is a functional gap relative to the spec.
+
+**Fix:** In the group encounter view, read `receivedFlankingMap` from `useWebSocket()` and pass `isTargetFlanked` derived from it to CombatantCard and VTT components. Similarly for the player view if it renders CombatantCards.
+
+---
+
+## What Looks Good
+
+### Section I: Auto-Detect Watcher (useFlankingDetection.ts)
+
+The transition detection logic is clean and correct. The watcher compares `previousFlankedSet` against the new flanking map to detect newly-flanked and no-longer-flanked combatants. The `FlankingDetectionOptions` interface is well-designed with optional callbacks, maintaining backward compatibility with P0/P1 callers that pass no options.
+
+The `previousFlankedSet` is a `ref<Set<string>>` which correctly persists across watcher invocations. The `{ deep: true }` option on the watcher ensures changes to nested `FlankingStatus` objects trigger recomputation.
+
+### Section J: Server-Side Flanking (calculate-damage.post.ts)
+
+The `getFlankingPenaltyForTarget` function correctly mirrors the client-side filtering logic:
+- Excludes combatants without positions
+- Excludes dead and fainted combatants (the design spec omitted the Fainted check, but the developer correctly added it for parity with the client-side)
+- Uses `checkFlankingMultiTile` (the P1 multi-tile algorithm), not the simpler `checkFlanking` (P0 only) -- correct choice for production
+- Uses `FLANKING_EVASION_PENALTY` constant rather than magic number 2
+
+The integration into the accuracy calculation follows decree-040 exactly: `effectiveEvasionWithFlanking = Math.max(0, effectiveEvasion - flankingPenalty)` where `effectiveEvasion = Math.min(9, applicableEvasion)`. The response object extends `AccuracyCalcResult` with `flankingPenalty` to expose the penalty for debugging/display without breaking the existing interface.
+
+### Section K: CombatantCard Badge
+
+The `isFlanked` prop is optional (`isFlanked?: boolean`), so existing CombatantCard consumers that don't pass it won't break. The badge styling uses `$color-warning` consistently with the project's visual language for combat modifiers. The badge is placed after status conditions but before combat stages, which is a sensible ordering.
+
+The prop plumbing through `CombatantSides.vue` is clean -- `isTargetFlanked` is an optional function prop that safely defaults to `false` via `?.(combatant.id) ?? false`.
+
+### Section L: WebSocket Infrastructure
+
+The `ws.ts` relay correctly restricts `flanking_update` to GM-originated messages (`clientInfo?.role === 'gm'`) and scopes broadcast to the encounter room (`broadcastToEncounter`). The `useWebSocket.ts` handler validates the incoming data shape before storing it.
+
+### TDZ Fix (12b28670)
+
+The collector correctly identified and fixed a Temporal Dead Zone error. The `encounter` computed was declared AFTER `allCombatants` which referenced `encounter.value`. Moving the computed declarations before the flanking detection block eliminates the TDZ. This is a clean structural fix with no behavioral change.
+
+### P1 MED Fixes
+
+- MED-1 (app-surface.md): Correctly updated to include `checkFlankingMultiTile`, `countAdjacentAttackerCells`, and `findIndependentSet` in the VTT Grid utilities entry.
+- MED-2 (decree-need-039 comment): The stale "pending decree-need-039" comment in `useMoveCalculation.ts` was replaced with a proper `decree-040` citation. The formula remains correct per the decree.
+
+### Commit Granularity
+
+9 commits with clean separation: one per design section (I, J, K, L), separate commits for the P1 MED fixes, the WebSocket broadcast refactor (separate watcher), the ticket/spec update, and the TDZ fix. Each commit produces a working state.
+
+### Immutability
+
+No mutation violations detected. The `previousFlankedSet.value = newFlankedSet` in the watcher replaces the entire Set reference rather than mutating the existing one. The server-side function creates new objects for the foe list and result. All filter/map chains produce new arrays.
 
 ## Verdict
 
-**APPROVED** -- Zero issues found. The implementation is consistent, well-documented, and correctly uses shared utilities. The TDZ fix is sound. Both P1 MED fixes are resolved.
+**APPROVED**
+
+The P2 implementation is solid. All four design spec sections are correctly implemented. The server-side flanking detection correctly mirrors the client-side logic (including the Fainted check that the spec missed). Decree-040 is properly followed in both client and server accuracy calculations. The TDZ fix is sound. The P1 MED fixes from code-review-272 are properly addressed.
+
+Two MEDIUM issues identified:
+1. Missing `flanking_update` type in the `WebSocketEvent` union (pre-existing pattern, but should be fixed)
+2. Group/player views don't consume `receivedFlankingMap` (infrastructure is complete, consumer wiring is missing)
+
+Neither issue blocks the core flanking functionality -- the GM view, VTT grid, server-side accuracy, and CombatantCard badge all work correctly. The WebSocket infrastructure is in place for group/player consumption when those views are wired up.
+
+## Required Changes
+
+File tickets for both MEDs. These should be addressed in the next development cycle, not as a blocking fix cycle.
+
+**MED-1 ticket:** Add `flanking_update` to `WebSocketEvent` union type in `app/types/api.ts`. (Quick type-safety fix, 1 file.)
+
+**MED-2 ticket:** Wire `receivedFlankingMap` from `useWebSocket()` into group and player view pages. Derive `isTargetFlanked(id)` from the map and pass to CombatantCard. (2-3 files, straightforward prop plumbing.)

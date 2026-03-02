@@ -1,7 +1,7 @@
 ---
 review_id: rules-review-252
 review_type: rules
-reviewer: game-logic-reviewer
+reviewer: senior-reviewer
 trigger: design-implementation
 target_report: feature-014
 domain: vtt-grid, combat
@@ -15,150 +15,108 @@ commits_reviewed:
   - bed9ff3b
   - 40d2f9e8
   - 092929fa
-mechanics_verified:
-  - flanking-detection-auto-watcher
-  - flanking-evasion-penalty-server-side
-  - flanking-evasion-penalty-client-side
-  - flanking-foe-filtering
-  - flanking-decree-040-compliance
-  - flanking-decree-003-interaction
-  - combatant-card-flanking-indicator
-  - websocket-flanking-sync
-  - tdz-fix-gm-index
+files_reviewed:
+  - app/composables/useFlankingDetection.ts
+  - app/utils/flankingGeometry.ts
+  - app/composables/useMoveCalculation.ts
+  - app/server/api/encounters/[id]/calculate-damage.post.ts
+  - app/components/encounter/CombatantCard.vue
+  - app/pages/gm/index.vue
+  - app/server/routes/ws.ts
+  - app/composables/useWebSocket.ts
 verdict: APPROVED
 issues_found:
   critical: 0
   high: 0
   medium: 0
-ptu_refs:
-  - core/07-combat.md#page-232
-  - core/07-combat.md#page-234
-reviewed_at: 2026-03-02T14:30:00Z
+reviewed_at: 2026-03-02T14:35:00Z
 follows_up: rules-review-248
 ---
 
-## Mechanics Verified
+## Review Scope
 
-### 1. Flanking Detection (Auto-Watcher, Section I)
+PTU rules compliance review for P2 of feature-014 (VTT Flanking Detection). P2 adds:
+- Auto-detection of flanking state on token movement (Section I)
+- Server-side flanking penalty in the `calculate-damage` endpoint (Section J)
+- CombatantCard flanking indicator badge (Section K)
+- WebSocket flanking state sync (Section L)
 
-- **Rule:** "When a combatant is Flanked by foes, they take a -2 penalty to their Evasion." (`core/07-combat.md#page-232`)
-- **Implementation:** `useFlankingDetection.ts` (lines 147-175) adds a `watch(flankingMap, ...)` that detects flanking state transitions by comparing the current set of flanked combatant IDs against a `previousFlankedSet`. When a combatant transitions to flanked (newly in the set) or un-flanked (removed from the set), the `onFlankingChanged` callback fires. The watcher also invokes the `render` callback to trigger VTT re-rendering.
-- **Verification:** The watcher correctly monitors the reactive `flankingMap` computed property, which recomputes whenever combatant positions change. The `{ deep: true }` option ensures nested property changes (flankerIds, effectiveFoeCount) trigger the watcher. The change detection logic (set difference between previous and current) correctly identifies transitions in both directions. The P0/P1 `checkFlankingMultiTile` function that powers the computed is unchanged and was previously verified correct in rules-review-248.
-- **Status:** CORRECT
+The core flanking geometry (P0) and multi-tile support (P1) were approved in rules-review-230 and rules-review-248 respectively. This review focuses on whether P2 automation correctly applies the rules already validated.
 
-### 2. Foe Filtering (Alive/Dead/Fainted)
+## PTU Rules Verified
 
-- **Rule:** PTU p.232 says flanking requires "foes" adjacent -- implying active combatants capable of threatening the target. Dead and fainted combatants cannot threaten.
-- **Implementation (client):** `useFlankingDetection.ts` (lines 71-77) filters combatants with `hp > 0 && !isDead && !isFainted`. Both `Dead` and `Fainted` status conditions are checked, and `currentHp > 0` is required.
-- **Implementation (server):** `calculate-damage.post.ts` (lines 137-143) applies the same filter: `hp > 0 && !isDead && !isFainted`.
-- **Verification:** Both client and server use identical filtering criteria. The server implementation improves on the design spec (which only checked `!isDead`) by also filtering `Fainted` combatants. This is correct per PTU -- fainted combatants cannot take actions and should not contribute to flanking.
-- **Status:** CORRECT
+### PTU p.232: Flanking Evasion Penalty (-2)
 
-### 3. Server-Side Flanking Penalty (Section J)
+> "When a combatant is Flanked by foes, they take a -2 penalty to their Evasion."
 
-- **Rule:** "When a combatant is Flanked by foes, they take a -2 penalty to their Evasion." (`core/07-combat.md#page-232`)
-- **Implementation:** `calculate-damage.post.ts` (lines 127-157) defines `getFlankingPenaltyForTarget()` which filters combatants to alive, positioned foes using `isEnemySide()`, then calls `checkFlankingMultiTile()` from the shared `flankingGeometry.ts` utility. Returns `FLANKING_EVASION_PENALTY` (2) if flanked, 0 otherwise.
-- **Verification:** The function correctly uses the same multi-tile-aware `checkFlankingMultiTile` that was approved in P1. It filters to the correct set of foes (positioned, alive, enemy-side). The penalty value of 2 matches PTU p.232.
-- **Status:** CORRECT
+**Server-side implementation** (`calculate-damage.post.ts`): The `getFlankingPenaltyForTarget` function computes flanking using `checkFlankingMultiTile` from `flankingGeometry.ts` (the full P1 multi-tile algorithm). It returns `FLANKING_EVASION_PENALTY` (2) when the target is flanked, applied as `effectiveEvasionWithFlanking = Math.max(0, effectiveEvasion - flankingPenalty)`.
 
-### 4. Decree-040 Compliance (Flanking After Evasion Cap)
+**Correctness:** The -2 penalty is correctly applied to ALL evasion types (Physical, Special, Speed) because it is applied to the `effectiveEvasion` value, which is already the `Math.max` of the applicable evasion type and Speed evasion. Per PTU p.232, flanking reduces "their Evasion" (all types), so applying it after the best-evasion selection is correct -- whichever evasion the defender chooses, it is reduced by 2.
 
-- **Rule (decree-040):** "The flanking -2 evasion penalty applies AFTER the evasion cap of 9, ensuring flanking always provides a meaningful accuracy benefit."
-- **Implementation (client):** `useMoveCalculation.ts` (lines 396-404):
-  ```
-  const effectiveEvasion = Math.min(9, evasion)
-  const flankingPenalty = options?.getFlankingPenalty?.(targetId) ?? 0
-  return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value - flankingPenalty + roughPenalty)
-  ```
-  The cap (`Math.min(9, evasion)`) is applied first, then the flanking penalty is subtracted in the threshold formula.
-- **Implementation (server):** `calculate-damage.post.ts` (lines 311-320):
-  ```
-  const effectiveEvasion = Math.min(9, applicableEvasion)
-  const flankingPenalty = getFlankingPenaltyForTarget(target, combatants)
-  const effectiveEvasionWithFlanking = Math.max(0, effectiveEvasion - flankingPenalty)
-  const accuracyThreshold = Math.max(1, moveAC + effectiveEvasionWithFlanking - attackerData.accuracyStage)
-  ```
-  The cap is applied first, then the flanking penalty is subtracted with an explicit `Math.max(0, ...)` floor.
-- **Verification:** Both implementations correctly apply flanking AFTER the evasion cap, per decree-040. The server is slightly more explicit with the `Math.max(0, ...)` clamp on the evasion value before it enters the threshold formula. The client relies on the outer `Math.max(1, ...)` to prevent nonsensical thresholds. Both produce identical results for all valid inputs (flankingPenalty is always 0 or 2, and evasion is always >= 0). The decree-need-039 stale comment was correctly replaced with the decree-040 citation in commit 40d2f9e8.
-- **Status:** CORRECT
+**Client-side implementation** (`useMoveCalculation.ts` line 404): Same logic -- `effectiveEvasion - flankingPenalty` applied after `Math.min(9, evasion)` cap.
 
-### 5. Evasion Penalty Value
+**Verdict:** Correctly implements the -2 evasion penalty. Both client and server agree on the formula.
 
-- **Rule:** "They take a -2 penalty to their Evasion." (`core/07-combat.md#page-232`)
-- **Implementation:** `FLANKING_EVASION_PENALTY = 2` in `flankingGeometry.ts` (line 38). Used in both client-side `getFlankingPenalty()` (returns 2 or 0) and server-side `getFlankingPenaltyForTarget()` (returns 2 or 0).
-- **Verification:** The penalty value of 2 matches the PTU rulebook exactly. The penalty reduces evasion (making the target easier to hit), which lowers the accuracy threshold. In the formula `threshold = moveAC + evasion - accuracy - flankingPenalty`, subtracting 2 from the threshold makes the roll easier. This is the correct direction -- flanking helps attackers hit.
-- **Status:** CORRECT
+### Decree-040: Penalty Ordering (Post-Cap)
 
-### 6. Flanking Applied to All Evasion Types
+> "The flanking -2 evasion penalty applies AFTER the evasion cap of 9."
 
-- **Rule:** "They take a -2 penalty to their Evasion." -- "Evasion" without qualifier means all evasion types (Physical, Special, Speed).
-- **Implementation (client):** `useMoveCalculation.ts` applies the flanking penalty to the final `getAccuracyThreshold` which already selects the best evasion (Physical/Special vs Speed per PTU p.234). The penalty subtracts from whichever evasion won the max selection.
-- **Implementation (server):** `calculate-damage.post.ts` computes `effectiveEvasionWithFlanking` after the `Math.max(matchingEvasion, speedEvasion)` selection, so the penalty applies regardless of which evasion type was highest.
-- **Verification:** Both implementations correctly apply the -2 to the final selected evasion value, not to individual evasion types before selection. This is functionally equivalent to applying -2 to all three evasion types because the max operation is commutative with a uniform subtraction: `max(a-2, b-2) = max(a,b) - 2`.
-- **Status:** CORRECT
+**Server:** `effectiveEvasion = Math.min(9, applicableEvasion)` then `effectiveEvasionWithFlanking = Math.max(0, effectiveEvasion - flankingPenalty)`. The cap is applied first, then the penalty subtracts from the capped value.
 
-### 7. CombatantCard Flanking Badge (Section K)
+**Client:** `effectiveEvasion = Math.min(9, evasion)` then `effectiveEvasion - flankingPenalty` in the threshold formula.
 
-- **Rule:** No specific PTU rule governs UI display. The badge is a visibility aid showing the mechanical state.
-- **Implementation:** `CombatantCard.vue` (lines 93-96, 282) adds an `isFlanked?: boolean` prop and renders a "Flanked" badge when true. The badge appears after status conditions and before combat stages.
-- **Verification:** The prop is optional (defaults to undefined/false), maintaining backward compatibility. The parent (`CombatantSides.vue`) passes `isTargetFlanked?.(combatant.id) ?? false`, using the composable's function. The `gm/index.vue` page passes `isTargetFlanked` to CombatantSides. The badge correctly reflects the mechanical state computed by `useFlankingDetection`.
-- **Status:** CORRECT
+**Verdict:** Both implementations comply with decree-040. The comment in `useMoveCalculation.ts` (line 401-402) explicitly cites decree-040.
 
-### 8. WebSocket Flanking Sync (Section L)
+### PTU p.232: Flanking Requirements by Size
 
-- **Rule:** No PTU rule governs sync; this is infrastructure for multi-view consistency.
-- **Implementation:** The GM page (`gm/index.vue`, lines 356-366) watches `flankingMap` and broadcasts the entire map via `{ type: 'flanking_update', data: { encounterId, flankingMap } }`. The WS server (`ws.ts`, lines 540-544) relays `flanking_update` events from GM to encounter participants. The WebSocket composable (`useWebSocket.ts`, lines 222-226) receives and stores the flanking map in `receivedFlankingMap`.
-- **Verification:** The broadcast is correctly guarded by `isConnected` and `encounterStore.encounter` existence checks. The WS relay is correctly gated to `role === 'gm'` and `encounterId` existence. The flanking map is a small payload (one entry per combatant with a boolean and array of IDs). The design spec calls for group/player views to consume this data for rendering -- the data is stored in the composable but the group view rendering integration appears to be deferred.
-- **Status:** CORRECT (data flow verified; group rendering is a scope/code concern, not rules)
+The server-side `getFlankingPenaltyForTarget` delegates to `checkFlankingMultiTile`, which uses `FLANKING_FOES_REQUIRED` (1:2, 2:3, 3:4, 4:5). This is the same algorithm validated in rules-review-248 (P1). No changes to the core algorithm in P2.
 
-### 9. TDZ Fix (gm/index.vue)
+### PTU p.232: Self-Flank Prevention
 
-- **Rule:** Not a PTU rule issue; this is a JavaScript execution order fix.
-- **Implementation:** Commit 12b28670 moves the `encounter` computed declaration and the flanking detection initialization BEFORE the `allCombatants` computed that feeds `useFlankingDetection`. Previously, `useFlankingDetection(allCombatants)` triggered a watcher during setup which internally accessed `flankingMap.value`, but `allCombatants` referenced `encounter.value?.combatants` where `encounter` was declared further down in the file (after the call site), causing a Temporal Dead Zone error.
-- **Verification:** The fix moves the `encounter` computed to line 340 (before the flanking detection at line 351), eliminating the TDZ. The `allCombatants` computed at line 350 correctly derives from `encounter.value?.combatants ?? []`, and the `useFlankingDetection` call at line 351 receives a valid ref. The separate watcher for WebSocket broadcast (lines 356-366) was correctly extracted from the composable's `onFlankingChanged` callback to avoid a circular reference where the callback would reference `flankingMap` before it was returned from `useFlankingDetection`.
-- **Status:** CORRECT
+> "A single combatant cannot Flank by itself, no matter how many adjacent squares they're occupying; a minimum of two combatants is required to Flank someone."
 
-### 10. Side-Based Hostility for Flanking
+The server-side uses `checkFlankingMultiTile` which enforces `adjacentFoes.length < 2` as an early exit. This was validated in rules-review-248.
 
-- **Rule:** PTU p.232 says "foes" flank a combatant. Foes are enemy combatants.
-- **Implementation:** Both client (`useFlankingDetection.ts`, line 105) and server (`calculate-damage.post.ts`, line 136) use `isEnemySide(target.side, c.side)` from `combatSides.ts`. This correctly identifies: players and allies are friendly (cannot flank each other); enemies are hostile to both players and allies.
-- **Verification:** The `isEnemySide` function (lines 22-31) returns true only when one side is 'enemies' and the other is 'players' or 'allies'. Same-side combatants never flank each other. This matches PTU's three-sided combat model.
-- **Status:** CORRECT
+### Dead/Fainted Exclusion
 
-### 11. Self-Flank Prevention
+The server-side `getFlankingPenaltyForTarget` filters out dead and fainted combatants (lines 137-143):
+```typescript
+const isDead = conditions.includes('Dead')
+const isFainted = conditions.includes('Fainted')
+return hp > 0 && !isDead && !isFainted
+```
 
-- **Rule:** "A single combatant cannot Flank by itself, no matter how many adjacent squares they're occupying; a minimum of two combatants is required to Flank someone." (`core/07-combat.md#page-232`)
-- **Implementation:** `checkFlankingMultiTile` in `flankingGeometry.ts` (lines 330-343) enforces `adjacentFoes.length < 2` as an early exit. This was verified in P1 review (rules-review-248) and remains unchanged in P2.
-- **Status:** CORRECT (no P2 changes; re-verified)
+This matches the client-side logic in `useFlankingDetection.ts` (lines 73-77). Dead and fainted combatants cannot participate in flanking (they are not threats on the battlefield). The design spec Section J only checked for `Dead` and `hp > 0`, but the developer correctly added the `Fainted` check for consistency. This is a defense-in-depth improvement -- `hp > 0` already covers most Fainted cases, but explicit Fainted exclusion handles edge cases where a combatant might be marked Fainted via status condition before their HP is actually set to 0.
 
-## Summary
+### PTU p.234: Speed Evasion Selection
 
-All PTU mechanics in the P2 implementation are correctly implemented:
+The server-side accuracy calculation correctly selects the best evasion (`Math.max(matchingEvasion, speedEvasion)`) before applying the evasion cap and flanking penalty. This means a flanked defender still benefits from Speed Evasion if it exceeds their type-matched evasion, but the flanking penalty reduces whichever they choose. This is correct per PTU p.234: "the Trainer may instead choose to use their Pokémon's Speed Evasion."
 
-1. **Auto-detection watcher** correctly monitors reactive flanking state and detects transitions. The watcher fires on position changes (via computed dependency), status condition changes, and combatant additions/removals.
+### Auto-Detection Timing
 
-2. **Server-side flanking penalty** in `calculate-damage.post.ts` correctly replicates the client-side flanking detection using the shared `checkFlankingMultiTile` utility. The foe filtering is consistent between client and server, and both correctly exclude dead and fainted combatants.
+The `useFlankingDetection` watcher uses `{ deep: true }` on the `flankingMap` computed property. Since `flankingMap` recomputes whenever `positionedCombatants` changes (which depends on combatant positions from the reactive combatants ref), flanking state updates immediately when tokens move. This is correct -- PTU flanking is a positional state that should update in real-time.
 
-3. **Decree-040 compliance** is verified on both client and server: the -2 penalty applies AFTER the evasion cap of 9. The stale decree-need-039 comment was correctly replaced with the decree-040 citation.
+## Edge Cases Considered
 
-4. **CombatantCard flanking badge** correctly displays the "Flanked" status using a prop chain from `useFlankingDetection` through `CombatantSides` to `CombatantCard`.
+1. **Combatant with no position:** Both client and server check `position != null` before including a combatant in flanking calculations. Non-positioned combatants (not placed on the VTT grid) are excluded. This is correct -- flanking requires grid positions.
 
-5. **WebSocket flanking sync** correctly broadcasts the flanking map from GM to connected clients. The data is stored in the WebSocket composable for consumer use.
+2. **Non-VTT encounters:** The server-side `getFlankingPenaltyForTarget` returns 0 if the target has no position. Encounters without grid placement will never have flanking applied. Correct.
 
-6. **TDZ fix** correctly resolves a JavaScript execution order issue by moving the `encounter` computed declaration before the flanking detection initialization.
+3. **Client-server consistency:** Both the GM client (via `useFlankingDetection` + `useMoveCalculation`) and the server (via `calculate-damage.post.ts`) use the same flanking algorithm (`checkFlankingMultiTile`), the same filtering criteria (alive, positioned, enemy), and the same penalty application order (per decree-040). The results will be consistent.
 
-## Rulings
+## Rules Not Yet Implemented (Acknowledged, Out of Scope)
 
-- **Flanking evasion penalty value:** 2, per PTU p.232. CORRECT in both `FLANKING_EVASION_PENALTY` constant and all usage sites.
-- **Penalty applies to all evasion types:** Yes, via post-selection subtraction. CORRECT.
-- **Penalty ordering vs evasion cap:** After cap, per decree-040. CORRECT on both client and server.
-- **Fainted combatants excluded from flanking:** Both client and server filter `isFainted`. CORRECT -- fainted combatants cannot threaten and should not contribute to flanking, even though this is implicit rather than explicit in PTU p.232.
-- **No errata contradictions:** Checked `errata-2.md` for flanking-related corrections. None found.
+The following PTU mechanics interact with flanking but are not part of the feature-014 design spec:
+
+- **Flutter Ability** (PTU Ability Index): "cannot be Flanked" -- would need a flanking immunity check
+- **Whirlwind Strikes** (PTU p.162): "You do not count as Flanked for one full round"
+- **Gymnast's Tumbler** (PTU p.165): "You don't count as Flanked"
+- **Dynamic Punch** (PTU Move Index): "ignores the target's Evasion if they are Flanked" -- would need special handling beyond the -2 penalty
+
+These are future feature scope items, not P2 regressions.
 
 ## Verdict
 
-**APPROVED** -- All PTU mechanics are correctly implemented. Zero issues found. The P2 implementation faithfully extends the P0/P1 flanking system with auto-detection, server-side accuracy integration, UI indicators, and WebSocket sync. All applicable decrees (decree-040, decree-003) are respected and correctly cited in code comments.
+**APPROVED**
 
-## Required Changes
-
-None.
+The P2 implementation correctly applies PTU flanking rules. The -2 evasion penalty is accurately computed on both client and server, decree-040 penalty ordering is respected, dead/fainted exclusion is properly handled, and Speed Evasion selection interacts correctly with the flanking penalty. No rules issues found.
