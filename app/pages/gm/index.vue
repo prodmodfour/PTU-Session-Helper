@@ -54,6 +54,9 @@
         @proceed="handlePriorityProceed"
       />
 
+      <!-- Mount Controls Panel (feature-004 P1) -->
+      <MountControls v-if="encounter.isActive" />
+
       <!-- Player Action Requests (GM approves/denies incoming player requests) -->
       <PlayerRequestPanel
         v-if="encounter.isActive"
