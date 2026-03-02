@@ -59,3 +59,10 @@ Design spec: `artifacts/designs/design-healing-items-001/`
   - `3cbd84e2` Section E: useHealingItems composable (`app/composables/useHealingItems.ts`)
   - `4ecf6b19` Section E: UseItemModal component (`app/components/encounter/UseItemModal.vue`)
   - `ca6034d7` Section E: CombatantCard integration (Use Item button + modal wiring)
+- 2026-03-02: code-review-267 CHANGES_REQUIRED (3H + 4M), rules-review-243 APPROVED.
+- 2026-03-02: P0 fix cycle complete (5 commits, all 7 issues addressed):
+  - `188a1257` H1: Remove double validation in use-item endpoint
+  - `50e5a29d` H2+M1: Replace local getCombatantName with useCombatantDisplay, show effective maxHp in dropdown (decree-017)
+  - `c5847923` H3+M2: Delete dead getApplicableItems stub, simplify validation ternary
+  - `cae215af` M4: Replace hardcoded 3px gap with $spacing-xs in CombatantCard
+  - `976d9bc6` M3: Add healing item system to app-surface.md

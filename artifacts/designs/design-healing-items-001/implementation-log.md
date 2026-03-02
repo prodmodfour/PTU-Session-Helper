@@ -62,3 +62,39 @@ Branch: `slave/2-dev-feature-020-p0-20260301`
 - Service has validation stubs for non-restorative categories
 - API endpoint has P0 category whitelist (easy to expand)
 - Composable getApplicableItems has allowedCategories parameter
+
+## P0 Fix Cycle (2026-03-02)
+
+Branch: `slave/2-dev-feature-020-fix-20260302`
+Review: code-review-267 CHANGES_REQUIRED (3H + 4M), rules-review-243 APPROVED.
+
+### H1: Remove Double Validation
+- **Commit:** `188a1257`
+- **File:** `app/server/api/encounters/[id]/use-item.post.ts` (modified)
+- Removed explicit validateItemApplication() call — applyHealingItem() validates internally
+- Removed unused validateItemApplication import
+
+### H2 + M1: UseItemModal Composable Reuse + Effective Max HP
+- **Commit:** `50e5a29d`
+- **File:** `app/components/encounter/UseItemModal.vue` (modified)
+- Replaced local getCombatantName() with useCombatantDisplay() composable
+- Target dropdown now shows effective max HP (injury-reduced, decree-017) instead of raw maxHp
+- Removed unused Pokemon/HumanCharacter type imports
+
+### H3 + M2: Dead Stub Removal + Ternary Cleanup
+- **Commit:** `c5847923`
+- **Files:** `app/constants/healingItems.ts`, `app/server/services/healing-item.service.ts` (modified)
+- Deleted getApplicableItems() stub from constants (real logic in composable)
+- Replaced convoluted nested ternary with getEntityDisplayName(target) call
+
+### M4: Hardcoded Gap Fix
+- **Commit:** `cae215af`
+- **File:** `app/components/encounter/CombatantCard.vue` (modified)
+- Replaced `gap: 3px` with `gap: $spacing-xs` (4px) for use-item button
+
+### M3: App Surface Documentation
+- **Commit:** `976d9bc6`
+- **File:** `.claude/skills/references/app-surface.md` (modified)
+- Added use-item endpoint to encounters API list
+- Added healing item system paragraph (constants, service, composable, modal, store, WebSocket)
+- Added healing-item.service.ts to server services table
