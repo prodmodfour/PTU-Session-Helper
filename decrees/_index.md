@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-02T13:54:17.670Z
-total_decrees: 40
-active: 40
+generated_at: 2026-03-02T14:48:25.946Z
+total_decrees: 41
+active: 41
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (40)
+## Active Decrees (41)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -51,3 +51,4 @@ superseded: 0
 | decree-038 | combat | sleep-classification-and-condition-behavior-decoupling | Decouple condition behaviors from categories; Sleep is volatile but persists through recall and encounter end |
 | decree-039 | combat | roar-blocked-by-trapped | Roar's forced recall does not override the Trapped condition |
 | decree-040 | combat | flanking-penalty-after-evasion-cap | Flanking -2 evasion penalty applies after the evasion cap, not before |
+| decree-041 | healing | awakening-item-inclusion | Keep Awakening at $200 as a standard single-condition cure item |

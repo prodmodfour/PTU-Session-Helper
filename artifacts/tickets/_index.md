@@ -1,25 +1,19 @@
 ---
-generated_at: 2026-03-02T14:28:37.077Z
-total_tickets: 283
-open: 46
-in_progress: 108
+generated_at: 2026-03-02T14:48:25.939Z
+total_tickets: 284
+open: 40
+in_progress: 114
 resolved: 111
 ---
 
 # Tickets Index
 
-## Open Tickets (46)
+## Open Tickets (40)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| docs-001 | docs | P0 | vtt-grid | docs-001: Add CLAUDE.md for app/components/vtt/ |
-| docs-002 | docs | P0 | server | docs-002: Add CLAUDE.md for app/server/services/ |
 | docs-003 | docs | P0 | state-management | docs-003: Add CLAUDE.md for app/stores/ |
-| docs-004 | docs | P0 | combat | docs-004: Add CLAUDE.md for app/components/encounter/ |
-| docs-005 | docs | P0 | composables | docs-005: Add CLAUDE.md for app/composables/ |
-| docs-006 | docs | P0 | database | docs-006: Add CLAUDE.md for app/prisma/ |
 | docs-007 | docs | P0 | testing | docs-007: Add CLAUDE.md for app/tests/ |
-| docs-008 | docs | P0 | reference | docs-008: Add CLAUDE.md for books/markdown/ |
 | docs-009 | docs | P0 | workflow | docs-009: Add CLAUDE.md for artifacts/ |
 | docs-010 | docs | P0 | workflow | docs-010: Add CLAUDE.md for decrees/ |
 | docs-011 | docs | P0 | server | docs-011: Add CLAUDE.md for app/server/api/ |
@@ -32,7 +26,7 @@ resolved: 111
 | feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
 | feature-021 | feature | P2 | character-lifecycle | feature-021: Derived Capability Calculations |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
-| ptu-rule-131 | ptu-rule | P2 | combat |  |
+| ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` ret |
 | bug-044 | bug | P3 | capture | `useCapture.ts` (line ~192) references `/api/encounters/${en |
 | ptu-rule-129 | ptu-rule | P3 | combat | ptu-rule-129: Roar's forced recall must respect the Trapped  |
 | feature-004 | feature | P3 | combat | feature-004: Pokemon Mounting / Rider System |
@@ -59,14 +53,20 @@ resolved: 111
 | refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
 | refactoring-119 | refactoring | P4 | — | refactoring-119: Update stale interrupt.post.ts file header  |
 
-## In-Progress Tickets (108)
+## In-Progress Tickets (114)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
 | bug-036 | bug | P0 | player-view | smoke-test (plan-20260227-122512) |
 | bug-038 | bug | P0 | healing | healing-audit-report (R033, 2026-02-28) |
+| docs-001 | docs | P0 | vtt-grid | plan-descendant-claude-md-rollout |
+| docs-002 | docs | P0 | server | plan-descendant-claude-md-rollout |
+| docs-005 | docs | P0 | composables | plan-descendant-claude-md-rollout |
+| docs-006 | docs | P0 | database | plan-descendant-claude-md-rollout |
 | ptu-rule-096 | ptu-rule | P0 | vtt | decree-002 |
 | ptu-rule-097 | ptu-rule | P0 | vtt | decree-003 |
+| docs-004 | docs | P0 | combat | plan-descendant-claude-md-rollout |
+| docs-008 | docs | P0 | reference | plan-descendant-claude-md-rollout |
 | bug-033 | bug | P0 | build | dev-server-error-log |
 | bug-034 | bug | P0 | build | dev-server-error-log |
 | bug-035 | bug | P0 | build | dev-server-error-log |
@@ -181,9 +181,9 @@ All decree-needs addressed.
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 14 | 27 | 44 |
-| ptu-rule | 6 | 59 | 38 | 104 |
+| ptu-rule | 6 | 59 | 38 | 105 |
 | feature | 4 | 15 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
 | decree | 0 | 0 | 40 | 40 |
 | refactoring | 14 | 13 | 1 | 41 |
-| docs | 16 | 0 | 0 | 16 |
+| docs | 10 | 6 | 0 | 16 |
