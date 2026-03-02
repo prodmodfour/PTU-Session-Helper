@@ -83,6 +83,12 @@ export default defineEventHandler(async (event) => {
     // Splice the held combatant in at the current index
     // This makes them the active combatant immediately
     turnOrder.splice(currentTurnIndex, 0, combatantId)
+    // Remove the original entry to prevent duplicate turns (bug-042).
+    // The original is now shifted right by 1, so find it after currentTurnIndex.
+    const originalIndex = turnOrder.indexOf(combatantId, currentTurnIndex + 1)
+    if (originalIndex !== -1) {
+      turnOrder.splice(originalIndex, 1)
+    }
 
     // Save to database
     await prisma.encounter.update({
