@@ -3,7 +3,7 @@ id: docs-009
 title: "Add CLAUDE.md for artifacts/"
 priority: P0
 severity: MEDIUM
-status: open
+status: resolved
 domain: workflow
 source: plan-descendant-claude-md-rollout
 created_by: user
@@ -80,3 +80,8 @@ Each design is a directory: `designs/design-NAME-NNN/` containing:
 - Directory structure matches actual artifact tree
 - Ticket lifecycle matches actual status directories
 - Index regeneration command works from project root
+
+## Resolution Log
+
+- Created `artifacts/CLAUDE.md` (~52 lines) documenting directory structure, _index.md regeneration, ticket lifecycle, review archive pattern, design organization, and state files
+- All counts and paths verified against actual directory contents
