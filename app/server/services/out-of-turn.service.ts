@@ -796,16 +796,58 @@ function isAllyCombatant(a: Combatant, b: Combatant): boolean {
 }
 
 /**
- * Get the movement speed of a combatant in meters.
- * For Pokemon: use overland capability.
- * For humans: default 5m.
+ * Get the effective movement speed of a combatant in meters.
+ * Applies movement-modifying conditions per PTU rules:
+ * - Stuck: speed 0 (cannot move)
+ * - Tripped: speed 0 (must spend Shift to stand)
+ * - Slowed: half speed
+ * - Speed CS: additive bonus/penalty (half stage, min 2)
+ * - Sprint: +50%
+ *
+ * Mirrors applyMovementModifiers from useGridMovement.ts for server use.
  */
 function getCombatantSpeed(combatant: Combatant): number {
+  let baseSpeed: number
   if (combatant.type === 'pokemon') {
     const pokemon = combatant.entity as Pokemon
-    return pokemon.capabilities?.overland || 5
+    baseSpeed = pokemon.capabilities?.overland || 5
+  } else {
+    baseSpeed = 5
   }
-  return 5
+
+  const conditions: string[] = combatant.entity.statusConditions ?? []
+  const tempConditions: string[] = combatant.tempConditions ?? []
+
+  // Stuck: cannot move at all
+  if (conditions.includes('Stuck')) return 0
+
+  // Tripped: must spend Shift to stand before moving
+  if (conditions.includes('Tripped') || tempConditions.includes('Tripped')) return 0
+
+  let speed = baseSpeed
+
+  // Slowed: half speed
+  if (conditions.includes('Slowed')) {
+    speed = Math.floor(speed / 2)
+  }
+
+  // Speed Combat Stage: additive bonus/penalty (half stage value)
+  const speedStage = combatant.entity.stageModifiers?.speed ?? 0
+  if (speedStage !== 0) {
+    const clamped = Math.max(-6, Math.min(6, speedStage))
+    const stageBonus = Math.trunc(clamped / 2)
+    speed = speed + stageBonus
+    if (stageBonus < 0) {
+      speed = Math.max(speed, 2)
+    }
+  }
+
+  // Sprint: +50%
+  if (tempConditions.includes('Sprint')) {
+    speed = Math.floor(speed * 1.5)
+  }
+
+  return Math.max(speed, baseSpeed > 0 ? 1 : 0)
 }
 
 /**
