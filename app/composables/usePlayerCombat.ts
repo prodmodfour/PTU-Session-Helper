@@ -428,6 +428,24 @@ export function usePlayerCombat() {
   })
 
   /**
+   * Get enemy Pokemon that can be targeted for capture.
+   * - Must be on the 'Enemies' side (wild Pokemon)
+   * - Must not be fainted (currentHp > 0)
+   * - Must be of type 'pokemon' (not trainers)
+   * Per PTU rules, you can only capture wild Pokemon, not trained Pokemon.
+   */
+  const captureTargets = computed((): Combatant[] => {
+    if (!encounterStore.encounter) return []
+
+    return encounterStore.encounter.combatants.filter(c => {
+      if (c.type !== 'pokemon') return false
+      if (c.side !== 'Enemies') return false
+      const pokemon = c.entity as Pokemon
+      return pokemon.currentHp > 0
+    })
+  })
+
+  /**
    * Get non-fainted team pokemon (for switch pokemon).
    * Excludes the currently active combatant's entity.
    */
@@ -487,6 +505,7 @@ export function usePlayerCombat() {
 
     // Target helpers
     validTargets,
+    captureTargets,
     switchablePokemon,
     trainerInventory
   }
