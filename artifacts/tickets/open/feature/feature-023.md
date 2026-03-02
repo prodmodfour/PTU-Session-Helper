@@ -53,3 +53,4 @@ FULL-scope feature requiring design spec. Extends the player view system (featur
 |------|--------|---------|
 | 2026-03-01 | Design spec created | design-player-capture-healing-001 with P0/P1/P2 tiers, shared-specs, testing-strategy |
 | 2026-03-02 | P0 implemented | 5 commits (a5a0a822..15527ddc): extended PlayerActionType, added player request functions, created PlayerRequestPanel, extracted usePlayerRequestHandlers composable, wired into GM encounter view |
+| 2026-03-02 | P0 fix cycle | 9 commits (63770d47..212f51a0): fixed CRIT-001 ball type string mismatch, HIGH-001 ballType passthrough, CR-1 gm/index.vue 800-line cap via useSwitchModalState extraction, HI-1 unused prop removal, HI-2 undo snapshots, HI-3 alert→inline error + MED-001 entityId→combatantId + MED-002 null check + ME-3 deny reason, ME-1 app-surface.md, ME-2 capture rate display, ME-4 import path |

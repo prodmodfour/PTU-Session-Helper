@@ -124,3 +124,4 @@ Add "Take a Breather" button to `PlayerCombatActions.vue` with Standard Action a
 |------|------|--------|---------|-------|
 | 2026-03-01 | ALL | Design complete | N/A | Full multi-tier design spec written |
 | 2026-03-02 | P0 | Implemented | a5a0a822, a0da08ee, eb42447b, d583486e, 15527ddc | Section A-D complete. Types extended, player request functions added, PlayerRequestPanel created, handlers extracted to composable, wired into GM view. Extra file: usePlayerRequestHandlers.ts (not in original spec, extracted for SRP/file-size). |
+| 2026-03-02 | P0 | Fix cycle | 63770d47..212f51a0 (9 commits) | Addressed code-review-270 + rules-review-246. Fixes: ball type string mismatch (CRIT), ballType passthrough (HIGH), gm/index.vue line cap via useSwitchModalState extraction, unused prop removal, undo snapshots, alert->inline error, entityId->combatantId, null check, deny reason, app-surface.md, capture rate display, import path. |
