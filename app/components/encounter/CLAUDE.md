@@ -53,7 +53,7 @@ For status moves (no damage base), MoveTargetModal skips the damage section enti
 | `useEncounterBudget` | Difficulty budget analysis (PTU p.460) | BudgetIndicator (via parent) |
 | `useSwitching` | Switch, recall, release workflows (Standard/Shift action cost) | SwitchPokemonModal |
 | `useHealingItems` | Item filtering by category and target state | UseItemModal |
-| `useCapture` | Capture rate calc, accuracy check (AC 6), ball modifiers | CombatantCard |
+| `useCapture` | Capture rate calc, accuracy check (AC 6), ball modifiers | CapturePanel (capture/) |
 | `useSwitchModalState` | Switch modal open/close, trainer/pokemon ID resolution | pages/gm/index.vue (parent) |
 | `useCombatantDisplay` | Name resolution for Pokemon (nickname/species) and humans | MoveTargetModal, UseItemModal, TargetSelector |
 | `useEncounterStore()` | Core encounter state, turn management, combatant CRUD | DeclarationPanel, GMActionModal, MoveTargetModal, CombatantCard, PriorityActionPanel, SwitchPokemonModal, SignificancePanel, UseItemModal, XpDistributionModal |
