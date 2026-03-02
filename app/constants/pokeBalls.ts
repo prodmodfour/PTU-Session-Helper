@@ -90,16 +90,6 @@ export interface PokeBallDef {
   /** Cost in PokeDollars ($0 for unsold balls like Master Ball) */
   readonly cost: number
   /**
-   * Pure function that evaluates a conditional modifier.
-   * Returns a number to add to the base modifier.
-   * Returns 0 if conditions are not met.
-   * undefined means no conditional logic (use base modifier only).
-   *
-   * P0: All condition functions are undefined (base modifiers only).
-   * P1: Condition functions are implemented per ball.
-   */
-  readonly condition?: (context: BallConditionContext) => number
-  /**
    * Description of the condition for UI display.
    * e.g., "Target is under half the level of your active Pokemon"
    */
