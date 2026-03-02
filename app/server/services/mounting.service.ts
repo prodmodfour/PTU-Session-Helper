@@ -18,8 +18,7 @@ import {
   getMountCapacity,
   countCurrentRiders,
   hasMountedProwess,
-  getMountActionCost,
-  getMovementSpeedForMount
+  getMountActionCost
 } from '~/utils/mountingRules'
 import { areAdjacent, getTokenCells, getAdjacentCellsForFootprint } from '~/utils/adjacency'
 import { getFootprintCells } from '~/utils/sizeCategory'
@@ -155,7 +154,7 @@ export function executeMount(
   // GM override: skipCheck bypasses the DC 10 mounting check
   const checkRequired = skipCheck ? false : !checkAutoSuccess
 
-  const mountMovement = getMovementSpeedForMount(mount)
+  const mountMovement = getOverlandSpeed(mount)
 
   const updatedCombatants = combatants.map(c => {
     if (c.id === riderId) {

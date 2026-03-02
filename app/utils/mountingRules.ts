@@ -152,13 +152,3 @@ export function triggersDismountCheck(hpDamage: number, maxHp: number): boolean 
   return hpDamage >= Math.floor(maxHp / 4)
 }
 
-/**
- * Get the base movement speed for a mount Pokemon.
- * Uses the mount's Overland capability as the primary movement speed.
- * Movement modifiers (Slowed, Speed CS) are applied at movement time, not at mount time.
- */
-export function getMovementSpeedForMount(mount: Combatant): number {
-  if (mount.type !== 'pokemon') return TRAINER_DEFAULT_SPEED
-  const pokemon = mount.entity as Pokemon
-  return pokemon.capabilities?.overland ?? TRAINER_DEFAULT_SPEED
-}
