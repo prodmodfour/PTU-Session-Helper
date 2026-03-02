@@ -3,7 +3,7 @@ id: docs-010
 title: "Add CLAUDE.md for decrees/"
 priority: P0
 severity: MEDIUM
-status: open
+status: resolved
 domain: workflow
 source: plan-descendant-claude-md-rollout
 created_by: user
@@ -78,3 +78,8 @@ Each decree file (`decree-NNN.md`) has:
 - Authority chain matches CLAUDE.md root description
 - Format verified against 3+ sample decrees (decree-001, decree-020, decree-040)
 - Domain distribution verified against _index.md table
+
+## Resolution Log
+
+- Created `decrees/CLAUDE.md` (~52 lines) documenting authority level, decree format, referencing conventions, and domain distribution
+- Domain counts verified by scanning all 42 decree frontmatters (actual counts differ from ticket estimates: combat 12, rest 7, vtt 7, character-lifecycle 4, capture 4, vtt-grid 3, pokemon-lifecycle 2, encounter 2, healing 1)
