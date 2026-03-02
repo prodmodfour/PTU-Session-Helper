@@ -8,7 +8,8 @@
  */
 
 import { HEALING_ITEM_CATALOG, type HealingItemDef } from '~/constants/healingItems'
-import { applyHealingToEntity } from '~/server/services/combatant.service'
+import { PERSISTENT_CONDITIONS } from '~/constants/statusConditions'
+import { applyHealingToEntity, updateStatusConditions } from '~/server/services/combatant.service'
 import { getEffectiveMaxHp } from '~/utils/restHealing'
 import type { Combatant, StatusCondition, Pokemon, HumanCharacter } from '~/types'
 
@@ -23,6 +24,49 @@ export interface ItemApplicationResult {
   }
   error?: string
 }
+
+// ============================================
+// CURE RESOLUTION
+// ============================================
+
+/**
+ * Resolve which conditions an item cures on a specific target.
+ * Returns the list of StatusCondition values to remove.
+ *
+ * Priority order:
+ * 1. curesAllStatus — clears all conditions except Fainted and Dead
+ * 2. curesAllPersistent — clears all persistent conditions
+ * 3. curesConditions — clears specific named conditions
+ */
+export function resolveConditionsToCure(
+  item: HealingItemDef,
+  targetConditions: StatusCondition[]
+): StatusCondition[] {
+  if (!targetConditions || targetConditions.length === 0) return []
+
+  // curesAllStatus: clear all persistent + volatile (but not Fainted/Dead)
+  if (item.curesAllStatus) {
+    return targetConditions.filter(c => c !== 'Fainted' && c !== 'Dead')
+  }
+
+  // curesAllPersistent: clear all persistent conditions
+  if (item.curesAllPersistent) {
+    const persistentSet = new Set<string>(PERSISTENT_CONDITIONS)
+    return targetConditions.filter(c => persistentSet.has(c))
+  }
+
+  // curesConditions: clear specific named conditions
+  if (item.curesConditions && item.curesConditions.length > 0) {
+    const cureSet = new Set<string>(item.curesConditions)
+    return targetConditions.filter(c => cureSet.has(c))
+  }
+
+  return []
+}
+
+// ============================================
+// VALIDATION
+// ============================================
 
 /**
  * Validate that an item can be applied to a target combatant.
@@ -41,37 +85,72 @@ export function validateItemApplication(
   const isFainted = (entity.statusConditions || []).includes('Fainted')
 
   // Revive items: target must be Fainted
-  if (item.canRevive && !isFainted) {
-    return `${item.name} can only be used on fainted targets`
+  if (item.canRevive) {
+    if (!isFainted) {
+      return `${item.name} can only be used on fainted targets`
+    }
+    // Revive items are always valid on fainted targets
+    return undefined
   }
 
-  // Non-revive items: target must NOT be Fainted (except Full Restore cures all status)
-  if (!item.canRevive && isFainted && !item.curesAllStatus) {
+  // Non-revive items: target must NOT be Fainted
+  if (isFainted) {
     return `Cannot use ${item.name} on a fainted target`
   }
 
-  // HP items: check if target is already at effective max HP
-  if (item.hpAmount || item.healToFull || item.healToPercent) {
-    if (!isFainted && !item.canRevive) {
-      const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
-      if (entity.currentHp >= effectiveMax) {
-        return `${getEntityDisplayName(target)} is already at full HP`
-      }
+  // Combined items (Full Restore): valid if HP below max OR has curable conditions
+  if (item.category === 'combined') {
+    const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
+    const isFullHp = entity.currentHp >= effectiveMax
+    const curableConditions = resolveConditionsToCure(
+      item,
+      entity.statusConditions || []
+    )
+    if (isFullHp && curableConditions.length === 0) {
+      return `${item.name} would have no effect (full HP, no curable conditions)`
     }
+    return undefined
   }
 
-  // Cure items: check if target has any curable condition (P1 -- skip in P0)
-  // This validation is intentionally lenient in P0; P1 adds stricter checks.
+  // Cure items: target must have at least one curable condition
+  if (item.category === 'cure') {
+    const curableConditions = resolveConditionsToCure(
+      item,
+      entity.statusConditions || []
+    )
+    if (curableConditions.length === 0) {
+      if (item.curesAllPersistent) {
+        return `Target has no persistent status conditions to cure`
+      }
+      const conditionNames = (item.curesConditions || []).join(', ')
+      return `Target is not affected by ${conditionNames}`
+    }
+    return undefined
+  }
+
+  // HP-only items: check if target is already at effective max HP
+  if (item.hpAmount || item.healToFull || item.healToPercent) {
+    const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
+    if (entity.currentHp >= effectiveMax) {
+      return `${getEntityDisplayName(target)} is already at full HP`
+    }
+  }
 
   return undefined
 }
 
+// ============================================
+// APPLICATION
+// ============================================
+
 /**
  * Apply a healing item's effects to a target combatant.
  *
- * P0: Only processes HP restoration (restorative category).
- * P1: Adds status cure, revive, combined, repulsive handling.
- * P2: Adds action economy, inventory consumption.
+ * Handles all item categories:
+ * - restorative: HP restoration
+ * - cure: status condition removal via updateStatusConditions()
+ * - combined: cure conditions first, then heal HP
+ * - revive: remove Fainted, set HP to item-specified amount
  *
  * Mutates the combatant's entity (same pattern as applyDamageToEntity).
  * The caller is responsible for persisting the state.
@@ -92,8 +171,23 @@ export function applyHealingItem(
 
   const effects: ItemApplicationResult['effects'] = {}
 
+  // --- Revive handling (P1) ---
+  if (item.canRevive) {
+    return applyReviveItem(item, itemName, target)
+  }
+
+  // --- Combined handling (P1): cure conditions first, then heal HP ---
+  if (item.category === 'combined') {
+    return applyCombinedItem(item, itemName, target)
+  }
+
+  // --- Status Cure (P1) ---
+  if (item.category === 'cure') {
+    applyCureEffects(item, target, effects)
+  }
+
   // --- HP Restoration ---
-  if (item.hpAmount) {
+  if (item.hpAmount && item.category !== 'cure') {
     const healResult = applyHealingToEntity(target, { amount: item.hpAmount })
     effects.hpHealed = healResult.hpHealed
   }
@@ -107,7 +201,7 @@ export function applyHealingItem(
     }
   }
 
-  if (item.healToPercent) {
+  if (item.healToPercent && !item.canRevive) {
     const effectiveMax = getEffectiveMaxHp(target.entity.maxHp, target.entity.injuries || 0)
     const targetHp = Math.floor(effectiveMax * item.healToPercent / 100)
     const amount = Math.max(0, targetHp - target.entity.currentHp)
@@ -117,7 +211,7 @@ export function applyHealingItem(
     }
   }
 
-  // --- Repulsive flag (for UI display, no mechanical effect in P0-P1) ---
+  // --- Repulsive flag ---
   if (item.repulsive) {
     effects.repulsive = true
   }
@@ -128,6 +222,119 @@ export function applyHealingItem(
     effects
   }
 }
+
+// ============================================
+// INTERNAL HELPERS
+// ============================================
+
+/**
+ * Apply status cure effects from an item.
+ * Uses updateStatusConditions() which handles CS reversal (decree-005).
+ * Resets badlyPoisonedRound when Badly Poisoned is cured.
+ */
+function applyCureEffects(
+  item: HealingItemDef,
+  target: Combatant,
+  effects: ItemApplicationResult['effects']
+): void {
+  const conditionsToCure = resolveConditionsToCure(
+    item,
+    target.entity.statusConditions || []
+  )
+  if (conditionsToCure.length > 0) {
+    const statusResult = updateStatusConditions(target, [], conditionsToCure)
+    effects.conditionsCured = statusResult.removed
+
+    // Reset Badly Poisoned counter if cured
+    if (conditionsToCure.includes('Badly Poisoned')) {
+      target.badlyPoisonedRound = 0
+    }
+  }
+}
+
+/**
+ * Apply a revive item to a fainted target.
+ * Removes Fainted status and sets HP to the item-specified amount.
+ *
+ * Does NOT go through applyHealingToEntity because that function has
+ * Fainted-removal logic at the 0-to-positive HP transition. For revives,
+ * we handle Fainted removal explicitly before setting HP.
+ */
+function applyReviveItem(
+  item: HealingItemDef,
+  itemName: string,
+  target: Combatant
+): ItemApplicationResult {
+  const entity = target.entity
+  const effects: ItemApplicationResult['effects'] = {}
+
+  // Remove Fainted status
+  entity.statusConditions = (entity.statusConditions || []).filter(
+    (s: StatusCondition) => s !== 'Fainted'
+  )
+  effects.revived = true
+
+  const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
+
+  // Set HP based on item type
+  if (item.hpAmount) {
+    // Revive: sets to fixed amount (e.g., 20 HP), capped at effective max
+    entity.currentHp = Math.min(item.hpAmount, effectiveMax)
+    effects.hpHealed = entity.currentHp
+  } else if (item.healToPercent) {
+    // Revival Herb: sets to percentage of effective max HP (e.g., 50%)
+    entity.currentHp = Math.max(1, Math.floor(effectiveMax * item.healToPercent / 100))
+    effects.hpHealed = entity.currentHp
+  }
+
+  // Repulsive flag
+  if (item.repulsive) {
+    effects.repulsive = true
+  }
+
+  return {
+    success: true,
+    itemName,
+    effects
+  }
+}
+
+/**
+ * Apply a combined item (e.g., Full Restore).
+ * Order: cure all status conditions first, then heal HP.
+ * This ensures CS effects are reversed before HP healing.
+ */
+function applyCombinedItem(
+  item: HealingItemDef,
+  itemName: string,
+  target: Combatant
+): ItemApplicationResult {
+  const effects: ItemApplicationResult['effects'] = {}
+
+  // Step 1: Cure conditions
+  applyCureEffects(item, target, effects)
+
+  // Step 2: Heal HP
+  if (item.hpAmount) {
+    const healResult = applyHealingToEntity(target, { amount: item.hpAmount })
+    effects.hpHealed = healResult.hpHealed
+  }
+
+  // Repulsive flag
+  if (item.repulsive) {
+    effects.repulsive = true
+  }
+
+  return {
+    success: true,
+    itemName,
+    effects
+  }
+}
+
+// ============================================
+// DISPLAY HELPERS
+// ============================================
 
 /**
  * Get the display name for a Pokemon entity.
