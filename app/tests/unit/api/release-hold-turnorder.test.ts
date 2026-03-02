@@ -16,8 +16,9 @@ import { describe, it, expect } from 'vitest'
 
 /**
  * Replicates the exact turnOrder manipulation from release-hold.post.ts:
- * 1. Splice combatant at currentTurnIndex
- * 2. Remove original entry (shifted right by 1) to prevent duplicates
+ * 1. Remove the original entry BEFORE inserting (it's typically before currentTurnIndex)
+ * 2. Adjust currentTurnIndex if the removal shifted it
+ * 3. Splice combatant at the adjusted currentTurnIndex
  *
  * Returns { turnOrder, currentTurnIndex } after manipulation.
  */
@@ -27,13 +28,16 @@ function releaseHeldIntoTurnOrder(
   combatantId: string
 ): { turnOrder: string[]; currentTurnIndex: number } {
   const result = [...turnOrder]
-  // Insert at current position (same as release-hold.post.ts line 85)
-  result.splice(currentTurnIndex, 0, combatantId)
-  // Remove the original entry to prevent duplicate turns (bug-042 fix)
-  const originalIndex = result.indexOf(combatantId, currentTurnIndex + 1)
+  // Remove the original entry BEFORE inserting (bug-042 fix)
+  const originalIndex = result.indexOf(combatantId)
   if (originalIndex !== -1) {
     result.splice(originalIndex, 1)
+    if (originalIndex < currentTurnIndex) {
+      currentTurnIndex--
+    }
   }
+  // Insert at the (possibly adjusted) current position
+  result.splice(currentTurnIndex, 0, combatantId)
   return { turnOrder: result, currentTurnIndex }
 }
 
@@ -70,10 +74,12 @@ describe('release-hold turnOrder deduplication (bug-042)', () => {
       const bCount = result.turnOrder.filter(id => id === 'B').length
       expect(bCount).toBe(1)
 
-      // B should be at the current turn index position
-      expect(result.turnOrder[currentTurnIndex]).toBe('B')
+      // B should be at the returned current turn index position
+      // Original B at index 1 removed, currentTurnIndex adjusted from 2 to 1
+      expect(result.currentTurnIndex).toBe(1)
+      expect(result.turnOrder[result.currentTurnIndex]).toBe('B')
 
-      // Total length should be unchanged (one inserted, one removed)
+      // Total length should be unchanged (one removed, one inserted)
       expect(result.turnOrder).toHaveLength(4)
     })
 
@@ -91,14 +97,17 @@ describe('release-hold turnOrder deduplication (bug-042)', () => {
       expect(buggyResult.turnOrder).toHaveLength(5)
     })
 
-    it('should place the released combatant at the current turn index', () => {
+    it('should place the released combatant at the adjusted current turn index', () => {
       const turnOrder = ['A', 'B', 'C', 'D']
       const currentTurnIndex = 3 // D is the current combatant
 
       const result = releaseHeldIntoTurnOrder(turnOrder, currentTurnIndex, 'B')
 
-      expect(result.turnOrder[currentTurnIndex]).toBe('B')
+      // B was at index 1 (before currentTurnIndex=3), so index adjusts to 2
+      expect(result.currentTurnIndex).toBe(2)
+      expect(result.turnOrder[result.currentTurnIndex]).toBe('B')
       expect(result.turnOrder).toHaveLength(4)
+      expect(result.turnOrder).toEqual(['A', 'C', 'B', 'D'])
     })
 
     it('should handle release when held combatant is last in turn order', () => {
@@ -124,7 +133,9 @@ describe('release-hold turnOrder deduplication (bug-042)', () => {
 
       const aCount = result.turnOrder.filter(id => id === 'A').length
       expect(aCount).toBe(1)
-      expect(result.turnOrder[1]).toBe('A')
+      // A was at index 0 (before currentTurnIndex=1), so index adjusts to 0
+      expect(result.currentTurnIndex).toBe(0)
+      expect(result.turnOrder[result.currentTurnIndex]).toBe('A')
       expect(result.turnOrder).toHaveLength(4)
     })
 
@@ -134,11 +145,10 @@ describe('release-hold turnOrder deduplication (bug-042)', () => {
 
       const result = releaseHeldIntoTurnOrder(turnOrder, currentTurnIndex, 'B')
 
-      // B is at index 3, original B (was at 1) removed
-      // Before splice: [A, B, C, D, E]
-      // After insert at 3: [A, B, C, B, D, E]
-      // After dedup (remove index 1): [A, C, B, D, E]
+      // Remove B at index 1: [A, C, D, E], currentTurnIndex adjusts 3->2
+      // Insert B at 2: [A, C, B, D, E]
       expect(result.turnOrder).toEqual(['A', 'C', 'B', 'D', 'E'])
+      expect(result.currentTurnIndex).toBe(2)
     })
 
     it('should work correctly when only 2 combatants exist', () => {
@@ -150,7 +160,9 @@ describe('release-hold turnOrder deduplication (bug-042)', () => {
       const aCount = result.turnOrder.filter(id => id === 'A').length
       expect(aCount).toBe(1)
       expect(result.turnOrder).toHaveLength(2)
-      expect(result.turnOrder[1]).toBe('A')
+      // A was at index 0 (before currentTurnIndex=1), so index adjusts to 0
+      expect(result.currentTurnIndex).toBe(0)
+      expect(result.turnOrder[result.currentTurnIndex]).toBe('A')
     })
 
     it('should not affect turn order when combatant was not in order (defensive)', () => {
