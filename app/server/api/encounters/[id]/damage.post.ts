@@ -11,6 +11,8 @@ import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server
 import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import { clearMountOnFaint } from '~/server/services/mounting.service'
+import { triggersDismountCheck, buildDismountCheckInfo } from '~/utils/mountingRules'
+import type { DismountCheckInfo } from '~/utils/mountingRules'
 import type { StatusCondition } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -114,6 +116,17 @@ export default defineEventHandler(async (event) => {
       await syncStagesToDatabase(combatant, entity.stageModifiers)
     }
 
+    // --- Dismount check on damage (feature-004 P1, PTU p.218) ---
+    // If either rider or mount takes damage >= 1/4 max HP, trigger a dismount check.
+    // Per decree-004: uses real HP damage after temp HP absorption (damageResult.hpDamage).
+    // The GM manually resolves the Acrobatics/Athletics vs DC 10 check.
+    let dismountCheck: DismountCheckInfo | null = null
+    if (combatant.mountState && !faintedFromAnySource) {
+      if (triggersDismountCheck(damageResult.hpDamage, entity.maxHp)) {
+        dismountCheck = buildDismountCheckInfo(combatant, 'damage', combatants)
+      }
+    }
+
     // Auto-dismount on faint (feature-004, PTU p.218)
     // When a combatant faints, clear mount state and place rider adjacent if mount fainted
     let mountDismounted = false
@@ -161,7 +174,10 @@ export default defineEventHandler(async (event) => {
           leagueSuppressed: deathCheck.leagueSuppressed
         },
         // Mount auto-dismount on faint (feature-004)
-        mountDismounted
+        mountDismounted,
+        // Dismount check trigger (feature-004 P1, PTU p.218)
+        // Present when damage >= 1/4 max HP on a mounted combatant (non-faint)
+        dismountCheck: dismountCheck ?? undefined
       }
     }
   } catch (error: unknown) {
