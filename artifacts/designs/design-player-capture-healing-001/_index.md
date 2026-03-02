@@ -4,7 +4,7 @@ ticket_id: feature-023
 category: FEATURE
 scope: FULL
 domain: player-view+capture+healing
-status: p1-implemented
+status: p2-implemented
 depends_on:
   - design-player-view-integration-001 (feature-003, all tracks complete)
   - design-priority-interrupt-001 (feature-016, P1 implemented — AoO awareness)
@@ -126,3 +126,4 @@ Add "Take a Breather" button to `PlayerCombatActions.vue` with Standard Action a
 | 2026-03-02 | P0 | Implemented | a5a0a822, a0da08ee, eb42447b, d583486e, 15527ddc | Section A-D complete. Types extended, player request functions added, PlayerRequestPanel created, handlers extracted to composable, wired into GM view. Extra file: usePlayerRequestHandlers.ts (not in original spec, extracted for SRP/file-size). |
 | 2026-03-02 | P0 | Fix cycle | 63770d47..212f51a0 (9 commits) | Addressed code-review-270 + rules-review-246. Fixes: ball type string mismatch (CRIT), ballType passthrough (HIGH), gm/index.vue line cap via useSwitchModalState extraction, unused prop removal, undo snapshots, alert->inline error, entityId->combatantId, null check, deny reason, app-surface.md, capture rate display, import path. |
 | 2026-03-02 | P1 | Implemented | 20c5ed16, 62bd998c, bc90905c, 1ba0bdba | Section E-H complete. captureTargets computed in usePlayerCombat, usePlayerCapture composable, PlayerCapturePanel component (two-step target select + rate preview), wired into PlayerCombatActions with canShowCapture guard and SCSS. |
+| 2026-03-02 | P2 | Implemented | 142bcc25, ade82061 | Section I-L complete. PlayerHealingPanel.vue with breather tab (PTU p.245 Full Action, assisted option) + healing items tab (feature-020 HEALING_ITEM_CATALOG integration). Wired into PlayerCombatActions with Heal button (PhHeart, --heal SCSS variant), panel closes on turn end. |
