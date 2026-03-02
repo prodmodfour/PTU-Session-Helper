@@ -107,6 +107,9 @@ export function useCapture() {
 
   /**
    * Calculate capture rate from provided data (no API call), with ball modifier.
+   * When conditionContext is provided, it is passed to calculateBallModifier
+   * so conditional ball modifiers (Timer Ball rounds, Level Ball comparison, etc.)
+   * are reflected in the preview.
    */
   function calculateCaptureRateLocal(params: {
     level: number
@@ -119,6 +122,7 @@ export function useCapture() {
     isShiny?: boolean
     isLegendary?: boolean
     ballType?: string
+    conditionContext?: Partial<BallConditionContext>
   }): CaptureRateData {
     const result = calculateCaptureRate({
       level: params.level,
@@ -133,7 +137,7 @@ export function useCapture() {
     })
 
     const ballType = params.ballType || DEFAULT_BALL_TYPE
-    const ballResult = calculateBallModifier(ballType)
+    const ballResult = calculateBallModifier(ballType, params.conditionContext)
     const ballDef = POKE_BALL_CATALOG[ballType]
 
     return {
