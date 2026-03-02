@@ -8,8 +8,10 @@ import { loadEncounter, findCombatant } from '~/server/services/encounter.servic
 import { calculateDamage, calculateEvasion, calculateAccuracyThreshold } from '~/utils/damageCalculation'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { ZERO_EVASION_CONDITIONS } from '~/constants/statusConditions'
+import { checkFlankingMultiTile, FLANKING_EVASION_PENALTY } from '~/utils/flankingGeometry'
+import { isEnemySide } from '~/utils/combatSides'
 import type { AccuracyCalcResult } from '~/utils/damageCalculation'
-import type { Pokemon, HumanCharacter, Move } from '~/types'
+import type { Pokemon, HumanCharacter, Move, Combatant } from '~/types'
 
 interface CalculateDamageRequest {
   attackerId: string
@@ -112,6 +114,46 @@ function getEntityEvasionStats(
     speedBase: human.stats.speed,
     speedStage: stages?.speed ?? 0,
   }
+}
+
+/**
+ * Compute the flanking evasion penalty for a target combatant.
+ * PTU p.232: -2 to all evasion when flanked.
+ * Per decree-040: penalty applies AFTER the evasion cap.
+ *
+ * Returns FLANKING_EVASION_PENALTY (2) if the target is flanked, 0 otherwise.
+ * Only positioned, alive combatants are considered for flanking.
+ */
+function getFlankingPenaltyForTarget(
+  targetCombatant: Combatant,
+  allCombatants: Combatant[]
+): number {
+  if (!targetCombatant.position) return 0
+
+  const foes = allCombatants
+    .filter(c => c.id !== targetCombatant.id)
+    .filter(c => c.position != null)
+    .filter(c => isEnemySide(targetCombatant.side, c.side))
+    .filter(c => {
+      const hp = c.entity.currentHp ?? 0
+      const conditions = c.entity.statusConditions ?? []
+      const isDead = conditions.includes('Dead')
+      const isFainted = conditions.includes('Fainted')
+      return hp > 0 && !isDead && !isFainted
+    })
+    .map(c => ({
+      id: c.id,
+      position: c.position!,
+      size: c.tokenSize || 1,
+    }))
+
+  const result = checkFlankingMultiTile(
+    targetCombatant.position,
+    targetCombatant.tokenSize || 1,
+    foes
+  )
+
+  return result.isFlanked ? FLANKING_EVASION_PENALTY : 0
 }
 
 export default defineEventHandler(async (event) => {
@@ -268,16 +310,25 @@ export default defineEventHandler(async (event) => {
     const applicableEvasion = Math.max(matchingEvasion, speedEvasion)
     const effectiveEvasion = Math.min(9, applicableEvasion)
 
+    // PTU p.232: Flanking penalty. Per decree-040: applied AFTER evasion cap.
+    // effectiveEvasionWithFlanking = Math.min(9, rawEvasion) - flankingPenalty
+    const flankingPenalty = getFlankingPenaltyForTarget(target, combatants)
+    const effectiveEvasionWithFlanking = Math.max(0, effectiveEvasion - flankingPenalty)
+
     const moveAC = move.ac ?? 0
-    const accuracy: AccuracyCalcResult = {
+    // Accuracy threshold uses flanking-adjusted evasion
+    const accuracyThreshold = Math.max(1, moveAC + effectiveEvasionWithFlanking - attackerData.accuracyStage)
+
+    const accuracy: AccuracyCalcResult & { flankingPenalty: number } = {
       moveAC,
       attackerAccuracyStage: attackerData.accuracyStage,
       physicalEvasion,
       specialEvasion,
       speedEvasion,
       applicableEvasion,
-      effectiveEvasion,
-      accuracyThreshold: calculateAccuracyThreshold(moveAC, attackerData.accuracyStage, applicableEvasion),
+      effectiveEvasion: effectiveEvasionWithFlanking,
+      accuracyThreshold,
+      flankingPenalty,
     }
 
     return {
