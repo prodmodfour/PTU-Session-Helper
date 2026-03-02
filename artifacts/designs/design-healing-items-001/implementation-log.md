@@ -158,3 +158,73 @@ Review: code-review-271 APPROVED (0 issues). rules-review-247 APPROVED (0 issues
 ### Deviations from Spec
 - Added Awakening item (Asleep + Bad Sleep cure, $200) — referenced in spec section F item list but not in catalog P0 entries
 - Revival Herb uses `Math.max(1, floor(effectiveMax * 0.5))` to guarantee minimum 1 HP even with extreme injuries
+
+## P2 Implementation (2026-03-02)
+
+Branch: `slave/3-dev-feature-020-p2-20260302`
+
+### Section J: Standard Action Enforcement
+- **Commit:** `f29edf62`
+- **File:** `app/server/api/encounters/[id]/use-item.post.ts` (modified)
+- Standard Action check: rejects if `standardActionUsed` is already true
+- Consumes `standardActionUsed` after successful item application (immutable spread)
+- Turn/held-action validation deferred to future (GM is sole user in current UI)
+
+### Section K: Target Forfeits Actions
+- **Commit:** `6a75e740` — TurnState type: added `forfeitStandardAction` and `forfeitShiftAction` optional booleans
+  - **File:** `app/types/combat.ts` (modified)
+- **Commit:** `f29edf62` — use-item endpoint sets forfeit flags on target when `!isSelfUse && !hasMedicTraining`
+- **Commit:** `b15856bc` — next-turn.post.ts consumes forfeit flags at new combatant's turn start
+  - **File:** `app/server/api/encounters/[id]/next-turn.post.ts` (modified)
+  - Pre-marks `standardActionUsed`/`shiftActionUsed` as true, clears forfeit flags
+  - Forfeit flags preserved through `resetCombatantsForNewRound` (cross-round) and `resetResolvingTrainerTurnState` (League battles)
+  - `actionForfeitApplied` flag in response for UI notification
+
+### Section L: Self-Use as Full-Round Action
+- **Commit:** `f29edf62`
+- Self-use detected when `userId === targetId`
+- Validates both Standard and Shift actions are available
+- Consumes both `standardActionUsed` and `shiftActionUsed` (immutable spread)
+- No forfeit flags set on self-use target
+
+### Section M: Adjacency Requirement
+- **Commit:** `778bbd0a` — `checkItemRange()` in healing-item.service.ts
+  - **File:** `app/server/services/healing-item.service.ts` (modified)
+  - Uses `ptuDistanceTokensBBox` for multi-cell token support (decree-002)
+  - Self-use and gridless play always adjacent (distance 0)
+- **Commit:** `f29edf62` — adjacency validation in use-item endpoint
+  - Rejects with distance message if `!rangeResult.adjacent`
+
+### Section N: Inventory Consumption
+- **Commit:** `778bbd0a` — `findTrainerForPokemon()` in healing-item.service.ts
+  - Resolves trainer owner via `pokemon.ownerId` for inventory lookup
+- **Commit:** `f29edf62` — inventory logic in use-item endpoint
+  - Validates item exists in trainer inventory with `quantity > 0`
+  - Deducts 1 after successful application (immutable map + filter empty stacks)
+  - Persists updated inventory to DB via `prisma.humanCharacter.update`
+  - `skipInventory` parameter for GM override (no check, no deduction)
+  - Response includes `inventoryConsumed` and `remainingQuantity`
+
+### Updated Store and Composable
+- **Commit:** `10b984c0` — encounter store `useItem()`: added `skipInventory` option, P2 response fields
+- **Commit:** `bb11dd01` — `useHealingItems.ts`: added `skipInventory` parameter passthrough
+
+### Updated UseItemModal UI
+- **Commit:** `7fe5cb55` — `UseItemModal.vue` (modified)
+  - Action cost badge (Standard / Full-Round) based on self-use detection
+  - Range/adjacency status display (PhMapPin icon, "Adjacent" / "Too far (Nm)")
+  - Action forfeit info line with Medic Training exemption indicator (PhShieldCheck)
+  - Inventory quantity (xN) column on each item row
+  - Out-of-stock items grayed out (opacity 0.4, unselectable)
+  - GM Mode checkbox toggle (PhShieldStar) for inventory bypass
+  - Comprehensive Apply button disabled states with tooltip reasons:
+    action not available, target not adjacent, out of stock, no item/target selected
+
+### WebSocket Event Update
+- **Commit:** `f29edf62` — `item_used` event now includes P2 fields:
+  `actionCost` ('standard' | 'full_round'), `targetForfeitsActions`, `inventoryConsumed`, `remainingQuantity`
+
+### Deviations from Spec
+- Used `ptuDistanceTokensBBox` instead of simple `ptuDiagonalDistance` for adjacency check — handles multi-cell tokens correctly per decree-002
+- Turn validation (user must be current turn combatant or have held action) not implemented — the GM is the sole UI user and can use items on behalf of any combatant. Adding turn-based restriction would limit GM flexibility. Can be added in a future iteration if needed.
+- Medic Training edge check uses case-insensitive `includes('medic training')` to be forgiving of data entry variations

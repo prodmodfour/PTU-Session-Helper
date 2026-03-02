@@ -79,3 +79,12 @@ Design spec: `artifacts/designs/design-healing-items-001/`
   - `b052616f` M1: Add Math.max(1,...) HP guard to Revive path (`app/server/services/healing-item.service.ts`)
   - `85480c5b` M2+rules-H1: Add decree-041 comment to Awakening entry (`app/constants/healingItems.ts`)
   - `4e8fbcb1` H1: Update app-surface.md with P1 healing item info (`.claude/skills/references/app-surface.md`)
+- 2026-03-02: code-review-284 APPROVED (0 issues). P1 fully approved.
+- 2026-03-02: P2 implementation complete (7 commits):
+  - `6a75e740` Section K: Add forfeitStandardAction/forfeitShiftAction to TurnState (`app/types/combat.ts`)
+  - `778bbd0a` Section M/N: Add checkItemRange and findTrainerForPokemon (`app/server/services/healing-item.service.ts`)
+  - `f29edf62` Sections J/K/L/M/N: Full P2 combat rules in use-item endpoint (action enforcement, self-use Full-Round, Medic Training, adjacency, inventory)
+  - `b15856bc` Section K: Consume forfeit flags at turn start in next-turn (`app/server/api/encounters/[id]/next-turn.post.ts`)
+  - `10b984c0` Section N: Add skipInventory to encounter store useItem (`app/stores/encounter.ts`)
+  - `bb11dd01` Section N: Add skipInventory passthrough to useHealingItems composable
+  - `7fe5cb55` UI: UseItemModal P2 updates (action cost, inventory qty, GM mode, adjacency, disabled states)

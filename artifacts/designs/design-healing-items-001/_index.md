@@ -4,7 +4,7 @@ ticket_id: feature-020
 category: FEATURE
 scope: FULL
 domain: healing
-status: p1-implemented
+status: p2-implemented
 decrees:
   - decree-017
   - decree-029
@@ -16,7 +16,12 @@ affected_files:
   - app/constants/healingItems.ts
   - app/server/services/combatant.service.ts
   - app/server/services/entity-update.service.ts
+  - app/server/services/healing-item.service.ts
+  - app/server/api/encounters/[id]/use-item.post.ts
+  - app/server/api/encounters/[id]/next-turn.post.ts
   - app/stores/encounter.ts
+  - app/composables/useHealingItems.ts
+  - app/types/combat.ts
   - app/types/character.ts
   - app/types/encounter.ts
   - app/components/encounter/UseItemModal.vue
