@@ -30,6 +30,30 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
   const { rollAccuracyCheck, attemptCapture } = useCapture()
 
   /**
+   * Reactive error state for handler failures.
+   * Auto-clears after 8 seconds. Non-blocking alternative to alert().
+   */
+  const handlerError = ref<string | null>(null)
+  let errorTimer: ReturnType<typeof setTimeout> | null = null
+
+  const setHandlerError = (message: string): void => {
+    console.error('Player request handler error:', message)
+    handlerError.value = message
+    if (errorTimer) clearTimeout(errorTimer)
+    errorTimer = setTimeout(() => {
+      handlerError.value = null
+    }, 8000)
+  }
+
+  const clearHandlerError = (): void => {
+    handlerError.value = null
+    if (errorTimer) {
+      clearTimeout(errorTimer)
+      errorTimer = null
+    }
+  }
+
+  /**
    * GM approves a player's capture request.
    * Rolls accuracy (AC 6), attempts capture, sends ack to player.
    */
@@ -50,7 +74,7 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
         c => c.id === data.trainerCombatantId
       )
       if (!trainerCombatant) {
-        alert('Could not find the trainer combatant for this capture request.')
+        setHandlerError('Could not find the trainer combatant for this capture request.')
         return
       }
 
@@ -65,6 +89,20 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
           trainerCombatantId: data.trainerCombatantId
         }
       })
+
+      // Handle null result (capture failed to execute)
+      if (!result) {
+        send({
+          type: 'player_action_ack',
+          data: {
+            requestId: data.requestId,
+            status: 'rejected',
+            reason: 'Capture attempt failed to execute'
+          }
+        })
+        setHandlerError('Capture attempt failed to execute. Player has been notified.')
+        return
+      }
 
       // Refresh encounter state after action economy change
       await encounterStore.loadEncounter(encounter.value.id)
@@ -87,15 +125,15 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
           status: 'accepted',
           result: {
             accuracyRoll: accuracyResult.roll,
-            captured: result?.captured ?? false,
-            captureRate: result?.captureRate,
-            roll: result?.roll,
-            reason: result?.reason
+            captured: result.captured,
+            captureRate: result.captureRate,
+            roll: result.roll,
+            reason: result.reason
           }
         }
       })
     } catch (e: any) {
-      alert(`Capture approval failed: ${e.message || 'Unknown error'}`)
+      setHandlerError(`Capture approval failed: ${e.message || 'Unknown error'}`)
     }
   }
 
@@ -165,7 +203,7 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
         }
       })
     } catch (e: any) {
-      alert(`Breather approval failed: ${e.message || 'Unknown error'}`)
+      setHandlerError(`Breather approval failed: ${e.message || 'Unknown error'}`)
     }
   }
 
@@ -185,18 +223,9 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
       // Capture undo snapshot before modifying encounter state
       encounterStore.captureSnapshot('Use Healing Item')
 
-      // Find the trainer combatant to get the user entity ID
-      const trainerCombatant = encounter.value.combatants.find(
-        c => c.id === data.trainerCombatantId
-      )
-      if (!trainerCombatant) {
-        alert('Could not find the trainer combatant for this healing request.')
-        return
-      }
-
       const itemResult = await encounterStore.useItem(
         data.healingItemName,
-        trainerCombatant.entityId,
+        data.trainerCombatantId,
         data.healingTargetId
       )
 
@@ -221,7 +250,7 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
         }
       })
     } catch (e: any) {
-      alert(`Healing item approval failed: ${e.message || 'Unknown error'}`)
+      setHandlerError(`Healing item approval failed: ${e.message || 'Unknown error'}`)
     }
   }
 
@@ -254,12 +283,14 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
       data: {
         requestId: data.requestId,
         status: 'rejected',
-        reason: data.reason || 'GM declined the request'
+        reason: data.reason || 'Request denied by GM'
       }
     })
   }
 
   return {
+    handlerError: readonly(handlerError),
+    clearHandlerError,
     handleApproveCapture,
     handleApproveBreather,
     handleApproveHealingItem,

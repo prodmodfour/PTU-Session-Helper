@@ -64,6 +64,12 @@
         @deny="handleDenyRequest"
       />
 
+      <!-- Player request handler error (non-blocking) -->
+      <div v-if="handlerError" class="handler-error" @click="clearHandlerError">
+        <span class="handler-error__text">{{ handlerError }}</span>
+        <span class="handler-error__dismiss">dismiss</span>
+      </div>
+
       <!-- Main Content -->
       <div class="encounter-content">
         <!-- Grid View -->
@@ -544,6 +550,8 @@ const handleDeclarationBroadcast = async () => {
 
 // Player Request Handlers (feature-023 P0)
 const {
+  handlerError,
+  clearHandlerError,
   handleApproveCapture,
   handleApproveBreather,
   handleApproveHealingItem,
@@ -723,5 +731,40 @@ const removeCombatant = async (combatantId: string) => {
   justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(4px);
+}
+
+.handler-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-danger, 0.15);
+  border: 1px solid rgba($color-danger, 0.4);
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  animation: error-slide-in 0.2s ease-out;
+
+  &__text {
+    font-size: $font-size-sm;
+    color: $color-danger;
+  }
+
+  &__dismiss {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    text-decoration: underline;
+  }
+}
+
+@keyframes error-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
