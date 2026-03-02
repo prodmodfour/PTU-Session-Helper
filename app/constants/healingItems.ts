@@ -104,6 +104,13 @@ export const HEALING_ITEM_CATALOG: Record<string, HealingItemDef> = {
     cost: 200,
     description: 'Cures Freezing.',
   },
+  'Awakening': {
+    name: 'Awakening',
+    category: 'cure',
+    curesConditions: ['Asleep', 'Bad Sleep'] as const,
+    cost: 200,
+    description: 'Cures Sleep.',
+  },
   'Full Heal': {
     name: 'Full Heal',
     category: 'cure',
