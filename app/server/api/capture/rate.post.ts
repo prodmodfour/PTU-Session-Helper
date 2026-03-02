@@ -1,6 +1,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { calculateCaptureRate, getCaptureDescription } from '~/utils/captureRate'
 import { isLegendarySpecies } from '~/constants/legendarySpecies'
+import { POKE_BALL_CATALOG, DEFAULT_BALL_TYPE, calculateBallModifier } from '~/constants/pokeBalls'
 import type { StatusCondition } from '~/types'
 
 interface CaptureRateRequest {
@@ -14,6 +15,7 @@ interface CaptureRateRequest {
   injuries?: number
   isShiny?: boolean
   isLegendary?: boolean  // GM override for legendary status
+  ballType?: string      // Key in POKE_BALL_CATALOG (default: 'Basic Ball')
 }
 
 export default defineEventHandler(async (event) => {
@@ -104,6 +106,19 @@ export default defineEventHandler(async (event) => {
     isLegendary
   })
 
+  // Ball type resolution and validation
+  const ballType = body.ballType || DEFAULT_BALL_TYPE
+  const ballDef = POKE_BALL_CATALOG[ballType]
+
+  if (body.ballType && !ballDef) {
+    throw createError({
+      statusCode: 400,
+      message: `Unknown ball type: ${body.ballType}`
+    })
+  }
+
+  const ballResult = calculateBallModifier(ballType)
+
   return {
     success: true,
     data: {
@@ -115,7 +130,15 @@ export default defineEventHandler(async (event) => {
       difficulty: getCaptureDescription(result.captureRate),
       canBeCaptured: result.canBeCaptured,
       hpPercentage: Math.round(result.hpPercentage),
-      breakdown: result.breakdown
+      breakdown: result.breakdown,
+      ballType,
+      ballModifier: ballResult.total,
+      ballBreakdown: {
+        baseModifier: ballResult.base,
+        conditionalModifier: ballResult.conditional,
+        conditionMet: ballResult.conditionMet,
+        conditionDescription: ballDef?.conditionDescription,
+      }
     }
   }
 })

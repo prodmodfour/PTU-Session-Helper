@@ -1,6 +1,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { calculateCaptureRate, attemptCapture, getCaptureDescription } from '~/utils/captureRate'
 import { isLegendarySpecies } from '~/constants/legendarySpecies'
+import { POKE_BALL_CATALOG, DEFAULT_BALL_TYPE, calculateBallModifier } from '~/constants/pokeBalls'
 import { applyTrainerXp, isNewSpecies } from '~/utils/trainerExperience'
 import type { TrainerXpResult } from '~/utils/trainerExperience'
 import { broadcast } from '~/server/utils/websocket'
@@ -10,7 +11,8 @@ interface CaptureAttemptRequest {
   pokemonId: string
   trainerId: string
   accuracyRoll?: number  // The accuracy check roll (to detect nat 20)
-  modifiers?: number     // Equipment/feature/ball modifiers (pre-calculated by GM)
+  ballType?: string      // Key in POKE_BALL_CATALOG (default: 'Basic Ball')
+  modifiers?: number     // Additional non-ball modifiers (features, equipment)
 }
 
 export default defineEventHandler(async (event) => {
@@ -95,12 +97,26 @@ export default defineEventHandler(async (event) => {
   // Was the accuracy check a critical hit (natural 20)?
   const criticalHit = body.accuracyRoll === 20
 
-  // Attempt capture
+  // Ball type resolution and validation
+  const ballType = body.ballType || DEFAULT_BALL_TYPE
+  const ballDef = POKE_BALL_CATALOG[ballType]
+
+  if (body.ballType && !ballDef) {
+    throw createError({
+      statusCode: 400,
+      message: `Unknown ball type: ${body.ballType}`
+    })
+  }
+
+  const ballResult = calculateBallModifier(ballType)
+
+  // Attempt capture with ball modifier separated from other modifiers
   const captureResult = attemptCapture(
     rateResult.captureRate,
     trainer.level,
     body.modifiers || 0,
-    criticalHit
+    criticalHit,
+    ballResult.total
   )
 
   // Track species XP data for the response
@@ -167,8 +183,16 @@ export default defineEventHandler(async (event) => {
       criticalHit,
       trainerLevel: trainer.level,
       modifiers: body.modifiers || 0,
+      ballModifier: ballResult.total,
+      ballType,
       difficulty: getCaptureDescription(rateResult.captureRate),
       breakdown: rateResult.breakdown,
+      ballBreakdown: {
+        baseModifier: ballResult.base,
+        conditionalModifier: ballResult.conditional,
+        conditionMet: ballResult.conditionMet,
+        conditionDescription: ballDef?.conditionDescription,
+      },
       pokemon: {
         id: pokemon.id,
         species: pokemon.species,
