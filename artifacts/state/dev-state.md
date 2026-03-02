@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-02T08:00:00
-updated_by: slave-collector (plan-20260301-223500)
+last_updated: 2026-03-02T08:35:00
+updated_by: slave-collector (plan-20260302-081436)
 ---
 
 # Dev Ecosystem State
@@ -23,7 +23,7 @@ updated_by: slave-collector (plan-20260301-223500)
 | bug-039 | P2 | **resolved** | Capture attempt endpoint allowed stealing owned Pokemon. Added ownership validation (reject if pokemon.ownerId non-null). Rate endpoint confirmed safe (read-only). Unit tests added (6 tests). Reviewed as part of code-review-216 (bug-039 portion approved), rules-review-192 **APPROVED** |
 | bug-040 | P4 | **resolved** | Extended-rest endpoint lacks Math.max(0,...) safety clamp on currentAp calculation. Already fixed in commit 3d6a238 (bug-038 fix cycle). Ticket moved to resolved by slave-3 (plan-20260228-153856) |
 | bug-041 | P3 | **resolved** | Remove Whirlwind references from Force Switch UI per decree-034. Fixed by slave-3 (plan-20260301-204809). Fix cycle (2 medium doc fixes) completed by slave-3 (plan-20260301-223500). Resolved |
-| bug-042 | P2 | **open** | release-hold.post.ts creates duplicate turnOrder entry in Full Contact battles after hold-release. Source: code-review-264 HIGH-001. Filed by slave-collector (plan-20260301-223500) |
+| bug-042 | P2 | **resolved** | release-hold.post.ts creates duplicate turnOrder entry in Full Contact battles after hold-release. Fixed by slave-1 (plan-20260302-081436): 3 commits — duplicate removal after splice, unit tests, ticket update. Needs review |
 
 ### PTU Rule Tickets (`tickets/ptu-rule/`)
 | Ticket | Priority | Status | Summary |
@@ -103,14 +103,14 @@ updated_by: slave-collector (plan-20260301-223500)
 | feature-011 | P1 | **P2-APPROVED** | Pokemon Switching Workflow — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-256 **APPROVED** (MED-001: switching.service.ts at 811 lines → refactoring-115) + rules-review-232 **APPROVED** (re-review by slave-5, plan-20260301-170000). All code-review-249 issues verified resolved. Feature complete | multi-phase |
 | feature-012 | P1 | **APPROVED** | Death & Heavily Injured Automation — fix cycle 3 APPROVED. code-review-233 **APPROVED** + rules-review-209 **APPROVED** (re-review by slave-3, plan-20260301-084803). All code-review-228 + rules-review-204 issues resolved. Feature complete | single-phase |
 | feature-009 | P1 | **P1-APPROVED** | Trainer XP & Advancement Tracking — P0 APPROVED. P1 APPROVED: code-review-262 **APPROVED** (0 issues, all 5 code-review-257 issues verified resolved) + rules-review-238 **APPROVED** (7 mechanics verified, MED-1: XpDistributionModal at 1016 lines → update refactoring-116). **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
-| feature-013 | P1 | **P2-fix-cycle-done** | Multi-Tile Token System — P0 APPROVED. P1 APPROVED. P2 fix cycle by slave-1 (plan-20260301-223500): 5 commits — removed duplicate isFlankingTarget from useRangeParser (CRIT-1), reset token metadata in endMeasurement (MED-1), added multi-cell footprint support to isometric measurement overlay (HIGH-1), documented getBlastEdgeOrigin as P3 follow-up (MED-1), ticket/design updates. All code-review-261 + rules-review-237 issues addressed. Needs re-review | multi-phase |
+| feature-013 | P1 | **P2-APPROVED** | Multi-Tile Token System — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-266 **APPROVED** (0 issues, all 5 code-review-261 + rules-review-237 issues verified resolved) + rules-review-242 **APPROVED** (all 5 mechanics verified, decree-002/040 compliant). Re-reviewed by slave-4 (plan-20260302-081436). **Feature complete** (all P0+P1+P2 tiers approved) | multi-phase |
 | feature-014 | P1 | **P0-APPROVED** | VTT Flanking Detection — P0 APPROVED. Re-reviewed by slave-5 (plan-20260301-204809): code-review-260 **APPROVED** (MED-1: unused flankingMap destructure → refactoring-118, non-blocking) + rules-review-236 **APPROVED** (7 mechanics verified, 0 issues, all code-review-254 + rules-review-230 issues confirmed resolved). P1 depends on feature-013 P2 (multi-tile flanking) | multi-phase |
 | feature-016 | P2 | **P1-APPROVED** | Priority / Interrupt / Attack of Opportunity System — P0 APPROVED. P1 APPROVED: code-review-264 **APPROVED** (NEW HIGH-001: release-hold.post.ts duplicate turnOrder → bug-042, NEW MED-001: stale interrupt.post.ts comment → refactoring-119) + rules-review-240 **APPROVED** (all mechanics verified, NEW MED-001: hold action skips validation chain, accepted for P1). Re-reviewed by slave-6 (plan-20260301-223500). All code-review-259 + rules-review-235 issues verified resolved. Ready for P2 (after bug-042 fix) | multi-phase |
 
-| feature-017 | P2 | **design-complete** | Poke Ball Type System — multi-tier design spec created by slave-4 (plan-20260301-223500). 6 files in design-poke-ball-types-001/: _index.md, spec-p0.md (ball catalog + modifier integration), spec-p1.md (conditional ball logic), spec-p2.md (selection UI + post-capture effects), shared-specs.md, testing-strategy.md. Ready for P0 implementation | multi-phase |
+| feature-017 | P2 | **P0-implemented** | Poke Ball Type System — P0 implemented by slave-2 (plan-20260302-081436): 5 commits — ball catalog constants (25 PTU ball types), ballModifier in attemptCapture, ballType in capture API endpoints, ball type in useCapture composable, ticket/design updates. Needs review | multi-phase |
 | feature-019 | P2 | **APPROVED** | VTT Status-Movement Integration — Tripped combatants blocked from VTT movement (R025). Stuck (R022) and Slowed (R024) pre-existing. Reviewed by slave-7 (plan-20260301-223500): code-review-265 **APPROVED** (0 issues, PTU faithful, consistent pattern, thorough documentation) + rules-review-241 **APPROVED** (all 3 mechanics verified correct, 46 tests passing, 0 issues). Feature complete | partial |
-| feature-020 | P2 | **P0-implemented** | Healing Item System — P0 implemented by slave-2 (plan-20260301-223500): 8 commits — item catalog (Section A), apply-item service (Section B), use-item API endpoint (Section C), encounter store action (Section D), useHealingItems composable + UseItemModal component (Section E), wired into CombatantCard. Needs review | multi-phase |
-| feature-023 | P2 | **design-complete** | Player Capture & Healing Interfaces — multi-tier design spec created by slave-5 (plan-20260301-223500). 6 files in design-player-capture-healing-001/: _index.md, spec-p0.md (player action request framework), spec-p1.md (player capture UI), spec-p2.md (player healing UI), shared-specs.md, testing-strategy.md. Ready for P0 implementation | multi-phase |
+| feature-020 | P2 | **P0-CHANGES_REQUIRED** | Healing Item System — P0 implemented by slave-2 (plan-20260301-223500). Reviewed by slave-5 (plan-20260302-081436): code-review-267 **CHANGES_REQUIRED** (3H: double validation, duplicate getCombatantName, dead stub getApplicableItems; 4M: effective maxHP display, convoluted ternary, app-surface.md, hardcoded gap) + rules-review-243 **APPROVED** (all PTU values correct, decree-017+029 compliant). Needs fix cycle | multi-phase |
+| feature-023 | P2 | **P0-implemented** | Player Capture & Healing Interfaces — P0 implemented by slave-3 (plan-20260302-081436): 6 commits — PlayerActionType extension (capture/breather/use_healing_item), usePlayerCombat request functions, PlayerRequestPanel GM component, extracted usePlayerRequestHandlers composable, wired into GM encounter view, ticket/design updates. Needs review | multi-phase |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -133,7 +133,21 @@ updated_by: slave-collector (plan-20260301-223500)
 
 ## Active Developer Work
 
-**Current task:** Session 81 collection complete. 7 slaves merged (22 commits total). 5 dev slaves (feature-013-p2-fix 5 commits, feature-020-p0 8 commits, ptu-rule-132+bug-041-fix 3 commits, feature-017-design 1 commit, feature-023-design 1 commit). 2 reviewer slaves (feature-016-p1-rereview APPROVED, feature-019-review APPROVED). Smoke test PASSED. Review naming collision (264/240) resolved by renumbering slave-7→265/241. Broken node_modules symlink from worktrees fixed.
+**Current task:** Session 82 collection complete. 5 slaves merged (18 commits total). 3 dev slaves (bug-042 3 commits, feature-017-p0 5 commits, feature-023-p0 6 commits). 2 reviewer slaves (feature-013-p2-rereview APPROVED, feature-020-p0-review CHANGES_REQUIRED). Smoke test PASSED. No conflicts.
+
+**Session 82 (2026-03-02, plan-20260302-081436):**
+- **slave-4** (reviewers): feature-013-p2-rereview — code-review-266 **APPROVED** (0 issues, all 5 code-review-261 + rules-review-237 issues verified resolved, minimal targeted fixes) + rules-review-242 **APPROVED** (0 issues, all 5 mechanics verified, canonical flanking intact, decree-002/040 compliant). → feature-013 **P2-APPROVED, Feature complete**
+- **slave-5** (reviewers): feature-020-p0-review — code-review-267 **CHANGES_REQUIRED** (3H: double validation in API+service, duplicate getCombatantName in UseItemModal, dead getApplicableItems stub in constants; 4M: maxHp vs effectiveMaxHp display, convoluted ternary, app-surface.md, hardcoded 3px gap) + rules-review-243 **APPROVED** (all 14 catalog items match PTU 1.05, injury cap correct, no min-1 for items, decree-017+029 compliant). → feature-020 **P0-CHANGES_REQUIRED**
+- **slave-1** (developer): bug-042 — 3 commits: Fixed duplicate turnOrder entry after hold-release in Full Contact battles. Splice pattern applied (remove original entry after insert at current turn). Unit tests added (3 test cases). Ticket updated. → **resolved, needs review**
+- **slave-2** (developer): feature-017-p0 — 5 commits: Poke Ball Type System P0 (Sections A-D). Ball catalog constants (25 PTU ball types), ballModifier in attemptCapture, ballType parameter in capture API endpoints, ball type support in useCapture composable, ticket/design updates. → **P0-implemented, needs review**
+- **slave-3** (developer): feature-023-p0 — 6 commits: Player Capture & Healing Interfaces P0 (Sections A-D). Extended PlayerActionType with capture/breather/use_healing_item, request functions in usePlayerCombat, PlayerRequestPanel GM component, extracted usePlayerRequestHandlers composable, wired into GM encounter view, ticket/design updates. → **P0-implemented, needs review**
+
+**Smoke test:** PASSED (Playwright) — GM view renders (full nav + encounter controls + group view buttons). Group view renders (Waiting for Encounter). Player view renders (character selection with retry).
+**Tickets filed:** None (no ticketable issues discovered in reviews)
+**Tickets approved:** feature-013 P2 (APPROVED by code-review-266 + rules-review-242). Feature complete (all P0+P1+P2 tiers)
+**Tickets resolved:** bug-042 (duplicate turnOrder fixed by slave-1)
+**Tickets needing fix cycle:** feature-020 P0 (code-review-267 3H+4M)
+**Tickets needing review:** bug-042 (first implementation), feature-017 P0 (first implementation), feature-023 P0 (first implementation)
 
 **Session 81 (2026-03-02, plan-20260301-223500):**
 - **slave-1** (developer): feature-013-p2-fix — 5 commits: Fix cycle for Multi-Tile Token System P2 (code-review-261 + rules-review-237). Removed duplicate isFlankingTarget from useRangeParser (CRIT-1), reset token metadata in endMeasurement (MED-1), added multi-cell footprint support to isometric measurement overlay (HIGH-1), documented getBlastEdgeOrigin as P3 follow-up (MED-1), ticket/design updates. → **P2-fix-cycle-done, needs re-review**
@@ -636,6 +650,14 @@ updated_by: slave-collector (plan-20260301-223500)
 5. Remaining open: ptu-rule-086-095 (various P3-P4), bug-032 (P4), ux-006 (P4), ux-009 (P4)
 
 ## Review Status
+
+### Session 82 Reviews (plan-20260302-081436)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-266 | feature-013 P2 re-review (Multi-Tile Token fix cycle) | APPROVED (0 issues, all 5 prior issues resolved) | senior-reviewer | 2026-03-02 |
+| rules-review-242 | feature-013 P2 re-review (Multi-Tile Token fix cycle) | APPROVED (0 issues, 5 mechanics verified, decree-002/040 compliant) | game-logic-reviewer | 2026-03-02 |
+| code-review-267 | feature-020 P0 (Healing Item System) | CHANGES_REQUIRED (3H: double validation, duplicate getCombatantName, dead stub; 4M: effectiveMaxHp display, convoluted ternary, app-surface.md, hardcoded gap) | senior-reviewer | 2026-03-02 |
+| rules-review-243 | feature-020 P0 (Healing Item System) | APPROVED (14 catalog items match PTU 1.05, injury cap correct, no min-1 for items) | game-logic-reviewer | 2026-03-02 |
 
 ### Session 80 Reviews (plan-20260301-220000)
 | Review ID | Target | Verdict | Reviewer | Date |
