@@ -257,7 +257,7 @@ function generateReviewsIndex() {
 }
 
 function generateTicketsIndex() {
-  const categories = ['bug', 'ptu-rule', 'feature', 'ux', 'decree', 'refactoring']
+  const categories = ['bug', 'ptu-rule', 'feature', 'ux', 'decree', 'refactoring', 'docs']
   const statusDirs = ['open', 'in-progress', 'resolved']
   const allTickets = []
 
@@ -547,7 +547,7 @@ function generateGlobalIndex() {
     return v === 'CHANGES_REQUIRED' || v === 'FAIL' || v === 'MIXED'
   })
 
-  const ticketCategories = ['bug', 'ptu-rule', 'feature', 'ux', 'decree', 'refactoring']
+  const ticketCategories = ['bug', 'ptu-rule', 'feature', 'ux', 'decree', 'refactoring', 'docs']
   const statusDirs = ['open', 'in-progress', 'resolved']
   let totalTickets = 0
   let openTickets = 0
