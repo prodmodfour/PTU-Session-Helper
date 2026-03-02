@@ -1,5 +1,31 @@
 // Combat-related types for PTU 1.05
 
+// ============================================================
+// Mount State (feature-004 — PTU p.218)
+// ============================================================
+
+/**
+ * Mount relationship tracking for a combatant.
+ * Present on BOTH the rider (trainer) and mount (Pokemon) combatants.
+ *
+ * PTU p.218: Mounting is a combat action. Rider uses mount's Movement
+ * Capabilities for Shift on trainer turn. Mount keeps unused movement
+ * + Standard Action on Pokemon turn.
+ */
+export interface MountState {
+  /** true = this combatant IS the rider; false = this combatant IS the mount */
+  isMounted: boolean
+  /** Combatant ID of the partner (rider->mount or mount->rider) */
+  partnerId: string
+  /**
+   * Movement remaining for the mount this round (meters).
+   * Set to mount's full movement speed at round start.
+   * Consumed by rider's Shift on trainer turn, remainder available to mount on Pokemon turn.
+   * Reset each round by resetCombatantsForNewRound.
+   */
+  movementRemaining: number
+}
+
 // Status conditions (PTU 1.05)
 export type StatusCondition =
   | 'Burned' | 'Frozen' | 'Paralyzed' | 'Poisoned' | 'Badly Poisoned'
