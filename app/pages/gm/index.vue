@@ -54,6 +54,17 @@
         @proceed="handlePriorityProceed"
       />
 
+      <!-- Player Action Requests (GM approves/denies incoming player requests) -->
+      <PlayerRequestPanel
+        v-if="encounter.isActive"
+        :encounter-id="encounter.id"
+        @approve-capture="handleApproveCapture"
+        @approve-breather="handleApproveBreather"
+        @approve-healing-item="handleApproveHealingItem"
+        @approve-generic="handleApproveGeneric"
+        @deny="handleDenyRequest"
+      />
+
       <!-- Main Content -->
       <div class="encounter-content">
         <!-- Grid View -->
@@ -615,6 +626,21 @@ const handleDeclarationBroadcast = async () => {
   }
   refreshUndoRedoState()
 }
+
+// Player Request Handlers (feature-023 P0)
+const {
+  handleApproveCapture,
+  handleApproveBreather,
+  handleApproveHealingItem,
+  handleApproveGeneric,
+  handleDenyRequest
+} = usePlayerRequestHandlers({
+  encounter,
+  send,
+  refreshUndoRedoState,
+  pendingBreatherShift,
+  activeView
+})
 
 const handleSetWeather = async (weather: string | null, source: string) => {
   const label = weather ? `Set Weather: ${weather}` : 'Cleared Weather'
