@@ -34,6 +34,12 @@ export function usePlayerCapture() {
     if (targetCombatant.type !== 'pokemon') return null
     const pokemon = targetCombatant.entity as Pokemon
 
+    // Omits evolutionStage, maxEvolutionStage, and isLegendary because
+    // the client-side Pokemon type does not carry SpeciesData fields.
+    // This makes the local estimate less accurate: evolution stage modifiers
+    // (up to -10 per stage beyond first) and legendary penalty (-30) are
+    // excluded. The server path (fetchCaptureRate) is the primary path and
+    // includes these fields via SpeciesData lookup.
     return calculateCaptureRateLocal({
       level: pokemon.level,
       currentHp: pokemon.currentHp,
