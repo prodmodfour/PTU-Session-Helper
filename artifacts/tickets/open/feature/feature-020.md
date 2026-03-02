@@ -74,3 +74,8 @@ Design spec: `artifacts/designs/design-healing-items-001/`
   - `7462947d` Section F-I: Category-aware getApplicableItems in useHealingItems composable
   - `0636470b` Section I/UI: UseItemModal grouped sections with repulsive badge
   - `b178d013` Tests: Comprehensive unit tests for cure resolution, revive HP, Full Restore
+- 2026-03-02: code-review-278 CHANGES_REQUIRED (0C, 1H, 2M). rules-review-254 CHANGES_REQUIRED (0C, 1H, 0M).
+- 2026-03-02: P1 fix cycle complete (3 commits, all 4 issues addressed):
+  - `b052616f` M1: Add Math.max(1,...) HP guard to Revive path (`app/server/services/healing-item.service.ts`)
+  - `85480c5b` M2+rules-H1: Add decree-041 comment to Awakening entry (`app/constants/healingItems.ts`)
+  - `4e8fbcb1` H1: Update app-surface.md with P1 healing item info (`.claude/skills/references/app-surface.md`)
