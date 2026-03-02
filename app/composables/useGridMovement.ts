@@ -187,9 +187,18 @@ export function useGridMovement(options: UseGridMovementOptions) {
 
     // Mounted combatants use shared movementRemaining (PTU p.218, feature-004)
     // Rider uses mount's movement on trainer turn; mount uses remainder on its turn.
-    // movementRemaining already accounts for the mount's base speed (set at round start).
+    // movementRemaining is the raw distance budget. Movement modifiers (Slowed, Speed CS)
+    // are applied from the MOUNT's conditions, not the rider's (PTU p.218, spec-p1 Section E).
     if (combatant.mountState) {
-      return combatant.mountState.movementRemaining
+      const remaining = combatant.mountState.movementRemaining
+      // Look up the mount combatant for condition-based modifiers
+      const mountCombatant = combatant.mountState.isMounted
+        ? findCombatant(combatant.mountState.partnerId) // rider -> lookup mount
+        : combatant // this IS the mount
+      if (mountCombatant) {
+        return applyMovementModifiers(mountCombatant, remaining)
+      }
+      return remaining
     }
 
     if (options.getMovementSpeed) {
@@ -233,10 +242,17 @@ export function useGridMovement(options: UseGridMovementOptions) {
     const combatant = findCombatant(combatantId)
 
     // Mounted combatants use shared movementRemaining (PTU p.218, feature-004)
-    // This value is pre-calculated at round start and decremented as either
-    // the rider or mount moves. Movement modifiers were applied at mount time.
+    // Movement modifiers (Slowed, Speed CS) are applied from the MOUNT's
+    // conditions, not the rider's personal conditions (spec-p1 Section E).
     if (combatant?.mountState) {
-      return combatant.mountState.movementRemaining
+      const remaining = combatant.mountState.movementRemaining
+      const mountCombatant = combatant.mountState.isMounted
+        ? findCombatant(combatant.mountState.partnerId)
+        : combatant
+      if (mountCombatant) {
+        return applyMovementModifiers(mountCombatant, remaining)
+      }
+      return remaining
     }
 
     // Base speed: use callback if provided, otherwise derive from combatant
