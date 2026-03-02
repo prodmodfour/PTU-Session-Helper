@@ -79,6 +79,52 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
       }
 
       const accuracyResult = rollAccuracyCheck()
+
+      // PTU p.214: AC 6 gate — ball must hit before capture attempt occurs
+      if (!accuracyResult.hits) {
+        // Ball missed — no capture attempt, but Standard Action is still consumed
+        try {
+          await $fetch(`/api/encounters/${encounter.value.id}/action`, {
+            method: 'POST',
+            body: {
+              combatantId: data.trainerCombatantId,
+              actionType: 'standard'
+            }
+          })
+        } catch (actionError: any) {
+          // Non-blocking — action economy tracking is best-effort
+        }
+
+        // Refresh encounter state after action economy change
+        await encounterStore.loadEncounter(encounter.value.id)
+        refreshUndoRedoState()
+
+        await nextTick()
+        if (encounterStore.encounter) {
+          send({
+            type: 'encounter_update',
+            data: encounterStore.encounter
+          })
+        }
+
+        send({
+          type: 'player_action_ack',
+          data: {
+            requestId: data.requestId,
+            status: 'accepted',
+            result: {
+              accuracyRoll: accuracyResult.roll,
+              accuracyHit: false,
+              captured: false,
+              reason: accuracyResult.isNat1
+                ? 'Natural 1 — ball missed! (auto-miss)'
+                : `Rolled ${accuracyResult.roll} vs AC 6 — ball missed!`
+            }
+          }
+        })
+        return
+      }
+
       const result = await attemptCapture({
         pokemonId: data.targetPokemonId,
         trainerId: trainerCombatant.entityId,
@@ -125,6 +171,7 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
           status: 'accepted',
           result: {
             accuracyRoll: accuracyResult.roll,
+            accuracyHit: true,
             captured: result.captured,
             captureRate: result.captureRate,
             roll: result.roll,
