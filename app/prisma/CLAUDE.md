@@ -59,8 +59,9 @@ AbilityData is seeded separately or populated on demand. No encounter tables or 
 ## Schema Sync
 
 - **No migrations directory** — uses `prisma db push` for schema changes (destructive sync)
-- No migration scripts for DB schema exist in `scripts/`; those scripts handle artifact reorganization only
 - Schema changes require re-running `prisma db push` + `prisma db seed` on the local SQLite file
+- One-time migration scripts in `app/prisma/`: `backfill-origin.ts`, `migrate-capabilities-key.ts`, `migrate-phantom-conditions.ts`
+- Additional seed files: `seed-encounter-tables.ts` (habitats), `seed-hassan-chompy.ts` and `seed-ilaria-iris.ts` (sample player characters)
 
 ## Gotchas
 
