@@ -45,7 +45,7 @@ Implement PTU flanking detection on the VTT grid. When a combatant is adjacent t
 | Tier | Sections | File |
 |------|----------|------|
 | P0 | A. Flanking geometry utility, B. 1x1 flanking detection composable, C. Visual indicator on VTT, D. Flanking evasion penalty in accuracy | [spec-p0.md](spec-p0.md) | **IMPLEMENTED** |
-| P1 | E. Multi-tile target flanking geometry, F. Multi-tile attacker counting, G. Diagonal flanking with PTU distance, H. 3+ attacker flanking | [spec-p1.md](spec-p1.md) |
+| P1 | E. Multi-tile target flanking geometry, F. Multi-tile attacker counting, G. Diagonal flanking with PTU distance, H. 3+ attacker flanking | [spec-p1.md](spec-p1.md) | **IMPLEMENTED** |
 | P2 | I. Auto-detect flanking on token placement/movement, J. Auto-apply penalty to accuracy checks, K. Flanking indicator in CombatantCard, L. WebSocket flanking sync | [spec-p2.md](spec-p2.md) |
 
 ## Dependencies
@@ -62,10 +62,10 @@ Implement PTU flanking detection on the VTT grid. When a combatant is adjacent t
 | B | 1x1 flanking detection composable | IMPLEMENTED | useFlankingDetection.ts | **P0** |
 | C | Visual indicator on VTT grid | IMPLEMENTED | Canvas + VTTToken CSS | **P0** |
 | D | Flanking evasion penalty in accuracy | IMPLEMENTED | useMoveCalculation.ts | **P0** |
-| E | Multi-tile target flanking geometry | NOT_IMPLEMENTED | Depends on feature-013 | **P1** |
-| F | Multi-tile attacker counting | NOT_IMPLEMENTED | Large attackers count as multiple foes | **P1** |
-| G | Diagonal flanking with PTU distance | NOT_IMPLEMENTED | Adjacency uses Chebyshev, decree-002 applies | **P1** |
-| H | 3+ attacker flanking | NOT_IMPLEMENTED | More than 2 flankers | **P1** |
+| E | Multi-tile target flanking geometry | IMPLEMENTED | checkFlankingMultiTile + findIndependentSet | **P1** |
+| F | Multi-tile attacker counting | IMPLEMENTED | countAdjacentAttackerCells | **P1** |
+| G | Diagonal flanking with PTU distance | IMPLEMENTED | Confirmed correct from P0 (8-directional adjacency) | **P1** |
+| H | 3+ attacker flanking | IMPLEMENTED | Validated via independent set algorithm | **P1** |
 | I | Auto-detect on token movement | NOT_IMPLEMENTED | No reactive flanking state | **P2** |
 | J | Auto-apply penalty to accuracy checks | NOT_IMPLEMENTED | Manual flanking tracking | **P2** |
 | K | Flanking indicator in CombatantCard | NOT_IMPLEMENTED | No flanking status display | **P2** |
