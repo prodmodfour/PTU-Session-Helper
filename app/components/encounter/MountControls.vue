@@ -193,7 +193,7 @@ const canMountOptions = computed(() => {
   const options: { id: string; name: string; overland: number }[] = []
 
   for (const c of encounter.combatants) {
-    if (c.id === current.id) return []
+    if (c.id === current.id) continue
     if (c.side !== current.side) continue
     if (!isMountable(c)) continue
     if (!c.position) continue
