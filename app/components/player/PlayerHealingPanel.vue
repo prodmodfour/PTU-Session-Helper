@@ -3,6 +3,13 @@
     <h4 class="combat-actions__panel-title">
       <PhHeart :size="16" />
       Healing
+      <button
+        class="combat-actions__panel-close"
+        aria-label="Close healing panel"
+        @click="emit('cancel')"
+      >
+        <PhX :size="16" />
+      </button>
     </h4>
 
     <!-- Tab selector (breather vs items) -->
@@ -120,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhHeart, PhWarning, PhInfo, PhWind } from '@phosphor-icons/vue'
+import { PhHeart, PhWarning, PhInfo, PhWind, PhX } from '@phosphor-icons/vue'
 import type { Combatant, Pokemon, HumanCharacter } from '~/types'
 import { HEALING_ITEM_CATALOG, type HealingItemDef } from '~/constants/healingItems'
 

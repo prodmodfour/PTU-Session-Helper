@@ -200,11 +200,30 @@
   }
 
   &__panel-title {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
     font-size: $font-size-xs;
     font-weight: 700;
     color: $color-text-muted;
     text-transform: uppercase;
     margin: 0 0 $spacing-xs;
+  }
+
+  &__panel-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: $color-text-muted;
+    cursor: pointer;
+    padding: 2px;
+    line-height: 1;
+    border-radius: $border-radius-sm;
+    transition: color $transition-fast;
+
+    &:hover {
+      color: $color-text;
+    }
   }
 
   &__panel-empty {
