@@ -66,7 +66,7 @@ The creation composable manages:
 | `StatAllocationSection.vue` | Stat point allocation with +/- buttons, pool tracking | **Adapt** -- same UI but smaller pool (1-2 points per level vs 10+ at creation) |
 | `EdgeSelectionSection.vue` | Free-text edge input + Skill Edge shortcut with dropdown | **Reuse directly** -- same edge selection UI |
 | `ClassFeatureSection.vue` | Class picker with branching specialization, feature free-text | **Reuse directly** -- same class/feature selection UI |
-| `SkillBackgroundSection.vue` | Background preset + custom skill assignment | **Do not reuse** -- level-up doesn't change backgrounds. New `LevelUpSkillSection` for single rank-up |
+| `SkillBackgroundSection.vue` | Background preset + custom skill assignment | **Do not reuse** -- level-up doesn't change backgrounds. Skill ranks come from Skill Edges per decree-037 |
 
 ### 6. Server API (`app/server/api/characters/[id].put.ts`)
 
@@ -248,10 +248,7 @@ gm/characters/[id].vue (or CharacterModal.vue)
       |-- Step 1: LevelUpStatSection.vue         [P0]
       |   (stat point allocation: +N points to distribute)
       |
-      |-- Step 2: LevelUpSkillSection.vue         [P0]
-      |   (skill rank choices: pick N skills to rank up)
-      |
-      |-- Step 3: LevelUpEdgeSection.vue          [P1]
+      |-- Step 2: LevelUpEdgeSection.vue          [P1]
       |   (edge selection at even levels + bonus Skill Edges)
       |
       |-- Step 4: LevelUpFeatureSection.vue       [P1]

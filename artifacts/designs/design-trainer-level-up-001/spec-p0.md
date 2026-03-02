@@ -552,9 +552,9 @@ interface Emits {
 
 ## E. Skill Rank Allocation Step — DEFERRED TO P1
 
-> **DECREE-037 (binding):** Per decree-037, trainers do NOT receive automatic skill ranks per level. Skill ranks come from Skill Edges only (PTU Core p.19, p.52). The `LevelUpSkillSection.vue` component was built but is now disabled in the P0 wizard flow. Skill rank allocation will be re-integrated in P1 as part of Edge selection — when a trainer selects a Skill Edge (Basic/Adept/Expert/Master Skills), the skill rank picker will surface as a sub-step of the Edge step.
+> **DECREE-037 (binding):** Per decree-037, trainers do NOT receive automatic skill ranks per level. Skill ranks come from Skill Edges only (PTU Core p.19, p.52). The `LevelUpSkillSection.vue` component has been deleted (dead code). Skill rank allocation is handled in P1 as part of Edge selection — when a trainer selects a Skill Edge (Basic/Adept/Expert/Master Skills), the skill rank picker surfaces as a sub-step of the Edge step.
 >
-> The `LevelUpSkillSection.vue` file is retained for reuse in P1. The `skillRanksGained` field was removed from `TrainerLevelUpInfo` and `totalSkillRanks` from `TrainerAdvancementSummary`. All skill-related state, actions, and computed values were removed from `useTrainerLevelUp.ts`. The `buildUpdatePayload` no longer includes `skills` in its output.
+> The `skillRanksGained` field was removed from `TrainerLevelUpInfo` and `totalSkillRanks` from `TrainerAdvancementSummary`. All skill-related state, actions, and computed values were removed from `useTrainerLevelUp.ts`. Skill rank updates in `buildUpdatePayload` come exclusively from Skill Edge choices (bonus + regular).
 
 ---
 

@@ -169,15 +169,9 @@ Component tests verify rendering and user interactions, not business logic.
 | Decrement emits event | Click [-] on Attack | `decrementStat: 'attack'` emitted |
 | Max HP preview updates | Props change | Preview formula correct |
 
-### File: `app/tests/unit/components/levelup/LevelUpSkillSection.test.ts`
+### ~~File: `LevelUpSkillSection.test.ts`~~ — REMOVED per decree-037
 
-| Test Case | Action | Expected |
-|-----------|--------|----------|
-| Renders skill grid by category | Mount | Body/Mind/Spirit groups |
-| Shows current ranks | Mount with skills | Rank labels correct |
-| Disabled when capped | Skill at cap | [+] button disabled |
-| Pathetic skills selectable | Skill at Pathetic | [+] button enabled |
-| Chosen skills shown | Props with choices | "Chosen" list rendered |
+> Component deleted. Skill rank allocation is handled via Skill Edge selection in the Edge step (P1). No standalone skill section test needed.
 
 ---
 
