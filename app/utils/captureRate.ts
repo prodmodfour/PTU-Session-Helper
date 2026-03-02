@@ -168,24 +168,27 @@ export function calculateCaptureRate(input: CaptureRateInput): CaptureRateResult
 }
 
 /**
- * Simulate a capture attempt
- * @param captureRate The calculated capture rate
+ * Simulate a capture attempt (decree-013: 1d100 system).
+ * @param captureRate The calculated capture rate (target number)
  * @param trainerLevel The trainer's level (subtracted from roll)
- * @param modifiers Any additional modifiers from equipment/features
+ * @param modifiers Non-ball modifiers from equipment/features
  * @param criticalHit Whether the accuracy check was a natural 20
+ * @param ballModifier Ball-specific modifier (from POKE_BALL_CATALOG)
  * @returns Object with success status and roll details
  */
 export function attemptCapture(
   captureRate: number,
   trainerLevel: number,
   modifiers: number = 0,
-  criticalHit: boolean = false
+  criticalHit: boolean = false,
+  ballModifier: number = 0
 ): {
   success: boolean
   roll: number
   modifiedRoll: number
   effectiveCaptureRate: number
   naturalHundred: boolean
+  ballModifier: number
 } {
   // Roll 1d100
   const roll = Math.floor(Math.random() * 100) + 1
@@ -199,10 +202,11 @@ export function attemptCapture(
     effectiveCaptureRate += 10  // Crit subtracts 10 from roll, same as adding 10 to rate
   }
 
-  // Modified roll = roll - trainer level + modifiers
+  // Modified roll = roll - trainer level + modifiers + ball modifier
   // PTU ball modifiers are negative (e.g., Great Ball = -10), so adding them
   // correctly reduces the roll, making capture easier.
-  const modifiedRoll = roll - trainerLevel + modifiers
+  // Ball modifier is additive with other modifiers on the roll.
+  const modifiedRoll = roll - trainerLevel + modifiers + ballModifier
 
   // Success if modified roll <= capture rate, or natural 100
   const success = naturalHundred || modifiedRoll <= effectiveCaptureRate
@@ -212,7 +216,8 @@ export function attemptCapture(
     roll,
     modifiedRoll,
     effectiveCaptureRate,
-    naturalHundred
+    naturalHundred,
+    ballModifier
   }
 }
 
