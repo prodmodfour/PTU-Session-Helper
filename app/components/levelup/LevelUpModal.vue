@@ -56,18 +56,6 @@
           @decrement-stat="levelUp.decrementStat"
         />
 
-        <LevelUpSkillSection
-          v-if="currentStep === 'skills'"
-          :current-skills="character.skills"
-          :skill-choices="[]"
-          :total-ranks="0"
-          :ranks-remaining="0"
-          :target-level="targetLevel"
-          :caps-unlocked="summary?.skillRankCapsUnlocked ?? []"
-          :get-effective-skill-rank="levelUp.getEffectiveSkillRank"
-          :can-rank-up-skill="() => false"
-        />
-
         <LevelUpEdgeSection
           v-if="currentStep === 'edges'"
           :effective-skills="levelUp.effectiveSkills.value"
@@ -195,8 +183,10 @@ onUnmounted(() => {
 const summary = computed((): TrainerAdvancementSummary | null => levelUp.summary.value)
 
 // --- Step Navigation ---
-// Order: milestones (if any) -> stats -> skills -> edges (if any) -> features (if any) -> classes (if any) -> summary
+// Order: milestones (if any) -> stats -> edges (if any) -> features (if any) -> classes (if any) -> summary
 // Milestones first because they affect edge/feature/stat counts.
+// Note: Per decree-037, skill rank allocation is NOT a separate step.
+// Skill ranks come from Skill Edges (in the edges step).
 const steps = computed((): string[] => {
   const s: string[] = []
 
@@ -207,9 +197,6 @@ const steps = computed((): string[] => {
 
   // Stats (always present)
   s.push('stats')
-
-  // Skills (always present -- read-only overview of caps per decree-037)
-  s.push('skills')
 
   // Edges (if base edges, bonus Skill Edges, or milestone bonus edges)
   if (levelUp.regularEdgesTotal.value > 0 || levelUp.bonusSkillEdgeEntries.value.length > 0) {
@@ -236,7 +223,6 @@ const steps = computed((): string[] => {
 const STEP_LABELS: Record<string, string> = {
   milestones: 'Milestones',
   stats: 'Stats',
-  skills: 'Skills',
   edges: 'Edges',
   features: 'Features',
   classes: 'Classes',
