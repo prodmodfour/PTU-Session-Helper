@@ -64,6 +64,10 @@ export interface CaptureAttemptResult {
     name: string
     level: number
   }
+  postCaptureEffect?: {
+    type: string
+    description: string
+  }
   reason?: string
 }
 
