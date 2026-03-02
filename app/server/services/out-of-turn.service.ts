@@ -1150,18 +1150,24 @@ export function resolveInterceptMelee(
       const dirX = dx === 0 ? 0 : dx > 0 ? 1 : -1
       const dirY = dy === 0 ? 0 : dy > 0 ? 1 : -1
 
-      // Simple step-by-step movement toward target
+      // Step-by-step movement toward target with PTU alternating diagonal cost
+      // Per decree-002: diagonal movement alternates 1m/2m cost
       let moved = 0
       let cx = interceptor.position.x
       let cy = interceptor.position.y
+      let diagCount = 0
       while (moved < shiftDistance) {
         const nextX = cx + dirX
         const nextY = cy + dirY
+        const isDiag = dirX !== 0 && dirY !== 0
+        const stepCost = isDiag ? (diagCount % 2 === 0 ? 1 : 2) : 1
+        if (moved + stepCost > shiftDistance) break
         // Don't move onto the target's position
         if (nextX === target.position.x && nextY === target.position.y) break
         cx = nextX
         cy = nextY
-        moved++
+        moved += stepCost
+        if (isDiag) diagCount++
       }
       newInterceptorPos = { x: cx, y: cy }
     }
@@ -1250,13 +1256,19 @@ export function resolveInterceptRanged(
     const dirX = dx === 0 ? 0 : dx > 0 ? 1 : -1
     const dirY = dy === 0 ? 0 : dy > 0 ? 1 : -1
 
+    // Per decree-002: diagonal movement alternates 1m/2m cost
     let moved = 0
     let cx = interceptor.position.x
     let cy = interceptor.position.y
+    let diagCount = 0
     while (moved < maxShift) {
+      const isDiag = dirX !== 0 && dirY !== 0
+      const stepCost = isDiag ? (diagCount % 2 === 0 ? 1 : 2) : 1
+      if (moved + stepCost > maxShift) break
       cx += dirX
       cy += dirY
-      moved++
+      moved += stepCost
+      if (isDiag) diagCount++
     }
     newPosition = { x: cx, y: cy }
   }
