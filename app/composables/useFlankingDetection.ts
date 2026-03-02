@@ -7,12 +7,16 @@
  * PTU p.232: A combatant is Flanked when sufficient foes are adjacent
  * but NOT adjacent to each other. Flanked targets take -2 to all evasion.
  *
- * Client-side only -- no server involvement for P0.
+ * P1: Uses checkFlankingMultiTile for full multi-tile token support.
+ * Handles Large (2x2, 3 foes), Huge (3x3, 4 foes), Gigantic (4x4, 5 foes).
+ * Multi-tile attackers count as multiple foes per adjacent cells (PTU p.232).
+ *
+ * Client-side only -- no server involvement for P0/P1.
  */
 
 import type { Combatant, CombatSide } from '~/types'
 import type { FlankingMap, FlankingStatus } from '~/types/combat'
-import { checkFlanking, FLANKING_EVASION_PENALTY } from '~/utils/flankingGeometry'
+import { checkFlankingMultiTile, FLANKING_EVASION_PENALTY } from '~/utils/flankingGeometry'
 import { isEnemySide } from '~/utils/combatSides'
 
 /**
@@ -63,6 +67,10 @@ export function useFlankingDetection(combatants: Ref<Combatant[]>) {
    *
    * For each combatant, determine if it is flanked by checking
    * all enemy combatants adjacent to it for the non-adjacency condition.
+   *
+   * Uses checkFlankingMultiTile which handles all token sizes including
+   * multi-tile targets (Large/Huge/Gigantic) and multi-tile attackers
+   * that count as multiple foes per adjacent cells (PTU p.232).
    */
   const flankingMap = computed((): FlankingMap => {
     const map: FlankingMap = {}
@@ -79,7 +87,7 @@ export function useFlankingDetection(combatants: Ref<Combatant[]>) {
           size: c.size,
         }))
 
-      const result = checkFlanking(target.position, target.size, foes)
+      const result = checkFlankingMultiTile(target.position, target.size, foes)
 
       map[target.id] = {
         isFlanked: result.isFlanked,
