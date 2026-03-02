@@ -206,6 +206,18 @@
             <PhCrosshairSimple :size="20" />
             <span>Capture</span>
           </button>
+
+          <!-- Healing -->
+          <button
+            class="combat-actions__btn combat-actions__btn--heal"
+            :disabled="!canUseStandardAction"
+            :aria-expanded="showHealingPanel"
+            aria-label="Healing options: Take a Breather or use healing items (requires GM approval)"
+            @click="showHealingPanel = !showHealingPanel"
+          >
+            <PhHeart :size="20" />
+            <span>Heal</span>
+          </button>
         </div>
       </section>
 
@@ -277,6 +289,13 @@
         v-if="showCapturePanel"
         @request-sent="handleCaptureRequestSent"
         @cancel="showCapturePanel = false"
+      />
+
+      <!-- Healing Panel (expandable) -->
+      <PlayerHealingPanel
+        v-if="showHealingPanel"
+        @request-sent="handleHealingRequestSent"
+        @cancel="showHealingPanel = false"
       />
     </template>
 
@@ -356,7 +375,8 @@ import {
   PhFirstAidKit,
   PhArrowsClockwise,
   PhStrategy,
-  PhCrosshairSimple
+  PhCrosshairSimple,
+  PhHeart
 } from '@phosphor-icons/vue'
 import type { Move } from '~/types'
 import { COMBAT_MANEUVERS } from '~/constants/combatManeuvers'
@@ -395,6 +415,7 @@ const showItemPanel = ref(false)
 const showSwitchPanel = ref(false)
 const showManeuverPanel = ref(false)
 const showCapturePanel = ref(false)
+const showHealingPanel = ref(false)
 const showPassConfirm = ref(false)
 
 /**
@@ -592,6 +613,11 @@ const handleCaptureRequestSent = () => {
   showToast('Capture request sent to GM')
 }
 
+const handleHealingRequestSent = () => {
+  showHealingPanel.value = false
+  showToast('Healing request sent to GM')
+}
+
 // Close panels when turn ends
 watch(isMyTurn, (isTurn) => {
   if (!isTurn) {
@@ -599,6 +625,7 @@ watch(isMyTurn, (isTurn) => {
     showSwitchPanel.value = false
     showManeuverPanel.value = false
     showCapturePanel.value = false
+    showHealingPanel.value = false
     showPassConfirm.value = false
     resetTargetSelector()
   }

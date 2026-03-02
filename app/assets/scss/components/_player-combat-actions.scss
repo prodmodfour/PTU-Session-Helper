@@ -155,6 +155,11 @@
       &:hover:not(:disabled) { border-color: $color-accent-scarlet; }
     }
 
+    &--heal {
+      border-color: rgba($color-accent-pink, 0.3);
+      &:hover:not(:disabled) { border-color: $color-accent-pink; }
+    }
+
     &--confirm {
       flex-direction: row;
       gap: $spacing-xs;
