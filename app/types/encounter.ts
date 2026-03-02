@@ -15,7 +15,8 @@ import type {
   SwitchAction,
   OutOfTurnAction,
   OutOfTurnUsage,
-  HoldActionState
+  HoldActionState,
+  MountState
 } from './combat';
 import type { Pokemon, HumanCharacter, PokemonType } from './character';
 import type { SignificanceTier } from '~/utils/encounterBudget';
@@ -76,6 +77,11 @@ export interface Combatant {
   holdAction?: HoldActionState;
   /** Whether this combatant forfeits their next round turn (Advanced Priority penalty) */
   skipNextRound?: boolean;
+
+  // Mount relationship (PTU p.218, feature-004)
+  // Present when this combatant is part of a mounted pair.
+  // Rider (trainer) and mount (Pokemon) each carry a MountState pointing to each other.
+  mountState?: MountState;
 
   // Reference to actual data
   entity: Pokemon | HumanCharacter;
