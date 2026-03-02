@@ -80,15 +80,22 @@ export default defineEventHandler(async (event) => {
     const turnOrder: string[] = JSON.parse(record.turnOrder)
     let currentTurnIndex = record.currentTurnIndex
 
-    // Splice the held combatant in at the current index
-    // This makes them the active combatant immediately
-    turnOrder.splice(currentTurnIndex, 0, combatantId)
-    // Remove the original entry to prevent duplicate turns (bug-042).
-    // The original is now shifted right by 1, so find it after currentTurnIndex.
-    const originalIndex = turnOrder.indexOf(combatantId, currentTurnIndex + 1)
+    // Remove the original entry BEFORE inserting to prevent duplicate turns (bug-042).
+    // For hold-release, the original entry is typically BEFORE currentTurnIndex
+    // (combatant held at an earlier turn, released at a later one), so the
+    // post-insert indexOf(id, currentTurnIndex+1) pattern cannot find it.
+    const originalIndex = turnOrder.indexOf(combatantId)
     if (originalIndex !== -1) {
       turnOrder.splice(originalIndex, 1)
+      // Adjust currentTurnIndex if the removal shifted it
+      if (originalIndex < currentTurnIndex) {
+        currentTurnIndex--
+      }
     }
+
+    // Splice the held combatant in at the (possibly adjusted) current index
+    // This makes them the active combatant immediately
+    turnOrder.splice(currentTurnIndex, 0, combatantId)
 
     // Save to database
     await prisma.encounter.update({
