@@ -6,7 +6,7 @@ priority: P1
 domain: character-lifecycle
 source: decree-037
 created_at: 2026-02-28
-status: in-progress
+status: resolved
 ---
 
 ## Summary
@@ -58,3 +58,23 @@ Items 1-4 were already resolved by a prior slave (slave-3, plan-20260228-233710)
   - Updated Sections A, C, E, G, and Integration Summary
   - Removed `skillRanksGained` from type examples, composable code examples, step navigation examples
   - Updated banner and integration summary to reflect current state
+
+### Final cleanup (slave/2-dev-ptu-rule-127-20260302)
+- `bd7e4709` fix: delete dead LevelUpSkillSection.vue per decree-037
+  - Deleted `app/components/levelup/LevelUpSkillSection.vue` (382 lines dead code)
+  - No references to this component existed in app/ code
+- `63b7d4d7` docs: update design specs to reflect LevelUpSkillSection deletion
+  - spec-p0 Section E: updated "retained for P1" to "deleted"
+  - shared-specs: removed LevelUpSkillSection from step tree, updated reuse table
+  - testing-strategy: marked LevelUpSkillSection test section as removed
+- `473d1e31` docs: update app-surface.md to remove LevelUpSkillSection reference
+  - Removed deleted component from level-up system description
+  - Updated wizard step sequence (no standalone skill step)
+
+### Verification
+- Codebase grep for `skillRanksGained` in `app/`: zero matches
+- Codebase grep for `totalSkillRanks` in `app/`: zero matches
+- Codebase grep for `LevelUpSkillSection` in `app/`: zero matches
+- No test files reference removed fields
+- All 6 required changes from ticket are complete
+- All 5 acceptance criteria met
