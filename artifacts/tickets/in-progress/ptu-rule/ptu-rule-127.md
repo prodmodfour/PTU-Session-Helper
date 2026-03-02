@@ -6,7 +6,7 @@ priority: P1
 domain: character-lifecycle
 source: decree-037
 created_at: 2026-02-28
-status: open
+status: in-progress
 ---
 
 ## Summary
@@ -39,3 +39,22 @@ Per decree-037, trainers should NOT receive an automatic +1 skill rank per level
 ## Impact
 
 P0 level-up will only handle stat point allocation until P1 Edge selection is implemented. This is the correct behavior per PTU RAW.
+
+## Resolution Log
+
+### Prior work (feature-008 fix cycle)
+Items 1-4 were already resolved by a prior slave (slave-3, plan-20260228-233710):
+- `skillRanksGained` removed from `TrainerLevelUpInfo` type in `trainerAdvancement.ts`
+- `totalSkillRanks` removed from `TrainerAdvancementSummary` in `trainerAdvancement.ts`
+- Skill rank computed properties removed from `useTrainerLevelUp.ts`
+- Composable doc comment updated to cite decree-037
+
+### This branch (slave/1-dev-ptu-rule-127-20260302)
+- `e716e985` fix: remove skills step from level-up wizard per decree-037
+  - Removed `LevelUpSkillSection` template block from `LevelUpModal.vue`
+  - Removed `'skills'` from step navigation and `STEP_LABELS`
+  - Added decree-037 comment to step navigation
+- `c8426e90` docs: update spec-p0 to remove skillRanksGained references per decree-037
+  - Updated Sections A, C, E, G, and Integration Summary
+  - Removed `skillRanksGained` from type examples, composable code examples, step navigation examples
+  - Updated banner and integration summary to reflect current state
