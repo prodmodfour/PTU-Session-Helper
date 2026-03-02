@@ -86,8 +86,7 @@ import {
   PhHeartbeat,
   PhFirstAidKit
 } from '@phosphor-icons/vue'
-import type { WebSocketEvent } from '~/types'
-import type { PlayerActionRequest, PlayerActionType } from '~/types/player-sync'
+import type { WebSocketEvent, PlayerActionRequest, PlayerActionType } from '~/types'
 import { DEFAULT_BALL_TYPE } from '~/constants/pokeBalls'
 
 interface DisplayedRequest {
