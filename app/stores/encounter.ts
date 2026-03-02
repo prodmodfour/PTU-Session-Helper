@@ -220,6 +220,29 @@ export const useEncounterStore = defineStore('encounter', {
       if (!c?.mountState) return null
       return state.encounter.combatants.find(p => p.id === c.mountState!.partnerId) ?? null
     },
+
+    /** Get mount state for a specific combatant */
+    getMountState: (state) => (combatantId: string) => {
+      if (!state.encounter) return undefined
+      const c = state.encounter.combatants.find(c => c.id === combatantId)
+      return c?.mountState
+    },
+
+    /** Get all mounted pairs as { riderId, mountId } tuples */
+    mountedPairs: (state): { riderId: string; mountId: string }[] => {
+      if (!state.encounter) return []
+      return state.encounter.combatants
+        .filter(c => c.mountState?.isMounted === true)
+        .map(c => ({ riderId: c.id, mountId: c.mountState!.partnerId }))
+    },
+
+    /** Check if the current turn combatant can dismount (is a mounted rider) */
+    canDismount: (state): boolean => {
+      if (!state.encounter) return false
+      const currentId = state.encounter.turnOrder[state.encounter.currentTurnIndex]
+      const current = state.encounter.combatants.find(c => c.id === currentId)
+      return current?.mountState?.isMounted === true
+    },
   },
 
   actions: {
