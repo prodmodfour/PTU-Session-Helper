@@ -197,6 +197,61 @@ Uses `playwright-cli` to open a real browser and verify pages load.
      - **Do NOT block** the rest of collection (state updates, cleanup still proceed)
      - The final report MUST prominently flag: "APP DOES NOT START — fix before next dev cycle"
 
+## Step 4c: Update Descendant CLAUDE.md Files
+
+After merges and smoke test, check whether any merged dev slave changes require updates to descendant CLAUDE.md files. **Skip this step if no dev slaves were merged** (reviewer/matrix-only collections don't change code).
+
+### 4c-1. Identify Affected Directories
+
+For each merged dev slave, get the list of changed files:
+```bash
+git log master~<total_dev_commits>..master --name-only --pretty=format: | sort -u
+```
+
+Map each changed file to its directory. Collect the unique set of directories that were touched.
+
+### 4c-2. Find Relevant CLAUDE.md Files
+
+For each touched directory, check if a `CLAUDE.md` exists in that directory OR any ancestor directory (up to the repo root). Build a set of CLAUDE.md files that might need updating.
+
+Common locations: `app/components/vtt/`, `app/components/encounter/`, `app/server/services/`, `app/stores/`, `app/composables/`, `app/prisma/`, `app/server/api/`, `app/types/`, `app/components/scene/`, `app/tests/`, `books/markdown/`, `artifacts/`, `decrees/`.
+
+### 4c-3. Check Each CLAUDE.md for Staleness
+
+For each affected CLAUDE.md:
+1. Read the CLAUDE.md file
+2. Compare its claims against the current directory state:
+   - **File counts**: Does it say "14 components" but the dir now has 15? Update the count.
+   - **File inventories/tables**: Are new files listed? Were any removed?
+   - **Dependency maps**: Did import relationships change?
+   - **Gotchas**: Are documented gotchas still accurate?
+3. If stale content is found, update the CLAUDE.md with corrected information.
+
+Focus on **factual accuracy** (counts, file lists, relationships). Do NOT rewrite prose or restructure sections — just fix stale data.
+
+### 4c-4. Commit Updates
+
+If any CLAUDE.md files were updated:
+```bash
+git add <updated-claude-md-files>
+git commit -m "docs: update descendant CLAUDE.md files after collection"
+```
+
+If no CLAUDE.md files needed changes, skip the commit.
+
+### 4c-5. Report
+
+Note in the final report which CLAUDE.md files were updated and what changed:
+```markdown
+### CLAUDE.md Updates
+| File | Changes |
+|------|---------|
+| app/components/vtt/CLAUDE.md | Added VTTNewComponent.vue to component table |
+| app/stores/CLAUDE.md | Updated encounter.ts line count from ~900 to ~950 |
+```
+
+If none needed updating: `### CLAUDE.md Updates: None needed`
+
 ## Step 5: Update State Files
 
 After ALL merges are complete, make a single atomic state update commit:
