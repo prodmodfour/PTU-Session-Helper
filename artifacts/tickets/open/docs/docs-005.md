@@ -3,7 +3,7 @@ id: docs-005
 title: "Add CLAUDE.md for app/composables/"
 priority: P0
 severity: HIGH
-status: open
+status: in-progress
 domain: composables
 source: plan-descendant-claude-md-rollout
 created_by: user
@@ -80,3 +80,13 @@ Create a descendant CLAUDE.md in `app/composables/` to map the 54 composables by
 - Domain groupings verified against actual file list (54 files)
 - Dependency chains verified against actual import statements
 - Naming convention matches Nuxt 3 auto-import behavior
+
+## Resolution Log
+
+- **132b0385** — Created `app/composables/CLAUDE.md` (50 lines)
+  - 5 sections: Domain Grouping, Naming Convention, Key Dependency Chains, Largest Composables, Gotchas
+  - 54 composable files confirmed and grouped across 13 domains
+  - 9 files over 20KB documented with exact sizes
+  - Dependency chains verified against actual import statements
+  - Gotchas verified: module-level refs in useEncounterHistory (lines 6-7), 280+ name mappings in usePokemonSprite
+  - No duplication with parent `app/CLAUDE.md`
