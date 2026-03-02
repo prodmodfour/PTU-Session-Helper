@@ -3,7 +3,7 @@ id: feature-017
 title: Poke Ball Type System
 priority: P2
 severity: MEDIUM
-status: design-complete
+status: in-progress
 domain: capture
 source: matrix-gap (GAP-CAP-2)
 matrix_source: capture R020, R021, R022, R023, R024, R025, R026
@@ -63,3 +63,8 @@ ptu-rule-050 (resolved) only removed dead `pokeBallType` code. The actual ball t
 |------|--------|---------|
 | 2026-03-01 | Design spec created | design-poke-ball-types-001 with 6 files: _index.md, spec-p0.md, spec-p1.md, spec-p2.md, shared-specs.md, testing-strategy.md |
 | 2026-03-01 | Status changed | open -> design-complete |
+| 2026-03-02 | P0 implemented | Section A: `3ae59073` app/constants/pokeBalls.ts (25 ball catalog, types, helpers) |
+| 2026-03-02 | P0 implemented | Section B: `9de31f89` app/utils/captureRate.ts (ballModifier param on attemptCapture) |
+| 2026-03-02 | P0 implemented | Section C: `bb0acb53` app/server/api/capture/rate.post.ts, attempt.post.ts (ballType param, ball breakdown in response) |
+| 2026-03-02 | P0 implemented | Section D: `2efb67d8` app/composables/useCapture.ts (ballType support, getAvailableBalls, updated interfaces) |
+| 2026-03-02 | Status changed | design-complete -> in-progress (P0 complete, P1/P2 pending) |

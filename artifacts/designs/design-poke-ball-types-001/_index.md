@@ -4,7 +4,7 @@ ticket_id: feature-017
 category: FEATURE
 scope: FULL
 domain: capture
-status: design-complete
+status: p0-implemented
 decrees:
   - decree-013
   - decree-014
