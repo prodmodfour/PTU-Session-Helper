@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-02T18:42:15.821Z
-total_reviews: 270
-active_count: 131
-approved_count: 134
+generated_at: 2026-03-02T20:04:19.865Z
+total_reviews: 276
+active_count: 133
+approved_count: 138
 ---
 
 # Reviews Index
 
-## Active Reviews (131)
+## Active Reviews (133)
 
 | Review ID | Verdict | Target | Reviewer | Date |
 |-----------|---------|--------|----------|------|
@@ -109,6 +109,8 @@ approved_count: 134
 | code-review-280 | CHANGES_REQUIRED | feature-023 | senior-reviewer | 2026-03-02 |
 | code-review-281 | CHANGES_REQUIRED | bug-043 | senior-reviewer | 2026-03-02 |
 | code-review-285 | CHANGES_REQUIRED | feature-004 | senior-reviewer | 2026-03-02 |
+| code-review-287 | CHANGES_REQUIRED | feature-020 | senior-reviewer | 2026-03-02 |
+| code-review-288 | CHANGES_REQUIRED | feature-023 | senior-reviewer | 2026-03-02 |
 | rules-review-034 | CHANGES_REQUIRED | bug-002 | game-logic-reviewer | 2026-02-18 |
 | rules-review-039 | CHANGES_REQUIRED | ptu-rule-034, ptu-rule-035 | game-logic-reviewer | 2026-02-18 |
 | rules-review-047 | MIXED | — | game-logic-reviewer | 2026-02-19 |
@@ -147,6 +149,7 @@ approved_count: 134
 
 | Review ID | Target | Reviewer | Date |
 |-----------|--------|----------|------|
+| code-review-286 | feature-017 | senior-reviewer | 2026-03-02 |
 | code-review-284 | feature-020 | senior-reviewer | 2026-03-03 |
 | code-review-283 | bug-043 | senior-reviewer | 2026-03-03 |
 | code-review-282 | feature-023 | senior-reviewer | 2026-03-02 |
@@ -156,13 +159,12 @@ approved_count: 134
 | code-review-274 | bug-042 | senior-reviewer | 2026-03-02 |
 | code-review-272 | feature-014 | senior-reviewer | 2026-03-02 |
 | code-review-271 | feature-020 | senior-reviewer | 2026-03-02 |
-| code-review-269 | feature-017 | senior-reviewer | 2026-03-02 |
 
 ## Stats
 
-- Active reviews: 270
-- Needs action: 131
-- Approved/Pass (active): 134
+- Active reviews: 276
+- Needs action: 133
+- Approved/Pass (active): 138
 - Archived: 297
-- Total (active + archived): 567
+- Total (active + archived): 573
 - Unique targets reviewed: 83
