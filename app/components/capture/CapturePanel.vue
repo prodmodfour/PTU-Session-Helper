@@ -160,9 +160,13 @@ const contextFlags = ref({
   isUnderwaterOrUnderground: false,
 })
 
-// Build full condition context from pokemon data + GM flags
+// Encounter store for round tracking (Timer Ball, Quick Ball)
+const encounterStore = useEncounterStore()
+
+// Build full condition context from pokemon data + GM flags + encounter round
 const fullConditionContext = computed<Partial<BallConditionContext>>(() => ({
   targetLevel: props.pokemonData.level,
+  encounterRound: encounterStore.currentRound || 1,
   ...contextFlags.value,
 }))
 
