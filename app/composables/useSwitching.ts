@@ -130,6 +130,36 @@ export function useSwitching() {
   }
 
   /**
+   * Check if a forced switch (Roar) can recall this Pokemon.
+   * Per decree-039: Roar does NOT override Trapped.
+   * PTU p.247: "A Pokemon or Trainer that is Trapped cannot be recalled."
+   *
+   * The shift movement still happens — this only validates the recall step.
+   * Client-side pre-validation for GM UI feedback before hitting the API.
+   */
+  function canForcedSwitch(pokemonCombatantId: string): {
+    allowed: boolean
+    reason?: string
+  } {
+    const encounter = encounterStore.encounter
+    if (!encounter) return { allowed: false, reason: 'No active encounter' }
+    if (!encounter.isActive) return { allowed: false, reason: 'Encounter is not active' }
+
+    const pokemon = encounter.combatants.find(c => c.id === pokemonCombatantId)
+    if (!pokemon) return { allowed: false, reason: 'Pokemon not found' }
+
+    // Trapped check — per decree-039, Roar does NOT override Trapped
+    const statuses: string[] = (pokemon.entity as { statusConditions?: string[] })?.statusConditions || []
+    const tempConditions: string[] = pokemon.tempConditions || []
+    const allConditions = [...statuses, ...tempConditions]
+    if (allConditions.includes('Trapped') || allConditions.includes('Bound')) {
+      return { allowed: false, reason: 'Cannot recall Trapped Pokemon — forced switch blocked (decree-039)' }
+    }
+
+    return { allowed: true }
+  }
+
+  /**
    * Execute a full switch via the API.
    */
   async function executeSwitch(
@@ -215,6 +245,7 @@ export function useSwitching() {
     getBenchPokemon,
     canSwitch,
     canFaintedSwitch,
+    canForcedSwitch,
     executeSwitch,
     executeRecall,
     executeRelease
