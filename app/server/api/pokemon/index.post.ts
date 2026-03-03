@@ -14,6 +14,15 @@ export default defineEventHandler(async (event) => {
     // PTU HP formula: Level + (HP Base × 3) + 10
     const maxHp = body.maxHp || (level + (baseHp * 3) + 10)
 
+    // Loyalty validation (PTU Chapter 10: 0-6 scale)
+    const loyalty = body.loyalty ?? 3
+    if (!Number.isInteger(loyalty) || loyalty < 0 || loyalty > 6) {
+      throw createError({
+        statusCode: 400,
+        message: 'Loyalty must be an integer between 0 and 6'
+      })
+    }
+
     const pokemon = await prisma.pokemon.create({
       data: {
         species: body.species,
@@ -65,7 +74,7 @@ export default defineEventHandler(async (event) => {
         // Library & categorization
         isInLibrary: body.isInLibrary !== false,
         origin: body.origin || 'manual',
-        loyalty: body.loyalty ?? 3,
+        loyalty,
         location: body.location || null,
         notes: body.notes
       }
