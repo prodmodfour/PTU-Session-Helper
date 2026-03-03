@@ -4,7 +4,7 @@ ticket_id: feature-018
 category: FEATURE
 scope: FULL
 domain: scenes, combat
-status: p0-implemented
+status: p1-implemented
 decree: decree-030
 affected_files:
   - app/types/encounter.ts
@@ -129,6 +129,22 @@ Branch: `slave/1-dev-feature-018-20260303-165227`
 | `74930b05` | `app/server/utils/turn-helpers.ts` | NEW | Extract 7 turn helper functions from next-turn.post.ts (857→655 lines) |
 | `74930b05` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Import helpers from turn-helpers.ts, remove extracted functions |
 | `d84459e4` | `.claude/skills/references/app-surface.md` | EDIT | Add weatherRules.ts, weather-automation.service.ts, turn-helpers.ts |
+
+### P1 (2026-03-03)
+
+Branch: `slave/2-dev-feature-018-p1-20260303-191515`
+
+| Commit | File | Action | Description |
+|--------|------|--------|-------------|
+| `c5dd2c9e` | `app/utils/damageCalculation.ts` | EDIT | Add weather field to DamageCalcInput, getWeatherDamageModifier(), Step 1.5 in formula, weatherModifier in breakdown |
+| `c5dd2c9e` | `app/server/api/encounters/[id]/calculate-damage.post.ts` | EDIT | Pass encounter weather to calculateDamage |
+| `d7291941` | `app/utils/weatherRules.ts` | EDIT | Add WEATHER_CS_ABILITIES constant, getWeatherCSBonuses() |
+| `9f262619` | `app/server/api/encounters/[id]/weather.post.ts` | EDIT | Apply/reverse weather CS bonuses on all combatants when weather set/changed (decree-005 stageSources) |
+| `4b3ab6bf` | `app/server/utils/turn-helpers.ts` | EDIT | Add reverseWeatherCSBonuses() for weather expiry CS reversal |
+| `4b3ab6bf` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Reverse weather CS on weather expiry via decrementWeather |
+| `c1aebb1f` | `app/server/services/weather-automation.service.ts` | EDIT | Add WEATHER_ABILITY_EFFECTS, WeatherAbilityEffect, getWeatherAbilityEffects() |
+| `5a6e5ab7` | `app/server/utils/turn-helpers.ts` | EDIT | Add applyWeatherAbilityEffects() helper |
+| `5a6e5ab7` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Turn-end (Dry Skin, Desert Weather) and turn-start (Ice Body, Rain Dish, Sun Blanket, Solar Power) weather ability effects, move log, WebSocket, response |
 
 ---
 

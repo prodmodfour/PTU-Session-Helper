@@ -58,3 +58,16 @@ FULL-scope feature requiring design spec. Affects damage calculation, turn end p
   - `d0dc47fb` — `app/utils/weatherRules.ts` (EDIT): Add Magic Guard + Sand Stream to immunity lists, fainted ally check, token-size comment, Permafrost tracking note
   - `74930b05` — `app/server/utils/turn-helpers.ts` (NEW) + `next-turn.post.ts` (EDIT): Extract 7 helper functions to reduce next-turn.post.ts from 857→655 lines
   - `d84459e4` — `app-surface.md` (EDIT) + `feature-018.md` (EDIT): Add new files to surface map, fix 1/16→1/10 ticket text
+- **2026-03-03 P1 Implementation** (branch: `slave/2-dev-feature-018-p1-20260303-191515`):
+  - **Section D: Type Damage Modifiers**
+    - `c5dd2c9e` — `app/utils/damageCalculation.ts` (EDIT): Add weather field to DamageCalcInput, getWeatherDamageModifier(), apply as Step 1.5 (before STAB), weatherModifier in breakdown
+    - `c5dd2c9e` — `app/server/api/encounters/[id]/calculate-damage.post.ts` (EDIT): Pass encounter weather to calculateDamage
+  - **Section E: Speed-Doubling Abilities + Solar Power CS**
+    - `d7291941` — `app/utils/weatherRules.ts` (EDIT): Add WEATHER_CS_ABILITIES constant, getWeatherCSBonuses()
+    - `9f262619` — `app/server/api/encounters/[id]/weather.post.ts` (EDIT): Apply/reverse weather CS bonuses on combatants when weather set/changed (decree-005 stageSources)
+    - `4b3ab6bf` — `app/server/utils/turn-helpers.ts` (EDIT): Add reverseWeatherCSBonuses() for weather expiry
+    - `4b3ab6bf` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Reverse weather CS on weather expiry
+  - **Section F: Weather Ability Healing/Damage**
+    - `c1aebb1f` — `app/server/services/weather-automation.service.ts` (EDIT): Add WEATHER_ABILITY_EFFECTS, getWeatherAbilityEffects() for turn start/end
+    - `5a6e5ab7` — `app/server/utils/turn-helpers.ts` (EDIT): Add applyWeatherAbilityEffects() helper
+    - `5a6e5ab7` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Turn-end and turn-start weather ability effects
