@@ -172,7 +172,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const { combatants } = await loadEncounter(id)
+    const { record, combatants } = await loadEncounter(id)
 
     const attacker = findCombatant(combatants, body.attackerId)
     const target = findCombatant(combatants, body.targetId)
@@ -260,6 +260,7 @@ export default defineEventHandler(async (event) => {
       damageReduction: effectiveDR,
       attackBonus,
       defenseBonus,
+      weather: record.weather,
     })
 
     // PTU p.246-247: Vulnerable, Frozen, and Asleep set evasion to 0

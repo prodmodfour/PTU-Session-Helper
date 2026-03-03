@@ -172,13 +172,22 @@ export interface DamageCalcInput {
   attackBonus?: number
   /** Post-stage flat bonus to defense stat (e.g., Focus +5) — PTU p.295 */
   defenseBonus?: number
+
+  /**
+   * Active weather condition on the encounter (P1: type damage modifiers).
+   * PTU pp.341-342: Rain/Sun modify Fire/Water DB by +/-5.
+   */
+  weather?: string | null
 }
 
 export interface DamageCalcResult {
   finalDamage: number
   breakdown: {
-    // Steps 1-3: Damage Base + STAB
+    // Steps 1-3: Damage Base + weather modifier + STAB
     rawDB: number
+    /** Weather modifier applied to Damage Base (P1: PTU pp.341-342) */
+    weatherModifier: number
+    weatherModifierApplied: boolean
     stabApplied: boolean
     effectiveDB: number
     // Steps 4-5: Set damage + critical
@@ -240,6 +249,36 @@ export function hasSTAB(moveType: string, attackerTypes: string[]): boolean {
 }
 
 /**
+ * Calculate weather damage base modifier.
+ * PTU pp.341-342:
+ * - Rain: Water +5 DB, Fire -5 DB
+ * - Sun: Fire +5 DB, Water -5 DB
+ *
+ * @returns The DB modifier to apply (-5, 0, or +5)
+ */
+export function getWeatherDamageModifier(
+  weather: string | null | undefined,
+  moveType: string
+): number {
+  if (!weather) return 0
+
+  const normalizedType = moveType.charAt(0).toUpperCase() + moveType.slice(1).toLowerCase()
+
+  switch (weather) {
+    case 'rain':
+      if (normalizedType === 'Water') return 5
+      if (normalizedType === 'Fire') return -5
+      return 0
+    case 'sunny':
+      if (normalizedType === 'Fire') return 5
+      if (normalizedType === 'Water') return -5
+      return 0
+    default:
+      return 0
+  }
+}
+
+/**
  * Get set damage (average) for a Damage Base value from the DB chart.
  */
 export function getSetDamage(db: number): number {
@@ -252,7 +291,9 @@ export function getSetDamage(db: number): number {
  * PTU 07-combat.md:834-847
  *
  * Steps:
- * 1-3: Damage Base + STAB → effective DB
+ * 1:   Start with Move's Damage Base
+ * 1.5: Apply weather modifier to DB (P1: PTU pp.341-342)
+ * 2-3: Apply STAB (+2 to DB)
  * 4-5: DB chart lookup → set damage + critical bonus
  * 6:   Add stage-modified attack stat
  * 7:   Subtract stage-modified defense stat + damage reduction (min 1)
@@ -260,10 +301,16 @@ export function getSetDamage(db: number): number {
  * 9:   Minimum 1 damage (unless immune)
  */
 export function calculateDamage(input: DamageCalcInput): DamageCalcResult {
-  // Steps 1-3: Damage Base + STAB
+  // Step 1: Raw Damage Base
   const rawDB = input.moveDamageBase
+
+  // Step 1.5 (P1): Weather modifier to DB
+  const weatherModifier = getWeatherDamageModifier(input.weather, input.moveType)
+  const weatherAdjustedDB = Math.max(1, rawDB + weatherModifier)
+
+  // Steps 2-3: STAB applied to weather-adjusted DB
   const stabApplied = hasSTAB(input.moveType, input.attackerTypes)
-  const effectiveDB = rawDB + (stabApplied ? 2 : 0)
+  const effectiveDB = weatherAdjustedDB + (stabApplied ? 2 : 0)
 
   // Steps 4-5: Set damage from chart + critical
   const setDamage = getSetDamage(effectiveDB)
@@ -300,6 +347,8 @@ export function calculateDamage(input: DamageCalcInput): DamageCalcResult {
     finalDamage: afterEffectiveness,
     breakdown: {
       rawDB,
+      weatherModifier,
+      weatherModifierApplied: weatherModifier !== 0,
       stabApplied,
       effectiveDB,
       setDamage,
