@@ -3,6 +3,7 @@ import { NATUREWALK_TERRAIN_MAP } from '~/constants/naturewalk'
 import type { NaturewalkTerrain } from '~/constants/naturewalk'
 import { getEquipmentGrantedCapabilities } from '~/utils/equipmentBonuses'
 import { computeTrainerDerivedStats } from '~/utils/trainerDerivedStats'
+import { LIVING_WEAPON_CONFIG, type LivingWeaponConfig } from '~/constants/livingWeapon'
 
 /**
  * Shared utility functions for querying combatant movement capabilities.
@@ -388,4 +389,40 @@ export function findNaturewalkImmuneStatuses(
   }
 
   return []
+}
+
+// =====================================
+// Living Weapon Capability (PTU pp.305-306)
+// =====================================
+
+/**
+ * Check if a Pokemon has the Living Weapon capability.
+ * Checks both the species name (known Living Weapon species) and
+ * the otherCapabilities string array for "Living Weapon".
+ *
+ * Returns the weapon config if found, null otherwise.
+ */
+export function getLivingWeaponConfig(pokemon: Pokemon): LivingWeaponConfig | null {
+  // Primary check: known Living Weapon species
+  const config = LIVING_WEAPON_CONFIG[pokemon.species]
+  if (config) return config
+
+  // Fallback: check otherCapabilities for "Living Weapon" string
+  // This supports homebrew Pokemon that may have the capability
+  const otherCaps = pokemon.capabilities?.otherCapabilities ?? []
+  const hasLivingWeapon = otherCaps.some(
+    cap => cap.trim().toLowerCase() === 'living weapon'
+  )
+
+  if (hasLivingWeapon) {
+    // Unknown species with Living Weapon -- default to Honedge config
+    // GM can adjust via custom equipment if needed
+    return {
+      ...LIVING_WEAPON_CONFIG['Honedge'],
+      species: pokemon.species,
+      equipmentDescription: `Living Weapon (${pokemon.species})`,
+    }
+  }
+
+  return null
 }
