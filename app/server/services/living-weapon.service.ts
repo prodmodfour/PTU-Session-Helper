@@ -198,8 +198,15 @@ export function engageLivingWeapon(
     }
   }
 
-  // Determine species for the relationship
-  const weaponSpecies = weaponConfig.species as WieldRelationship['weaponSpecies']
+  // Determine species for the relationship.
+  // Validate that species is a known Living Weapon species; default unknown
+  // (homebrew) species to 'Honedge' to match reconstruction logic.
+  const knownSpecies: WieldRelationship['weaponSpecies'][] = ['Honedge', 'Doublade', 'Aegislash']
+  const weaponSpecies: WieldRelationship['weaponSpecies'] = knownSpecies.includes(
+    weaponConfig.species as WieldRelationship['weaponSpecies']
+  )
+    ? (weaponConfig.species as WieldRelationship['weaponSpecies'])
+    : 'Honedge'
 
   // Check if the Pokemon is fainted
   const isFainted = pokemon.currentHp <= 0 ||
