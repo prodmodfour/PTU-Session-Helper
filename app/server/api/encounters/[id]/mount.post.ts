@@ -51,13 +51,13 @@ export default defineEventHandler(async (event) => {
     // Persist updated combatants
     await saveEncounterCombatants(id, mountResult.updatedCombatants)
 
-    // Broadcast mount event via WebSocket
+    const response = buildEncounterResponse(record, mountResult.updatedCombatants)
+
+    // Broadcast mount event via WebSocket (send full encounter response)
     broadcastToEncounter(id, {
       type: 'encounter_update',
-      data: { encounterId: id }
+      data: response
     })
-
-    const response = buildEncounterResponse(record, mountResult.updatedCombatants)
 
     return {
       success: true,

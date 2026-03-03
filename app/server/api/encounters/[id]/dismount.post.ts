@@ -59,13 +59,13 @@ export default defineEventHandler(async (event) => {
     // Persist updated combatants
     await saveEncounterCombatants(id, dismountResult.updatedCombatants)
 
-    // Broadcast dismount event via WebSocket
+    const response = buildEncounterResponse(record, dismountResult.updatedCombatants)
+
+    // Broadcast dismount event via WebSocket (send full encounter response)
     broadcastToEncounter(id, {
       type: 'encounter_update',
-      data: { encounterId: id }
+      data: response
     })
-
-    const response = buildEncounterResponse(record, dismountResult.updatedCombatants)
 
     return {
       success: true,
