@@ -95,6 +95,52 @@ export const HAIL_ADJACENT_PROTECTION: string[] = ['Snow Cloak']
 /** Abilities that protect adjacent allies from Sandstorm damage */
 export const SANDSTORM_ADJACENT_PROTECTION: string[] = ['Sand Veil']
 
+/**
+ * Weather-based combat stage abilities (P1).
+ * Applied when weather is set, reversed when weather changes/expires.
+ * Uses source-tracked CS changes per decree-005 (stageSources system).
+ *
+ * PTU pp.311-335:
+ * - Swift Swim: +4 Speed CS in Rain (p.331)
+ * - Chlorophyll: +4 Speed CS in Sun (p.315)
+ * - Sand Rush: +4 Speed CS in Sandstorm (p.323)
+ * - Solar Power: +2 SpAtk CS in Sun (p.327) — also has HP damage, handled separately
+ */
+export const WEATHER_CS_ABILITIES: Array<{
+  weather: PtuWeather
+  ability: string
+  stat: 'speed' | 'specialAttack'
+  bonus: number
+}> = [
+  { weather: 'rain', ability: 'Swift Swim', stat: 'speed', bonus: 4 },
+  { weather: 'sunny', ability: 'Chlorophyll', stat: 'speed', bonus: 4 },
+  { weather: 'sandstorm', ability: 'Sand Rush', stat: 'speed', bonus: 4 },
+  { weather: 'sunny', ability: 'Solar Power', stat: 'specialAttack', bonus: 2 },
+]
+
+/**
+ * Get weather-based CS bonuses for a combatant.
+ * Returns array of matching abilities and their stat bonuses.
+ */
+export function getWeatherCSBonuses(
+  combatant: Combatant,
+  weather: string | null | undefined
+): Array<{ ability: string; stat: 'speed' | 'specialAttack'; bonus: number }> {
+  if (!weather) return []
+  const abilities = getCombatantAbilities(combatant)
+  const bonuses: Array<{ ability: string; stat: 'speed' | 'specialAttack'; bonus: number }> = []
+
+  for (const entry of WEATHER_CS_ABILITIES) {
+    if (weather === entry.weather) {
+      if (abilities.some(a => a.toLowerCase() === entry.ability.toLowerCase())) {
+        bonuses.push({ ability: entry.ability, stat: entry.stat, bonus: entry.bonus })
+      }
+    }
+  }
+
+  return bonuses
+}
+
 // ============================================
 // TYPE / ABILITY HELPERS
 // ============================================
