@@ -1,6 +1,8 @@
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
 import { clearMountOnRemoval } from '~/server/services/mounting.service'
+import { clearWieldOnRemoval } from '~/server/services/living-weapon.service'
+import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 
 export default defineEventHandler(async (event) => {
   const encounterId = getRouterParam(event, 'id')
@@ -45,6 +47,11 @@ export default defineEventHandler(async (event) => {
 
   // Clear mount state on partner if the removed combatant was part of a mounted pair (feature-004)
   combatants = clearMountOnRemoval(combatants, combatantId)
+
+  // Clear wield state on partner if the removed combatant was part of a wield pair (feature-005)
+  const wieldRelationships = reconstructWieldRelationships(combatants)
+  const wieldResult = clearWieldOnRemoval(combatants, wieldRelationships, combatantId)
+  combatants = wieldResult.combatants
 
   // Remove from all turn orders
   const turnOrderIndex = turnOrder.indexOf(combatantId)
