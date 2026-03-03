@@ -2,6 +2,7 @@ import type { Combatant, Pokemon, HumanCharacter, TerrainType, TerrainCell, Stat
 import { NATUREWALK_TERRAIN_MAP } from '~/constants/naturewalk'
 import type { NaturewalkTerrain } from '~/constants/naturewalk'
 import { getEquipmentGrantedCapabilities } from '~/utils/equipmentBonuses'
+import { computeTrainerDerivedStats } from '~/utils/trainerDerivedStats'
 
 /**
  * Shared utility functions for querying combatant movement capabilities.
@@ -9,16 +10,47 @@ import { getEquipmentGrantedCapabilities } from '~/utils/equipmentBonuses'
  * to check whether a combatant can fly, swim, or burrow.
  */
 
+// =====================================
+// Human Trainer Derived Movement Speeds
+// =====================================
+
+/**
+ * Get a human trainer's Overland speed derived from skills.
+ * PTU Core p.16: Overland = 3 + floor((Athletics rank + Acrobatics rank) / 2).
+ * Default is 5 (Untrained Athletics=2, Untrained Acrobatics=2: 3+floor(4/2)=5).
+ */
+function getHumanOverlandSpeed(human: HumanCharacter): number {
+  const derived = computeTrainerDerivedStats({
+    skills: human.skills || {},
+    weightKg: human.weight
+  })
+  return derived.overland
+}
+
+/**
+ * Get a human trainer's Swimming speed derived from Overland.
+ * PTU Core p.16: Swimming = floor(Overland / 2).
+ */
+function getHumanSwimSpeed(human: HumanCharacter): number {
+  const derived = computeTrainerDerivedStats({
+    skills: human.skills || {},
+    weightKg: human.weight
+  })
+  return derived.swimming
+}
+
 /**
  * Check whether a combatant has Swim capability (swim speed > 0).
- * Pokemon have capabilities.swim; humans default to 0 (no swim).
+ * Pokemon have capabilities.swim; trainers always have Swimming = floor(Overland / 2).
+ * PTU Core p.16: "Swimming Speed for a Trainer is equal to half of their Overland Speed."
  */
 export function combatantCanSwim(combatant: Combatant): boolean {
   if (combatant.type === 'pokemon') {
     const pokemon = combatant.entity as Pokemon
     return (pokemon.capabilities?.swim ?? 0) > 0
   }
-  return false
+  // Trainers always have a Swimming speed (derived from Overland)
+  return getHumanSwimSpeed(combatant.entity as HumanCharacter) > 0
 }
 
 /**
@@ -58,25 +90,28 @@ export function getSkySpeed(combatant: Combatant): number {
 
 /**
  * Get a combatant's Overland speed.
- * Pokemon use capabilities.overland; humans default to DEFAULT_MOVEMENT_SPEED (5).
+ * Pokemon use capabilities.overland; humans derive from skills per PTU Core p.16:
+ * Overland = 3 + floor((Athletics rank + Acrobatics rank) / 2).
  */
 export function getOverlandSpeed(combatant: Combatant): number {
   if (combatant.type === 'pokemon') {
     const pokemon = combatant.entity as Pokemon
     return pokemon.capabilities?.overland ?? 5
   }
-  return 5
+  return getHumanOverlandSpeed(combatant.entity as HumanCharacter)
 }
 
 /**
- * Get a combatant's Swim speed. Returns 0 for non-swimming combatants.
+ * Get a combatant's Swim speed.
+ * Pokemon use capabilities.swim; humans derive from Overland per PTU Core p.16:
+ * Swimming = floor(Overland / 2).
  */
 export function getSwimSpeed(combatant: Combatant): number {
   if (combatant.type === 'pokemon') {
     const pokemon = combatant.entity as Pokemon
     return pokemon.capabilities?.swim ?? 0
   }
-  return 0
+  return getHumanSwimSpeed(combatant.entity as HumanCharacter)
 }
 
 /**
