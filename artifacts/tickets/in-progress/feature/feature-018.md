@@ -3,7 +3,7 @@ id: feature-018
 title: Weather Effect Automation
 priority: P2
 severity: MEDIUM
-status: design-complete
+status: in-progress
 domain: scenes
 source: matrix-gap (Scenes SG-1)
 matrix_source: scenes R011, R012, R013, R014, R015
@@ -50,3 +50,7 @@ FULL-scope feature requiring design spec. Affects damage calculation, turn end p
   - `shared-specs.md` — Weather type enum, damage formulas, ability interaction matrix, data flow, constants
   - `testing-strategy.md` — Unit tests, integration tests, manual testing checklist for all tiers
 - **CORRECTION**: PTU weather damage is 1 Tick (1/10th max HP), NOT 1/16th as stated in the ticket. Verified against PTU p.246 and p.341.
+- **2026-03-03 P0 Implementation** (branch: `slave/3-dev-feature-018-p0-20260303-131425`):
+  - `adb21288` — `app/utils/weatherRules.ts` (NEW): Pure functions for weather type/ability immunity checks
+  - `8283f207` — `app/server/services/weather-automation.service.ts` (NEW): Weather tick calculation service
+  - `05e8d8b3` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Weather tick at turn start, move log, WebSocket broadcast

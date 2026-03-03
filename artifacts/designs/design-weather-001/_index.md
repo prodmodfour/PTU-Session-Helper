@@ -4,7 +4,7 @@ ticket_id: feature-018
 category: FEATURE
 scope: FULL
 domain: scenes, combat
-status: validated
+status: p0-implemented
 decree: decree-030
 affected_files:
   - app/types/encounter.ts
@@ -104,6 +104,20 @@ Weather damage is **1/10th max HP** (a Tick), NOT 1/16th. The existing `calculat
 | Z | Thermosensitive (+2 Atk/SpAtk CS in Sun; halved movement in Hail) | NOT_IMPLEMENTED | No ability-weather interaction | **P2** |
 | AA | Flower Gift (Burst 4 +2 CS distribution in Sun) | NOT_IMPLEMENTED | No ability-weather interaction | **P2** |
 | AB | Harvest (Digestion Buff auto-retain in Sun) | NOT_IMPLEMENTED | No ability-weather interaction | **P2** |
+
+---
+
+## Implementation Log
+
+### P0 (2026-03-03)
+
+Branch: `slave/3-dev-feature-018-p0-20260303-131425`
+
+| Commit | File | Action | Description |
+|--------|------|--------|-------------|
+| `adb21288` | `app/utils/weatherRules.ts` | NEW | Weather type enum, immunity checks (type + ability + adjacent ally), constants |
+| `8283f207` | `app/server/services/weather-automation.service.ts` | NEW | Weather tick calculation, immunity result, delegates damage application to caller |
+| `05e8d8b3` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Weather tick at turn start, faint handling, move log, WebSocket broadcast, response payload |
 
 ---
 
