@@ -136,3 +136,26 @@ Review: code-review-285 (CHANGES_REQUIRED — 1C+2H+3M)
 - `app/server/api/encounters/[id]/damage.post.ts` (EDIT — immutable reassignment)
 - `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT — immutable reassignment)
 - `.claude/skills/references/app-surface.md` (EDIT — mounting system documentation)
+
+### P1 Fix Cycle (2026-03-03)
+
+Branch: `slave/3-dev-feature-004-20260303-165227`
+Review: code-review-296 (CHANGES_REQUIRED — 2H+3M), rules-review-269 (APPROVED)
+
+**Commits (5):**
+- `f33e6d7f` — fix: offset mount badge to avoid overlap with elevation badge in VTTToken (HIGH-1)
+- `9b13fdd6` — fix: apply movement modifiers once upfront for mounted combatants (HIGH-2)
+- `e072c51d` — fix: use capacity check instead of blanket skip in MountControls (MED-1)
+- `7ef0cfb9` — fix: include heavily injured HP loss in dismount threshold check (MED-2)
+- `b5124d88` — fix: show mount partner name in Group and Player combatant cards (MED-3)
+
+**Files changed (8):**
+- `app/components/vtt/VTTToken.vue` (EDIT — mount badge position offset)
+- `app/utils/movementModifiers.ts` (NEW — extracted applyMovementModifiers for client/server sharing)
+- `app/composables/useGridMovement.ts` (EDIT — re-export from utils, return movementRemaining directly)
+- `app/server/services/mounting.service.ts` (EDIT — apply modifiers in executeMount and resetMountMovement)
+- `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT — apply modifiers in resetCombatantsForNewRound)
+- `app/components/encounter/MountControls.vue` (EDIT — capacity check with getMountCapacity/countCurrentRiders)
+- `app/server/api/encounters/[id]/damage.post.ts` (EDIT — totalDamageEvent includes heavilyInjuredHpLoss)
+- `app/components/encounter/GroupCombatantCard.vue` (EDIT — partner name via getMountPartner)
+- `app/components/encounter/PlayerCombatantCard.vue` (EDIT — partner name via getMountPartner)
