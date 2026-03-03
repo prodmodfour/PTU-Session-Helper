@@ -14,7 +14,7 @@
 | `scene.ts` | 61 | Hand-written | Scene, SceneCharacter, ScenePokemon, SceneGroup, GroupViewTab, SceneModifier |
 | `habitat.ts` | 97 | Hand-written | EncounterTable, TableModification, RarityPreset, DensityTier (includes runtime constants) |
 | `template.ts` | 29 | Hand-written | TemplateCombatant, EncounterTemplate |
-| `api.ts` | 94 | Hand-written | ApiResponse\<T\>, WebSocketEvent (40+ member discriminated union) |
+| `api.ts` | 95 | Hand-written | ApiResponse\<T\>, WebSocketEvent (40+ member discriminated union) |
 | `settings.ts` | 22 | Hand-written | AppSettings, DamageMode, DEFAULT_SETTINGS |
 | `species.ts` | 44 | Prisma-derived | SpeciesData, EvolutionTrigger |
 | `player.ts` | 8 | Hand-written | PlayerTab |

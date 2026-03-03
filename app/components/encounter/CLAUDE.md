@@ -1,6 +1,6 @@
 # Encounter Components
 
-34 components managing PTU combat. Parent page: `pages/gm/index.vue` (GM) and `pages/group/index.vue` (Group view).
+35 components managing PTU combat. Parent page: `pages/gm/index.vue` (GM) and `pages/group/index.vue` (Group view).
 
 ## Turn Lifecycle (5 Phases)
 
@@ -21,13 +21,13 @@
 
 For status moves (no damage base), MoveTargetModal skips the damage section entirely.
 
-## Component Categories (34 components, 10 categories)
+## Component Categories (35 components, 10 categories)
 
 **Turn Flow (5):** DeclarationPanel, DeclarationSummary, PriorityActionPanel, HoldActionButton, SignificancePanel
 
 **Damage / Move Resolution (7):** MoveButton, MoveTargetModal, DamageSection, TargetDamageList, TargetSelector, MoveInfoCard, ManeuverGrid
 
-**Combatant Cards (4):** CombatantCard (GM), GroupCombatantCard (Group view), PlayerCombatantCard (Player view), PlayerRequestPanel
+**Combatant Cards (5):** CombatantCard (GM), CombatantCaptureSection (extracted capture UI), GroupCombatantCard (Group view), PlayerCombatantCard (Player view), PlayerRequestPanel
 
 **Status / Conditions (3):** StatusConditionsModal, CombatStagesModal, CombatantConditionsSection
 

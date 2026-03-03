@@ -4,7 +4,7 @@ Context for working with the test infrastructure in `app/tests/`.
 
 ## Test Structure
 
-50 test files total: 48 unit tests across 6 subdirectories + 2 integration tests. The `e2e/` directory exists but is empty (`.gitkeep` only).
+51 test files total: 49 unit tests across 6 subdirectories + 2 integration tests. The `e2e/` directory exists but is empty (`.gitkeep` only).
 
 ```
 tests/
@@ -14,7 +14,7 @@ tests/
 │   ├── composables/    # 10 files — useCombat, useDamageCalculation, useGridMovement, etc.
 │   ├── services/       # 6 files — combatant, encounterGeneration, healing-item, restHealing, status-automation, ball-condition
 │   ├── stores/         # 7 files — encounter, encounterLibrary, encounterTables, library, settings, terrain, terrain-migration
-│   └── utils/          # 13 files — diceRoller, gridDistance, captureRate, typeChart, restHealing, etc.
+│   └── utils/          # 14 files — diceRoller, gridDistance, captureRate, typeChart, restHealing, abilityAssignment, etc.
 ├── integration/        # 2 files — encounter-tables, fog-of-war
 └── e2e/                # empty (.gitkeep) — UX exploration uses Playwright in ux-sessions/
 ```
