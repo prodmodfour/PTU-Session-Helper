@@ -1,18 +1,20 @@
 ---
-generated_at: 2026-03-03T07:36:25.741Z
-total_tickets: 287
-open: 28
+generated_at: 2026-03-03T11:12:35.923Z
+total_tickets: 289
+open: 30
 in_progress: 110
 resolved: 129
 ---
 
 # Tickets Index
 
-## Open Tickets (28)
+## Open Tickets (30)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| decree-need-042 | decree | P1 | combat | The Living Weapon engage logic gates engagement behind Comba |
 | bug-045 | bug | P2 | capture | bug-045: CapturePanel receives entityId instead of combatant |
+| bug-046 | bug | P2 | combat | The mount and dismount endpoints broadcast `encounter_update |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
 | bug-044 | bug | P3 | capture | `useCapture.ts` (line ~192) references `/api/encounters/${en |
@@ -156,18 +158,20 @@ resolved: 129
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (1)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-042 | P1 | combat | — |
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 2 | 14 | 27 | 45 |
+| bug | 3 | 14 | 27 | 46 |
 | ptu-rule | 5 | 59 | 39 | 105 |
 | feature | 1 | 17 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
-| decree | 0 | 0 | 41 | 41 |
+| decree | 1 | 0 | 41 | 42 |
 | refactoring | 15 | 13 | 1 | 42 |
 | docs | 0 | 0 | 16 | 16 |
