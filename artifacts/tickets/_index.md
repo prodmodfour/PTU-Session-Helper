@@ -1,17 +1,18 @@
 ---
-generated_at: 2026-03-03T21:14:12.226Z
-total_tickets: 296
-open: 27
-in_progress: 116
+generated_at: 2026-03-03T23:07:27.177Z
+total_tickets: 298
+open: 29
+in_progress: 117
 resolved: 134
 ---
 
 # Tickets Index
 
-## Open Tickets (27)
+## Open Tickets (29)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| decree-need-044 | decree | P2 | combat | The PTU 1.05 rulebook contradicts itself on Sun Blanket's he |
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
 | feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
@@ -39,8 +40,9 @@ resolved: 134
 | refactoring-116 | refactoring | P4 | — | refactoring-116: XpDistributionModal.vue exceeds 800-line fi |
 | refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
 | refactoring-119 | refactoring | P4 | — | refactoring-119: Update stale interrupt.post.ts file header  |
+| refactoring-126 | refactoring | P4 | pokemon-lifecycle | The outer catch block in `[id].put.ts` (line ~90) and `index |
 
-## In-Progress Tickets (116)
+## In-Progress Tickets (117)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -113,6 +115,7 @@ resolved: 134
 | ptu-rule-122 | ptu-rule | P3 | — | decree-029 |
 | ptu-rule-123 | ptu-rule | P3 | — | decree-030 |
 | ptu-rule-128 | ptu-rule | P3 | combat | decree-038 |
+| ptu-rule-131 | ptu-rule | P3 | capture | code-review-281 M2 |
 | feature-005 | feature | P3 | combat | user-request |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
@@ -161,18 +164,20 @@ resolved: 134
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (1)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-044 | P2 | combat | — |
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 17 | 29 | 49 |
-| ptu-rule | 5 | 60 | 39 | 106 |
+| ptu-rule | 5 | 61 | 39 | 106 |
 | feature | 1 | 19 | 3 | 24 |
 | ux | 6 | 7 | 2 | 16 |
-| decree | 0 | 0 | 43 | 43 |
-| refactoring | 14 | 13 | 2 | 42 |
+| decree | 1 | 0 | 43 | 44 |
+| refactoring | 15 | 13 | 2 | 43 |
 | docs | 0 | 0 | 16 | 16 |
