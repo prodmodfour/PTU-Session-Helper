@@ -35,7 +35,8 @@ import {
   skipFaintedTrainers,
   skipUndeclaredTrainers,
   skipUncommandablePokemon,
-  decrementWeather
+  decrementWeather,
+  reverseWeatherCSBonuses
 } from '~/server/utils/turn-helpers'
 import type { TrainerDeclaration } from '~/types/combat'
 import type { StatusCondition } from '~/types'
@@ -231,6 +232,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Move to next turn
+    // Snapshot weather before turn progression for P1 CS reversal on expiry
+    const weatherBeforeAdvance = weather
     currentTurnIndex++
 
     // --- Hold Queue check (P1 — PTU p.227) ---
@@ -383,6 +386,13 @@ export default defineEventHandler(async (event) => {
         resetCombatantsForNewRound(combatants);
         ({ weather, weatherDuration, weatherSource } = decrementWeather(weather, weatherDuration, weatherSource))
       }
+    }
+
+    // P1: Reverse weather CS bonuses if weather expired this round.
+    // weatherBeforeAdvance was captured before turn progression; if it was non-null
+    // but weather is now null, the weather expired via decrementWeather.
+    if (weatherBeforeAdvance && !weather) {
+      reverseWeatherCSBonuses(combatants)
     }
 
     // Track defeated enemies for XP calculation

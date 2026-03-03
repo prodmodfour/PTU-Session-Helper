@@ -8,7 +8,7 @@
 
 import { getOverlandSpeed } from '~/utils/combatantCapabilities'
 import { applyMovementModifiers } from '~/utils/movementModifiers'
-import type { TrainerDeclaration } from '~/types/combat'
+import type { TrainerDeclaration, StageSource } from '~/types/combat'
 
 /**
  * Reset a trainer's turn state during resolution phase so they can execute
@@ -219,4 +219,36 @@ export function decrementWeather(
     return { weather, weatherDuration: newDuration, weatherSource }
   }
   return { weather, weatherDuration, weatherSource }
+}
+
+/**
+ * Reverse all weather-origin CS bonuses on all combatants (P1).
+ * Called when weather expires via decrementWeather.
+ * Uses decree-005 stageSources system — finds entries with 'weather:' prefix,
+ * reverses their value, and removes them from stageSources.
+ *
+ * Mutates combatant objects directly (acceptable: freshly parsed from JSON).
+ */
+export function reverseWeatherCSBonuses(combatants: any[]): void {
+  for (const combatant of combatants) {
+    const stageSources: StageSource[] = combatant.stageSources ?? []
+    const weatherSources = stageSources.filter((s: StageSource) => s.source.startsWith('weather:'))
+
+    if (weatherSources.length === 0) continue
+
+    const entity = combatant.entity
+    if (!entity.stageModifiers) continue
+
+    let updatedModifiers = { ...entity.stageModifiers }
+    for (const src of weatherSources) {
+      const current = updatedModifiers[src.stat] || 0
+      updatedModifiers = {
+        ...updatedModifiers,
+        [src.stat]: Math.max(-6, Math.min(6, current - src.value))
+      }
+    }
+    entity.stageModifiers = updatedModifiers
+
+    combatant.stageSources = stageSources.filter((s: StageSource) => !s.source.startsWith('weather:'))
+  }
 }
