@@ -1,20 +1,18 @@
 ---
-generated_at: 2026-03-03T17:34:03.121Z
+generated_at: 2026-03-03T18:47:49.293Z
 total_tickets: 291
-open: 28
-in_progress: 114
+open: 26
+in_progress: 116
 resolved: 130
 ---
 
 # Tickets Index
 
-## Open Tickets (28)
+## Open Tickets (26)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
-| bug-044 | bug | P3 | capture | `useCapture.ts` (line ~192) references `/api/encounters/${en |
-| ptu-rule-129 | ptu-rule | P3 | combat | ptu-rule-129: Roar's forced recall must respect the Trapped  |
 | feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
 | refactoring-108 | refactoring | P3 | — | refactoring-108: Extract switch button computeds from Combat |
@@ -41,7 +39,7 @@ resolved: 130
 | refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
 | refactoring-119 | refactoring | P4 | — | refactoring-119: Update stale interrupt.post.ts file header  |
 
-## In-Progress Tickets (114)
+## In-Progress Tickets (116)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -118,6 +116,7 @@ resolved: 130
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
+| bug-044 | bug | P3 | capture | rules-review-246 PRE-EXISTING-002 |
 | ptu-rule-055 | ptu-rule | P3 | pokemon-lifecycle | — |
 | ptu-rule-056 | ptu-rule | P3 | character-lifecycle | — |
 | ptu-rule-058 | ptu-rule | P3 | encounter-tables | — |
@@ -129,6 +128,7 @@ resolved: 130
 | ptu-rule-079 | ptu-rule | P3 | combat | code-review-120 (M1) |
 | ptu-rule-080 | ptu-rule | P3 | character-lifecycle | code-review-121 (M3) |
 | ptu-rule-109 | ptu-rule | P3 | capture | rules-review-161 M1 |
+| ptu-rule-129 | ptu-rule | P3 | combat | decree-039 |
 | feature-004 | feature | P3 | combat | user-request |
 | ux-003 | ux | P3 | player-view | code-review-158 M1 |
 | ux-004 | ux | P3 | player-view | rules-review-149 R2 |
@@ -168,8 +168,8 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 16 | 27 | 46 |
-| ptu-rule | 6 | 59 | 39 | 106 |
+| bug | 0 | 17 | 27 | 46 |
+| ptu-rule | 5 | 60 | 39 | 106 |
 | feature | 1 | 19 | 3 | 24 |
 | ux | 5 | 7 | 2 | 15 |
 | decree | 0 | 0 | 42 | 42 |
