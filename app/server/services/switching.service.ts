@@ -422,8 +422,9 @@ export function validateSwitch(params: {
   }
 
   // 3b. Recalled Pokemon must not be Trapped (PTU p.247: "Trapped... cannot be recalled")
+  // Note: tempConditions lives on the combatant, not the entity.
   const recalledStatuses: string[] = (recalled.entity as { statusConditions?: string[] })?.statusConditions || []
-  const recalledTempConditions: string[] = (recalled.entity as { tempConditions?: string[] })?.tempConditions || []
+  const recalledTempConditions: string[] = recalled.tempConditions || []
   const allRecalledConditions = [...recalledStatuses, ...recalledTempConditions]
   if (allRecalledConditions.includes('Trapped') || allRecalledConditions.includes('Bound')) {
     return { valid: false, error: 'Pokemon is Trapped and cannot be recalled', statusCode: 400 }
@@ -604,8 +605,9 @@ export function validateForcedSwitch(params: {
   // Only moves with explicit text bypass Trapped (U-Turn, Baton Pass, Volt Switch, Parting Shot).
   // Roar's text (p.8855) says nothing about Trapped, so the recall is blocked.
   // The shift movement still happens (handled by the caller), but recall fails here.
+  // Note: tempConditions lives on the combatant, not the entity.
   const recalledStatuses: string[] = (recalled.entity as { statusConditions?: string[] })?.statusConditions || []
-  const recalledTempConditions: string[] = (recalled.entity as { tempConditions?: string[] })?.tempConditions || []
+  const recalledTempConditions: string[] = recalled.tempConditions || []
   const allRecalledConditions = [...recalledStatuses, ...recalledTempConditions]
   if (allRecalledConditions.includes('Trapped') || allRecalledConditions.includes('Bound')) {
     return { valid: false, error: 'Cannot recall Trapped Pokemon — forced switch blocked (decree-039)', statusCode: 400 }
