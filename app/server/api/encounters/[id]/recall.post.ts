@@ -112,11 +112,12 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: 'Pokemon does not belong to this trainer' })
       }
 
-      // Trapped check
+      // Trapped check — PTU p.247: "A Pokemon or Trainer that is Trapped cannot be recalled."
+      // Note: tempConditions lives on the combatant, not the entity.
       const statuses: string[] = (pokemon.entity as { statusConditions?: string[] })?.statusConditions || []
-      const tempConditions: string[] = (pokemon.entity as { tempConditions?: string[] })?.tempConditions || []
+      const tempConditions: string[] = pokemon.tempConditions || []
       const allConditions = [...statuses, ...tempConditions]
-      if (allConditions.includes('Trapped') || allConditions.includes('Bound')) {
+      if (allConditions.includes('Trapped')) {
         throw createError({ statusCode: 400, message: 'Pokemon is Trapped and cannot be recalled' })
       }
 
