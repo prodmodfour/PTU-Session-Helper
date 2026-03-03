@@ -47,7 +47,7 @@ const availableTrainers = computed(() => {
   return encounter.combatants
     .filter(c => c.type === 'human' && (c.side === 'players' || c.side === 'allies'))
     .map(c => ({
-      id: c.entityId!,
+      id: c.id,
       name: (c.entity as HumanCharacter).name,
     }))
 })
