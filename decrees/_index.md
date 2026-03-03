@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-03T19:49:36.419Z
-total_decrees: 44
-active: 43
+generated_at: 2026-03-03T21:14:12.232Z
+total_decrees: 45
+active: 44
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (43)
+## Active Decrees (44)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -54,3 +54,4 @@ superseded: 0
 | decree-041 | healing | awakening-item-inclusion | Keep Awakening at $200 as a standard single-condition cure item |
 | decree-042 | capture | pokeball-accuracy-modifiers | Apply full accuracy system to Poke Ball throws |
 | decree-043 | combat | living-weapon-skill-rank-gate | Combat Skill Rank gates Living Weapon move access, not engagement |
+| decree-044 | combat | bound-condition-removal | Remove phantom 'Bound' condition; only Trapped blocks recall (RAW) |

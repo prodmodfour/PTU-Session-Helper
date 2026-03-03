@@ -1,22 +1,20 @@
 ---
-generated_at: 2026-03-03T19:49:36.391Z
-total_tickets: 295
-open: 30
+generated_at: 2026-03-03T21:14:12.226Z
+total_tickets: 296
+open: 27
 in_progress: 116
-resolved: 130
+resolved: 134
 ---
 
 # Tickets Index
 
-## Open Tickets (30)
+## Open Tickets (27)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
-| bug-048 | bug | P3 | combat | bug-048: 'Bound' condition check blocks recall without PTU b |
 | feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
-| decree-need-043 | decree | P3 | combat | decree-need-043: Should 'Bound' condition block Pokemon reca |
 | refactoring-108 | refactoring | P3 | — | refactoring-108: Extract switch button computeds from Combat |
 | refactoring-112 | refactoring | P3 | combat | Refactoring-112: Decompose encounter store into focused sub- |
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
@@ -37,7 +35,6 @@ resolved: 130
 | refactoring-100 | refactoring | P4 | — | When a combatant faints from any damage source, `applyDamage |
 | refactoring-101 | refactoring | P4 | pokemon-lifecycle | Deduplicate type-badge SCSS across evolution components |
 | refactoring-102 | refactoring | P4 | pokemon-lifecycle | Extract EvolutionSelectionModal from duplicated branching ev |
-| refactoring-105 | refactoring | P4 | combat | Remove Spurious 'Bound' Condition Check from Trapped Validat |
 | refactoring-115 | refactoring | P4 | combat | Refactoring-115: switching.service.ts exceeds 800-line limit |
 | refactoring-116 | refactoring | P4 | — | refactoring-116: XpDistributionModal.vue exceeds 800-line fi |
 | refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
@@ -164,20 +161,18 @@ resolved: 130
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-043 | P3 | combat | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 2 | 17 | 27 | 48 |
+| bug | 1 | 17 | 29 | 49 |
 | ptu-rule | 5 | 60 | 39 | 106 |
 | feature | 1 | 19 | 3 | 24 |
 | ux | 6 | 7 | 2 | 16 |
-| decree | 1 | 0 | 42 | 43 |
-| refactoring | 15 | 13 | 1 | 42 |
+| decree | 0 | 0 | 43 | 43 |
+| refactoring | 14 | 13 | 2 | 42 |
 | docs | 0 | 0 | 16 | 16 |
