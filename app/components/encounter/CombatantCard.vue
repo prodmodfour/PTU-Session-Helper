@@ -436,6 +436,31 @@ watch(availableTrainers, (trainers) => {
   }
 }, { immediate: true })
 
+// Fetch species data for evolution stage info (needed for accurate capture rate preview)
+const speciesEvolution = ref<{ evolutionStage: number; maxEvolutionStage: number } | null>(null)
+watch(
+  () => isWildPokemon.value ? (entity.value as Pokemon).species : null,
+  async (species) => {
+    if (!species) {
+      speciesEvolution.value = null
+      return
+    }
+    try {
+      const resp = await $fetch<{ success: boolean; data: { evolutionStage: number; maxEvolutionStage: number } }>(`/api/species/${species}`)
+      if (resp.success) {
+        speciesEvolution.value = {
+          evolutionStage: resp.data.evolutionStage,
+          maxEvolutionStage: resp.data.maxEvolutionStage,
+        }
+      }
+    } catch {
+      // Non-critical: capture rate preview will use defaults
+      speciesEvolution.value = null
+    }
+  },
+  { immediate: true }
+)
+
 // Pokemon data for CapturePanel
 const capturePokemonData = computed(() => {
   const pokemon = entity.value as Pokemon
@@ -443,6 +468,8 @@ const capturePokemonData = computed(() => {
     level: pokemon.level,
     currentHp: pokemon.currentHp,
     maxHp: pokemon.maxHp,
+    evolutionStage: speciesEvolution.value?.evolutionStage,
+    maxEvolutionStage: speciesEvolution.value?.maxEvolutionStage,
     statusConditions: pokemon.statusConditions || [],
     injuries: pokemon.injuries || 0,
     isShiny: pokemon.shiny || false,
