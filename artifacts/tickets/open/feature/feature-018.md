@@ -3,7 +3,7 @@ id: feature-018
 title: Weather Effect Automation
 priority: P2
 severity: MEDIUM
-status: open
+status: design-complete
 domain: scenes
 source: matrix-gap (Scenes SG-1)
 matrix_source: scenes R011, R012, R013, R014, R015
@@ -39,3 +39,14 @@ Weather can be set on scenes but is display-only. No weather damage, no type dam
 ## Implementation Scope
 
 FULL-scope feature requiring design spec. Affects damage calculation, turn end processing, and ability system.
+
+## Resolution Log
+
+- **2026-03-03**: Design spec created at `artifacts/designs/design-weather-001/`
+  - `_index.md` — Design metadata, tier summary, priority map, affected/new files
+  - `spec-p0.md` — Weather damage at turn start (Hail/Sandstorm) with type and ability immunities
+  - `spec-p1.md` — Type damage modifiers (Rain/Sun DB changes), speed abilities, weather healing/damage
+  - `spec-p2.md` — Weather Ball type change, Forecast type change, UI indicators, additional abilities
+  - `shared-specs.md` — Weather type enum, damage formulas, ability interaction matrix, data flow, constants
+  - `testing-strategy.md` — Unit tests, integration tests, manual testing checklist for all tiers
+- **CORRECTION**: PTU weather damage is 1 Tick (1/10th max HP), NOT 1/16th as stated in the ticket. Verified against PTU p.246 and p.341.
