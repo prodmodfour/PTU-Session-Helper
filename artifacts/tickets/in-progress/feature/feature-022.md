@@ -70,3 +70,4 @@ After merging, run `npx prisma db push` to add the `loyalty` column to the Pokem
 | e0d17fcc | pokemon-generator.service.ts, index.post.ts | Set starting loyalty values based on origin |
 | 82d86103 | serializers.ts, [id].put.ts, entity-builder.service.ts | Expose loyalty in API responses and update endpoint |
 | 84f34e44 | PokemonStatsTab.vue | Add loyalty display and edit UI with PhHandshake icon |
+| 51c53132 | attempt.post.ts | Wire Friend Ball +1 loyalty to actual DB update |
