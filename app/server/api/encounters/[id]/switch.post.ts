@@ -39,6 +39,8 @@ import {
   canSwitchedPokemonBeCommanded,
   applyRecallSideEffects
 } from '~/server/services/switching.service'
+import { clearWieldOnRemoval } from '~/server/services/living-weapon.service'
+import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 import { broadcastToEncounter } from '~/server/utils/websocket'
 import type { SwitchAction } from '~/types/combat'
 
@@ -219,7 +221,13 @@ export default defineEventHandler(async (event) => {
       recallCombatantId
     )
 
-    // 2b. Apply recall side-effects on the recalled Pokemon's DB record
+    // 2b. Auto-disengage Living Weapon on switch recall (feature-005)
+    const wieldRelationships = reconstructWieldRelationships(removalResult.combatants)
+    const wieldCleanup = clearWieldOnRemoval(removalResult.combatants, wieldRelationships, recallCombatantId)
+    // Replace combatants with wield-cleaned version
+    const cleanedRemovalResult = { ...removalResult, combatants: wieldCleanup.combatants }
+
+    // 2c. Apply recall side-effects on the recalled Pokemon's DB record
     // PTU p.247-248: volatile conditions cleared, temp HP lost, combat stages reset
     await applyRecallSideEffects(recalledCombatant.entityId)
 
@@ -247,14 +255,14 @@ export default defineEventHandler(async (event) => {
     newCombatant.turnState.canBeCommanded = canBeCommanded
 
     // 5. Add new combatant to combatants array
-    const updatedCombatants = [...removalResult.combatants, newCombatant]
+    const updatedCombatants = [...cleanedRemovalResult.combatants, newCombatant]
 
     // 5b. Section K: Determine immediate-act eligibility (Full Contact only)
     // PTU p.229: Released Pokemon whose initiative has already passed may act immediately.
     // Does NOT apply to: fainted switches, League battles, or forced switches.
     const isFullContact = record.battleType === 'full_contact'
-    const currentCombatantForInit = removalResult.turnOrder[removalResult.currentTurnIndex]
-      ? updatedCombatants.find(c => c.id === removalResult.turnOrder[removalResult.currentTurnIndex])
+    const currentCombatantForInit = cleanedRemovalResult.turnOrder[cleanedRemovalResult.currentTurnIndex]
+      ? updatedCombatants.find(c => c.id === cleanedRemovalResult.turnOrder[cleanedRemovalResult.currentTurnIndex])
       : null
     const canActImmediately = isFullContact
       && !isFaintedSwitch
@@ -264,10 +272,10 @@ export default defineEventHandler(async (event) => {
     const insertResult = insertIntoTurnOrder(
       newCombatant,
       updatedCombatants,
-      removalResult.turnOrder,
-      removalResult.trainerTurnOrder,
-      removalResult.pokemonTurnOrder,
-      removalResult.currentTurnIndex,
+      cleanedRemovalResult.turnOrder,
+      cleanedRemovalResult.trainerTurnOrder,
+      cleanedRemovalResult.pokemonTurnOrder,
+      cleanedRemovalResult.currentTurnIndex,
       record.battleType,
       currentPhase,
       canActImmediately
