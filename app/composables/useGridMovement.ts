@@ -1,4 +1,4 @@
-import type { GridPosition, Combatant, Pokemon, TerrainType, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
+import type { GridPosition, Combatant, Pokemon, HumanCharacter, TerrainType, TerrainCostGetter, ElevationCostGetter, TerrainElevationGetter } from '~/types'
 import { areAdjacent } from '~/utils/adjacency'
 import { AOO_BLOCKING_CONDITIONS } from '~/types/combat'
 import { useTerrainStore } from '~/stores/terrain'
@@ -6,7 +6,7 @@ import { useRangeParser } from '~/composables/useRangeParser'
 import {
   combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed,
   getOverlandSpeed, getSwimSpeed, getBurrowSpeed, calculateAveragedSpeed,
-  naturewalkBypassesTerrain
+  naturewalkBypassesTerrain, getHumanDerivedSpeeds
 } from '~/utils/combatantCapabilities'
 import { TERRAIN_COSTS, DEFAULT_FLAGS } from '~/stores/terrain'
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
@@ -211,11 +211,21 @@ export function useGridMovement(options: UseGridMovementOptions) {
       return options.getMovementSpeed(combatantId)
     }
 
-    const overland = getOverlandSpeed(combatant)
-    const speeds = [overland]
+    // For humans, compute overland and swimming from a single derivation call
+    // to avoid redundant computeTrainerDerivedStats invocations in the hot path.
+    let overland: number
+    const speeds: number[] = []
 
-    if (combatantCanSwim(combatant)) {
-      speeds.push(getSwimSpeed(combatant))
+    if (combatant.type === 'human') {
+      const humanSpeeds = getHumanDerivedSpeeds(combatant.entity as HumanCharacter)
+      overland = humanSpeeds.overland
+      speeds.push(overland, humanSpeeds.swimming)
+    } else {
+      overland = getOverlandSpeed(combatant)
+      speeds.push(overland)
+      if (combatantCanSwim(combatant)) {
+        speeds.push(getSwimSpeed(combatant))
+      }
     }
     if (combatantCanBurrow(combatant)) {
       speeds.push(getBurrowSpeed(combatant))

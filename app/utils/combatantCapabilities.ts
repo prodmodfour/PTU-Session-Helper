@@ -16,28 +16,21 @@ import { LIVING_WEAPON_CONFIG, type LivingWeaponConfig } from '~/constants/livin
 // =====================================
 
 /**
- * Get a human trainer's Overland speed derived from skills.
- * PTU Core p.16: Overland = 3 + floor((Athletics rank + Acrobatics rank) / 2).
- * Default is 5 (Untrained Athletics=2, Untrained Acrobatics=2: 3+floor(4/2)=5).
+ * Get a human trainer's Overland and Swimming speeds in a single call.
+ * Avoids redundant computeTrainerDerivedStats invocations when both speeds
+ * are needed (e.g., getMaxPossibleSpeed queries overland, canSwim, and swim
+ * speed for the same combatant).
+ *
+ * PTU Core p.16:
+ * - Overland = 3 + floor((Athletics rank + Acrobatics rank) / 2)
+ * - Swimming = floor(Overland / 2)
  */
-function getHumanOverlandSpeed(human: HumanCharacter): number {
+export function getHumanDerivedSpeeds(human: HumanCharacter): { overland: number; swimming: number } {
   const derived = computeTrainerDerivedStats({
     skills: human.skills || {},
     weightKg: human.weight
   })
-  return derived.overland
-}
-
-/**
- * Get a human trainer's Swimming speed derived from Overland.
- * PTU Core p.16: Swimming = floor(Overland / 2).
- */
-function getHumanSwimSpeed(human: HumanCharacter): number {
-  const derived = computeTrainerDerivedStats({
-    skills: human.skills || {},
-    weightKg: human.weight
-  })
-  return derived.swimming
+  return { overland: derived.overland, swimming: derived.swimming }
 }
 
 /**
@@ -50,8 +43,10 @@ export function combatantCanSwim(combatant: Combatant): boolean {
     const pokemon = combatant.entity as Pokemon
     return (pokemon.capabilities?.swim ?? 0) > 0
   }
-  // Trainers always have a Swimming speed (derived from Overland)
-  return getHumanSwimSpeed(combatant.entity as HumanCharacter) > 0
+  // Trainers always have a Swimming speed (derived from Overland).
+  // Minimum possible Overland is 4 (Pathetic in both skills), so Swimming >= 2.
+  // This means all trainers can always swim per PTU rules.
+  return true
 }
 
 /**
@@ -99,7 +94,7 @@ export function getOverlandSpeed(combatant: Combatant): number {
     const pokemon = combatant.entity as Pokemon
     return pokemon.capabilities?.overland ?? 5
   }
-  return getHumanOverlandSpeed(combatant.entity as HumanCharacter)
+  return getHumanDerivedSpeeds(combatant.entity as HumanCharacter).overland
 }
 
 /**
@@ -112,7 +107,7 @@ export function getSwimSpeed(combatant: Combatant): number {
     const pokemon = combatant.entity as Pokemon
     return pokemon.capabilities?.swim ?? 0
   }
-  return getHumanSwimSpeed(combatant.entity as HumanCharacter)
+  return getHumanDerivedSpeeds(combatant.entity as HumanCharacter).swimming
 }
 
 /**
