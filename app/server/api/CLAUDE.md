@@ -58,7 +58,7 @@ Simple CRUD endpoints may work directly with Prisma + serializer utilities from 
 
 | API Directory | Primary Service(s) |
 |--------------|-------------------|
-| encounters/ | encounter.service, combatant.service, out-of-turn.service, intercept.service, switching.service, status-automation.service, mounting.service, living-weapon.service |
+| encounters/ | encounter.service, combatant.service, out-of-turn.service, intercept.service, switching.service, status-automation.service, weather-automation.service, mounting.service, living-weapon.service |
 | pokemon/ | pokemon-generator.service, evolution.service, entity-update.service |
 | characters/ | entity-update.service, rest-healing.service, csv-import.service |
 | capture/ | ball-condition.service, utility functions in `utils/captureRate` |

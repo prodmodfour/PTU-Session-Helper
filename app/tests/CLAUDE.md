@@ -4,13 +4,13 @@ Context for working with the test infrastructure in `app/tests/`.
 
 ## Test Structure
 
-51 test files total: 49 unit tests across 6 subdirectories + 2 integration tests. The `e2e/` directory exists but is empty (`.gitkeep` only).
+52 test files total: 50 unit tests across 6 subdirectories + 2 integration tests. The `e2e/` directory exists but is empty (`.gitkeep` only).
 
 ```
 tests/
 ├── unit/
 │   ├── api/            # 10 files — server endpoint handlers
-│   ├── components/     # 2 files — CombatantCard, PokemonCard
+│   ├── components/     # 3 files — CombatantCaptureSection, CombatantCard, PokemonCard
 │   ├── composables/    # 10 files — useCombat, useDamageCalculation, useGridMovement, etc.
 │   ├── services/       # 6 files — combatant, encounterGeneration, healing-item, restHealing, status-automation, ball-condition
 │   ├── stores/         # 7 files — encounter, encounterLibrary, encounterTables, library, settings, terrain, terrain-migration
@@ -55,12 +55,12 @@ Defined in `app/vitest.config.ts`:
 
 ## Coverage Gaps
 
-**Well covered**: utils (13 tests), composables (10), API handlers (10), stores (7), services (6).
+**Well covered**: utils (14 tests), composables (10), API handlers (10), stores (7), services (6).
 
 **Major gaps**:
 - **VTT**: 14 components + 6 composables + 6 stores = 26 source files, only ~4 related tests (gridMovement, terrain, terrain-migration, gridDistance)
 - **Player**: 16 components + 1 page = 17 source files, 0 tests
 - **Isometric**: 5 composables + 1 component + 1 store = 7 source files, 0 tests
-- **Components overall**: 2 unit tests out of 146 total components
+- **Components overall**: 3 unit tests out of 153 total components
 - **WebSocket**: 3 source files (composable, server route, server util), 0 tests
 - **Integration**: only 2 files — cross-layer flows (e.g., encounter creation -> combat -> XP) untested

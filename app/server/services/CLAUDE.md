@@ -17,7 +17,7 @@ If you need Pokemon, call one of these. Never build Pokemon records ad-hoc in AP
 
 | Pattern | Services |
 |---|---|
-| **Pure functions** (no DB, no side effects) | encounter-generation, status-automation, grid-placement, ball-condition, mounting, living-weapon, living-weapon-state |
+| **Pure functions** (no DB, no side effects) | encounter-generation, status-automation, weather-automation, grid-placement, ball-condition, mounting, living-weapon, living-weapon-state |
 | **DB writers** (read/write Prisma) | pokemon-generator, entity-update, entity-builder, rest-healing, scene, csv-import, evolution |
 | **Hybrid** (pure logic + DB persist) | combatant, switching, healing-item, out-of-turn, intercept |
 | **Orchestrators** (coordinate other services) | encounter |
@@ -44,7 +44,8 @@ If you need Pokemon, call one of these. Never build Pokemon records ad-hoc in AP
 | `switching.service.ts` | ~812 | Pokemon switch validation, recall range, initiative insertion, action tracking |
 | `ball-condition.service.ts` | ~185 | Build Poke Ball condition context from encounter state for conditional ball modifiers |
 | `mounting.service.ts` | ~456 | Trainer-Pokemon mount/dismount logic, movement sharing, faint auto-dismount |
-| `living-weapon.service.ts` | ~351 | Living Weapon engage/disengage, wield state queries, faint penalty, auto-disengage |
+| `living-weapon.service.ts` | ~349 | Living Weapon engage/disengage, wield state queries, faint penalty, auto-disengage |
+| `weather-automation.service.ts` | ~112 | Weather damage ticks at turn start (Hail, Sandstorm) with type/ability immunities |
 | `living-weapon-state.ts` | ~51 | Reconstruct wieldRelationships from combatant flags for WebSocket state sync |
 
 ## Dependency Map
@@ -62,6 +63,7 @@ out-of-turn -------> intercept (detect/resolve intercept functions)
 ball-condition ----> encounter (encounter state for context building)
 mounting ----------> combatant (mount state on combatants)
 living-weapon -----> encounter (wield state on combatants)
+weather-automation -> status-automation (calculateTickDamage)
 living-weapon-state -> (standalone, reconstructs from combatant flags)
 ```
 

@@ -8,7 +8,7 @@
 2. **Priority Window** (`betweenTurns === true`) — `PriorityActionPanel` after `nextTurn()`. GM declares priority or continues.
 3. **Action Phase** (`currentPhase === 'pokemon'` or `'trainer_resolution'`) — `GMActionModal` hub: Standard/Shift/Swift actions, moves, maneuvers.
 4. **Out-of-Turn Interrupts** — `AoOPrompt` / `InterceptPrompt` triggered by `out-of-turn.service.ts` and `intercept.service.ts`.
-5. **Turn End** — `encounterStore.nextTurn()` calls `POST /next-turn`. Server runs `status-automation.service.ts` (Burn/Poison tick), advances `currentTurnIndex`.
+5. **Turn End** — `encounterStore.nextTurn()` calls `POST /next-turn`. Server runs `weather-automation.service.ts` (Hail/Sandstorm tick) then `status-automation.service.ts` (Burn/Poison tick), advances `currentTurnIndex`.
 
 ## Battle Modes
 
