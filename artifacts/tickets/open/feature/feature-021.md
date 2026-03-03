@@ -57,11 +57,11 @@ PARTIAL-scope — can be implemented as computed properties. No design spec need
 **Gap identified:** The VTT movement system (`combatantCapabilities.ts` and `useGridMovement.ts`) was using hardcoded defaults (Overland=5, Swimming=0) for human combatants instead of computing from trainer skills.
 
 **Commits:**
-1. `f822d987` — `feat: derive human trainer Overland and Swimming speeds from skills`
+1. `3912f8da` — `feat: derive human trainer Overland and Swimming speeds from skills`
    - `app/utils/combatantCapabilities.ts`: Updated `getOverlandSpeed`, `getSwimSpeed`, `combatantCanSwim` to compute from skills via `computeTrainerDerivedStats` instead of returning hardcoded defaults
    - Added `getHumanOverlandSpeed` and `getHumanSwimSpeed` private helpers
 
-2. `311adc9d` — `feat: use derived trainer speeds in VTT grid movement`
+2. `6d54d85e` — `feat: use derived trainer speeds in VTT grid movement`
    - `app/composables/useGridMovement.ts`: Updated `getTerrainAwareSpeed` to compute human Swimming speed for water terrain; updated `getSpeed` fallback to use `getOverlandSpeed` instead of `DEFAULT_MOVEMENT_SPEED` for humans
 
 **Coverage of matrix rules after fix:**
