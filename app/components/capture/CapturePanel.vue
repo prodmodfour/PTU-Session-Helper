@@ -32,7 +32,7 @@
       </template>
       <template v-else>
         <div class="capture-panel__accuracy-result">
-          <span>Accuracy: {{ accuracyResult.roll }}</span>
+          <span>Accuracy: {{ accuracyResult.roll }} (need {{ accuracyResult.threshold }}+)</span>
           <span v-if="accuracyResult.isNat1" class="capture-panel__miss">
             Natural 1 -- Miss!
           </span>
@@ -40,10 +40,10 @@
             Natural 20 -- Critical Hit!
           </span>
           <span v-else-if="accuracyResult.hits" class="capture-panel__hit">
-            {{ accuracyResult.roll }} vs AC 6 -- Hit
+            {{ accuracyResult.roll }} vs {{ accuracyResult.threshold }} -- Hit
           </span>
           <span v-else class="capture-panel__miss">
-            {{ accuracyResult.roll }} vs AC 6 -- Miss!
+            {{ accuracyResult.roll }} vs {{ accuracyResult.threshold }} -- Miss!
           </span>
         </div>
 
@@ -115,7 +115,7 @@
 import { PhSparkle } from '@phosphor-icons/vue'
 import { DEFAULT_BALL_TYPE } from '~/constants/pokeBalls'
 import type { BallConditionContext } from '~/constants/pokeBalls'
-import type { CaptureRateData, CaptureAttemptResult } from '~/composables/useCapture'
+import type { CaptureRateData, CaptureAttemptResult, CaptureAccuracyParams } from '~/composables/useCapture'
 
 const props = defineProps<{
   /** The wild Pokemon's ID */
@@ -135,6 +135,8 @@ const props = defineProps<{
   encounterId?: string
   /** Available trainer IDs for capture (GM selects) */
   trainerId: string
+  /** Accuracy modifiers per decree-042: thrower stages, target evasion, flanking, terrain */
+  accuracyParams?: CaptureAccuracyParams
 }>()
 
 const emit = defineEmits<{
@@ -192,14 +194,14 @@ const accuracyResult = ref<{
   isNat1: boolean
   isNat20: boolean
   hits: boolean
-  total: number
+  threshold: number
 } | null>(null)
 
 const captureAttemptResult = ref<CaptureAttemptResult | null>(null)
 
 async function rollAndThrow() {
-  // Step 1: Roll accuracy
-  const accuracy = rollAccuracyCheck()
+  // Step 1: Roll accuracy with full modifier system (decree-042)
+  const accuracy = rollAccuracyCheck(props.accuracyParams)
   accuracyResult.value = accuracy
 
   if (!accuracy.hits) {
