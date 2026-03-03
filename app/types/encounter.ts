@@ -16,7 +16,8 @@ import type {
   OutOfTurnAction,
   OutOfTurnUsage,
   HoldActionState,
-  MountState
+  MountState,
+  WieldRelationship
 } from './combat';
 import type { Pokemon, HumanCharacter, PokemonType } from './character';
 import type { SignificanceTier } from '~/utils/encounterBudget';
@@ -82,6 +83,12 @@ export interface Combatant {
   // Present when this combatant is part of a mounted pair.
   // Rider (trainer) and mount (Pokemon) each carry a MountState pointing to each other.
   mountState?: MountState;
+
+  // Living Weapon state (PTU pp.305-306, feature-005)
+  /** If this combatant is a trainer currently wielding a Living Weapon */
+  wieldingWeaponId?: string;
+  /** If this combatant is a Pokemon currently being wielded as a Living Weapon */
+  wieldedByTrainerId?: string;
 
   // Reference to actual data
   entity: Pokemon | HumanCharacter;
@@ -172,6 +179,10 @@ export interface Encounter {
 
   /** Hold action queue -- combatants who held and their target initiative (P1 scope) */
   holdQueue: Array<{ combatantId: string; holdUntilInitiative: number | null }>;
+
+  // Living Weapon wield relationships (encounter-scoped, feature-005)
+  /** Active wield relationships between trainers and Living Weapon Pokemon */
+  wieldRelationships: WieldRelationship[];
 
   // History
   moveLog: MoveLogEntry[];

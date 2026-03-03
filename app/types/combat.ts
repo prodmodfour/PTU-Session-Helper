@@ -1,6 +1,28 @@
 // Combat-related types for PTU 1.05
 
 // ============================================================
+// Living Weapon Wield State (feature-005 — PTU pp.305-306)
+// ============================================================
+
+/**
+ * A Living Weapon wield relationship within an encounter.
+ * Tracks which trainer combatant is wielding which Pokemon combatant.
+ *
+ * PTU pp.305-306: Living Weapon can be wielded as equipment.
+ * Engage = Standard Action. Disengage = Swift Action.
+ */
+export interface WieldRelationship {
+  /** Combatant ID of the wielding trainer */
+  wielderId: string
+  /** Combatant ID of the Living Weapon Pokemon */
+  weaponId: string
+  /** Species of the Living Weapon (determines weapon type, moves, bonuses) */
+  weaponSpecies: 'Honedge' | 'Doublade' | 'Aegislash'
+  /** Whether the Living Weapon is fainted (PTU: still usable, -2 penalty) */
+  isFainted: boolean
+}
+
+// ============================================================
 // Mount State (feature-004 — PTU p.218)
 // ============================================================
 
