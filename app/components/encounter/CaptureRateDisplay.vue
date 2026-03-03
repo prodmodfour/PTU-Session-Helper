@@ -177,7 +177,7 @@ const captureRateClass = computed(() => {
     border-radius: $border-radius-md;
     padding: $spacing-sm;
     margin-top: $spacing-xs;
-    z-index: 100;
+    z-index: $z-index-dropdown;
     display: none;
 
     .breakdown-separator {
