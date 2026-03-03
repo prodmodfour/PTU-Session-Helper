@@ -1,8 +1,8 @@
 # Implementation Log
 
-## Status: p0-implemented
+## Status: p0-implemented (fix cycle complete)
 
-P0 implemented (Sections A-D). P1 and P2 remain.
+P0 implemented (Sections A-D) + fix cycle applied. P1 and P2 remain.
 
 ---
 
@@ -12,6 +12,7 @@ P0 implemented (Sections A-D). P1 and P2 remain.
 |------|--------|---------|
 | 2026-02-28 | Design spec created | Full P0/P1/P2 spec for Living Weapon system |
 | 2026-03-03 | P0 implemented | 14 commits: data model, constants, capability parsing, service, API endpoints, WebSocket, encounter integration, auto-disengage on removal/recall/switch |
+| 2026-03-03 | P0 fix cycle | 8 commits: code-review-297 (C1+H1-H3+M1-M3) + rules-review-270 (HIGH#1-#2+MEDIUM#1) + bug-046 + decree-043 |
 
 ---
 
@@ -62,6 +63,19 @@ WieldRelationships are **not stored in a dedicated DB column**. Instead, the com
 
 ### Design Deviation: `updateWieldFaintedState`
 The spec defines `updateWieldFaintedState` for explicitly updating the fainted flag on wield relationships. Since relationships are reconstructed from combatant flags (which include the entity's HP state), the `isFainted` flag is automatically correct at reconstruction time. The function exists in the service for future use if relationships are stored in a dedicated column, but is not called in the current flow.
+
+## Fix Cycle Commits
+
+| Commit | Issue | Description |
+|--------|-------|-------------|
+| c924acb4 | decree-043, rules-270 HIGH#1 | Remove Combat Skill Rank gate from engagement |
+| ecbc2159 | code-297 M1 | Validate homebrew species (default to Honedge) |
+| 48123a55 | code-297 C1/H2/M3, rules-270 HIGH#2/MEDIUM#1 | Overhaul engage endpoint |
+| 29e792f4 | code-297 C1/H2/M3, rules-270 MEDIUM#1 | Overhaul disengage endpoint |
+| ff8e7f0e | bug-046 | Fix malformed WS broadcast in mount/dismount |
+| 80b4f5fa | code-297 H1 | Add WS event types and client handlers |
+| a5199014 | code-297 H3 | File unit test coverage ticket (feature-024) |
+| d9b6c420 | code-297 M2 | Update app-surface.md |
 
 ### Duplicate Code Path Check (L2 Lesson)
 Searched all combatant removal paths and added auto-disengage to:
