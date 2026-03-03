@@ -30,8 +30,8 @@ No loyalty tracking exists. PTU loyalty is a 7-rank system (0-6) that affects co
 - Chapter 10: Pokemon Loyalty
 - 7 ranks (0 = hostile, 3 = neutral, 6 = devoted)
 - Captured wild Pokemon start at rank 2
-- Traded Pokemon start at rank 1
-- Bred Pokemon start at rank 4
+- Traded Pokemon start at rank 1 (not yet implemented — traded origin does not exist)
+- Bred/hatched Pokemon start at rank 3 (PTU p.211, not yet implemented — bred origin does not exist)
 - Low loyalty requires Command checks (Charm/Intimidate vs DC)
 - Some evolutions require minimum loyalty
 
@@ -81,3 +81,8 @@ After running `npx prisma generate` (so the Prisma client includes the `loyalty`
 | 82d86103 | serializers.ts, [id].put.ts, entity-builder.service.ts | Expose loyalty in API responses and update endpoint |
 | 84f34e44 | PokemonStatsTab.vue | Add loyalty display and edit UI with PhHandshake icon |
 | 51c53132 | attempt.post.ts | Wire Friend Ball +1 loyalty to actual DB update |
+| a37f58d7 | pokemon-generator.service.ts | Fix C1: thread origin through CreatedPokemon to fix loyalty divergence in entity builder |
+| c4c55d7f | pokemon-generator.service.ts | Fix M1+M2+H1(rules): correct stale JSDoc for getStartingLoyalty and createPokemonRecord |
+| 27ffd8a3 | [id].put.ts | Fix H1: add server-side loyalty range validation to PUT endpoint |
+| 4b8204ae | index.post.ts | Fix H2: add server-side loyalty range validation to POST endpoint |
+| 4bff0cf0 | feature-022.md | Fix H3: document post-merge as-any removal checklist |
