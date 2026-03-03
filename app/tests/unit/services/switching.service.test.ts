@@ -178,33 +178,6 @@ describe('switching.service — validateForcedSwitch', () => {
       expect(result.statusCode).toBe(400)
     })
 
-    it('should block forced switch when Pokemon has Bound status condition', () => {
-      const boundPokemon = makeCombatant({
-        id: 'comb-bound',
-        type: 'pokemon',
-        entityId: 'poke-001',
-        entity: makePokemonEntity({
-          statusConditions: ['Bound'] as any,
-          ownerId: 'human-001'
-        })
-      })
-
-      const result = validateForcedSwitch({
-        encounter: {
-          isActive: true,
-          combatants: [trainerCombatant, boundPokemon],
-          battleType: 'full_contact'
-        },
-        trainerId: 'trainer-001',
-        recallCombatantId: 'comb-bound',
-        releaseEntityId: 'poke-bench-001',
-        releasedPokemonRecord
-      })
-
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('Trapped')
-    })
-
     it('should block forced switch when Pokemon has Trapped in tempConditions', () => {
       const pokemonWithTempTrapped = makeCombatant({
         id: 'comb-temp-trapped',

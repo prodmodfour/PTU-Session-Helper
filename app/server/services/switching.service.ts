@@ -426,7 +426,7 @@ export function validateSwitch(params: {
   const recalledStatuses: string[] = (recalled.entity as { statusConditions?: string[] })?.statusConditions || []
   const recalledTempConditions: string[] = recalled.tempConditions || []
   const allRecalledConditions = [...recalledStatuses, ...recalledTempConditions]
-  if (allRecalledConditions.includes('Trapped') || allRecalledConditions.includes('Bound')) {
+  if (allRecalledConditions.includes('Trapped')) {
     return { valid: false, error: 'Pokemon is Trapped and cannot be recalled', statusCode: 400 }
   }
 
@@ -609,7 +609,7 @@ export function validateForcedSwitch(params: {
   const recalledStatuses: string[] = (recalled.entity as { statusConditions?: string[] })?.statusConditions || []
   const recalledTempConditions: string[] = recalled.tempConditions || []
   const allRecalledConditions = [...recalledStatuses, ...recalledTempConditions]
-  if (allRecalledConditions.includes('Trapped') || allRecalledConditions.includes('Bound')) {
+  if (allRecalledConditions.includes('Trapped')) {
     return { valid: false, error: 'Cannot recall Trapped Pokemon — forced switch blocked (decree-039)', statusCode: 400 }
   }
 

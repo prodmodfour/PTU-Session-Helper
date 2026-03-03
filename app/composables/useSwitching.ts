@@ -152,7 +152,7 @@ export function useSwitching() {
     const statuses: string[] = (pokemon.entity as { statusConditions?: string[] })?.statusConditions || []
     const tempConditions: string[] = pokemon.tempConditions || []
     const allConditions = [...statuses, ...tempConditions]
-    if (allConditions.includes('Trapped') || allConditions.includes('Bound')) {
+    if (allConditions.includes('Trapped')) {
       return { allowed: false, reason: 'Cannot recall Trapped Pokemon — forced switch blocked (decree-039)' }
     }
 
