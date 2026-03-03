@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import type { Combatant, Pokemon, HumanCharacter, PokemonCapabilities, TerrainType, TerrainCell, StatusCondition } from '~/types'
-import type { EquipmentSlots } from '~/types/character'
+import type { EquipmentSlots, SkillRank } from '~/types/character'
 import {
   getCombatantNaturewalks,
   naturewalkBypassesTerrain,
   findNaturewalkImmuneStatuses,
+  getOverlandSpeed,
+  getSwimSpeed,
+  combatantCanSwim,
 } from '~/utils/combatantCapabilities'
 
 /**
@@ -65,6 +68,7 @@ function makeHumanCombatant(overrides?: {
   capabilities?: string[]
   position?: { x: number; y: number }
   equipment?: EquipmentSlots
+  skills?: Record<string, SkillRank>
 }): Combatant {
   return {
     id: 'human-1',
@@ -98,6 +102,7 @@ function makeHumanCombatant(overrides?: {
         attack: 0, defense: 0, specialAttack: 0,
         specialDefense: 0, speed: 0, accuracy: 0, evasion: 0,
       },
+      skills: overrides?.skills ?? {},
       ...(overrides?.capabilities ? { capabilities: overrides.capabilities } : {}),
       ...(overrides?.equipment ? { equipment: overrides.equipment } : {}),
     } as Combatant['entity'],
@@ -842,5 +847,123 @@ describe('findNaturewalkImmuneStatuses — equipment-derived capabilities', () =
       true
     )
     expect(result).toEqual([])
+  })
+})
+
+// =========================================================
+// Trainer Derived Speed Functions (PTU Core p.16)
+// =========================================================
+
+describe('getOverlandSpeed — human trainer', () => {
+  it('should return correct derived Overland for human with Adept Athletics and Novice Acrobatics', () => {
+    // Athletics=Adept(4), Acrobatics=Novice(3) -> 3 + floor((4+3)/2) = 3 + 3 = 6
+    const human = makeHumanCombatant({
+      skills: { Athletics: 'Adept', Acrobatics: 'Novice' },
+    })
+    expect(getOverlandSpeed(human)).toBe(6)
+  })
+
+  it('should return correct derived Overland for human with Expert Athletics and Expert Acrobatics', () => {
+    // Athletics=Expert(5), Acrobatics=Expert(5) -> 3 + floor((5+5)/2) = 3 + 5 = 8
+    const human = makeHumanCombatant({
+      skills: { Athletics: 'Expert', Acrobatics: 'Expert' },
+    })
+    expect(getOverlandSpeed(human)).toBe(8)
+  })
+
+  it('should return correct derived Overland for human with Master Athletics and Master Acrobatics', () => {
+    // Athletics=Master(6), Acrobatics=Master(6) -> 3 + floor((6+6)/2) = 3 + 6 = 9
+    const human = makeHumanCombatant({
+      skills: { Athletics: 'Master', Acrobatics: 'Master' },
+    })
+    expect(getOverlandSpeed(human)).toBe(9)
+  })
+
+  it('should default to 5 when human.skills is empty (Untrained defaults)', () => {
+    // No skills -> Athletics=Untrained(2), Acrobatics=Untrained(2) -> 3 + floor((2+2)/2) = 3 + 2 = 5
+    const human = makeHumanCombatant({ skills: {} })
+    expect(getOverlandSpeed(human)).toBe(5)
+  })
+
+  it('should return 4 for Pathetic in both skills', () => {
+    // Athletics=Pathetic(1), Acrobatics=Pathetic(1) -> 3 + floor((1+1)/2) = 3 + 1 = 4
+    const human = makeHumanCombatant({
+      skills: { Athletics: 'Pathetic', Acrobatics: 'Pathetic' },
+    })
+    expect(getOverlandSpeed(human)).toBe(4)
+  })
+})
+
+describe('getSwimSpeed — human trainer', () => {
+  it('should return floor(overland/2) for human with Adept Athletics and Novice Acrobatics', () => {
+    // Overland = 6, Swimming = floor(6/2) = 3
+    const human = makeHumanCombatant({
+      skills: { Athletics: 'Adept', Acrobatics: 'Novice' },
+    })
+    expect(getSwimSpeed(human)).toBe(3)
+  })
+
+  it('should return floor(overland/2) for human with default skills', () => {
+    // Overland = 5, Swimming = floor(5/2) = 2
+    const human = makeHumanCombatant({ skills: {} })
+    expect(getSwimSpeed(human)).toBe(2)
+  })
+
+  it('should return floor(overland/2) for odd Overland value', () => {
+    // Athletics=Novice(3), Acrobatics=Adept(4) -> Overland = 3 + floor(7/2) = 3 + 3 = 6
+    // Swimming = floor(6/2) = 3
+    const human = makeHumanCombatant({
+      skills: { Athletics: 'Novice', Acrobatics: 'Adept' },
+    })
+    expect(getSwimSpeed(human)).toBe(3)
+  })
+})
+
+describe('combatantCanSwim', () => {
+  it('should return true for any human combatant', () => {
+    // All trainers have Swimming >= 2 (minimum Overland is 4, floor(4/2) = 2)
+    const human = makeHumanCombatant()
+    expect(combatantCanSwim(human)).toBe(true)
+  })
+
+  it('should return true for human with Pathetic skills', () => {
+    const human = makeHumanCombatant({
+      skills: { Athletics: 'Pathetic', Acrobatics: 'Pathetic' },
+    })
+    expect(combatantCanSwim(human)).toBe(true)
+  })
+
+  it('should return true for Pokemon with swim > 0', () => {
+    const pokemon = makePokemonCombatant({ swim: 3 })
+    expect(combatantCanSwim(pokemon)).toBe(true)
+  })
+
+  it('should return false for Pokemon with swim = 0', () => {
+    const pokemon = makePokemonCombatant({ swim: 0 })
+    expect(combatantCanSwim(pokemon)).toBe(false)
+  })
+})
+
+describe('getOverlandSpeed / getSwimSpeed — Pokemon paths unchanged', () => {
+  it('should return Pokemon overland from capabilities', () => {
+    const pokemon = makePokemonCombatant({ overland: 7 })
+    expect(getOverlandSpeed(pokemon)).toBe(7)
+  })
+
+  it('should return Pokemon swim from capabilities', () => {
+    const pokemon = makePokemonCombatant({ swim: 4 })
+    expect(getSwimSpeed(pokemon)).toBe(4)
+  })
+
+  it('should default Pokemon overland to 5 when capabilities missing', () => {
+    const pokemon = makePokemonCombatant()
+    ;(pokemon.entity as any).capabilities = undefined
+    expect(getOverlandSpeed(pokemon)).toBe(5)
+  })
+
+  it('should default Pokemon swim to 0 when capabilities missing', () => {
+    const pokemon = makePokemonCombatant()
+    ;(pokemon.entity as any).capabilities = undefined
+    expect(getSwimSpeed(pokemon)).toBe(0)
   })
 })
