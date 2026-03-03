@@ -1,6 +1,6 @@
 ---
-generated_at: 2026-03-03T06:27:43.685Z
-total_designs: 26
+generated_at: 2026-03-03T07:36:25.743Z
+total_designs: 27
 ---
 
 # Designs Index
@@ -16,7 +16,7 @@ total_designs: 26
 | design-league-battle-001 | combat | p1-implemented | ptu-rule-107 | FULL | PTU_RULE |
 | design-level-budget-001 | scenes | p1-complete | ptu-rule-060 | NEW_FEATURE | FEATURE_GAP |
 | design-level-up-allocation-001 | — | — | — | — | — |
-| design-living-weapon-001 | combat | validated | feature-005 | FULL | FEATURE_GAP |
+| design-living-weapon-001 | combat | p0-implemented | feature-005 | FULL | FEATURE_GAP |
 | design-mounting-001 | combat | validated | feature-004 | FULL | FEATURE |
 | design-multi-tile-tokens-001 | vtt-grid | p2-fix-implemented | feature-013 | FULL | FEATURE |
 | design-player-capture-healing-001 | player-view+capture+healing | p2-implemented | feature-023 | FULL | FEATURE |
@@ -32,4 +32,5 @@ total_designs: 26
 | design-trainer-level-up-001 | character-lifecycle | p1-fix-applied | feature-008 | FULL | FEATURE_GAP |
 | design-trainer-sprites-001 | character-lifecycle | implemented | feature-001 | SINGLE_PHASE | FEATURE_GAP |
 | design-trainer-xp-001 | character-lifecycle | p1-implemented | feature-009 | FULL | FEATURE_GAP |
+| design-weather-001 | scenes, combat | complete | feature-018 | FULL | FEATURE |
 | design-xp-system-001 | pokemon-lifecycle | implemented | ptu-rule-055 | FULL | FEATURE_GAP |

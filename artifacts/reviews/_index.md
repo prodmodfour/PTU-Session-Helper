@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-03T06:27:43.666Z
-total_reviews: 285
-active_count: 133
-approved_count: 147
+generated_at: 2026-03-03T07:36:25.732Z
+total_reviews: 289
+active_count: 135
+approved_count: 149
 ---
 
 # Reviews Index
 
-## Active Reviews (133)
+## Active Reviews (135)
 
 | Review ID | Verdict | Target | Reviewer | Date |
 |-----------|---------|--------|----------|------|
@@ -111,6 +111,8 @@ approved_count: 147
 | code-review-285 | CHANGES_REQUIRED | feature-004 | senior-reviewer | 2026-03-02 |
 | code-review-287 | CHANGES_REQUIRED | feature-020 | senior-reviewer | 2026-03-02 |
 | code-review-288 | CHANGES_REQUIRED | feature-023 | senior-reviewer | 2026-03-02 |
+| code-review-295 | CHANGES_REQUIRED | feature-017 | senior-reviewer | 2026-03-03 |
+| code-review-296 | CHANGES_REQUIRED | feature-004 | senior-reviewer | 2026-03-03 |
 | rules-review-034 | CHANGES_REQUIRED | bug-002 | game-logic-reviewer | 2026-02-18 |
 | rules-review-039 | CHANGES_REQUIRED | ptu-rule-034, ptu-rule-035 | game-logic-reviewer | 2026-02-18 |
 | rules-review-047 | MIXED | — | game-logic-reviewer | 2026-02-19 |
@@ -162,9 +164,9 @@ approved_count: 147
 
 ## Stats
 
-- Active reviews: 285
-- Needs action: 133
-- Approved/Pass (active): 147
+- Active reviews: 289
+- Needs action: 135
+- Approved/Pass (active): 149
 - Archived: 297
-- Total (active + archived): 582
+- Total (active + archived): 586
 - Unique targets reviewed: 83

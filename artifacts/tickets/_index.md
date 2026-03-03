@@ -1,8 +1,8 @@
 ---
-generated_at: 2026-03-03T06:27:43.675Z
-total_tickets: 285
+generated_at: 2026-03-03T07:36:25.741Z
+total_tickets: 287
 open: 28
-in_progress: 109
+in_progress: 110
 resolved: 129
 ---
 
@@ -12,8 +12,7 @@ resolved: 129
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| feature-018 | feature | P2 | scenes | feature-018: Weather Effect Automation |
-| feature-021 | feature | P2 | character-lifecycle | feature-021: Derived Capability Calculations |
+| bug-045 | bug | P2 | capture | bug-045: CapturePanel receives entityId instead of combatant |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
 | bug-044 | bug | P3 | capture | `useCapture.ts` (line ~192) references `/api/encounters/${en |
@@ -24,6 +23,7 @@ resolved: 129
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
 | refactoring-114 | refactoring | P3 | character-lifecycle | refactoring-114: Rename capturedSpecies to ownedSpecies for  |
 | refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
+| refactoring-125 | refactoring | P3 | combat | refactoring-125: CombatantCard.vue exceeds 800-line file siz |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
 | ptu-rule-130 | ptu-rule | P4 | combat | PTU-Rule-130: Fainted recall+release pair should not apply L |
@@ -41,7 +41,7 @@ resolved: 129
 | refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
 | refactoring-119 | refactoring | P4 | — | refactoring-119: Update stale interrupt.post.ts file header  |
 
-## In-Progress Tickets (109)
+## In-Progress Tickets (110)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -77,6 +77,7 @@ resolved: 129
 | feature-017 | feature | P2 | capture | matrix-gap (GAP-CAP-2) |
 | feature-019 | feature | P2 | vtt-grid | matrix-gap (VTT SG-4) |
 | feature-020 | feature | P2 | healing | matrix-gap (GAP-HEAL-2) |
+| feature-021 | feature | P2 | character-lifecycle | matrix-gap (Character SG-3) |
 | refactoring-106 | refactoring | P2 | combat | decree-038 |
 | bug-001 | bug | P2 | csv-import | code-review-034 |
 | bug-030 | bug | P2 | player-view | code-review-159 M3 |
@@ -163,10 +164,10 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 14 | 27 | 44 |
+| bug | 2 | 14 | 27 | 45 |
 | ptu-rule | 5 | 59 | 39 | 105 |
-| feature | 3 | 16 | 3 | 23 |
+| feature | 1 | 17 | 3 | 23 |
 | ux | 5 | 7 | 2 | 15 |
 | decree | 0 | 0 | 41 | 41 |
-| refactoring | 14 | 13 | 1 | 41 |
+| refactoring | 15 | 13 | 1 | 42 |
 | docs | 0 | 0 | 16 | 16 |
