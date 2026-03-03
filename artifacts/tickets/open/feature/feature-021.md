@@ -3,7 +3,7 @@ id: feature-021
 title: Derived Capability Calculations
 priority: P2
 severity: MEDIUM
-status: open
+status: in-progress
 domain: character-lifecycle
 source: matrix-gap (Character SG-3)
 matrix_source: character-lifecycle R013, R014, R015, R016, R017, R018
@@ -47,3 +47,35 @@ PARTIAL-scope — can be implemented as computed properties. No design spec need
 - `app/utils/` or `app/composables/` — capability calculation utility
 - `app/components/character/` — display computed values
 - `app/server/services/combatant.service.ts` — use computed movement for grid
+
+## Resolution Log
+
+### Implementation (2026-03-03)
+
+**Pre-existing utility:** `app/utils/trainerDerivedStats.ts` already implemented all 6 PTU capability formulas correctly (Power, High Jump, Long Jump, Overland, Swimming, Throwing Range). It was already integrated into character display via `CapabilitiesDisplay.vue` and `HumanStatsTab.vue`.
+
+**Gap identified:** The VTT movement system (`combatantCapabilities.ts` and `useGridMovement.ts`) was using hardcoded defaults (Overland=5, Swimming=0) for human combatants instead of computing from trainer skills.
+
+**Commits:**
+1. `f822d987` — `feat: derive human trainer Overland and Swimming speeds from skills`
+   - `app/utils/combatantCapabilities.ts`: Updated `getOverlandSpeed`, `getSwimSpeed`, `combatantCanSwim` to compute from skills via `computeTrainerDerivedStats` instead of returning hardcoded defaults
+   - Added `getHumanOverlandSpeed` and `getHumanSwimSpeed` private helpers
+
+2. `311adc9d` — `feat: use derived trainer speeds in VTT grid movement`
+   - `app/composables/useGridMovement.ts`: Updated `getTerrainAwareSpeed` to compute human Swimming speed for water terrain; updated `getSpeed` fallback to use `getOverlandSpeed` instead of `DEFAULT_MOVEMENT_SPEED` for humans
+
+**Coverage of matrix rules after fix:**
+| Rule | Status |
+|------|--------|
+| R013 (Power) | Computed — `computeTrainerDerivedStats` in display + utility |
+| R014 (High Jump) | Computed — `computeTrainerDerivedStats` in display + utility |
+| R015 (Long Jump) | Computed — `computeTrainerDerivedStats` in display + utility |
+| R016 (Overland) | Computed — display via `CapabilitiesDisplay.vue`, VTT via `getOverlandSpeed` |
+| R017 (Swimming) | Computed — display via `CapabilitiesDisplay.vue`, VTT via `getSwimSpeed`/`combatantCanSwim` |
+| R018 (Throwing Range) | Computed — `computeTrainerDerivedStats` in display + utility |
+
+**Downstream consumers automatically fixed** (all call `getOverlandSpeed`/`getSwimSpeed`):
+- `mounting.service.ts` — mount movement calculation
+- `next-turn.post.ts` — mount movement reset per turn
+- `MountControls.vue` — mount speed display
+- `useGridMovement.ts` — VTT movement range, speed averaging, terrain-aware speed
