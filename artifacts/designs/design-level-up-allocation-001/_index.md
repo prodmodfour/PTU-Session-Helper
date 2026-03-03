@@ -148,3 +148,9 @@ The `validateBaseRelations()` function is identical for both. If evolution ships
 | 2026-03-01 | a02ba6b5 | `app/assets/scss/main.scss` + 4 component files — extract shared keyframes to global SCSS (M3) |
 
 **Addressed:** C1 (ability categorization boundary), H1 (unsafe Move cast), H2 (alert() → inline error), rules-H1 (milestone ordering), M1 (distinct emits), M2 (watchEffect timing), M3 (duplicate keyframes)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-03-03 | 5457f3f4 | `app/tests/unit/utils/abilityAssignment.test.ts` — 22 unit tests for categorizeAbilities + getAbilityPool (C1 validation) |
+
+**Addressed:** CR-238 C1 fix validation tests (required by review: species with only Basic, Basic+Advanced no High, full Basic+Advanced+High)

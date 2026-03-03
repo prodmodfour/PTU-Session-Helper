@@ -98,3 +98,4 @@ Full design spec: [`design-level-up-allocation-001`](../../../designs/design-lev
 | 2026-03-01 | 1b451beb | Fix M1: add distinct emit types for ability/move events in PokemonLevelUpPanel |
 | 2026-03-01 | 48490659 | Fix M2: replace watchEffect with one-time init in MoveLearningPanel |
 | 2026-03-01 | a02ba6b5 | Fix M3: extract shared slideDown/spin keyframes to global SCSS |
+| 2026-03-03 | 5457f3f4 | Test: 22 unit tests for categorizeAbilities + getAbilityPool (CR-238 C1 validation) |
