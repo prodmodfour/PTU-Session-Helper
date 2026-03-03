@@ -119,6 +119,17 @@ Branch: `slave/3-dev-feature-018-p0-20260303-131425`
 | `8283f207` | `app/server/services/weather-automation.service.ts` | NEW | Weather tick calculation, immunity result, delegates damage application to caller |
 | `05e8d8b3` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Weather tick at turn start, faint handling, move log, WebSocket broadcast, response payload |
 
+### P0 Fix Cycle (2026-03-03)
+
+Branch: `slave/1-dev-feature-018-20260303-165227`
+
+| Commit | File | Action | Description |
+|--------|------|--------|-------------|
+| `d0dc47fb` | `app/utils/weatherRules.ts` | EDIT | Add Magic Guard + Sand Stream to immunity lists, fainted ally HP check, token-size comment, Permafrost note |
+| `74930b05` | `app/server/utils/turn-helpers.ts` | NEW | Extract 7 turn helper functions from next-turn.post.ts (857→655 lines) |
+| `74930b05` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Import helpers from turn-helpers.ts, remove extracted functions |
+| `d84459e4` | `.claude/skills/references/app-surface.md` | EDIT | Add weatherRules.ts, weather-automation.service.ts, turn-helpers.ts |
+
 ---
 
 ## Atomized Files

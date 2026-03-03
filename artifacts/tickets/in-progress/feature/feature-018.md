@@ -54,3 +54,7 @@ FULL-scope feature requiring design spec. Affects damage calculation, turn end p
   - `adb21288` — `app/utils/weatherRules.ts` (NEW): Pure functions for weather type/ability immunity checks
   - `8283f207` — `app/server/services/weather-automation.service.ts` (NEW): Weather tick calculation service
   - `05e8d8b3` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Weather tick at turn start, move log, WebSocket broadcast
+- **2026-03-03 P0 Fix Cycle** (code-review-302 + rules-review-275, branch: `slave/1-dev-feature-018-20260303-165227`):
+  - `d0dc47fb` — `app/utils/weatherRules.ts` (EDIT): Add Magic Guard + Sand Stream to immunity lists, fainted ally check, token-size comment, Permafrost tracking note
+  - `74930b05` — `app/server/utils/turn-helpers.ts` (NEW) + `next-turn.post.ts` (EDIT): Extract 7 helper functions to reduce next-turn.post.ts from 857→655 lines
+  - `d84459e4` — `app-surface.md` (EDIT) + `feature-018.md` (EDIT): Add new files to surface map, fix 1/16→1/10 ticket text
