@@ -537,6 +537,20 @@ export default defineWebSocketHandler({
           }
           break
 
+        case 'living_weapon_engage':
+          // Living Weapon engage event, broadcast to all viewers in encounter
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
+        case 'living_weapon_disengage':
+          // Living Weapon disengage event, broadcast to all viewers in encounter
+          if (clientInfo?.encounterId) {
+            broadcastToEncounter(clientInfo.encounterId, event, peer)
+          }
+          break
+
         case 'movement_preview':
           // GM previewing a move, broadcast to group views
           if (clientInfo?.role === 'gm' && clientInfo.encounterId) {
