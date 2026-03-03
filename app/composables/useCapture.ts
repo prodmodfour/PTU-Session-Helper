@@ -1,5 +1,6 @@
 import type { StatusCondition } from '~/types'
 import { calculateCaptureRate, getCaptureDescription } from '~/utils/captureRate'
+import { calculateAccuracyThreshold } from '~/utils/damageCalculation'
 import { POKE_BALL_CATALOG, DEFAULT_BALL_TYPE, calculateBallModifier } from '~/constants/pokeBalls'
 import type { PokeBallDef, BallConditionContext } from '~/constants/pokeBalls'
 
@@ -34,6 +35,22 @@ export interface CaptureRateData {
   ballType: string
   ballModifier: number
   ballBreakdown: BallBreakdown
+}
+
+/**
+ * Parameters for Poke Ball accuracy check.
+ * Per decree-042: Poke Ball throws use the full accuracy system —
+ * thrower accuracy stages, target Speed Evasion, flanking, rough terrain.
+ */
+export interface CaptureAccuracyParams {
+  /** Thrower's accuracy combat stage (-6 to +6). Default 0. */
+  throwerAccuracyStage?: number
+  /** Target Pokemon's Speed Evasion (0-6+). Default 0. */
+  targetSpeedEvasion?: number
+  /** Flanking penalty applied to target evasion (PTU p.232). Default 0. */
+  flankingPenalty?: number
+  /** Rough terrain penalty added to threshold (PTU p.231). Default 0. */
+  roughTerrainPenalty?: number
 }
 
 export interface CaptureAttemptResult {
@@ -240,35 +257,46 @@ export function useCapture() {
   /**
    * Roll accuracy check for throwing a Poke Ball.
    * PTU p.214: AC 6 Status Attack Roll.
-   * Natural 1 always misses. Natural 20 always hits.
-   * Roll >= 6 hits, roll < 6 misses.
+   * PTU ch9 p.271: "Resolve the attack like you would any other."
+   * Per decree-042: Full accuracy system applies — accuracy stages, Speed Evasion,
+   * flanking penalty, rough terrain penalty.
    *
-   * NOTE: This currently rolls a flat d20 without accuracy/evasion modifiers.
-   * Per decree-042 and PTU p.214, the full accuracy system applies to Poke Ball
-   * throws (thrower accuracy stages, target Speed Evasion, flanking, rough terrain).
-   * Implementation of those modifiers is tracked as ptu-rule-131.
+   * Uses calculateAccuracyThreshold(6, accuracyStage, speedEvasion) from
+   * damageCalculation.ts — the same utility used by useMoveCalculation.ts.
+   *
+   * Natural 1 always misses. Natural 20 always hits.
    */
-  function rollAccuracyCheck(): {
+  function rollAccuracyCheck(params?: CaptureAccuracyParams): {
     roll: number
     isNat1: boolean
     isNat20: boolean
     hits: boolean
-    total: number
+    threshold: number
   } {
+    const accuracyStage = params?.throwerAccuracyStage ?? 0
+    const speedEvasion = params?.targetSpeedEvasion ?? 0
+    const flankingPenalty = params?.flankingPenalty ?? 0
+    const roughTerrainPenalty = params?.roughTerrainPenalty ?? 0
+
+    // Calculate threshold using central utility (same as move accuracy system).
+    // Poke Ball AC = 6. Flanking reduces effective evasion (decree-040: applied
+    // after evasion cap). Rough terrain adds to threshold (PTU p.231).
+    const baseThreshold = calculateAccuracyThreshold(6, accuracyStage, speedEvasion)
+    const threshold = Math.max(1, baseThreshold - flankingPenalty + roughTerrainPenalty)
+
     const roll = Math.floor(Math.random() * 20) + 1
     const isNat1 = roll === 1
     const isNat20 = roll === 20
 
-    // PTU p.214: Natural 1 always misses, Natural 20 always hits, otherwise AC 6
-    // TODO(ptu-rule-131): Apply thrower accuracy stages and target Speed Evasion
-    const hits = isNat1 ? false : (isNat20 ? true : roll >= 6)
+    // PTU: Natural 1 always misses, Natural 20 always hits, otherwise roll >= threshold
+    const hits = isNat1 ? false : (isNat20 ? true : roll >= threshold)
 
     return {
       roll,
       isNat1,
       isNat20,
       hits,
-      total: roll // TODO(ptu-rule-131): Add trainer's accuracy modifiers, subtract target evasion
+      threshold,
     }
   }
 
