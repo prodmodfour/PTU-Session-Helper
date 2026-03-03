@@ -9,15 +9,15 @@ created_by: slave-collector (plan-20260301-184039)
 created_at: 2026-03-01
 ---
 
-# refactoring-116: XpDistributionModal.vue exceeds 800-line file limit (873 lines)
+# refactoring-116: XpDistributionModal.vue exceeds 800-line file limit (1016 lines)
 
 ## Summary
 
-`app/components/encounter/XpDistributionModal.vue` is 873 lines, exceeding the project's 800-line maximum. The file was already at 813 lines before feature-009 P1 added ~60 lines for trainer XP integration. The 273-line `<style>` block is the largest contributor.
+`app/components/encounter/XpDistributionModal.vue` is 1016 lines, exceeding the project's 800-line maximum by 216 lines. The file was at 873 lines after feature-009 P1, then the P1 fix cycle (code-review-257 fixes: trainer XP results display, fresh data fetching, partial failure handling, and associated styling) added ~143 lines. The `<style>` block is the largest contributor.
 
 ## Affected Files
 
-- `app/components/encounter/XpDistributionModal.vue` (873 lines)
+- `app/components/encounter/XpDistributionModal.vue` (1016 lines)
 
 ## Suggested Fix
 

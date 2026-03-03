@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-03T14:30:00
-updated_by: slave-collector (plan-20260303-131425)
+last_updated: 2026-03-03T15:30:00
+updated_by: slave-collector (plan-20260303-150824)
 ---
 
 # Dev Ecosystem State
@@ -99,20 +99,20 @@ updated_by: slave-collector (plan-20260303-131425)
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
 | feature-003 | P1 | **Track-A-P2-APPROVED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 APPROVED: code-review-188 APPROVED (`:deep()` fix complete). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1+P2 complete | multi-phase-parallel |
 | feature-004 | P3 | **P1-CHANGES_REQUIRED** | Pokemon Mounting / Rider System — design spec created by slave-1 (plan-20260228-153856). P0 APPROVED. P1 reviewed by slave-2 (plan-20260303-065350): code-review-296 **CHANGES_REQUIRED** + rules-review-269. Needs P1 fix cycle | multi-phase |
-| feature-005 | P3 | **P0-fix-cycle-done** | Living Weapon System (Honedge Line) — design spec created by slave-2 (plan-20260228-153856). P0 implemented by slave-3 (plan-20260303-065350): 15 commits. Reviewed by slave-6 (plan-20260303-074602): code-review-297 CHANGES_REQUIRED + rules-review-270 CHANGES_REQUIRED. Fix cycle by slave-1 (plan-20260303-131425): 9 commits — removed rank gate per decree-043, validated homebrew species, overhauled engage/disengage endpoints (initiator action economy, action validation, stale response fix), fixed mount/dismount WS broadcast (bug-046), added WS event types/handlers, filed feature-024 for test coverage, updated app-surface.md. Needs P0 re-review | multi-phase |
+| feature-005 | P3 | **P0-APPROVED** | Living Weapon System (Honedge Line) — design spec created by slave-2 (plan-20260228-153856). P0 implemented by slave-3 (plan-20260303-065350): 15 commits. Reviewed by slave-6 (plan-20260303-074602): code-review-297 CHANGES_REQUIRED + rules-review-270 CHANGES_REQUIRED. Fix cycle by slave-1 (plan-20260303-131425): 9 commits. Re-reviewed by slave-4 (plan-20260303-150824): code-review-301 **APPROVED** + rules-review-274 **APPROVED**. All code-review-297 + rules-review-270 issues verified resolved. P0 complete | multi-phase |
 | feature-006 | P1 | **P2-APPROVED** | Pokemon Evolution System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-290 **APPROVED** + rules-review-266 **APPROVED** (plan-20260302-224650). All code-review-248 + rules-review-224 issues verified resolved. Feature complete | multi-phase |
 | feature-007 | P1 | **P1-APPROVED** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle APPROVED: code-review-243 **APPROVED** (M1: loose MoveDetail types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (all 9 mechanics verified, 0 issues). All code-review-238 + rules-review-214 issues resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
 | feature-008 | P1 | **P1-APPROVED** | Trainer Level-Up Milestone Workflow — P0 APPROVED. P1 fix cycle re-review: code-review-291 **APPROVED** + rules-review-267 **APPROVED** (plan-20260302-224650). All code-review-239 + rules-review-206 issues verified resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
 | feature-010 | P1 | **resolved** | Status Condition Automation Engine — P0 implemented. Fix cycle completed: M1 (app-surface.md) fixed by slave-2 (plan-20260228-214159). Ticket moved to resolved. code-review-227 all issues resolved, rules-review-203 APPROVED | multi-phase |
 | feature-011 | P1 | **P2-APPROVED** | Pokemon Switching Workflow — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-256 **APPROVED** (MED-001: switching.service.ts at 811 lines → refactoring-115) + rules-review-232 **APPROVED** (re-review by slave-5, plan-20260301-170000). All code-review-249 issues verified resolved. Feature complete | multi-phase |
 | feature-012 | P1 | **APPROVED** | Death & Heavily Injured Automation — fix cycle 3 APPROVED. code-review-233 **APPROVED** + rules-review-209 **APPROVED** (re-review by slave-3, plan-20260301-084803). All code-review-228 + rules-review-204 issues resolved. Feature complete | single-phase |
-| feature-009 | P1 | **P1-APPROVED** | Trainer XP & Advancement Tracking — P0 APPROVED. P1 APPROVED: code-review-262 **APPROVED** (0 issues, all 5 code-review-257 issues verified resolved) + rules-review-238 **APPROVED** (7 mechanics verified, MED-1: XpDistributionModal at 1016 lines → update refactoring-116). **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
+| feature-009 | P1 | **P1-APPROVED** | Trainer XP & Advancement Tracking — P0 APPROVED. P1 APPROVED: code-review-262 **APPROVED**. P1 fix cycle re-reviewed by slave-2 (plan-20260303-150824): code-review-300 **APPROVED** (all 5 code-review-257 issues verified, MED-01: refactoring-116 line count stale) + rules-review-273 **APPROVED** (all 8 mechanics verified, 0 issues). **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
 | feature-013 | P1 | **P2-APPROVED** | Multi-Tile Token System — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-266 **APPROVED** (0 issues, all 5 code-review-261 + rules-review-237 issues verified resolved) + rules-review-242 **APPROVED** (all 5 mechanics verified, decree-002/040 compliant). Re-reviewed by slave-4 (plan-20260302-081436). **Feature complete** (all P0+P1+P2 tiers approved) | multi-phase |
 | feature-014 | P1 | **P2-APPROVED** | VTT Flanking Detection — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-276 **APPROVED** (2 MED: flanking_update missing from WebSocketEvent union → refactoring-121, receivedFlankingMap not consumed in group/player views → refactoring-122) + rules-review-252 **APPROVED** (0 issues, all PTU flanking mechanics verified). **Feature complete** (all 12 sections A-L implemented and approved) | multi-phase |
 | feature-016 | P2 | **P2-APPROVED** | Priority / Interrupt / Attack of Opportunity System — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-279 **APPROVED** (2 MED: distanceMoved uses budget not actual → refactoring-123, hardcoded speed=20 in InterceptPrompt → refactoring-124) + rules-review-255 **APPROVED** (0 issues, all code-review-273 + rules-review-249 issues verified resolved). **Feature complete** (all tiers approved) | multi-phase |
 
 | feature-017 | P2 | **P2-APPROVED** | Poke Ball Type System — P0 APPROVED. P1 APPROVED. P2 fix cycle done by slave-5 (plan-20260303-074602): 9 commits. Re-reviewed by slave-5 (plan-20260303-131425): code-review-299 **APPROVED** + rules-review-272 **APPROVED**. All code-review-295 issues verified resolved. **Feature complete** | multi-phase |
-| feature-018 | P2 | **P0-implemented** | Weather Effect Automation — design spec created by slave-5 (plan-20260303-065350). P0 implemented by slave-3 (plan-20260303-131425): 4 commits — weatherRules.ts utility (type/ability immunity checks), weather-automation.service.ts (weather tick calculation), integrated weather tick damage into next-turn.post.ts turn processing. Needs P0 review | multi-phase |
+| feature-018 | P2 | **P0-CHANGES_REQUIRED** | Weather Effect Automation — design spec created by slave-5 (plan-20260303-065350). P0 implemented by slave-3 (plan-20260303-131425): 4 commits. Reviewed by slave-3 (plan-20260303-150824): code-review-302 **CHANGES_REQUIRED** (1C: next-turn.post.ts 857 lines, 2H: fainted ally protection check + Magic Guard missing, 2M: app-surface.md + token-size adjacency) + rules-review-275 **CHANGES_REQUIRED** (2H: Sand Stream + Magic Guard missing, 2M: Permafrost not handled → ptu-rule-133, ticket text 1/16→1/10). Needs P0 fix cycle | multi-phase |
 | feature-019 | P2 | **APPROVED** | VTT Status-Movement Integration — Tripped combatants blocked from VTT movement (R025). Stuck (R022) and Slowed (R024) pre-existing. Reviewed by slave-7 (plan-20260301-223500): code-review-265 **APPROVED** (0 issues, PTU faithful, consistent pattern, thorough documentation) + rules-review-241 **APPROVED** (all 3 mechanics verified correct, 46 tests passing, 0 issues). Feature complete | partial |
 | feature-020 | P2 | **P2-APPROVED** | Healing Item System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-293 **APPROVED** (plan-20260302-224650). All code-review-287 issues verified resolved. Rules-review-263 already APPROVED. **Feature complete** | multi-phase |
 | feature-021 | P2 | **fix-cycle-done** | Derived Capability Calculations — implemented by slave-4 (plan-20260303-065350): 3 commits. Reviewed by slave-7 (plan-20260303-074602): code-review-298 CHANGES_REQUIRED + rules-review-271 APPROVED. Fix cycle by slave-2 (plan-20260303-131425): 4 commits — consolidated redundant computeTrainerDerivedStats calls into getHumanDerivedSpeeds, added unit tests for trainer speed derivation, fixed commit hashes in resolution log. Needs re-review | partial |
@@ -140,7 +140,21 @@ updated_by: slave-collector (plan-20260303-131425)
 
 ## Active Developer Work
 
-**Current task:** Session 96 collection complete. 5 slaves merged (22 commits total). 4 dev slaves (feature-005-fix, feature-021-fix, feature-018-p0, bug-045) + 1 reviewer slave (feature-017-p2-rereview APPROVED). Smoke test PASSED. All 5 slaves completed successfully.
+**Current task:** Session 97 collection complete. 3 slaves merged (6 commits + 2 renumbered artifacts), 1 skipped (no-op). 3 reviewer slaves (feature-009-rereview APPROVED, feature-018-p0-review CHANGES_REQUIRED, feature-005-rereview APPROVED). No dev slaves — smoke test skipped.
+
+**Session 97 (2026-03-03, plan-20260303-150824):**
+- **slave-1** (developer): ptu-rule-096+feature-023 — 0 commits. All code-review-183 issues and feature-023 case fix already on master before plan creation. → **NO-OP, skipped**
+- **slave-2** (reviewers): feature-009-rereview — code-review-300 **APPROVED** (all 5 code-review-257 issues verified, MED-01: refactoring-116 line count stale 873→1016) + rules-review-273 **APPROVED** (all 8 mechanics verified, 0 issues). → feature-009 **P1-APPROVED, feature complete**
+- **slave-3** (reviewers): feature-018-p0-review — code-review-302 **CHANGES_REQUIRED** (1C+2H+2M) + rules-review-275 **CHANGES_REQUIRED** (2H+2M). → feature-018 **P0-CHANGES_REQUIRED**
+- **slave-4** (reviewers): feature-005-rereview — code-review-301 **APPROVED** (all code-review-297 + rules-review-270 issues verified fixed, 0 new issues) + rules-review-274 **APPROVED** (all 13 mechanics verified, decree-043 compliant). → feature-005 **P0-APPROVED**
+
+**Smoke test:** Skipped (no dev slaves merged)
+**Tickets APPROVED:** feature-009 P1 (re-review passed, feature complete), feature-005 P0 (re-review passed)
+**Tickets needing fix cycle:** feature-018 P0 (CHANGES_REQUIRED: 1C+2H code + 2H rules)
+**Tickets needing re-review:** feature-021 (fix cycle done from session 96)
+**Tickets filed:** ptu-rule-133 (Permafrost weather damage reduction, P4)
+**Tickets updated:** refactoring-116 (line count 873→1016)
+**Note:** Slave-3 review artifacts renumbered from 300/273 to 302/275 to avoid collision with slave-2
 
 **Session 96 (2026-03-03, plan-20260303-131425):**
 - **slave-1** (developer): feature-005+bug-046 — 9 commits: Living Weapon P0 fix cycle. Removed Combat rank gate per decree-043, validated homebrew species, overhauled engage/disengage endpoints (initiator action economy, action validation, stale response), fixed mount/dismount WS broadcast (bug-046), added WS event types/handlers, filed feature-024 for test coverage, updated app-surface.md. → **P0-fix-cycle-done, needs re-review**
@@ -820,6 +834,16 @@ updated_by: slave-collector (plan-20260303-131425)
 5. Remaining open: ptu-rule-086-095 (various P3-P4), bug-032 (P4), ux-006 (P4), ux-009 (P4)
 
 ## Review Status
+
+### Session 97 Reviews (plan-20260303-150824)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-300 | feature-009 P1 re-review (Trainer XP fix cycle) | APPROVED (all 5 code-review-257 issues verified, MED-01: refactoring-116 line count stale) | senior-reviewer | 2026-03-03 |
+| rules-review-273 | feature-009 P1 re-review (Trainer XP fix cycle) | APPROVED (all 8 mechanics verified, 0 issues, decree-030/037 compliant) | game-logic-reviewer | 2026-03-03 |
+| code-review-302 | feature-018 P0 (Weather Effect Automation: weatherRules.ts, weather-automation.service.ts, next-turn integration) | CHANGES_REQUIRED (1C: next-turn.post.ts 857 lines, 2H: fainted ally protection + Magic Guard missing, 2M: app-surface.md + token-size adjacency) | senior-reviewer | 2026-03-03 |
+| rules-review-275 | feature-018 P0 (Weather Effect Automation) | CHANGES_REQUIRED (2H: Sand Stream + Magic Guard missing from immunity lists, 2M: Permafrost damage reduction → ptu-rule-133, ticket text 1/16→1/10) | game-logic-reviewer | 2026-03-03 |
+| code-review-301 | feature-005 P0 re-review (Living Weapon fix cycle: 8 commits) | APPROVED (all code-review-297 1C+3H+3M + rules-review-270 2H+1M issues verified fixed, 0 new issues) | senior-reviewer | 2026-03-03 |
+| rules-review-274 | feature-005 P0 re-review (Living Weapon fix cycle) | APPROVED (all 13 mechanics verified, decree-043 compliant, Weaponize ability noted for P1/P2) | game-logic-reviewer | 2026-03-03 |
 
 ### Session 95 Reviews (plan-20260303-074602)
 | Review ID | Target | Verdict | Reviewer | Date |
