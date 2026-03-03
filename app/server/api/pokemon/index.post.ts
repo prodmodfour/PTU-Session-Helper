@@ -65,6 +65,7 @@ export default defineEventHandler(async (event) => {
         // Library & categorization
         isInLibrary: body.isInLibrary !== false,
         origin: body.origin || 'manual',
+        loyalty: body.loyalty ?? 3,
         location: body.location || null,
         notes: body.notes
       }

@@ -194,6 +194,19 @@ export async function generatePokemonData(input: GeneratePokemonInput): Promise<
  * Create a Pokemon DB record from generated data.
  * Always sets isInLibrary: true (visible in sheets).
  */
+/**
+ * Map Pokemon origin to starting loyalty value (PTU Chapter 10).
+ * Captured wild: 2 (Wary), Traded: 1 (Resistant), Bred/Egg: 4 (Friendly),
+ * Default (GM-created): 3 (Neutral).
+ */
+function getStartingLoyalty(origin: PokemonOrigin): number {
+  switch (origin) {
+    case 'captured': return 2  // Wary — freshly captured wild Pokemon
+    case 'wild':     return 2  // Wary — wild spawns treated as captured if assigned to trainer
+    default:         return 3  // Neutral — manual, template, import
+  }
+}
+
 export async function createPokemonRecord(
   input: GeneratePokemonInput,
   data: GeneratedPokemonData
@@ -243,6 +256,7 @@ export async function createPokemonRecord(
       tutorPoints: data.tutorPoints,
       isInLibrary: true,
       origin: input.origin,
+      loyalty: getStartingLoyalty(input.origin),
       notes: input.originLabel || null
     }
   })
@@ -318,6 +332,7 @@ function createdPokemonToEntity(pokemon: CreatedPokemon): Pokemon {
     tutorPoints: data.tutorPoints,
     trainingExp: 0,
     eggGroups: data.eggGroups,
+    loyalty: 3,
     shiny: false,
     gender: data.gender as Pokemon['gender'],
     isInLibrary: true,
