@@ -203,6 +203,8 @@ CRUD + extensive combat actions.
 
 **Type immunity utility:** `utils/typeStatusImmunity.ts` (shared between server and client — TYPE_STATUS_IMMUNITIES map, isImmuneToStatus, getImmuneType, findImmuneStatuses; per decree-012, PTU p.239 type-based status immunities).
 
+**Weather rules utility:** `utils/weatherRules.ts` (PTU 1.05 weather effect rules — PtuWeather type, isDamagingWeather, isImmuneToHail, isImmuneToSandstorm, isImmuneToWeatherDamage, getCombatantTypes, getCombatantAbilities; constants: HAIL_IMMUNE_TYPES, SANDSTORM_IMMUNE_TYPES, HAIL_IMMUNE_ABILITIES, SANDSTORM_IMMUNE_ABILITIES, HAIL_ADJACENT_PROTECTION, SANDSTORM_ADJACENT_PROTECTION; shared between server and client for weather immunity checks).
+
 ### Encounter Templates (`/api/encounter-templates`)
 Full CRUD + save-from/load-to encounter.
 - `GET/POST /api/encounter-templates` — list, create
@@ -303,6 +305,7 @@ Export/import for offline character management.
 | `server/services/combatant.service.ts` | Combatant builder, damage pipeline, calculateCurrentInitiative (CS-modified speed for initiative) |
 | `server/services/encounter.service.ts` | Encounter CRUD, reorderInitiativeAfterSpeedChange (decree-006), saveInitiativeReorder |
 | `server/services/status-automation.service.ts` | Tick damage calculation for status conditions (Burned, Poisoned, Badly Poisoned, Cursed). Pure functions: calculateTickDamage, calculateBadlyPoisonedDamage, getTickDamageEntries. TICK_DAMAGE_CONDITIONS constant in `constants/statusConditions.ts`. Integrated into `next-turn.post.ts` (fires before turn advance). WebSocket event: `status_tick` (server → all clients). `badlyPoisonedRound` field on Combatant model tracks escalation. |
+| `server/services/weather-automation.service.ts` | Weather tick damage at turn start (Hail, Sandstorm). Pure functions: getWeatherTickForCombatant. Uses weatherRules.ts for immunity checks and status-automation.service.ts for tick calculation. Integrated into `next-turn.post.ts` (fires at incoming combatant's turn start). WeatherTickResult type exported for response payload. |
 | `server/services/switching.service.ts` | Pokemon switching logic — validateSwitch (10-step chain), validateFaintedSwitch, validateForcedSwitch, checkRecallRange (8m PTU diagonal), insertIntoTurnOrder (full contact + league), removeCombatantFromEncounter, markActionUsed, buildSwitchAction, canSwitchedPokemonBeCommanded, hasInitiativeAlreadyPassed, findAdjacentPosition, checkRecallReleasePair, applyRecallSideEffects |
 | `server/services/out-of-turn.service.ts` | Out-of-turn actions — AoO: canUseAoO, detectAoOTriggers, resolveAoOAction, expirePendingActions, autoDeclineFaintedReactor, cleanupResolvedActions. Hold: canHoldAction, applyHoldAction, releaseHeldAction, checkHoldQueue, removeFromHoldQueue. Priority: canUsePriority, applyStandardPriority, applyLimitedPriority, applyAdvancedPriority. Interrupt: canUseInterrupt, createInterruptAction, applyInterruptUsage |
 | `server/services/healing-item.service.ts` | Healing item validation and application — validateItemApplication, applyHealingItem, getEntityDisplayName, checkItemRange (P2 adjacency check), findTrainerForPokemon (P2 inventory owner resolution) |
@@ -316,6 +319,7 @@ Export/import for offline character management.
 | `server/utils/websocket.ts` | WebSocket broadcast utilities |
 | `server/utils/pendingRequests.ts` | Shared pending action request tracking (requestId -> characterId routing, 60s TTL) |
 | `server/utils/pokemon-nickname.ts` | Nickname resolution |
+| `server/utils/turn-helpers.ts` | Turn lifecycle helpers extracted from next-turn.post.ts — resetResolvingTrainerTurnState, resetAllTrainersForResolution, resetCombatantsForNewRound, skipFaintedTrainers, skipUndeclaredTrainers, skipUncommandablePokemon, decrementWeather |
 
 ## Selector Guidance
 

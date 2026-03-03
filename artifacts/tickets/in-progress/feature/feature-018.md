@@ -30,7 +30,7 @@ Weather can be set on scenes but is display-only. No weather damage, no type dam
 ## PTU Rules
 
 - Chapter 7/10: Weather effects
-- Hail/Sandstorm: 1/16 max HP damage at end of turn (with type immunities)
+- Hail/Sandstorm: 1/10 max HP damage (1 Tick) at turn start (with type immunities)
 - Rain: Fire -5 DB, Water +5 DB, Swift Swim doubles speed
 - Sun: Fire +5 DB, Water -5 DB, Chlorophyll doubles speed
 - Weather Ball changes type based on active weather
