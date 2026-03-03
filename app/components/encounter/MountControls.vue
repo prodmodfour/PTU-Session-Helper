@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import type { Combatant, Pokemon, HumanCharacter } from '~/types'
 import { PhHorse, PhShieldChevron } from '@phosphor-icons/vue'
-import { isMountable, hasMountedProwess, getMountActionCost, hasExpertMountingSkill } from '~/utils/mountingRules'
+import { isMountable, hasMountedProwess, getMountActionCost, hasExpertMountingSkill, getMountCapacity, countCurrentRiders } from '~/utils/mountingRules'
 import { getOverlandSpeed } from '~/utils/combatantCapabilities'
 import { areAdjacent } from '~/utils/adjacency'
 
@@ -207,9 +207,10 @@ const canMountOptions = computed(() => {
     const samePos = current.position.x === c.position.x && current.position.y === c.position.y
     if (!adjacent && !samePos) continue
 
-    // Already carrying a rider? Skip if at capacity
-    // (simplified: skip if already has a rider from this pair check)
-    if (c.mountState && !c.mountState.isMounted) continue
+    // Skip if mount is at rider capacity (Mountable 2+ may still have room)
+    const capacity = getMountCapacity(c)
+    const currentRiders = countCurrentRiders(c.id, encounter.combatants)
+    if (currentRiders >= capacity) continue
 
     const pokemon = c.entity as Pokemon
     const name = pokemon.nickname || pokemon.species
