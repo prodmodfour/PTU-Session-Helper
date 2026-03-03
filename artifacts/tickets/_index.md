@@ -1,24 +1,22 @@
 ---
-generated_at: 2026-03-03T11:12:35.923Z
-total_tickets: 289
-open: 30
-in_progress: 110
-resolved: 129
+generated_at: 2026-03-03T14:31:24.302Z
+total_tickets: 290
+open: 28
+in_progress: 113
+resolved: 130
 ---
 
 # Tickets Index
 
-## Open Tickets (30)
+## Open Tickets (28)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| decree-need-042 | decree | P1 | combat | The Living Weapon engage logic gates engagement behind Comba |
-| bug-045 | bug | P2 | capture | bug-045: CapturePanel receives entityId instead of combatant |
-| bug-046 | bug | P2 | combat | The mount and dismount endpoints broadcast `encounter_update |
 | feature-022 | feature | P2 | pokemon-lifecycle | feature-022: Pokemon Loyalty System |
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
 | bug-044 | bug | P3 | capture | `useCapture.ts` (line ~192) references `/api/encounters/${en |
 | ptu-rule-129 | ptu-rule | P3 | combat | ptu-rule-129: Roar's forced recall must respect the Trapped  |
+| feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
 | refactoring-108 | refactoring | P3 | — | refactoring-108: Extract switch button computeds from Combat |
 | refactoring-112 | refactoring | P3 | combat | Refactoring-112: Decompose encounter store into focused sub- |
@@ -43,7 +41,7 @@ resolved: 129
 | refactoring-118 | refactoring | P4 | — | refactoring-118: Remove unused flankingMap destructure in Gr |
 | refactoring-119 | refactoring | P4 | — | refactoring-119: Update stale interrupt.post.ts file header  |
 
-## In-Progress Tickets (110)
+## In-Progress Tickets (113)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -73,6 +71,8 @@ resolved: 129
 | ptu-rule-104 | ptu-rule | P1 | combat | decree-012 |
 | refactoring-001 | refactoring | P1 | vtt | decree-010 |
 | bug-039 | bug | P2 | capture | capture-audit-report (R018, 2026-02-28) |
+| bug-045 | bug | P2 | capture | rules-review-268 Observation 2 |
+| bug-046 | bug | P2 | combat | code-review-297 C1 (pre-existing observation) |
 | ptu-rule-107 | ptu-rule | P2 | combat | decree-021 |
 | ptu-rule-108 | ptu-rule | P2 | vtt-grid | rules-review-160 M2 + rules-review-162 M1 |
 | feature-016 | feature | P2 | combat+vtt-grid | matrix-gap (combat Gap 2 + VTT SG-5) |
@@ -98,6 +98,7 @@ resolved: 129
 | ptu-rule-111 | ptu-rule | P2 | combat | rules-review-161 M3 |
 | ptu-rule-113 | ptu-rule | P2 | vtt | decree-023 |
 | feature-002 | feature | P2 | vtt-grid | — |
+| feature-018 | feature | P2 | scenes | matrix-gap (Scenes SG-1) |
 | feature-023 | feature | P2 | player-view+capture+healing | matrix-gap (GAP-CAP-1 + GAP-HEAL-1) |
 | bug-042 | bug | P2 | — | code-review-264 HIGH-001 |
 | ptu-rule-086 | ptu-rule | P3 | capture | capture-audit.md (capture-R005) |
@@ -158,20 +159,18 @@ resolved: 129
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-042 | P1 | combat | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 3 | 14 | 27 | 46 |
+| bug | 1 | 16 | 27 | 46 |
 | ptu-rule | 5 | 59 | 39 | 105 |
-| feature | 1 | 17 | 3 | 23 |
+| feature | 2 | 18 | 3 | 24 |
 | ux | 5 | 7 | 2 | 15 |
-| decree | 1 | 0 | 41 | 42 |
+| decree | 0 | 0 | 42 | 42 |
 | refactoring | 15 | 13 | 1 | 42 |
 | docs | 0 | 0 | 16 | 16 |

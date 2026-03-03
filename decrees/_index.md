@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-03T11:12:35.929Z
-total_decrees: 43
-active: 42
+generated_at: 2026-03-03T14:31:24.329Z
+total_decrees: 44
+active: 43
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (42)
+## Active Decrees (43)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -53,3 +53,4 @@ superseded: 0
 | decree-040 | combat | flanking-penalty-after-evasion-cap | Flanking -2 evasion penalty applies after the evasion cap, not before |
 | decree-041 | healing | awakening-item-inclusion | Keep Awakening at $200 as a standard single-condition cure item |
 | decree-042 | capture | pokeball-accuracy-modifiers | Apply full accuracy system to Poke Ball throws |
+| decree-043 | combat | living-weapon-skill-rank-gate | Combat Skill Rank gates Living Weapon move access, not engagement |
