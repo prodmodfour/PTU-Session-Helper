@@ -104,7 +104,7 @@ Verified: Deferred via ticket as recommended.
 
 ### File sizes
 - `evolution.service.ts`: 715 lines (under 800-line limit)
-- `evolution-undo.post.ts`: 153 lines
+- `evolution-undo.post.ts`: 152 lines
 - `EvolutionConfirmModal.vue`: 437 lines
 - `useEvolutionUndo.ts`: 61 lines
 

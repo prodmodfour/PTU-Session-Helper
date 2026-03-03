@@ -18,6 +18,8 @@ mechanics_verified:
   - evolution-undo-stone-restore
   - stone-consumption-atomicity
   - gm-override-missing-stone
+  - decree-035-compliance
+  - decree-036-compliance
 verdict: APPROVED
 issues_found:
   critical: 0
@@ -33,7 +35,10 @@ ptu_refs:
   - pokedexes/gen4/bonsly.md#Evolution
   - pokedexes/gen4/mime-jr.md#Evolution
   - pokedexes/gen7/steenee.md#Evolution
-reviewed_at: 2026-03-02T20:45:00Z
+  - pokedexes/gen4/combee.md#Evolution
+  - pokedexes/gen4/burmy.md#Evolution
+  - pokedexes/gen3/kirlia.md#Evolution
+reviewed_at: 2026-03-02T22:30:00Z
 follows_up: rules-review-224
 ---
 
@@ -141,10 +146,26 @@ Status: CORRECT. Matches the expected behavior that evolution and stone consumpt
 
 Status: CORRECT
 
-## Decree Compliance
+### 7. decree-035 Compliance (Base Relations)
 
-- **Per decree-035:** Base Relations ordering uses nature-adjusted base stats. None of the fix commits modified the `recalculateStats()` or `validateBaseRelations()` logic. Compliance is maintained.
-- **Per decree-036:** Stone evolution move learning uses `entry.level <= currentLevel`. None of the fix commits modified the `getEvolutionMoves()` logic. Compliance is maintained.
+- **Decree:** "Base Relations ordering uses nature-adjusted base stats." (`decrees/decree-035.md`)
+- **Implementation:** `recalculateStats()` in `evolution.service.ts` line 179 applies nature via `applyNatureToBaseStats()` before calling `validateBaseRelations()` at line 211. The ordering constraint uses nature-adjusted values.
+- **Fix commit impact:** None of the 5 fix commits modified `recalculateStats()` or `validateBaseRelations()`. The logic remains as approved in rules-review-213 (P1).
+- **Status:** CORRECT -- per decree-035, this approach was ruled correct.
+
+### 8. decree-036 Compliance (Stone Evolution Move Learning)
+
+- **Decree:** "Stone evolutions learn new-form moves at or below the Pokemon's current level." (`decrees/decree-036.md`)
+- **Implementation:** `getEvolutionMoves()` in `utils/evolutionCheck.ts` lines 209-211: `evolutionMinLevel !== null ? entry.level < evolutionMinLevel : entry.level <= currentLevel`. Stone evolutions (null minimumLevel) use `<=` comparison against current level; level-based evolutions use strict `<` against the minimum evolution level.
+- **Fix commit impact:** None of the 5 fix commits modified `getEvolutionMoves()`. The logic remains as approved in rules-review-213 (P1).
+- **Status:** CORRECT -- per decree-036, this approach was ruled correct.
+
+### 9. Core Evolution Mechanics (PTU p.202)
+
+- **Rule:** "Upon Evolving, several changes occur in a Pokemon. Take the new form's Base Stats, apply the Pokemon's Nature again, reapply any Vitamins that were used, and then re-Stat the Pokemon, spreading the Stats as you wish. Again, Pokemon add +X Stat Points to their Base Stats, where X is the Pokemon's Level plus 10. You must of course, still follow the Base Relations Rule." (`core/05-pokemon.md`, lines 592-598)
+- **Implementation:** `recalculateStats()` applies nature (line 179), validates stat point total = level + 10 (lines 183-194), validates Base Relations (line 211), calculates HP = level + (hpStat * 3) + 10 (line 224).
+- **Fix commit impact:** None of the 5 fix commits modified the core stat recalculation or HP formula.
+- **Status:** CORRECT -- HP formula, stat total, and Base Relations enforcement all match PTU RAW.
 
 ## Summary
 
