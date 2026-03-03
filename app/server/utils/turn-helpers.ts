@@ -9,6 +9,11 @@
 import { getOverlandSpeed } from '~/utils/combatantCapabilities'
 import { applyMovementModifiers } from '~/utils/movementModifiers'
 import type { TrainerDeclaration, StageSource } from '~/types/combat'
+import { getWeatherAbilityEffects } from '~/server/services/weather-automation.service'
+import type { WeatherAbilityResult } from '~/server/services/weather-automation.service'
+import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import { clearMountOnFaint } from '~/server/services/mounting.service'
 
 /**
  * Reset a trainer's turn state during resolution phase so they can execute
@@ -251,4 +256,81 @@ export function reverseWeatherCSBonuses(combatants: any[]): void {
 
     combatant.stageSources = stageSources.filter((s: StageSource) => !s.source.startsWith('weather:'))
   }
+}
+
+/**
+ * Apply weather ability effects (heal or damage) to a combatant (P1).
+ *
+ * Handles both healing (clamped to maxHp) and damage (via combatant.service
+ * pipeline with injury/faint tracking). Returns the list of effects applied.
+ *
+ * @param combatant - The combatant to apply effects to
+ * @param weather - Current encounter weather
+ * @param timing - 'turn_start' or 'turn_end'
+ * @param allCombatants - All combatants (for mount faint handling)
+ * @param gridWidth - Grid width for mount faint placement
+ * @param gridHeight - Grid height for mount faint placement
+ * @param trackDefeated - Callback to track defeated enemies for XP
+ */
+export async function applyWeatherAbilityEffects(
+  combatant: any,
+  weather: string,
+  timing: 'turn_start' | 'turn_end',
+  allCombatants: any[],
+  gridWidth: number,
+  gridHeight: number,
+  trackDefeated: (c: any) => void
+): Promise<{ results: WeatherAbilityResult[]; combatants: any[] }> {
+  let combatants = allCombatants
+  const results: WeatherAbilityResult[] = []
+
+  if (combatant.entity.currentHp <= 0) return { results, combatants }
+
+  const effects = getWeatherAbilityEffects(combatant, weather, timing)
+
+  for (const effect of effects) {
+    if (combatant.entity.currentHp <= 0) break
+
+    if (effect.effect === 'heal') {
+      const healed = Math.min(effect.amount, combatant.entity.maxHp - combatant.entity.currentHp)
+      combatant.entity.currentHp += healed
+
+      await syncEntityToDatabase(combatant, {
+        currentHp: combatant.entity.currentHp
+      })
+    } else {
+      const damageResult = calculateDamage(
+        effect.amount,
+        combatant.entity.currentHp,
+        combatant.entity.maxHp,
+        combatant.entity.temporaryHp || 0,
+        combatant.entity.injuries || 0
+      )
+      applyDamageToEntity(combatant, damageResult)
+
+      if (damageResult.fainted) {
+        applyFaintStatus(combatant)
+        // Auto-dismount if mounted
+        if (combatant.mountState) {
+          const mountFaintResult = clearMountOnFaint(combatants, combatant.id, gridWidth, gridHeight)
+          if (mountFaintResult.dismounted) {
+            combatants = mountFaintResult.combatants
+          }
+        }
+        trackDefeated(combatant)
+      }
+
+      await syncEntityToDatabase(combatant, {
+        currentHp: combatant.entity.currentHp,
+        temporaryHp: combatant.entity.temporaryHp,
+        injuries: combatant.entity.injuries,
+        statusConditions: combatant.entity.statusConditions,
+        ...(damageResult.injuryGained ? { lastInjuryTime: new Date() } : {})
+      })
+    }
+
+    results.push(effect)
+  }
+
+  return { results, combatants }
 }

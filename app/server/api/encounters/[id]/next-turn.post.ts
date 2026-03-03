@@ -26,7 +26,7 @@ import { expirePendingActions, cleanupResolvedActions, checkHoldQueue } from '~/
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import { clearMountOnFaint } from '~/server/services/mounting.service'
 import { getWeatherTickForCombatant } from '~/server/services/weather-automation.service'
-import type { WeatherTickResult } from '~/server/services/weather-automation.service'
+import type { WeatherTickResult, WeatherAbilityResult } from '~/server/services/weather-automation.service'
 import { isDamagingWeather } from '~/utils/weatherRules'
 import {
   resetResolvingTrainerTurnState,
@@ -36,7 +36,8 @@ import {
   skipUndeclaredTrainers,
   skipUncommandablePokemon,
   decrementWeather,
-  reverseWeatherCSBonuses
+  reverseWeatherCSBonuses,
+  applyWeatherAbilityEffects
 } from '~/server/utils/turn-helpers'
 import type { TrainerDeclaration } from '~/types/combat'
 import type { StatusCondition } from '~/types'
@@ -166,6 +167,36 @@ export default defineEventHandler(async (event) => {
           }
         }
       }
+    }
+
+    // Track defeated enemies for XP calculation (hoisted for weather ability faint tracking)
+    let defeatedEnemies = JSON.parse(encounter.defeatedEnemies)
+    const trackDefeated = (combatant: any) => {
+      if (combatant.side === 'enemies') {
+        const entityName = combatant.type === 'pokemon'
+          ? (combatant.entity as { nickname?: string; species: string }).nickname || (combatant.entity as { species: string }).species
+          : (combatant.entity as { name: string }).name
+        defeatedEnemies = [
+          ...defeatedEnemies,
+          { species: entityName, level: combatant.entity.level, type: combatant.type }
+        ]
+      }
+    }
+
+    // --- P1: Weather ability effects at TURN END (PTU pp.311-335) ---
+    // Dry Skin: heal 1 tick in Rain, lose 1 tick in Sun
+    // Desert Weather: heal 1/16 max HP in Rain
+    // Skip during declaration phase (declaration is not a real turn).
+    const weatherAbilityResults: WeatherAbilityResult[] = []
+
+    if (currentCombatant && currentPhase !== 'trainer_declaration' && weather && currentCombatant.entity.currentHp > 0) {
+      const gridW = encounter.gridWidth || 20
+      const gridH = encounter.gridHeight || 20
+      const turnEndResult = await applyWeatherAbilityEffects(
+        currentCombatant, weather, 'turn_end', combatants, gridW, gridH, trackDefeated
+      )
+      combatants = turnEndResult.combatants
+      weatherAbilityResults.push(...turnEndResult.results)
     }
 
     // --- Tick damage processing at turn end (PTU p.246-247) ---
@@ -395,20 +426,6 @@ export default defineEventHandler(async (event) => {
       reverseWeatherCSBonuses(combatants)
     }
 
-    // Track defeated enemies for XP calculation
-    let defeatedEnemies = JSON.parse(encounter.defeatedEnemies)
-    const trackDefeated = (combatant: any) => {
-      if (combatant.side === 'enemies') {
-        const entityName = combatant.type === 'pokemon'
-          ? (combatant.entity as { nickname?: string; species: string }).nickname || (combatant.entity as { species: string }).species
-          : (combatant.entity as { name: string }).name
-        defeatedEnemies = [
-          ...defeatedEnemies,
-          { species: entityName, level: combatant.entity.level, type: combatant.type }
-        ]
-      }
-    }
-
     // Check if heavily injured penalty defeated the current combatant
     if (heavilyInjuredPenalty && currentCombatant) {
       const isFainted = currentCombatant.entity.currentHp === 0
@@ -522,6 +539,25 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // --- P1: Weather ability effects at TURN START (PTU pp.311-335) ---
+    // Ice Body: heal 1 tick in Hail. Rain Dish: heal 1 tick in Rain.
+    // Sun Blanket: heal 1 tick in Sun. Solar Power: lose 1/16 max HP in Sun.
+    // Skip during declaration phase. Process after weather tick damage.
+    if (currentPhase !== 'trainer_declaration' && weather && currentTurnIndex < turnOrder.length) {
+      const newCurrentId = turnOrder[currentTurnIndex]
+      const newCurrent = combatants.find((c: any) => c.id === newCurrentId)
+
+      if (newCurrent && newCurrent.entity.currentHp > 0) {
+        const gridW = encounter.gridWidth || 20
+        const gridH = encounter.gridHeight || 20
+        const turnStartResult = await applyWeatherAbilityEffects(
+          newCurrent, weather, 'turn_start', combatants, gridW, gridH, trackDefeated
+        )
+        combatants = turnStartResult.combatants
+        weatherAbilityResults.push(...turnStartResult.results)
+      }
+    }
+
     const updateData: Record<string, unknown> = {
       currentTurnIndex,
       currentRound,
@@ -600,6 +636,31 @@ export default defineEventHandler(async (event) => {
       updateData.moveLog = JSON.stringify(moveLog)
     }
 
+    // Add weather ability effects (heal/damage) to move log
+    if (weatherAbilityResults.length > 0) {
+      const moveLog = JSON.parse((updateData.moveLog as string) || encounter.moveLog || '[]')
+      for (const result of weatherAbilityResults) {
+        moveLog.push({
+          id: uuidv4(),
+          timestamp: new Date(),
+          round: currentRound,
+          actorId: result.combatantId,
+          actorName: result.combatantName,
+          moveName: `${result.ability} (${result.effect === 'heal' ? 'Heal' : 'Damage'})`,
+          damageClass: 'Status',
+          targets: [{
+            id: result.combatantId,
+            name: result.combatantName,
+            hit: true,
+            damage: result.effect === 'damage' ? result.amount : 0,
+            injury: false
+          }],
+          notes: result.formula
+        })
+      }
+      updateData.moveLog = JSON.stringify(moveLog)
+    }
+
     const updatedRecord = await prisma.encounter.update({
       where: { id },
       data: updateData
@@ -639,6 +700,23 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Broadcast weather ability effects via WebSocket
+    for (const result of weatherAbilityResults) {
+      broadcastToEncounter(id, {
+        type: 'status_tick',
+        data: {
+          encounterId: id,
+          combatantId: result.combatantId,
+          combatantName: result.combatantName,
+          condition: result.ability,
+          damage: result.effect === 'damage' ? result.amount : -result.amount,
+          newHp: 0, // Caller doesn't track post-effect HP in WeatherAbilityResult
+          fainted: false,
+          formula: result.formula
+        }
+      })
+    }
+
     const response = buildEncounterResponse(updatedRecord, combatants, {
       ...(clearDeclarations && { declarations: [], switchActions: [] }),
       ...(updateData.moveLog && { moveLog: JSON.parse(updateData.moveLog as string) }),
@@ -652,7 +730,8 @@ export default defineEventHandler(async (event) => {
       ...(tickResults.length > 0 && { tickDamage: tickResults }),
       ...(holdReleaseTriggered.length > 0 && { holdReleaseTriggered }),
       ...(actionForfeitApplied && { actionForfeitApplied }),
-      ...(weatherTickResult && { weatherTick: weatherTickResult })
+      ...(weatherTickResult && { weatherTick: weatherTickResult }),
+      ...(weatherAbilityResults.length > 0 && { weatherAbilityEffects: weatherAbilityResults })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
