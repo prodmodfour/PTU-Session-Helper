@@ -28,6 +28,7 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
 
   const encounterStore = useEncounterStore()
   const { rollAccuracyCheck, attemptCapture } = useCapture()
+  const { getStageModifiers } = useEntityStats()
 
   /**
    * Reactive error state for handler failures.
@@ -78,7 +79,15 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
         return
       }
 
-      const accuracyResult = rollAccuracyCheck()
+      // Compute accuracy params from encounter combatant data (decree-042)
+      const trainerStages = getStageModifiers(trainerCombatant.entity)
+      const pokemonCombatant = encounter.value.combatants.find(
+        c => c.type === 'pokemon' && c.entityId === data.targetPokemonId
+      )
+      const accuracyResult = rollAccuracyCheck({
+        throwerAccuracyStage: trainerStages.accuracy || 0,
+        targetSpeedEvasion: pokemonCombatant?.speedEvasion || 0,
+      })
 
       // PTU p.214: AC 6 gate — ball must hit before capture attempt occurs
       if (!accuracyResult.hits) {
@@ -118,7 +127,7 @@ export function usePlayerRequestHandlers(options: PlayerRequestHandlersOptions) 
               captured: false,
               reason: accuracyResult.isNat1
                 ? 'Natural 1 — ball missed! (auto-miss)'
-                : `Rolled ${accuracyResult.roll} vs AC 6 — ball missed!`
+                : `Rolled ${accuracyResult.roll} vs ${accuracyResult.threshold} — ball missed!`
             }
           }
         })
