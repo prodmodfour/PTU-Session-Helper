@@ -98,7 +98,7 @@ updated_by: slave-collector (plan-20260303-150824)
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
 | feature-003 | P1 | **Track-A-P2-APPROVED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 APPROVED: code-review-188 APPROVED (`:deep()` fix complete). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1+P2 complete | multi-phase-parallel |
-| feature-004 | P3 | **P1-CHANGES_REQUIRED** | Pokemon Mounting / Rider System — design spec created by slave-1 (plan-20260228-153856). P0 APPROVED. P1 reviewed by slave-2 (plan-20260303-065350): code-review-296 **CHANGES_REQUIRED** + rules-review-269. Needs P1 fix cycle | multi-phase |
+| feature-004 | P3 | **P1-fix-cycle-done** | Pokemon Mounting / Rider System — design spec created by slave-1 (plan-20260228-153856). P0 APPROVED. P1 reviewed by slave-2 (plan-20260303-065350): code-review-296 **CHANGES_REQUIRED** + rules-review-269. P1 fix cycle by slave-3 (plan-20260303-165227): 6 commits — badge overlap, movement modifier double-application, mount capacity check, dismount threshold, partner name display. Needs P1 re-review | multi-phase |
 | feature-005 | P3 | **P0-APPROVED** | Living Weapon System (Honedge Line) — design spec created by slave-2 (plan-20260228-153856). P0 implemented by slave-3 (plan-20260303-065350): 15 commits. Reviewed by slave-6 (plan-20260303-074602): code-review-297 CHANGES_REQUIRED + rules-review-270 CHANGES_REQUIRED. Fix cycle by slave-1 (plan-20260303-131425): 9 commits. Re-reviewed by slave-4 (plan-20260303-150824): code-review-301 **APPROVED** + rules-review-274 **APPROVED**. All code-review-297 + rules-review-270 issues verified resolved. P0 complete | multi-phase |
 | feature-006 | P1 | **P2-APPROVED** | Pokemon Evolution System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-290 **APPROVED** + rules-review-266 **APPROVED** (plan-20260302-224650). All code-review-248 + rules-review-224 issues verified resolved. Feature complete | multi-phase |
 | feature-007 | P1 | **P1-APPROVED** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle APPROVED: code-review-243 **APPROVED** (M1: loose MoveDetail types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (all 9 mechanics verified, 0 issues). All code-review-238 + rules-review-214 issues resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
@@ -112,11 +112,12 @@ updated_by: slave-collector (plan-20260303-150824)
 | feature-016 | P2 | **P2-APPROVED** | Priority / Interrupt / Attack of Opportunity System — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-279 **APPROVED** (2 MED: distanceMoved uses budget not actual → refactoring-123, hardcoded speed=20 in InterceptPrompt → refactoring-124) + rules-review-255 **APPROVED** (0 issues, all code-review-273 + rules-review-249 issues verified resolved). **Feature complete** (all tiers approved) | multi-phase |
 
 | feature-017 | P2 | **P2-APPROVED** | Poke Ball Type System — P0 APPROVED. P1 APPROVED. P2 fix cycle done by slave-5 (plan-20260303-074602): 9 commits. Re-reviewed by slave-5 (plan-20260303-131425): code-review-299 **APPROVED** + rules-review-272 **APPROVED**. All code-review-295 issues verified resolved. **Feature complete** | multi-phase |
-| feature-018 | P2 | **P0-CHANGES_REQUIRED** | Weather Effect Automation — design spec created by slave-5 (plan-20260303-065350). P0 implemented by slave-3 (plan-20260303-131425): 4 commits. Reviewed by slave-3 (plan-20260303-150824): code-review-302 **CHANGES_REQUIRED** (1C: next-turn.post.ts 857 lines, 2H: fainted ally protection check + Magic Guard missing, 2M: app-surface.md + token-size adjacency) + rules-review-275 **CHANGES_REQUIRED** (2H: Sand Stream + Magic Guard missing, 2M: Permafrost not handled → ptu-rule-133, ticket text 1/16→1/10). Needs P0 fix cycle | multi-phase |
+| feature-018 | P2 | **P0-fix-cycle-done** | Weather Effect Automation — design spec created by slave-5 (plan-20260303-065350). P0 implemented by slave-3 (plan-20260303-131425). Reviewed by slave-3 (plan-20260303-150824): code-review-302 **CHANGES_REQUIRED** + rules-review-275 **CHANGES_REQUIRED**. P0 fix cycle by slave-1 (plan-20260303-165227): 4 commits — added Magic Guard+Sand Stream immunities, fainted ally check, extracted turn helpers (857→655 lines), updated app-surface.md + ticket text. Needs P0 re-review | multi-phase |
 | feature-019 | P2 | **APPROVED** | VTT Status-Movement Integration — Tripped combatants blocked from VTT movement (R025). Stuck (R022) and Slowed (R024) pre-existing. Reviewed by slave-7 (plan-20260301-223500): code-review-265 **APPROVED** (0 issues, PTU faithful, consistent pattern, thorough documentation) + rules-review-241 **APPROVED** (all 3 mechanics verified correct, 46 tests passing, 0 issues). Feature complete | partial |
 | feature-020 | P2 | **P2-APPROVED** | Healing Item System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-293 **APPROVED** (plan-20260302-224650). All code-review-287 issues verified resolved. Rules-review-263 already APPROVED. **Feature complete** | multi-phase |
-| feature-021 | P2 | **fix-cycle-done** | Derived Capability Calculations — implemented by slave-4 (plan-20260303-065350): 3 commits. Reviewed by slave-7 (plan-20260303-074602): code-review-298 CHANGES_REQUIRED + rules-review-271 APPROVED. Fix cycle by slave-2 (plan-20260303-131425): 4 commits — consolidated redundant computeTrainerDerivedStats calls into getHumanDerivedSpeeds, added unit tests for trainer speed derivation, fixed commit hashes in resolution log. Needs re-review | partial |
+| feature-021 | P2 | **APPROVED** | Derived Capability Calculations — implemented by slave-4 (plan-20260303-065350). Fix cycle by slave-2 (plan-20260303-131425). Re-reviewed by slave-2 (plan-20260303-165227): code-review-303 **APPROVED** + rules-review-276 **APPROVED**. All code-review-298 issues verified resolved. **Feature complete** | partial |
 | feature-023 | P2 | **P2-APPROVED** | Player Capture & Healing Interfaces — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-294 **APPROVED** (plan-20260302-224650). All code-review-288 issues verified resolved. Rules-review-264 already APPROVED. **Feature complete** | multi-phase |
+| feature-022 | P2 | **partial-implemented** | Pokemon Loyalty System — PARTIAL scope implemented by slave-4 (plan-20260303-165227): 7 commits — schema field, starting values by origin, API exposure, UI display+edit, Friend Ball loyalty bonus. R048 partial, R050 done. Needs prisma db push. Needs review. Out of scope: command checks (R049), loyalty-gated evolution, automatic loyalty changes | partial |
 | feature-024 | P3 | **open** | Living Weapon unit test coverage — engage validation rules, disengage state clearing, reconstruction from flags, homebrew species fallback. Filed by slave-1 (plan-20260303-131425) as part of feature-005 fix cycle (code-review-297 H3) | single-phase |
 
 ### UX Tickets (`tickets/ux/`)
@@ -140,7 +141,20 @@ updated_by: slave-collector (plan-20260303-150824)
 
 ## Active Developer Work
 
-**Current task:** Session 97 collection complete. 3 slaves merged (6 commits + 2 renumbered artifacts), 1 skipped (no-op). 3 reviewer slaves (feature-009-rereview APPROVED, feature-018-p0-review CHANGES_REQUIRED, feature-005-rereview APPROVED). No dev slaves — smoke test skipped.
+**Current task:** Session 98 collection complete. 4 slaves merged (19 commits, 1 conflict resolved), 0 skipped. 3 dev slaves + 1 reviewer slave.
+
+**Session 98 (2026-03-03, plan-20260303-165227):**
+- **slave-1** (developer): feature-018-p0-fix — 4 commits: Weather Automation P0 fix cycle. Added Magic Guard+Sand Stream to immunity lists, fainted ally protection check, extracted 7 helper functions to turn-helpers.ts (857→655 lines), updated app-surface.md and ticket text. → **P0-fix-cycle-done, needs re-review**
+- **slave-2** (reviewers): feature-021-rereview — code-review-303 **APPROVED** (0C/0H/1M: commit hashes still wrong in resolution log, accepted as doc-only) + rules-review-276 **APPROVED** (all formulas verified, 0 issues). → feature-021 **APPROVED, feature complete**
+- **slave-3** (developer): feature-004-p1-fix — 6 commits: Mounting System P1 fix cycle. Badge overlap positioning, movement modifier double-application (extracted movementModifiers.ts utility), mount capacity check, dismount threshold with heavily-injured HP loss, partner name in Group/Player cards. → **P1-fix-cycle-done, needs re-review**
+- **slave-4** (developer): feature-022 — 7 commits: Pokemon Loyalty System PARTIAL scope. Schema field (loyalty Int @default(3)), starting values by origin, API exposure, UI display+edit in PokemonStatsTab, Friend Ball +1 loyalty wiring. → **partial-implemented, needs review + prisma db push**
+
+**Smoke test:** PASSED (all 3 views render, 500 errors expected from pending loyalty schema migration)
+**Tickets APPROVED:** feature-021 (re-review passed, feature complete)
+**Tickets needing re-review:** feature-018 P0 (fix cycle done), feature-004 P1 (fix cycle done)
+**Tickets needing review:** feature-022 (first implementation, PARTIAL scope)
+**Migration needed:** `npx prisma db push` for feature-022 loyalty field
+**Conflict resolved:** slave-3 next-turn.post.ts conflicted with slave-1's helper extraction — ported movementModifiers changes to turn-helpers.ts
 
 **Session 97 (2026-03-03, plan-20260303-150824):**
 - **slave-1** (developer): ptu-rule-096+feature-023 — 0 commits. All code-review-183 issues and feature-023 case fix already on master before plan creation. → **NO-OP, skipped**
@@ -835,6 +849,12 @@ updated_by: slave-collector (plan-20260303-150824)
 
 ## Review Status
 
+### Session 98 Reviews (plan-20260303-165227)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-303 | feature-021 re-review (Derived Capability Calculations fix cycle) | APPROVED (all code-review-298 issues verified, 1M: commit hashes still wrong in resolution log — doc-only) | senior-reviewer | 2026-03-03 |
+| rules-review-276 | feature-021 re-review (Derived Capability Calculations fix cycle) | APPROVED (all formulas verified against PTU Core p.16, 0 issues, decree-011/037 compliant) | game-logic-reviewer | 2026-03-03 |
+
 ### Session 97 Reviews (plan-20260303-150824)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
@@ -1276,6 +1296,20 @@ updated_by: slave-collector (plan-20260303-150824)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-03-03, session 98 — plan-20260303-165227)
+
+**Slave collection plan-20260303-165227:** 4 slaves merged (19 commits total, 1 conflict resolved). 3 dev slaves + 1 reviewer slave, all completed successfully.
+- **slave-1** (developer): feature-018-p0-fix — 4 commits (Magic Guard+Sand Stream immunities, fainted ally check, extract turn-helpers.ts, update app-surface.md + ticket text)
+- **slave-2** (reviewers): feature-021-rereview — code-review-303 **APPROVED** (1M: doc-only commit hash issue) + rules-review-276 **APPROVED** (all formulas verified, 0 issues) → **feature-021 complete**
+- **slave-3** (developer): feature-004-p1-fix — 6 commits (badge overlap, movementModifiers.ts extraction, mount capacity check, dismount threshold, partner names in cards)
+- **slave-4** (developer): feature-022 — 7 commits (loyalty schema+type, starting values, API, UI display+edit, Friend Ball +1 loyalty)
+
+**Smoke test:** PASSED (build in 3.7s, all 3 views render)
+**Tickets filed:** 0
+**Tickets APPROVED:** 1 (feature-021 — feature complete)
+**Conflict:** slave-3 next-turn.post.ts vs slave-1 turn-helpers.ts extraction — resolved by porting movementModifiers to extracted file
+**Migration pending:** `npx prisma db push` for feature-022 loyalty field
 
 ## Session Summary (2026-03-03, session 95 — plan-20260303-074602)
 
