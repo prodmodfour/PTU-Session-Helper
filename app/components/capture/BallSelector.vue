@@ -1,5 +1,5 @@
 <template>
-  <div class="ball-selector">
+  <div ref="selectorRef" class="ball-selector">
     <label class="ball-selector__label">
       Ball Type
     </label>
@@ -159,6 +159,26 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = ref(false)
+const selectorRef = ref<HTMLElement | null>(null)
+
+// Click-outside handler to dismiss dropdown
+function handleClickOutside(e: MouseEvent) {
+  if (selectorRef.value && !selectorRef.value.contains(e.target as Node)) {
+    isOpen.value = false
+  }
+}
+
+watch(isOpen, (open) => {
+  if (open) {
+    document.addEventListener('click', handleClickOutside, true)
+  } else {
+    document.removeEventListener('click', handleClickOutside, true)
+  }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside, true)
+})
 
 const grouped = computed(() => getBallsByCategory())
 
