@@ -2,7 +2,8 @@
 id: decree-need-043
 title: "Should 'Bound' condition block Pokemon recall?"
 priority: P3
-status: open
+status: addressed
+decree_id: decree-044
 domain: combat
 source: code-review-308 MEDIUM-002 + rules-review-281 HIGH-001
 created_by: slave-collector (plan-20260303-191515)
