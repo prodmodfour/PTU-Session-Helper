@@ -490,13 +490,6 @@ const formatStatName = (stat: string): string => STAT_NAMES[stat] || stat
   &__flanking {
     margin-bottom: $spacing-xs;
   }
-
-  &__actions {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xs;
-    min-width: 100px;
-  }
 }
 
 // Injury badge
