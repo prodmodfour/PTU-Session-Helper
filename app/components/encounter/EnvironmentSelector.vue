@@ -8,6 +8,7 @@
         class="environment-selector__badge"
       >
         {{ activePreset.name }}
+        <span v-if="isModifiedPreset" class="environment-selector__modified">(modified)</span>
       </span>
       <span v-else class="environment-selector__badge environment-selector__badge--none">
         None
@@ -160,6 +161,20 @@ const activePreset = computed((): EnvironmentPreset | null => {
   return encounterStore.activeEnvironmentPreset ?? null
 })
 
+/**
+ * Detect when the active preset has diverged from its built-in original
+ * (e.g., after dismissing an effect). The dropdown shows 'custom' but
+ * the badge shows the original name + '(modified)' for clarity.
+ */
+const isModifiedPreset = computed((): boolean => {
+  if (!activePreset.value) return false
+  // If the selectedPresetId is 'custom' but the active preset ID looks like
+  // a built-in that was modified, show the modified label
+  if (selectedPresetId.value !== 'custom') return false
+  const baseId = activePreset.value.id.replace(/-custom-\d+$/, '')
+  return baseId in BUILT_IN_PRESETS
+})
+
 // Watch for external changes (WebSocket updates)
 watch(() => props.encounter.environmentPreset, (newPreset) => {
   selectedPresetId.value = newPreset?.id ?? ''
@@ -228,13 +243,21 @@ const dismissEffect = async (index: number) => {
     return
   }
 
+  // HIGH-2: When dismissing an effect from a built-in preset, create a custom
+  // variant so re-selecting the original built-in won't silently override changes.
+  const currentId = activePreset.value.id
+  const isBuiltIn = currentId in BUILT_IN_PRESETS
   const updatedPreset: EnvironmentPreset = {
     ...activePreset.value,
+    id: isBuiltIn ? `${currentId}-custom-${Date.now()}` : currentId,
     effects: updatedEffects
   }
 
   try {
     await encounterStore.setEnvironmentPreset(props.encounter.id, updatedPreset)
+    if (isBuiltIn) {
+      selectedPresetId.value = 'custom'
+    }
     broadcastUpdate()
   } catch {
     alert('Failed to dismiss environment effect.')
