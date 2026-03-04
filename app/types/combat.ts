@@ -20,6 +20,14 @@ export interface WieldRelationship {
   weaponSpecies: 'Honedge' | 'Doublade' | 'Aegislash'
   /** Whether the Living Weapon is fainted (PTU: still usable, -2 penalty) */
   isFainted: boolean
+  /** Movement speed used this round (shared pool, P2).
+   *  Reset to 0 at the start of each new round.
+   *  Total cannot exceed wielder's Movement Speed. */
+  movementUsedThisRound: number
+  /** For Aegislash: was the Pokemon already in Blade forme when engaged? (P2)
+   *  If false, disengage will revert to Shield forme.
+   *  Undefined for non-Aegislash. */
+  wasInBladeFormeOnEngage?: boolean
 }
 
 // ============================================================

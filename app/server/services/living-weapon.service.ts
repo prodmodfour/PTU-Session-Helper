@@ -225,6 +225,7 @@ export function engageLivingWeapon(
     weaponId,
     weaponSpecies,
     isFainted,
+    movementUsedThisRound: 0,
   }
 
   // Update combatant flags (immutable)
