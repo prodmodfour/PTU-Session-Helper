@@ -11,9 +11,13 @@
  *   marks Standard Action as used on initiator, broadcasts WebSocket event.
  */
 import { loadEncounter, buildEncounterResponse, saveEncounterCombatants } from '~/server/services/encounter.service'
-import { engageLivingWeapon, refreshCombatantEquipmentBonuses } from '~/server/services/living-weapon.service'
+import {
+  engageLivingWeapon, refreshCombatantEquipmentBonuses,
+  syncWeaponPosition, swapAegislashStance, isAegislashBladeForm
+} from '~/server/services/living-weapon.service'
 import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 import { broadcastToEncounter } from '~/server/utils/websocket'
+import type { Pokemon } from '~/types/character'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -96,9 +100,52 @@ export default defineEventHandler(async (event) => {
       body.weaponId
     )
 
+    // P2: Aegislash forced Blade forme (PTU p.306)
+    // When Aegislash is engaged as a Living Weapon, force into Blade forme.
+    let updatedWieldRelationship = result.wieldRelationship
+    let updatedCombatantsPreAction = result.combatants
+    if (result.wieldRelationship.weaponSpecies === 'Aegislash') {
+      const weaponCombatant = result.combatants.find(c => c.id === body.weaponId)
+      if (weaponCombatant && weaponCombatant.type === 'pokemon') {
+        const pokemon = weaponCombatant.entity as Pokemon
+        const isAlreadyBlade = isAegislashBladeForm(pokemon)
+
+        // Track pre-engage forme for revert on disengage
+        updatedWieldRelationship = {
+          ...result.wieldRelationship,
+          wasInBladeFormeOnEngage: isAlreadyBlade,
+        }
+
+        if (!isAlreadyBlade) {
+          // Force into Blade forme by swapping stats
+          const bladePokemon = swapAegislashStance(pokemon)
+          updatedCombatantsPreAction = result.combatants.map(c => {
+            if (c.id === body.weaponId) {
+              return { ...c, entity: bladePokemon }
+            }
+            return c
+          })
+        }
+      }
+    }
+
+    // Update wield relationships with Aegislash tracking
+    const updatedWieldRels = result.wieldRelationships.map(r =>
+      r.wielderId === updatedWieldRelationship.wielderId
+        ? updatedWieldRelationship
+        : r
+    )
+
+    // P2: Sync weapon position to wielder's position (PTU p.306: shared position)
+    const positionSyncedCombatants = syncWeaponPosition(
+      updatedCombatantsPreAction,
+      updatedWieldRels,
+      body.wielderId
+    )
+
     // Mark Standard Action as used on the initiator (wielder or weapon)
     // And refresh the wielder's evasion values with the Living Weapon equipment overlay
-    const finalCombatants = result.combatants.map(c => {
+    const finalCombatants = positionSyncedCombatants.map(c => {
       let updated = c
       if (c.id === initiatorId) {
         updated = {
@@ -111,7 +158,7 @@ export default defineEventHandler(async (event) => {
       }
       // Refresh wielder's evasion values after wield relationship change
       if (c.id === body.wielderId) {
-        updated = refreshCombatantEquipmentBonuses(result.wieldRelationships, updated)
+        updated = refreshCombatantEquipmentBonuses(updatedWieldRels, updated)
       }
       return updated
     })
@@ -131,7 +178,7 @@ export default defineEventHandler(async (event) => {
       type: 'living_weapon_engage',
       data: {
         encounterId: id,
-        wieldRelationship: result.wieldRelationship,
+        wieldRelationship: updatedWieldRelationship,
       }
     })
 
@@ -145,7 +192,7 @@ export default defineEventHandler(async (event) => {
       success: true,
       data: {
         encounter: response,
-        wieldRelationship: result.wieldRelationship,
+        wieldRelationship: updatedWieldRelationship,
         wielder: updatedWielder,
         weapon: updatedWeapon,
       }
