@@ -161,6 +161,10 @@ export interface WeatherAbilityResult {
   effect: 'heal' | 'damage'
   amount: number
   formula: string
+  /** Post-effect HP — populated by applyWeatherAbilityEffects after applying */
+  newHp: number
+  /** Whether the combatant fainted from this effect */
+  fainted: boolean
 }
 
 /**
@@ -199,7 +203,10 @@ export function getWeatherAbilityEffects(
       weather,
       effect: effect.type,
       amount,
-      formula: `${effect.ability}: 1/${effect.hpFraction} max HP (${amount})`
+      formula: `${effect.ability}: 1/${effect.hpFraction} max HP (${amount})`,
+      // Populated by applyWeatherAbilityEffects after applying the effect
+      newHp: 0,
+      fainted: false
     })
   }
 
