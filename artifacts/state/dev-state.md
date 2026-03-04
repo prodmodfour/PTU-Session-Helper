@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-04T10:55:00
-updated_by: slave-collector (plan-20260304-104014)
+last_updated: 2026-03-04T11:40:00
+updated_by: slave-collector (plan-20260304-110950)
 ---
 
 # Dev Ecosystem State
@@ -100,7 +100,7 @@ updated_by: slave-collector (plan-20260304-104014)
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
 | feature-003 | P1 | **Track-A-P2-APPROVED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 APPROVED: code-review-188 APPROVED (`:deep()` fix complete). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1+P2 complete | multi-phase-parallel |
 | feature-004 | P3 | **P2-APPROVED** | Pokemon Mounting / Rider System — P0 APPROVED. P1 APPROVED. P2 fix cycle re-reviewed by slave-4 (plan-20260304-095500): code-review-318 **APPROVED** (all 6 code-review-314 + 2 rules-review-287 issues verified resolved, 0 new) + rules-review-291 **APPROVED** (all 10 mechanics verified, decree-003/004/040 compliant). **Feature complete** (all P0+P1+P2 tiers approved) | multi-phase |
-| feature-005 | P3 | **P1-APPROVED** | Living Weapon System (Honedge Line) — P0 APPROVED (code-review-301 + rules-review-274). P1 fix cycle APPROVED: code-review-319 **APPROVED** (1M: calculate-damage.post.ts missing moveKeywords passthrough → bug-050) + rules-review-292 **APPROVED** (all 6 issues resolved, 0 regressions). **P1 complete, ready for P2** | multi-phase |
+| feature-005 | P3 | **P2-implemented** | Living Weapon System (Honedge Line) — P0 APPROVED (code-review-301 + rules-review-274). P1 APPROVED (code-review-319 + rules-review-292). P2 implemented by slave-2 (plan-20260304-110950): 14 commits — VTT shared movement pool, No Guard suppression, Aegislash forced Blade Forme, Weaponize ability intercept, Soulstealer healing, bug-050 fix. **P2 needs review** | multi-phase |
 | feature-006 | P1 | **P2-APPROVED** | Pokemon Evolution System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-290 **APPROVED** + rules-review-266 **APPROVED** (plan-20260302-224650). All code-review-248 + rules-review-224 issues verified resolved. Feature complete | multi-phase |
 | feature-007 | P1 | **P1-APPROVED** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle APPROVED: code-review-243 **APPROVED** (M1: loose MoveDetail types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (all 9 mechanics verified, 0 issues). All code-review-238 + rules-review-214 issues resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
 | feature-008 | P1 | **P1-APPROVED** | Trainer Level-Up Milestone Workflow — P0 APPROVED. P1 fix cycle re-review: code-review-291 **APPROVED** + rules-review-267 **APPROVED** (plan-20260302-224650). All code-review-239 + rules-review-206 issues verified resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
@@ -113,7 +113,7 @@ updated_by: slave-collector (plan-20260304-104014)
 | feature-016 | P2 | **P2-APPROVED** | Priority / Interrupt / Attack of Opportunity System — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-279 **APPROVED** (2 MED: distanceMoved uses budget not actual → refactoring-123, hardcoded speed=20 in InterceptPrompt → refactoring-124) + rules-review-255 **APPROVED** (0 issues, all code-review-273 + rules-review-249 issues verified resolved). **Feature complete** (all tiers approved) | multi-phase |
 
 | feature-017 | P2 | **P2-APPROVED** | Poke Ball Type System — P0 APPROVED. P1 APPROVED. P2 fix cycle done by slave-5 (plan-20260303-074602): 9 commits. Re-reviewed by slave-5 (plan-20260303-131425): code-review-299 **APPROVED** + rules-review-272 **APPROVED**. All code-review-295 issues verified resolved. **Feature complete** | multi-phase |
-| feature-018 | P2 | **P2-fix-cycle-done** | Weather Effect Automation — P0 APPROVED. P1 APPROVED. P2 fix cycle by slave-1 (plan-20260304-104014): 5 commits — server-side weather threading for mount speed (H1), Sand Force clamp reordering (M1), WeatherEffectIndicator moved constant to client utils (M3), app-surface.md updated (M2), ticket updated. Needs re-review | multi-phase |
+| feature-018 | P2 | **P2-APPROVED** | Weather Effect Automation — P0 APPROVED. P1 APPROVED. P2 fix cycle APPROVED: code-review-320 **APPROVED** (all 4 code-review-317 issues resolved, 0 new) + rules-review-293 **APPROVED** (all 5 mechanics verified, decree-045 compliant). **Feature complete** (all P0+P1+P2 tiers approved) | multi-phase |
 | feature-019 | P2 | **APPROVED** | VTT Status-Movement Integration — Tripped combatants blocked from VTT movement (R025). Stuck (R022) and Slowed (R024) pre-existing. Reviewed by slave-7 (plan-20260301-223500): code-review-265 **APPROVED** (0 issues, PTU faithful, consistent pattern, thorough documentation) + rules-review-241 **APPROVED** (all 3 mechanics verified correct, 46 tests passing, 0 issues). Feature complete | partial |
 | feature-020 | P2 | **P2-APPROVED** | Healing Item System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-293 **APPROVED** (plan-20260302-224650). All code-review-287 issues verified resolved. Rules-review-263 already APPROVED. **Feature complete** | multi-phase |
 | feature-021 | P2 | **APPROVED** | Derived Capability Calculations — implemented by slave-4 (plan-20260303-065350). Fix cycle by slave-2 (plan-20260303-131425). Re-reviewed by slave-2 (plan-20260303-165227): code-review-303 **APPROVED** + rules-review-276 **APPROVED**. All code-review-298 issues verified resolved. **Feature complete** | partial |
@@ -135,14 +135,25 @@ updated_by: slave-collector (plan-20260304-104014)
 | ux-009 | P4 | **resolved** | Proactive IMMUNE tags in StatusConditionsModal — implemented by slave-4 (plan-20260227-153711). code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | ux-010 | P4 | **resolved** | Overlapping significance tier boundaries — fixed by slave-4 (plan-20260227-153711). Exclusive end values. code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | ux-011 | P4 | **open** | Custom item form missing grantedCapabilities input field. Follow-up from code-review-222 M-01. Filed by slave-collector (plan-20260228-153856) |
-| ux-012 | P3 | **open** | Client-side status_tick WebSocket handler for tick damage notifications. Follow-up from code-review-227 M2. Filed by slave-collector (plan-20260228-205826) |
+| ux-012 | P3 | **implemented** | Client-side status_tick WebSocket handler for tick damage notifications. Implemented by slave-4 (plan-20260304-110950): 3 commits — added status_tick to WebSocketEvent union, handler shows toast for each tick result. **Needs review** |
 | ux-013 | P4 | **open** | LevelUpSummary stacked bonus Skill Edge display shows each rank-up from base rank instead of cumulative progression. Cosmetic only — actual payload is correct. Source: rules-review-215 MED-01. Filed by slave-collector (plan-20260301-110550) |
 | ux-014 | P4 | **open** | Evolution undo snapshot staleness warning — no expiry mechanism, GM could undo much later discarding post-evolution changes. Source: code-review-248 M2. Filed by slave-collector (plan-20260301-143720) |
 | ux-015 | P4 | **open** | Replace alert() with inline UI for evolution prevention messages (Everstone/Eviolite). Source: code-review-248 M3. Filed by slave-collector (plan-20260301-143720) |
 
 ## Active Developer Work
 
-**Current task:** Session 106 collection complete. 2 slaves merged (7 commits), 0 skipped. 1 dev slave + 1 reviewer slave.
+**Current task:** Session 107 collection complete. 4 slaves merged (23 commits), 0 skipped. 3 dev slaves + 1 reviewer slave.
+
+**Session 107 (2026-03-04, plan-20260304-110950):**
+- **slave-1** (reviewers): feature-018-p2-fix-rereview — code-review-320 **APPROVED** (all 4 code-review-317 issues resolved, 0 new) + rules-review-293 **APPROVED** (5 mechanics verified, decree-045 compliant). → feature-018 **P2-APPROVED, feature complete**
+- **slave-2** (developer): feature-005-p2+bug-050 — 14 commits: Living Weapon P2. VTT shared movement pool (movementUsedThisRound on WieldRelationship), No Guard suppression in damage calc, Aegislash forced Blade Forme on engage/revert on disengage (wasInBladeFormeOnEngage), Weaponize ability intercept, Soulstealer healing on faint/kill in damage+move+AoO endpoints. Also fixed bug-050 (moveKeywords passthrough). → **P2-implemented, needs review**
+- **slave-3** (developer): refactoring-114 — 4 commits: Renamed capturedSpecies → ownedSpecies across Prisma schema, TypeScript source, CLAUDE.md, and app-surface.md. → **implemented, needs review + prisma migration**
+- **slave-4** (developer): ux-012 — 3 commits: Added status_tick WebSocket event handler. Toast notifications for Burn/Poison/Cursed tick damage. → **implemented, needs review**
+
+**Smoke test:** PASSED (all 3 views render correctly)
+**Tickets APPROVED:** feature-018 P2 (both re-reviews passed — feature complete)
+**New implementations needing review:** feature-005 P2 (Living Weapon), refactoring-114 (ownedSpecies rename), ux-012 (status_tick handler)
+**Tickets resolved:** bug-050 (moveKeywords passthrough, fixed as part of feature-005 P2)
 
 **Session 106 (2026-03-04, plan-20260304-104014):**
 - **slave-1** (developer): feature-018-p2-fix — 5 commits: Fix cycle addressing code-review-317 (1H+3M). Server-side weather threading for mount speed calcs (H1), Sand Force bonus before min-1 clamp (M1), WEATHER_ABILITY_EFFECTS moved to client utils (M3), app-surface.md updated (M2), ticket updated. → **fix-cycle-done, needs re-review**
@@ -898,6 +909,12 @@ updated_by: slave-collector (plan-20260304-104014)
 
 ## Review Status
 
+### Session 107 Reviews (plan-20260304-110950)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-320 | feature-018 P2 re-review (Weather Effect Automation fix cycle: 5 commits) | APPROVED (all 4 code-review-317 issues resolved, 0 new. Thermosensitive weather threaded through 5 server call sites, Sand Force clamp reordered, WeatherEffectIndicator import fixed, app-surface.md updated) | senior-reviewer | 2026-03-04 |
+| rules-review-293 | feature-018 P2 re-review (Weather Effect Automation fix cycle: 5 mechanics verified) | APPROVED (all 5 mechanics verified, decree-045 compliant. Sand Force clamp ordering corrected, Thermosensitive halving applied server-side) | game-logic-reviewer | 2026-03-04 |
+
 ### Session 106 Reviews (plan-20260304-104014)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
@@ -1401,6 +1418,20 @@ updated_by: slave-collector (plan-20260304-104014)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-03-04, session 107 — plan-20260304-110950)
+
+**Slave collection plan-20260304-110950:** 4 slaves merged (23 commits total). 3 dev slaves + 1 reviewer slave, all completed successfully.
+- **slave-1** (reviewers): feature-018-p2-fix-rereview — code-review-320 **APPROVED** (0 issues) + rules-review-293 **APPROVED** (0 issues)
+- **slave-2** (developer): feature-005-p2+bug-050 — 14 commits (VTT shared movement, No Guard suppression, Aegislash forced Blade Forme, Weaponize intercept, Soulstealer healing, bug-050 moveKeywords fix)
+- **slave-3** (developer): refactoring-114 — 4 commits (capturedSpecies → ownedSpecies rename across schema + TS)
+- **slave-4** (developer): ux-012 — 3 commits (status_tick WebSocket handler + toast notifications)
+
+**Smoke test:** PASSED (all 3 views render correctly)
+**Tickets APPROVED:** 1 (feature-018 P2 — both re-reviews passed, feature complete)
+**New implementations needing review:** feature-005 P2 (Living Weapon), refactoring-114 (ownedSpecies rename), ux-012 (status_tick handler)
+**Tickets resolved:** bug-050 (moveKeywords passthrough, fixed as part of feature-005 P2)
+**CLAUDE.md updates:** 1 (app/types/CLAUDE.md — combat.ts 321→329, encounter.ts 237→240, api.ts 98→99 52→53 members, player-sync.ts 155→167)
 
 ## Session Summary (2026-03-04, session 106 — plan-20260304-104014)
 

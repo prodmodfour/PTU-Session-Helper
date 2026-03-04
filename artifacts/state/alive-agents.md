@@ -464,3 +464,7 @@
 | plan-20260304-095500/slave-4 | reviewers | feature-004-p2-rereview | APPROVED | 2026-03-04T10:12:00Z | 7c6315df |
 | plan-20260304-104014/slave-1 | developer | feature-018-p2-fix | success | 2026-03-04T10:47:30Z | 058851d4, e3a785f6, c24c4c30, 7458d79e, d8c1c9d8 |
 | plan-20260304-104014/slave-2 | reviewers | feature-005-p1-rereview | APPROVED | 2026-03-04T10:45:30Z | 29ef80e6, cf985d24 |
+| plan-20260304-110950/slave-1 | reviewers | feature-018-p2-fix-rereview | APPROVED | 2026-03-04T11:21:00Z | f209589b, f89ab86b |
+| plan-20260304-110950/slave-2 | developer | feature-005-p2+bug-050 | success | 2026-03-04T11:30:06Z | c3b07416, 1d01abf7, c4f405c4, cf4aac7c, 822e44f1, 74e61f15, 42fe84e8, 27177c73, 03f837c0, 61378ad5, cf5ba7a7, c1a7c0ea, 6db8c8bb, f9abd845 |
+| plan-20260304-110950/slave-3 | developer | refactoring-114 | success | 2026-03-04T11:18:00Z | 7a9bb41c, e3c7772a, c6ae2dbe, 354d5a27 |
+| plan-20260304-110950/slave-4 | developer | ux-012 | success | 2026-03-04T11:18:00Z | faff273e, e672db94, 9de908ef |
