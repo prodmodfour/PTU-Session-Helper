@@ -95,6 +95,14 @@
         <span class="flanking-badge">Flanked</span>
       </div>
 
+      <!-- P2 (feature-018): Weather effect indicator -->
+      <WeatherEffectIndicator
+        v-if="encounterWeather"
+        :combatant="combatant"
+        :weather="encounterWeather"
+        :all-combatants="allCombatants"
+      />
+
       <!-- Combat Stages (GM only, show non-zero) -->
       <div v-if="isGm && hasStageChanges" class="combatant-card__stages">
         <span
@@ -404,6 +412,10 @@ const isWildPokemon = computed(() => {
 })
 
 const encounterStore = useEncounterStore()
+
+// P2 (feature-018): Weather effect indicator data
+const encounterWeather = computed(() => encounterStore.encounter?.weather ?? null)
+const allCombatants = computed(() => encounterStore.encounter?.combatants ?? [])
 
 // Handle successful capture — reload encounter to reflect Pokemon ownership change
 function handleCaptured() {
