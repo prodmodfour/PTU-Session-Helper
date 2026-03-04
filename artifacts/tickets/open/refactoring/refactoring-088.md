@@ -2,7 +2,7 @@
 ticket_id: refactoring-088
 ticket_type: refactoring
 priority: P4
-status: in-progress
+status: open
 category: EXT-ROBUSTNESS
 domain: vtt-grid
 source: code-review-195 MED-1

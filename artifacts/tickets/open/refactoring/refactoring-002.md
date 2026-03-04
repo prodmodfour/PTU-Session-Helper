@@ -2,7 +2,7 @@
 ticket_id: refactoring-002
 ticket_type: refactoring
 priority: P3
-status: in-progress
+status: open
 domain: vtt-grid
 topic: deprecate-legacy-terrain-types
 source: code-review-185 HIGH-2

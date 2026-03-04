@@ -3,7 +3,7 @@ id: refactoring-087
 title: Split terrain store test file to stay under 800-line limit
 priority: P4
 severity: LOW
-status: in-progress
+status: open
 domain: vtt-grid
 category: TEST-STALE
 source: code-review-190 MED-1

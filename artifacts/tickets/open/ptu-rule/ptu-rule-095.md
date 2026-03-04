@@ -3,7 +3,7 @@ id: ptu-rule-095
 title: Disengage maneuver missing from combatManeuvers
 priority: P4
 severity: LOW
-status: resolved
+status: open
 domain: vtt-grid
 source: vtt-grid-audit.md (R030)
 created_by: slave-collector (plan-20260226-175938)

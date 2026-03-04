@@ -3,7 +3,7 @@ id: refactoring-095
 title: "Guard addEdge() against Skill Edge string injection bypassing patheticSkills check"
 priority: P4
 severity: LOW
-status: in-progress
+status: open
 domain: character-lifecycle
 source: rules-review-188 MED-01
 created_at: 2026-02-28
