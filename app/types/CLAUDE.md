@@ -7,10 +7,10 @@
 | File | Lines | Source | Key Types |
 |------|-------|--------|-----------|
 | `index.ts` | 44 | Barrel re-export | Exports all below |
-| `combat.ts` | 319 | Hand-written | StatusCondition, ActionType, TurnPhase, StageModifiers, TurnState, CombatSide, OutOfTurnAction, MountState, WieldRelationship |
+| `combat.ts` | 321 | Hand-written | StatusCondition, ActionType, TurnPhase, StageModifiers, TurnState, CombatSide, OutOfTurnAction, MountState, WieldRelationship |
 | `spatial.ts` | 131 | Hand-written | GridPosition, GridConfig, TokenState, TerrainCell, TerrainFlags, MovementPath, RangeType, ParsedRange |
 | `character.ts` | 289 | Prisma-derived | HumanCharacter, Pokemon, Move, Ability, Stats, EquipmentSlots, PokemonOrigin |
-| `encounter.ts` | 231 | Prisma-derived | Combatant (includes mountState), Encounter, MoveLogEntry, EncounterSnapshot, LibraryFilters |
+| `encounter.ts` | 237 | Prisma-derived | Combatant (includes mountState, forecastOriginalTypes), Encounter, MoveLogEntry, EncounterSnapshot, LibraryFilters |
 | `scene.ts` | 61 | Hand-written | Scene, SceneCharacter, ScenePokemon, SceneGroup, GroupViewTab, SceneModifier |
 | `habitat.ts` | 97 | Hand-written | EncounterTable, TableModification, RarityPreset, DensityTier (includes runtime constants) |
 | `template.ts` | 29 | Hand-written | TemplateCombatant, EncounterTemplate |
