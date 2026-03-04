@@ -76,9 +76,9 @@ model HumanCharacter {
   // Accumulates XP from GM awards, captures, quests. Auto-levels at 10.
   trainerXp        Int      @default(0)
 
-  // Captured species history for +1 XP tracking
+  // Owned species history for +1 XP tracking (catches, hatches, evolves per PTU p.461)
   // JSON array of lowercase species names: ["pikachu", "charmander"]
-  capturedSpecies  String   @default("[]")
+  ownedSpecies     String   @default("[]")  @map("capturedSpecies")
 
   // Library
   isInLibrary   Boolean  @default(true)
