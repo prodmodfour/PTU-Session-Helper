@@ -170,9 +170,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, Move, Pokemon, HumanCharacter, StatusCondition } from '~/types'
+import type { Combatant, Move, Pokemon, HumanCharacter, StatusCondition, SkillRank } from '~/types'
+import type { PokemonType } from '~/types/character'
+import type { MoveFrequency } from '~/types/combat'
 import type { Maneuver } from '~/constants/combatManeuvers'
 import { checkMoveFrequency } from '~/utils/moveFrequency'
+import { LIVING_WEAPON_CONFIG } from '~/constants/livingWeapon'
 
 const props = defineProps<{
   combatant: Combatant
@@ -231,11 +234,54 @@ const spriteUrl = computed(() => {
   return ''
 })
 
+/**
+ * Effective move list: base moves + Living Weapon moves (if wielded).
+ * PTU p.306: While used as a Living Weapon, the Pokemon adds weapon
+ * moves to its move list if the wielder qualifies (decree-043: Combat rank).
+ */
 const moves = computed(() => {
-  if (isPokemon.value) {
-    return (props.combatant.entity as Pokemon).moves || []
-  }
-  return []
+  if (!isPokemon.value) return []
+  const baseMoves = (props.combatant.entity as Pokemon).moves || []
+
+  // Check if this Pokemon is currently wielded as a Living Weapon
+  const wieldRels = encounterStore.encounter?.wieldRelationships ?? []
+  const wieldRel = wieldRels.find(r => r.weaponId === props.combatant.id)
+  if (!wieldRel) return baseMoves
+
+  // Find the wielder and get their Combat skill rank
+  const wielder = props.allCombatants.find(c => c.id === wieldRel.wielderId)
+  if (!wielder || wielder.type !== 'human') return baseMoves
+  const human = wielder.entity as HumanCharacter
+  const combatRank = (human.skills?.Combat ?? 'Untrained') as SkillRank
+
+  // Get Living Weapon config and filter moves by wielder's Combat rank
+  const config = LIVING_WEAPON_CONFIG[wieldRel.weaponSpecies]
+  if (!config) return baseMoves
+
+  const SKILL_RANK_ORDER: readonly SkillRank[] = [
+    'Pathetic', 'Untrained', 'Novice', 'Adept', 'Expert', 'Master'
+  ]
+  const rankIndex = SKILL_RANK_ORDER.indexOf(combatRank)
+
+  const weaponMoves: Move[] = config.grantedMoves
+    .filter(wm => rankIndex >= SKILL_RANK_ORDER.indexOf(wm.requiredRank as SkillRank))
+    .map(wm => ({
+      id: `living-weapon-${wm.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+      name: wm.name,
+      type: wm.type as PokemonType,
+      damageClass: wm.damageClass,
+      frequency: wm.frequency as MoveFrequency,
+      ac: wm.ac,
+      damageBase: wm.damageBase,
+      range: wm.range,
+      effect: wm.effect,
+      keywords: ['Weapon'],
+    }))
+
+  // Merge: base moves + weapon moves (avoid duplicates by name)
+  const existingNames = new Set(baseMoves.map(m => m.name))
+  const newMoves = weaponMoves.filter(m => !existingNames.has(m.name))
+  return [...baseMoves, ...newMoves]
 })
 
 /** Check if a move is exhausted (frequency limit reached). */
