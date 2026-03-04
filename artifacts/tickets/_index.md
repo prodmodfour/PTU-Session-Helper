@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-03T23:12:06.438Z
+generated_at: 2026-03-04T01:05:48.363Z
 total_tickets: 298
 open: 28
 in_progress: 117
@@ -131,11 +131,11 @@ resolved: 135
 | ptu-rule-079 | ptu-rule | P3 | combat | code-review-120 (M1) |
 | ptu-rule-080 | ptu-rule | P3 | character-lifecycle | code-review-121 (M3) |
 | ptu-rule-109 | ptu-rule | P3 | capture | rules-review-161 M1 |
-| ptu-rule-129 | ptu-rule | P3 | combat | decree-039 |
 | feature-004 | feature | P3 | combat | user-request |
 | ux-003 | ux | P3 | player-view | code-review-158 M1 |
 | ux-004 | ux | P3 | player-view | rules-review-149 R2 |
 | ptu-rule-112 | ptu-rule | P3 | vtt-grid | rules-review-162 M2 |
+| ptu-rule-129 | ptu-rule | P3 | combat | decree-039 |
 | bug-032 | bug | P4 | encounter-tables | encounter-tables-audit.md (OBS-001) |
 | ptu-rule-114 | ptu-rule | P4 | combat | rules-review-169 (ptu-rule-099+104 re-review, note on breather mechanics) |
 | ptu-rule-116 | ptu-rule | P4 | vtt-grid | rules-review-181 (scope boundary note) |
