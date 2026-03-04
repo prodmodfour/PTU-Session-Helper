@@ -81,10 +81,11 @@
             <span class="environment-effect__type">{{ formatEffectType(effect.type) }}</span>
           </div>
           <div class="environment-effect__detail">
-            <template v-if="effect.type === 'accuracy_penalty' && effect.accuracyPenaltyPerMeter">
-              {{ effect.accuracyPenaltyPerMeter }} accuracy per unilluminated meter
+            <template v-if="effect.type === 'accuracy_penalty'">
+              <span v-if="effect.description">{{ effect.description }}</span>
+              <span v-else>-{{ effect.accuracyPenalty }} accuracy penalty</span>
             </template>
-            <template v-else-if="effect.type === 'terrain_override' && effect.terrainRules">
+            <template v-else-if="effect.type === 'terrain_override'">
               <span v-if="effect.terrainRules.slowTerrain">Slow Terrain. </span>
               <span v-if="effect.terrainRules.weightClassBreak">
                 WC {{ effect.terrainRules.weightClassBreak }}+ breaks ice. </span>
@@ -92,7 +93,7 @@
                 Acrobatics DC 10 on injury.
               </span>
             </template>
-            <template v-else-if="effect.type === 'status_trigger' && effect.statusOnEntry">
+            <template v-else-if="effect.type === 'status_trigger'">
               On {{ effect.statusOnEntry.terrain }} entry:
               {{ effect.statusOnEntry.effect }}
               <span v-if="effect.statusOnEntry.stagePenalty">
@@ -100,7 +101,7 @@
                 {{ effect.statusOnEntry.stagePenalty.stages }})
               </span>
             </template>
-            <template v-else-if="effect.customRule">
+            <template v-else-if="effect.type === 'custom'">
               {{ effect.customRule }}
             </template>
           </div>
