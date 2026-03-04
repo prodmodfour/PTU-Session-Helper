@@ -26,25 +26,25 @@ If you need Pokemon, call one of these. Never build Pokemon records ad-hoc in AP
 
 | File | Lines | Description |
 |---|---|---|
-| `combatant.service.ts` | ~686 | Damage calc, healing, status conditions, stage mods, combatant construction |
+| `combatant.service.ts` | ~697 | Damage calc, healing, status conditions, stage mods, combatant construction |
 | `csv-import.service.ts` | ~405 | Parse PTU character sheet CSVs, create trainer + Pokemon DB records |
 | `encounter-generation.service.ts` | ~125 | Weighted random species selection with diversity enforcement for spawn tables |
-| `encounter.service.ts` | ~476 | Encounter CRUD, initiative sorting, turn management, response building |
-| `entity-builder.service.ts` | ~127 | Transform Prisma records into typed Pokemon/HumanCharacter entities |
+| `encounter.service.ts` | ~478 | Encounter CRUD, initiative sorting, turn management, response building |
+| `entity-builder.service.ts` | ~128 | Transform Prisma records into typed Pokemon/HumanCharacter entities |
 | `entity-update.service.ts` | ~141 | Sync combatant state changes back to Pokemon/HumanCharacter DB rows |
 | `evolution.service.ts` | ~715 | Species evolution: stat recalc, Base Relations validation, full execution |
 | `grid-placement.service.ts` | ~147 | Auto-place combatant tokens on VTT grid by side, size-to-token mapping |
 | `healing-item.service.ts` | ~372 | Healing item validation and application (HP restore, status cure, revive, combat action economy) |
 | `intercept.service.ts` | ~732 | Intercept Melee/Ranged (PTU p.242) — eligibility, detection, resolution |
 | `out-of-turn.service.ts` | ~752 | AoO, Hold Action, Priority Actions, Interrupt framework |
-| `pokemon-generator.service.ts` | ~539 | Canonical Pokemon creation: generate data, persist, build combatants |
+| `pokemon-generator.service.ts` | ~540 | Canonical Pokemon creation: generate data, persist, build combatants |
 | `rest-healing.service.ts` | ~130 | Daily move refresh for Extended Rest (rolling window rule) |
 | `scene.service.ts` | ~74 | Scene-end AP restoration for characters |
 | `status-automation.service.ts` | ~151 | Tick damage at turn end (Burn, Poison, Badly Poisoned, Cursed) |
 | `switching.service.ts` | ~824 | Pokemon switch validation, recall range, initiative insertion, action tracking |
 | `ball-condition.service.ts` | ~185 | Build Poke Ball condition context from encounter state for conditional ball modifiers |
 | `mounting.service.ts` | ~561 | Trainer-Pokemon mount/dismount logic, movement sharing, faint auto-dismount |
-| `living-weapon.service.ts` | ~349 | Living Weapon engage/disengage, wield state queries, faint penalty, auto-disengage |
+| `living-weapon.service.ts` | ~533 | Living Weapon engage/disengage, wield state queries, faint penalty, auto-disengage, equipment overlay, weapon moves |
 | `weather-automation.service.ts` | ~222 | Weather damage ticks at turn start (Hail, Sandstorm) with type/ability immunities; weather ability effects (Ice Body, Rain Dish, Sun Blanket, Solar Power, Dry Skin, Desert Weather) |
 | `living-weapon-state.ts` | ~51 | Reconstruct wieldRelationships from combatant flags for WebSocket state sync |
 
@@ -71,6 +71,6 @@ living-weapon-state -> (standalone, reconstructs from combatant flags)
 
 - **encounter-generation != pokemon-generator**: `encounter-generation` does weighted random species selection from spawn tables. `pokemon-generator` creates individual Pokemon with full character sheets. They serve different stages of the pipeline.
 - **Template combatants have no entityId**: Combatants loaded from EncounterTemplate have `entityId: null` until the encounter starts and real DB records are created. `entity-update` skips them silently.
-- **combatant.service is the largest hybrid file** (~686 lines): Contains damage calc, healing, status, stages, and combatant construction. Read the section headers before diving in.
+- **switching.service is the largest hybrid file** (~824 lines): Contains switch validation, recall range, initiative insertion, action tracking. Read the section headers before diving in.
 - **Pure services must stay pure**: `encounter-generation`, `status-automation`, and `grid-placement` have zero DB imports. Keep them that way for testability.
 - **out-of-turn and intercept are circular**: They import from each other. `intercept` was extracted from `out-of-turn` for file size compliance; they share types via `~/types/combat`.

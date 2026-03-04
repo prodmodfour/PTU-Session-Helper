@@ -38,8 +38,8 @@
 | useGridMovement.ts | 26KB | PTU movement rules, diagonal costs, terrain, multi-cell tokens |
 | useIsometricRendering.ts | 27KB | Full isometric draw loop with sprite caching |
 | useGridRendering.ts | 26KB | 2D canvas draw: grid, fog, terrain, measurement overlays |
+| useMoveCalculation.ts | 25KB | PTU move resolution: accuracy, damage, STAB, crits, effectiveness |
 | usePathfinding.ts | 25KB | A* with terrain costs, elevation, multi-cell footprints |
-| useMoveCalculation.ts | 24KB | PTU move resolution: accuracy, damage, STAB, crits, effectiveness |
 | useIsometricInteraction.ts | 22KB | Isometric mouse/touch input with inverse projection |
 | usePokemonSprite.ts | 22KB | Showdown sprite URLs with 280+ special name mappings |
 | useIsometricOverlays.ts | 22KB | Isometric fog, terrain, measurement drawing |
