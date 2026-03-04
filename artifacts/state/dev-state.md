@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-04T23:35:00
-updated_by: survey-1741124400
+last_updated: 2026-03-04T22:20:00
+updated_by: collector-plan-1772661312
 ---
 
 # Dev Ecosystem State
@@ -12,7 +12,7 @@ updated_by: survey-1741124400
 ### Bug Tickets (`tickets/open/bug/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| bug-047 | P4 | open | Friend Ball loyalty fallback default mismatch (2 vs schema default 3) |
+| bug-047 | P4 | resolved | Friend Ball loyalty fallback default mismatch — fixed in plan-1772661312 |
 | bug-051 | P1 | open | Tickets index generator uses frontmatter status instead of directory path (fixed, ticket documents the bug) |
 
 ### PTU Rule Tickets (`tickets/open/ptu-rule/` + `tickets/in-progress/ptu-rule/`)
@@ -29,7 +29,7 @@ updated_by: survey-1741124400
 ### Feature Tickets (`tickets/open/feature/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| feature-025 | P2 | open | Per-combatant Darkvision/Blindsense tracking to auto-negate darkness penalties |
+| feature-025 | P2 | design-complete | Per-combatant Darkvision/Blindsense tracking — design spec written (design-darkvision-tracking-001) |
 
 ### UX Tickets (`tickets/open/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -46,7 +46,7 @@ updated_by: survey-1741124400
 #### In-Progress (`tickets/in-progress/refactoring/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| refactoring-096 | P4 | in-progress | Harmonize tag color styling — needs fix cycle (code-review-224 H1+M1) |
+| refactoring-096 | P4 | resolved | Harmonize tag color styling — fix cycle complete (plan-1772661312) |
 | refactoring-106 | P2 | in-progress | Decouple condition behaviors from category arrays — needs fix cycle (code-review-327 1H+1M) |
 
 #### Open (`tickets/open/refactoring/`)
@@ -58,7 +58,7 @@ updated_by: survey-1741124400
 | refactoring-088 | P4 | open | Code-review-195 MED-1 (vtt-grid) |
 | refactoring-091 | P4 | open | Code-review-203 M1 (character-lifecycle) |
 | refactoring-095 | P4 | open | Guard addEdge() against Skill Edge string injection |
-| refactoring-097 | P2 | open | Replace blocking alert() with non-blocking toast for heavily injured/death |
+| refactoring-097 | P2 | resolved | Replace blocking alert() with non-blocking toast — implemented useGmToast (plan-1772661312) |
 | refactoring-098 | P3 | open | Refactor entity mutation in heavily injured/death paths to immutable patterns |
 | refactoring-099 | P4 | open | Extract XP actions from encounter.ts store (806 lines) |
 | refactoring-100 | P4 | open | Reset badlyPoisonedRound on faint in applyDamageToEntity |
@@ -67,10 +67,10 @@ updated_by: survey-1741124400
 | refactoring-103 | P4 | open | damage.post.ts uses species instead of nickname for defeated enemy tracking |
 | refactoring-104 | P4 | open | useCharacterCreation.ts has inline rank progression arrays instead of shared constant |
 | refactoring-107 | P4 | open | Extract duplicated SCSS from level-up P1 components |
-| refactoring-108 | P3 | open | Extract switch button computeds from CombatantCard.vue |
+| refactoring-108 | P3 | resolved | Extract switch button computeds — useCombatantSwitchButtons.ts (plan-1772661312) |
 | refactoring-109 | P4 | open | Tighten MoveDetail interface types in MoveLearningPanel |
 | refactoring-110 | P4 | open | Hide Level 40 ability button when Level 20 milestone incomplete |
-| refactoring-111 | P3 | open | Extract drawMovementArrow from useIsometricRendering.ts |
+| refactoring-111 | P3 | resolved | Extract drawMovementArrow — useIsometricMovementPreview.ts (plan-1772661312) |
 | refactoring-112 | P3 | open | Decompose encounter store into focused sub-modules (970 lines) |
 | refactoring-113 | P3 | open | Wire or remove autoDeclineFaintedReactor in aoo-resolve.post.ts |
 | refactoring-115 | P4 | open | switching.service.ts exceeds 800-line limit (811 lines) |
@@ -89,9 +89,17 @@ updated_by: survey-1741124400
 
 ## Active Developer Work
 
-**Current status:** Session 113 collection complete. No active slaves.
+**Current status:** Session 114 collection complete. No active slaves.
 
-**Last session (113, 2026-03-04, plan-20260304-203323):**
+**Last session (114, 2026-03-04, plan-1772661312):**
+- slave-1 (dev): refactoring-097 — 6 commits. alert()→toast conversion (useGmToast + GmToastContainer)
+- slave-2 (dev): feature-025 — 1 commit. Design spec: design-darkvision-tracking-001
+- slave-3 (dev): refactoring-096 — 3 commits. CSS specificity fix cycle (code-review-224)
+- slave-4 (dev): refactoring-111 — 2 commits. Extract useIsometricMovementPreview
+- slave-5 (dev): refactoring-108 — 2 commits. Extract useCombatantSwitchButtons
+- slave-6 (dev): bug-047 — 3 commits. Loyalty fallback 2→3 + intercept.service fix
+
+**Session 113 (2026-03-04, plan-20260304-203323):**
 - slave-1 (dev): ptu-rule-058-p2-fix + decree-048 — 7 commits. P2 fix cycle done, **needs re-review**
 - slave-2 (review): ptu-rule-134 — APPROVED, feature complete
 - slave-3 (review): refactoring-125 + bug-050 — both APPROVED, feature complete
@@ -101,13 +109,6 @@ updated_by: survey-1741124400
 - slave-2 (dev): refactoring-125-fix — 2 commits. APPROVED (session 113)
 - slave-3 (review): ptu-rule-058-p2 — CHANGES_REQUIRED (2H+3M). Fix cycle done (session 113)
 
-**Session 111 (2026-03-04, plan-20260304-144401):**
-- slave-4 (dev): ptu-rule-058-p2 — 9 commits. Environmental Modifier Framework
-- slave-5 (dev): bug-001 — resolved
-- slave-1 (review): refactoring-106+ptu-rule-128 — CHANGES_REQUIRED (1H+1M). Needs fix cycle
-- slave-2 (review): feature-024-fix — APPROVED, feature complete
-- slave-3 (review): refactoring-125 — CHANGES_REQUIRED (1M). Fixed (session 112)
-
 ## Code Health
 
 | Metric | Value |
@@ -115,9 +116,9 @@ updated_by: survey-1741124400
 | Last updated | 2026-03-04 |
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 1 (bug-051 — index generator, already fixed) |
-| Open tickets (P2) | 2 (feature-025, refactoring-097) |
-| Open tickets (P3) | 12 |
-| Open tickets (P4) | 34 |
-| In-progress tickets | 3 (ptu-rule-058, refactoring-096, refactoring-106) |
-| Total open + in-progress | 52 |
-| Needing action | ptu-rule-058 (fix cycle from code-review-330), refactoring-096 (fix cycle), refactoring-106 (fix cycle) |
+| Open tickets (P2) | 1 (feature-025 — design complete, needs implementation) |
+| Open tickets (P3) | 9 |
+| Open tickets (P4) | 33 |
+| In-progress tickets | 2 (ptu-rule-058, refactoring-106) |
+| Total open + in-progress | 48 |
+| Needing action | ptu-rule-058 (needs re-review after P2 fix cycle), refactoring-106 (fix cycle from code-review-327) |
