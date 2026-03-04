@@ -2,7 +2,7 @@
 
 ## Status: p1-implemented
 
-P0 implemented (Sections A-D) + fix cycle applied. P1 implemented (Sections E-I). P2 remains.
+P0 implemented (Sections A-D) + fix cycle applied. P1 implemented (Sections E-I) + fix cycle applied. P2 remains.
 
 ---
 
@@ -14,6 +14,7 @@ P0 implemented (Sections A-D) + fix cycle applied. P1 implemented (Sections E-I)
 | 2026-03-03 | P0 implemented | 14 commits: data model, constants, capability parsing, service, API endpoints, WebSocket, encounter integration, auto-disengage on removal/recall/switch |
 | 2026-03-03 | P0 fix cycle | 8 commits: code-review-297 (C1+H1-H3+M1-M3) + rules-review-270 (HIGH#1-#2+MEDIUM#1) + bug-046 + decree-043 |
 | 2026-03-04 | P1 implemented | 12 commits: equipment overlay, weapon moves, evasion refresh, integration across all 4 code paths + faint state sync |
+| 2026-03-04 | P1 fix cycle | 6 commits: code-review-316 (1H+2M) + rules-review-289 (1H+2M). Weapon move DB +1 mod, Weapon keyword STAB exclusion, getEffectiveEquipBonuses extraction, GM move UI injection, encounter reload wield state, app-surface update |
 
 ---
 
@@ -68,6 +69,30 @@ When a wielded Pokemon faints or is healed from faint, the wielder's evasion val
 1. `damage.post.ts` — On faint
 2. `heal.post.ts` — On faint removal
 3. `use-item.post.ts` — On revive via item
+
+---
+
+## P1 Fix Cycle Commits
+
+| Commit | Issue | Description |
+|--------|-------|-------------|
+| ca91d05e | rules-289 HIGH#1 | Apply Small Melee Weapon +1 DB modifier to weapon move constants |
+| 9adc611c | rules-289 MEDIUM#1 | Skip STAB for moves with Weapon keyword (3 code paths) |
+| 900cd8cb | code-316 MEDIUM#1 | Extract getEffectiveEquipBonuses to shared utility (800-line compliance) |
+| 9eebcede | code-316 HIGH#1 | Inject weapon moves into GMActionModal move selection UI |
+| 1a607b6a | rules-289 MEDIUM#2 | Restore wielder evasion on encounter reload via buildEncounterResponse |
+| 83797b0e | code-316 MEDIUM#2 | Update app-surface.md with P1 function additions |
+
+### P1 Fix Cycle Files Changed
+- `app/constants/livingWeapon.ts` — Weapon move DB values +1
+- `app/composables/useMoveCalculation.ts` — STAB exclusion, extracted getEffectiveEquipBonuses
+- `app/components/encounter/GMActionModal.vue` — Weapon move injection into move list
+- `app/components/encounter/MoveButton.vue` — STAB exclusion for Weapon keyword
+- `app/utils/damageCalculation.ts` — moveKeywords field + STAB exclusion in calculateDamage
+- `app/utils/equipmentBonuses.ts` — getEffectiveEquipBonuses shared utility function
+- `app/server/services/encounter.service.ts` — Refresh wielder evasion on encounter load
+- `artifacts/designs/design-living-weapon-001/shared-specs.md` — Corrected weapon move DB table
+- `.claude/skills/references/app-surface.md` — P1 function documentation
 
 ---
 
