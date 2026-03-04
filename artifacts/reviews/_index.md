@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-04T09:42:50.530Z
-total_reviews: 329
-active_count: 149
-approved_count: 175
+generated_at: 2026-03-04T10:34:30.068Z
+total_reviews: 333
+active_count: 150
+approved_count: 178
 ---
 
 # Reviews Index
 
-## Active Reviews (149)
+## Active Reviews (150)
 
 | Review ID | Verdict | Target | Reviewer | Date |
 |-----------|---------|--------|----------|------|
@@ -122,6 +122,7 @@ approved_count: 175
 | code-review-312 | CHANGES_REQUIRED | ptu-rule-131 | senior-reviewer | 2026-03-04 |
 | code-review-314 | CHANGES_REQUIRED | feature-004 | senior-reviewer | 2026-03-04 |
 | code-review-316 | CHANGES_REQUIRED | feature-005 | senior-reviewer | 2026-03-04 |
+| code-review-317 | CHANGES_REQUIRED | feature-018 | senior-reviewer | 2026-03-04 |
 | rules-review-034 | CHANGES_REQUIRED | bug-002 | game-logic-reviewer | 2026-02-18 |
 | rules-review-039 | CHANGES_REQUIRED | ptu-rule-034, ptu-rule-035 | game-logic-reviewer | 2026-02-18 |
 | rules-review-047 | MIXED | — | game-logic-reviewer | 2026-02-19 |
@@ -165,6 +166,7 @@ approved_count: 175
 
 | Review ID | Target | Reviewer | Date |
 |-----------|--------|----------|------|
+| code-review-318 | feature-004 | senior-reviewer | 2026-03-04 |
 | code-review-315 | ptu-rule-131 | senior-reviewer | 2026-03-04 |
 | code-review-313 | feature-018 | senior-reviewer | 2026-03-04 |
 | code-review-311 | ptu-rule-129 | senior-reviewer | 2026-03-04 |
@@ -174,13 +176,12 @@ approved_count: 175
 | code-review-304 | feature-018 | senior-reviewer | 2026-03-03 |
 | code-review-303 | feature-021 | senior-reviewer | 2026-03-03 |
 | code-review-301 | feature-005 | senior-reviewer | 2026-03-03 |
-| code-review-300 | feature-009 | senior-reviewer | 2026-03-03 |
 
 ## Stats
 
-- Active reviews: 329
-- Needs action: 149
-- Approved/Pass (active): 175
+- Active reviews: 333
+- Needs action: 150
+- Approved/Pass (active): 178
 - Archived: 297
-- Total (active + archived): 626
+- Total (active + archived): 630
 - Unique targets reviewed: 90

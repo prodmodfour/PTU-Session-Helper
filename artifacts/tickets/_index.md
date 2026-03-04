@@ -1,18 +1,17 @@
 ---
-generated_at: 2026-03-04T09:42:50.539Z
+generated_at: 2026-03-04T10:34:30.079Z
 total_tickets: 300
-open: 30
+open: 29
 in_progress: 117
-resolved: 135
+resolved: 136
 ---
 
 # Tickets Index
 
-## Open Tickets (30)
+## Open Tickets (29)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| refactoring-127 | refactoring | P0 | project-wide | refactoring-127: Rename project to "Rotom Table" |
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
 | feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
@@ -178,5 +177,5 @@ All decree-needs addressed.
 | feature | 1 | 19 | 3 | 24 |
 | ux | 6 | 7 | 2 | 16 |
 | decree | 0 | 0 | 44 | 44 |
-| refactoring | 17 | 13 | 2 | 45 |
+| refactoring | 16 | 13 | 3 | 45 |
 | docs | 0 | 0 | 16 | 16 |
