@@ -11,6 +11,7 @@ import { reconstructWieldRelationships } from '~/server/services/living-weapon-s
 import { ZERO_EVASION_CONDITIONS } from '~/constants/statusConditions'
 import { checkFlankingMultiTile, FLANKING_EVASION_PENALTY } from '~/utils/flankingGeometry'
 import { isEnemySide } from '~/utils/combatSides'
+import { hasRiderFeature } from '~/utils/mountingRules'
 import type { AccuracyCalcResult } from '~/utils/damageCalculation'
 import { getWeatherBallEffect, getSandForceDamageBonus } from '~/utils/weatherRules'
 import type { Pokemon, HumanCharacter, Move, Combatant } from '~/types'
@@ -324,6 +325,17 @@ export default defineEventHandler(async (event) => {
       physicalEvasion = calculateEvasion(targetEvasion.defenseBase, targetEvasion.defenseStage, evasionBonus, focusDefBonus)
       specialEvasion = calculateEvasion(targetEvasion.spDefBase, targetEvasion.spDefStage, evasionBonus, focusSpDefBonus)
       speedEvasion = calculateEvasion(targetEvasion.speedBase, targetEvasion.speedStage, evasionBonus, focusSpeedBonus)
+
+      // P2: Ride as One Speed Evasion sharing override (PTU p.103).
+      // If the target is part of a mounted pair with Ride as One active, the shared
+      // Speed Evasion (set by applyRideAsOneEvasion on mount) takes precedence over
+      // the stat-derived evasion. The combatant.speedEvasion field holds the shared value.
+      if (target.mountState && target.mountState.originalSpeedEvasion !== undefined) {
+        // Ride as One was applied (originalSpeedEvasion is only set when Ride as One is active).
+        // Use the higher of: stat-derived speed evasion or the Ride as One shared value.
+        // This ensures Ride as One "use the highest of each other's Speed Evasion" is respected.
+        speedEvasion = Math.max(speedEvasion, target.speedEvasion)
+      }
     }
 
     // PTU p.234: Speed Evasion may be applied to any Move with an accuracy check.
