@@ -15,7 +15,9 @@ export default defineEventHandler(async (event) => {
     const maxHp = body.maxHp || (level + (baseHp * 3) + 10)
 
     // Loyalty validation (PTU Chapter 10: 0-6 scale)
-    const loyalty = body.loyalty ?? 3
+    // decree-049: wild origin defaults to Loyalty 2 (Wary), others default to 3 (Neutral)
+    const origin = body.origin || 'manual'
+    const loyalty = body.loyalty ?? (origin === 'wild' ? 2 : 3)
     if (!Number.isInteger(loyalty) || loyalty < 0 || loyalty > 6) {
       throw createError({
         statusCode: 400,
