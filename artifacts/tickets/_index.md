@@ -1,25 +1,26 @@
 ---
-generated_at: 2026-03-04T15:30:14.475Z
-total_tickets: 304
-open: 27
+generated_at: 2026-03-04T15:37:05.205Z
+total_tickets: 306
+open: 28
 in_progress: 121
-resolved: 138
+resolved: 139
 ---
 
 # Tickets Index
 
-## Open Tickets (27)
+## Open Tickets (28)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| ptu-rule-134 | ptu-rule | P1 | combat | Per decree-047, Other category conditions (Stuck, Slowed, Tr |
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
-| decree-need-046 | decree | P3 | combat | PTU p.248 states: "When a Pokemon becomes Fainted, they are  |
 | refactoring-108 | refactoring | P3 | — | refactoring-108: Extract switch button computeds from Combat |
 | refactoring-112 | refactoring | P3 | combat | Refactoring-112: Decompose encounter store into focused sub- |
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
 | refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
 | refactoring-125 | refactoring | P3 | combat | refactoring-125: CombatantCard.vue exceeds 800-line file siz |
 | refactoring-128 | refactoring | P3 | combat | `useMoveCalculation.ts` is now 806 lines, exceeding the 800- |
+| refactoring-129 | refactoring | P3 | combat | Per decree-047, whether Other category conditions clear on f |
 | bug-047 | bug | P4 | capture | bug-047: Friend Ball loyalty fallback default mismatch |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
@@ -166,20 +167,18 @@ resolved: 138
 | refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
 | refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-046 | P3 | combat | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 17 | 30 | 50 |
-| ptu-rule | 5 | 61 | 39 | 106 |
+| ptu-rule | 6 | 61 | 39 | 107 |
 | feature | 0 | 20 | 3 | 24 |
 | ux | 5 | 8 | 2 | 16 |
-| decree | 1 | 0 | 45 | 46 |
-| refactoring | 15 | 15 | 3 | 46 |
+| decree | 0 | 0 | 46 | 46 |
+| refactoring | 16 | 15 | 3 | 47 |
 | docs | 0 | 0 | 16 | 16 |

@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-04T15:30:14.480Z
-total_decrees: 47
-active: 46
+generated_at: 2026-03-04T15:37:05.211Z
+total_decrees: 48
+active: 47
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (46)
+## Active Decrees (47)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -57,3 +57,4 @@ superseded: 0
 | decree-044 | combat | bound-condition-removal | Remove phantom 'Bound' condition; only Trapped blocks recall (RAW) |
 | decree-045 | combat | sun-blanket-healing-fraction | Use Tick (1/10th max HP) for Sun Blanket healing, not 1/16th |
 | decree-046 | combat | no-guard-definition | Use playtest +3/-3 flat accuracy version of No Guard |
+| decree-047 | combat | other-condition-faint-clearing | Other conditions do not clear on faint by default; clearing is source-dependent |
