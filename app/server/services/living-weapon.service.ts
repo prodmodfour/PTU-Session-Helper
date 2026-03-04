@@ -8,7 +8,7 @@
  * Engage = Standard Action, Disengage = Swift Action.
  */
 
-import type { Combatant } from '~/types/encounter'
+import type { Combatant, Encounter } from '~/types/encounter'
 import type { WieldRelationship } from '~/types/combat'
 import type { Pokemon, HumanCharacter, SkillRank, Move, PokemonType } from '~/types/character'
 import type { MoveFrequency } from '~/types/combat'
@@ -16,6 +16,7 @@ import { getLivingWeaponConfig } from '~/utils/combatantCapabilities'
 import { LIVING_WEAPON_CONFIG } from '~/constants/livingWeapon'
 import type { LivingWeaponConfig } from '~/constants/livingWeapon'
 import { areAdjacent } from '~/utils/adjacency'
+import { getOverlandSpeed as getOverlandSpeedUtil } from '~/utils/combatantCapabilities'
 import {
   computeEquipmentBonuses,
   computeEffectiveEquipment,
@@ -531,4 +532,305 @@ export function getEffectiveMoveList(
   const newMoves = weaponMoves.filter(m => !existingNames.has(m.name))
 
   return [...baseMoves, ...newMoves]
+}
+
+// ============================================================
+// P2: VTT Shared Movement (Section J — PTU p.306)
+// ============================================================
+
+/**
+ * Sync a wielded Living Weapon's position to its wielder's position.
+ * Called after engage, and after any movement by either party.
+ *
+ * Returns updated combatants array (immutable).
+ */
+export function syncWeaponPosition(
+  combatants: Combatant[],
+  wieldRelationships: WieldRelationship[],
+  wielderId: string
+): Combatant[] {
+  const relationship = wieldRelationships.find(
+    r => r.wielderId === wielderId
+  )
+  if (!relationship) return combatants
+
+  const wielder = combatants.find(c => c.id === wielderId)
+  if (!wielder?.position) return combatants
+
+  return combatants.map(c => {
+    if (c.id === relationship.weaponId) {
+      return { ...c, position: { ...wielder.position! } }
+    }
+    return c
+  })
+}
+
+/**
+ * Handle linked movement for a wielded Living Weapon pair.
+ * Both combatants move together, and the shared pool is updated.
+ *
+ * PTU p.306: "the Wielder and the Living Weapon use the Wielder's
+ * Movement Speed to shift during each of their turns, and the total
+ * amount Shifted during the round cannot exceed the Wielder's Movement Speed."
+ *
+ * @param combatants - Current combatant array
+ * @param wieldRelationships - Current wield relationships
+ * @param movingCombatantId - The combatant that initiated the shift
+ * @param newPosition - The destination grid position
+ * @param movementCost - How many squares of movement were used
+ * @returns Updated combatants and wield relationships (immutable)
+ */
+export function handleLinkedMovement(
+  combatants: Combatant[],
+  wieldRelationships: WieldRelationship[],
+  movingCombatantId: string,
+  newPosition: { x: number; y: number },
+  movementCost: number
+): { combatants: Combatant[]; wieldRelationships: WieldRelationship[] } {
+  const relationship = wieldRelationships.find(
+    r => r.wielderId === movingCombatantId || r.weaponId === movingCombatantId
+  )
+  if (!relationship) {
+    return { combatants, wieldRelationships }
+  }
+
+  const partnerId = relationship.wielderId === movingCombatantId
+    ? relationship.weaponId
+    : relationship.wielderId
+
+  // Update both positions
+  const updatedCombatants = combatants.map(c => {
+    if (c.id === movingCombatantId || c.id === partnerId) {
+      return { ...c, position: { ...newPosition } }
+    }
+    return c
+  })
+
+  // Update shared movement pool
+  const updatedRelationships = wieldRelationships.map(r => {
+    if (r.wielderId === relationship.wielderId) {
+      return {
+        ...r,
+        movementUsedThisRound: (r.movementUsedThisRound ?? 0) + movementCost,
+      }
+    }
+    return r
+  })
+
+  return {
+    combatants: updatedCombatants,
+    wieldRelationships: updatedRelationships,
+  }
+}
+
+/**
+ * Get the effective movement speed for a combatant, accounting for
+ * Living Weapon shared movement pool.
+ *
+ * For wielded pairs, returns the wielder's speed minus movement
+ * already used this round by either party.
+ *
+ * @returns Remaining movement speed, or -1 if not part of a wield pair
+ *          (caller should use normal speed calculation)
+ */
+export function getWieldedMovementSpeed(
+  combatant: Combatant,
+  wieldRelationships: WieldRelationship[],
+  combatants: Combatant[]
+): number | null {
+  const relationship = wieldRelationships.find(
+    r => r.wielderId === combatant.id || r.weaponId === combatant.id
+  )
+  if (!relationship) return null
+
+  const wielder = combatants.find(c => c.id === relationship.wielderId)
+  if (!wielder) return null
+
+  // Use wielder's overland speed as the shared pool base
+  const wielderSpeed = getOverlandSpeedUtil(wielder)
+  const remaining = wielderSpeed - (relationship.movementUsedThisRound ?? 0)
+  return Math.max(0, remaining)
+}
+
+/**
+ * Reset shared movement pools for all wield relationships at round start.
+ * Called from resetCombatantsForNewRound in turn-helpers.ts.
+ *
+ * Returns updated wield relationships array (immutable).
+ */
+export function resetWieldMovementPools(
+  wieldRelationships: WieldRelationship[]
+): WieldRelationship[] {
+  return wieldRelationships.map(r => ({
+    ...r,
+    movementUsedThisRound: 0,
+  }))
+}
+
+// ============================================================
+// P2: No Guard Ability Suppression (Section K — PTU p.306)
+// ============================================================
+
+/**
+ * Check if a Pokemon's No Guard ability is currently active.
+ * No Guard is suppressed while the Pokemon is wielded as a Living Weapon.
+ *
+ * PTU p.306: "While Wielded, a Living Weapon cannot benefit from
+ * its No Guard Ability."
+ */
+export function isNoGuardActive(
+  combatant: Combatant,
+  wieldRelationships: WieldRelationship[]
+): boolean {
+  if (combatant.type !== 'pokemon') return false
+
+  const pokemon = combatant.entity as Pokemon
+  const hasNoGuard = pokemon.abilities?.some(
+    (a: { name: string }) => a.name === 'No Guard'
+  ) ?? false
+  if (!hasNoGuard) return false
+
+  // Suppressed while wielded
+  const isCurrentlyWielded = wieldRelationships.some(
+    r => r.weaponId === combatant.id
+  )
+  return !isCurrentlyWielded
+}
+
+// ============================================================
+// P2: Aegislash Forced Blade Forme (Section L — PTU p.306)
+// ============================================================
+
+/**
+ * Swap Aegislash between Shield Stance and Sword Stance (Blade forme).
+ * Swaps Attack<->Defense and SpAtk<->SpDef in currentStats.
+ *
+ * Returns a new Pokemon entity (immutable).
+ */
+export function swapAegislashStance(pokemon: Pokemon): Pokemon {
+  const stats = pokemon.currentStats
+  return {
+    ...pokemon,
+    currentStats: {
+      ...stats,
+      attack: stats.defense,
+      defense: stats.attack,
+      specialAttack: stats.specialDefense,
+      specialDefense: stats.specialAttack,
+    },
+  }
+}
+
+/**
+ * Check if an Aegislash is currently in Blade forme (Sword Stance).
+ * Heuristic: Blade forme has higher Attack than Defense.
+ */
+export function isAegislashBladeForm(pokemon: Pokemon): boolean {
+  return pokemon.currentStats.attack > pokemon.currentStats.defense
+}
+
+// ============================================================
+// P2: Weaponize Ability — Free Action Intercept (Section M)
+// ============================================================
+
+/**
+ * Check if a Pokemon can use Weaponize to intercept for its wielder.
+ *
+ * PTU p.2874-2878: "While being wielded as a Living Weapon and being
+ * actively Commanded as a Pokemon, the user may Intercept for its
+ * Wielder as a Free Action."
+ *
+ * Requirements:
+ * 1. The Pokemon has the Weaponize ability
+ * 2. The Pokemon is currently wielded as a Living Weapon
+ * 3. The Pokemon is NOT fainted (must be "actively commanded")
+ */
+export function canUseWeaponize(
+  combatant: Combatant,
+  wieldRelationships: WieldRelationship[]
+): boolean {
+  if (combatant.type !== 'pokemon') return false
+
+  const pokemon = combatant.entity as Pokemon
+  const hasWeaponize = pokemon.abilities?.some(
+    (a: { name: string }) => a.name === 'Weaponize'
+  ) ?? false
+  if (!hasWeaponize) return false
+
+  // Must be wielded
+  const relationship = wieldRelationships.find(
+    r => r.weaponId === combatant.id
+  )
+  if (!relationship) return false
+
+  // Must not be fainted (PTU: "actively Commanded")
+  if (relationship.isFainted) return false
+
+  return true
+}
+
+// ============================================================
+// P2: Soulstealer Ability — Heal on Faint/Kill (Section N)
+// ============================================================
+
+/**
+ * Check if Soulstealer should trigger after a faint.
+ *
+ * PTU p.2417-2423:
+ * - Scene frequency, Free Action
+ * - Trigger: the user's attack causes a foe to Faint
+ * - Effect: remove 1 Injury + heal 25% max HP
+ * - If the attack killed: full heal + remove all Injuries
+ *
+ * Returns trigger info if Soulstealer should fire, null otherwise.
+ */
+export function checkSoulstealer(
+  attacker: Combatant,
+  targetFainted: boolean
+): { triggered: boolean; isKill: boolean } | null {
+  if (!targetFainted) return null
+  if (attacker.type !== 'pokemon') return null
+
+  const pokemon = attacker.entity as Pokemon
+  const hasSoulstealer = pokemon.abilities?.some(
+    (a: { name: string }) => a.name === 'Soulstealer'
+  ) ?? false
+  if (!hasSoulstealer) return null
+
+  // Kill detection is deferred to GM input (PTU kill rules are
+  // complex and GM-adjudicated). For now, all faints are non-kill.
+  return { triggered: true, isKill: false }
+}
+
+/**
+ * Apply Soulstealer healing to the attacker.
+ * - Faint (non-kill): remove 1 Injury + heal 25% max HP
+ * - Kill: remove all Injuries + full heal
+ *
+ * Mutates the combatant's entity in place (follows existing
+ * damage.post.ts mutation pattern).
+ *
+ * Returns info about the healing applied.
+ */
+export function applySoulstealerHealing(
+  combatant: Combatant,
+  isKill: boolean
+): { hpHealed: number; injuriesRemoved: number } {
+  const entity = combatant.entity
+  const maxHp = entity.maxHp
+
+  if (isKill) {
+    const hpHealed = maxHp - entity.currentHp
+    const injuriesRemoved = entity.injuries || 0
+    entity.currentHp = maxHp
+    entity.injuries = 0
+    return { hpHealed, injuriesRemoved }
+  } else {
+    const healAmount = Math.floor(maxHp * 0.25)
+    const hpHealed = Math.min(healAmount, maxHp - entity.currentHp)
+    entity.currentHp = Math.min(maxHp, entity.currentHp + healAmount)
+    const injuriesRemoved = entity.injuries > 0 ? 1 : 0
+    entity.injuries = Math.max(0, (entity.injuries || 0) - 1)
+    return { hpHealed, injuriesRemoved }
+  }
 }
