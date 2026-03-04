@@ -1,9 +1,7 @@
-import type { Move, Combatant, Pokemon, HumanCharacter, GridPosition } from '~/types'
-import type { WieldRelationship } from '~/types/combat'
+import type { Move, Combatant, Pokemon } from '~/types'
 import type { DiceRollResult } from '~/utils/diceRoller'
 import { roll } from '~/utils/diceRoller'
-import { computeEquipmentBonuses, computeEffectiveEquipment } from '~/utils/equipmentBonuses'
-import { LIVING_WEAPON_CONFIG } from '~/constants/livingWeapon'
+import { getEffectiveEquipBonuses } from '~/utils/equipmentBonuses'
 import { computeTargetEvasions } from '~/utils/evasionCalculation'
 import { getEffectivenessClass } from '~/utils/typeEffectiveness'
 import { getWeatherDamageModifier } from '~/utils/damageCalculation'
@@ -80,26 +78,9 @@ export function useMoveCalculation(
   const terrainStore = useTerrainStore()
   const encounterStore = useEncounterStore()
 
-  /**
-   * Get effective equipment bonuses for a combatant, accounting for
-   * Living Weapon equipment overlay when the combatant is wielding one.
-   * Client-side counterpart of getEffectiveEquipmentBonuses from living-weapon.service.ts.
-   */
-  const getEffectiveEquipBonuses = (combatant: Combatant) => {
-    if (combatant.type !== 'human') {
-      return computeEquipmentBonuses({})
-    }
-    const human = combatant.entity as HumanCharacter
-    let equipment = human.equipment ?? {}
+  const getEquipBonuses = (combatant: Combatant) => {
     const wieldRels = encounterStore.encounter?.wieldRelationships ?? []
-    const wieldRel = wieldRels.find(r => r.wielderId === combatant.id)
-    if (wieldRel) {
-      const config = LIVING_WEAPON_CONFIG[wieldRel.weaponSpecies]
-      if (config) {
-        equipment = computeEffectiveEquipment(equipment, config, wieldRel.isFainted)
-      }
-    }
-    return computeEquipmentBonuses(equipment)
+    return getEffectiveEquipBonuses(combatant, wieldRels)
   }
 
   // State
@@ -109,10 +90,7 @@ export function useMoveCalculation(
   const hasRolledAccuracy = ref(false)
   const accuracyResults = ref<Record<string, AccuracyResult>>({})
 
-  // =====================================
-  // Range & Line-of-Sight Filtering
-  // =====================================
-
+  // --- Range & Line-of-Sight Filtering ---
   const parsedMoveRange = computed(() => parseRange(move.value.range))
 
   /**
@@ -123,19 +101,10 @@ export function useMoveCalculation(
     return terrainStore.getTerrainAt(x, y) === 'blocking'
   }
 
-  // =====================================
-  // Rough Terrain Accuracy Penalty (PTU p.231)
-  // =====================================
+  // --- Rough Terrain Accuracy Penalty (PTU p.231) ---
 
   /**
-   * Get cells occupied by enemy combatants relative to the actor.
-   *
-   * Per decree-003 (PTU p.231): "Squares occupied by enemies always count
-   * as Rough Terrain" — targeting through these squares applies -2 accuracy.
-   *
-   * Enemy determination: 'enemies' vs 'players'/'allies'.
-   * A combatant on 'enemies' considers 'players' and 'allies' as enemies.
-   * A combatant on 'players' or 'allies' considers 'enemies' as enemies.
+   * Get cells occupied by enemy combatants (decree-003: enemies = rough terrain, -2 accuracy).
    */
   const enemyOccupiedCells = computed((): Set<string> => {
     const cells = new Set<string>()
@@ -344,9 +313,7 @@ export function useMoveCalculation(
     return targets.value.filter(t => targetRangeStatus.value[t.id]?.inRange === false)
   })
 
-  // =====================================
-  // STAB Calculations
-  // =====================================
+  // --- STAB Calculations ---
   const actorTypes = computed((): string[] => {
     if (actor.value.type === 'pokemon') {
       return (actor.value.entity as Pokemon).types
@@ -403,9 +370,7 @@ export function useMoveCalculation(
     return getSandForceDamageBonus(actor.value, weather, effectiveMoveType.value)
   })
 
-  // =====================================
-  // Accuracy Calculations
-  // =====================================
+  // --- Accuracy Calculations ---
   const attackerAccuracyStage = computed((): number => {
     const stages = getStageModifiers(actor.value.entity)
     return stages.accuracy || 0
@@ -533,9 +498,7 @@ export function useMoveCalculation(
     return hasRolledAccuracy.value && hitCount.value > 0
   })
 
-  // =====================================
-  // Damage Calculations
-  // =====================================
+  // --- Damage Calculations ---
   const attackStatValue = computed((): number => {
     if (!move.value.damageBase) return 0
 
@@ -548,7 +511,7 @@ export function useMoveCalculation(
     // Uses effective equipment (accounts for Living Weapon overlay)
     let focusBonus = 0
     if (actor.value.type === 'human') {
-      const equipBonuses = getEffectiveEquipBonuses(actor.value)
+      const equipBonuses = getEquipBonuses(actor.value)
       const statKey = move.value.damageClass === 'Physical' ? 'attack' : 'specialAttack'
       focusBonus = equipBonuses.statBonuses[statKey] ?? 0
     }
@@ -624,7 +587,7 @@ export function useMoveCalculation(
       let focusDefBonus = 0
       let equipmentDR = 0
       if (target.type === 'human') {
-        const equipBonuses = getEffectiveEquipBonuses(target)
+        const equipBonuses = getEquipBonuses(target)
         const defKey = move.value.damageClass === 'Physical' ? 'defense' : 'specialDefense'
         focusDefBonus = equipBonuses.statBonuses[defKey] ?? 0
         equipmentDR = equipBonuses.damageReduction
@@ -699,9 +662,7 @@ export function useMoveCalculation(
     hasRolledDamage.value = true
   }
 
-  // =====================================
-  // Target Selection
-  // =====================================
+  // --- Target Selection ---
   const toggleTarget = (targetId: string) => {
     const index = selectedTargets.value.indexOf(targetId)
     if (index === -1) {
@@ -720,9 +681,7 @@ export function useMoveCalculation(
     return getCombatantNameById(targets.value, targetId)
   }
 
-  // =====================================
-  // Confirmation Logic
-  // =====================================
+  // --- Confirmation Logic ---
   const canConfirm = computed((): boolean => {
     if (selectedTargets.value.length === 0) return false
 

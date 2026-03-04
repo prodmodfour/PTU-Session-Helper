@@ -8,8 +8,11 @@
  * PTU Reference: 09-gear-and-items.md (p.286-295)
  */
 
-import type { EquipmentSlots, EquipmentSlot, EquippedItem } from '~/types/character'
+import type { EquipmentSlots, EquipmentSlot, EquippedItem, HumanCharacter } from '~/types/character'
 import type { LivingWeaponConfig } from '~/constants/livingWeapon'
+import type { WieldRelationship } from '~/types/combat'
+import type { Combatant } from '~/types/encounter'
+import { LIVING_WEAPON_CONFIG } from '~/constants/livingWeapon'
 
 /**
  * Explicit slot priority for Focus item selection.
@@ -194,4 +197,39 @@ function buildLivingWeaponShield(
     description: 'Light Shield from Living Weapon (Aegislash)' +
       (isFainted ? ' [Fainted: -2 penalty]' : ''),
   }
+}
+
+// ============================================
+// EFFECTIVE EQUIPMENT BONUSES (client-side)
+// ============================================
+
+/**
+ * Get effective equipment bonuses for a combatant, accounting for
+ * Living Weapon equipment overlay when the combatant is wielding one.
+ *
+ * Shared utility used by both client-side composables (useMoveCalculation,
+ * evasionCalculation) and conceptually mirrors the server-side
+ * getEffectiveEquipmentBonuses from living-weapon.service.ts.
+ *
+ * For human combatants: checks wield relationships and merges the
+ * Living Weapon into equipment slots before computing bonuses.
+ * For non-human combatants: returns zero bonuses.
+ */
+export function getEffectiveEquipBonuses(
+  combatant: Combatant,
+  wieldRelationships: WieldRelationship[]
+): EquipmentCombatBonuses {
+  if (combatant.type !== 'human') {
+    return computeEquipmentBonuses({})
+  }
+  const human = combatant.entity as HumanCharacter
+  let equipment = human.equipment ?? {}
+  const wieldRel = wieldRelationships.find(r => r.wielderId === combatant.id)
+  if (wieldRel) {
+    const config = LIVING_WEAPON_CONFIG[wieldRel.weaponSpecies]
+    if (config) {
+      equipment = computeEffectiveEquipment(equipment, config, wieldRel.isFainted)
+    }
+  }
+  return computeEquipmentBonuses(equipment)
 }
