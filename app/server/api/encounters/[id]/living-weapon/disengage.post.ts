@@ -11,9 +11,13 @@
  * Validates: active relationship exists, turn active, Swift Action available.
  */
 import { loadEncounter, buildEncounterResponse, saveEncounterCombatants } from '~/server/services/encounter.service'
-import { disengageLivingWeapon, refreshCombatantEquipmentBonuses } from '~/server/services/living-weapon.service'
+import {
+  disengageLivingWeapon, refreshCombatantEquipmentBonuses,
+  swapAegislashStance, isAegislashBladeForm
+} from '~/server/services/living-weapon.service'
 import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 import { broadcastToEncounter } from '~/server/utils/websocket'
+import type { Pokemon } from '~/types/character'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -83,10 +87,45 @@ export default defineEventHandler(async (event) => {
       body.combatantId
     )
 
+    // P2: Aegislash forme revert on disengage (PTU p.306)
+    // If the Aegislash was NOT in Blade forme before engage, revert to Shield.
+    const weaponId = result.removedRelationship.weaponId
+    let revertedCombatants = result.combatants
+    if (result.removedRelationship.weaponSpecies === 'Aegislash') {
+      const weaponCombatant = result.combatants.find(c => c.id === weaponId)
+      if (weaponCombatant && weaponCombatant.type === 'pokemon') {
+        const wasAlreadyBlade = weaponCombatant.wasInBladeFormeOnEngage === true
+        const pokemon = weaponCombatant.entity as Pokemon
+        const isCurrentlyBlade = isAegislashBladeForm(pokemon)
+
+        // If was NOT in Blade forme before engage, revert to Shield
+        if (!wasAlreadyBlade && isCurrentlyBlade) {
+          const shieldPokemon = swapAegislashStance(pokemon)
+          revertedCombatants = result.combatants.map(c => {
+            if (c.id === weaponId) {
+              // Clear the wasInBladeFormeOnEngage flag
+              const { wasInBladeFormeOnEngage, ...rest } = c
+              return { ...rest, entity: shieldPokemon } as typeof c
+            }
+            return c
+          })
+        } else {
+          // Was already in Blade forme or already in Shield: just clear the flag
+          revertedCombatants = result.combatants.map(c => {
+            if (c.id === weaponId) {
+              const { wasInBladeFormeOnEngage, ...rest } = c
+              return rest as typeof c
+            }
+            return c
+          })
+        }
+      }
+    }
+
     // Mark Swift Action as used on the disengaging combatant
     // And refresh the wielder's evasion values (Living Weapon overlay removed)
     const wielderId = result.removedRelationship.wielderId
-    const finalCombatants = result.combatants.map(c => {
+    const finalCombatants = revertedCombatants.map(c => {
       let updated = c
       if (c.id === body.combatantId) {
         updated = {

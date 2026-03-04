@@ -121,7 +121,15 @@ export default defineEventHandler(async (event) => {
           const bladePokemon = swapAegislashStance(pokemon)
           updatedCombatantsPreAction = result.combatants.map(c => {
             if (c.id === body.weaponId) {
-              return { ...c, entity: bladePokemon }
+              return { ...c, entity: bladePokemon, wasInBladeFormeOnEngage: isAlreadyBlade }
+            }
+            return c
+          })
+        } else {
+          // Already in Blade forme — just set the tracking flag
+          updatedCombatantsPreAction = result.combatants.map(c => {
+            if (c.id === body.weaponId) {
+              return { ...c, wasInBladeFormeOnEngage: isAlreadyBlade }
             }
             return c
           })

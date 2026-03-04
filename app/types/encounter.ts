@@ -93,6 +93,9 @@ export interface Combatant {
   wieldingWeaponId?: string;
   /** If this combatant is a Pokemon currently being wielded as a Living Weapon */
   wieldedByTrainerId?: string;
+  /** For Aegislash: was in Blade forme when engaged as Living Weapon? (P2)
+   *  Used to revert forme on disengage. Combat-scoped, not DB-persisted. */
+  wasInBladeFormeOnEngage?: boolean;
 
   // Forecast ability: original types before weather-based type change (P2, feature-018)
   // Combat-scoped — not persisted to the Pokemon DB record.
