@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-04T23:26:10.252Z
-total_decrees: 49
-active: 48
+generated_at: 2026-03-04T23:31:39.837Z
+total_decrees: 50
+active: 49
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (48)
+## Active Decrees (49)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -59,3 +59,4 @@ superseded: 0
 | decree-046 | combat | no-guard-definition | Use playtest +3/-3 flat accuracy version of No Guard |
 | decree-047 | combat | other-condition-faint-clearing | Other conditions do not clear on faint by default; clearing is source-dependent |
 | decree-048 | encounter-tables | dark-cave-blindness-penalties | Use RAW flat Blindness/Total Blindness penalties with two separate cave presets |
+| decree-049 | capture | loyalty-default-by-origin | Use origin-dependent default loyalty: wild catches at 2 (Wary), hatched/gifted at 3 (Neutral) |

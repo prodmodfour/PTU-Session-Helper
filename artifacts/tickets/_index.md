@@ -1,9 +1,9 @@
 ---
-generated_at: 2026-03-04T23:26:10.246Z
-total_tickets: 313
+generated_at: 2026-03-04T23:31:39.829Z
+total_tickets: 314
 open: 48
 in_progress: 2
-resolved: 263
+resolved: 264
 ---
 
 # Tickets Index
@@ -28,13 +28,13 @@ resolved: 263
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
 | ptu-rule-130 | ptu-rule | P4 | combat | PTU-Rule-130: Fainted recall+release pair should not apply L |
 | ptu-rule-133 | ptu-rule | P4 | scenes | ptu-rule-133: Permafrost ability weather damage reduction no |
+| ptu-rule-135 | ptu-rule | P4 | capture | Per decree-049, wild-caught Pokemon should default to Loyalt |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
 | ux-011 | ux | P4 | character-lifecycle | ux-011: Custom item form missing grantedCapabilities input f |
 | ux-013 | ux | P4 | character-lifecycle | ux-013: Stacked bonus Skill Edge rank-up display shows incor |
 | ux-014 | ux | P4 | pokemon-lifecycle | UX-014: Evolution undo snapshot staleness warning |
 | ux-015 | ux | P4 | pokemon-lifecycle | UX-015: Replace alert() with inline UI for evolution prevent |
 | ux-016 | ux | P4 | combat | ux-016: hasActed flag not set when all three actions individ |
-| decree-need-048 | decree | P4 | capture | The Prisma schema sets `loyalty Int @default(3)` (Neutral),  |
 | refactoring-086 | refactoring | P4 | combat | `app/composables/useMoveCalculation.ts` is 801 lines, exceed |
 | refactoring-087 | refactoring | P4 | vtt-grid | `app/tests/unit/stores/terrain.test.ts` is 811 lines, exceed |
 | refactoring-088 | refactoring | P4 | vtt-grid | `combatantsOnGrid` in `useMoveCalculation.ts` falls back to  |
@@ -68,20 +68,18 @@ resolved: 263
 | feature-025 | feature | P2 | encounter-tables | decree-048 |
 | ptu-rule-058 | ptu-rule | P3 | encounter-tables | — |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-048 | P4 | capture | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 0 | 51 | 52 |
-| ptu-rule | 6 | 1 | 99 | 106 |
+| ptu-rule | 7 | 1 | 99 | 107 |
 | feature | 0 | 1 | 24 | 25 |
 | ux | 6 | 0 | 10 | 16 |
-| decree | 1 | 0 | 47 | 48 |
+| decree | 0 | 0 | 48 | 48 |
 | refactoring | 33 | 0 | 16 | 49 |
 | docs | 1 | 0 | 16 | 17 |
