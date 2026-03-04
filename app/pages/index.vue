@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div class="home__hero">
-      <h1 class="home__title">PTU Session Helper</h1>
+      <h1 class="home__title">Rotom Table</h1>
       <p class="home__subtitle">Pokemon Tabletop United 1.05</p>
     </div>
 
@@ -41,7 +41,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'PTU Session Helper - Home'
+  title: 'Rotom Table - Home'
 })
 </script>
 
