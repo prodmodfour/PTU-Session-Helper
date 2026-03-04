@@ -273,6 +273,11 @@ export function useEncounterActions(options: EncounterActionsOptions) {
 
       localCombatant.position = position
 
+      // P2: Track distance moved this turn for Run Up / Overrun features
+      if (distanceMoved > 0) {
+        encounterStore.addDistanceMoved(combatantId, distanceMoved)
+      }
+
       // Linked movement: update mount partner position locally (feature-004)
       // Server already saved both positions; this syncs local state before broadcast
       if (localCombatant.mountState) {
