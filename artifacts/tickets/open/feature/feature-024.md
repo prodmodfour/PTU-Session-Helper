@@ -48,7 +48,10 @@ These are pure functions with no DB dependency — ideal for unit testing with V
 - `6d2d2df9` — test: add unit tests for living-weapon-state.ts (13 tests: reconstruction from flags, homebrew fallback, fainted detection, edge cases)
 - `cd571956` — test: add getLivingWeaponConfig tests to combatantCapabilities (9 tests: known species, homebrew fallback, case-insensitive matching)
 
+Fix cycle (code-review-324):
+- `e250a53f` — fix: remove duplicate vi.mock dead code (H1), add explicit reference equality comment (M1)
+
 Files changed:
-- `app/tests/unit/services/living-weapon.service.test.ts` (new, 671 lines)
+- `app/tests/unit/services/living-weapon.service.test.ts` (new, 671 lines → 660 lines after fix)
 - `app/tests/unit/services/living-weapon-state.test.ts` (new, 211 lines)
 - `app/tests/unit/utils/combatantCapabilities.test.ts` (added 89 lines)
