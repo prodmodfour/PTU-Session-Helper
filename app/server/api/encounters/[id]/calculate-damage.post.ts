@@ -277,6 +277,7 @@ export default defineEventHandler(async (event) => {
       moveType: effectiveMoveType,
       moveDamageBase: effectiveMoveDB,
       moveDamageClass: move.damageClass,
+      moveKeywords: move.keywords,
       targetTypes: targetData.types,
       defenseStat: targetData.defenseStat,
       defenseStage: targetData.defenseStage,
