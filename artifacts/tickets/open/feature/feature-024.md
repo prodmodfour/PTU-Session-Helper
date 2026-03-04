@@ -3,7 +3,7 @@ id: feature-024
 title: "Add unit tests for Living Weapon system"
 priority: P3
 severity: MEDIUM
-status: open
+status: in-progress
 domain: testing
 source: code-review-297 H3
 created_by: developer (fix cycle)
@@ -41,3 +41,14 @@ No unit tests exist for any Living Weapon code (code-review-297 H3). Add minimum
 ## Notes
 
 These are pure functions with no DB dependency — ideal for unit testing with Vitest.
+
+## Resolution Log
+
+- `bc411488` — test: add unit tests for living-weapon.service.ts (50 tests: meetsSkillRequirement, engage validation/execution, disengage, clearWieldOnRemoval, updateWieldFaintedState, query helpers)
+- `6d2d2df9` — test: add unit tests for living-weapon-state.ts (13 tests: reconstruction from flags, homebrew fallback, fainted detection, edge cases)
+- `cd571956` — test: add getLivingWeaponConfig tests to combatantCapabilities (9 tests: known species, homebrew fallback, case-insensitive matching)
+
+Files changed:
+- `app/tests/unit/services/living-weapon.service.test.ts` (new, 671 lines)
+- `app/tests/unit/services/living-weapon-state.test.ts` (new, 211 lines)
+- `app/tests/unit/utils/combatantCapabilities.test.ts` (added 89 lines)
