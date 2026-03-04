@@ -186,11 +186,13 @@ export default defineEventHandler(async (event) => {
 
   // If captured, auto-link Pokemon to trainer and update origin
   if (captureResult.success) {
+    // decree-049: wild captures default to Loyalty 2 (Wary)
     await prisma.pokemon.update({
       where: { id: body.pokemonId },
       data: {
         ownerId: body.trainerId,
-        origin: 'captured'
+        origin: 'captured',
+        loyalty: 2
       }
     })
 
@@ -208,7 +210,8 @@ export default defineEventHandler(async (event) => {
       }
     } else if (ballDef?.postCaptureEffect === 'loyalty_plus_one') {
       // Friend Ball: +1 Loyalty (PTU p.279)
-      const currentLoyalty = (pokemon as any).loyalty ?? 3
+      // decree-049: wild captures start at Loyalty 2, so Friend Ball brings them to 3
+      const currentLoyalty = 2
       const newLoyalty = Math.min(6, currentLoyalty + 1)
       await prisma.pokemon.update({
         where: { id: body.pokemonId },
