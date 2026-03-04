@@ -3,7 +3,8 @@ id: feature-025
 title: "Per-combatant Darkvision/Blindsense tracking to auto-negate darkness penalties"
 priority: P2
 severity: medium
-status: open
+status: in-progress
+design_spec: design-darkvision-tracking-001
 domain: encounter-tables
 source: decree-048
 created_by: decree-facilitator
