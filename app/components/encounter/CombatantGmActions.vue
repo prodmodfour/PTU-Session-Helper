@@ -145,7 +145,7 @@
 
 <script setup lang="ts">
 import { PhFirstAidKit } from '@phosphor-icons/vue'
-import type { Combatant, Pokemon, HumanCharacter, StatusCondition, StageModifiers } from '~/types'
+import type { Combatant, StatusCondition, StageModifiers } from '~/types'
 
 const props = defineProps<{
   combatant: Combatant
@@ -181,130 +181,18 @@ const showUseItemModal = ref(false)
 const entity = computed(() => props.combatant.entity)
 const isPokemon = computed(() => props.combatant.type === 'pokemon')
 
-// Show switch button for trainers who own Pokemon in encounter, or for Pokemon owned by a trainer
-const canShowSwitchButton = computed(() => {
-  if (props.combatant.type === 'human') {
-    const trainerEntityId = props.combatant.entityId
-    const encounterStore = useEncounterStore()
-    return encounterStore.encounter?.combatants.some(
-      c => c.type === 'pokemon' && (c.entity as Pokemon).ownerId === trainerEntityId
-    ) ?? false
-  }
-  if (props.combatant.type === 'pokemon') {
-    const pokemon = entity.value as Pokemon
-    return !!pokemon.ownerId
-  }
-  return false
-})
-
-/**
- * Determine if the switch button should be disabled.
- * Switch can be initiated on either the trainer's or their Pokemon's turn,
- * and the Standard Action is consumed on whichever combatant's turn it is.
- */
-const isSwitchDisabled = computed(() => {
-  const encounterStore = useEncounterStore()
-  const encounter = encounterStore.encounter
-  if (!encounter) return true
-
-  const currentId = encounter.turnOrder[encounter.currentTurnIndex]
-
-  if (props.combatant.type === 'human') {
-    // Trainer card: check if it's the trainer's turn or any of their Pokemon's turns
-    const trainerEntityId = props.combatant.entityId
-    const isTrainerTurn = currentId === props.combatant.id
-    const isOwnedPokemonTurn = encounter.combatants.some(
-      c => c.id === currentId && c.type === 'pokemon' && (c.entity as Pokemon).ownerId === trainerEntityId
-    )
-    if (!isTrainerTurn && !isOwnedPokemonTurn) return true
-
-    // Check Standard Action on the initiating combatant (whoever's turn it is)
-    const initiator = encounter.combatants.find(c => c.id === currentId)
-    return initiator?.turnState.standardActionUsed ?? true
-  }
-
-  if (props.combatant.type === 'pokemon') {
-    // Pokemon card: check if it's this Pokemon's turn or its trainer's turn
-    const pokemon = entity.value as Pokemon
-    const isPokemonTurn = currentId === props.combatant.id
-    const isTrainerTurn = encounter.combatants.some(
-      c => c.id === currentId && c.type === 'human' && c.entityId === pokemon.ownerId
-    )
-    if (!isPokemonTurn && !isTrainerTurn) return true
-
-    const initiator = encounter.combatants.find(c => c.id === currentId)
-    return initiator?.turnState.standardActionUsed ?? true
-  }
-
-  return true
-})
-
-/**
- * Show fainted switch button when:
- * - Combatant is a trainer who has a fainted Pokemon in the encounter
- * - OR combatant is a fainted Pokemon owned by a trainer
- */
-const canShowFaintedSwitchButton = computed(() => {
-  if (props.combatant.type === 'human') {
-    const trainerEntityId = props.combatant.entityId
-    const encounterStore = useEncounterStore()
-    return encounterStore.encounter?.combatants.some(
-      c => c.type === 'pokemon' &&
-        (c.entity as Pokemon).ownerId === trainerEntityId &&
-        c.entity.currentHp <= 0
-    ) ?? false
-  }
-  if (props.combatant.type === 'pokemon') {
-    const pokemon = entity.value as Pokemon
-    return pokemon.ownerId && pokemon.currentHp <= 0
-  }
-  return false
-})
-
-/**
- * Disable fainted switch when:
- * - Not the trainer's turn
- * - Trainer's Shift Action already used
- */
-const isFaintedSwitchDisabled = computed(() => {
-  const encounterStore = useEncounterStore()
-  const encounter = encounterStore.encounter
-  if (!encounter) return true
-
-  const currentId = encounter.turnOrder[encounter.currentTurnIndex]
-
-  // Find the trainer
-  let trainerCombatantId: string
-  if (props.combatant.type === 'human') {
-    trainerCombatantId = props.combatant.id
-  } else {
-    const pokemon = entity.value as Pokemon
-    const trainer = encounter.combatants.find(
-      c => c.type === 'human' && c.entityId === pokemon.ownerId
-    )
-    if (!trainer) return true
-    trainerCombatantId = trainer.id
-  }
-
-  // Must be the trainer's turn
-  if (currentId !== trainerCombatantId) return true
-
-  // Trainer must have Shift Action
-  const trainer = encounter.combatants.find(c => c.id === trainerCombatantId)
-  return trainer?.turnState.shiftActionUsed ?? true
-})
-
-/**
- * Show force switch button for Pokemon that are owned by a trainer.
- * GM can trigger this on any Pokemon to simulate Roar effects.
- * Only shown on Pokemon combatants (not trainers).
- * Note: Whirlwind is a push, not a forced switch (decree-034).
- */
-const canShowForceSwitchButton = computed(() => {
-  if (props.combatant.type !== 'pokemon') return false
-  const pokemon = entity.value as Pokemon
-  return !!pokemon.ownerId
-})
+// Switch button visibility and disabled logic (extracted to composable)
+const {
+  canShowSwitchButton,
+  isSwitchDisabled,
+  canShowFaintedSwitchButton,
+  isFaintedSwitchDisabled,
+  canShowForceSwitchButton
+} = useCombatantSwitchButtons(
+  computed(() => props.combatant),
+  entity,
+  isPokemon
+)
 
 // Actions
 const applyDamage = () => {
