@@ -103,6 +103,21 @@
         :all-combatants="allCombatants"
       />
 
+      <!-- Vision capability indicator (decree-048, feature-025) -->
+      <div v-if="hasVision" class="combatant-card__vision">
+        <PhEye :size="14" weight="bold" />
+        <span v-if="hasDarkvision">Darkvision</span>
+        <span v-if="hasBlindsense">Blindsense</span>
+      </div>
+
+      <!-- Vision capability toggle (GM only, darkness preset active) -->
+      <VisionCapabilityToggle
+        v-if="isGm"
+        :combatant="combatant"
+        :show-vision-toggles="showVisionToggles"
+        @toggle-vision="handleToggleVision"
+      />
+
       <!-- Combat Stages (GM only, show non-zero) -->
       <div v-if="isGm && hasStageChanges" class="combatant-card__stages">
         <span
@@ -163,8 +178,10 @@
 </template>
 
 <script setup lang="ts">
-import { PhHorse } from '@phosphor-icons/vue'
+import { PhHorse, PhEye } from '@phosphor-icons/vue'
 import type { Combatant, Pokemon, HumanCharacter, StatusCondition, StageModifiers } from '~/types'
+import type { VisionCapability } from '~/utils/visionRules'
+import { hasVisionCapability, hasSpecificVision, isDarknessBasedPreset } from '~/utils/visionRules'
 
 const props = defineProps<{
   combatant: Combatant
@@ -282,6 +299,19 @@ const encounterStore = useEncounterStore()
 // P2 (feature-018): Weather effect indicator data
 const encounterWeather = computed(() => encounterStore.encounter?.weather ?? null)
 const allCombatants = computed(() => encounterStore.encounter?.combatants ?? [])
+
+// Vision capability indicator and toggle (decree-048, feature-025)
+const hasVision = computed(() => hasVisionCapability(props.combatant))
+const hasDarkvision = computed(() => hasSpecificVision(props.combatant, 'darkvision'))
+const hasBlindsense = computed(() => hasSpecificVision(props.combatant, 'blindsense'))
+const showVisionToggles = computed(() => {
+  const preset = encounterStore.activeEnvironmentPreset
+  return !!preset && isDarknessBasedPreset(preset.id)
+})
+
+function handleToggleVision(capability: VisionCapability, enabled: boolean) {
+  encounterStore.toggleVisionCapability(props.combatant.id, capability, enabled)
+}
 
 // Handle successful capture — reload encounter to reflect Pokemon ownership change
 function handleCaptured() {
@@ -470,6 +500,20 @@ const formatStatName = (stat: string): string => STAT_NAMES[stat] || stat
     color: $color-warning;
     background: rgba($color-warning, 0.15);
     border: 1px solid rgba($color-warning, 0.3);
+    border-radius: $border-radius-sm;
+  }
+
+  &__vision {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px $spacing-xs;
+    margin-bottom: $spacing-xs;
+    font-size: $font-size-xs;
+    font-weight: 500;
+    color: $color-accent-teal;
+    background: rgba($color-accent-teal, 0.1);
+    border: 1px solid rgba($color-accent-teal, 0.3);
     border-radius: $border-radius-sm;
   }
 
