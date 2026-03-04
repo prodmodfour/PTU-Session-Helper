@@ -49,6 +49,7 @@ export type WebSocketEvent =
   | { type: 'status_change'; data: { combatantId: string; added?: StatusCondition[]; removed?: StatusCondition[] } }
   | { type: 'combatant_added'; data: Combatant }
   | { type: 'combatant_removed'; data: { combatantId: string } }
+  | { type: 'status_tick'; data: { encounterId: string; combatantId: string; combatantName: string; condition: string; damage: number; newHp: number; fainted: boolean; formula: string } }
   // Living Weapon events (feature-005)
   | { type: 'living_weapon_engage'; data: { encounterId: string; wieldRelationship: WieldRelationship } }
   | { type: 'living_weapon_disengage'; data: { encounterId: string; wielderId: string; weaponId: string } }
