@@ -19,9 +19,9 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'PTU Session Helper',
+      title: 'Rotom Table',
       meta: [
-        { name: 'description', content: 'Pokemon Tabletop United 1.05 Session Helper' }
+        { name: 'description', content: 'Rotom Table - Pokemon Tabletop United 1.05 Session Helper' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
@@ -31,7 +31,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      appName: 'PTU Session Helper'
+      appName: 'Rotom Table'
     }
   },
 
