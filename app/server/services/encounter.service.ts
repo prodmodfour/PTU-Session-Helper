@@ -6,7 +6,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { rollDie } from '~/utils/diceRoller'
 import { calculateCurrentInitiative } from '~/server/services/combatant.service'
-import type { Combatant, Encounter, GridConfig } from '~/types'
+import type { Combatant, Encounter, EnvironmentPreset, GridConfig } from '~/types'
 import type { TrainerDeclaration, SwitchAction, OutOfTurnAction, WieldRelationship } from '~/types/combat'
 import type { SignificanceTier } from '~/utils/encounterBudget'
 import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
@@ -51,6 +51,7 @@ interface EncounterRecord {
   gridIsometric: boolean
   gridCameraAngle: number
   gridMaxElevation: number
+  environmentPreset: string
   createdAt: Date
   updatedAt: Date
 }
@@ -85,6 +86,7 @@ export interface ParsedEncounter {
   pendingOutOfTurnActions: OutOfTurnAction[]
   holdQueue: Array<{ combatantId: string; holdUntilInitiative: number | null }>
   wieldRelationships: WieldRelationship[]
+  environmentPreset?: EnvironmentPreset | null
   createdAt: Date
   updatedAt: Date
 }
@@ -191,6 +193,22 @@ export function sortByInitiativeWithRollOff(combatants: Combatant[], descending:
 }
 
 /**
+ * Parse the environmentPreset JSON field from the DB record.
+ * Returns null if the field is empty, "{}", or invalid JSON.
+ */
+function parseEnvironmentPreset(raw: string): EnvironmentPreset | null {
+  if (!raw || raw === '{}') return null
+  try {
+    const parsed = JSON.parse(raw) as EnvironmentPreset
+    // Validate minimum shape: must have id and name
+    if (parsed && parsed.id && parsed.name) return parsed
+    return null
+  } catch {
+    return null
+  }
+}
+
+/**
  * Build a standardized encounter response object
  */
 export function buildEncounterResponse(
@@ -280,6 +298,7 @@ export function buildEncounterResponse(
     pendingOutOfTurnActions: options?.pendingOutOfTurnActions ?? JSON.parse(record.pendingActions || '[]'),
     holdQueue: options?.holdQueue ?? JSON.parse(record.holdQueue || '[]'),
     wieldRelationships,
+    environmentPreset: parseEnvironmentPreset(record.environmentPreset),
     createdAt: record.createdAt,
     updatedAt: record.updatedAt
   }

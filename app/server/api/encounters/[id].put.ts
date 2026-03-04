@@ -46,7 +46,8 @@ export default defineEventHandler(async (event) => {
         defeatedEnemies: JSON.stringify(body.defeatedEnemies ?? []),
         declarations: JSON.stringify(body.declarations ?? []),
         significanceMultiplier: body.significanceMultiplier ?? 1.0,
-        significanceTier: body.significanceTier ?? 'insignificant'
+        significanceTier: body.significanceTier ?? 'insignificant',
+        environmentPreset: body.environmentPreset ? JSON.stringify(body.environmentPreset) : '{}'
       }
     })
 

@@ -38,6 +38,9 @@ export const useEncounterStore = defineStore('encounter', {
     // PTU Turn Phase (for League battles)
     currentPhase: (state): TurnPhase => state.encounter?.currentPhase ?? 'pokemon',
 
+    // Environment Preset (P2: ptu-rule-058)
+    activeEnvironmentPreset: (state) => state.encounter?.environmentPreset ?? null,
+
     combatantsByInitiative: (state): Combatant[] => {
       if (!state.encounter) return []
       const order = state.encounter.turnOrder
@@ -859,6 +862,10 @@ export const useEncounterStore = defineStore('encounter', {
       if (data.gridConfig !== undefined) {
         this.encounter.gridConfig = data.gridConfig
       }
+      // Environment Preset (P2: ptu-rule-058)
+      if (data.environmentPreset !== undefined) {
+        this.encounter.environmentPreset = data.environmentPreset
+      }
 
       // Surgically update combatants to preserve reactivity
       for (const incomingCombatant of data.combatants) {
@@ -1586,6 +1593,35 @@ export const useEncounterStore = defineStore('encounter', {
         return response.data.addedPokemon
       } catch (e: any) {
         this.error = e.message || 'Failed to add wild Pokemon'
+        throw e
+      }
+    },
+
+    // ===========================================
+    // Significance Multiplier
+    // ===========================================
+
+    // ===========================================
+    // Environment Preset (P2: ptu-rule-058)
+    // ===========================================
+
+    /** Set or clear the environment preset on the active encounter */
+    async setEnvironmentPreset(encounterId: string, preset: import('~/types').EnvironmentPreset | null) {
+      try {
+        await $fetch(`/api/encounters/${encounterId}/environment-preset`, {
+          method: 'PUT',
+          body: { environmentPreset: preset }
+        })
+
+        // Update local state immutably
+        if (this.encounter && this.encounter.id === encounterId) {
+          this.encounter = {
+            ...this.encounter,
+            environmentPreset: preset
+          }
+        }
+      } catch (e: any) {
+        this.error = e.message || 'Failed to update environment preset'
         throw e
       }
     },
