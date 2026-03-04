@@ -4,8 +4,10 @@ import { roll } from '~/utils/diceRoller'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { computeTargetEvasions } from '~/utils/evasionCalculation'
 import { getEffectivenessClass } from '~/utils/typeEffectiveness'
+import { getWeatherDamageModifier } from '~/utils/damageCalculation'
 import type { EvasionDependencies } from '~/utils/evasionCalculation'
 import { useTerrainStore } from '~/stores/terrain'
+import { useEncounterStore } from '~/stores/encounter'
 import { isEnemySide } from '~/utils/combatSides'
 import { naturewalkBypassesTerrain } from '~/utils/combatantCapabilities'
 
@@ -73,6 +75,7 @@ export function useMoveCalculation(
 
   const { parseRange, isInRange, closestCellPair } = useRangeParser()
   const terrainStore = useTerrainStore()
+  const encounterStore = useEncounterStore()
 
   // State
   const selectedTargets = ref<string[]>([])
@@ -331,9 +334,18 @@ export function useMoveCalculation(
     return checkSTAB(move.value.type, actorTypes.value)
   })
 
+  // Weather DB modifier (P1: PTU pp.341-342)
+  // Rain: Water +5 DB, Fire -5 DB. Sun: Fire +5 DB, Water -5 DB.
+  const weatherModifier = computed(() => {
+    if (!move.value.damageBase || !move.value.type) return 0
+    const weather = encounterStore.encounter?.weather ?? null
+    return getWeatherDamageModifier(weather, move.value.type)
+  })
+
   const effectiveDB = computed(() => {
     if (!move.value.damageBase) return 0
-    return hasSTAB.value ? move.value.damageBase + 2 : move.value.damageBase
+    const weatherAdjustedDB = Math.max(1, move.value.damageBase + weatherModifier.value)
+    return hasSTAB.value ? weatherAdjustedDB + 2 : weatherAdjustedDB
   })
 
   // =====================================
@@ -723,9 +735,10 @@ export function useMoveCalculation(
     inRangeTargets,
     outOfRangeTargets,
 
-    // STAB
+    // STAB & Weather
     actorTypes,
     hasSTAB,
+    weatherModifier,
     effectiveDB,
 
     // Accuracy
