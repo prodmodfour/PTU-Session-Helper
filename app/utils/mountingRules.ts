@@ -14,7 +14,7 @@
 
 import type { Combatant } from '~/types/encounter'
 import type { Pokemon, HumanCharacter, SkillRank } from '~/types/character'
-import { RIDER_FEATURE_NAMES } from '~/constants/trainerClasses'
+// Rider feature name constants live in ~/constants/trainerClasses.ts
 
 // ============================================================
 // Constants
