@@ -487,3 +487,6 @@
 | plan-20260304-172253/slave-1 | developer | ptu-rule-134+refactoring-106-fix | success | 2026-03-04T17:25:15Z | 8bdb1834, 194e78ae |
 | plan-20260304-172253/slave-2 | developer | refactoring-125-fix | success | 2026-03-04T17:25:45Z | 2d912536, 3557fdea |
 | plan-20260304-172253/slave-3 | reviewers | ptu-rule-058-p2 | CHANGES_REQUIRED | 2026-03-04T17:37:00Z | 84505ed1, 27cecfbe |
+| plan-20260304-203323/slave-1 | developer | ptu-rule-058-p2-fix+decree-048 | success | 2026-03-04T20:40:00Z | dc566686, 2b66a066, 061e18fa, 8f2c1abe, 0122da9a, 3ed80679, dbcd64de |
+| plan-20260304-203323/slave-2 | reviewers | ptu-rule-134 | APPROVED | 2026-03-04T20:37:00Z | a7f5375d, e00df069 |
+| plan-20260304-203323/slave-3 | reviewers | refactoring-125+bug-050 | APPROVED | 2026-03-04T21:00:00Z | 90a4c983, e78f9633, 5784dcd0 |

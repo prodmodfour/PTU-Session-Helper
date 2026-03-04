@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-04T19:15:00
-updated_by: slave-collector (plan-20260304-172253)
+last_updated: 2026-03-04T21:10:00
+updated_by: slave-collector (plan-20260304-203323)
 ---
 
 # Dev Ecosystem State
@@ -36,8 +36,8 @@ updated_by: slave-collector (plan-20260304-172253)
 | ptu-rule-045 | P3 | **resolved** | Equipment/armor system — P0+P1+P2 all APPROVED. code-review-132 APPROVED (M1: SLOT_ICONS duplication → refactoring-069), rules-review-122 APPROVED |
 | ptu-rule-055 | P3 | **resolved** | XP calculation — P0+P1+P2 all APPROVED. code-review-131 APPROVED, rules-review-121 APPROVED |
 | ptu-rule-056 | P3 | **resolved** | Character creation form — P0+P1+P2 all approved. H1 fix applied (moved `_create-form.scss` from `additionalData` to `css` array). code-review-138 CHANGES_REQUIRED → fixed |
-| ptu-rule-058 | P3 | **P2-CHANGES_REQUIRED** | Encounter density/significance — P0+P1+H1 fix all APPROVED. P2 (Environmental Modifier Framework) implemented by slave-4 (plan-20260304-144401): 9 commits. Reviewed by slave-3 (plan-20260304-172253): code-review-330 **CHANGES_REQUIRED** (2H+3M) + rules-review-302 **APPROVED** (1H decree-need-047 filed, non-blocking). **Needs fix cycle** |
-| ptu-rule-134 | P1 | **in-progress** | Revert Other conditions to clearsOnFaint: false per decree-047. Implemented by slave-1 (plan-20260304-172253): 2 commits. clearsOnFaint set to false for Stuck/Slowed/Trapped/Tripped/Vulnerable. refactoring-106 resolution log updated. **Needs review** |
+| ptu-rule-058 | P3 | **P2-fix-cycle-done** | Encounter density/significance — P0+P1+H1 fix all APPROVED. P2 fix cycle by slave-1 (plan-20260304-203323): 7 commits addressing code-review-330 (2H+3M) + decree-048 compliance (split Dark Cave into Dim Cave + Dark Cave). Discriminated union type, computed penalty, preset divergence handling, field rename, sign convention fix. **Needs re-review** |
+| ptu-rule-134 | P1 | **APPROVED** | Revert Other conditions to clearsOnFaint: false per decree-047. Implemented by slave-1 (plan-20260304-172253): 2 commits. Reviewed by slave-2 (plan-20260304-203323): code-review-331 **APPROVED** + rules-review-303 **APPROVED**. All decree-047 binding points verified. Feature complete |
 | ptu-rule-060 | P3 | **resolved** | Level-budget/significance — P0 C1 fix + P1 significance multiplier all APPROVED. code-review-141 APPROVED (M1/M2 non-blocking → refactoring-072, 073), rules-review-131 APPROVED |
 | ptu-rule-077 | P3 | **resolved** | Focus (Speed) initiative/evasion — fix implemented, APPROVED (code-review-125 + rules-review-115) |
 | ptu-rule-078 | P3 | **resolved** | Trainer class associated skills — H1+H2 fix APPROVED. code-review-142 APPROVED, rules-review-132 APPROVED. All 39 classes correct |
@@ -143,16 +143,26 @@ updated_by: slave-collector (plan-20260304-172253)
 
 ## Active Developer Work
 
-**Current task:** Session 112 collection complete. 3 slaves merged (6 commits), 0 skipped. 2 dev slaves + 1 reviewer slave.
+**Current task:** Session 113 collection complete. 3 slaves merged (12 commits), 0 skipped. 1 dev slave + 2 reviewer slaves.
 
-**Session 112 (2026-03-04, plan-20260304-172253):**
-- **slave-1** (developer): ptu-rule-134+refactoring-106-fix — 2 commits: Set clearsOnFaint: false for 5 Other category conditions (Stuck, Slowed, Trapped, Tripped, Vulnerable) per decree-047. Updated refactoring-106 resolution log. → **in-progress, needs review**
-- **slave-2** (developer): refactoring-125-fix — 2 commits: Added CombatantGmActions entry to app-surface.md (code-review-329 M1 fix). Updated refactoring-125 resolution log. → **fix-cycle-done, needs re-review**
-- **slave-3** (reviewers): ptu-rule-058-p2 — code-review-330 **CHANGES_REQUIRED** (2H: computed accuracy penalty, preset divergence on dismiss; 3M: field naming, sign convention, discriminated union type) + rules-review-302 **APPROVED** (1H: Dark Cave penalty deviates from RAW → decree-need-047 filed). → **needs fix cycle**
+**Session 113 (2026-03-04, plan-20260304-203323):**
+- **slave-1** (developer): ptu-rule-058-p2-fix+decree-048 — 7 commits: Fix cycle addressing code-review-330 (2H+3M). Converted EnvironmentEffect to discriminated union (MED-3), split Dark Cave into Dim Cave + Dark Cave presets per decree-048 (MED-2 sign convention + MED-1 field rename), converted penalty to computed (HIGH-1), handle preset divergence on dismissal (HIGH-2), updated ticket. → **P2 fix cycle done, needs re-review**
+- **slave-2** (reviewers): ptu-rule-134 — code-review-331 **APPROVED** (0 issues, decree-047 compliant) + rules-review-303 **APPROVED** (0 issues, all 5 conditions verified). → ptu-rule-134 **APPROVED, feature complete**
+- **slave-3** (reviewers): refactoring-125+bug-050 — code-review-332 **APPROVED** (M1 fix verified) + rules-review-304 **APPROVED** (mechanics preserved). code-review-333 **APPROVED** (correct moveKeywords passthrough) + rules-review-305 **APPROVED** (PTU p.287 weapon STAB exclusion). → refactoring-125 **APPROVED, feature complete**. bug-050 **APPROVED, feature complete**
 
 **Smoke test:** PASSED (all 3 views render correctly)
-**Tickets needing fix cycle:** ptu-rule-058 P2 (code-review-330 2H+3M)
-**Tickets needing review:** ptu-rule-134 (first implementation), refactoring-125 fix cycle (re-review)
+**Tickets APPROVED:** ptu-rule-134 (both reviews passed), refactoring-125 (both re-reviews passed), bug-050 (both reviews passed)
+**Tickets needing re-review:** ptu-rule-058 P2 (fix cycle done, 7 commits)
+**Tickets filed:** None
+
+**Session 112 (2026-03-04, plan-20260304-172253):**
+- **slave-1** (developer): ptu-rule-134+refactoring-106-fix — 2 commits: Set clearsOnFaint: false for 5 Other category conditions (Stuck, Slowed, Trapped, Tripped, Vulnerable) per decree-047. Updated refactoring-106 resolution log. → **APPROVED** (session 113)
+- **slave-2** (developer): refactoring-125-fix — 2 commits: Added CombatantGmActions entry to app-surface.md (code-review-329 M1 fix). Updated refactoring-125 resolution log. → **APPROVED** (session 113)
+- **slave-3** (reviewers): ptu-rule-058-p2 — code-review-330 **CHANGES_REQUIRED** (2H: computed accuracy penalty, preset divergence on dismiss; 3M: field naming, sign convention, discriminated union type) + rules-review-302 **APPROVED** (1H: Dark Cave penalty deviates from RAW → decree-need-047 filed). → **fix cycle done** (session 113)
+
+**Smoke test:** PASSED (all 3 views render correctly)
+**Tickets needing fix cycle:** ptu-rule-058 P2 (code-review-330 2H+3M) → fixed in session 113
+**Tickets needing review:** ptu-rule-134 (first implementation) → APPROVED in session 113, refactoring-125 fix cycle (re-review) → APPROVED in session 113
 **Tickets filed:** decree-need-047 (Dark Cave Blindness penalty vs RAW), refactoring-130 (environment preset '{}' vs null DB)
 
 **Session 111 (2026-03-04, plan-20260304-144401):**
@@ -921,6 +931,16 @@ updated_by: slave-collector (plan-20260304-172253)
 
 ## Review Status
 
+### Session 113 Reviews (plan-20260304-203323)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-331 | ptu-rule-134 first review (decree-047 compliance, 2 commits, 1 file) | APPROVED (0 issues, all 5 Other conditions verified clearsOnFaint: false, FAINT_CLEARED_CONDITIONS derived correctly, decree-047 all 3 binding points met) | senior-reviewer | 2026-03-04 |
+| rules-review-303 | ptu-rule-134 first review (faint condition clearing, 4 mechanics verified) | APPROVED (0 issues, RAW p.248 compliant, decree-047 all binding points verified) | game-logic-reviewer | 2026-03-04 |
+| code-review-332 | refactoring-125 fix cycle re-review (app-surface.md update, 2 commits) | APPROVED (0 issues, M1 from code-review-329 resolved, CombatantGmActions documented) | senior-reviewer | 2026-03-04 |
+| rules-review-304 | refactoring-125 fix cycle re-review (GM action panel mechanics preservation) | APPROVED (0 issues, documentation-only fix, prior rules-review-301 approval stands) | game-logic-reviewer | 2026-03-04 |
+| code-review-333 | bug-050 first review (moveKeywords passthrough, 1 commit, 1 file) | APPROVED (0 issues, single-line fix correct, DamageCalcInput optional field safe, PTU p.287 weapon STAB exclusion enforced) | senior-reviewer | 2026-03-04 |
+| rules-review-305 | bug-050 first review (weapon move STAB exclusion verified) | APPROVED (0 issues, PTU p.287 compliant, data flow chain verified end-to-end) | game-logic-reviewer | 2026-03-04 |
+
 ### Session 111 Reviews (plan-20260304-144401)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
@@ -1450,7 +1470,7 @@ updated_by: slave-collector (plan-20260304-172253)
 | refactoring-106 | P2 | **needs-fix-cycle** | Decouple condition behaviors from category arrays per decree-038. Per-condition behavior flags (clearsOnRecall, clearsOnEncounterEnd, clearsOnFaint). Resolved by slave-6 (plan-20260301-110550): 6 refactoring commits + 1 Sleep fix commit. Reviewed (plan-20260304-144401): code-review-327 **CHANGES_REQUIRED** (1H: faint clearing expanded to Other conditions beyond RAW, 1M: encounter-end clearing expanded) + rules-review-299 **APPROVED**. Needs fix cycle |
 | refactoring-107 | P4 | **open** | Duplicated `.btn` / `.counter` / `.tag` / `.selected-tags` SCSS across LevelUpEdgeSection, LevelUpFeatureSection, LevelUpClassSection, LevelUpModal (~40-50 lines each). Extract to shared SCSS partial. Source: code-review-239 M1. Filed by slave-collector (plan-20260301-110550) |
 | refactoring-112 | P3 | **open** | Decompose encounter store into focused sub-modules (970 lines, 5+ responsibility clusters). Source: code-review-249 M1. Filed by slave-collector (plan-20260301-143720) |
-| refactoring-125 | P3 | **needs-fix-cycle** | CombatantCard.vue exceeds 800-line limit (930 lines). Extracted CombatantGmActions.vue (396 lines). CombatantCard reduced to 566 lines. Implemented by slave-4 (plan-20260304-132346): 5 commits. Reviewed (plan-20260304-144401): code-review-329 **CHANGES_REQUIRED** (1M: app-surface.md not updated) + rules-review-301 **APPROVED**. Needs fix cycle |
+| refactoring-125 | P3 | **APPROVED** | CombatantCard.vue exceeds 800-line limit (930 lines). Extracted CombatantGmActions.vue (396 lines). CombatantCard reduced to 566 lines. Implemented by slave-4 (plan-20260304-132346): 5 commits. Fix cycle by slave-2 (plan-20260304-172253): 2 commits (app-surface.md update). Re-reviewed by slave-3 (plan-20260304-203323): code-review-332 **APPROVED** + rules-review-304 **APPROVED**. Feature complete |
 
 ## Code Health
 
@@ -1464,6 +1484,19 @@ updated_by: slave-collector (plan-20260304-172253)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-03-04, session 113 — plan-20260304-203323)
+
+**Slave collection plan-20260304-203323:** 3 slaves merged (12 commits total). 1 dev slave + 2 reviewer slaves, all completed successfully.
+- **slave-1** (developer): ptu-rule-058-p2-fix+decree-048 — 7 commits (discriminated union type, Dim Cave + Dark Cave split per decree-048, computed penalty, preset divergence handling, field rename, sign convention fix, ticket update)
+- **slave-2** (reviewers): ptu-rule-134 review — code-review-331 **APPROVED** (0 issues) + rules-review-303 **APPROVED** (0 issues)
+- **slave-3** (reviewers): refactoring-125+bug-050 review — code-review-332 **APPROVED** + rules-review-304 **APPROVED** (refactoring-125 fix cycle verified). code-review-333 **APPROVED** + rules-review-305 **APPROVED** (bug-050 moveKeywords fix verified)
+
+**Smoke test:** PASSED (all 3 views render correctly)
+**Tickets APPROVED:** 3 (ptu-rule-134, refactoring-125, bug-050 — all reviews passed, feature complete)
+**Tickets needing re-review:** ptu-rule-058 P2 (fix cycle done, 7 commits from slave-1)
+**Tickets filed:** 0
+**CLAUDE.md updates:** 1 (app/types/CLAUDE.md — encounter.ts 295→325 lines, EnvironmentEffect now discriminated union)
 
 ## Session Summary (2026-03-04, session 111 — plan-20260304-144401)
 
