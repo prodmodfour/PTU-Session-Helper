@@ -90,7 +90,7 @@ export const MODIFIER_WEATHER: PtuWeather[] = ['rain', 'sunny']
 | Dry Skin | Sun | Lose 1 tick at turn end | P1 |
 | Desert Weather | Rain | Heal 1/16th max HP at turn end | P1 |
 | Desert Weather | Sandstorm | Immune to Sandstorm damage | P0 (immunity only) |
-| Desert Weather | Sun | Resist Fire one step further | P1 |
+| Desert Weather | Sun | Resist Fire one step further | P2 (deferred from P1 — requires type effectiveness pipeline changes; see code-review-310 MEDIUM-001) |
 | Sand Veil | Sandstorm | +2 Evasion; user + adjacent allies immune | P2 |
 | Sand Rush | Sandstorm | +4 Speed CS; immune to Sandstorm damage | P1 (speed); P0 (immunity) |
 | Sand Force | Sandstorm | +5 damage to Ground/Rock/Steel moves; immune | P2 (damage); P0 (immunity) |
