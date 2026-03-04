@@ -48,6 +48,15 @@ export function useWebSocket() {
     captureRate: number
     timestamp: number
   } | null>(null)
+  /** Last status tick damage event received via WebSocket */
+  const lastStatusTick = ref<{
+    combatantName: string
+    condition: string
+    damage: number
+    newHp: number
+    fainted: boolean
+    timestamp: number
+  } | null>(null)
   const messageListeners = new Set<(message: WebSocketEvent) => void>()
 
   // Stored identity for auto re-identification on reconnect
@@ -261,6 +270,17 @@ export function useWebSocket() {
         }
         break
 
+      case 'status_tick':
+        // Tick damage notification (Burn, Poison, Badly Poisoned, Cursed, weather)
+        if (message.data && typeof message.data === 'object') {
+          const d = message.data as {
+            combatantName: string; condition: string; damage: number
+            newHp: number; fainted: boolean
+          }
+          lastStatusTick.value = { ...d, timestamp: Date.now() }
+        }
+        break
+
       case 'flanking_update':
         // P2: GM broadcast flanking state — store for group/player views
         if (message.data && typeof message.data === 'object' && 'flankingMap' in message.data) {
@@ -361,6 +381,8 @@ export function useWebSocket() {
     receivedFlankingMap: readonly(receivedFlankingMap),
     /** P2: Last capture attempt event for Group/Player View display */
     lastCaptureAttempt: readonly(lastCaptureAttempt),
+    /** Last status tick damage event for toast/notification display */
+    lastStatusTick: readonly(lastStatusTick),
     connect,
     disconnect,
     resetAndReconnect,
