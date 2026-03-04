@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-04T21:33:02.446Z
+generated_at: 2026-03-04T21:34:26.782Z
 ---
 
 # Artifact Ecosystem Index
@@ -9,14 +9,15 @@ generated_at: 2026-03-04T21:33:02.446Z
 | Category | Count |
 |----------|-------|
 | Active reviews (CHANGES_REQUIRED/FAIL) | 1 |
-| Open tickets | 48 |
-| In-progress tickets | 8 |
+| Open tickets | 49 |
+| In-progress tickets | 3 |
 | Open decree-needs | 0 |
 
 ## Open Tickets by Priority
 
 | Priority | Count |
 |----------|-------|
+| P1 | 1 |
 | P2 | 2 |
 | P3 | 10 |
 | P4 | 36 |
@@ -32,7 +33,7 @@ generated_at: 2026-03-04T21:33:02.446Z
 | Directory | Files |
 |-----------|-------|
 | reviews/ | 2 |
-| tickets/ (all) | 307 |
+| tickets/ (all) | 308 |
 | designs/ | 27 |
 | matrix/ | 9 domains |
 | refactoring/ | 87 |

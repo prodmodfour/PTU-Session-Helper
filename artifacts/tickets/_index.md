@@ -1,17 +1,18 @@
 ---
-generated_at: 2026-03-04T21:33:02.459Z
-total_tickets: 307
-open: 48
-in_progress: 8
-resolved: 251
+generated_at: 2026-03-04T21:34:26.793Z
+total_tickets: 308
+open: 49
+in_progress: 3
+resolved: 256
 ---
 
 # Tickets Index
 
-## Open Tickets (48)
+## Open Tickets (49)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| bug-051 | bug | P1 | tooling | Tickets index generator uses frontmatter status instead of d |
 | feature-025 | feature | P2 | encounter-tables | Per decree-048, implement per-combatant vision capability tr |
 | refactoring-097 | refactoring | P2 | combat | refactoring-097: Replace blocking alert() with non-blocking  |
 | refactoring-002 | refactoring | P3 | vtt-grid | Legacy terrain types `'difficult'` and `'rough'` are still v |
@@ -61,17 +62,12 @@ resolved: 251
 | refactoring-126 | refactoring | P4 | pokemon-lifecycle | The outer catch block in `[id].put.ts` (line ~90) and `index |
 | refactoring-130 | refactoring | P4 | encounter-tables | When clearing an environment preset, the endpoint stores `'{ |
 
-## In-Progress Tickets (8)
+## In-Progress Tickets (3)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
 | refactoring-106 | refactoring | P2 | combat | decree-038 |
 | ptu-rule-058 | ptu-rule | P3 | encounter-tables | — |
-| refactoring-089 | refactoring | P4 | healing | code-review-196 M1 |
-| refactoring-090 | refactoring | P4 | healing | rules-review-173 MED-1 |
-| refactoring-092 | refactoring | P4 | encounter-tables | code-review-207 M1 |
-| refactoring-093 | refactoring | P4 | combat | code-review-207 M2 |
-| refactoring-094 | refactoring | P4 | combat | code-review-209 (MED-1) |
 | refactoring-096 | refactoring | P4 | character-lifecycle | code-review-215 MED-03 |
 
 ## Open Decree-Needs (0)
@@ -82,10 +78,10 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 0 | 49 | 50 |
+| bug | 2 | 0 | 49 | 51 |
 | ptu-rule | 6 | 1 | 99 | 106 |
 | feature | 1 | 0 | 24 | 25 |
 | ux | 6 | 0 | 10 | 16 |
 | decree | 0 | 0 | 47 | 47 |
-| refactoring | 34 | 7 | 6 | 47 |
+| refactoring | 34 | 2 | 11 | 47 |
 | docs | 0 | 0 | 16 | 16 |
