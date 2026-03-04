@@ -99,8 +99,8 @@ updated_by: slave-collector (plan-20260304-012646)
 | feature-001 | P3 | **resolved** | B2W2 trainer sprites — single-phase design complete, P0 APPROVED (code-review-149 + rules-review-139). Closed by slave-3 (plan-20260224-162105) | single-phase |
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
 | feature-003 | P1 | **Track-A-P2-APPROVED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 APPROVED: code-review-188 APPROVED (`:deep()` fix complete). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1+P2 complete | multi-phase-parallel |
-| feature-004 | P3 | **P2-fix-cycle-done** | Pokemon Mounting / Rider System — P0 APPROVED. P1 APPROVED. P2 implemented by slave-2 (plan-20260304-000900): 14 commits. Reviewed by slave-3 (plan-20260304-012646): code-review-314 **CHANGES_REQUIRED** + rules-review-287 **CHANGES_REQUIRED**. Fix cycle by slave-2 (plan-20260304-085746): 7 commits — applyResistStep full effectiveness ladder (rules H1), ConquerorsMarsh→ConquerorsMarch typo (C/R MED), Agility Training persistent mountState (H1), Ride as One evasion wired into accuracy calc (C1), dead utility functions wired (H2), app-surface.md updated (M2), feature-004 ticket+log updated. Needs re-review | multi-phase |
-| feature-005 | P3 | **P1-CHANGES_REQUIRED** | Living Weapon System (Honedge Line) — P0 APPROVED (code-review-301 + rules-review-274). P1 implemented by slave-4 (plan-20260304-012646): 13 commits. Reviewed by slave-4 (plan-20260304-085746): code-review-316 **CHANGES_REQUIRED** (1H: weapon moves not injected into client-side move list, 2M: useMoveCalculation.ts 806 lines → refactoring-128, app-surface.md) + rules-review-289 **CHANGES_REQUIRED** (1H: weapon move DB missing Small Melee +1 modifier, 2M: STAB exclusion for weapon moves, evasion cache staleness on reload). Needs fix cycle | multi-phase |
+| feature-004 | P3 | **P2-APPROVED** | Pokemon Mounting / Rider System — P0 APPROVED. P1 APPROVED. P2 fix cycle re-reviewed by slave-4 (plan-20260304-095500): code-review-318 **APPROVED** (all 6 code-review-314 + 2 rules-review-287 issues verified resolved, 0 new) + rules-review-291 **APPROVED** (all 10 mechanics verified, decree-003/004/040 compliant). **Feature complete** (all P0+P1+P2 tiers approved) | multi-phase |
+| feature-005 | P3 | **P1-fix-cycle-done** | Living Weapon System (Honedge Line) — P0 APPROVED (code-review-301 + rules-review-274). P1 fix cycle by slave-2 (plan-20260304-095500): 7 commits — Small Melee +1 DB modifier applied (rules H1), STAB skipped for Weapon keyword (rules M1), getEffectiveEquipBonuses extracted to shared utility (code M1), weapon moves injected into GM move selection UI (code H1), wielder evasion restored on encounter reload (rules M2), app-surface.md updated (code M2), ticket+log updated. Needs re-review | multi-phase |
 | feature-006 | P1 | **P2-APPROVED** | Pokemon Evolution System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-290 **APPROVED** + rules-review-266 **APPROVED** (plan-20260302-224650). All code-review-248 + rules-review-224 issues verified resolved. Feature complete | multi-phase |
 | feature-007 | P1 | **P1-APPROVED** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle APPROVED: code-review-243 **APPROVED** (M1: loose MoveDetail types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (all 9 mechanics verified, 0 issues). All code-review-238 + rules-review-214 issues resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
 | feature-008 | P1 | **P1-APPROVED** | Trainer Level-Up Milestone Workflow — P0 APPROVED. P1 fix cycle re-review: code-review-291 **APPROVED** + rules-review-267 **APPROVED** (plan-20260302-224650). All code-review-239 + rules-review-206 issues verified resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
@@ -113,7 +113,7 @@ updated_by: slave-collector (plan-20260304-012646)
 | feature-016 | P2 | **P2-APPROVED** | Priority / Interrupt / Attack of Opportunity System — P0 APPROVED. P1 APPROVED. P2 APPROVED: code-review-279 **APPROVED** (2 MED: distanceMoved uses budget not actual → refactoring-123, hardcoded speed=20 in InterceptPrompt → refactoring-124) + rules-review-255 **APPROVED** (0 issues, all code-review-273 + rules-review-249 issues verified resolved). **Feature complete** (all tiers approved) | multi-phase |
 
 | feature-017 | P2 | **P2-APPROVED** | Poke Ball Type System — P0 APPROVED. P1 APPROVED. P2 fix cycle done by slave-5 (plan-20260303-074602): 9 commits. Re-reviewed by slave-5 (plan-20260303-131425): code-review-299 **APPROVED** + rules-review-272 **APPROVED**. All code-review-295 issues verified resolved. **Feature complete** | multi-phase |
-| feature-018 | P2 | **P2-implemented** | Weather Effect Automation — P0 APPROVED. P1 APPROVED. P2 implemented by slave-1 (plan-20260304-085746): 12 commits — Weather Ball type/DB override, Forecast type change, WeatherEffectIndicator component, Sand Force damage bonus, Hydration/Leaf Guard status cure, Snow Cloak/Sand Veil evasion, Thermosensitive movement halving, EncounterHeader weather tooltip. Needs P2 review | multi-phase |
+| feature-018 | P2 | **P2-CHANGES_REQUIRED** | Weather Effect Automation — P0 APPROVED. P1 APPROVED. P2 reviewed by slave-3 (plan-20260304-095500): code-review-317 **CHANGES_REQUIRED** (1H: server-side Thermosensitive movement halving missing for mount speed, 3M: Sand Force clamp ordering divergence, app-surface.md, WeatherEffectIndicator imports server service) + rules-review-290 **APPROVED** (2M: Leaf Guard scope narrowed, server mount movement weather gap). Needs fix cycle | multi-phase |
 | feature-019 | P2 | **APPROVED** | VTT Status-Movement Integration — Tripped combatants blocked from VTT movement (R025). Stuck (R022) and Slowed (R024) pre-existing. Reviewed by slave-7 (plan-20260301-223500): code-review-265 **APPROVED** (0 issues, PTU faithful, consistent pattern, thorough documentation) + rules-review-241 **APPROVED** (all 3 mechanics verified correct, 46 tests passing, 0 issues). Feature complete | partial |
 | feature-020 | P2 | **P2-APPROVED** | Healing Item System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-293 **APPROVED** (plan-20260302-224650). All code-review-287 issues verified resolved. Rules-review-263 already APPROVED. **Feature complete** | multi-phase |
 | feature-021 | P2 | **APPROVED** | Derived Capability Calculations — implemented by slave-4 (plan-20260303-065350). Fix cycle by slave-2 (plan-20260303-131425). Re-reviewed by slave-2 (plan-20260303-165227): code-review-303 **APPROVED** + rules-review-276 **APPROVED**. All code-review-298 issues verified resolved. **Feature complete** | partial |
@@ -142,20 +142,18 @@ updated_by: slave-collector (plan-20260304-012646)
 
 ## Active Developer Work
 
-**Current task:** Session 104 collection complete. 4 slaves merged (23 commits), 0 skipped. 2 dev slaves + 2 reviewer slaves.
+**Current task:** Session 105 collection complete. 4 slaves merged (21 commits), 0 skipped. 2 dev slaves + 2 reviewer slaves.
 
-**Session 104 (2026-03-04, plan-20260304-085746):**
-- **slave-1** (developer): feature-018-p2 — 12 commits: Weather Effect Automation P2. Weather Ball type/DB override, Forecast type change on weather set/expire, WeatherEffectIndicator component with CombatantCard integration, Sand Force +5 damage bonus, Hydration/Leaf Guard status cure at turn end, Snow Cloak/Sand Veil evasion bonuses, Thermosensitive movement halving in Hail, EncounterHeader comprehensive weather tooltip. → **P2-implemented, needs review**
-- **slave-2** (developer): feature-004-p2-fix — 7 commits: Fix cycle addressing code-review-314 + rules-review-287. applyResistStep full PTU effectiveness ladder (rules H1), ConquerorsMarsh→ConquerorsMarch typo + constant extraction (C/R MED), Agility Training flag moved to persistent mountState (H1), Ride as One speed evasion wired into accuracy calc (C1), 5 dead utility functions wired into integration points (H2), app-surface.md updated (M2), ticket+log updated. → **fix-cycle-done, needs re-review**
-- **slave-3** (reviewers): ptu-rule-131-rereview — code-review-315 **APPROVED** (all 4 code-review-312 issues resolved, 0 new) + rules-review-288 **APPROVED** (all 8 mechanics verified, decree-042/040 compliant). → ptu-rule-131 **APPROVED, feature complete**
-- **slave-4** (reviewers): feature-005-p1-review — code-review-316 **CHANGES_REQUIRED** (1H: weapon moves not injected into client-side move list, 2M: useMoveCalculation.ts 806 lines → refactoring-128, app-surface.md not updated) + rules-review-289 **CHANGES_REQUIRED** (1H: weapon move DB missing Small Melee Weapon +1 modifier per PTU p.287, 2M: STAB exclusion for [Weapon] keyword moves, evasion cache staleness on encounter reload). → feature-005 **P1-CHANGES_REQUIRED, needs fix cycle**
+**Session 105 (2026-03-04, plan-20260304-095500):**
+- **slave-1** (developer): refactoring-127 — 11 commits: Rename project from "PTU Session Helper" to "Rotom Table". Updated package.json, nuxt.config.ts, page titles, layout headers, SCSS comments, README, remote access docs. → **completed**
+- **slave-2** (developer): feature-005-p1-fix — 7 commits: Fix cycle addressing code-review-316 + rules-review-289. Small Melee +1 DB modifier applied to Living Weapon moves (rules H1), STAB skipped for Weapon keyword moves (rules M1), getEffectiveEquipBonuses extracted to shared utility (code M1), weapon moves injected into GM move selection UI (code H1), wielder evasion restored on encounter reload (rules M2), app-surface.md updated (code M2), ticket+log updated. → **fix-cycle-done, needs re-review**
+- **slave-3** (reviewers): feature-018-p2-review — code-review-317 **CHANGES_REQUIRED** (1H: server-side Thermosensitive movement halving missing for mount speed, 3M: Sand Force clamp ordering divergence, app-surface.md, WeatherEffectIndicator imports server service) + rules-review-290 **APPROVED** (2M non-blocking: Leaf Guard scope narrowed, server mount movement weather gap). → feature-018 **P2-CHANGES_REQUIRED, needs fix cycle**
+- **slave-4** (reviewers): feature-004-p2-rereview — code-review-318 **APPROVED** (all code-review-314 1C+2H+3M + rules-review-287 1H+1M issues verified resolved, 0 new) + rules-review-291 **APPROVED** (10 mechanics verified, decree-003/004/040 compliant). → feature-004 **P2-APPROVED, feature complete**
 
-**Smoke test:** PASSED (all 3 views render)
-**Tickets APPROVED:** ptu-rule-131 (both re-reviews passed — feature complete)
-**Tickets needing fix cycle:** feature-005 P1 (code-review-316 1H+2M + rules-review-289 1H+2M), feature-004 P2 (fix done, needs re-review)
-**Tickets needing first review:** feature-018 P2 (new implementation)
-**Tickets filed:** refactoring-128 (useMoveCalculation.ts 806 lines, code-review-316 MED-001)
-**Migration:** `npx prisma db push` for feature-022 loyalty field — completed (already in sync)
+**Smoke test:** PASSED (all 3 views render — "Rotom Table" branding confirmed)
+**Tickets APPROVED:** feature-004 P2 (both re-reviews passed — feature complete)
+**Tickets needing fix cycle:** feature-018 P2 (code-review-317 1H+3M), feature-005 P1 (fix done, needs re-review)
+**Tickets completed:** refactoring-127 (project rename to Rotom Table)
 
 **Session 101 (2026-03-03, plan-20260303-202535):**
 - **slave-1** (developer): ptu-rule-129+bug-049 fix — 5 commits: Fix cycle addressing code-review-308. Fixed tempConditions read from combatant not entity (H1), removed dead Bound checks per decree-044 (M2), updated app-surface.md (M1). Also resolved bug-049, bug-048, refactoring-105. → **fix-done, needs re-review**
@@ -891,6 +889,14 @@ updated_by: slave-collector (plan-20260304-012646)
 
 ## Review Status
 
+### Session 105 Reviews (plan-20260304-095500)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-317 | feature-018 P2 first review (Weather Effect Automation P2: 12 commits) | CHANGES_REQUIRED (1H: server-side Thermosensitive movement halving not applied to mounted combatants, 3M: Sand Force min-1 clamp ordering divergence between client/server + app-surface.md not updated + WeatherEffectIndicator imports server-only service) | senior-reviewer | 2026-03-04 |
+| rules-review-290 | feature-018 P2 first review (Weather Effect Automation P2: 13 mechanics verified) | APPROVED (2M non-blocking: Leaf Guard scope narrowed to persistent statuses, server-side mount movement missing weather parameter for Thermosensitive. All P2 mechanics produce correct game values. Decree-005/045 compliant) | game-logic-reviewer | 2026-03-04 |
+| code-review-318 | feature-004 P2 re-review (Rider Class Features fix cycle: 7 commits) | APPROVED (all code-review-314 1C+2H+3M + rules-review-287 1H+1M issues verified resolved, 0 new. Ride as One evasion in accuracy calc, Agility Training persistent mountState, dead functions wired, typo eliminated) | senior-reviewer | 2026-03-04 |
+| rules-review-291 | feature-004 P2 re-review (Rider Class Features fix cycle: 10 mechanics verified) | APPROVED (all issues resolved. applyResistStep full PTU effectiveness ladder correct, decree-003/004/040 compliant) | game-logic-reviewer | 2026-03-04 |
+
 ### Session 104 Reviews (plan-20260304-085746)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
@@ -1380,6 +1386,20 @@ updated_by: slave-collector (plan-20260304-012646)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-03-04, session 105 — plan-20260304-095500)
+
+**Slave collection plan-20260304-095500:** 4 slaves merged (21 commits total). 2 dev slaves + 2 reviewer slaves, all completed successfully.
+- **slave-1** (developer): refactoring-127 — 11 commits (project rename from "PTU Session Helper" to "Rotom Table": package.json, nuxt.config.ts, page titles, layout headers, SCSS, README, docs)
+- **slave-2** (developer): feature-005-p1-fix — 7 commits (Small Melee +1 DB modifier, STAB weapon exclusion, getEffectiveEquipBonuses extraction, GM move UI injection, encounter reload evasion restore, app-surface.md)
+- **slave-3** (reviewers): feature-018-p2 review — code-review-317 **CHANGES_REQUIRED** (1H+3M) + rules-review-290 **APPROVED** (2M non-blocking)
+- **slave-4** (reviewers): feature-004-p2 re-review — code-review-318 **APPROVED** + rules-review-291 **APPROVED** → **feature-004 P2 feature complete**
+
+**Smoke test:** PASSED (all 3 views render with "Rotom Table" branding)
+**Tickets APPROVED:** 1 (feature-004 P2 — both re-reviews passed, feature complete)
+**Tickets needing fix cycle:** 1 (feature-018 P2 — code-review-317 1H+3M)
+**Tickets needing re-review:** feature-005 P1 (fix cycle done)
+**Tickets completed:** refactoring-127 (project rename)
 
 ## Session Summary (2026-03-04, session 104 — plan-20260304-085746)
 
