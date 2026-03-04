@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-04T21:10:01.105Z
+generated_at: 2026-03-04T21:12:00.695Z
 total_tickets: 307
 open: 27
 in_progress: 122
@@ -51,7 +51,6 @@ resolved: 140
 | bug-038 | bug | P0 | healing | healing-audit-report (R033, 2026-02-28) |
 | ptu-rule-096 | ptu-rule | P0 | vtt | decree-002 |
 | ptu-rule-097 | ptu-rule | P0 | vtt | decree-003 |
-| ptu-rule-134 | ptu-rule | P1 | combat | decree-047 |
 | bug-002 | bug | P1 | — | code-review-035 |
 | ptu-rule-038 | ptu-rule | P1 | healing | — |
 | ptu-rule-098 | ptu-rule | P1 | combat | decree-005 |
@@ -61,6 +60,7 @@ resolved: 140
 | ptu-rule-102 | ptu-rule | P1 | vtt | decree-009 |
 | ptu-rule-103 | ptu-rule | P1 | vtt | decree-011 |
 | ptu-rule-104 | ptu-rule | P1 | combat | decree-012 |
+| ptu-rule-134 | ptu-rule | P1 | combat | decree-047 |
 | feature-006 | feature | P1 | pokemon-lifecycle | matrix-gap (GAP-PLC-1) |
 | feature-007 | feature | P1 | pokemon-lifecycle | matrix-gap (GAP-PLC-2) |
 | feature-008 | feature | P1 | character-lifecycle | matrix-gap (SG-1) |
@@ -71,7 +71,6 @@ resolved: 140
 | feature-014 | feature | P1 | vtt-grid+combat | matrix-gap (combat Gap 4 + VTT SG-2) |
 | refactoring-001 | refactoring | P1 | vtt | decree-010 |
 | refactoring-106 | refactoring | P2 | combat | decree-038 |
-| refactoring-125 | refactoring | P2 | encounter | code-review-295 C1 |
 | bug-030 | bug | P2 | player-view | code-review-159 M3 |
 | bug-039 | bug | P2 | capture | capture-audit-report (R018, 2026-02-28) |
 | bug-042 | bug | P2 | — | code-review-264 HIGH-001 |
@@ -102,12 +101,13 @@ resolved: 140
 | feature-021 | feature | P2 | character-lifecycle | matrix-gap (Character SG-3) |
 | feature-022 | feature | P2 | pokemon-lifecycle | matrix-gap (GAP-PLC-3) |
 | feature-023 | feature | P2 | player-view+capture+healing | matrix-gap (GAP-CAP-1 + GAP-HEAL-1) |
-| bug-050 | bug | P3 | combat | code-review-319 MEDIUM-001 |
+| refactoring-125 | refactoring | P2 | encounter | code-review-295 C1 |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
 | ptu-rule-058 | ptu-rule | P3 | encounter-tables | — |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
 | bug-044 | bug | P3 | capture | rules-review-246 PRE-EXISTING-002 |
+| bug-050 | bug | P3 | combat | code-review-319 MEDIUM-001 |
 | ptu-rule-055 | ptu-rule | P3 | pokemon-lifecycle | — |
 | ptu-rule-056 | ptu-rule | P3 | character-lifecycle | — |
 | ptu-rule-060 | ptu-rule | P3 | scenes | — |
