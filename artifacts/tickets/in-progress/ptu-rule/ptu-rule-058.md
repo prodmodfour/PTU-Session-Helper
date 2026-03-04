@@ -66,3 +66,17 @@ Added EnvironmentPreset and EnvironmentEffect type definitions. Three built-in p
 
 **Commits:** `58f502d7`, `bb640c74`, `582efc38`, `9564494d`, `c98218e8`, `23f1fb52`, `ca41f198`
 **Files (11):** `encounter.ts` (type), `environmentPresets.ts` (new), `schema.prisma`, `encounter.service.ts`, `environment-preset.put.ts` (new), `[id].put.ts`, `encounter.ts` (store), `EnvironmentSelector.vue` (new), `_environment-selector.scss` (new), `damageCalculation.ts`, `useMoveCalculation.ts`, `MoveTargetModal.vue`, `_move-target-modal.scss`, `gm/index.vue`
+
+### P2 Fix Cycle (code-review-330 + decree-048) -- 2026-03-04
+
+Resolved 2 HIGH + 3 MEDIUM issues from code-review-330. Implemented decree-048 (RAW blindness penalties with split cave presets).
+
+- **MED-3:** Converted `EnvironmentEffect` from flat optional-field interface to discriminated union type (`AccuracyPenaltyEffect | TerrainOverrideEffect | StatusTriggerEffect | MovementModifierEffect | CustomEffect`). Compile-time exhaustiveness checking on `effect.type`.
+- **MED-1:** Renamed `accuracyPenaltyPerMeter` to `accuracyPenalty` across types, constants, and composable (flat penalty, not per-meter).
+- **MED-2:** Stored accuracy penalty as positive number. Removed `Math.abs` wrapper in composable.
+- **decree-048:** Split single `DARK_CAVE_PRESET` into `DIM_CAVE_PRESET` (Blindness: -6, PTU 07-combat.md:1699-1700) and `DARK_CAVE_PRESET` (Total Blindness: -10, PTU 07-combat.md:1716-1717).
+- **HIGH-1:** Converted `getEnvironmentAccuracyPenalty()` function to `environmentAccuracyPenalty` computed property. Updated MoveTargetModal template to use computed value (eliminates double evaluation per render).
+- **HIGH-2:** When `dismissEffect` modifies a built-in preset, creates custom variant ID and sets dropdown to 'custom'. Shows '(modified)' label on badge. Prevents re-selecting original built-in from silently overriding customized version.
+
+**Commits:** `dc566686`, `2b66a066`, `061e18fa`, `8f2c1abe`, `0122da9a`, `3ed80679`
+**Files (4):** `encounter.ts` (type), `environmentPresets.ts`, `useMoveCalculation.ts`, `EnvironmentSelector.vue`, `MoveTargetModal.vue`
