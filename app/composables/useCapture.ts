@@ -1,6 +1,7 @@
 import type { StatusCondition } from '~/types'
 import { calculateCaptureRate, getCaptureDescription } from '~/utils/captureRate'
-import { calculateAccuracyThreshold } from '~/utils/damageCalculation'
+// Note: calculateAccuracyThreshold is NOT used here. The threshold is computed
+// inline (single expression) to match useMoveCalculation.ts — see rollAccuracyCheck.
 import { POKE_BALL_CATALOG, DEFAULT_BALL_TYPE, calculateBallModifier } from '~/constants/pokeBalls'
 import type { PokeBallDef, BallConditionContext } from '~/constants/pokeBalls'
 
@@ -264,8 +265,10 @@ export function useCapture() {
    * Per decree-042: Full accuracy system applies — accuracy stages, Speed Evasion,
    * flanking penalty, rough terrain penalty.
    *
-   * Uses calculateAccuracyThreshold(6, accuracyStage, speedEvasion) from
-   * damageCalculation.ts — the same utility used by useMoveCalculation.ts.
+   * Threshold is computed inline as a single expression — matching the formula
+   * in useMoveCalculation.ts:416 — to avoid double Math.max(1,...) clamping that
+   * would occur if calculateAccuracyThreshold (which clamps internally) were
+   * called and then flanking/rough terrain adjustments were clamped again.
    *
    * Natural 1 always misses. Natural 20 always hits.
    */
@@ -281,11 +284,12 @@ export function useCapture() {
     const flankingPenalty = params?.flankingPenalty ?? 0
     const roughTerrainPenalty = params?.roughTerrainPenalty ?? 0
 
-    // Calculate threshold using central utility (same as move accuracy system).
-    // Poke Ball AC = 6. Flanking reduces effective evasion (decree-040: applied
-    // after evasion cap). Rough terrain adds to threshold (PTU p.231).
-    const baseThreshold = calculateAccuracyThreshold(6, accuracyStage, speedEvasion)
-    const threshold = Math.max(1, baseThreshold - flankingPenalty + roughTerrainPenalty)
+    // Single-expression threshold matching useMoveCalculation.ts:416.
+    // Poke Ball AC = 6. Evasion capped at 9 (PTU p.234).
+    // Flanking reduces effective evasion (decree-040: applied after evasion cap).
+    // Rough terrain adds to threshold (PTU p.231).
+    const effectiveEvasion = Math.min(9, speedEvasion)
+    const threshold = Math.max(1, 6 + effectiveEvasion - accuracyStage - flankingPenalty + roughTerrainPenalty)
 
     const roll = Math.floor(Math.random() * 20) + 1
     const isNat1 = roll === 1
