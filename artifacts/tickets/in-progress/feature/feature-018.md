@@ -80,3 +80,27 @@ FULL-scope feature requiring design spec. Affects damage calculation, turn end p
     - `07d0d701` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Use result.newHp and result.fainted in WebSocket broadcast instead of hardcoded values
   - **MEDIUM-001**: Desert Weather Sun fire resistance deferred to P2
     - `60ad567f` — `artifacts/designs/design-weather-001/shared-specs.md` (EDIT): Update tier annotation for Desert Weather Sun fire resistance from P1 to P2
+- **2026-03-04 P2 Implementation** (branch: `slave/1-dev-feature-018-p2-20260304-085746`):
+  - **Section G: Weather Ball**
+    - `2c19d0c8` — `app/utils/weatherRules.ts` (EDIT): Add getWeatherBallEffect() for dynamic type/DB mapping
+    - `dbfd9303` — `app/server/api/encounters/[id]/calculate-damage.post.ts` (EDIT): Override moveType/DB for Weather Ball based on weather
+    - `aafe5512` — `app/composables/useMoveCalculation.ts` (EDIT): Client-side Weather Ball effective type/DB for STAB and damage calcs
+  - **Section H: Forecast (Castform)**
+    - `f61a7171` — `app/types/encounter.ts` (EDIT): Add forecastOriginalTypes to Combatant interface
+    - `2c19d0c8` — `app/utils/weatherRules.ts` (EDIT): Add getForecastType() for weather-to-type mapping
+    - `546fcfb3` — `app/server/api/encounters/[id]/weather.post.ts` (EDIT): Apply Forecast type changes when weather set/cleared
+    - `67caef24` — `app/server/utils/turn-helpers.ts` (EDIT): Add reverseForecastTypeChanges() for weather expiry
+    - `67caef24` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Reverse Forecast on weather expiry
+  - **Section I: UI Indicators**
+    - `778bc79d` — `app/components/encounter/WeatherEffectIndicator.vue` (NEW): Per-combatant weather effect display
+    - `778bc79d` — `app/components/encounter/CombatantCard.vue` (EDIT): Integrate WeatherEffectIndicator
+    - `00b78ab5` — `app/components/gm/EncounterHeader.vue` (EDIT): Enhanced weather tooltip with effect summary
+  - **Section J: Additional Abilities**
+    - `37ba58f9` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Hydration (Rain) and Leaf Guard (Sun) status cure at turn end
+    - `dbfd9303` — `app/server/api/encounters/[id]/calculate-damage.post.ts` (EDIT): Sand Force +5 damage for Ground/Rock/Steel in Sandstorm
+    - `5560c70d` — `app/utils/damageCalculation.ts` (EDIT): Add abilityDamageBonus field to DamageCalcInput and formula (Step 7.5)
+    - `546fcfb3` — `app/server/api/encounters/[id]/weather.post.ts` (EDIT): Snow Cloak +2 evasion in Hail, Sand Veil +2 evasion in Sandstorm (decree-005 tracked)
+    - `2c19d0c8` — `app/utils/weatherRules.ts` (EDIT): Thermosensitive +2 Atk/SpAtk CS in Sun, WEATHER_EVASION_ABILITIES, WEATHER_STATUS_CURE_ABILITIES
+    - `0c07439f` — `app/utils/movementModifiers.ts` (EDIT): Thermosensitive halved movement in Hail
+    - `0c07439f` — `app/composables/useGridMovement.ts` (EDIT): Pass weather to applyMovementModifiers for Thermosensitive
+  - **Deferred**: Flower Gift (UI indicator only, manual CS — shown in WeatherEffectIndicator), Harvest (no berry system)

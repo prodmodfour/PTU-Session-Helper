@@ -4,7 +4,7 @@ ticket_id: feature-018
 category: FEATURE
 scope: FULL
 domain: scenes, combat
-status: p1-implemented
+status: p2-implemented
 decree: decree-030
 affected_files:
   - app/types/encounter.ts
@@ -145,6 +145,27 @@ Branch: `slave/2-dev-feature-018-p1-20260303-191515`
 | `c1aebb1f` | `app/server/services/weather-automation.service.ts` | EDIT | Add WEATHER_ABILITY_EFFECTS, WeatherAbilityEffect, getWeatherAbilityEffects() |
 | `5a6e5ab7` | `app/server/utils/turn-helpers.ts` | EDIT | Add applyWeatherAbilityEffects() helper |
 | `5a6e5ab7` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Turn-end (Dry Skin, Desert Weather) and turn-start (Ice Body, Rain Dish, Sun Blanket, Solar Power) weather ability effects, move log, WebSocket, response |
+
+### P2 (2026-03-04)
+
+Branch: `slave/1-dev-feature-018-p2-20260304-085746`
+
+| Commit | File | Action | Description |
+|--------|------|--------|-------------|
+| `2c19d0c8` | `app/utils/weatherRules.ts` | EDIT | getWeatherBallEffect(), getForecastType(), WEATHER_EVASION_ABILITIES, getSandForceDamageBonus(), WEATHER_STATUS_CURE_ABILITIES, Thermosensitive CS entries |
+| `f61a7171` | `app/types/encounter.ts` | EDIT | Add forecastOriginalTypes to Combatant interface |
+| `5560c70d` | `app/utils/damageCalculation.ts` | EDIT | Add abilityDamageBonus to DamageCalcInput, apply as Step 7.5 |
+| `546fcfb3` | `app/server/api/encounters/[id]/weather.post.ts` | EDIT | Forecast type changes, Snow Cloak/Sand Veil evasion bonuses |
+| `37ba58f9` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Hydration/Leaf Guard status cure at turn end |
+| `dbfd9303` | `app/server/api/encounters/[id]/calculate-damage.post.ts` | EDIT | Weather Ball type/DB override, Sand Force +5 damage bonus |
+| `aafe5512` | `app/composables/useMoveCalculation.ts` | EDIT | Client-side Weather Ball type/DB, Sand Force bonus |
+| `67caef24` | `app/server/utils/turn-helpers.ts` | EDIT | reverseForecastTypeChanges() for weather expiry |
+| `67caef24` | `app/server/api/encounters/[id]/next-turn.post.ts` | EDIT | Reverse Forecast on weather expiry |
+| `778bc79d` | `app/components/encounter/WeatherEffectIndicator.vue` | NEW | Per-combatant weather effect indicator |
+| `778bc79d` | `app/components/encounter/CombatantCard.vue` | EDIT | Integrate WeatherEffectIndicator |
+| `00b78ab5` | `app/components/gm/EncounterHeader.vue` | EDIT | Enhanced weather tooltip with effect summary |
+| `0c07439f` | `app/utils/movementModifiers.ts` | EDIT | Thermosensitive halved movement in Hail |
+| `0c07439f` | `app/composables/useGridMovement.ts` | EDIT | Pass weather to applyMovementModifiers |
 
 ---
 
