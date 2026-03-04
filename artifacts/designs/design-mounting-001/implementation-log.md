@@ -1,9 +1,10 @@
 # Implementation Log
 
-## Status: p1-implemented
+## Status: p2-implemented
 
 P0 (Core Mount Relationship, API, and Turn Integration) is fully implemented.
 P1 (VTT Integration, Dismount Checks, Edge Effects, UI) is fully implemented.
+P2 (Rider Trainer Class Features) is fully implemented.
 
 ## P0 Implementation
 
@@ -99,4 +100,63 @@ P1 (VTT Integration, Dismount Checks, Edge Effects, UI) is fully implemented.
 
 ## P2 Implementation
 
-(Not started)
+### Section J: Rider Class Feature — Rider (Agility Training Doubling)
+- `aae04e0f` — Add hasRiderClass, hasRiderFeature to mountingRules.ts
+- `aae04e0f` — Add RIDER_FEATURE_NAMES and AGILITY_TRAINING constants to trainerClasses.ts
+- `3467ecf4` — Add Agility Training toggle in MountControls.vue (sets 'Agile' tempCondition)
+- `48d888b9` — Add toggleAgilityTraining action in encounter store
+
+### Section K: Ramming Speed (Run Up Ability)
+- `019f7d1a` — Add calculateRunUpBonus() to mountingRules.ts
+- `aae04e0f` — Add hasRunUp() and isDashOrPassRange() to mountingRules.ts
+- `3467ecf4` — Display Run Up bonus on mount's turn in MountControls.vue
+
+### Section L: Conqueror's March
+- `aae04e0f` — Add isConquerorsMarchEligibleRange() to mountingRules.ts
+- `48d888b9` — Add activateConquerorsMarch action in encounter store
+- `3467ecf4` — Add Conqueror's March activation button in MountControls.vue
+
+### Section M: Ride as One (Shared Speed Evasion + Initiative)
+- `bacb7c4c` — Implement applyRideAsOneEvasion and restoreRideAsOneEvasion in mounting.service.ts
+- `bacb7c4c` — Integrate evasion sharing into executeMount and executeDismount
+- `bacb7c4c` — Restore evasion on clearMountOnFaint
+- `9763fd18` — Add originalSpeedEvasion and rideAsOneSwapped to MountState
+- `d7a0da4e` — Reset rideAsOneSwapped at round start in turn-helpers.ts
+- `48d888b9` — Add setRideAsOneSwapped action in encounter store
+- `3467ecf4` — Display Ride as One indicator in MountControls.vue
+
+### Section N: Lean In (Burst/Blast/Cone/Line Resistance)
+- `019f7d1a` — Add applyResistStep() and isAoERange() to mountingRules.ts
+- `9763fd18` — Add featureUsage to Combatant type
+- `48d888b9` — Add useSceneFeature action for scene-limited tracking
+- `3467ecf4` — Add Lean In usage counter and activation button in MountControls.vue
+- `cbb3b00e` — Reset featureUsage on scene transition in next-scene.post.ts
+
+### Section O: Cavalier's Reprisal (Counter-Attack)
+- `91449c1f` — Detect reprisal opportunity in damage.post.ts (when mount hit by adjacent foe)
+- `3467ecf4` — Display Cavalier's Reprisal info and AP cost in MountControls.vue
+
+### Section P: Overrun (Speed Stat to Damage)
+- `019f7d1a` — Add calculateOverrunModifiers() to mountingRules.ts
+- `3467ecf4` — Add Overrun activation button with usage tracking in MountControls.vue
+
+### Cross-Cutting: Distance Tracking
+- `9763fd18` — Add distanceMovedThisTurn to TurnState type
+- `d7a0da4e` — Reset distanceMovedThisTurn in turn state resets
+- `bad8df60` — Track distance on token movement in useEncounterActions.ts
+- `48d888b9` — Add addDistanceMoved action in encounter store
+
+### Files Changed (P2)
+| Action | File |
+|--------|------|
+| EDIT | `app/utils/mountingRules.ts` |
+| EDIT | `app/types/combat.ts` |
+| EDIT | `app/types/encounter.ts` |
+| EDIT | `app/constants/trainerClasses.ts` |
+| EDIT | `app/server/services/mounting.service.ts` |
+| EDIT | `app/server/utils/turn-helpers.ts` |
+| EDIT | `app/server/api/encounters/[id]/damage.post.ts` |
+| EDIT | `app/server/api/encounters/[id]/next-scene.post.ts` |
+| EDIT | `app/stores/encounter.ts` |
+| EDIT | `app/composables/useEncounterActions.ts` |
+| EDIT | `app/components/encounter/MountControls.vue` |

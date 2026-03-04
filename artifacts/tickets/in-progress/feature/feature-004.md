@@ -159,3 +159,36 @@ Review: code-review-296 (CHANGES_REQUIRED — 2H+3M), rules-review-269 (APPROVED
 - `app/server/api/encounters/[id]/damage.post.ts` (EDIT — totalDamageEvent includes heavilyInjuredHpLoss)
 - `app/components/encounter/GroupCombatantCard.vue` (EDIT — partner name via getMountPartner)
 - `app/components/encounter/PlayerCombatantCard.vue` (EDIT — partner name via getMountPartner)
+
+### P2 Implementation (2026-03-04)
+
+Branch: `slave/2-dev-feature-004-p2-20260304`
+
+**Commits (12):**
+- `aae04e0f` — feat: add Rider class feature detection and constants
+- `9763fd18` — feat: extend types for P2 Rider class features
+- `bacb7c4c` — feat: implement Ride as One speed evasion sharing
+- `d7a0da4e` — feat: reset distanceMovedThisTurn and rideAsOneSwapped at turn/round start
+- `48d888b9` — feat: add Rider class feature activation actions to encounter store
+- `3467ecf4` — feat: add Rider class feature UI to MountControls panel
+- `91449c1f` — feat: detect Cavalier's Reprisal opportunity in damage endpoint
+- `019f7d1a` — feat: add Run Up, Overrun, and Lean In calculation helpers
+- `bad8df60` — feat: track distance moved this turn on token movement
+- `cbb3b00e` — feat: reset featureUsage on scene transition
+- `c8cd79b0` — fix: use existing $color-warning variable for Rider feature UI
+- `065cd55f` — fix: use PhArrowFatRight icon for Conqueror's March
+
+**Files changed (11):**
+- `app/utils/mountingRules.ts` (EDIT — Rider feature detection, Run Up/Overrun/Lean In helpers)
+- `app/types/combat.ts` (EDIT — distanceMovedThisTurn, MountState P2 fields)
+- `app/types/encounter.ts` (EDIT — featureUsage on Combatant)
+- `app/constants/trainerClasses.ts` (EDIT — RIDER_FEATURE_NAMES, scene-limit constants)
+- `app/server/services/mounting.service.ts` (EDIT — Ride as One evasion sharing)
+- `app/server/utils/turn-helpers.ts` (EDIT — distance/rideAsOneSwapped reset)
+- `app/server/api/encounters/[id]/damage.post.ts` (EDIT — Cavalier's Reprisal detection)
+- `app/server/api/encounters/[id]/next-scene.post.ts` (EDIT — featureUsage reset)
+- `app/stores/encounter.ts` (EDIT — feature activation actions)
+- `app/composables/useEncounterActions.ts` (EDIT — distance tracking on movement)
+- `app/components/encounter/MountControls.vue` (EDIT — Rider feature UI)
+
+**P2 covers:** All 7 Rider class features (Rider, Ramming Speed, Conqueror's March, Ride as One, Lean In, Cavalier's Reprisal, Overrun). Automation levels vary per spec: Ride as One evasion is fully automated; Agility Training and Conqueror's March are toggle/flag-based; Lean In and Overrun have scene-limited usage tracking; Cavalier's Reprisal detects trigger and prompts GM.
