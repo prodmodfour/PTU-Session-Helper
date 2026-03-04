@@ -4,7 +4,7 @@ category: EXT-LATENT
 priority: P4
 severity: LOW
 domain: encounter-tables
-status: in-progress
+status: resolved
 source: code-review-207 M1
 created_by: slave-collector (plan-20260227-153711)
 created_at: 2026-02-27

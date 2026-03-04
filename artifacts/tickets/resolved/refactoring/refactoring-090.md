@@ -2,7 +2,7 @@
 ticket_id: refactoring-090
 ticket_type: refactoring
 priority: P4
-status: in-progress
+status: resolved
 category: CODE-HYGIENE
 domain: healing
 source: rules-review-173 MED-1

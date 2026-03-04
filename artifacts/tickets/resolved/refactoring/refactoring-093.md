@@ -4,7 +4,7 @@ category: EXT-NAMING
 priority: P4
 severity: LOW
 domain: combat
-status: in-progress
+status: resolved
 source: code-review-207 M2
 created_by: slave-collector (plan-20260227-153711)
 created_at: 2026-02-27

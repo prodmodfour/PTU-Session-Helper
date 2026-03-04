@@ -2,7 +2,7 @@
 ticket_id: refactoring-089
 ticket_type: refactoring
 priority: P4
-status: in-progress
+status: resolved
 category: EXT-DOCUMENTATION
 domain: healing
 source: code-review-196 M1
