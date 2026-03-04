@@ -118,7 +118,7 @@ updated_by: slave-collector (plan-20260304-012646)
 | feature-020 | P2 | **P2-APPROVED** | Healing Item System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-293 **APPROVED** (plan-20260302-224650). All code-review-287 issues verified resolved. Rules-review-263 already APPROVED. **Feature complete** | multi-phase |
 | feature-021 | P2 | **APPROVED** | Derived Capability Calculations — implemented by slave-4 (plan-20260303-065350). Fix cycle by slave-2 (plan-20260303-131425). Re-reviewed by slave-2 (plan-20260303-165227): code-review-303 **APPROVED** + rules-review-276 **APPROVED**. All code-review-298 issues verified resolved. **Feature complete** | partial |
 | feature-023 | P2 | **P2-APPROVED** | Player Capture & Healing Interfaces — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-294 **APPROVED** (plan-20260302-224650). All code-review-288 issues verified resolved. Rules-review-264 already APPROVED. **Feature complete** | multi-phase |
-| feature-022 | P2 | **APPROVED** | Pokemon Loyalty System — PARTIAL scope. Fix cycle by slave-1 (plan-20260303-191515). Re-reviewed by slave-3 (plan-20260303-202535): code-review-309 **APPROVED** (all 6 code-review-306 issues verified resolved, 0 new) + rules-review-282 **APPROVED** (all rules-review-279 issues resolved, 0 new). Needs `prisma db push` + as-any removal (5 locations documented in ticket). Out of scope: command checks (R049), loyalty-gated evolution | partial |
+| feature-022 | P2 | **APPROVED** | Pokemon Loyalty System — PARTIAL scope. Fix cycle by slave-1 (plan-20260303-191515). Re-reviewed by slave-3 (plan-20260303-202535): code-review-309 **APPROVED** (all 6 code-review-306 issues verified resolved, 0 new) + rules-review-282 **APPROVED** (all rules-review-279 issues resolved, 0 new). `prisma db push` completed (schema already in sync). Remaining: as-any removal (5 locations documented in ticket). Out of scope: command checks (R049), loyalty-gated evolution | partial |
 | feature-024 | P3 | **open** | Living Weapon unit test coverage — engage validation rules, disengage state clearing, reconstruction from flags, homebrew species fallback. Filed by slave-1 (plan-20260303-131425) as part of feature-005 fix cycle (code-review-297 H3) | single-phase |
 
 ### UX Tickets (`tickets/ux/`)
@@ -155,7 +155,7 @@ updated_by: slave-collector (plan-20260304-012646)
 **Tickets needing fix cycle:** feature-005 P1 (code-review-316 1H+2M + rules-review-289 1H+2M), feature-004 P2 (fix done, needs re-review)
 **Tickets needing first review:** feature-018 P2 (new implementation)
 **Tickets filed:** refactoring-128 (useMoveCalculation.ts 806 lines, code-review-316 MED-001)
-**Migration needed:** `npx prisma db push` for feature-022 loyalty field (still pending from session 101)
+**Migration:** `npx prisma db push` for feature-022 loyalty field — completed (already in sync)
 
 **Session 101 (2026-03-03, plan-20260303-202535):**
 - **slave-1** (developer): ptu-rule-129+bug-049 fix — 5 commits: Fix cycle addressing code-review-308. Fixed tempConditions read from combatant not entity (H1), removed dead Bound checks per decree-044 (M2), updated app-surface.md (M1). Also resolved bug-049, bug-048, refactoring-105. → **fix-done, needs re-review**
@@ -164,10 +164,10 @@ updated_by: slave-collector (plan-20260304-012646)
 - **slave-4** (reviewers): feature-018-p1 review — code-review-310 **CHANGES_REQUIRED** (1C: client-side weather DB modifier missing, 1H: WebSocket newHp:0, 1M: Desert Weather scope) + rules-review-283 **APPROVED** (1M advisory: Sun Blanket HP fraction → decree-need-044). → feature-018 P1 **CHANGES_REQUIRED, needs fix cycle**
 
 **Smoke test:** PASSED (all 3 views render)
-**Tickets APPROVED:** feature-022 (both reviews passed — needs prisma db push + as-any removal)
+**Tickets APPROVED:** feature-022 (both reviews passed — prisma db push done, as-any removal remaining)
 **Tickets needing fix cycle:** feature-018 P1 (code-review-310 1C+1H+1M), ptu-rule-129 (fix done, needs re-review)
 **Tickets needing first review:** ptu-rule-131 (new implementation)
-**Migration needed:** `npx prisma db push` for feature-022 loyalty field
+**Migration:** `npx prisma db push` for feature-022 loyalty field — completed session 104
 **Tickets filed:** decree-need-044 (Sun Blanket HP fraction ambiguity), refactoring-126 (Pokemon PUT/POST 500 error wrapping)
 
 **Session 100 (2026-03-03, plan-20260303-191515):**
@@ -181,7 +181,7 @@ updated_by: slave-collector (plan-20260304-012646)
 **Tickets needing fix cycle:** ptu-rule-129 (code-review-308 1H+2M)
 **Tickets needing re-review:** feature-022 (fix cycle complete)
 **Tickets needing review:** feature-018 P1 (new implementation)
-**Migration needed:** `npx prisma db push` for feature-022 loyalty field
+**Migration:** `npx prisma db push` for feature-022 loyalty field — completed session 104
 **Tickets filed:** bug-047 (loyalty fallback mismatch), bug-048 (Bound condition dead code), decree-need-043 (should Bound block recall?), ux-016 (hasActed flag edge case)
 
 **Session 99 (2026-03-03, plan-20260303-175043):**
@@ -195,7 +195,7 @@ updated_by: slave-collector (plan-20260304-012646)
 **Tickets APPROVED:** feature-018 P0 (re-review passed, ready for P1), feature-004 P1 (re-review passed, ready for P2)
 **Tickets needing fix cycle:** feature-022 (code-review-306 1C+3H+2M)
 **Tickets needing review:** bug-044 (new fix), ptu-rule-129 (new fix)
-**Migration needed:** `npx prisma db push` for feature-022 loyalty field
+**Migration:** `npx prisma db push` for feature-022 loyalty field — completed session 104
 **Tickets filed:** refactoring-086 (deduplicate mount movement reset logic)
 
 **Session 97 (2026-03-03, plan-20260303-150824):**
@@ -1455,7 +1455,7 @@ updated_by: slave-collector (plan-20260304-012646)
 **Tickets filed:** 0
 **Tickets APPROVED:** 1 (feature-021 — feature complete)
 **Conflict:** slave-3 next-turn.post.ts vs slave-1 turn-helpers.ts extraction — resolved by porting movementModifiers to extracted file
-**Migration pending:** `npx prisma db push` for feature-022 loyalty field
+**Migration:** `npx prisma db push` for feature-022 loyalty field — completed session 104
 
 ## Session Summary (2026-03-03, session 95 — plan-20260303-074602)
 
