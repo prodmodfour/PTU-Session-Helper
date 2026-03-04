@@ -1,25 +1,22 @@
 ---
-generated_at: 2026-03-04T10:58:01.969Z
+generated_at: 2026-03-04T11:44:21.697Z
 total_tickets: 301
-open: 30
-in_progress: 117
+open: 27
+in_progress: 120
 resolved: 136
 ---
 
 # Tickets Index
 
-## Open Tickets (30)
+## Open Tickets (27)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
-| bug-050 | bug | P3 | combat | bug-050: Server-side calculate-damage missing moveKeywords p |
 | feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
-| ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
 | refactoring-108 | refactoring | P3 | — | refactoring-108: Extract switch button computeds from Combat |
 | refactoring-112 | refactoring | P3 | combat | Refactoring-112: Decompose encounter store into focused sub- |
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
-| refactoring-114 | refactoring | P3 | character-lifecycle | refactoring-114: Rename capturedSpecies to ownedSpecies for  |
 | refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
 | refactoring-125 | refactoring | P3 | combat | refactoring-125: CombatantCard.vue exceeds 800-line file siz |
 | refactoring-128 | refactoring | P3 | combat | `useMoveCalculation.ts` is now 806 lines, exceeding the 800- |
@@ -43,7 +40,7 @@ resolved: 136
 | refactoring-119 | refactoring | P4 | — | refactoring-119: Update stale interrupt.post.ts file header  |
 | refactoring-126 | refactoring | P4 | pokemon-lifecycle | The outer catch block in `[id].put.ts` (line ~90) and `index |
 
-## In-Progress Tickets (117)
+## In-Progress Tickets (120)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -104,6 +101,7 @@ resolved: 136
 | feature-022 | feature | P2 | pokemon-lifecycle | matrix-gap (GAP-PLC-3) |
 | feature-023 | feature | P2 | player-view+capture+healing | matrix-gap (GAP-CAP-1 + GAP-HEAL-1) |
 | bug-042 | bug | P2 | — | code-review-264 HIGH-001 |
+| bug-050 | bug | P3 | combat | code-review-319 MEDIUM-001 |
 | ptu-rule-086 | ptu-rule | P3 | capture | capture-audit.md (capture-R005) |
 | ptu-rule-087 | ptu-rule | P3 | pokemon-lifecycle | pokemon-lifecycle-audit.md (R022) |
 | ptu-rule-088 | ptu-rule | P3 | encounter-tables | encounter-tables-audit.md (R008) |
@@ -118,7 +116,9 @@ resolved: 136
 | ptu-rule-128 | ptu-rule | P3 | combat | decree-038 |
 | ptu-rule-131 | ptu-rule | P3 | capture | code-review-281 M2 |
 | feature-005 | feature | P3 | combat | user-request |
+| ux-012 | ux | P3 | — | code-review-227 (M2) |
 | refactoring-002 | refactoring | P3 | vtt-grid | code-review-185 HIGH-2 |
+| refactoring-114 | refactoring | P3 | character-lifecycle | rules-review-229 (carried from rules-review-222 M1) |
 | bug-029 | bug | P3 | api-validation | code-review-079 |
 | bug-031 | bug | P3 | player-view | rules-review-149 R3 |
 | bug-044 | bug | P3 | capture | rules-review-246 PRE-EXISTING-002 |
@@ -173,10 +173,10 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 2 | 17 | 29 | 50 |
+| bug | 1 | 18 | 29 | 50 |
 | ptu-rule | 5 | 61 | 39 | 106 |
 | feature | 1 | 19 | 3 | 24 |
-| ux | 6 | 7 | 2 | 16 |
+| ux | 5 | 8 | 2 | 16 |
 | decree | 0 | 0 | 44 | 44 |
-| refactoring | 16 | 13 | 3 | 45 |
+| refactoring | 15 | 14 | 3 | 45 |
 | docs | 0 | 0 | 16 | 16 |
