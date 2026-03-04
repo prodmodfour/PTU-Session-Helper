@@ -243,6 +243,10 @@ model Encounter {
   terrainEnabled  Boolean @default(false)
   terrainState    String  @default("{}") // JSON object for terrain persistence
 
+  // Environment Preset (P2: ptu-rule-058)
+  // JSON object representing the active EnvironmentPreset, or "{}" if none
+  environmentPreset String @default("{}")
+
   // History
   moveLog       String   @default("[]") // JSON array
 
