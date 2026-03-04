@@ -3,6 +3,7 @@ import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleT
 import type { OutOfTurnAction, AoOTrigger, InterruptTrigger } from '~/types/combat'
 import type { GridPosition } from '~/types/spatial'
 import type { SignificanceTier } from '~/utils/encounterBudget'
+import { CONQUERORS_MARCH_CONDITION } from '~/constants/trainerClasses'
 
 // History composable for undo/redo
 let historyComposable: ReturnType<typeof useEncounterHistory> | null = null
@@ -1163,17 +1164,27 @@ export const useEncounterStore = defineStore('encounter', {
 
     /**
      * Activate Conqueror's March for the current round.
-     * Adds 'ConquerorsMarsh' temp condition to the mount.
+     * Adds CONQUERORS_MARCH_CONDITION temp condition to the mount.
+     * Consumes the rider's Standard Action (it is an Order).
      * Requires: rider has feature, mount has Run Up, mount is being ridden.
      */
-    activateConquerorsMarch(mountId: string) {
+    activateConquerorsMarch(riderId: string, mountId: string) {
       if (!this.encounter) return
       const mount = this.encounter.combatants.find(c => c.id === mountId)
       if (!mount) return
 
       const tempConditions = mount.tempConditions ?? []
-      if (!tempConditions.includes('ConquerorsMarsh')) {
-        mount.tempConditions = [...tempConditions, 'ConquerorsMarsh']
+      if (!tempConditions.includes(CONQUERORS_MARCH_CONDITION)) {
+        mount.tempConditions = [...tempConditions, CONQUERORS_MARCH_CONDITION]
+      }
+
+      // Conqueror's March costs a Standard Action (it is an Order)
+      const rider = this.encounter.combatants.find(c => c.id === riderId)
+      if (rider) {
+        rider.turnState = {
+          ...rider.turnState,
+          standardActionUsed: true
+        }
       }
     },
 

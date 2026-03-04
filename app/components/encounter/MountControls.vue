@@ -214,7 +214,7 @@ import {
 } from '~/utils/mountingRules'
 import { getOverlandSpeed } from '~/utils/combatantCapabilities'
 import { areAdjacent } from '~/utils/adjacency'
-import { LEAN_IN_MAX_PER_SCENE, OVERRUN_MAX_PER_SCENE } from '~/constants/trainerClasses'
+import { LEAN_IN_MAX_PER_SCENE, OVERRUN_MAX_PER_SCENE, CONQUERORS_MARCH_CONDITION } from '~/constants/trainerClasses'
 
 const encounterStore = useEncounterStore()
 const { send } = useWebSocket()
@@ -422,7 +422,7 @@ const isAgilityTrainingActive = computed(() => {
 const isConquerorsMarchActive = computed(() => {
   const mount = mountCombatant.value
   if (!mount) return false
-  return (mount.tempConditions ?? []).includes('ConquerorsMarsh')
+  return (mount.tempConditions ?? []).includes(CONQUERORS_MARCH_CONDITION)
 })
 
 // Rider's Standard Action already used
@@ -530,16 +530,10 @@ const handleToggleAgilityTraining = () => {
 }
 
 const handleActivateConquerorsMarch = () => {
+  const rider = riderCombatant.value
   const mount = mountCombatant.value
-  if (!mount) return
-  encounterStore.activateConquerorsMarch(mount.id)
-  // Conqueror's March costs a Standard Action (it is an Order)
-  if (currentCombatant.value) {
-    currentCombatant.value.turnState = {
-      ...currentCombatant.value.turnState,
-      standardActionUsed: true
-    }
-  }
+  if (!rider || !mount) return
+  encounterStore.activateConquerorsMarch(rider.id, mount.id)
   broadcastUpdate()
 }
 

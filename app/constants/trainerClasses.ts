@@ -202,6 +202,9 @@ export const AGILITY_TRAINING_INITIATIVE_BONUS = 4
 /** Cavalier's Reprisal AP cost */
 export const CAVALIERS_REPRISAL_AP_COST = 1
 
+/** Temp condition key for Conqueror's March active state */
+export const CONQUERORS_MARCH_CONDITION = 'ConquerorsMarch'
+
 /** Get trainer classes grouped by category */
 export function getClassesByCategory(): Record<TrainerClassCategory, TrainerClassDef[]> {
   return TRAINER_CLASS_CATEGORIES.reduce((acc, category) => ({
