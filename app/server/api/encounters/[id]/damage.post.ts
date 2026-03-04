@@ -11,8 +11,9 @@ import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server
 import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import { clearMountOnFaint } from '~/server/services/mounting.service'
-import { refreshCombatantEquipmentBonuses } from '~/server/services/living-weapon.service'
+import { refreshCombatantEquipmentBonuses, checkSoulstealer, applySoulstealerHealing } from '~/server/services/living-weapon.service'
 import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { triggersDismountCheck, buildDismountCheckInfo, hasRiderFeature } from '~/utils/mountingRules'
 import { areAdjacent } from '~/utils/adjacency'
 import { CAVALIERS_REPRISAL_AP_COST } from '~/constants/trainerClasses'
@@ -205,6 +206,33 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // P2: Soulstealer ability check (PTU p.2417-2423, feature-005)
+    // If the attacker has Soulstealer and the target fainted, heal the attacker.
+    // Scene frequency — tracked via response annotation (GM enforces limit).
+    let soulstealerResult: { attackerId: string; hpHealed: number; injuriesRemoved: number; isKill: boolean } | null = null
+    if (faintedFromAnySource && body.attackerId) {
+      const attacker = combatants.find((c: any) => c.id === body.attackerId)
+      if (attacker) {
+        const soulstealCheck = checkSoulstealer(attacker, true)
+        if (soulstealCheck?.triggered) {
+          const healing = applySoulstealerHealing(attacker, soulstealCheck.isKill)
+          soulstealerResult = {
+            attackerId: body.attackerId,
+            hpHealed: healing.hpHealed,
+            injuriesRemoved: healing.injuriesRemoved,
+            isKill: soulstealCheck.isKill,
+          }
+          // Sync healed attacker to database
+          if (attacker.entityId) {
+            await syncEntityToDatabase(attacker, {
+              currentHp: attacker.entity.currentHp,
+              injuries: attacker.entity.injuries,
+            })
+          }
+        }
+      }
+    }
+
     // Track defeated enemies for XP
     let defeatedEnemies = JSON.parse(record.defeatedEnemies)
     const isDefeated = faintedFromAnySource || deathCheck.isDead
@@ -245,7 +273,10 @@ export default defineEventHandler(async (event) => {
         dismountCheck: dismountCheck ?? undefined,
         // Cavalier's Reprisal opportunity (feature-004 P2, PTU p.103)
         // Present when mount is hit by adjacent melee foe and rider has the feature + AP
-        reprisalOpportunity
+        reprisalOpportunity,
+        // Soulstealer healing (feature-005 P2, PTU p.2417)
+        // Present when attacker has Soulstealer and target fainted
+        soulstealer: soulstealerResult ?? undefined
       }
     }
   } catch (error: unknown) {
