@@ -152,6 +152,13 @@ export const STATUS_CONDITION_DEFS: Record<StatusCondition, StatusConditionDef> 
   },
 
   // === Other conditions ===
+  // Per decree-047: Other conditions do NOT clear on faint.
+  // PTU p.248: only Persistent and Volatile conditions clear on faint.
+  // clearsOnEncounterEnd: true is intentional for combat conditions (Stuck, Slowed,
+  // Trapped, Tripped, Vulnerable) — these are combat-context conditions that logically
+  // should not persist after an encounter ends, even though the old category-based code
+  // didn't clear them. This is a pragmatic improvement over the old behavior.
+  // Source-dependent clearing is future work (refactoring-129).
   'Fainted': {
     name: 'Fainted',
     category: 'other',
@@ -171,35 +178,35 @@ export const STATUS_CONDITION_DEFS: Record<StatusCondition, StatusConditionDef> 
     category: 'other',
     clearsOnRecall: true,
     clearsOnEncounterEnd: true,
-    clearsOnFaint: true
+    clearsOnFaint: false  // decree-047: Other conditions don't clear on faint
   },
   'Slowed': {
     name: 'Slowed',
     category: 'other',
     clearsOnRecall: true,
     clearsOnEncounterEnd: true,
-    clearsOnFaint: true
+    clearsOnFaint: false  // decree-047: Other conditions don't clear on faint
   },
   'Trapped': {
     name: 'Trapped',
     category: 'other',
     clearsOnRecall: false,   // Trapped prevents recall entirely
     clearsOnEncounterEnd: true,
-    clearsOnFaint: true
+    clearsOnFaint: false  // decree-047: Other conditions don't clear on faint
   },
   'Tripped': {
     name: 'Tripped',
     category: 'other',
     clearsOnRecall: true,
     clearsOnEncounterEnd: true,
-    clearsOnFaint: true
+    clearsOnFaint: false  // decree-047: Other conditions don't clear on faint
   },
   'Vulnerable': {
     name: 'Vulnerable',
     category: 'other',
     clearsOnRecall: true,
     clearsOnEncounterEnd: true,
-    clearsOnFaint: true
+    clearsOnFaint: false  // decree-047: Other conditions don't clear on faint
   }
 } as const
 
@@ -249,6 +256,8 @@ export const ENCOUNTER_END_CLEARED_CONDITIONS: StatusCondition[] =
  * Conditions cleared on faint.
  * Derived from per-condition clearsOnFaint flags (decree-038).
  * PTU p.248: "automatically cured of all Persistent and Volatile Status Conditions"
+ * Other category conditions are excluded per decree-047 (only Persistent + Volatile clear on faint).
+ * Source-dependent clearing for Other conditions is future work (refactoring-129).
  */
 export const FAINT_CLEARED_CONDITIONS: StatusCondition[] =
   ALL_CONDITION_DEFS.filter(d => d.clearsOnFaint).map(d => d.name)
