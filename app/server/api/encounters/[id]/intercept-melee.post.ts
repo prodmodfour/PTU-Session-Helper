@@ -19,6 +19,8 @@ import {
   resolveInterceptMelee,
   getDefaultOutOfTurnUsage
 } from '~/server/services/out-of-turn.service'
+import { canUseWeaponize } from '~/server/services/living-weapon.service'
+import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 import { broadcastToEncounter } from '~/server/utils/websocket'
 import type { OutOfTurnAction } from '~/types/combat'
 
@@ -38,13 +40,16 @@ export default defineEventHandler(async (event) => {
     targetId,
     attackerId,
     actionId,
-    skillCheck
+    skillCheck,
+    isWeaponize
   } = body as {
     interceptorId: string
     targetId: string
     attackerId: string
     actionId: string
     skillCheck: number
+    /** Weaponize ability: Free Action intercept for wielded Living Weapon (PTU p.2874) */
+    isWeaponize?: boolean
   }
 
   if (!interceptorId || !targetId || !attackerId || skillCheck === undefined) {
@@ -86,13 +91,34 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: 'Attacker combatant not found' })
     }
 
-    // Validate eligibility
-    const eligibility = canIntercept(interceptor)
-    if (!eligibility.allowed) {
-      throw createError({
-        statusCode: 400,
-        message: `Cannot Intercept Melee: ${eligibility.reason}`
-      })
+    // Weaponize ability: validate Living Weapon can use Free Action intercept
+    // PTU p.2874: while wielded and actively commanded, may Intercept for wielder as Free Action
+    if (isWeaponize) {
+      const wieldRelationships = reconstructWieldRelationships(combatants)
+      if (!canUseWeaponize(interceptor, wieldRelationships)) {
+        throw createError({
+          statusCode: 400,
+          message: 'Cannot use Weaponize: interceptor must have Weaponize ability, be wielded, and not fainted'
+        })
+      }
+      // Verify target is the wielder
+      const wieldRel = wieldRelationships.find(r => r.weaponId === interceptorId)
+      if (!wieldRel || wieldRel.wielderId !== targetId) {
+        throw createError({
+          statusCode: 400,
+          message: 'Weaponize intercept: target must be the wielder of this Living Weapon'
+        })
+      }
+      // Skip normal eligibility check — Weaponize is a Free Action (no Interrupt cost)
+    } else {
+      // Validate normal eligibility
+      const eligibility = canIntercept(interceptor)
+      if (!eligibility.allowed) {
+        throw createError({
+          statusCode: 400,
+          message: `Cannot Intercept Melee: ${eligibility.reason}`
+        })
+      }
     }
 
     // Validate loyalty for Pokemon
@@ -134,21 +160,23 @@ export default defineEventHandler(async (event) => {
       ? `Success -- took the hit for ${targetName}.`
       : `Failed -- shifted ${resolution.distanceMoved}m toward ${targetName}.`
 
+    const moveName = isWeaponize ? 'Weaponize (Intercept)' : 'Intercept Melee'
+    const actionType = isWeaponize ? 'free' : 'interrupt'
     moveLog.push({
       id: uuidv4(),
       timestamp: new Date(),
       round: record.currentRound,
       actorId: interceptorId,
       actorName: interceptorName,
-      moveName: 'Intercept Melee',
+      moveName,
       damageClass: 'Status',
-      actionType: 'interrupt',
+      actionType,
       targets: [{
         id: attackerId,
         name: attackerName,
         hit: resolution.interceptSuccess
       }],
-      notes: `${interceptorName} intercepted attack on ${targetName}. DC ${resolution.dcRequired}, check ${skillCheck}. ${successText}`
+      notes: `${interceptorName} intercepted attack on ${targetName}${isWeaponize ? ' (Weaponize — Free Action)' : ''}. DC ${resolution.dcRequired}, check ${skillCheck}. ${successText}`
     })
 
     // Save to database
