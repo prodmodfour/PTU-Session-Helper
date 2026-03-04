@@ -104,3 +104,17 @@ FULL-scope feature requiring design spec. Affects damage calculation, turn end p
     - `0c07439f` — `app/utils/movementModifiers.ts` (EDIT): Thermosensitive halved movement in Hail
     - `0c07439f` — `app/composables/useGridMovement.ts` (EDIT): Pass weather to applyMovementModifiers for Thermosensitive
   - **Deferred**: Flower Gift (UI indicator only, manual CS — shown in WeatherEffectIndicator), Harvest (no berry system)
+- **2026-03-04 P2 Fix Cycle** (code-review-317, branch: `slave/1-dev-feature-018-p2-fix-20260304-104014`):
+  - **HIGH-001**: Server-side movement modifier calls missing weather parameter
+    - `058851d4` — `app/server/utils/turn-helpers.ts` (EDIT): Add weather param to resetCombatantsForNewRound, pass to applyMovementModifiers
+    - `058851d4` — `app/server/services/mounting.service.ts` (EDIT): Add weather param to executeMount and resetMountMovement, pass to applyMovementModifiers
+    - `058851d4` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Pass weather to all 5 resetCombatantsForNewRound calls
+    - `058851d4` — `app/server/api/encounters/[id]/mount.post.ts` (EDIT): Pass record.weather to executeMount
+  - **MEDIUM-001**: Sand Force min-1 clamp ordering divergence
+    - `e3a785f6` — `app/utils/damageCalculation.ts` (EDIT): Move abilityDamageBonus before Math.max(1, ...) so bonus is included in clamp
+  - **MEDIUM-003**: WeatherEffectIndicator imports server-only service
+    - `c24c4c30` — `app/utils/weatherRules.ts` (EDIT): Add WEATHER_ABILITY_EFFECTS constant and WeatherAbilityEffect interface
+    - `c24c4c30` — `app/server/services/weather-automation.service.ts` (EDIT): Re-export from weatherRules.ts instead of defining locally
+    - `c24c4c30` — `app/components/encounter/WeatherEffectIndicator.vue` (EDIT): Import from weatherRules.ts instead of server service
+  - **MEDIUM-002**: app-surface.md missing P2 additions
+    - `7458d79e` — `.claude/skills/references/app-surface.md` (EDIT): Add P2 weatherRules.ts functions, movementModifiers.ts, WeatherEffectIndicator
