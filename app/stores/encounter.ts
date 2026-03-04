@@ -1627,6 +1627,35 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // ===========================================
+    // Vision Capabilities (decree-048, feature-025)
+    // ===========================================
+
+    /** Toggle a vision capability (Darkvision/Blindsense) on a combatant */
+    async toggleVisionCapability(
+      combatantId: string,
+      capability: import('~/utils/visionRules').VisionCapability,
+      enabled: boolean
+    ) {
+      if (!this.encounter) return
+
+      try {
+        const response = await $fetch<{ success: boolean; data: Encounter }>(
+          `/api/encounters/${this.encounter.id}/combatants/${combatantId}/vision`,
+          {
+            method: 'POST',
+            body: { capability, enabled, source: 'manual' }
+          }
+        )
+        if (response.success) {
+          this.encounter = response.data
+          getHistory().pushSnapshot('Toggle vision capability')
+        }
+      } catch (e: any) {
+        alert(`Failed to toggle vision capability: ${e?.message || e}`)
+      }
+    },
+
+    // ===========================================
     // Significance Multiplier
     // ===========================================
 
