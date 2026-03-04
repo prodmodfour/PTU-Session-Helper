@@ -44,6 +44,8 @@ const { hasSTAB: checkSTAB } = useTypeChart()
 
 const hasSTAB = computed(() => {
   if (!props.showSTAB || !props.move.type || props.actorTypes.length === 0) return false
+  // PTU p.287: Weapon moves "can never benefit from STAB"
+  if (props.move.keywords?.includes('Weapon')) return false
   return checkSTAB(props.move.type, props.actorTypes)
 })
 </script>

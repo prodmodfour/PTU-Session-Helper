@@ -185,6 +185,11 @@ export interface DamageCalcInput {
    * Applied after defense subtraction, before type effectiveness.
    */
   abilityDamageBonus?: number
+
+  /**
+   * Move keywords (e.g., ['Weapon']). PTU p.287: Weapon moves can never benefit from STAB.
+   */
+  moveKeywords?: string[]
 }
 
 export interface DamageCalcResult {
@@ -319,7 +324,9 @@ export function calculateDamage(input: DamageCalcInput): DamageCalcResult {
   const weatherAdjustedDB = Math.max(1, rawDB + weatherModifier)
 
   // Steps 2-3: STAB applied to weather-adjusted DB
-  const stabApplied = hasSTAB(input.moveType, input.attackerTypes)
+  // PTU p.287: Weapon moves "can never benefit from STAB"
+  const isWeaponMove = input.moveKeywords?.includes('Weapon') ?? false
+  const stabApplied = !isWeaponMove && hasSTAB(input.moveType, input.attackerTypes)
   const effectiveDB = weatherAdjustedDB + (stabApplied ? 2 : 0)
 
   // Steps 4-5: Set damage from chart + critical

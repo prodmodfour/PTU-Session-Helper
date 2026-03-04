@@ -376,6 +376,8 @@ export function useMoveCalculation(
 
   const hasSTAB = computed(() => {
     if (!effectiveMoveType.value) return false
+    // PTU p.287: Weapon moves "can never benefit from STAB"
+    if (move.value.keywords?.includes('Weapon')) return false
     return checkSTAB(effectiveMoveType.value, actorTypes.value)
   })
 
