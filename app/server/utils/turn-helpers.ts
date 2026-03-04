@@ -114,6 +114,12 @@ export function resetCombatantsForNewRound(combatants: any[], weather?: string |
       holdUntilInitiative: null,
       holdUsedThisRound: false
     }
+    // Reset Living Weapon shared movement pool for new round (H2, feature-005 P2)
+    // wieldMovementUsed is persisted on the wielder combatant for reconstruction (H1).
+    if (c.wieldMovementUsed !== undefined) {
+      c.wieldMovementUsed = 0
+    }
+
     // Reset mount movement for new round (feature-004)
     // Apply movement modifiers (Slowed, Speed CS, Sprint) from the mount's conditions
     // ONCE here so the client returns movementRemaining directly without re-applying.
