@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const updated = await prisma.encounter.update({
+    await prisma.encounter.update({
       where: { id },
       data: {
         environmentPreset: preset ? JSON.stringify(preset) : '{}'
