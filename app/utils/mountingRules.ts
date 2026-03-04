@@ -359,27 +359,25 @@ export function calculateOverrunModifiers(
 // ============================================================
 
 /**
- * PTU resistance step progression.
- * Each step halves the damage. Lean In adds one additional step.
+ * PTU resistance step progression (PTU p.236-237).
+ * "Resist one step further" means moving one position down the
+ * full PTU effectiveness ladder:
  *
- * Effectiveness values in PTU:
- * 2.0 (Super Effective) -> 1.0 (Neutral) -> 0.5 (Resisted) -> 0.25 (Double Resisted)
+ *   3.0x (Triply SE) -> 2.0x (Doubly SE) -> 1.5x (SE) -> 1.0x (Neutral)
+ *   -> 0.5x (Resisted) -> 0.25x (Doubly Resisted) -> 0.125x (Triply Resisted)
  *
- * "Resist one step further" means:
- * - If currently at 2.0: becomes 1.0
- * - If currently at 1.5: becomes 1.0 (capped — PTU doesn't have 0.75)
- * - If currently at 1.0: becomes 0.5
- * - If currently at 0.5: becomes 0.25
- * - If at 0.25: stays at 0.25 (floor)
+ * Lean In adds one additional resistance step to both rider and mount.
  *
  * @param currentEffectiveness - The current type effectiveness multiplier
  * @returns The effectiveness multiplier after applying one resistance step
  */
 export function applyResistStep(currentEffectiveness: number): number {
-  if (currentEffectiveness >= 2.0) return 1.0
-  if (currentEffectiveness >= 1.5) return 1.0
-  if (currentEffectiveness >= 1.0) return 0.5
-  if (currentEffectiveness >= 0.5) return 0.25
+  if (currentEffectiveness >= 3.0) return 2.0    // Triply SE -> Doubly SE
+  if (currentEffectiveness >= 2.0) return 1.5    // Doubly SE -> SE
+  if (currentEffectiveness >= 1.5) return 1.0    // SE -> Neutral
+  if (currentEffectiveness >= 1.0) return 0.5    // Neutral -> Resisted
+  if (currentEffectiveness >= 0.5) return 0.25   // Resisted -> Doubly Resisted
+  if (currentEffectiveness >= 0.25) return 0.125 // Doubly Resisted -> Triply Resisted
   return currentEffectiveness // Already at floor or immune
 }
 
