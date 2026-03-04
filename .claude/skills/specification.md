@@ -73,8 +73,7 @@ artifacts/
 │   └── resolved/       # Completed
 └── state/              # Ecosystem state files
     ├── dev-state.md    # Orchestrator writes → Dev skills read
-    ├── test-state.md   # Orchestrator writes → Matrix skills read
-    └── alive-agents.md # Slave Collector writes → Orchestrator Survey reads
+    └── test-state.md   # Orchestrator writes → Matrix skills read
 ```
 
 ### 2.4 Ticket System
@@ -215,7 +214,7 @@ The orchestration system is split into three phases, each with its own skill:
 | **File** | `.claude/skills/slave-collector.md` |
 | **Trigger** | `/collect_slaves` |
 | **Input** | `.worktrees/slave-plan.json`, `.worktrees/slave-status/`, all branch worktrees |
-| **Output** | `dev-state.md`, `test-state.md`, `alive-agents.md`, cleanup |
+| **Output** | `dev-state.md`, `test-state.md`, cleanup |
 | **Lifecycle** | Ephemeral — one collection per session, then dies |
 
 **Lifecycle (8 steps):**
@@ -531,7 +530,7 @@ core/07-combat.md: "Damage = Attack Roll + Attack Stat - Defense Stat"
 
 The Orchestrator maintains two state files (sole writer):
 
-**dev-state.md** — Dev Ecosystem state:
+**dev-state.md** — Dev Ecosystem state (target: under 200 lines):
 ```markdown
 ---
 last_updated: <ISO timestamp>
@@ -541,16 +540,17 @@ updated_by: orchestrator
 # Dev Ecosystem State
 
 ## Open Tickets
-### Bug Tickets (`tickets/open/bug/`)
-### PTU Rule Tickets (`tickets/open/ptu-rule/`)
-### Feature Tickets (`tickets/open/feature/`)
-### UX Tickets (`tickets/open/ux/`)
+### Bug Tickets
+### PTU Rule Tickets
+### Feature Tickets
+### UX Tickets
+### Refactoring Tickets
 
-## Active Developer Work
-## Review Status
-## Refactoring Tickets (`refactoring/`)
+## Active Developer Work     # last 3 sessions only
 ## Code Health
 ```
+
+**Pruning rules:** Only open/in-progress tickets appear. Resolved tickets live in `tickets/resolved/` and are removed from state. No Review Status section (reviews live in `reviews/`). No Session Summary section. Active Developer Work keeps only last 3 sessions.
 
 **test-state.md** — Matrix Ecosystem state:
 ```markdown

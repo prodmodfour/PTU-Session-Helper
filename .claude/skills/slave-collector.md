@@ -260,9 +260,15 @@ After ALL merges are complete, make a single atomic state update commit:
 
 For each merged dev/reviewer slave:
 - Update the specific ticket row (status, summary)
-- Update "Active Developer Work" section
-- Append to "Session Summary" (never overwrite existing entries)
-- Update review status if reviewer slave
+- Update "Active Developer Work" section (add new session, keep only last 3 sessions)
+- Update "Code Health" counts
+
+**Pruning rules (apply every time you write dev-state.md):**
+- **Resolved tickets:** Remove rows for tickets whose status is resolved/APPROVED/feature-complete. They already exist as files in `tickets/resolved/`. Replace with a one-line summary row if needed (e.g., `| bug-001–046 | — | resolved | see tickets/resolved/ |`).
+- **Sessions:** Keep only the last 3 sessions in "Active Developer Work". Drop older sessions entirely — review artifacts in `reviews/archive/` preserve full history.
+- **No Review Status section.** Reviews are tracked in `reviews/active/` and `reviews/archive/`. Do not maintain a separate Review Status table in dev-state.md.
+- **No Session Summary section.** The "Active Developer Work" last-3-sessions block replaces it.
+- **Target size:** dev-state.md should stay under 200 lines. If it exceeds this, prune more aggressively.
 
 ### 5b. Update `test-state.md`
 
@@ -272,19 +278,11 @@ For each merged matrix slave:
 - Update active work section
 - If a browser auditor slave was merged, update the Browser column with present/absent/error/unreachable counts
 
-### 5c. Update `alive-agents.md`
-
-Append one row per merged slave:
-```markdown
-| <slave-id> | <type> | <target> | <result> | <ISO timestamp> | <commit hashes> |
-```
-
-### 5d. Commit State Updates
+### 5c. Commit State Updates
 
 ```bash
 git add artifacts/state/dev-state.md
 git add artifacts/state/test-state.md
-git add artifacts/state/alive-agents.md
 git commit -m "orchestrator: collect-slaves for plan-<plan_id>"
 ```
 

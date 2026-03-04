@@ -165,7 +165,7 @@ Skills are loaded by slaves via templates. Original skill files serve as referen
 | 9b | Orchestrator Planner | `orchestrator-planner.md` | user (`/plan_slaves`) | `slave-plan.json` |
 | 9c | Orchestrator Launcher | `orchestrator-launcher.md` | user (`/launch_slaves`) | tmux sessions |
 | — | Slave Executor | `slave-executor.md` | user (`/slave N`) | branch commits, status file |
-| — | Slave Collector | `slave-collector.md` | user (`/collect_slaves`) | state files, `alive-agents.md`, cleanup |
+| — | Slave Collector | `slave-collector.md` | user (`/collect_slaves`) | state files, cleanup |
 | 10 | Retrospective Analyst | `retrospective-analyst.md` | after cycles complete | `lessons/*.md` |
 
 **Note:** The Matrix Ecosystem pipeline has 5 stages: Rule Extraction → Capability Mapping → Coverage Analysis → Implementation Audit → Browser Audit.
@@ -232,7 +232,6 @@ artifacts/
 ├── lessons/               Retrospective Analyst writes → all skills read
 ├── refactoring/           Code Health Auditor writes → Developer/Reviewer reads
 ├── reviews/               Senior Reviewer + Game Logic Reviewer write → Collector/Developer reads
-├── alive-agents.md        Completed slave session log (collector writes)
 ├── dev-state.md           Collector writes → Dev skills read
 └── test-state.md          Collector writes → Matrix skills read
 ```

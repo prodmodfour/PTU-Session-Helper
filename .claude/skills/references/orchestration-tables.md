@@ -27,11 +27,26 @@ Categories label *what kind of work* an item is — they are **NOT a priority or
 |----------|-----------|-----------|
 | M1 | Audit has CRITICAL incorrect items, no ticket yet | **Survey creates P0 bug tickets** → Developer |
 | M2 | Matrix + audit complete, tickets not yet created | **Survey processes matrix**: create tickets |
-| M3 | App code changed since last capability mapping | Capability Mapper (re-map) |
-| M4 | Active domain has incomplete matrix stages | Next skill in sequence |
-| M5 | Audit has AMBIGUOUS items | Game Logic Reviewer |
+| M3 | App code changed since last capability mapping | Capability Mapper (re-map) — **only when no D1-D5 work exists** |
+| M4 | Active domain has incomplete matrix stages | Next skill in sequence — **only when no D1-D5 work exists** |
+| M5 | Audit has AMBIGUOUS items | Game Logic Reviewer — **only when no D1-D5 work exists** |
 | M6 | Domain fully processed, all tickets created | Report, suggest next domain |
 | M7 | All domains complete | Report overall coverage |
+
+## Matrix Maintenance Trigger
+
+M1/M2 are always processed inline by the survey (ticket creation). M3-M5 enter the work queue **only when no D1-D5 items exist** in the current queue. This ensures:
+
+- Dev work always takes priority over matrix maintenance
+- Matrix pipelines refresh when there's bandwidth, not during active development
+- Stale matrices get validated before falling through to D8 refactoring or D9 code health
+- One pipeline stage per domain per survey — natural progression across cycles
+
+When triggered, the survey promotes the **next needed stage** for each stale domain:
+- Capabilities stale → M3 (Capability Mapper re-map)
+- Capabilities fresh, matrix stale → M4 (Coverage Analyzer)
+- Matrix fresh, audit stale → M4 (Implementation Auditor)
+- Audit complete, no tickets → M2 (already handled inline)
 
 ## Parallelization Rules
 

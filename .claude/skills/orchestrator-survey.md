@@ -75,11 +75,7 @@ If `_index.md` files don't exist, fall back to scanning directories:
 - `artifacts/lessons/`
 - `decrees/`
 
-### 1e. Read Recently Completed Work
-
-Read `artifacts/state/alive-agents.md` for the last 10 entries.
-
-### 1f. Scan Decree-Need Tickets and Active Decrees
+### 1e. Scan Decree-Need Tickets and Active Decrees
 
 Read `decrees/_index.md` for active decrees. Read `artifacts/tickets/_index.md` for open decree-need tickets (check "Open Decree-Needs" section).
 
@@ -106,7 +102,7 @@ Walk through the raw data from Step 1 and tag each item with its category using 
 **Developer assignment order:**
 1. **Escalated CHANGES_REQUIRED** — only if review found CRITICAL severity correctness bugs
 2. **Highest P-level actionable ticket** — P0 > P1 > P2 > P3 > P4, regardless of category
-3. **Within same P-level**, prefer: fix cycles (D2) > open tickets > designs > refactoring
+3. **Within same P-level**, prefer: fix cycles (D2) > open tickets > designs > matrix maintenance (M3/M4) > refactoring
 4. **Within same P-level and category**, prefer: extensibility impact > scope size
 
 **Reviewer assignment (always parallel with dev work):**
@@ -170,6 +166,40 @@ Compare timestamps across stages:
 
 For code changes, check `git log --oneline -10` and map to domains via `references/app-surface.md`.
 
+## Step 3a: Matrix Maintenance Promotion (Conditional)
+
+After staleness detection, check if the work queue contains any D1-D5 items:
+
+- **If D1-D5 items exist** → skip this step entirely. Dev work takes priority.
+- **If NO D1-D5 items exist** → promote stale matrix domains into actionable work queue items.
+
+This ensures the "no urgent dev work" state is validated — stale matrices may reveal new bugs/gaps that *should* be D1-D5 work.
+
+**For each stale domain** identified in Step 3, determine the **next needed pipeline stage** and add one work item:
+
+1. **Capabilities stale** (app code changed since last capability mapping) → add:
+   `{priority: "P3", category: "M3", target: "<domain>-remap", agent_types: ["capability-mapper"], launch_mode: "single", description: "Re-map capabilities for <domain> (stale since <commit>)", domain: "<domain>"}`
+
+2. **Capabilities fresh, matrix stale** (capabilities updated since last coverage analysis) → add:
+   `{priority: "P3", category: "M4", target: "<domain>-coverage", agent_types: ["coverage-analyzer"], launch_mode: "single", description: "Re-run coverage analysis for <domain>", domain: "<domain>"}`
+
+3. **Matrix fresh, audit stale/missing** (matrix updated since last audit) → add:
+   `{priority: "P3", category: "M4", target: "<domain>-audit", agent_types: ["implementation-auditor"], launch_mode: "single", description: "Re-audit <domain> implementation correctness", domain: "<domain>"}`
+
+4. **Audit complete, no tickets** → already handled by M2 in Step 2c.
+
+**One stage per domain per survey.** Don't queue the entire pipeline for a domain — just the next step. The following survey will detect the next stale stage and promote it. This creates natural pipeline progression across survey cycles.
+
+**Sorting:** M3/M4 items at P3 sort below any D6/D7 items at the same P-level but above D8 refactoring. Within M3/M4, prefer domains with the most code churn since last mapping.
+
+**Multiple stale domains can run in parallel** — see the parallelization rules in `references/orchestration-tables.md` (Capability Mapper across domains = parallel, Coverage Analyzer needs mapper output = serial per domain).
+
+Update the queue's `summary` to include:
+- `"matrix_maintenance_triggered": true`
+- `"m3_items": N`
+- `"m4_items": N`
+- `"stale_domains_promoted": ["combat", "healing", ...]`
+
 ## Step 4: Write work-queue.json
 
 Write `.worktrees/work-queue.json` with this schema:
@@ -217,6 +247,7 @@ Show the work queue to the user:
 - **M2 tickets created:** 3
 - **D3b designs validated:** 1
 - **Decree-needs pending:** 2 (run `/address_design_decrees`)
+- **Matrix maintenance triggered:** Yes/No (only when D1-D5 queue is empty)
 - **Staleness detected:** capabilities for healing domain (re-map needed)
 
 ### Next Step

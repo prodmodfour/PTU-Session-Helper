@@ -233,7 +233,6 @@ artifacts/
 ├── refactoring/           # Refactoring tickets + audit summary
 ├── reviews/               # Code + rules reviews
 ├── lessons/               # Retrospective lessons
-├── alive-agents.md        # Completed slave session log
 ├── dev-state.md           # Dev ecosystem state
 └── test-state.md          # Matrix ecosystem state
 ```

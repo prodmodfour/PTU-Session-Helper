@@ -13,7 +13,7 @@ artifacts/
   tickets/            # Tickets across lifecycle states
   refactoring/        # 85+ refactoring entries with audit summary
   lessons/            # Per-skill retrospective files (9 files)
-  state/              # dev-state.md, test-state.md, alive-agents.md
+  state/              # dev-state.md, test-state.md
 ```
 
 ## Index Files
@@ -59,4 +59,3 @@ Each design is a directory (`designs/design-NAME-NNN/`) containing:
 
 - `state/dev-state.md` — Comprehensive dev ecosystem state (all ticket statuses, current work)
 - `state/test-state.md` — Test ecosystem state
-- `state/alive-agents.md` — Currently running agent processes

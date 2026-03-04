@@ -56,8 +56,7 @@ artifacts/
 ├── lessons/               # Retrospective Analyst writes
 └── state/                 # Ecosystem state files
     ├── dev-state.md       # Orchestrator writes (sole writer)
-    ├── test-state.md      # Orchestrator writes (sole writer)
-    └── alive-agents.md    # Slave Collector writes
+    └── test-state.md      # Orchestrator writes (sole writer)
 ```
 
 ## File Naming Conventions
