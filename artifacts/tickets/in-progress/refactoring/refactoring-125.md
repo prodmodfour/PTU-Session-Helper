@@ -42,6 +42,12 @@ Events forwarded: damage, heal, stages, status, openActions, remove, switchPokem
 | 9c237a93 | Remove unused __actions SCSS | CombatantCard.vue |
 | 99e7caf5 | Update encounter CLAUDE.md | CLAUDE.md |
 
+### Fix Cycle (code-review-329 M1)
+
+| Hash | Description | Files |
+|------|-------------|-------|
+| 2d912536 | Add CombatantGmActions entry to app-surface.md | app-surface.md |
+
 ### Result
 
 - CombatantCard.vue: 930 lines -> 585 lines (345 lines removed)
