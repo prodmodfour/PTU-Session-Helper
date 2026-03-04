@@ -10,6 +10,7 @@ import type { Combatant, Encounter, GridConfig } from '~/types'
 import type { TrainerDeclaration, SwitchAction, OutOfTurnAction, WieldRelationship } from '~/types/combat'
 import type { SignificanceTier } from '~/utils/encounterBudget'
 import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
+import { refreshCombatantEquipmentBonuses } from '~/server/services/living-weapon.service'
 
 // Prisma encounter record type (matches Prisma schema)
 interface EncounterRecord {
@@ -234,6 +235,22 @@ export function buildEncounterResponse(
     maxElevation: record.gridMaxElevation ?? 5
   } : null
 
+  // Reconstruct wield relationships and refresh wielder evasion values.
+  // On encounter reload, cached evasion may be stale if a wield relationship
+  // was active when the encounter was saved. Refresh to account for the
+  // Living Weapon equipment overlay (PTU pp.305-306).
+  const wieldRelationships = options?.wieldRelationships ?? reconstructWieldRelationships(combatants)
+  let effectiveCombatants = combatants
+  if (wieldRelationships.length > 0) {
+    effectiveCombatants = combatants.map(c => {
+      const isWielder = wieldRelationships.some(r => r.wielderId === c.id)
+      if (isWielder) {
+        return refreshCombatantEquipmentBonuses(wieldRelationships, c)
+      }
+      return c
+    })
+  }
+
   return {
     id: record.id,
     name: record.name,
@@ -241,7 +258,7 @@ export function buildEncounterResponse(
     weather: record.weather ?? null,
     weatherDuration: record.weatherDuration ?? 0,
     weatherSource: record.weatherSource ?? null,
-    combatants,
+    combatants: effectiveCombatants,
     currentRound: options?.currentRound ?? record.currentRound,
     currentTurnIndex: options?.currentTurnIndex ?? record.currentTurnIndex,
     turnOrder,
@@ -262,7 +279,7 @@ export function buildEncounterResponse(
     switchActions: options?.switchActions ?? JSON.parse(record.switchActions || '[]'),
     pendingOutOfTurnActions: options?.pendingOutOfTurnActions ?? JSON.parse(record.pendingActions || '[]'),
     holdQueue: options?.holdQueue ?? JSON.parse(record.holdQueue || '[]'),
-    wieldRelationships: options?.wieldRelationships ?? reconstructWieldRelationships(combatants),
+    wieldRelationships,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt
   }
