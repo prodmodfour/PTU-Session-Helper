@@ -1,18 +1,19 @@
 ---
-generated_at: 2026-03-04T10:34:30.079Z
-total_tickets: 300
-open: 29
+generated_at: 2026-03-04T10:58:01.969Z
+total_tickets: 301
+open: 30
 in_progress: 117
 resolved: 136
 ---
 
 # Tickets Index
 
-## Open Tickets (29)
+## Open Tickets (30)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
+| bug-050 | bug | P3 | combat | bug-050: Server-side calculate-damage missing moveKeywords p |
 | feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
 | refactoring-108 | refactoring | P3 | — | refactoring-108: Extract switch button computeds from Combat |
@@ -172,7 +173,7 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 17 | 29 | 49 |
+| bug | 2 | 17 | 29 | 50 |
 | ptu-rule | 5 | 61 | 39 | 106 |
 | feature | 1 | 19 | 3 | 24 |
 | ux | 6 | 7 | 2 | 16 |

@@ -1,8 +1,8 @@
 ---
-generated_at: 2026-03-04T10:34:30.068Z
-total_reviews: 333
+generated_at: 2026-03-04T10:58:01.959Z
+total_reviews: 335
 active_count: 150
-approved_count: 178
+approved_count: 180
 ---
 
 # Reviews Index
@@ -166,6 +166,7 @@ approved_count: 178
 
 | Review ID | Target | Reviewer | Date |
 |-----------|--------|----------|------|
+| code-review-319 | feature-005 | senior-reviewer | 2026-03-04 |
 | code-review-318 | feature-004 | senior-reviewer | 2026-03-04 |
 | code-review-315 | ptu-rule-131 | senior-reviewer | 2026-03-04 |
 | code-review-313 | feature-018 | senior-reviewer | 2026-03-04 |
@@ -175,13 +176,12 @@ approved_count: 178
 | code-review-305 | feature-004 | senior-reviewer | 2026-03-03 |
 | code-review-304 | feature-018 | senior-reviewer | 2026-03-03 |
 | code-review-303 | feature-021 | senior-reviewer | 2026-03-03 |
-| code-review-301 | feature-005 | senior-reviewer | 2026-03-03 |
 
 ## Stats
 
-- Active reviews: 333
+- Active reviews: 335
 - Needs action: 150
-- Approved/Pass (active): 178
+- Approved/Pass (active): 180
 - Archived: 297
-- Total (active + archived): 630
+- Total (active + archived): 632
 - Unique targets reviewed: 90
