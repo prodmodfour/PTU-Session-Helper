@@ -1,5 +1,5 @@
 #!/bin/bash
-# PTU Session Helper - tmux Development Environment
+# Rotom Table - tmux Development Environment
 
 SESSION="ptu"
 PROJECT_DIR="$HOME/pokemon_ttrpg/session_helper/app"
