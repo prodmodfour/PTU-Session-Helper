@@ -1,8 +1,8 @@
 # Implementation Log
 
-## Status: p0-implemented (fix cycle complete)
+## Status: p1-implemented
 
-P0 implemented (Sections A-D) + fix cycle applied. P1 and P2 remain.
+P0 implemented (Sections A-D) + fix cycle applied. P1 implemented (Sections E-I). P2 remains.
 
 ---
 
@@ -13,6 +13,61 @@ P0 implemented (Sections A-D) + fix cycle applied. P1 and P2 remain.
 | 2026-02-28 | Design spec created | Full P0/P1/P2 spec for Living Weapon system |
 | 2026-03-03 | P0 implemented | 14 commits: data model, constants, capability parsing, service, API endpoints, WebSocket, encounter integration, auto-disengage on removal/recall/switch |
 | 2026-03-03 | P0 fix cycle | 8 commits: code-review-297 (C1+H1-H3+M1-M3) + rules-review-270 (HIGH#1-#2+MEDIUM#1) + bug-046 + decree-043 |
+| 2026-03-04 | P1 implemented | 12 commits: equipment overlay, weapon moves, evasion refresh, integration across all 4 code paths + faint state sync |
+
+---
+
+## P1 Commits
+
+| Commit | Section | Description |
+|--------|---------|-------------|
+| 056780bb | E/F/G/H | computeEffectiveEquipment, buildLivingWeaponEquippedItem, buildLivingWeaponShield in equipmentBonuses.ts |
+| b62452f5 | E | getEffectiveEquipmentBonuses in living-weapon.service.ts |
+| 69ebdfc5 | I | getGrantedWeaponMoves, getEffectiveMoveList for weapon move injection |
+| 7d151309 | E | refreshCombatantEquipmentBonuses for post-engage/disengage evasion update |
+| cf69f2ea | E | calculateCurrentInitiative updated with wieldRelationships support |
+| 76929cb2 | E | calculate-damage.post.ts updated with effective equipment + weapon move lookup |
+| d0ceade5 | E/F/G | evasionCalculation.ts + useMoveCalculation.ts updated with Living Weapon overlay |
+| caeb7759 | E | engage/disengage endpoints call refreshCombatantEquipmentBonuses |
+| c4ef51ff | H | damage.post.ts refreshes wielder evasion on Living Weapon faint |
+| 4c795e5b | H | heal.post.ts refreshes wielder evasion on Living Weapon faint recovery |
+| a9162f74 | - | Remove unused computeEquipmentBonuses import from damage calc |
+| c0b3e100 | H | use-item.post.ts refreshes wielder evasion on Living Weapon revive |
+
+## P1 Files Changed
+
+### Modified Files
+- `app/utils/equipmentBonuses.ts` — computeEffectiveEquipment, buildLivingWeaponEquippedItem, buildLivingWeaponShield
+- `app/server/services/living-weapon.service.ts` — getEffectiveEquipmentBonuses, refreshCombatantEquipmentBonuses, getGrantedWeaponMoves, getEffectiveMoveList
+- `app/server/services/combatant.service.ts` — calculateCurrentInitiative accepts wieldRelationships
+- `app/server/services/encounter.service.ts` — reorderInitiativeAfterSpeedChange passes wield relationships
+- `app/utils/evasionCalculation.ts` — computeTargetEvasions accepts wieldRelationships
+- `app/composables/useMoveCalculation.ts` — Uses effective equipment with Living Weapon overlay
+- `app/server/api/encounters/[id]/calculate-damage.post.ts` — Uses effective equipment + weapon move lookup
+- `app/server/api/encounters/[id]/living-weapon/engage.post.ts` — Calls refreshCombatantEquipmentBonuses
+- `app/server/api/encounters/[id]/living-weapon/disengage.post.ts` — Calls refreshCombatantEquipmentBonuses
+- `app/server/api/encounters/[id]/damage.post.ts` — Refreshes wielder evasion on Living Weapon faint
+- `app/server/api/encounters/[id]/heal.post.ts` — Refreshes wielder evasion on Living Weapon faint recovery
+- `app/server/api/encounters/[id]/use-item.post.ts` — Refreshes wielder evasion on Living Weapon revive
+
+## P1 Implementation Notes
+
+### Equipment Overlay Pattern
+The Living Weapon equipment overlay is a runtime computation that replaces the trainer's mainHand (and offHand for Doublade/Aegislash) with dynamic EquippedItem objects. The trainer's persisted equipment JSON is never modified. This is implemented in `computeEffectiveEquipment()` and consumed through `getEffectiveEquipmentBonuses()`.
+
+### Duplicate Code Path Check (L2 Lesson Applied)
+All code paths that compute equipment bonuses for trainers in combat were identified and updated:
+1. `buildCombatantFromEntity()` — No change needed (called before wield relationships exist)
+2. `calculateCurrentInitiative()` — Updated to accept optional wieldRelationships
+3. `calculate-damage.post.ts` — Uses getEffectiveEquipmentBonuses
+4. `computeTargetEvasions()` / `useMoveCalculation.ts` — Uses effective equipment
+5. `breather.post.ts` — Not changed (only checks speedDefaultCS, not affected by Living Weapon)
+
+### Faint State Sync
+When a wielded Pokemon faints or is healed from faint, the wielder's evasion values are immediately refreshed to apply or remove the -2 penalty. This is handled in 3 endpoints:
+1. `damage.post.ts` — On faint
+2. `heal.post.ts` — On faint removal
+3. `use-item.post.ts` — On revive via item
 
 ---
 
