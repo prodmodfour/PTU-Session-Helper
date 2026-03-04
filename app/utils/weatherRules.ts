@@ -96,7 +96,7 @@ export const HAIL_ADJACENT_PROTECTION: string[] = ['Snow Cloak']
 export const SANDSTORM_ADJACENT_PROTECTION: string[] = ['Sand Veil']
 
 /**
- * Weather-based combat stage abilities (P1).
+ * Weather-based combat stage abilities (P1 + P2).
  * Applied when weather is set, reversed when weather changes/expires.
  * Uses source-tracked CS changes per decree-005 (stageSources system).
  *
@@ -105,17 +105,23 @@ export const SANDSTORM_ADJACENT_PROTECTION: string[] = ['Sand Veil']
  * - Chlorophyll: +4 Speed CS in Sun (p.315)
  * - Sand Rush: +4 Speed CS in Sandstorm (p.323)
  * - Solar Power: +2 SpAtk CS in Sun (p.327) — also has HP damage, handled separately
+ * P2 additions:
+ * - Thermosensitive: +2 Atk CS and +2 SpAtk CS in Sun (p.331)
+ *   (Hail movement halving handled separately in grid movement)
  */
 export const WEATHER_CS_ABILITIES: Array<{
   weather: PtuWeather
   ability: string
-  stat: 'speed' | 'specialAttack'
+  stat: 'speed' | 'specialAttack' | 'attack'
   bonus: number
 }> = [
   { weather: 'rain', ability: 'Swift Swim', stat: 'speed', bonus: 4 },
   { weather: 'sunny', ability: 'Chlorophyll', stat: 'speed', bonus: 4 },
   { weather: 'sandstorm', ability: 'Sand Rush', stat: 'speed', bonus: 4 },
   { weather: 'sunny', ability: 'Solar Power', stat: 'specialAttack', bonus: 2 },
+  // P2: Thermosensitive (PTU p.331)
+  { weather: 'sunny', ability: 'Thermosensitive', stat: 'attack', bonus: 2 },
+  { weather: 'sunny', ability: 'Thermosensitive', stat: 'specialAttack', bonus: 2 },
 ]
 
 /**
@@ -125,10 +131,10 @@ export const WEATHER_CS_ABILITIES: Array<{
 export function getWeatherCSBonuses(
   combatant: Combatant,
   weather: string | null | undefined
-): Array<{ ability: string; stat: 'speed' | 'specialAttack'; bonus: number }> {
+): Array<{ ability: string; stat: 'speed' | 'specialAttack' | 'attack'; bonus: number }> {
   if (!weather) return []
   const abilities = getCombatantAbilities(combatant)
-  const bonuses: Array<{ ability: string; stat: 'speed' | 'specialAttack'; bonus: number }> = []
+  const bonuses: Array<{ ability: string; stat: 'speed' | 'specialAttack' | 'attack'; bonus: number }> = []
 
   for (const entry of WEATHER_CS_ABILITIES) {
     if (weather === entry.weather) {
@@ -336,3 +342,156 @@ export function isImmuneToWeatherDamage(
     default: return { immune: true, reason: 'type', detail: 'non-damaging weather' }
   }
 }
+
+// ============================================
+// P2: WEATHER BALL
+// ============================================
+
+/**
+ * Weather Ball type/DB mapping (PTU p.338+).
+ * Returns the effective type and DB for Weather Ball given the current weather.
+ *
+ * Without weather: Normal-type, DB 5
+ * With weather: matching type, DB 10
+ */
+export function getWeatherBallEffect(weather: string | null | undefined): {
+  type: string
+  damageBase: number
+} {
+  switch (weather) {
+    case 'sunny': return { type: 'Fire', damageBase: 10 }
+    case 'rain': return { type: 'Water', damageBase: 10 }
+    case 'hail': return { type: 'Ice', damageBase: 10 }
+    case 'sandstorm': return { type: 'Rock', damageBase: 10 }
+    default: return { type: 'Normal', damageBase: 5 }
+  }
+}
+
+// ============================================
+// P2: FORECAST (CASTFORM)
+// ============================================
+
+/**
+ * Forecast type mapping (PTU p.319).
+ * Returns the type Castform becomes in the given weather.
+ * Returns 'Normal' if no weather or non-PTU weather.
+ */
+export function getForecastType(weather: string | null | undefined): string {
+  switch (weather) {
+    case 'sunny': return 'Fire'
+    case 'rain': return 'Water'
+    case 'hail': return 'Ice'
+    case 'sandstorm': return 'Rock'
+    default: return 'Normal'
+  }
+}
+
+// ============================================
+// P2: WEATHER EVASION ABILITIES
+// ============================================
+
+/**
+ * Weather-based evasion bonus abilities (P2).
+ * These add flat evasion bonuses (PTU Part 2 evasion: additive on top of stat-derived).
+ * Applied/reversed alongside WEATHER_CS_ABILITIES when weather changes.
+ *
+ * PTU pp.311-335:
+ * - Snow Cloak: +2 evasion in Hail (p.327)
+ * - Sand Veil: +2 evasion in Sandstorm (p.323)
+ */
+export const WEATHER_EVASION_ABILITIES: Array<{
+  weather: PtuWeather
+  ability: string
+  bonus: number
+}> = [
+  { weather: 'hail', ability: 'Snow Cloak', bonus: 2 },
+  { weather: 'sandstorm', ability: 'Sand Veil', bonus: 2 },
+]
+
+/**
+ * Get weather-based evasion bonuses for a combatant.
+ * Returns array of matching abilities and their evasion bonus values.
+ */
+export function getWeatherEvasionBonuses(
+  combatant: Combatant,
+  weather: string | null | undefined
+): Array<{ ability: string; bonus: number }> {
+  if (!weather) return []
+  const abilities = getCombatantAbilities(combatant)
+  const bonuses: Array<{ ability: string; bonus: number }> = []
+
+  for (const entry of WEATHER_EVASION_ABILITIES) {
+    if (weather === entry.weather) {
+      if (abilities.some(a => a.toLowerCase() === entry.ability.toLowerCase())) {
+        bonuses.push({ ability: entry.ability, bonus: entry.bonus })
+      }
+    }
+  }
+
+  return bonuses
+}
+
+// ============================================
+// P2: SAND FORCE
+// ============================================
+
+/** Move types that get +5 damage from Sand Force in Sandstorm (PTU p.323) */
+export const SAND_FORCE_TYPES: string[] = ['Ground', 'Rock', 'Steel']
+
+/**
+ * Check if Sand Force damage bonus applies.
+ * PTU p.323: "While in a Sandstorm, the user's Ground, Rock, and Steel-Type
+ * Direct-Damage Moves deal +5 Damage."
+ *
+ * @returns 5 if Sand Force applies, 0 otherwise.
+ */
+export function getSandForceDamageBonus(
+  combatant: Combatant,
+  weather: string | null | undefined,
+  moveType: string
+): number {
+  if (weather !== 'sandstorm') return 0
+
+  const abilities = getCombatantAbilities(combatant)
+  const hasSandForce = abilities.some(a => a.toLowerCase() === 'sand force')
+  if (!hasSandForce) return 0
+
+  const normalizedType = moveType.charAt(0).toUpperCase() + moveType.slice(1).toLowerCase()
+  if (SAND_FORCE_TYPES.includes(normalizedType)) return 5
+
+  return 0
+}
+
+// ============================================
+// P2: STATUS CURE ABILITIES
+// ============================================
+
+/**
+ * Persistent status conditions that can be cured by Hydration/Leaf Guard.
+ * PTU p.320:
+ * - Hydration: cures "one Status Affliction" (persistent statuses)
+ * - Leaf Guard: cures "one Status Condition" (broader — includes volatile)
+ *
+ * For safety, both cure from the same list of persistent statuses.
+ * Volatile conditions (Confused, Flinched, etc.) are generally round-scoped
+ * and clear on their own, so we focus on persistent ones.
+ */
+export const CURABLE_PERSISTENT_STATUSES: string[] = [
+  'Burned', 'Frozen', 'Paralyzed', 'Poisoned', 'Badly Poisoned', 'Asleep'
+]
+
+/**
+ * Weather status cure abilities (P2).
+ * Each entry defines which weather triggers the cure.
+ *
+ * PTU pp.320:
+ * - Hydration: cure one status affliction at turn end in Rain
+ * - Leaf Guard: cure one status condition at turn end in Sun
+ */
+export const WEATHER_STATUS_CURE_ABILITIES: Array<{
+  weather: PtuWeather
+  ability: string
+}> = [
+  { weather: 'rain', ability: 'Hydration' },
+  { weather: 'sunny', ability: 'Leaf Guard' },
+]
