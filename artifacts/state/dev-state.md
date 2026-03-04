@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-04T13:05:00
-updated_by: slave-collector (plan-20260304-124517)
+last_updated: 2026-03-04T14:20:00
+updated_by: slave-collector (plan-20260304-132346)
 ---
 
 # Dev Ecosystem State
@@ -100,7 +100,7 @@ updated_by: slave-collector (plan-20260304-124517)
 | feature-002 | P2 | **P2-APPROVED** | 3D isometric grid — P2 fix cycle 2 APPROVED (code-review-160 + rules-review-150). All tiers complete | multi-phase |
 | feature-003 | P1 | **Track-A-P2-APPROVED + Track-B-P1-APPROVED + Track-C-P1-APPROVED** | Player View — Track A P2 APPROVED: code-review-188 APPROVED (`:deep()` fix complete). Track B P1 APPROVED (code-review-162). Track C P1 APPROVED (code-review-163 + rules-review-152). All tracks P0+P1+P2 complete | multi-phase-parallel |
 | feature-004 | P3 | **P2-APPROVED** | Pokemon Mounting / Rider System — P0 APPROVED. P1 APPROVED. P2 fix cycle re-reviewed by slave-4 (plan-20260304-095500): code-review-318 **APPROVED** (all 6 code-review-314 + 2 rules-review-287 issues verified resolved, 0 new) + rules-review-291 **APPROVED** (all 10 mechanics verified, decree-003/004/040 compliant). **Feature complete** (all P0+P1+P2 tiers approved) | multi-phase |
-| feature-005 | P3 | **P2-fix-cycle-done** | Living Weapon System (Honedge Line) — P0 APPROVED (code-review-301 + rules-review-274). P1 APPROVED (code-review-319 + rules-review-292). P2 fix cycle by slave-1 (plan-20260304-124517): 7 commits — split service into abilities+movement sub-services (C1), persist wieldMovementUsed (H1), reset at round start (H2), No Guard client-side per decree-046 (H3), immutable updates (M1), movement modifiers (rules-M2). **P2 needs re-review** | multi-phase |
+| feature-005 | P3 | **P2-APPROVED** | Living Weapon System (Honedge Line) — P0 APPROVED (code-review-301 + rules-review-274). P1 APPROVED (code-review-319 + rules-review-292). P2 APPROVED (code-review-325 + rules-review-297). All tiers complete. **Feature complete** | multi-phase |
 | feature-006 | P1 | **P2-APPROVED** | Pokemon Evolution System — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-290 **APPROVED** + rules-review-266 **APPROVED** (plan-20260302-224650). All code-review-248 + rules-review-224 issues verified resolved. Feature complete | multi-phase |
 | feature-007 | P1 | **P1-APPROVED** | Pokemon Level-Up Allocation UI — P0 APPROVED. P1 fix cycle APPROVED: code-review-243 **APPROVED** (M1: loose MoveDetail types → refactoring-109, M2: canAssignAbility UX → refactoring-110) + rules-review-219 **APPROVED** (all 9 mechanics verified, 0 issues). All code-review-238 + rules-review-214 issues resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
 | feature-008 | P1 | **P1-APPROVED** | Trainer Level-Up Milestone Workflow — P0 APPROVED. P1 fix cycle re-review: code-review-291 **APPROVED** + rules-review-267 **APPROVED** (plan-20260302-224650). All code-review-239 + rules-review-206 issues verified resolved. **Feature complete** (design has P0+P1 only, no P2 tier) | multi-phase |
@@ -119,7 +119,7 @@ updated_by: slave-collector (plan-20260304-124517)
 | feature-021 | P2 | **APPROVED** | Derived Capability Calculations — implemented by slave-4 (plan-20260303-065350). Fix cycle by slave-2 (plan-20260303-131425). Re-reviewed by slave-2 (plan-20260303-165227): code-review-303 **APPROVED** + rules-review-276 **APPROVED**. All code-review-298 issues verified resolved. **Feature complete** | partial |
 | feature-023 | P2 | **P2-APPROVED** | Player Capture & Healing Interfaces — P0 APPROVED. P1 APPROVED. P2 APPROVED. P2 fix cycle re-review: code-review-294 **APPROVED** (plan-20260302-224650). All code-review-288 issues verified resolved. Rules-review-264 already APPROVED. **Feature complete** | multi-phase |
 | feature-022 | P2 | **APPROVED** | Pokemon Loyalty System — PARTIAL scope. Fix cycle by slave-1 (plan-20260303-191515). Re-reviewed by slave-3 (plan-20260303-202535): code-review-309 **APPROVED** (all 6 code-review-306 issues verified resolved, 0 new) + rules-review-282 **APPROVED** (all rules-review-279 issues resolved, 0 new). `prisma db push` completed (schema already in sync). Remaining: as-any removal (5 locations documented in ticket). Out of scope: command checks (R049), loyalty-gated evolution | partial |
-| feature-024 | P3 | **CHANGES_REQUIRED** | Living Weapon unit test coverage — engage validation, disengage clearing, state reconstruction, homebrew fallback, getLivingWeaponConfig. Implemented by slave-4 (plan-20260304-115403): 4 commits. Reviewed by slave-3 (plan-20260304-124517): code-review-324 **CHANGES_REQUIRED** (1H: duplicate vi.mock dead code, 1M: reference equality assertion) + rules-review-296 **APPROVED** (all 72 tests rules-correct, 0 issues). **Needs fix cycle** | single-phase |
+| feature-024 | P3 | **fix-cycle-done** | Living Weapon unit test coverage — engage validation, disengage clearing, state reconstruction, homebrew fallback, getLivingWeaponConfig. Implemented by slave-4 (plan-20260304-115403): 4 commits. Reviewed by slave-3 (plan-20260304-124517): code-review-324 **CHANGES_REQUIRED** (1H+1M). Fix cycle by slave-3 (plan-20260304-132346): 2 commits — removed duplicate vi.mock (H1), added .toEqual for reference equality (M1). **Needs re-review** | single-phase |
 
 ### UX Tickets (`tickets/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -135,23 +135,25 @@ updated_by: slave-collector (plan-20260304-124517)
 | ux-009 | P4 | **resolved** | Proactive IMMUNE tags in StatusConditionsModal — implemented by slave-4 (plan-20260227-153711). code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | ux-010 | P4 | **resolved** | Overlapping significance tier boundaries — fixed by slave-4 (plan-20260227-153711). Exclusive end values. code-review-209 APPROVED + rules-review-185 APPROVED (plan-20260227-162300 slave-2) |
 | ux-011 | P4 | **open** | Custom item form missing grantedCapabilities input field. Follow-up from code-review-222 M-01. Filed by slave-collector (plan-20260228-153856) |
-| ux-012 | P3 | **fix-cycle-done** | Client-side status_tick WebSocket handler for tick damage notifications. Implemented by slave-4 (plan-20260304-110950). Reviewed: code-review-322 **CHANGES_REQUIRED** (1C+2M) + rules-review-295 **APPROVED**. Fix cycle by slave-2 (plan-20260304-124517): 2 commits — replaced lastStatusTick with statusTickQueue array (C1), fixed commit hashes (M2). combatantId included in payload (M1). **Needs re-review** |
+| ux-012 | P3 | **APPROVED** | Client-side status_tick WebSocket handler for tick damage notifications. Implemented by slave-4 (plan-20260304-110950). Fix cycle by slave-2 (plan-20260304-124517). Re-reviewed: code-review-326 **APPROVED** (1M: commit hash in resolution log) + rules-review-298 **APPROVED** (0 issues). Feature complete |
 | ux-013 | P4 | **open** | LevelUpSummary stacked bonus Skill Edge display shows each rank-up from base rank instead of cumulative progression. Cosmetic only — actual payload is correct. Source: rules-review-215 MED-01. Filed by slave-collector (plan-20260301-110550) |
 | ux-014 | P4 | **open** | Evolution undo snapshot staleness warning — no expiry mechanism, GM could undo much later discarding post-evolution changes. Source: code-review-248 M2. Filed by slave-collector (plan-20260301-143720) |
 | ux-015 | P4 | **open** | Replace alert() with inline UI for evolution prevention messages (Everstone/Eviolite). Source: code-review-248 M3. Filed by slave-collector (plan-20260301-143720) |
 
 ## Active Developer Work
 
-**Current task:** Session 109 collection complete. 3 slaves merged (10 commits), 0 skipped. 2 dev slaves + 1 reviewer slave.
+**Current task:** Session 110 collection complete. 4 slaves merged (11 commits), 0 skipped. 2 dev slaves + 2 reviewer slaves.
 
-**Session 109 (2026-03-04, plan-20260304-124517):**
-- **slave-1** (developer): feature-005-p2-fix — 7 commits: Split living-weapon.service.ts into abilities+movement sub-services (C1), persist wieldMovementUsed on combatant (H1), reset at round start (H2), No Guard client-side per decree-046 (H3), immutable updates (M1), movement modifiers (rules-M2), ticket updated. → **P2-fix-cycle-done, needs re-review**
-- **slave-2** (developer): ux-012-fix — 2 commits: Replaced lastStatusTick with statusTickQueue array (C1), fixed commit hashes (M2). → **fix-cycle-done, needs re-review**
-- **slave-3** (reviewers): feature-024-review — code-review-324 **CHANGES_REQUIRED** (1H: duplicate vi.mock dead code, 1M: reference equality assertion) + rules-review-296 **APPROVED** (all 72 tests rules-correct). → feature-024 **CHANGES_REQUIRED, needs fix cycle**
+**Session 110 (2026-03-04, plan-20260304-132346):**
+- **slave-1** (reviewers): feature-005-p2-rereview — code-review-325 **APPROVED** (0 issues, all 7 code-review-321 + 5 rules-review-294 issues resolved) + rules-review-297 **APPROVED** (0 issues). → feature-005 **P2-APPROVED, feature complete**
+- **slave-2** (reviewers): ux-012-rereview — code-review-326 **APPROVED** (1M: commit hash in resolution log, non-blocking) + rules-review-298 **APPROVED** (0 issues). → ux-012 **APPROVED, feature complete**
+- **slave-3** (developer): feature-024-fix — 2 commits: Removed duplicate vi.mock dead code (H1), fixed reference equality assertion (M1). → **fix-cycle-done, needs re-review**
+- **slave-4** (developer): refactoring-125 — 5 commits: Extracted CombatantGmActions.vue from CombatantCard.vue (930→566 lines). → **refactoring done, needs review**
 
 **Smoke test:** PASSED (all 3 views render correctly)
-**Tickets needing re-review:** feature-005 P2 (fix cycle done), ux-012 (fix cycle done)
-**Tickets needing fix cycle:** feature-024 (code-review-324 1H+1M)
+**Tickets APPROVED:** feature-005 P2 (both re-reviews passed — all tiers complete), ux-012 (both re-reviews passed)
+**Tickets needing re-review:** feature-024 (fix cycle done)
+**Tickets needing review:** refactoring-125 (first implementation)
 
 **Session 106 (2026-03-04, plan-20260304-104014):**
 - **slave-1** (developer): feature-018-p2-fix — 5 commits: Fix cycle addressing code-review-317 (1H+3M). Server-side weather threading for mount speed calcs (H1), Sand Force bonus before min-1 clamp (M1), WEATHER_ABILITY_EFFECTS moved to client utils (M3), app-surface.md updated (M2), ticket updated. → **fix-cycle-done, needs re-review**
@@ -907,6 +909,14 @@ updated_by: slave-collector (plan-20260304-124517)
 
 ## Review Status
 
+### Session 110 Reviews (plan-20260304-132346)
+| Review ID | Target | Verdict | Reviewer | Date |
+|-----------|--------|---------|----------|------|
+| code-review-325 | feature-005 P2 re-review (Living Weapon P2 fix cycle: 7 commits, all code-review-321 + rules-review-294 issues) | APPROVED (0 issues, all 7 code + 5 rules issues resolved, service split clean, No Guard per decree-046, Soulstealer scene frequency enforced) | senior-reviewer | 2026-03-04 |
+| rules-review-297 | feature-005 P2 re-review (Living Weapon P2 fix cycle: 6 mechanics verified) | APPROVED (all 5 rules-review-294 issues resolved, movement pool reset correct, Soulstealer featureUsage tracking correct, No Guard client+server consistent per decree-046, movement modifiers applied to shared pool) | game-logic-reviewer | 2026-03-04 |
+| code-review-326 | ux-012 re-review (status_tick WebSocket handler fix cycle: 3 commits) | APPROVED (1M: commit hash c54820c6 should be 06313ff4 in resolution log, non-blocking. All 3 code-review-322 issues resolved: statusTickQueue array, all 8 server fields preserved, commit hashes fixed) | senior-reviewer | 2026-03-04 |
+| rules-review-298 | ux-012 re-review (status_tick handler: 2 mechanics verified) | APPROVED (queue pattern handles burst ticks, all broadcast fields preserved, decree-032/005 compliance verified, no game logic changes) | game-logic-reviewer | 2026-03-04 |
+
 ### Session 109 Reviews (plan-20260304-124517)
 | Review ID | Target | Verdict | Reviewer | Date |
 |-----------|--------|---------|----------|------|
@@ -1418,6 +1428,7 @@ updated_by: slave-collector (plan-20260304-124517)
 | refactoring-106 | P2 | **resolved** | Decouple condition behaviors from category arrays per decree-038. Per-condition behavior flags (clearsOnRecall, clearsOnEncounterEnd, clearsOnFaint). Resolved by slave-6 (plan-20260301-110550): 6 refactoring commits + 1 Sleep fix commit. All 7 consumer files updated |
 | refactoring-107 | P4 | **open** | Duplicated `.btn` / `.counter` / `.tag` / `.selected-tags` SCSS across LevelUpEdgeSection, LevelUpFeatureSection, LevelUpClassSection, LevelUpModal (~40-50 lines each). Extract to shared SCSS partial. Source: code-review-239 M1. Filed by slave-collector (plan-20260301-110550) |
 | refactoring-112 | P3 | **open** | Decompose encounter store into focused sub-modules (970 lines, 5+ responsibility clusters). Source: code-review-249 M1. Filed by slave-collector (plan-20260301-143720) |
+| refactoring-125 | P3 | **in-progress** | CombatantCard.vue exceeds 800-line limit (930 lines). Extracted CombatantGmActions.vue (396 lines). CombatantCard reduced to 566 lines. Implemented by slave-4 (plan-20260304-132346): 5 commits. **Needs review** |
 
 ## Code Health
 
@@ -1431,6 +1442,19 @@ updated_by: slave-collector (plan-20260304-124517)
 | Open tickets (P4) | 10 (refactoring-060/062/076/078/079/084 + ux-002/006/007/008) |
 | Total open | 16 |
 | Total resolved | 159 (feature-002 fully resolved) |
+
+## Session Summary (2026-03-04, session 110 — plan-20260304-132346)
+
+**Slave collection plan-20260304-132346:** 4 slaves merged (11 commits total). 2 dev slaves + 2 reviewer slaves, all completed successfully.
+- **slave-1** (reviewers): feature-005-p2-rereview — code-review-325 **APPROVED** (0 issues) + rules-review-297 **APPROVED** (0 issues). All code-review-321 + rules-review-294 issues resolved.
+- **slave-2** (reviewers): ux-012-rereview — code-review-326 **APPROVED** (1M: commit hash in resolution log) + rules-review-298 **APPROVED** (0 issues). All code-review-322 issues resolved.
+- **slave-3** (developer): feature-024-fix — 2 commits (removed duplicate vi.mock H1, fixed reference equality M1)
+- **slave-4** (developer): refactoring-125 — 5 commits (extracted CombatantGmActions.vue from CombatantCard.vue, reduced from 930 to 566 lines)
+
+**Smoke test:** PASSED (all 3 views render correctly)
+**Tickets APPROVED:** feature-005 P2 (both re-reviews passed — all tiers complete, feature done), ux-012 (both re-reviews passed)
+**Tickets needing re-review:** feature-024 (fix cycle done)
+**Tickets needing review:** refactoring-125 (first implementation)
 
 ## Session Summary (2026-03-04, session 109 — plan-20260304-124517)
 
