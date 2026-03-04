@@ -2,6 +2,7 @@ import type { GridPosition, Combatant, Pokemon, HumanCharacter, TerrainType, Ter
 import { areAdjacent } from '~/utils/adjacency'
 import { AOO_BLOCKING_CONDITIONS } from '~/types/combat'
 import { useTerrainStore } from '~/stores/terrain'
+import { useEncounterStore } from '~/stores/encounter'
 import { useRangeParser } from '~/composables/useRangeParser'
 import {
   combatantCanSwim, combatantCanBurrow, combatantCanFly, getSkySpeed,
@@ -97,7 +98,11 @@ export { applyMovementModifiers } from '~/utils/movementModifiers'
 
 export function useGridMovement(options: UseGridMovementOptions) {
   const terrainStore = useTerrainStore()
+  const encounterStore = useEncounterStore()
   const { calculatePathCost, getMovementRangeCells, getMovementRangeCellsWithAveraging } = useRangeParser()
+
+  // P2: Current weather for Thermosensitive movement halving
+  const currentWeather = computed(() => encounterStore.encounter?.weather ?? null)
 
   /**
    * Calculate distance between two grid positions using PTU diagonal rules.
@@ -165,7 +170,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
     }
 
     const maxSpeed = Math.max(...speeds)
-    const modifiedSpeed = applyMovementModifiers(combatant, maxSpeed)
+    const modifiedSpeed = applyMovementModifiers(combatant, maxSpeed, currentWeather.value)
 
     // Disengage clamp: when disengaged, movement is limited to 1m (PTU p.241)
     if (combatant.disengaged) {
@@ -216,9 +221,9 @@ export function useGridMovement(options: UseGridMovementOptions) {
       baseSpeed = DEFAULT_MOVEMENT_SPEED
     }
 
-    // Apply movement modifiers from combat state
+    // Apply movement modifiers from combat state (P2: includes Thermosensitive Hail halving)
     if (combatant) {
-      baseSpeed = applyMovementModifiers(combatant, baseSpeed)
+      baseSpeed = applyMovementModifiers(combatant, baseSpeed, currentWeather.value)
     }
 
     // Disengage clamp: when disengaged, movement is limited to 1m (PTU p.241)
@@ -269,8 +274,8 @@ export function useGridMovement(options: UseGridMovementOptions) {
     // Calculate averaged base speed from terrain types
     const averagedBase = calculateAveragedSpeed(combatant, terrainTypes)
 
-    // Apply movement modifiers (Stuck, Tripped, Slowed, Speed CS, Sprint)
-    return applyMovementModifiers(combatant, averagedBase)
+    // Apply movement modifiers (Stuck, Tripped, Slowed, Speed CS, Sprint, P2: Thermosensitive)
+    return applyMovementModifiers(combatant, averagedBase, currentWeather.value)
   }
 
   /**
@@ -288,7 +293,7 @@ export function useGridMovement(options: UseGridMovementOptions) {
     }
     return (terrainTypes: Set<string>) => {
       const averagedBase = calculateAveragedSpeed(combatant, terrainTypes)
-      return applyMovementModifiers(combatant, averagedBase)
+      return applyMovementModifiers(combatant, averagedBase, currentWeather.value)
     }
   }
 

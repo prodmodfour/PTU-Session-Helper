@@ -13,6 +13,7 @@
  */
 
 import type { Combatant } from '~/types/encounter'
+import { getCombatantAbilities } from '~/utils/weatherRules'
 
 /**
  * Apply movement-modifying conditions and combat stage effects to base speed.
@@ -21,9 +22,10 @@ import type { Combatant } from '~/types/encounter'
  *
  * @param combatant - The combatant whose conditions affect the speed
  * @param speed - The base speed to modify
+ * @param weather - Optional encounter weather (P2: Thermosensitive halves movement in Hail)
  * @returns The modified speed after applying all movement conditions
  */
-export function applyMovementModifiers(combatant: Combatant, speed: number): number {
+export function applyMovementModifiers(combatant: Combatant, speed: number, weather?: string | null): number {
   let modifiedSpeed = speed
   const conditions = combatant.entity.statusConditions ?? []
   const tempConditions = combatant.tempConditions ?? []
@@ -41,6 +43,15 @@ export function applyMovementModifiers(combatant: Combatant, speed: number): num
   // Slowed: reduce all movement speeds by half
   if (conditions.includes('Slowed')) {
     modifiedSpeed = Math.floor(modifiedSpeed / 2)
+  }
+
+  // P2: Thermosensitive movement halving in Hail (PTU p.331)
+  // "While Hailing, the user's movement capabilities are reduced by half."
+  if (weather === 'hail') {
+    const abilities = getCombatantAbilities(combatant)
+    if (abilities.some(a => a.toLowerCase() === 'thermosensitive')) {
+      modifiedSpeed = Math.floor(modifiedSpeed / 2)
+    }
   }
 
   // Speed Combat Stage modifier (-6 to +6): additive bonus/penalty
