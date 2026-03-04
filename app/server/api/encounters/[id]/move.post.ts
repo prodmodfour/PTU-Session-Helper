@@ -18,6 +18,8 @@ import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server
 import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkMoveFrequency, incrementMoveUsage } from '~/utils/moveFrequency'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
+import { checkSoulstealer, applySoulstealerHealing } from '~/server/services/living-weapon.service'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import type { Move } from '~/types/character'
 import type { StatusCondition } from '~/types'
 
@@ -238,6 +240,29 @@ export default defineEventHandler(async (event) => {
       standardActionUsed: true
     }
 
+    // P2: Soulstealer ability check (PTU p.2417-2423, feature-005)
+    // If the actor has Soulstealer and any target fainted from this move, heal the actor.
+    let soulstealerResult: { hpHealed: number; injuriesRemoved: number; isKill: boolean } | null = null
+    const anyTargetFainted = targetResults.some(r => r.fainted)
+    if (anyTargetFainted) {
+      const soulstealCheck = checkSoulstealer(actor, true)
+      if (soulstealCheck?.triggered) {
+        const healing = applySoulstealerHealing(actor, soulstealCheck.isKill)
+        soulstealerResult = {
+          hpHealed: healing.hpHealed,
+          injuriesRemoved: healing.injuriesRemoved,
+          isKill: soulstealCheck.isKill,
+        }
+        // Sync healed actor to database
+        if (actor.entityId) {
+          await syncEntityToDatabase(actor, {
+            currentHp: actor.entity.currentHp,
+            injuries: actor.entity.injuries,
+          })
+        }
+      }
+    }
+
     // Track defeated enemies for XP calculation
     let defeatedEnemies = JSON.parse(record.defeatedEnemies)
     for (const result of targetResults) {
@@ -270,7 +295,8 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       data: response,
-      ...(targetResults.length > 0 && { targetResults })
+      ...(targetResults.length > 0 && { targetResults }),
+      ...(soulstealerResult && { soulstealer: { actorId: body.actorId, ...soulstealerResult } })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
