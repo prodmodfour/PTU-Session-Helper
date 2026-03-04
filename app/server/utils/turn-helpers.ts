@@ -39,6 +39,7 @@ export function resetResolvingTrainerTurnState(combatants: any[], combatantId: s
       swiftActionUsed: false,
       canBeCommanded: true,
       isHolding: false,
+      distanceMovedThisTurn: 0,
       ...(forfeitStandard && { forfeitStandardAction: true }),
       ...(forfeitShift && { forfeitShiftAction: true })
     }
@@ -95,6 +96,7 @@ export function resetCombatantsForNewRound(combatants: any[]) {
       swiftActionUsed: false,
       canBeCommanded: true,
       isHolding: false,
+      distanceMovedThisTurn: 0,
       ...(forfeitStandard && { forfeitStandardAction: true }),
       ...(forfeitShift && { forfeitShiftAction: true })
     }
@@ -118,13 +120,13 @@ export function resetCombatantsForNewRound(combatants: any[]) {
       if (!c.mountState.isMounted) {
         // This is the mount -- recalculate from its own modified Overland speed
         const mountSpeed = applyMovementModifiers(c, getOverlandSpeed(c))
-        c.mountState = { ...c.mountState, movementRemaining: mountSpeed }
+        c.mountState = { ...c.mountState, movementRemaining: mountSpeed, rideAsOneSwapped: false }
       } else {
         // This is the rider -- sync movement with mount partner's modified speed
         const mountPartner = combatants.find((p: any) => p.id === c.mountState.partnerId)
         if (mountPartner) {
           const mountSpeed = applyMovementModifiers(mountPartner, getOverlandSpeed(mountPartner))
-          c.mountState = { ...c.mountState, movementRemaining: mountSpeed }
+          c.mountState = { ...c.mountState, movementRemaining: mountSpeed, rideAsOneSwapped: false }
         }
       }
     }
