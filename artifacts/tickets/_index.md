@@ -1,18 +1,17 @@
 ---
-generated_at: 2026-03-04T22:25:03.174Z
+generated_at: 2026-03-04T22:58:07.603Z
 total_tickets: 310
-open: 47
+open: 46
 in_progress: 1
-resolved: 262
+resolved: 263
 ---
 
 # Tickets Index
 
-## Open Tickets (47)
+## Open Tickets (46)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| bug-051 | bug | P1 | tooling | Tickets index generator uses frontmatter status instead of d |
 | feature-025 | feature | P2 | encounter-tables | Per decree-048, implement per-combatant vision capability tr |
 | refactoring-002 | refactoring | P3 | vtt-grid | Legacy terrain types `'difficult'` and `'rough'` are still v |
 | refactoring-098 | refactoring | P3 | combat | refactoring-098: Refactor entity mutation in heavily injured |
@@ -74,7 +73,7 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 0 | 50 | 51 |
+| bug | 0 | 0 | 51 | 51 |
 | ptu-rule | 6 | 1 | 99 | 106 |
 | feature | 1 | 0 | 24 | 25 |
 | ux | 6 | 0 | 10 | 16 |
