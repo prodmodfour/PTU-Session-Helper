@@ -44,7 +44,7 @@ export function reconstructWieldRelationships(combatants: Combatant[]): WieldRel
       weaponId: weapon.id,
       weaponSpecies: knownSpecies,
       isFainted,
-      movementUsedThisRound: 0,
+      movementUsedThisRound: c.wieldMovementUsed ?? 0,
     })
   }
 

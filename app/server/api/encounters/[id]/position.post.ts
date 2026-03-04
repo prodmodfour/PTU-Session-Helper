@@ -139,6 +139,17 @@ export default defineEventHandler(async (event) => {
             position: { ...body.position }
           }
         }
+
+        // H1: Persist shared movement pool usage on the wielder combatant
+        // so reconstructWieldRelationships can recover it mid-round.
+        const wielderIndex = combatants.findIndex(c => c.id === wieldRel.wielderId)
+        if (wielderIndex !== -1 && distanceMoved > 0) {
+          const wielder = combatants[wielderIndex]
+          combatants[wielderIndex] = {
+            ...wielder,
+            wieldMovementUsed: (wielder.wieldMovementUsed ?? 0) + distanceMoved
+          }
+        }
       } else {
         // Non-mounted, non-wielded: standard single-combatant position update
         combatants[combatantIndex] = {

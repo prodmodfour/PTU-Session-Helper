@@ -247,9 +247,10 @@ export function engageLivingWeapon(
   }
 
   // Update combatant flags (immutable)
+  // H1: Initialize wieldMovementUsed on wielder for reconstruction persistence
   const updatedCombatants = combatants.map(c => {
     if (c.id === wielderId) {
-      return { ...c, wieldingWeaponId: weaponId }
+      return { ...c, wieldingWeaponId: weaponId, wieldMovementUsed: 0 }
     }
     if (c.id === weaponId) {
       return { ...c, wieldedByTrainerId: wielderId }
@@ -290,9 +291,10 @@ export function disengageLivingWeapon(
   const { wielderId, weaponId } = relationship
 
   // Clear combatant flags (immutable)
+  // H1: Also clear wieldMovementUsed on wielder
   const updatedCombatants = combatants.map(c => {
     if (c.id === wielderId) {
-      const { wieldingWeaponId, ...rest } = c
+      const { wieldingWeaponId, wieldMovementUsed, ...rest } = c
       return rest as Combatant
     }
     if (c.id === weaponId) {

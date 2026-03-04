@@ -96,6 +96,10 @@ export interface Combatant {
   /** For Aegislash: was in Blade forme when engaged as Living Weapon? (P2)
    *  Used to revert forme on disengage. Combat-scoped, not DB-persisted. */
   wasInBladeFormeOnEngage?: boolean;
+  /** Shared movement pool usage for Living Weapon wield pairs (H1 fix).
+   *  Persisted on the wielder combatant so reconstructWieldRelationships
+   *  can recover mid-round movement tracking. Reset to 0 at round start. */
+  wieldMovementUsed?: number;
 
   // Forecast ability: original types before weather-based type change (P2, feature-018)
   // Combat-scoped — not persisted to the Pokemon DB record.
