@@ -4,6 +4,8 @@
 import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse } from '~/server/services/encounter.service'
 import { applyHealingToEntity } from '~/server/services/combatant.service'
 import { syncHealingToDatabase } from '~/server/services/entity-update.service'
+import { refreshCombatantEquipmentBonuses } from '~/server/services/living-weapon.service'
+import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -51,6 +53,21 @@ export default defineEventHandler(async (event) => {
       entity.injuries || 0,
       entity.statusConditions || []
     )
+
+    // Living Weapon faint recovery (feature-005, PTU p.305):
+    // When a wielded Pokemon is healed from faint, refresh the wielder's evasion
+    // to remove the -2 fainted penalty from equipment bonuses.
+    if (healResult.faintedRemoved && combatant.wieldedByTrainerId) {
+      const wieldRels = reconstructWieldRelationships(combatants)
+      const wielder = combatants.find(c => c.id === combatant.wieldedByTrainerId)
+      if (wielder) {
+        const refreshed = refreshCombatantEquipmentBonuses(wieldRels, wielder)
+        const wielderIdx = combatants.findIndex(c => c.id === wielder.id)
+        if (wielderIdx >= 0) {
+          combatants[wielderIdx] = refreshed
+        }
+      }
+    }
 
     await saveEncounterCombatants(id, combatants)
 
