@@ -355,17 +355,19 @@ export default defineEventHandler(async (event) => {
 
     const moveAC = move.ac ?? 0
 
-    // No Guard ability: -3 to AC (PTU p.2240)
-    // Suppressed while wielded as a Living Weapon (PTU p.306, feature-005 P2)
-    const noGuardActive = isNoGuardActive(attacker, wieldRelationships)
-    const noGuardACReduction = noGuardActive ? -3 : 0
-    const effectiveAC = moveAC + noGuardACReduction
+    // No Guard ability (decree-046): playtest +3/-3 flat accuracy version.
+    // +3 bonus to all Attack Rolls for the user (attacker has No Guard),
+    // +3 bonus to all Attack Rolls against the user (target has No Guard).
+    // Suppressed while wielded as a Living Weapon (PTU p.306, feature-005 P2).
+    const attackerNoGuard = isNoGuardActive(attacker, wieldRelationships)
+    const targetNoGuard = isNoGuardActive(target, wieldRelationships)
+    const noGuardBonus = (attackerNoGuard ? 3 : 0) + (targetNoGuard ? 3 : 0)
 
     // Accuracy threshold uses flanking-adjusted evasion
-    const accuracyThreshold = Math.max(1, effectiveAC + effectiveEvasionWithFlanking - attackerData.accuracyStage)
+    const accuracyThreshold = Math.max(1, moveAC + effectiveEvasionWithFlanking - attackerData.accuracyStage - noGuardBonus)
 
-    const accuracy: AccuracyCalcResult & { flankingPenalty: number; noGuardActive?: boolean } = {
-      moveAC: effectiveAC,
+    const accuracy: AccuracyCalcResult & { flankingPenalty: number; noGuardActive?: boolean; targetNoGuard?: boolean } = {
+      moveAC,
       attackerAccuracyStage: attackerData.accuracyStage,
       physicalEvasion,
       specialEvasion,
@@ -374,7 +376,8 @@ export default defineEventHandler(async (event) => {
       effectiveEvasion: effectiveEvasionWithFlanking,
       accuracyThreshold,
       flankingPenalty,
-      ...(noGuardActive && { noGuardActive: true }),
+      ...(attackerNoGuard && { noGuardActive: true }),
+      ...(targetNoGuard && { targetNoGuard: true }),
     }
 
     // P2: Rider feature modifier annotations for GM awareness.

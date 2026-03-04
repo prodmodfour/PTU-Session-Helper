@@ -424,6 +424,50 @@ export function useMoveCalculation(
     }
   }
 
+  /**
+   * Check if a combatant has an active (unsuppressed) No Guard ability.
+   * No Guard is suppressed while wielded as a Living Weapon (PTU p.306).
+   */
+  const hasActiveNoGuard = (combatant: Combatant): boolean => {
+    if (combatant.type !== 'pokemon') return false
+    const pokemon = combatant.entity as Pokemon
+    const hasAbility = pokemon.abilities?.some(
+      (a: { name: string }) => a.name === 'No Guard'
+    ) ?? false
+    if (!hasAbility) return false
+
+    // Suppressed while wielded as a Living Weapon
+    const wieldRels = encounterStore.encounter?.wieldRelationships ?? []
+    return !wieldRels.some(r => r.weaponId === combatant.id)
+  }
+
+  /**
+   * Get the No Guard accuracy bonus for this attack.
+   *
+   * Per decree-046: No Guard uses playtest +3/-3 flat accuracy version.
+   * +3 bonus to all Attack Rolls for the user (attacker has No Guard),
+   * +3 bonus to all Attack Rolls against the user (target has No Guard).
+   * These stack if both attacker and target have No Guard.
+   *
+   * Suppressed while the No Guard Pokemon is wielded as a Living Weapon.
+   */
+  const getNoGuardBonus = (targetId: string): number => {
+    let bonus = 0
+
+    // +3 if the attacker has active No Guard
+    if (hasActiveNoGuard(actor.value)) {
+      bonus += 3
+    }
+
+    // +3 if the target has active No Guard (attacks against them get bonus)
+    const target = targets.value.find(t => t.id === targetId)
+    if (target && hasActiveNoGuard(target)) {
+      bonus += 3
+    }
+
+    return bonus
+  }
+
   const getAccuracyThreshold = (targetId: string): number => {
     if (!move.value.ac) return 0
 
@@ -436,7 +480,9 @@ export function useMoveCalculation(
     // Per decree-040: flanking penalty applies AFTER the evasion cap of 9.
     // effectiveEvasion = Math.min(9, rawEvasion) - flankingPenalty
     const flankingPenalty = options?.getFlankingPenalty?.(targetId) ?? 0
-    return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value - flankingPenalty + roughPenalty)
+    // No Guard bonus (decree-046): +3/-3 flat accuracy, reduces threshold
+    const noGuardBonus = getNoGuardBonus(targetId)
+    return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value - flankingPenalty + roughPenalty - noGuardBonus)
   }
 
   const rollAccuracy = () => {
@@ -769,6 +815,7 @@ export function useMoveCalculation(
     getTargetEvasion,
     getTargetEvasionLabel,
     getAccuracyThreshold,
+    getNoGuardBonus,
     getRoughTerrainPenalty,
     rollAccuracy,
     hitCount,
