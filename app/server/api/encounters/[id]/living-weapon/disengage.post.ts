@@ -11,7 +11,7 @@
  * Validates: active relationship exists, turn active, Swift Action available.
  */
 import { loadEncounter, buildEncounterResponse, saveEncounterCombatants } from '~/server/services/encounter.service'
-import { disengageLivingWeapon } from '~/server/services/living-weapon.service'
+import { disengageLivingWeapon, refreshCombatantEquipmentBonuses } from '~/server/services/living-weapon.service'
 import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 import { broadcastToEncounter } from '~/server/utils/websocket'
 
@@ -84,17 +84,24 @@ export default defineEventHandler(async (event) => {
     )
 
     // Mark Swift Action as used on the disengaging combatant
+    // And refresh the wielder's evasion values (Living Weapon overlay removed)
+    const wielderId = result.removedRelationship.wielderId
     const finalCombatants = result.combatants.map(c => {
+      let updated = c
       if (c.id === body.combatantId) {
-        return {
-          ...c,
+        updated = {
+          ...updated,
           turnState: {
-            ...c.turnState,
+            ...updated.turnState,
             swiftActionUsed: true,
           }
         }
       }
-      return c
+      // Refresh wielder's evasion values after wield relationship removed
+      if (c.id === wielderId) {
+        updated = refreshCombatantEquipmentBonuses(result.wieldRelationships, updated)
+      }
+      return updated
     })
 
     // Persist updated combatants

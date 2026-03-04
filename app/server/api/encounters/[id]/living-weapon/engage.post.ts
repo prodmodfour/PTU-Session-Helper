@@ -11,7 +11,7 @@
  *   marks Standard Action as used on initiator, broadcasts WebSocket event.
  */
 import { loadEncounter, buildEncounterResponse, saveEncounterCombatants } from '~/server/services/encounter.service'
-import { engageLivingWeapon } from '~/server/services/living-weapon.service'
+import { engageLivingWeapon, refreshCombatantEquipmentBonuses } from '~/server/services/living-weapon.service'
 import { reconstructWieldRelationships } from '~/server/services/living-weapon-state'
 import { broadcastToEncounter } from '~/server/utils/websocket'
 
@@ -97,17 +97,23 @@ export default defineEventHandler(async (event) => {
     )
 
     // Mark Standard Action as used on the initiator (wielder or weapon)
+    // And refresh the wielder's evasion values with the Living Weapon equipment overlay
     const finalCombatants = result.combatants.map(c => {
+      let updated = c
       if (c.id === initiatorId) {
-        return {
-          ...c,
+        updated = {
+          ...updated,
           turnState: {
-            ...c.turnState,
+            ...updated.turnState,
             standardActionUsed: true,
           }
         }
       }
-      return c
+      // Refresh wielder's evasion values after wield relationship change
+      if (c.id === body.wielderId) {
+        updated = refreshCombatantEquipmentBonuses(result.wieldRelationships, updated)
+      }
+      return updated
     })
 
     // Persist updated combatants
