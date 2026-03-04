@@ -71,3 +71,12 @@ FULL-scope feature requiring design spec. Affects damage calculation, turn end p
     - `c1aebb1f` — `app/server/services/weather-automation.service.ts` (EDIT): Add WEATHER_ABILITY_EFFECTS, getWeatherAbilityEffects() for turn start/end
     - `5a6e5ab7` — `app/server/utils/turn-helpers.ts` (EDIT): Add applyWeatherAbilityEffects() helper
     - `5a6e5ab7` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Turn-end and turn-start weather ability effects
+- **2026-03-04 P1 Fix Cycle** (code-review-310, branch: `slave/1-dev-feature-018-fix-20260304`):
+  - **CRITICAL-001**: Client-side weather DB modifier missing in useMoveCalculation.ts
+    - `ca59d3b9` — `app/composables/useMoveCalculation.ts` (EDIT): Import getWeatherDamageModifier, read weather from encounterStore, apply +/-5 DB modifier before STAB in effectiveDB computed
+  - **HIGH-001**: WebSocket broadcast for weather ability effects sent hardcoded newHp:0 and fainted:false
+    - `64a039a0` — `app/server/services/weather-automation.service.ts` (EDIT): Add newHp and fainted fields to WeatherAbilityResult interface
+    - `07d0d701` — `app/server/utils/turn-helpers.ts` (EDIT): Populate newHp and fainted after applying heal/damage in applyWeatherAbilityEffects
+    - `07d0d701` — `app/server/api/encounters/[id]/next-turn.post.ts` (EDIT): Use result.newHp and result.fainted in WebSocket broadcast instead of hardcoded values
+  - **MEDIUM-001**: Desert Weather Sun fire resistance deferred to P2
+    - `60ad567f` — `artifacts/designs/design-weather-001/shared-specs.md` (EDIT): Update tier annotation for Desert Weather Sun fire resistance from P1 to P2
