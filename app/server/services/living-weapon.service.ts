@@ -10,7 +10,8 @@
 
 import type { Combatant } from '~/types/encounter'
 import type { WieldRelationship } from '~/types/combat'
-import type { Pokemon, HumanCharacter, SkillRank } from '~/types/character'
+import type { Pokemon, HumanCharacter, SkillRank, Move, PokemonType } from '~/types/character'
+import type { MoveFrequency } from '~/types/combat'
 import { getLivingWeaponConfig } from '~/utils/combatantCapabilities'
 import { LIVING_WEAPON_CONFIG } from '~/constants/livingWeapon'
 import type { LivingWeaponConfig } from '~/constants/livingWeapon'
@@ -400,4 +401,87 @@ export function getEffectiveEquipmentBonuses(
   }
 
   return computeEquipmentBonuses(equipment)
+}
+
+// ============================================================
+// Weapon Move Injection (P1 — Section I)
+// ============================================================
+
+/**
+ * Get the weapon moves a Living Weapon gains while wielded,
+ * filtered by the wielder's Combat skill rank.
+ *
+ * PTU p.306: "so long as their wielder qualifies to access them."
+ * PTU p.288: Adept Weapon Moves require Adept Combat.
+ * PTU p.290: Master Weapon Moves require Master Combat.
+ * Per decree-043: Combat Skill Rank gates weapon MOVE ACCESS, not engagement.
+ */
+export function getGrantedWeaponMoves(
+  config: LivingWeaponConfig,
+  wielderCombatRank: SkillRank | undefined
+): Move[] {
+  const rank = wielderCombatRank ?? 'Untrained'
+
+  return config.grantedMoves
+    .filter(wm => meetsSkillRequirement(rank, wm.requiredRank))
+    .map(wm => ({
+      id: `living-weapon-${wm.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+      name: wm.name,
+      type: wm.type as PokemonType,
+      damageClass: wm.damageClass,
+      frequency: wm.frequency as MoveFrequency,
+      ac: wm.ac,
+      damageBase: wm.damageBase,
+      range: wm.range,
+      effect: wm.effect,
+      keywords: ['Weapon'],
+    }))
+}
+
+/**
+ * Get the effective move list for a Pokemon combatant,
+ * including any Living Weapon moves if wielded.
+ *
+ * PTU p.306: "While used as a Living Weapon, the Pokemon also adds
+ * these Moves to its own Move List, so long as their wielder qualifies
+ * to access them."
+ *
+ * Weapon moves are NOT DB-persisted — they are injected at runtime.
+ * When fainted, the Pokemon cannot use moves (fainted = no actions),
+ * but the moves remain conceptually on the list.
+ */
+export function getEffectiveMoveList(
+  wieldRelationships: WieldRelationship[],
+  combatants: Combatant[],
+  combatant: Combatant
+): Move[] {
+  if (combatant.type !== 'pokemon') return []
+
+  const pokemon = combatant.entity as Pokemon
+  const baseMoves = pokemon.moves ?? []
+
+  // Check if this Pokemon is currently wielded
+  const wieldRel = wieldRelationships.find(
+    r => r.weaponId === combatant.id
+  )
+  if (!wieldRel) return baseMoves
+
+  // Get the wielder's Combat skill rank
+  const wielder = combatants.find(c => c.id === wieldRel.wielderId)
+  if (!wielder || wielder.type !== 'human') return baseMoves
+
+  const human = wielder.entity as HumanCharacter
+  const combatRank = (human.skills?.Combat ?? 'Untrained') as SkillRank
+
+  // Get config and filter moves by wielder qualification
+  const config = LIVING_WEAPON_CONFIG[wieldRel.weaponSpecies]
+  if (!config) return baseMoves
+
+  const weaponMoves = getGrantedWeaponMoves(config, combatRank)
+
+  // Merge: base moves + weapon moves (avoid duplicates by name)
+  const existingNames = new Set(baseMoves.map(m => m.name))
+  const newMoves = weaponMoves.filter(m => !existingNames.has(m.name))
+
+  return [...baseMoves, ...newMoves]
 }
