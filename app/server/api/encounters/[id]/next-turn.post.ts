@@ -710,8 +710,8 @@ export default defineEventHandler(async (event) => {
           combatantName: result.combatantName,
           condition: result.ability,
           damage: result.effect === 'damage' ? result.amount : -result.amount,
-          newHp: 0, // Caller doesn't track post-effect HP in WeatherAbilityResult
-          fainted: false,
+          newHp: result.newHp,
+          fainted: result.fainted,
           formula: result.formula
         }
       })

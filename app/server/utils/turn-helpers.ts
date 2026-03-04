@@ -298,6 +298,10 @@ export async function applyWeatherAbilityEffects(
       await syncEntityToDatabase(combatant, {
         currentHp: combatant.entity.currentHp
       })
+
+      // Populate post-effect state for WebSocket broadcast
+      effect.newHp = combatant.entity.currentHp
+      effect.fainted = false
     } else {
       const damageResult = calculateDamage(
         effect.amount,
@@ -327,6 +331,10 @@ export async function applyWeatherAbilityEffects(
         statusConditions: combatant.entity.statusConditions,
         ...(damageResult.injuryGained ? { lastInjuryTime: new Date() } : {})
       })
+
+      // Populate post-effect state for WebSocket broadcast
+      effect.newHp = combatant.entity.currentHp
+      effect.fainted = damageResult.fainted
     }
 
     results.push(effect)
