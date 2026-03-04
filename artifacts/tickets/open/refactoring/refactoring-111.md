@@ -3,6 +3,7 @@ ticket_id: refactoring-111
 category: EXT-FILE-SIZE
 priority: P3
 severity: MEDIUM
+status: in-progress
 domain: vtt-grid
 source: code-review-245 MED-1
 created_by: slave-collector (plan-20260301-135300)
@@ -28,3 +29,10 @@ Extract `drawMovementArrow()` (lines 674-756, ~82 lines) and related arrow/highl
 - Prevents file from growing past maintainability limits during P1
 - Cleaner separation of concerns between token rendering and movement preview rendering
 - Should be done before or during feature-013 P1 implementation
+
+## Resolution Log
+
+- `57ad778a` — refactor: extract movement preview drawing into useIsometricMovementPreview composable
+  - Created `app/composables/useIsometricMovementPreview.ts` (195 lines) with `drawCellHighlight`, `drawMovementRange`, `drawMovementArrow`
+  - Updated `app/composables/useIsometricRendering.ts` (820 -> 682 lines) to import and delegate to the new composable
+  - Moved 4 related constants (`MOVEMENT_RANGE_FILL`, `MOVEMENT_RANGE_STROKE`, `VALID_MOVE_COLOR`, `INVALID_MOVE_COLOR`) to the new file
