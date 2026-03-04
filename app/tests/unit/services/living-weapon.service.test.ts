@@ -13,18 +13,6 @@ vi.mock('~/utils/adjacency', () => ({
   areAdjacent: (...args: unknown[]) => mockAreAdjacent(...args),
 }))
 
-// Mock equipmentBonuses (not under test here)
-vi.mock('~/utils/equipmentBonuses', () => ({
-  computeEquipmentBonuses: () => ({
-    damageReduction: 0,
-    evasionBonus: 0,
-    statBonuses: {},
-    speedDefaultCS: 0,
-    conditionalDR: [],
-  }),
-  computeEffectiveEquipment: (eq: unknown) => eq,
-}))
-
 // Mock damageCalculation (not under test here)
 vi.mock('~/utils/damageCalculation', () => ({
   calculateEvasion: () => 0,
@@ -577,7 +565,8 @@ describe('clearWieldOnRemoval', () => {
     const combatant = makeHumanCombatant({ id: 'h1' })
     const combatants = [combatant]
     const result = clearWieldOnRemoval(combatants, [], 'h1')
-    expect(result.combatants).toBe(combatants) // same reference
+    // Intentional reference equality: no-op path must return the original array (not a copy)
+    expect(result.combatants).toBe(combatants)
     expect(result.wieldRelationships).toHaveLength(0)
   })
 
