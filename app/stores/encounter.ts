@@ -1135,6 +1135,113 @@ export const useEncounterStore = defineStore('encounter', {
     },
 
     // ===========================================
+    // Rider Class Feature Activation (feature-004 P2)
+    // ===========================================
+
+    /**
+     * Toggle Agility Training on/off for a mounted pair.
+     * When active: mount gets 'Agile' temp condition. Rider feature doubles the bonus.
+     * This is a client-side toggle that the GM uses as a reminder.
+     */
+    toggleAgilityTraining(combatantId: string) {
+      if (!this.encounter) return
+      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
+      if (!combatant?.mountState) return
+
+      // Find the mount (the one with isMounted=false)
+      const mountId = combatant.mountState.isMounted ? combatant.mountState.partnerId : combatantId
+      const mount = this.encounter.combatants.find(c => c.id === mountId)
+      if (!mount) return
+
+      const tempConditions = mount.tempConditions ?? []
+      if (tempConditions.includes('Agile')) {
+        mount.tempConditions = tempConditions.filter(c => c !== 'Agile')
+      } else {
+        mount.tempConditions = [...tempConditions, 'Agile']
+      }
+    },
+
+    /**
+     * Activate Conqueror's March for the current round.
+     * Adds 'ConquerorsMarsh' temp condition to the mount.
+     * Requires: rider has feature, mount has Run Up, mount is being ridden.
+     */
+    activateConquerorsMarch(mountId: string) {
+      if (!this.encounter) return
+      const mount = this.encounter.combatants.find(c => c.id === mountId)
+      if (!mount) return
+
+      const tempConditions = mount.tempConditions ?? []
+      if (!tempConditions.includes('ConquerorsMarsh')) {
+        mount.tempConditions = [...tempConditions, 'ConquerorsMarsh']
+      }
+    },
+
+    /**
+     * Record a scene-limited feature use (Lean In, Overrun).
+     * Increments usedThisScene for the given feature on the combatant.
+     */
+    useSceneFeature(combatantId: string, featureName: string, maxPerScene: number) {
+      if (!this.encounter) return false
+      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
+      if (!combatant) return false
+
+      const usage = combatant.featureUsage ?? {}
+      const current = usage[featureName] ?? { usedThisScene: 0, maxPerScene }
+
+      if (current.usedThisScene >= current.maxPerScene) return false
+
+      combatant.featureUsage = {
+        ...usage,
+        [featureName]: {
+          usedThisScene: current.usedThisScene + 1,
+          maxPerScene
+        }
+      }
+      return true
+    },
+
+    /**
+     * Set the Ride as One initiative swap flag on a mounted pair.
+     * When the first pair member's turn comes up and the GM chooses the other,
+     * this flag is set to indicate the swap occurred.
+     */
+    setRideAsOneSwapped(combatantId: string, swapped: boolean) {
+      if (!this.encounter) return
+      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
+      if (!combatant?.mountState) return
+
+      combatant.mountState = {
+        ...combatant.mountState,
+        rideAsOneSwapped: swapped
+      }
+
+      // Also set on partner
+      const partner = this.encounter.combatants.find(c => c.id === combatant.mountState!.partnerId)
+      if (partner?.mountState) {
+        partner.mountState = {
+          ...partner.mountState,
+          rideAsOneSwapped: swapped
+        }
+      }
+    },
+
+    /**
+     * Update distance moved this turn for a combatant.
+     * Called by movement handlers when a combatant moves.
+     */
+    addDistanceMoved(combatantId: string, distance: number) {
+      if (!this.encounter) return
+      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
+      if (!combatant) return
+
+      combatant.turnState = {
+        ...combatant.turnState,
+        distanceMovedThisTurn: (combatant.turnState.distanceMovedThisTurn ?? 0) + distance
+      }
+    },
+
+    // ===========================================
     // Attack of Opportunity (feature-016)
     // ===========================================
 
