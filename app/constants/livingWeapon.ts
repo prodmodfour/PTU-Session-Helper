@@ -46,13 +46,16 @@ export interface LivingWeaponMove {
 }
 
 // === Weapon Move Definitions (PTU pp.288-290) ===
+// DB values include the Small Melee Weapon +1 DB modifier (PTU p.287:
+// "Small Melee Weapons raise the Damage Base by +1").
+// Base DB -> effective DB: Wounding Strike 6->7, Double Swipe 4->5, Bleed! 9->10.
 
 const WOUNDING_STRIKE: LivingWeaponMove = {
   name: 'Wounding Strike',
   type: 'Normal',
   frequency: 'EOT',
   ac: 2,
-  damageBase: 6,
+  damageBase: 7,
   damageClass: 'Physical',
   range: 'WR, 1 Target',
   effect: 'The target loses a Tick of Hit Points.',
@@ -65,7 +68,7 @@ const DOUBLE_SWIPE: LivingWeaponMove = {
   type: 'Normal',
   frequency: 'EOT',
   ac: 2,
-  damageBase: 4,
+  damageBase: 5,
   damageClass: 'Physical',
   range: 'WR, 2 Targets; or WR, 1 Target, Double Strike',
   effect: 'None',
@@ -78,7 +81,7 @@ const BLEED: LivingWeaponMove = {
   type: 'Normal',
   frequency: 'Scene x2',
   ac: 2,
-  damageBase: 9,
+  damageBase: 10,
   damageClass: 'Physical',
   range: 'WR, 1 Target',
   effect: 'The target loses a Tick of Hit Points at the start of their next three turns.',

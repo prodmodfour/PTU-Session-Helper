@@ -83,13 +83,13 @@ export interface LivingWeaponMove {
 
 ### Weapon Move Data
 
-Full weapon move definitions per PTU pp.288-290:
+Full weapon move definitions per PTU pp.288-290. DB values include the Small Melee Weapon +1 DB modifier (PTU p.287: "Small Melee Weapons raise the Damage Base by +1"):
 
-| Move | Type | Freq | AC | DB | Class | Range | Effect | Tier |
-|------|------|------|-----|-----|-------|-------|--------|------|
-| Wounding Strike | Normal | EOT | 2 | 6 (2d6+8 / 15) | Physical | WR, 1 Target | Target loses a Tick of HP | Adept |
-| Double Swipe | Normal | EOT | 2 | 4 (1d8+6 / 11) | Physical | WR, 2 Targets or WR, 1 Target Double Strike | None | Adept |
-| Bleed! | Normal | Scene x2 | 2 | 9 (2d10+10 / 21) | Physical | WR, 1 Target | Target loses Tick of HP at start of next 3 turns | Master |
+| Move | Type | Freq | AC | Base DB | +1 Mod | Effective DB | Class | Range | Effect | Tier |
+|------|------|------|-----|---------|--------|-------------|-------|-------|--------|------|
+| Wounding Strike | Normal | EOT | 2 | 6 | +1 | 7 | Physical | WR, 1 Target | Target loses a Tick of HP | Adept |
+| Double Swipe | Normal | EOT | 2 | 4 | +1 | 5 | Physical | WR, 2 Targets or WR, 1 Target Double Strike | None | Adept |
+| Bleed! | Normal | Scene x2 | 2 | 9 | +1 | 10 | Physical | WR, 1 Target | Target loses Tick of HP at start of next 3 turns | Master |
 
 "WR" = Weapon Range (for Small Melee Weapons, this is Melee range -- adjacent targets).
 
