@@ -1,17 +1,18 @@
 ---
-generated_at: 2026-03-04T08:30:50.933Z
-total_tickets: 298
-open: 28
+generated_at: 2026-03-04T09:42:50.539Z
+total_tickets: 300
+open: 30
 in_progress: 117
 resolved: 135
 ---
 
 # Tickets Index
 
-## Open Tickets (28)
+## Open Tickets (30)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| refactoring-127 | refactoring | P0 | project-wide | refactoring-127: Rename project to "Rotom Table" |
 | ptu-rule-131 | ptu-rule | P2 | combat | `rollAccuracyCheck()` in `app/composables/useCapture.ts` rei |
 | feature-024 | feature | P3 | testing | No unit tests exist for any Living Weapon code (code-review- |
 | ux-012 | ux | P3 | — | The server broadcasts `status_tick` WebSocket events when ti |
@@ -21,6 +22,7 @@ resolved: 135
 | refactoring-114 | refactoring | P3 | character-lifecycle | refactoring-114: Rename capturedSpecies to ownedSpecies for  |
 | refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
 | refactoring-125 | refactoring | P3 | combat | refactoring-125: CombatantCard.vue exceeds 800-line file siz |
+| refactoring-128 | refactoring | P3 | combat | `useMoveCalculation.ts` is now 806 lines, exceeding the 800- |
 | bug-047 | bug | P4 | capture | bug-047: Friend Ball loyalty fallback default mismatch |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
@@ -176,5 +178,5 @@ All decree-needs addressed.
 | feature | 1 | 19 | 3 | 24 |
 | ux | 6 | 7 | 2 | 16 |
 | decree | 0 | 0 | 44 | 44 |
-| refactoring | 15 | 13 | 2 | 43 |
+| refactoring | 17 | 13 | 2 | 45 |
 | docs | 0 | 0 | 16 | 16 |

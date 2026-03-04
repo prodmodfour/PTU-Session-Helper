@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-04T08:30:50.961Z
+generated_at: 2026-03-04T09:42:50.545Z
 total_decrees: 46
 active: 45
 superseded: 0
