@@ -201,6 +201,11 @@ export interface Encounter {
   /** Active wield relationships between trainers and Living Weapon Pokemon */
   wieldRelationships: WieldRelationship[];
 
+  // Environment Preset (P2: ptu-rule-058)
+  // Optional PTU environmental modifier attached to the encounter.
+  // Stored as JSON on the Encounter DB record; null/undefined = no preset active.
+  environmentPreset?: EnvironmentPreset | null;
+
   // History
   moveLog: MoveLogEntry[];
 
@@ -213,6 +218,52 @@ export interface Encounter {
   // PTU significance multiplier for XP calculation (Core p.460)
   significanceMultiplier: number;
   significanceTier: SignificanceTier;
+}
+
+// ============================================
+// ENVIRONMENT PRESETS (P2: ptu-rule-058)
+// ============================================
+
+/**
+ * A single mechanical effect within an environment preset.
+ * Each effect type maps to a PTU environmental modifier rule.
+ */
+export interface EnvironmentEffect {
+  type: 'accuracy_penalty' | 'terrain_override' | 'status_trigger' | 'movement_modifier' | 'custom'
+  /** Accuracy penalty per unilluminated meter (Dark Cave: -2) */
+  accuracyPenaltyPerMeter?: number
+  /** Terrain override rules (Arctic/ice environments) */
+  terrainRules?: {
+    /** Weight class at which ice breaks (e.g., 5+ breaks ice) */
+    weightClassBreak?: number
+    /** All squares treated as slow terrain */
+    slowTerrain?: boolean
+    /** Acrobatics check required when taking injury */
+    acrobaticsOnInjury?: boolean
+  }
+  /** Status effect triggered when entering specific terrain */
+  statusOnEntry?: {
+    /** Terrain type that triggers the effect (e.g., 'water') */
+    terrain: string
+    /** Effect applied on entry (e.g., 'hail_damage_per_turn') */
+    effect: string
+    /** Optional combat stage penalty on entry */
+    stagePenalty?: { stat: string; stages: number }
+  }
+  /** Freeform rule text for GM reference (Hazard Factory custom rules) */
+  customRule?: string
+}
+
+/**
+ * A named collection of mechanical effects the GM can attach to an encounter.
+ * Each preset maps to a PTU environmental modifier example
+ * (Core 11-pokemon-in-the-world.md).
+ */
+export interface EnvironmentPreset {
+  id: string
+  name: string
+  description: string
+  effects: EnvironmentEffect[]
 }
 
 // Movement preview for broadcasting to group view
