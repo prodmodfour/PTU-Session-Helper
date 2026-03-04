@@ -270,7 +270,8 @@ function generateTicketsIndex() {
         const dir = join(ARTIFACTS, 'tickets', status, cat)
         const tickets = readAllFrontmatter(dir)
         for (const t of tickets) {
-          allTickets.push({ ...t, category: cat })
+          // Directory location is the source of truth for status, not frontmatter
+          allTickets.push({ ...t, category: cat, status })
         }
       }
     }
@@ -578,6 +579,7 @@ function generateGlobalIndex() {
   const hasNewTicketStructure = existsSync(join(ARTIFACTS, 'tickets', 'open'))
 
   if (hasNewTicketStructure) {
+    // Use directory location as source of truth for status, not frontmatter
     for (const status of statusDirs) {
       for (const cat of ticketCategories) {
         const tickets = readAllFrontmatter(join(ARTIFACTS, 'tickets', status, cat))
