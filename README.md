@@ -1,4 +1,4 @@
-# PTU Session Helper
+# Rotom Table
 
 A Game Master aid application for Pokemon Tabletop United (PTU) 1.05 in-person tabletop RPG sessions. Designed for dual-display use with a GM laptop and a player-facing TV.
 
