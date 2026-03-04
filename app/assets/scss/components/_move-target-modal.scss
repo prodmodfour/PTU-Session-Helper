@@ -485,6 +485,11 @@
     background: $color-bg-secondary;
     color: $color-accent-violet;
     font-weight: 600;
+
+    &--env {
+      color: $color-accent-scarlet;
+      background: rgba($color-accent-scarlet, 0.1);
+    }
   }
 
   &__roll-prompt {

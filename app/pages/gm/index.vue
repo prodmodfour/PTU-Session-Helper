@@ -114,9 +114,10 @@
           @forceSwitch="handleForceSwitch"
         />
 
-        <!-- Sidebar: Move Log + Significance Panel -->
+        <!-- Sidebar: Move Log + Environment + Significance Panel -->
         <div class="encounter-sidebar">
           <CombatLogPanel :move-log="moveLog" />
+          <EnvironmentSelector :encounter="encounter" />
           <SignificancePanel
             :encounter="encounter"
             @open-xp-modal="showXpModal = true"

@@ -116,6 +116,9 @@
             <span v-if="attackerAccuracyStage !== 0" class="accuracy-section__modifier">
               {{ attackerAccuracyStage > 0 ? '+' : '' }}{{ attackerAccuracyStage }} Accuracy
             </span>
+            <span v-if="getEnvironmentAccuracyPenalty() > 0" class="accuracy-section__modifier accuracy-section__modifier--env">
+              +{{ getEnvironmentAccuracyPenalty() }} Environment
+            </span>
           </div>
 
           <div v-if="!hasRolledAccuracy" class="accuracy-section__roll-prompt">
@@ -281,6 +284,7 @@ const {
   getTargetEvasion,
   getTargetEvasionLabel,
   getAccuracyThreshold,
+  getEnvironmentAccuracyPenalty,
   rollAccuracy,
   hitCount,
   missCount,
