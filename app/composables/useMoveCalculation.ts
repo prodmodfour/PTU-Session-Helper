@@ -468,6 +468,31 @@ export function useMoveCalculation(
     return bonus
   }
 
+  // --- Environment Accuracy Penalty (P2: ptu-rule-058) ---
+
+  /**
+   * Calculate the environment-based accuracy penalty for the current encounter.
+   * Returns a positive number that increases the accuracy threshold (harder to hit).
+   * Currently supports the accuracy_penalty effect type (e.g., Dark Cave).
+   *
+   * Note: The per-meter darkness penalty is a GM reference tool. Since illumination
+   * tracking is not automated, this returns the base penalty value for a single meter
+   * of darkness. The GM can override via the EnvironmentSelector UI.
+   */
+  const getEnvironmentAccuracyPenalty = (): number => {
+    const preset = encounterStore.activeEnvironmentPreset
+    if (!preset) return 0
+
+    let penalty = 0
+    for (const effect of preset.effects) {
+      if (effect.type === 'accuracy_penalty' && effect.accuracyPenaltyPerMeter) {
+        // accuracyPenaltyPerMeter is negative (e.g., -2), so negate to get positive threshold increase
+        penalty += Math.abs(effect.accuracyPenaltyPerMeter)
+      }
+    }
+    return penalty
+  }
+
   const getAccuracyThreshold = (targetId: string): number => {
     if (!move.value.ac) return 0
 
@@ -482,7 +507,9 @@ export function useMoveCalculation(
     const flankingPenalty = options?.getFlankingPenalty?.(targetId) ?? 0
     // No Guard bonus (decree-046): +3/-3 flat accuracy, reduces threshold
     const noGuardBonus = getNoGuardBonus(targetId)
-    return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value - flankingPenalty + roughPenalty - noGuardBonus)
+    // Environment accuracy penalty (P2: ptu-rule-058)
+    const environmentPenalty = getEnvironmentAccuracyPenalty()
+    return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value - flankingPenalty + roughPenalty - noGuardBonus + environmentPenalty)
   }
 
   const rollAccuracy = () => {
@@ -817,6 +844,7 @@ export function useMoveCalculation(
     getAccuracyThreshold,
     getNoGuardBonus,
     getRoughTerrainPenalty,
+    getEnvironmentAccuracyPenalty,
     rollAccuracy,
     hitCount,
     missCount,

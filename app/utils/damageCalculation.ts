@@ -111,17 +111,22 @@ export function calculateEvasion(baseStat: number, combatStage: number = 0, evas
 /**
  * Calculate accuracy threshold for a move.
  * PTU 07-combat.md:624-657
- * Threshold = moveAC + min(9, evasion) - attackerAccuracyStage
+ * Threshold = moveAC + min(9, evasion) - attackerAccuracyStage + environmentPenalty
  * Result is clamped to min 1 (nat 1 always misses, nat 20 always hits — handled by caller).
  * Accuracy combat stages apply directly (not as multiplier).
+ *
+ * @param environmentPenalty — optional accuracy penalty from environment presets
+ *   (P2: ptu-rule-058). Positive value = harder to hit (increases threshold).
+ *   Example: Dark Cave adds +2 per unilluminated meter.
  */
 export function calculateAccuracyThreshold(
   moveAC: number,
   attackerAccuracyStage: number,
-  defenderEvasion: number
+  defenderEvasion: number,
+  environmentPenalty: number = 0
 ): number {
   const effectiveEvasion = Math.min(9, defenderEvasion)
-  return Math.max(1, moveAC + effectiveEvasion - attackerAccuracyStage)
+  return Math.max(1, moveAC + effectiveEvasion - attackerAccuracyStage + environmentPenalty)
 }
 
 export interface AccuracyCalcResult {
