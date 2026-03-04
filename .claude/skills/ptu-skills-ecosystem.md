@@ -1,6 +1,6 @@
 # PTU Skills Ecosystem
 
-Master reference for the 10-skill ecosystem that validates the PTU Session Helper through direct PTU rule-to-code coverage analysis. The ecosystem is organized into two logically separate halves — Dev and Matrix — coordinated by a master/slave orchestration system.
+Master reference for the 11-skill ecosystem that validates the PTU Session Helper through direct PTU rule-to-code coverage analysis. The ecosystem is organized into two logically separate halves — Dev and Matrix — coordinated by a master/slave orchestration system.
 
 ## Core Principle
 
@@ -93,6 +93,8 @@ The Feature Matrix drives the dev loop. Every PTU rule is extracted, every app c
     Game Logic Rev     ← ptu-rule tickets ←  Capability Mapper┘        │
     Code Health Aud    ← ux tickets ←                         Implementation Auditor
     Retrospective*                                                     │
+                                                              Browser Auditor
+                                                                       │
                                                            Master reads matrix,
                                                            creates tickets (M2)
 ```
@@ -103,7 +105,8 @@ The Feature Matrix drives the dev loop. Every PTU rule is extracted, every app c
 
 **Matrix Ecosystem Internal:**
 - AMBIGUOUS audit items → Game Logic Reviewer (ruling) → re-audit
-- App code changed → re-map capabilities → re-analyze → re-audit
+- App code changed → re-map capabilities → re-analyze → re-audit → re-browser-audit
+- ABSENT browser audit items → investigate (data seeding? conditional render?) → re-browser-audit
 
 **Dev Ecosystem Internal:**
 - CHANGES_REQUIRED review → Developer (address feedback)
@@ -141,7 +144,8 @@ Skills are loaded by slaves via templates. Original skill files serve as referen
 | 5 | PTU Rule Extractor | `ptu-rule-extractor.md` | `templates/agent-rule-extractor.md` | PTU chapters + errata | `matrix/<domain>-rules.md` |
 | 6 | App Capability Mapper | `app-capability-mapper.md` | `templates/agent-capability-mapper.md` | app source code | `matrix/<domain>-capabilities.md` |
 | 7 | Coverage Analyzer | `coverage-analyzer.md` | `templates/agent-coverage-analyzer.md` | rules + capabilities | `matrix/<domain>-matrix.md` |
-| 8 | Implementation Auditor | `implementation-auditor.md` | `templates/agent-implementation-auditor.md` | matrix + source + rulebook | `matrix/<domain>-audit.md` |
+| 8 | Implementation Auditor | `implementation-auditor.md` | `templates/agent-implementation-auditor.md` | matrix + source + rulebook | `matrix/<domain>/audit/` |
+| 9 | Browser Auditor | `browser-auditor.md` | `templates/agent-browser-auditor.md` | capabilities + matrix + audit | `matrix/<domain>/browser-audit/` |
 
 ### Coordination
 
@@ -151,6 +155,8 @@ Skills are loaded by slaves via templates. Original skill files serve as referen
 | — | Slave Executor | `slave-executor.md` | user (`/slave N`) | branch commits, status file |
 | — | Slave Collector | `slave-collector.md` | user (`/collect_slaves`) | state files, `alive-agents.md`, cleanup |
 | 10 | Retrospective Analyst | `retrospective-analyst.md` | after cycles complete | `lessons/*.md` |
+
+**Note:** The Matrix Ecosystem pipeline has 5 stages: Rule Extraction → Capability Mapping → Coverage Analysis → Implementation Audit → Browser Audit.
 
 ## Skill Files
 
@@ -171,11 +177,13 @@ Skills are loaded by slaves via templates. Original skill files serve as referen
 │   ├── agent-capability-mapper.md
 │   ├── agent-coverage-analyzer.md
 │   ├── agent-implementation-auditor.md
+│   ├── agent-browser-auditor.md
 │   └── agent-retrospective-analyst.md
 ├── ptu-rule-extractor.md                 (reference — not embedded in prompts)
 ├── app-capability-mapper.md
 ├── coverage-analyzer.md
 ├── implementation-auditor.md
+├── browser-auditor.md
 ├── ptu-session-helper-dev.md
 ├── ptu-session-helper-senior-reviewer.md
 ├── game-logic-reviewer.md
@@ -186,6 +194,7 @@ Skills are loaded by slaves via templates. Original skill files serve as referen
     ├── ptu-chapter-index.md              (rulebook lookup)
     ├── skill-interfaces.md               (data contracts)
     ├── app-surface.md                    (routes, APIs, stores)
+    ├── browser-audit-routes.md           (route mapping for browser auditor)
     └── playwright-patterns.md            (e2e patterns — for external testing)
 ```
 
@@ -202,7 +211,8 @@ artifacts/
 │   ├── <domain>-rules.md          Rule Extractor writes → Coverage Analyzer reads
 │   ├── <domain>-capabilities.md   Capability Mapper writes → Coverage Analyzer reads
 │   ├── <domain>-matrix.md         Coverage Analyzer writes → Auditor reads, Master reads
-│   └── <domain>-audit.md          Implementation Auditor writes → Master reads
+│   ├── <domain>-audit.md          Implementation Auditor writes → Master reads
+│   └── <domain>/browser-audit/    Browser Auditor writes → Master reads
 ├── designs/               Developer writes (when feature ticket needs design) → shared read zone
 ├── lessons/               Retrospective Analyst writes → all skills read
 ├── refactoring/           Code Health Auditor writes → Developer/Reviewer reads
@@ -223,6 +233,7 @@ artifacts/
 | Capability mapping completeness | App Capability Mapper |
 | Coverage classification accuracy | Coverage Analyzer |
 | Implementation correctness verification | Implementation Auditor |
+| Browser-level capability verification | Browser Auditor |
 | Gap detection and ticket creation | Master Planner (from matrix data) |
 | Pattern identification and lesson accuracy | Retrospective Analyst |
 | Structural code health issues and refactoring priority | Code Health Auditor |
@@ -236,8 +247,10 @@ artifacts/
 4. `/create_slave_plan` → plan includes Coverage Analyzer for domain X
 5. Execute + collect
 6. `/create_slave_plan` → plan includes Implementation Auditor for domain X
-7. Execute + collect → Master creates tickets (M2) in next plan
-8. `/create_slave_plan` → plan includes Developer slaves for highest-priority tickets
+7. Execute + collect
+8. `/create_slave_plan` → plan includes Browser Auditor for domain X
+9. Execute + collect → Master creates tickets (M2) in next plan
+10. `/create_slave_plan` → plan includes Developer slaves for highest-priority tickets
 
 ### Bug Fix Cycle (cross-ecosystem)
 1. `/create_slave_plan` → slave-1: Developer fixes ticket, slave-2: Developer fixes another ticket (parallel)
