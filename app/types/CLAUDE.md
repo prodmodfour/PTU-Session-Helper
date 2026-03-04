@@ -7,18 +7,18 @@
 | File | Lines | Source | Key Types |
 |------|-------|--------|-----------|
 | `index.ts` | 44 | Barrel re-export | Exports all below |
-| `combat.ts` | 321 | Hand-written | StatusCondition, ActionType, TurnPhase, StageModifiers, TurnState, CombatSide, OutOfTurnAction, MountState, WieldRelationship |
+| `combat.ts` | 329 | Hand-written | StatusCondition, ActionType, TurnPhase, StageModifiers, TurnState, CombatSide, OutOfTurnAction, MountState, WieldRelationship |
 | `spatial.ts` | 131 | Hand-written | GridPosition, GridConfig, TokenState, TerrainCell, TerrainFlags, MovementPath, RangeType, ParsedRange |
 | `character.ts` | 289 | Prisma-derived | HumanCharacter, Pokemon, Move, Ability, Stats, EquipmentSlots, PokemonOrigin |
-| `encounter.ts` | 237 | Prisma-derived | Combatant (includes mountState, forecastOriginalTypes), Encounter, MoveLogEntry, EncounterSnapshot, LibraryFilters |
+| `encounter.ts` | 240 | Prisma-derived | Combatant (includes mountState, forecastOriginalTypes), Encounter, MoveLogEntry, EncounterSnapshot, LibraryFilters |
 | `scene.ts` | 61 | Hand-written | Scene, SceneCharacter, ScenePokemon, SceneGroup, GroupViewTab, SceneModifier |
 | `habitat.ts` | 97 | Hand-written | EncounterTable, TableModification, RarityPreset, DensityTier (includes runtime constants) |
 | `template.ts` | 29 | Hand-written | TemplateCombatant, EncounterTemplate |
-| `api.ts` | 98 | Hand-written | ApiResponse\<T\>, WebSocketEvent (52-member discriminated union) |
+| `api.ts` | 99 | Hand-written | ApiResponse\<T\>, WebSocketEvent (53-member discriminated union) |
 | `settings.ts` | 22 | Hand-written | AppSettings, DamageMode, DEFAULT_SETTINGS |
 | `species.ts` | 44 | Prisma-derived | SpeciesData, EvolutionTrigger |
 | `player.ts` | 8 | Hand-written | PlayerTab |
-| `player-sync.ts` | 155 | Hand-written | Track C WebSocket protocol: PlayerActionRequest, PlayerTurnNotification, SceneSyncPayload |
+| `player-sync.ts` | 167 | Hand-written | Track C WebSocket protocol: PlayerActionRequest, PlayerTurnNotification, SceneSyncPayload |
 | `vtt.ts` | 15 | Hand-written | TerrainCostGetter, ElevationCostGetter (function type signatures) |
 | `guards.ts` | 37 | Hand-written | isPokemon(), isHumanCharacter(), getEntityDisplayName() |
 
