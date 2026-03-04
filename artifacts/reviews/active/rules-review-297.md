@@ -6,19 +6,19 @@ trigger: design-implementation
 target_report: feature-005
 domain: combat
 commits_reviewed:
-  - 3319923a
-  - eb9d7385
-  - d14f4492
-  - f6acb5b5
-  - a51fe8ac
   - 2d5e1260
+  - a51fe8ac
+  - f6acb5b5
+  - d14f4492
+  - eb9d7385
+  - 3319923a
   - 06313ff4
 mechanics_verified:
-  - shared-movement-pool-reset
-  - shared-movement-pool-persistence
-  - shared-movement-pool-modifiers
-  - no-guard-client-server-parity
-  - no-guard-decree-046-compliance
+  - shared-movement-pool
+  - movement-pool-reset
+  - movement-modifiers-on-shared-pool
+  - no-guard-suppression-client
+  - no-guard-decree-046
   - soulstealer-scene-frequency
 verdict: APPROVED
 issues_found:
@@ -27,77 +27,165 @@ issues_found:
   medium: 0
 ptu_refs:
   - core/10-indices-and-reference.md#Living Weapon (pp.305-306)
-  - core/10-indices-and-reference.md#Ability: No Guard (p.325)
   - core/10-indices-and-reference.md#Ability: Soulstealer (p.329)
+  - core/10-indices-and-reference.md#Ability: No Guard (p.325)
   - playtest-packet-2016.md#Ability: No Guard (line 525)
-reviewed_at: 2026-03-04T13:30:00Z
+reviewed_at: 2026-03-04T13:45:00Z
 follows_up: rules-review-294
 ---
 
+## Re-Review Context
+
+This is a re-review of the feature-005 P2 fix cycle. The previous rules-review-294 found 2 HIGH and 3 MEDIUM issues. The developer addressed all 5 in 7 commits. This review verifies each fix resolves the original issue correctly per PTU rules.
+
 ## Mechanics Verified
 
-### Shared Movement Pool Reset (rules-review-294 HIGH-001)
+### HIGH-001: Movement Pool Reset at Round Start
 
-- **Rule:** PTU p.306 -- "the total amount Shifted during the round cannot exceed the Wielder's Movement Speed." Per-round cap implies reset each round.
-- **Previous issue:** `resetWieldMovementPools()` was never called from round advancement code.
-- **Fix:** `resetCombatantsForNewRound` in `turn-helpers.ts` lines 117-121 now resets `wieldMovementUsed` to 0 on wielder combatants at round start.
-- **Status:** CORRECT. The reset fires for any combatant with `wieldMovementUsed !== undefined`, which is set on engagement and cleared on disengagement. This matches the mount reset pattern (lines 126-139 in the same function).
+- **Rule:** "the total amount Shifted during the round cannot exceed the Wielder's Movement Speed" (`core/10-indices-and-reference.md`, line 243-247). Per-round cap implies reset each round.
+- **Original Issue:** `resetWieldMovementPools()` existed but was never called from round advancement logic.
+- **Fix (commits d14f4492 + eb9d7385):** Rather than calling `resetWieldMovementPools()` on the `WieldRelationship` objects (which are reconstructed from combatant flags on each API call), the developer persisted `wieldMovementUsed` directly on the wielder combatant and resets it in `resetCombatantsForNewRound()` at `turn-helpers.ts:117-121`:
+  ```typescript
+  if (c.wieldMovementUsed !== undefined) {
+    c.wieldMovementUsed = 0
+  }
+  ```
+  The `reconstructWieldRelationships()` in `living-weapon-state.ts:47` now reads this persisted value: `movementUsedThisRound: c.wieldMovementUsed ?? 0`. The `position.post.ts:143-152` increments `wieldMovementUsed` on the wielder combatant after each movement.
+- **Status:** CORRECT. The reset follows the same pattern as mount `movementRemaining` reset (lines 126-138 of same function). The persisted field on the wielder combatant solves both the round-reset problem and the mid-round reconstruction problem (H1 from code-review-321). The pool resets to 0 at each new round, matching PTU per-round cap semantics.
 
-### Shared Movement Pool Persistence (code-review-321 H1)
+### HIGH-002: Soulstealer Scene Frequency Enforcement
 
-- **Rule:** PTU p.306 -- shared pool must track cumulative movement across both combatants' turns within a single round.
-- **Previous issue:** `reconstructWieldRelationships()` always set `movementUsedThisRound: 0`, losing mid-round tracking across API calls.
-- **Fix:** `wieldMovementUsed` field persisted on the wielder combatant, read by reconstruction (`living-weapon-state.ts` line 47: `c.wieldMovementUsed ?? 0`), updated in `position.post.ts` lines 146-152 after each movement.
-- **Status:** CORRECT. The value survives the JSON serialize/deserialize cycle through the encounter's combatants column. Mid-round API calls (position updates, damage calculations) will reconstruct the correct remaining pool.
+- **Rule:** "Scene -- Free Action" (`core/10-indices-and-reference.md`, line 2418). Soulstealer triggers at most once per scene.
+- **Original Issue:** `checkSoulstealer()` had no frequency check; healing fired on every qualifying faint.
+- **Fix (commit 3319923a, in C1 split):** `checkSoulstealer()` in `living-weapon-abilities.service.ts:168-172` now checks `combatant.featureUsage`:
+  ```typescript
+  const usage = attacker.featureUsage?.['Soulstealer']
+  if (usage && usage.usedThisScene >= usage.maxPerScene) {
+    return null
+  }
+  ```
+  `applySoulstealerHealing()` at lines 200-209 records usage after healing:
+  ```typescript
+  combatant.featureUsage = {
+    ...currentUsage,
+    Soulstealer: {
+      usedThisScene: soulstealerUsage.usedThisScene + 1,
+      maxPerScene: 1,
+    },
+  }
+  ```
+- **Status:** CORRECT. `maxPerScene: 1` correctly enforces the "Scene" frequency (once per scene). The `featureUsage` tracking pattern reuses the existing infrastructure from `encounter.ts:84` (`featureUsage?: Record<string, { usedThisScene: number; maxPerScene: number }>`), originally added for Rider class features. The check occurs before any healing is applied, preventing the second+ trigger entirely.
 
-### Shared Movement Pool Modifiers (rules-review-294 MEDIUM-002)
+### MEDIUM-001: No Guard Client-Side Accuracy Check
 
-- **Rule:** PTU p.306 uses "the Wielder's Movement Speed." Movement Speed is subject to conditions (Slowed halves, Stuck zeroes, Speed CS modifies, Sprint adds 50%).
-- **Previous issue:** Raw `getOverlandSpeed(wielder)` was used without applying modifiers.
-- **Fix:** All three computation paths now apply `applyMovementModifiers(wielder, baseSpeed, weather)`:
-  - Client `getMaxPossibleSpeed()` (useGridMovement.ts:160-163)
-  - Client `getSpeed()` (useGridMovement.ts:237-241)
-  - Server `getWieldedMovementSpeed()` (living-weapon-movement.service.ts:140-143)
-- **Status:** CORRECT. A Slowed wielder will have a halved shared pool. A Stuck wielder will have 0 movement. Sprint correctly adds 50%. Weather parameter is passed for Thermosensitive interaction.
+- **Rule:** Per decree-046, No Guard uses playtest +3/-3 flat accuracy. Suppressed while wielded as Living Weapon (PTU p.306).
+- **Original Issue:** `useMoveCalculation.ts` `getAccuracyThreshold()` did not account for No Guard at all.
+- **Fix (commit f6acb5b5):** Added `hasActiveNoGuard()` at `useMoveCalculation.ts:431-442` and `getNoGuardBonus()` at lines 454-469:
+  ```typescript
+  const getNoGuardBonus = (targetId: string): number => {
+    let bonus = 0
+    if (hasActiveNoGuard(actor.value)) bonus += 3
+    const target = targets.value.find(t => t.id === targetId)
+    if (target && hasActiveNoGuard(target)) bonus += 3
+    return bonus
+  }
+  ```
+  The `getAccuracyThreshold()` at line 485 now subtracts `noGuardBonus`:
+  ```typescript
+  return Math.max(1, move.value.ac + effectiveEvasion - attackerAccuracyStage.value - flankingPenalty + roughPenalty - noGuardBonus)
+  ```
+  The suppression check at line 441: `return !wieldRels.some(r => r.weaponId === combatant.id)` correctly returns `false` (No Guard inactive) when the Pokemon is wielded.
+- **Status:** CORRECT. The client-side implementation mirrors the server-side logic in `calculate-damage.post.ts:358-364`. Both paths:
+  1. Check if attacker has No Guard and it is active (+3 bonus)
+  2. Check if target has No Guard and it is active (+3 bonus)
+  3. Suppress No Guard when the Pokemon is wielded (found as `weaponId` in wieldRelationships)
+  4. Subtract total bonus from accuracy threshold (reducing threshold = easier to hit)
+  Per decree-046: "+3 bonus to all Attack Rolls for the user, +3 bonus to all Attack Rolls against the user." Both attacker and target bonuses are correctly implemented and stack if both have active No Guard.
 
-### No Guard Client-Server Parity (code-review-321 H3 + rules-review-294 MEDIUM-001)
+### MEDIUM-002: Movement Modifiers Applied to Shared Pool
 
-- **Rule:** Per decree-046: "+3 bonus to all Attack Rolls for the user, AND +3 bonus to all Attack Rolls against the user." Per PTU p.306: suppressed while wielded.
-- **Previous issue:** Server applied No Guard correctly; client did not check for it at all.
-- **Fix:** Client-side `useMoveCalculation.ts` now has `hasActiveNoGuard()` (lines 431-442) and `getNoGuardBonus()` (lines 454-469). `getAccuracyThreshold()` (line 485) subtracts the combined bonus. Server-side `calculate-damage.post.ts` (lines 358-367) now checks both attacker and target No Guard.
-- **Status:** CORRECT. Verified both paths produce identical accuracy thresholds for the same inputs. The formula is: `Math.max(1, moveAC + effectiveEvasion - accuracyStage - flankingPenalty + roughPenalty - noGuardBonus)`. Both attacker and target No Guard are checked with suppression awareness.
+- **Rule:** PTU p.306 -- "use the Wielder's Movement Speed to shift." Movement speed is subject to Slowed, Stuck, Speed CS, Sprint per normal rules.
+- **Original Issue:** Shared pool used raw `getOverlandSpeed(wielder)` without movement modifiers.
+- **Fix (commit 2d5e1260):** Both client-side locations in `useGridMovement.ts` (lines 150-164 and 228-242) and the server-side `getWieldedMovementSpeed()` in `living-weapon-movement.service.ts:140-143` now apply modifiers:
+  ```typescript
+  // Client (useGridMovement.ts:160-163):
+  const modifiedSpeed = applyMovementModifiers(wielder, baseSpeed, weather)
+  const remaining = modifiedSpeed - (wieldRel.movementUsedThisRound ?? 0)
 
-### No Guard Decree Compliance (rules-review-294 MEDIUM-003)
+  // Server (living-weapon-movement.service.ts:140-143):
+  const baseSpeed = getOverlandSpeedUtil(wielder)
+  const modifiedSpeed = applyMovementModifiers(wielder, baseSpeed, weather)
+  const remaining = modifiedSpeed - (relationship.movementUsedThisRound ?? 0)
+  ```
+- **Status:** CORRECT. `applyMovementModifiers()` (from `utils/movementModifiers.ts`) applies all relevant modifiers in correct order: Stuck (speed 0), Tripped (speed 0), Slowed (halve), Thermosensitive in Hail (halve), Speed CS (additive, min 2 floor for negative), Sprint (+50%). This matches the mount system pattern and ensures a Slowed/Stuck wielder correctly has reduced/zero movement for the shared pool.
 
-- **Rule:** Ambiguous -- core rulebook (p.325) vs playtest packet (2016, line 525).
-- **Previous issue:** No decree existed to formalize which version the system follows.
-- **Fix:** decree-046 recorded. Ruling: "Use the 2016 playtest packet version of No Guard -- +3 bonus to all Attack Rolls for the user, +3 bonus to all Attack Rolls against the user, affecting all attack types."
-- **Status:** CORRECT. decree-046 is referenced in implementation comments at all three code sites (abilities service, client composable, server endpoint). Implementation matches the decree ruling exactly.
+### MEDIUM-003: No Guard Decree
 
-### Soulstealer Scene Frequency (code-review-321 M3 + rules-review-294 HIGH-002)
+- **Rule:** Pre-existing ambiguity between core (evasion-based, melee-only) and playtest (+3/-3 flat) definitions.
+- **Original Issue:** No decree existed to formalize the No Guard definition choice.
+- **Fix (commit b446c3a6, preceding the fix cycle):** decree-046 was created at `decrees/decree-046.md`, ruling: "Use the 2016 playtest packet version of No Guard -- +3 bonus to all Attack Rolls for the user, +3 bonus to all Attack Rolls against the user, affecting all attack types."
+- **Status:** CORRECT. decree-046 is active, properly formatted, and correctly cited in:
+  - `living-weapon-abilities.service.ts:50-51` (server-side)
+  - `useMoveCalculation.ts:447-449` (client-side)
+  - `calculate-damage.post.ts:358-361` (server-side damage endpoint)
 
-- **Rule:** "Scene -- Free Action" (`core/10-indices-and-reference.md`, line 2418). Soulstealer can trigger at most once per scene.
-- **Previous issue:** No frequency enforcement. Healing applied on every qualifying faint.
-- **Fix:** `checkSoulstealer()` (living-weapon-abilities.service.ts:168-172) checks `featureUsage['Soulstealer']` before triggering. `applySoulstealerHealing()` (lines 200-209) records usage with `maxPerScene: 1`.
-- **Status:** CORRECT. The `featureUsage` pattern matches the established infrastructure (Lean In, Overrun from feature-004 P2). After the first trigger, `usedThisScene` becomes 1, which equals `maxPerScene` (1), and subsequent calls to `checkSoulstealer()` return `null`.
+### Decree Compliance Check
 
-### Decree Compliance
+- **decree-001** (minimum 1 damage): Not affected by fix cycle. No changes to damage pipeline.
+- **decree-043** (Combat Skill Rank gates move access, not engagement): No changes to engagement validation. Compliant.
+- **decree-044** (remove phantom Bound condition): No Bound condition references in fix cycle. Compliant.
+- **decree-045** (Sun Blanket 1/10th max HP healing): Not relevant to Living Weapon. Compliant.
+- **decree-046** (No Guard playtest version): Implementation correctly follows this decree in all three paths (server damage calc, client accuracy calc, abilities service). Fully compliant.
 
-- **decree-001:** Minimum 1 damage. Not affected by these fixes.
-- **decree-043:** Combat Skill Rank gates move access, not engagement. Not affected by these fixes.
-- **decree-044:** No phantom Bound condition. Not affected by these fixes.
-- **decree-045:** Sun Blanket healing. Not affected by these fixes.
-- **decree-046:** No Guard uses playtest +3/-3 flat accuracy. Implementation confirmed compliant (see above).
+### Additional Verification: C1 Split (Structural, Not Rules)
+
+The C1 split (commit 3319923a) extracted abilities and movement functions into sub-services. Verified that all re-exported functions maintain identical signatures and logic. `living-weapon.service.ts` now re-exports from both sub-services (lines 26-42), preserving backward compatibility for all existing import sites. This is a code quality change with no rules impact, but confirmed that no game logic was altered during extraction.
+
+### Additional Verification: M1 Immutable Update
+
+The M1 fix (commit a51fe8ac) changed `useEncounterActions.ts:316-320` from direct mutation to immutable `.map()` update:
+```typescript
+encounterStore.encounter.wieldRelationships = encounterStore.encounter.wieldRelationships.map(
+  (r, i) => i === wieldRelIndex
+    ? { ...r, movementUsedThisRound: (r.movementUsedThisRound ?? 0) + distanceMoved }
+    : r
+)
+```
+This is a code quality fix with no rules impact. The movement pool arithmetic (`+= distanceMoved`) is unchanged and correct.
+
+### Additional Verification: M2 JSDoc on Soulstealer Mutation
+
+The `applySoulstealerHealing()` function at `living-weapon-abilities.service.ts:184-191` now has explicit JSDoc documenting the mutation pattern:
+> "This function mutates `combatant.entity` in place, following the same mutation pattern used by `applyDamageToEntity` in `combatant.service.ts` and `damage.post.ts`. The caller is responsible for persisting changes to the database via `syncEntityToDatabase`."
+
+This is documentation-only with no rules impact.
+
+## Summary
+
+All 5 issues from rules-review-294 have been correctly resolved:
+
+| Issue | Severity | Resolution | Status |
+|-------|----------|------------|--------|
+| HIGH-001: Movement pool never resets | HIGH | `wieldMovementUsed` reset in `resetCombatantsForNewRound` | RESOLVED |
+| HIGH-002: Soulstealer unlimited triggers | HIGH | `featureUsage` tracking with `maxPerScene: 1` | RESOLVED |
+| MEDIUM-001: No Guard client-side gap | MEDIUM | `hasActiveNoGuard()` + `getNoGuardBonus()` in `useMoveCalculation.ts` | RESOLVED |
+| MEDIUM-002: Missing movement modifiers | MEDIUM | `applyMovementModifiers()` applied in both client and server paths | RESOLVED |
+| MEDIUM-003: No Guard decree needed | MEDIUM | decree-046 created and cited in all relevant files | RESOLVED |
+
+The 7 code-review-321 issues (C1, H1, H2, H3, M1, M2, M3) are all resolved from a game logic perspective as well. The movement pool system now correctly resets per round, persists mid-round state, and applies movement modifiers. No Guard is consistently handled across client and server per decree-046. Soulstealer respects its Scene frequency limit.
 
 ## Rulings
 
-No new rulings needed. All mechanics verified against existing decrees and PTU core text.
+1. **Persisting `wieldMovementUsed` on the wielder combatant is the correct approach.** It mirrors the mount pattern (`mountState.movementRemaining`) and survives API call reconstruction cycles.
+2. **Reusing `featureUsage` for Soulstealer scene tracking is correct.** The infrastructure was designed for exactly this pattern (scene-limited features with `usedThisScene`/`maxPerScene` counters).
+3. **No Guard suppression check via `wieldRelationships.some(r => r.weaponId === combatant.id)` is correct.** A Pokemon found as `weaponId` in any wield relationship is currently wielded, and per PTU p.306, No Guard is suppressed while wielded.
+4. **Both attacker and target No Guard bonuses stacking (+6 total) is correct per decree-046.** The playtest text says "+3 bonus to all Attack Rolls [for user]" and "+3 Bonus on Attack Rolls against the user" -- these are independent bonuses that stack when both combatants have active No Guard.
 
 ## Verdict
 
 **APPROVED**
 
-All 5 issues from rules-review-294 have been resolved correctly. The shared movement pool now resets at round start, persists mid-round, and applies movement modifiers. No Guard is implemented per decree-046 on both client and server. Soulstealer is limited to Scene x1 via the established featureUsage pattern. No new game logic issues found.
+All HIGH and MEDIUM issues from rules-review-294 are resolved. The implementation correctly follows PTU rules for shared movement pooling (round reset, modifier application), Soulstealer scene frequency enforcement, and No Guard per decree-046. No new game logic issues found.
 
 ## Required Changes
 
