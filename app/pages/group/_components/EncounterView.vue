@@ -40,6 +40,7 @@
             :combatants="sortedCombatants"
             :current-turn-id="currentCombatant?.id"
             :current-phase="encounter?.battleType === 'trainer' ? encounter?.currentPhase : undefined"
+            :flanking-map="receivedFlankingMap"
           />
 
           <!-- League Battle: Declaration Summary (visible when declarations exist) -->
@@ -57,7 +58,10 @@
         </div>
 
         <!-- Current Combatant Details -->
-        <CombatantDetailsPanel :combatant="currentCombatant" />
+        <CombatantDetailsPanel
+          :combatant="currentCombatant"
+          :is-flanked="currentCombatant ? (receivedFlankingMap[currentCombatant.id]?.isFlanked ?? false) : false"
+        />
       </main>
     </div>
   </div>
@@ -65,7 +69,7 @@
 
 <script setup lang="ts">
 import { PhSpinner } from '@phosphor-icons/vue'
-import type { GridConfig } from '~/types'
+import type { GridConfig, FlankingMap } from '~/types'
 import { useFogOfWarStore } from '~/stores/fogOfWar'
 import { useTerrainStore } from '~/stores/terrain'
 
@@ -82,6 +86,9 @@ const WEATHER_LABELS: Record<string, string> = {
 }
 
 const { getCombatantName } = useCombatantDisplay()
+
+// P2: Flanking map received from GM via WebSocket (provided by group/index.vue)
+const receivedFlankingMap = inject<Readonly<Ref<FlankingMap>>>('receivedFlankingMap', readonly(ref({})))
 
 const encounterStore = useEncounterStore()
 const fogOfWarStore = useFogOfWarStore()
