@@ -2,48 +2,84 @@
 review_id: code-review-333
 review_type: code
 reviewer: senior-reviewer
-trigger: bug-fix
-target_report: bug-050
-domain: combat
+trigger: refactoring
+target_report: refactoring-112
+domain: encounter-tables
 commits_reviewed:
-  - c3b07416
+  - 4851a5fa
+  - 33977eed
+  - 215669ab
+  - 9df79032
+  - 3237c0e3
+  - a078083d
+  - 6812b66c
 files_reviewed:
-  - app/server/api/encounters/[id]/calculate-damage.post.ts
-  - app/utils/damageCalculation.ts
-  - app/types/character.ts
+  - app/stores/encounter.ts
+  - app/composables/useEncounterUndoRedo.ts
+  - app/composables/useEncounterSwitching.ts
+  - app/composables/useEncounterOutOfTurn.ts
+  - app/composables/useEncounterMounts.ts
+  - app/composables/useEncounterCombatActions.ts
+  - app/composables/CLAUDE.md
+  - app/stores/CLAUDE.md
 verdict: APPROVED
 issues_found:
   critical: 0
   high: 0
-  medium: 0
-reviewed_at: 2026-03-04T19:30:00Z
+  medium: 2
+reviewed_at: 2026-03-05T12:00:00Z
 follows_up: null
 ---
 
 ## Review Scope
 
-First review of bug-050: server-side `calculate-damage.post.ts` endpoint missing `moveKeywords` passthrough to `calculateDamage()`, which would prevent Living Weapon STAB exclusion (PTU p.287: weapon moves can never benefit from STAB).
+Refactoring-112 decomposes the encounter store from 970 lines to 782 lines by extracting 5 composables: `useEncounterUndoRedo` (112 lines), `useEncounterSwitching` (132 lines), `useEncounterOutOfTurn` (339 lines), `useEncounterMounts` (223 lines), and `useEncounterCombatActions` (278 lines). The main store delegates to these via a `_buildContext()` pattern that passes closures over the Pinia `this` reference.
 
-Checked against decrees 001-048. decree-043 (Living Weapon skill rank gate) is in the Living Weapon domain but concerns skill rank gating for move access, not STAB calculation -- not applicable here. No decree violations.
+### Verification Performed
+
+1. **All 58 consumer-referenced store properties verified present.** Cross-referenced all `encounterStore.<property>` usages across 45 consumer files against the store's exported getters and actions. All properties are accessible. (Note: `encounterStore.fetchEncounter` in `XpDistributionModal.vue` is a pre-existing bug, not introduced by this refactoring.)
+
+2. **`_buildContext()` pattern verified correct.** The pattern creates closures that capture `this` (the Pinia store instance). Since Pinia always binds `this` to the store in action calls, `ctx.getEncounter()` correctly returns the reactive encounter reference. Synchronous composable functions (e.g., `toggleAgilityTraining`) that mutate the returned encounter object work because JavaScript passes objects by reference -- they mutate the same reactive object that Pinia tracks.
+
+3. **`this` binding verified.** All 32 `_buildContext()` calls occur inside Pinia actions where `this` is guaranteed to be the store instance. No arrow function or callback context issues.
+
+4. **Decree compliance verified.** Decrees 005, 012, 021, 033, 038, 047, 048 all govern server-side behavior. The store is a thin API client -- the refactoring preserves identical API calls with identical parameters. No decree violations.
+
+5. **Commit granularity is correct.** Each extraction is a separate commit, and the final delegation rewrite is its own commit. This allows clean bisection if needed.
 
 ## Issues
 
-None.
+### MEDIUM
+
+**MEDIUM-001: Dead code in `useEncounterOutOfTurn` -- `enterBetweenTurns`/`exitBetweenTurns` exported but never used.**
+
+The composable defines and exports `enterBetweenTurns()` and `exitBetweenTurns()` (lines 171-178, 332-333), but the main store keeps these as inline one-liners (lines 720-721) rather than delegating. The composable functions are dead code. Either delegate consistently or remove them from the composable's return object.
+
+File: `app/composables/useEncounterOutOfTurn.ts` lines 170-178, 332-333
+File: `app/stores/encounter.ts` lines 720-721
+
+**MEDIUM-002: `toggleVisionCapability` calls `getHistory().pushSnapshot()` directly instead of using `this.captureSnapshot()`.**
+
+Line 567 of the store imports and calls `getHistory()` directly from the composable module, bypassing the delegated `captureSnapshot` action. While this was the original behavior (pre-refactoring), the delegation pattern introduces a cleaner path via `this.captureSnapshot('Toggle vision capability')`. This inconsistency should be resolved now while the developer is already in the code. The direct `getHistory()` import at line 6 could then be removed.
+
+File: `app/stores/encounter.ts` lines 6, 567
 
 ## What Looks Good
 
-1. **Fix is correct and minimal.** The single-line addition `moveKeywords: move.keywords,` at line 280 passes the move's keyword array into the `calculateDamage()` input object. The `DamageCalcInput` interface (damageCalculation.ts line 197) declares `moveKeywords?: string[]` as optional, so existing calls without the field continue to work (defaulting to no STAB exclusion, which is correct for non-weapon moves).
+1. **Context pattern is well-designed.** Each composable declares its own typed context interface (e.g., `EncounterCombatActionsContext`), making dependencies explicit. The `useEncounterOutOfTurn` and `useEncounterCombatActions` contexts include `setBetweenTurns` while simpler composables omit it -- good interface segregation.
 
-2. **Consumer logic verified.** The `calculateDamage()` function in `damageCalculation.ts` (line 333) checks `input.moveKeywords?.includes('Weapon')` and skips STAB when true. The optional chaining with `?? false` fallback means the field being previously absent caused the default behavior (STAB applied normally), which is incorrect for weapon moves. After this fix, weapon moves will correctly have their keywords passed through and STAB will be blocked.
+2. **No behavioral changes.** Every extracted function is a byte-for-byte copy of the original store action body, with `this.encounter` replaced by `ctx.getEncounter()` and `this.error = ...` replaced by `ctx.setError(...)`. The refactoring is purely structural.
 
-3. **Data source verified.** The `move` object comes from `getEffectiveMoveList()` (line 192), which for Living Weapon wielded Pokemon includes the weapon moves with `keywords: ['Weapon']` set by the living-weapon service. The `Move` type in `character.ts` (line 59) declares `keywords?: string[]`. The chain is complete: service sets keywords, type declares them, endpoint passes them, calculator reads them.
+3. **CLAUDE.md updates are thorough.** Both `app/composables/CLAUDE.md` and `app/stores/CLAUDE.md` were updated to reflect the new architecture, including the new "Encounter Store Delegates" domain grouping and the `_buildContext()` pattern documentation.
 
-4. **No other server-side call sites affected.** Verified all other `calculateDamage()` call sites in the server: `move.post.ts`, `next-turn.post.ts`, `aoo-resolve.post.ts`, `damage.post.ts`, and `turn-helpers.ts` all call the *different* `calculateDamage` from `combatant.service.ts` (which handles HP reduction arithmetic, not the 9-step damage formula). The `calculate-damage.post.ts` endpoint is the sole server-side caller of the 9-step `calculateDamage` from `utils/damageCalculation.ts`.
+4. **File sizes are well within limits.** Main store at 782 lines (under 800). Largest composable is `useEncounterOutOfTurn` at 339 lines. Good distribution.
 
-5. **Defensive correctness.** Even though the bug is currently not triggerable (Honedge line: Steel/Ghost types, weapon moves are Normal type, so STAB never matches), the fix is the right call. Future Living Weapon species with type-matching weapon moves would silently receive incorrect bonus damage without this fix. Per review philosophy: fix it now while the developer is in the code.
-
-6. **PTU rules compliance.** PTU p.287 states weapon moves "can never benefit from STAB." The implementation at damageCalculation.ts line 332-334 correctly blocks STAB for any move with the Weapon keyword. This fix ensures the server-side path honors that rule identically to any client-side path.
+5. **The `getHistory()` singleton pattern is correctly preserved.** The lazy-initialized singleton in `useEncounterUndoRedo` ensures all callers share the same history state, matching the original module-level pattern.
 
 ## Verdict
 
-**APPROVED** -- Correct single-line fix for a latent rules compliance bug. The data flow chain is verified end-to-end. No regressions possible (optional field with safe default). bug-050 is ready to close.
+**APPROVED.** The refactoring achieves its goal of reducing the encounter store below 800 lines while preserving all behavior. The two MEDIUM issues (dead code in the out-of-turn composable and inconsistent history access in `toggleVisionCapability`) should be addressed promptly but do not block merge.
+
+## Required Changes
+
+None blocking. File tickets for MEDIUM-001 and MEDIUM-002 for prompt follow-up.
