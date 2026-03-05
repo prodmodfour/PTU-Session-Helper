@@ -488,6 +488,7 @@ export const useEncounterStore = defineStore('encounter', {
           existing.mountState = incomingCombatant.mountState
           existing.wieldingWeaponId = incomingCombatant.wieldingWeaponId
           existing.wieldedByTrainerId = incomingCombatant.wieldedByTrainerId
+          existing.visionState = incomingCombatant.visionState
           Object.assign(existing.entity, incomingCombatant.entity)
         } else {
           this.encounter.combatants.push(incomingCombatant)
