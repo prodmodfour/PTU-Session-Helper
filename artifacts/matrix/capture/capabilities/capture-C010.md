@@ -1,17 +1,17 @@
 ---
 cap_id: capture-C010
-name: Calculate Capture Rate
-type: api-endpoint
+name: evaluateTimerBall
+type: utility
 domain: capture
 ---
 
-### capture-C010: Calculate Capture Rate
+### capture-C010: evaluateTimerBall
 - **cap_id**: capture-C010
-- **name**: Capture Rate Calculation Endpoint
-- **type**: api-endpoint
-- **location**: `app/server/api/capture/rate.post.ts`
-- **game_concept**: Server-side capture rate calculation
-- **description**: Accepts pokemonId (looks up DB for level, HP, status, injuries, shiny, evolution data from SpeciesData) OR raw data (level, currentHp, maxHp, species, statusConditions, injuries, isShiny). Returns capture rate with full breakdown and difficulty label.
-- **inputs**: `{ pokemonId }` or `{ level, currentHp, maxHp, species?, statusConditions?, injuries?, isShiny? }`
-- **outputs**: `{ species, level, currentHp, maxHp, captureRate, difficulty, canBeCaptured, hpPercentage, breakdown }`
-- **accessible_from**: gm
+- **name**: Timer Ball Condition Evaluator
+- **type**: utility
+- **location**: `app/utils/pokeBallConditions.ts` -- `evaluateTimerBall()`
+- **game_concept**: PTU p.272: Timer Ball improves by -5 per round, total capped at -20
+- **description**: Round-dependent evaluator. Base +5 in catalog. Conditional: -5 per round elapsed since encounter start. Total capped at -20. Round 1: total +5, Round 2: 0, Round 3: -5, Round 6+: -20.
+- **inputs**: context.encounterRound
+- **outputs**: BallConditionResult with round-based modifier
+- **accessible_from**: gm, player (via evaluateBallCondition)

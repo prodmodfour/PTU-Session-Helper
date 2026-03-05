@@ -1,17 +1,17 @@
 ---
 cap_id: capture-C021
-name: useCapture — calculateCaptureRateLocal
-type: composable-function
+name: evaluateNestBall
+type: utility
 domain: capture
 ---
 
-### capture-C021: useCapture — calculateCaptureRateLocal
+### capture-C021: evaluateNestBall
 - **cap_id**: capture-C021
-- **name**: Local Capture Rate Calculation
-- **type**: composable-function
-- **location**: `app/composables/useCapture.ts` — `calculateCaptureRateLocal()`
-- **game_concept**: Client-side capture rate without API call
-- **description**: Calculates capture rate locally using the pure utility function. No DB lookup — uses provided data. Returns CaptureRateData with difficulty label.
-- **inputs**: { level, currentHp, maxHp, evolutionStage?, maxEvolutionStage?, statusConditions?, injuries?, isShiny?, isLegendary? }
-- **outputs**: CaptureRateData
-- **accessible_from**: gm, player
+- **name**: Nest Ball Condition Evaluator
+- **type**: utility
+- **location**: `app/utils/pokeBallConditions.ts` -- `evaluateNestBall()`
+- **game_concept**: PTU p.272: -20 if target is under level 10
+- **description**: Context-dependent evaluator. Returns -20 if targetLevel < 10.
+- **inputs**: context.targetLevel
+- **outputs**: BallConditionResult (-20 or 0)
+- **accessible_from**: gm, player (via evaluateBallCondition)

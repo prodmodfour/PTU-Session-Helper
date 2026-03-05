@@ -1,17 +1,17 @@
 ---
 cap_id: capture-C022
-name: useCapture — attemptCapture
-type: composable-function
+name: evaluateDiveBall
+type: utility
 domain: capture
 ---
 
-### capture-C022: useCapture — attemptCapture
+### capture-C022: evaluateDiveBall
 - **cap_id**: capture-C022
-- **name**: Attempt Capture (API Call)
-- **type**: composable-function
-- **location**: `app/composables/useCapture.ts` — `attemptCapture()`
-- **game_concept**: Client-side capture attempt execution
-- **description**: Calls POST /api/capture/attempt. On success, optionally consumes the trainer's Standard Action in an encounter context (calls /api/encounters/:id/action). Manages loading/error/warning state. Warning set if action consumption fails but capture succeeded.
-- **inputs**: { pokemonId, trainerId, accuracyRoll?, modifiers?, encounterContext?: { encounterId, trainerCombatantId } }
-- **outputs**: CaptureAttemptResult or null
-- **accessible_from**: gm
+- **name**: Dive Ball Condition Evaluator
+- **type**: utility
+- **location**: `app/utils/pokeBallConditions.ts` -- `evaluateDiveBall()`
+- **game_concept**: PTU p.272: -20 if target found underwater or underground
+- **description**: Context-dependent evaluator (GM-provided flag). Returns -20 if isUnderwaterOrUnderground is true. This is a GM override toggle.
+- **inputs**: context.isUnderwaterOrUnderground
+- **outputs**: BallConditionResult (-20 or 0)
+- **accessible_from**: gm, player (via evaluateBallCondition)

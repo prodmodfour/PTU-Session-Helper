@@ -7,15 +7,11 @@ domain: capture
 
 ### capture-C003: getCaptureDescription
 - **cap_id**: capture-C003
-- **name**: Capture Difficulty Label
+- **name**: Capture Difficulty Description
 - **type**: utility
-- **location**: `app/utils/captureRate.ts` — `getCaptureDescription()`
-- **game_concept**: Human-readable difficulty rating
-- **description**: Maps capture rate to label: Very Easy (>=80), Easy (>=60), Moderate (>=40), Difficult (>=20), Very Difficult (>=1), Nearly Impossible (<1).
-- **inputs**: captureRate number
-- **outputs**: Difficulty string
-- **accessible_from**: gm, player
-
----
-
-## API Endpoint Capabilities
+- **location**: `app/utils/captureRate.ts` -- `getCaptureDescription()`
+- **game_concept**: Human-readable capture difficulty label
+- **description**: Maps a numeric capture rate to a difficulty label: >=80 Very Easy, >=60 Easy, >=40 Moderate, >=20 Difficult, >=1 Very Difficult, <1 Nearly Impossible.
+- **inputs**: captureRate (number)
+- **outputs**: Difficulty description string
+- **accessible_from**: gm, player (auto-imported utility)
