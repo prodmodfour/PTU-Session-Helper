@@ -1,20 +1,19 @@
 ---
-generated_at: 2026-03-05T10:19:58.134Z
+generated_at: 2026-03-05T11:08:17.590Z
 total_tickets: 328
-open: 44
-in_progress: 6
+open: 43
+in_progress: 7
 resolved: 278
 ---
 
 # Tickets Index
 
-## Open Tickets (44)
+## Open Tickets (43)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | refactoring-129 | refactoring | P3 | combat | Per decree-047, whether Other category conditions clear on f |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
-| ptu-rule-121 | ptu-rule | P4 | combat | The Sprint endpoint (`app/server/api/encounters/[id]/sprint. |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
 | ptu-rule-130 | ptu-rule | P4 | combat | PTU-Rule-130: Fainted recall+release pair should not apply L |
@@ -57,7 +56,7 @@ resolved: 278
 | refactoring-140 | refactoring | P4 | combat | After refactoring-098 converted entity mutations to immutabl |
 | docs-017 | docs | P4 | tooling | The bug-047 ticket resolution log references stale commit ha |
 
-## In-Progress Tickets (6)
+## In-Progress Tickets (7)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
@@ -65,6 +64,7 @@ resolved: 278
 | refactoring-117 | refactoring | P3 | — | code-review-259 MED-002 |
 | refactoring-128 | refactoring | P3 | combat | code-review-316 MED-001 |
 | bug-055 | bug | P4 | pokemon-lifecycle | code-review-334b M2 |
+| ptu-rule-121 | ptu-rule | P4 | combat | combat-audit-report (R113, 2026-02-28) |
 | ptu-rule-135 | ptu-rule | P4 | capture | decree-049 |
 | refactoring-139 | refactoring | P4 | multiple | code-review-334 MEDIUM-1 + code-review-334b M1 |
 
@@ -77,7 +77,7 @@ All decree-needs addressed.
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 2 | 52 | 55 |
-| ptu-rule | 5 | 1 | 101 | 107 |
+| ptu-rule | 4 | 2 | 101 | 107 |
 | feature | 0 | 0 | 25 | 25 |
 | ux | 8 | 0 | 10 | 18 |
 | decree | 0 | 0 | 48 | 48 |
