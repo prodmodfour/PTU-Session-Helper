@@ -13,6 +13,8 @@ import type { StatusCondition, ConditionSourceType, ConditionInstance } from '~/
 
 export interface ConditionClearingOverrides {
   clearsOnFaint: boolean
+  clearsOnRecall: boolean
+  clearsOnEncounterEnd: boolean
 }
 
 /**
@@ -21,14 +23,14 @@ export interface ConditionClearingOverrides {
  * An empty object means "use the static condition def flag."
  */
 export const SOURCE_CLEARING_RULES: Record<ConditionSourceType, Partial<ConditionClearingOverrides>> = {
-  'move':        { clearsOnFaint: true },   // Move effect dissipates on faint
-  'ability':     { clearsOnFaint: true },    // Ability effect typically dissipates
-  'terrain':     { clearsOnFaint: false },   // Terrain persists independently
-  'weather':     { clearsOnFaint: false },   // Weather persists independently
-  'item':        { clearsOnFaint: true },    // Item effects are combat-contextual
-  'environment': { clearsOnFaint: false },   // Environment preset persists
-  'manual':      { clearsOnFaint: false },   // GM-applied: conservative, GM controls removal
-  'system':      { clearsOnFaint: false },   // System-applied: defer to static flags
+  'move':        { clearsOnFaint: true, clearsOnRecall: true, clearsOnEncounterEnd: true },
+  'ability':     { clearsOnFaint: true, clearsOnRecall: true, clearsOnEncounterEnd: true },
+  'terrain':     { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: true },
+  'weather':     { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: true },
+  'item':        { clearsOnFaint: true, clearsOnRecall: true, clearsOnEncounterEnd: true },
+  'environment': { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: false },
+  'manual':      { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: false },
+  'system':      { clearsOnFaint: false },
   'unknown':     {}                          // No override: use static condition def
 }
 
@@ -61,6 +63,60 @@ export function shouldClearOnFaint(
 
   // Fallback: static condition def flag (clearsOnFaint: false for Other, decree-047)
   return def.clearsOnFaint
+}
+
+/**
+ * Determine whether a specific condition instance should be cleared on recall.
+ * Same pattern as shouldClearOnFaint: source overrides only for Other conditions.
+ */
+export function shouldClearOnRecall(
+  condition: StatusCondition,
+  instance?: ConditionInstance
+): boolean {
+  const def = getConditionDef(condition)
+
+  // Non-other conditions: use static clearsOnRecall flag
+  if (def.category !== 'other') {
+    return def.clearsOnRecall
+  }
+
+  // Other condition: check source-based override
+  if (instance?.sourceType) {
+    const rule = SOURCE_CLEARING_RULES[instance.sourceType]
+    if (rule?.clearsOnRecall !== undefined) {
+      return rule.clearsOnRecall
+    }
+  }
+
+  // Fallback: static condition def flag
+  return def.clearsOnRecall
+}
+
+/**
+ * Determine whether a specific condition instance should be cleared at encounter end.
+ * Same pattern as shouldClearOnFaint: source overrides only for Other conditions.
+ */
+export function shouldClearOnEncounterEnd(
+  condition: StatusCondition,
+  instance?: ConditionInstance
+): boolean {
+  const def = getConditionDef(condition)
+
+  // Non-other conditions: use static clearsOnEncounterEnd flag
+  if (def.category !== 'other') {
+    return def.clearsOnEncounterEnd
+  }
+
+  // Other condition: check source-based override
+  if (instance?.sourceType) {
+    const rule = SOURCE_CLEARING_RULES[instance.sourceType]
+    if (rule?.clearsOnEncounterEnd !== undefined) {
+      return rule.clearsOnEncounterEnd
+    }
+  }
+
+  // Fallback: static condition def flag
+  return def.clearsOnEncounterEnd
 }
 
 /**
