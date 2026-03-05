@@ -167,6 +167,7 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const { showToast } = useGmToast()
 const groupViewTabsStore = useGroupViewTabsStore()
 const encounterStore = useEncounterStore()
 
@@ -304,7 +305,7 @@ onMounted(async () => {
       }))
     }
   } catch (error) {
-    alert('Failed to load scene data')
+    showToast('Failed to load scene data', 'error')
   } finally {
     loading.value = false
   }
@@ -376,7 +377,7 @@ const saveScene = async () => {
       groups: scene.value.groups
     })
   } catch (error) {
-    alert('Failed to save scene')
+    showToast('Failed to save scene', 'error')
   }
 }
 
@@ -389,7 +390,7 @@ const activateScene = async () => {
     await groupViewTabsStore.setActiveTab('scene', scene.value.id)
     scene.value = { ...scene.value, isActive: true }
   } catch (error) {
-    alert('Failed to activate scene')
+    showToast('Failed to activate scene', 'error')
   } finally {
     activating.value = false
   }
@@ -402,7 +403,7 @@ const deactivateScene = async () => {
     await groupViewTabsStore.deactivateScene(scene.value.id)
     scene.value = { ...scene.value, isActive: false }
   } catch (error) {
-    alert('Failed to deactivate scene')
+    showToast('Failed to deactivate scene', 'error')
   }
 }
 
@@ -433,7 +434,7 @@ const handleGenerateEncounter = async (tableId: string) => {
       }
     }
   } catch (error) {
-    alert('Failed to generate encounter')
+    showToast('Failed to generate encounter', 'error')
   } finally {
     generatingEncounter.value = false
   }
@@ -463,7 +464,7 @@ const createGroup = async () => {
       scene.value.groups = [...scene.value.groups, response.data]
     }
   } catch (error) {
-    alert('Failed to create group')
+    showToast('Failed to create group', 'error')
   }
 }
 
@@ -477,7 +478,7 @@ const deleteGroup = async (groupId: string) => {
       selectedGroupId.value = null
     }
   } catch (error) {
-    alert('Failed to delete group')
+    showToast('Failed to delete group', 'error')
   }
 }
 
@@ -505,7 +506,7 @@ const addCharacter = async (char: { id: string; name: string; avatarUrl: string 
       scene.value.characters = [...scene.value.characters, response.data]
     }
   } catch (error) {
-    alert('Failed to add character to scene')
+    showToast('Failed to add character to scene', 'error')
   }
 }
 
@@ -516,7 +517,7 @@ const removeCharacter = async (charSceneId: string) => {
     await $fetch(`/api/scenes/${scene.value.id}/characters/${charSceneId}`, { method: 'DELETE' })
     scene.value.characters = scene.value.characters.filter(c => c.id !== charSceneId)
   } catch (error) {
-    alert('Failed to remove character from scene')
+    showToast('Failed to remove character from scene', 'error')
   }
 }
 
@@ -538,7 +539,7 @@ const addWildPokemon = async (species: string, level: number) => {
       }
     }
   } catch (error) {
-    alert('Failed to add Pokemon to scene')
+    showToast('Failed to add Pokemon to scene', 'error')
   }
 }
 
@@ -549,7 +550,7 @@ const removePokemon = async (pokemonSceneId: string) => {
     await $fetch(`/api/scenes/${scene.value.id}/pokemon/${pokemonSceneId}`, { method: 'DELETE' })
     scene.value.pokemon = scene.value.pokemon.filter(p => p.id !== pokemonSceneId)
   } catch (error) {
-    alert('Failed to remove Pokemon from scene')
+    showToast('Failed to remove Pokemon from scene', 'error')
   }
 }
 
@@ -568,7 +569,7 @@ const handleGroupResize = async (groupId: string, position: ScenePosition, width
       body: { position, width, height }
     })
   } catch (error) {
-    alert('Failed to resize group')
+    showToast('Failed to resize group', 'error')
   }
 }
 
@@ -701,7 +702,7 @@ const handleStartEncounter = async (options: {
     showStartEncounterModal.value = false
     router.push('/gm')
   } catch (error) {
-    alert('Failed to create encounter from scene')
+    showToast('Failed to create encounter from scene', 'error')
   } finally {
     startingEncounter.value = false
   }

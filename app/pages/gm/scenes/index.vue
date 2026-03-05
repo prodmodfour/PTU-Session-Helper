@@ -155,6 +155,7 @@ useHead({
 })
 
 const router = useRouter()
+const { showToast } = useGmToast()
 const groupViewTabsStore = useGroupViewTabsStore()
 
 // State
@@ -183,7 +184,7 @@ const createScene = async () => {
       router.push(`/gm/scenes/${scene.id}`)
     }
   } catch (error) {
-    alert('Failed to create scene')
+    showToast('Failed to create scene', 'error')
   }
 }
 
@@ -195,7 +196,7 @@ const activateScene = async (id: string) => {
     // Also switch tab to scene
     await groupViewTabsStore.setActiveTab('scene', id)
   } catch (error) {
-    alert('Failed to activate scene')
+    showToast('Failed to activate scene', 'error')
   } finally {
     activating.value = null
   }
@@ -206,7 +207,7 @@ const deactivateScene = async (id: string) => {
   try {
     await groupViewTabsStore.deactivateScene(id)
   } catch (error) {
-    alert('Failed to deactivate scene')
+    showToast('Failed to deactivate scene', 'error')
   }
 }
 
@@ -224,7 +225,7 @@ const deleteScene = async () => {
     await groupViewTabsStore.deleteScene(sceneToDelete.value.id)
     sceneToDelete.value = null
   } catch (error) {
-    alert('Failed to delete scene')
+    showToast('Failed to delete scene', 'error')
   } finally {
     deleting.value = false
   }
