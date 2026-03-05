@@ -48,7 +48,8 @@ function serializeLinkedPokemon(p: Pokemon) {
     tutorPoints: p.tutorPoints,
     trainingExp: p.trainingExp,
     eggGroups: JSON.parse(p.eggGroups),
-    loyalty: (p as any).loyalty ?? 3,
+    // decree-049: wild/captured origin defaults to Loyalty 2, others to 3
+    loyalty: (p as any).loyalty ?? (p.origin === 'wild' || p.origin === 'captured' ? 2 : 3),
     shiny: p.shiny,
     gender: p.gender,
     spriteUrl: p.spriteUrl
@@ -239,7 +240,8 @@ export function serializePokemon(pokemon: Pokemon) {
     tutorPoints: pokemon.tutorPoints,
     trainingExp: pokemon.trainingExp,
     eggGroups: JSON.parse(pokemon.eggGroups),
-    loyalty: (pokemon as any).loyalty ?? 3,
+    // decree-049: wild/captured origin defaults to Loyalty 2, others to 3
+    loyalty: (pokemon as any).loyalty ?? (pokemon.origin === 'wild' || pokemon.origin === 'captured' ? 2 : 3),
     statusConditions: JSON.parse(pokemon.statusConditions),
     injuries: pokemon.injuries,
     temporaryHp: pokemon.temporaryHp,
