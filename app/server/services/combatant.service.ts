@@ -283,13 +283,24 @@ export interface StatusChangeResult {
 }
 
 /**
+ * Source metadata for condition application (decree-047).
+ * If omitted, defaults to 'manual' source.
+ */
+export interface ConditionSource {
+  type: ConditionSourceType
+  label: string
+}
+
+/**
  * Update status conditions on a combatant's entity.
  * Per decree-005: auto-applies/reverses CS effects for Burn, Paralysis, Poison.
+ * Per decree-047: tracks condition source in conditionInstances for source-aware clearing.
  */
 export function updateStatusConditions(
   combatant: Combatant,
   addStatuses: StatusCondition[],
-  removeStatuses: StatusCondition[]
+  removeStatuses: StatusCondition[],
+  source?: ConditionSource
 ): StatusChangeResult & { stageChanges?: StageChangeResult } {
   const entity = combatant.entity
   let currentStatuses: StatusCondition[] = entity.statusConditions || []
@@ -308,6 +319,29 @@ export function updateStatusConditions(
   }
 
   combatant.entity = { ...combatant.entity, statusConditions: currentStatuses }
+
+  // Update conditionInstances for source tracking (decree-047)
+  if (!combatant.conditionInstances) {
+    combatant.conditionInstances = []
+  }
+
+  // Add instances for newly added conditions
+  for (const status of actuallyAdded) {
+    const instance: ConditionInstance = source
+      ? { condition: status, sourceType: source.type, sourceLabel: source.label }
+      : buildManualSourceInstance(status)
+    combatant.conditionInstances = [
+      ...combatant.conditionInstances,
+      instance
+    ]
+  }
+
+  // Remove instances for removed conditions
+  for (const status of actuallyRemoved) {
+    combatant.conditionInstances = combatant.conditionInstances.filter(
+      i => i.condition !== status
+    )
+  }
 
   // Auto-apply/reverse CS effects from status conditions (decree-005)
   let stageChanges: StageChangeResult | undefined
