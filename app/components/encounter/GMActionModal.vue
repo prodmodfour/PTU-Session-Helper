@@ -151,6 +151,7 @@
         <!-- Status Conditions Section -->
         <CombatantConditionsSection
           :current-conditions="currentConditions"
+          :condition-instances="combatant.conditionInstances"
           @add-condition="addCondition"
           @remove-condition="removeCondition"
         />

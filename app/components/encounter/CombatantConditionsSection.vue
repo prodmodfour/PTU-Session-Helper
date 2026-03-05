@@ -19,7 +19,7 @@
             @click="$emit('removeCondition', condition)"
             :title="'Click to remove ' + condition"
           >
-            {{ condition }}
+            {{ formatCondition(condition) }}
             <span class="condition-tag__remove">&times;</span>
           </button>
         </div>
@@ -75,16 +75,18 @@
 </template>
 
 <script setup lang="ts">
-import type { StatusCondition } from '~/types'
+import type { StatusCondition, ConditionInstance } from '~/types'
 import {
   PERSISTENT_CONDITIONS,
   VOLATILE_CONDITIONS,
   OTHER_CONDITIONS,
   getConditionClass
 } from '~/constants/statusConditions'
+import { formatConditionDisplay } from '~/constants/conditionSourceRules'
 
 const props = defineProps<{
   currentConditions: StatusCondition[]
+  conditionInstances?: ConditionInstance[]
 }>()
 
 defineEmits<{
@@ -100,6 +102,10 @@ const otherConditions = OTHER_CONDITIONS
 
 const hasCondition = (condition: StatusCondition): boolean => {
   return props.currentConditions.includes(condition)
+}
+
+const formatCondition = (condition: StatusCondition): string => {
+  return formatConditionDisplay(condition, props.conditionInstances)
 }
 </script>
 

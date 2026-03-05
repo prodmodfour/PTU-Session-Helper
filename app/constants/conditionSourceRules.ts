@@ -85,3 +85,26 @@ export function buildManualSourceInstance(condition: StatusCondition): Condition
     sourceLabel: 'GM applied'
   }
 }
+
+/**
+ * Format a condition for display, including source label for Other conditions.
+ * Used in GM view to show what applied an Other condition.
+ *
+ * Display rules:
+ * - Persistent/Volatile: condition name only (source doesn't affect behavior)
+ * - Other with manual source: condition name only (GM applied it, they know why)
+ * - Other with unknown source: condition name + "(source unknown)"
+ * - Other with specific source: condition name + "(sourceLabel)"
+ */
+export function formatConditionDisplay(
+  condition: StatusCondition,
+  instances?: ConditionInstance[]
+): string {
+  const def = getConditionDef(condition)
+  if (def.category !== 'other') return condition
+
+  const instance = instances?.find(i => i.condition === condition)
+  if (!instance || instance.sourceType === 'manual') return condition
+  if (instance.sourceType === 'unknown') return `${condition} (source unknown)`
+  return `${condition} (${instance.sourceLabel})`
+}
