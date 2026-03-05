@@ -1,25 +1,24 @@
 ---
-generated_at: 2026-03-05T07:12:39.109Z
-total_tickets: 321
-open: 50
-in_progress: 1
-resolved: 270
+generated_at: 2026-03-05T08:49:25.104Z
+total_tickets: 327
+open: 49
+in_progress: 2
+resolved: 276
 ---
 
 # Tickets Index
 
-## Open Tickets (50)
+## Open Tickets (49)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| bug-053 | bug | P2 | encounter-tables | Two related issues prevent vision state from syncing across  |
-| refactoring-098 | refactoring | P3 | combat | refactoring-098: Refactor entity mutation in heavily injured |
+| bug-054 | bug | P3 | multiple | GmToastContainer.vue (now in the GM layout) has no `onUnmoun |
 | refactoring-113 | refactoring | P3 | combat | refactoring-113: Wire or remove autoDeclineFaintedReactor in |
 | refactoring-117 | refactoring | P3 | — | refactoring-117: Extract out-of-turn actions from encounter. |
-| refactoring-122 | refactoring | P3 | vtt-grid, player-view | refactoring-122: Wire receivedFlankingMap into group/player  |
 | refactoring-128 | refactoring | P3 | combat | `useMoveCalculation.ts` is now 806 lines, exceeding the 800- |
 | refactoring-129 | refactoring | P3 | combat | Per decree-047, whether Other category conditions clear on f |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
+| bug-055 | bug | P4 | pokemon-lifecycle | In `gm/pokemon/[id].vue` (lines 418-421), evolution ineligib |
 | ptu-rule-121 | ptu-rule | P4 | combat | The Sprint endpoint (`app/server/api/encounters/[id]/sprint. |
 | ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
 | ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
@@ -57,17 +56,18 @@ resolved: 270
 | refactoring-126 | refactoring | P4 | pokemon-lifecycle | The outer catch block in `[id].put.ts` (line ~90) and `index |
 | refactoring-130 | refactoring | P4 | encounter-tables | When clearing an environment preset, the endpoint stores `'{ |
 | refactoring-132 | refactoring | P4 | combat | refactoring-132: Add type-narrowing helper for Combatant ent |
-| refactoring-133 | refactoring | P4 | encounter-tables | The `source` parameter in the vision toggle API endpoint (`v |
-| refactoring-134 | refactoring | P4 | combat | The `toggleVisionCapability` action in encounter store uses  |
-| refactoring-135 | refactoring | P4 | encounter-tables | The `source` parameter in the vision toggle API endpoint is  |
+| refactoring-136 | refactoring | P4 | encounter-tables | `useEncounterOutOfTurn` defines and exports `enterBetweenTur |
+| refactoring-137 | refactoring | P4 | encounter-tables | `toggleVisionCapability` (encounter store line 567) calls `g |
+| refactoring-138 | refactoring | P4 | combat | Refactoring-098 converted the primary damage/next-turn/move  |
+| refactoring-139 | refactoring | P4 | multiple | In `useGmToast.ts` (lines 72-78), `dismissAll()` iterates th |
 | docs-017 | docs | P4 | tooling | The bug-047 ticket resolution log references stale commit ha |
-| docs-018 | docs | P4 | docs | The `app-surface.md` reference document was not updated when |
 
-## In-Progress Tickets (1)
+## In-Progress Tickets (2)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
 | feature-025 | feature | P2 | encounter-tables | decree-048 |
+| ptu-rule-135 | ptu-rule | P4 | capture | decree-049 |
 
 ## Open Decree-Needs (0)
 
@@ -77,10 +77,10 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 2 | 0 | 51 | 53 |
-| ptu-rule | 5 | 0 | 102 | 107 |
+| bug | 3 | 0 | 52 | 55 |
+| ptu-rule | 5 | 1 | 101 | 107 |
 | feature | 0 | 1 | 24 | 25 |
 | ux | 8 | 0 | 10 | 18 |
 | decree | 0 | 0 | 48 | 48 |
-| refactoring | 33 | 0 | 19 | 52 |
-| docs | 2 | 0 | 16 | 18 |
+| refactoring | 32 | 0 | 24 | 56 |
+| docs | 1 | 0 | 17 | 18 |
