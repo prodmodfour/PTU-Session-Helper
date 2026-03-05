@@ -1,19 +1,9 @@
 import { defineStore } from 'pinia'
-import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, SwitchAction, StatusCondition } from '~/types'
+import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, StatusCondition } from '~/types'
 import type { OutOfTurnAction, AoOTrigger, InterruptTrigger } from '~/types/combat'
 import type { GridPosition } from '~/types/spatial'
 import type { SignificanceTier } from '~/utils/encounterBudget'
-import { CONQUERORS_MARCH_CONDITION } from '~/constants/trainerClasses'
-
-// History composable for undo/redo
-let historyComposable: ReturnType<typeof useEncounterHistory> | null = null
-
-const getHistory = () => {
-  if (!historyComposable) {
-    historyComposable = useEncounterHistory()
-  }
-  return historyComposable
-}
+import { getHistory } from '~/composables/useEncounterUndoRedo'
 
 export const useEncounterStore = defineStore('encounter', {
   state: () => ({
@@ -31,35 +21,26 @@ export const useEncounterStore = defineStore('encounter', {
     currentRound: (state) => state.encounter?.currentRound ?? 0,
     sceneNumber: (state) => state.encounter?.sceneNumber ?? 1,
 
-    // Battle type
     battleType: (state): BattleType => state.encounter?.battleType ?? 'full_contact',
     isLeagueBattle: (state): boolean => state.encounter?.battleType === 'trainer',
-
-    // PTU Turn Phase (for League battles)
     currentPhase: (state): TurnPhase => state.encounter?.currentPhase ?? 'pokemon',
-
-    // Environment Preset (P2: ptu-rule-058)
     activeEnvironmentPreset: (state) => state.encounter?.environmentPreset ?? null,
 
     combatantsByInitiative: (state): Combatant[] => {
       if (!state.encounter) return []
       const order = state.encounter.turnOrder
-      // If turnOrder exists, use it; otherwise sort combatants by initiative (descending)
       if (order.length > 0) {
         return order.map(id => state.encounter!.combatants.find(c => c.id === id)).filter(Boolean) as Combatant[]
       }
-      // Fallback: sort by initiative descending
       return [...state.encounter.combatants].sort((a, b) => b.initiative - a.initiative)
     },
 
-    // League Battle: Trainer turn order (low speed to high for declarations)
     trainersByTurnOrder: (state): Combatant[] => {
       if (!state.encounter) return []
       const order = state.encounter.trainerTurnOrder ?? []
       return order.map(id => state.encounter!.combatants.find(c => c.id === id)).filter(Boolean) as Combatant[]
     },
 
-    // League Battle: Pokemon turn order (high speed to low for actions)
     pokemonByTurnOrder: (state): Combatant[] => {
       if (!state.encounter) return []
       const order = state.encounter.pokemonTurnOrder ?? []
@@ -84,12 +65,10 @@ export const useEncounterStore = defineStore('encounter', {
       return state.encounter?.combatants.filter(c => c.side === 'enemies') ?? []
     },
 
-    // Get combatants with injuries
     injuredCombatants: (state): Combatant[] => {
       return state.encounter?.combatants.filter(c => c.injuries.count > 0) ?? []
     },
 
-    // Get combatants who can still act this turn (have remaining actions)
     combatantsWithActions: (state): Combatant[] => {
       return state.encounter?.combatants.filter(c => {
         const ts = c.turnState
@@ -101,7 +80,6 @@ export const useEncounterStore = defineStore('encounter', {
       return state.encounter?.moveLog ?? []
     },
 
-    /** Get all declarations for the current round (League Battle) */
     currentDeclarations: (state): TrainerDeclaration[] => {
       if (!state.encounter) return []
       return (state.encounter.declarations ?? []).filter(
@@ -109,7 +87,6 @@ export const useEncounterStore = defineStore('encounter', {
       )
     },
 
-    /** Get the declaration for the currently-resolving trainer (resolution phase only) */
     currentResolutionDeclaration: (state): TrainerDeclaration | null => {
       if (!state.encounter) return null
       if (state.encounter.currentPhase !== 'trainer_resolution') return null
@@ -119,35 +96,29 @@ export const useEncounterStore = defineStore('encounter', {
       ) ?? null
     },
 
-    /** Pending AoO actions awaiting GM resolution (feature-016) */
     pendingAoOs: (state): OutOfTurnAction[] => {
       return (state.encounter?.pendingOutOfTurnActions ?? [])
         .filter(a => a.category === 'aoo' && a.status === 'pending')
     },
 
-    /** All pending out-of-turn actions (AoO, Priority, Interrupt) */
     pendingOutOfTurnActions: (state): OutOfTurnAction[] => {
       return (state.encounter?.pendingOutOfTurnActions ?? [])
         .filter(a => a.status === 'pending')
     },
 
-    /** Whether there are any pending AoO actions to show */
     hasAoOPrompts: (state): boolean => {
       return (state.encounter?.pendingOutOfTurnActions ?? [])
         .some(a => a.category === 'aoo' && a.status === 'pending')
     },
 
-    /** Hold queue entries (P1) */
     holdQueue: (state) => {
       return state.encounter?.holdQueue ?? []
     },
 
-    /** Whether we are in the between-turns Priority window */
     isBetweenTurns: (state): boolean => {
       return state.betweenTurns
     },
 
-    /** Combatants currently holding their action */
     holdingCombatants: (state): Combatant[] => {
       if (!state.encounter) return []
       return state.encounter.combatants.filter(c =>
@@ -155,25 +126,21 @@ export const useEncounterStore = defineStore('encounter', {
       )
     },
 
-    /** Pending interrupt actions awaiting GM resolution */
     pendingInterrupts: (state): OutOfTurnAction[] => {
       return (state.encounter?.pendingOutOfTurnActions ?? [])
         .filter(a => a.category === 'interrupt' && a.status === 'pending')
     },
 
-    /** Pending Intercept Melee opportunities (ally_hit_melee triggers) */
     pendingInterceptMelee: (state): OutOfTurnAction[] => {
       return (state.encounter?.pendingOutOfTurnActions ?? [])
         .filter(a => a.triggerType === 'ally_hit_melee' && a.status === 'pending')
     },
 
-    /** Pending Intercept Ranged opportunities (ranged_in_range triggers) */
     pendingInterceptRanged: (state): OutOfTurnAction[] => {
       return (state.encounter?.pendingOutOfTurnActions ?? [])
         .filter(a => a.triggerType === 'ranged_in_range' && a.status === 'pending')
     },
 
-    /** Whether there are any pending Intercept prompts to show */
     hasInterceptPrompts: (state): boolean => {
       return (state.encounter?.pendingOutOfTurnActions ?? [])
         .some(a =>
@@ -182,7 +149,6 @@ export const useEncounterStore = defineStore('encounter', {
         )
     },
 
-    /** Combatants eligible for Priority actions (alive, not used Priority, not holding) */
     priorityEligibleCombatants: (state): Combatant[] => {
       if (!state.encounter) return []
       return state.encounter.combatants.filter(c => {
@@ -193,31 +159,23 @@ export const useEncounterStore = defineStore('encounter', {
       })
     },
 
-    // ===========================================
-    // Mount State Getters (feature-004)
-    // ===========================================
-
-    /** Get all currently mounted pairs (rider combatants with isMounted=true) */
     mountedRiders: (state): Combatant[] => {
       if (!state.encounter) return []
       return state.encounter.combatants.filter(c => c.mountState?.isMounted === true)
     },
 
-    /** Check if a specific combatant is currently mounted (as rider) */
     isMountedRider: (state) => (combatantId: string): boolean => {
       if (!state.encounter) return false
       const c = state.encounter.combatants.find(c => c.id === combatantId)
       return c?.mountState?.isMounted === true
     },
 
-    /** Check if a specific combatant is currently being ridden (as mount) */
     isBeingRidden: (state) => (combatantId: string): boolean => {
       if (!state.encounter) return false
       const c = state.encounter.combatants.find(c => c.id === combatantId)
       return c?.mountState !== undefined && c.mountState.isMounted === false
     },
 
-    /** Get the mount partner for a combatant (returns the other half of the pair) */
     getMountPartner: (state) => (combatantId: string): Combatant | null => {
       if (!state.encounter) return null
       const c = state.encounter.combatants.find(c => c.id === combatantId)
@@ -225,14 +183,12 @@ export const useEncounterStore = defineStore('encounter', {
       return state.encounter.combatants.find(p => p.id === c.mountState!.partnerId) ?? null
     },
 
-    /** Get mount state for a specific combatant */
     getMountState: (state) => (combatantId: string) => {
       if (!state.encounter) return undefined
       const c = state.encounter.combatants.find(c => c.id === combatantId)
       return c?.mountState
     },
 
-    /** Get all mounted pairs as { riderId, mountId } tuples */
     mountedPairs: (state): { riderId: string; mountId: string }[] => {
       if (!state.encounter) return []
       return state.encounter.combatants
@@ -240,7 +196,6 @@ export const useEncounterStore = defineStore('encounter', {
         .map(c => ({ riderId: c.id, mountId: c.mountState!.partnerId }))
     },
 
-    /** Check if the current turn combatant can dismount (is a mounted rider) */
     canDismount: (state): boolean => {
       if (!state.encounter) return false
       const currentId = state.encounter.turnOrder[state.encounter.currentTurnIndex]
@@ -248,25 +203,18 @@ export const useEncounterStore = defineStore('encounter', {
       return current?.mountState?.isMounted === true
     },
 
-    // ===========================================
-    // Living Weapon Getters (feature-005)
-    // ===========================================
-
-    /** Check if a combatant is currently wielding a Living Weapon */
     isWieldingWeapon: (state) => (combatantId: string): boolean => {
       if (!state.encounter) return false
       const c = state.encounter.combatants.find(c => c.id === combatantId)
       return c?.wieldingWeaponId !== undefined
     },
 
-    /** Check if a combatant is currently being wielded as a Living Weapon */
     isBeingWielded: (state) => (combatantId: string): boolean => {
       if (!state.encounter) return false
       const c = state.encounter.combatants.find(c => c.id === combatantId)
       return c?.wieldedByTrainerId !== undefined
     },
 
-    /** Get the wielded weapon combatant for a trainer */
     getWieldedWeapon: (state) => (combatantId: string): Combatant | null => {
       if (!state.encounter) return null
       const c = state.encounter.combatants.find(c => c.id === combatantId)
@@ -274,7 +222,6 @@ export const useEncounterStore = defineStore('encounter', {
       return state.encounter.combatants.find(w => w.id === c.wieldingWeaponId) ?? null
     },
 
-    /** Get the wielder trainer combatant for a weapon Pokemon */
     getWeaponWielder: (state) => (combatantId: string): Combatant | null => {
       if (!state.encounter) return null
       const c = state.encounter.combatants.find(c => c.id === combatantId)
@@ -282,7 +229,6 @@ export const useEncounterStore = defineStore('encounter', {
       return state.encounter.combatants.find(w => w.id === c.wieldedByTrainerId) ?? null
     },
 
-    /** Get all active wield pairs as { wielderId, weaponId } tuples */
     wieldPairs: (state): { wielderId: string; weaponId: string }[] => {
       if (!state.encounter) return []
       return state.encounter.combatants
@@ -292,7 +238,17 @@ export const useEncounterStore = defineStore('encounter', {
   },
 
   actions: {
-    // Load encounter from API
+    _buildContext() {
+      return {
+        getEncounter: () => this.encounter,
+        setEncounter: (enc: Encounter) => { this.encounter = enc },
+        setError: (msg: string) => { this.error = msg },
+        setBetweenTurns: (val: boolean) => { this.betweenTurns = val }
+      }
+    },
+
+    // Encounter CRUD Actions
+
     async loadEncounter(id: string) {
       this.loading = true
       this.error = null
@@ -306,7 +262,6 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Create new encounter
     async createEncounter(
       name: string,
       battleType: 'trainer' | 'full_contact',
@@ -319,9 +274,7 @@ export const useEncounterStore = defineStore('encounter', {
         const response = await $fetch<{ data: Encounter }>('/api/encounters', {
           method: 'POST',
           body: {
-            name,
-            battleType,
-            weather,
+            name, battleType, weather,
             ...(significance && {
               significanceMultiplier: significance.multiplier,
               significanceTier: significance.tier
@@ -338,7 +291,6 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Create encounter from scene data
     async createFromScene(
       sceneId: string,
       battleType: 'trainer' | 'full_contact',
@@ -350,8 +302,7 @@ export const useEncounterStore = defineStore('encounter', {
         const response = await $fetch<{ data: Encounter }>('/api/encounters/from-scene', {
           method: 'POST',
           body: {
-            sceneId,
-            battleType,
+            sceneId, battleType,
             ...(significance && {
               significanceMultiplier: significance.multiplier,
               significanceTier: significance.tier
@@ -368,7 +319,6 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Create encounter from template
     async loadFromTemplate(templateId: string, encounterName?: string) {
       this.loading = true
       this.error = null
@@ -387,15 +337,8 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Add combatant to encounter
-    async addCombatant(
-      entityId: string,
-      entityType: 'pokemon' | 'human',
-      side: CombatSide,
-      initiativeBonus: number = 0
-    ) {
+    async addCombatant(entityId: string, entityType: 'pokemon' | 'human', side: CombatSide, initiativeBonus: number = 0) {
       if (!this.encounter) return
-
       try {
         const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/combatants`, {
           method: 'POST',
@@ -408,119 +351,8 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    /** Perform a full Pokemon switch (recall one, release another) as a Standard Action */
-    async switchPokemon(
-      trainerId: string,
-      recallCombatantId: string,
-      releaseEntityId: string,
-      options?: {
-        faintedSwitch?: boolean
-        forced?: boolean
-        releasePosition?: { x: number; y: number }
-      }
-    ) {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            switchDetails: {
-              trainerName: string
-              recalledName: string
-              releasedName: string
-              actionCost: 'standard' | 'shift' | 'none'
-              rangeToRecalled: number
-              releasedInitiative: number
-              canActThisRound: boolean
-            }
-          }
-        }>(`/api/encounters/${this.encounter.id}/switch`, {
-          method: 'POST',
-          body: {
-            trainerId,
-            recallCombatantId,
-            releaseEntityId,
-            faintedSwitch: options?.faintedSwitch ?? false,
-            forced: options?.forced ?? false,
-            releasePosition: options?.releasePosition
-          }
-        })
-        this.encounter = response.data.encounter
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to switch Pokemon'
-        throw e
-      }
-    },
-
-    /** Recall one or two Pokemon from the field (P2 Section L) */
-    async recallPokemon(
-      trainerId: string,
-      pokemonCombatantIds: string[]
-    ) {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            recallDetails: {
-              trainerName: string
-              recalledNames: string[]
-              actionCost: 'standard' | 'shift'
-              count: number
-            }
-          }
-        }>(`/api/encounters/${this.encounter.id}/recall`, {
-          method: 'POST',
-          body: { trainerId, pokemonCombatantIds }
-        })
-        this.encounter = response.data.encounter
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to recall Pokemon'
-        throw e
-      }
-    },
-
-    /** Release one or two Pokemon onto the field (P2 Section L) */
-    async releasePokemon(
-      trainerId: string,
-      pokemonEntityIds: string[],
-      positions?: Array<{ x: number; y: number } | null>
-    ) {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            releaseDetails: {
-              trainerName: string
-              releasedNames: string[]
-              releasedCombatantIds: string[]
-              actionCost: 'standard' | 'shift'
-              count: number
-              countsAsSwitch: boolean
-            }
-          }
-        }>(`/api/encounters/${this.encounter.id}/release`, {
-          method: 'POST',
-          body: { trainerId, pokemonEntityIds, positions }
-        })
-        this.encounter = response.data.encounter
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to release Pokemon'
-        throw e
-      }
-    },
-
-    // Remove combatant from encounter
     async removeCombatant(combatantId: string) {
       if (!this.encounter) return
-
       try {
         const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/combatants/${combatantId}`, {
           method: 'DELETE'
@@ -532,10 +364,8 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Clear encounter after ending
     async endAndClear() {
       if (!this.encounter) return
-
       try {
         await this.endEncounter()
         this.encounter = null
@@ -545,14 +375,10 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Start encounter (sort initiative)
     async startEncounter() {
       if (!this.encounter) return
-
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/start`, {
-          method: 'POST'
-        })
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/start`, { method: 'POST' })
         this.encounter = response.data
       } catch (e: any) {
         this.error = e.message || 'Failed to start encounter'
@@ -560,240 +386,10 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Next turn
-    // Returns heavily injured penalty and tick damage data for GM alerts
-    async nextTurn(): Promise<{
-      heavilyInjuredPenalty: { combatantId: string; hpLost: number; isDead: boolean; deathCause: string | null } | null
-      holdReleaseTriggered: Array<{ combatantId: string }>
-    } | null> {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: Encounter
-          heavilyInjuredPenalty?: { combatantId: string; hpLost: number; isDead: boolean; deathCause: string | null }
-          holdReleaseTriggered?: Array<{ combatantId: string }>
-        }>(`/api/encounters/${this.encounter.id}/next-turn`, {
-          method: 'POST'
-        })
-        this.encounter = response.data
-        // Enter between-turns state for Priority declaration window (Section B6)
-        this.betweenTurns = true
-        return {
-          heavilyInjuredPenalty: response.heavilyInjuredPenalty ?? null,
-          holdReleaseTriggered: response.holdReleaseTriggered ?? []
-        }
-      } catch (e: any) {
-        this.error = e.message || 'Failed to advance turn'
-        throw e
-      }
-    },
-
-    /** Submit a trainer declaration during League Battle declaration phase (decree-021) */
-    async submitDeclaration(
-      combatantId: string,
-      actionType: TrainerDeclaration['actionType'],
-      description: string,
-      targetIds?: string[]
-    ) {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{ data: Encounter }>(
-          `/api/encounters/${this.encounter.id}/declare`,
-          {
-            method: 'POST',
-            body: { combatantId, actionType, description, targetIds }
-          }
-        )
-        this.encounter = response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to submit declaration'
-        throw e
-      }
-    },
-
-    // Execute move
-    // Returns target injury/death results for GM alerts (null if no damage targets)
-    async executeMove(
-      actorId: string,
-      moveId: string,
-      targetIds: string[],
-      damage?: number,
-      targetDamages?: Record<string, number>,
-      notes?: string
-    ): Promise<Array<{
-      targetId: string
-      targetName: string
-      heavilyInjured: boolean
-      heavilyInjuredHpLoss: number
-      fainted: boolean
-      isDead: boolean
-      deathCause: string | null
-      leagueSuppressed: boolean
-    }> | null> {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: Encounter
-          targetResults?: Array<{
-            targetId: string
-            targetName: string
-            heavilyInjured: boolean
-            heavilyInjuredHpLoss: number
-            fainted: boolean
-            isDead: boolean
-            deathCause: string | null
-            leagueSuppressed: boolean
-          }>
-        }>(`/api/encounters/${this.encounter.id}/move`, {
-          method: 'POST',
-          body: { actorId, moveId, targetIds, damage, targetDamages, notes }
-        })
-        this.encounter = response.data
-        return response.targetResults ?? null
-      } catch (e: any) {
-        this.error = e.message || 'Failed to execute move'
-        throw e
-      }
-    },
-
-    // Apply damage to combatant
-    // Returns damage result with heavily injured and death check info
-    async applyDamage(combatantId: string, damage: number, suppressDeath: boolean = false) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: Encounter
-          damageResult?: {
-            heavilyInjured?: boolean
-            heavilyInjuredHpLoss?: number
-            deathCheck?: {
-              isDead: boolean
-              cause: string | null
-              leagueSuppressed: boolean
-            }
-            mountDismounted?: boolean
-            dismountCheck?: {
-              triggered: boolean
-              riderId: string
-              mountId: string
-              dc: number
-              mountedProwessBonus: number
-              reason: 'damage' | 'push' | 'confusion'
-            }
-          }
-        }>(`/api/encounters/${this.encounter.id}/damage`, {
-          method: 'POST',
-          body: { combatantId, damage, suppressDeath }
-        })
-        this.encounter = response.data
-        return response.damageResult ?? null
-      } catch (e: any) {
-        this.error = e.message || 'Failed to apply damage'
-        throw e
-      }
-    },
-
-    // Heal combatant (supports HP, temp HP, and injury healing)
-    async healCombatant(
-      combatantId: string,
-      amount: number = 0,
-      tempHp: number = 0,
-      healInjuries: number = 0
-    ) {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/heal`, {
-          method: 'POST',
-          body: { combatantId, amount, tempHp, healInjuries }
-        })
-        this.encounter = response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to heal combatant'
-        throw e
-      }
-    },
-
-    /** Use a healing item on a combatant (P2: action economy + inventory) */
-    async useItem(
-      itemName: string,
-      userId: string,
-      targetId: string,
-      options?: {
-        targetAccepts?: boolean
-        /** GM override: skip inventory check/consumption */
-        skipInventory?: boolean
-      }
-    ) {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{
-          success: boolean
-          data: Encounter
-          itemResult: {
-            itemName: string
-            userName: string
-            targetName: string
-            hpHealed?: number
-            conditionsCured?: StatusCondition[]
-            revived?: boolean
-            repulsive?: boolean
-            refused: boolean
-            actionCost?: 'standard' | 'full_round'
-            targetForfeitsActions?: boolean
-            inventoryConsumed?: boolean
-            remainingQuantity?: number
-          }
-        }>(`/api/encounters/${this.encounter.id}/use-item`, {
-          method: 'POST',
-          body: {
-            itemName,
-            userId,
-            targetId,
-            targetAccepts: options?.targetAccepts ?? true,
-            ...(options?.skipInventory && { skipInventory: true })
-          }
-        })
-
-        if (response.data) {
-          this.encounter = response.data
-        }
-        return response.itemResult
-      } catch (e: any) {
-        this.error = e.message || 'Failed to use item'
-        throw e
-      }
-    },
-
-    // Set ready action
-    async setReadyAction(combatantId: string, readyAction: string) {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/ready`, {
-          method: 'POST',
-          body: { combatantId, readyAction }
-        })
-        this.encounter = response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to set ready action'
-        throw e
-      }
-    },
-
-    // End encounter
     async endEncounter() {
       if (!this.encounter) return
-
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/end`, {
-          method: 'POST'
-        })
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/end`, { method: 'POST' })
         this.encounter = response.data
       } catch (e: any) {
         this.error = e.message || 'Failed to end encounter'
@@ -801,125 +397,16 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Update encounter from websocket
-    // Uses surgical updates to prevent full reactivity cascade
-    updateFromWebSocket(data: Encounter) {
-      if (!this.encounter) {
-        this.encounter = data
-        return
-      }
-
-      // Update top-level properties (preserve existing if incoming is undefined)
-      this.encounter.name = data.name ?? this.encounter.name
-      this.encounter.battleType = data.battleType ?? this.encounter.battleType
-      if (data.weather !== undefined) {
-        this.encounter.weather = data.weather
-      }
-      if (data.weatherDuration !== undefined) {
-        this.encounter.weatherDuration = data.weatherDuration
-      }
-      if (data.weatherSource !== undefined) {
-        this.encounter.weatherSource = data.weatherSource
-      }
-      this.encounter.currentRound = data.currentRound ?? this.encounter.currentRound
-      this.encounter.currentTurnIndex = data.currentTurnIndex ?? this.encounter.currentTurnIndex
-      this.encounter.isPaused = data.isPaused ?? this.encounter.isPaused
-      // League battle phase tracking
-      this.encounter.currentPhase = data.currentPhase ?? this.encounter.currentPhase
-      this.encounter.turnOrder = data.turnOrder ?? this.encounter.turnOrder
-      this.encounter.trainerTurnOrder = data.trainerTurnOrder ?? this.encounter.trainerTurnOrder
-      this.encounter.pokemonTurnOrder = data.pokemonTurnOrder ?? this.encounter.pokemonTurnOrder
-      // Critical: preserve isServed if not in incoming data
-      if (data.isServed !== undefined) {
-        this.encounter.isServed = data.isServed
-      }
-      // League Battle declarations
-      if (data.declarations !== undefined) {
-        this.encounter.declarations = data.declarations
-      }
-      // Switch actions
-      if (data.switchActions !== undefined) {
-        this.encounter.switchActions = data.switchActions
-      }
-      // Out-of-turn actions (feature-016)
-      if (data.pendingOutOfTurnActions !== undefined) {
-        this.encounter.pendingOutOfTurnActions = data.pendingOutOfTurnActions
-      }
-      if (data.holdQueue !== undefined) {
-        this.encounter.holdQueue = data.holdQueue
-      }
-      // Living Weapon wield relationships (feature-005)
-      if (data.wieldRelationships !== undefined) {
-        this.encounter.wieldRelationships = data.wieldRelationships
-      }
-      this.encounter.moveLog = data.moveLog ?? this.encounter.moveLog
-      if (data.significanceMultiplier !== undefined) {
-        this.encounter.significanceMultiplier = data.significanceMultiplier
-      }
-      if (data.significanceTier !== undefined) {
-        this.encounter.significanceTier = data.significanceTier
-      }
-      if (data.gridConfig !== undefined) {
-        this.encounter.gridConfig = data.gridConfig
-      }
-      // Environment Preset (P2: ptu-rule-058)
-      if (data.environmentPreset !== undefined) {
-        this.encounter.environmentPreset = data.environmentPreset
-      }
-
-      // Surgically update combatants to preserve reactivity
-      for (const incomingCombatant of data.combatants) {
-        const existingIndex = this.encounter.combatants.findIndex(c => c.id === incomingCombatant.id)
-        if (existingIndex !== -1) {
-          // Update existing combatant in place
-          const existing = this.encounter.combatants[existingIndex]
-          existing.initiative = incomingCombatant.initiative
-          existing.hasActed = incomingCombatant.hasActed
-          existing.side = incomingCombatant.side
-          existing.position = incomingCombatant.position
-          existing.turnState = incomingCombatant.turnState
-          // Out-of-turn action state (feature-016)
-          existing.outOfTurnUsage = incomingCombatant.outOfTurnUsage
-          existing.disengaged = incomingCombatant.disengaged
-          // P1: Hold Action and skipNextRound state
-          existing.holdAction = incomingCombatant.holdAction
-          existing.skipNextRound = incomingCombatant.skipNextRound
-          // Mount state (feature-004)
-          existing.mountState = incomingCombatant.mountState
-          // Living Weapon state (feature-005)
-          existing.wieldingWeaponId = incomingCombatant.wieldingWeaponId
-          existing.wieldedByTrainerId = incomingCombatant.wieldedByTrainerId
-          // Update entity properties
-          Object.assign(existing.entity, incomingCombatant.entity)
-        } else {
-          // New combatant - add it
-          this.encounter.combatants.push(incomingCombatant)
-        }
-      }
-
-      // Remove combatants that no longer exist
-      const incomingIds = new Set(data.combatants.map(c => c.id))
-      this.encounter.combatants = this.encounter.combatants.filter(c => incomingIds.has(c.id))
-    },
-
-    // Clear encounter
     clearEncounter() {
       this.encounter = null
       this.error = null
     },
 
-    // ===========================================
     // Serve/Unserve Actions (Group View)
-    // ===========================================
-
-    // Serve encounter to Group View
     async serveEncounter() {
       if (!this.encounter) return
-
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/serve`, {
-          method: 'POST'
-        })
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/serve`, { method: 'POST' })
         this.encounter = response.data
       } catch (e: any) {
         this.error = e.message || 'Failed to serve encounter'
@@ -927,14 +414,10 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Unserve encounter from Group View
     async unserveEncounter() {
       if (!this.encounter) return
-
       try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/unserve`, {
-          method: 'POST'
-        })
+        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/unserve`, { method: 'POST' })
         this.encounter = response.data
       } catch (e: any) {
         this.error = e.message || 'Failed to unserve encounter'
@@ -942,7 +425,6 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // Load served encounter (for Group View)
     async loadServedEncounter() {
       this.loading = true
       this.error = null
@@ -958,117 +440,67 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // ===========================================
-    // Undo/Redo Actions
-    // ===========================================
-
-    // Capture current state before an action (GM only)
-    captureSnapshot(actionName: string) {
-      if (this.encounter) {
-        const history = getHistory()
-        history.pushSnapshot(actionName, this.encounter)
+    // WebSocket Update
+    updateFromWebSocket(data: Encounter) {
+      if (!this.encounter) {
+        this.encounter = data
+        return
       }
+
+      this.encounter.name = data.name ?? this.encounter.name
+      this.encounter.battleType = data.battleType ?? this.encounter.battleType
+      if (data.weather !== undefined) this.encounter.weather = data.weather
+      if (data.weatherDuration !== undefined) this.encounter.weatherDuration = data.weatherDuration
+      if (data.weatherSource !== undefined) this.encounter.weatherSource = data.weatherSource
+      this.encounter.currentRound = data.currentRound ?? this.encounter.currentRound
+      this.encounter.currentTurnIndex = data.currentTurnIndex ?? this.encounter.currentTurnIndex
+      this.encounter.isPaused = data.isPaused ?? this.encounter.isPaused
+      this.encounter.currentPhase = data.currentPhase ?? this.encounter.currentPhase
+      this.encounter.turnOrder = data.turnOrder ?? this.encounter.turnOrder
+      this.encounter.trainerTurnOrder = data.trainerTurnOrder ?? this.encounter.trainerTurnOrder
+      this.encounter.pokemonTurnOrder = data.pokemonTurnOrder ?? this.encounter.pokemonTurnOrder
+      if (data.isServed !== undefined) this.encounter.isServed = data.isServed
+      if (data.declarations !== undefined) this.encounter.declarations = data.declarations
+      if (data.switchActions !== undefined) this.encounter.switchActions = data.switchActions
+      if (data.pendingOutOfTurnActions !== undefined) this.encounter.pendingOutOfTurnActions = data.pendingOutOfTurnActions
+      if (data.holdQueue !== undefined) this.encounter.holdQueue = data.holdQueue
+      if (data.wieldRelationships !== undefined) this.encounter.wieldRelationships = data.wieldRelationships
+      this.encounter.moveLog = data.moveLog ?? this.encounter.moveLog
+      if (data.significanceMultiplier !== undefined) this.encounter.significanceMultiplier = data.significanceMultiplier
+      if (data.significanceTier !== undefined) this.encounter.significanceTier = data.significanceTier
+      if (data.gridConfig !== undefined) this.encounter.gridConfig = data.gridConfig
+      if (data.environmentPreset !== undefined) this.encounter.environmentPreset = data.environmentPreset
+
+      // Surgically update combatants to preserve reactivity
+      for (const incomingCombatant of data.combatants) {
+        const existingIndex = this.encounter.combatants.findIndex(c => c.id === incomingCombatant.id)
+        if (existingIndex !== -1) {
+          const existing = this.encounter.combatants[existingIndex]
+          existing.initiative = incomingCombatant.initiative
+          existing.hasActed = incomingCombatant.hasActed
+          existing.side = incomingCombatant.side
+          existing.position = incomingCombatant.position
+          existing.turnState = incomingCombatant.turnState
+          existing.outOfTurnUsage = incomingCombatant.outOfTurnUsage
+          existing.disengaged = incomingCombatant.disengaged
+          existing.holdAction = incomingCombatant.holdAction
+          existing.skipNextRound = incomingCombatant.skipNextRound
+          existing.mountState = incomingCombatant.mountState
+          existing.wieldingWeaponId = incomingCombatant.wieldingWeaponId
+          existing.wieldedByTrainerId = incomingCombatant.wieldedByTrainerId
+          Object.assign(existing.entity, incomingCombatant.entity)
+        } else {
+          this.encounter.combatants.push(incomingCombatant)
+        }
+      }
+
+      const incomingIds = new Set(data.combatants.map(c => c.id))
+      this.encounter.combatants = this.encounter.combatants.filter(c => incomingIds.has(c.id))
     },
 
-    // Undo last action
-    async undoAction() {
-      const history = getHistory()
-      if (!history.canUndo.value || !this.encounter) return false
-
-      const previousState = history.undo()
-      if (!previousState) return false
-
-      try {
-        // Sync to database
-        await $fetch(`/api/encounters/${this.encounter.id}` as string, {
-          method: 'PUT',
-          body: previousState
-        } as any)
-        this.encounter = previousState
-        return true
-      } catch (e: any) {
-        this.error = e.message || 'Failed to undo action'
-        // Restore the redo state since we failed
-        history.redo()
-        return false
-      }
-    },
-
-    // Redo previously undone action
-    async redoAction() {
-      const history = getHistory()
-      if (!history.canRedo.value || !this.encounter) return false
-
-      const nextState = history.redo()
-      if (!nextState) return false
-
-      try {
-        // Sync to database
-        await $fetch(`/api/encounters/${this.encounter.id}` as string, {
-          method: 'PUT',
-          body: nextState
-        } as any)
-        this.encounter = nextState
-        return true
-      } catch (e: any) {
-        this.error = e.message || 'Failed to redo action'
-        // Restore the previous state since we failed
-        history.undo()
-        return false
-      }
-    },
-
-    // Get undo/redo state
-    getUndoRedoState() {
-      const history = getHistory()
-      return {
-        canUndo: history.canUndo.value,
-        canRedo: history.canRedo.value,
-        lastActionName: history.lastActionName.value,
-        nextActionName: history.nextActionName.value
-      }
-    },
-
-    // Initialize history when encounter loads
-    initializeHistory() {
-      if (this.encounter) {
-        const history = getHistory()
-        history.initializeHistory(this.encounter)
-      }
-    },
-
-    // ===========================================
-    // PTU Turn State Actions
-    // ===========================================
-
-    // Use an action for a combatant (standard, shift, or swift)
-    async useAction(combatantId: string, actionType: 'standard' | 'shift' | 'swift') {
-      if (!this.encounter) return
-
-      try {
-        const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/action`, {
-          method: 'POST',
-          body: { combatantId, actionType }
-        })
-        this.encounter = response.data
-      } catch (e: any) {
-        this.error = e.message || `Failed to use ${actionType} action`
-        throw e
-      }
-    },
-
-    // ===========================================
     // Weather Management
-    // ===========================================
-
-    // Set weather on encounter with PTU duration tracking
-    async setWeather(
-      weather: string | null,
-      source: 'move' | 'ability' | 'manual' = 'manual',
-      duration?: number
-    ) {
+    async setWeather(weather: string | null, source: 'move' | 'ability' | 'manual' = 'manual', duration?: number) {
       if (!this.encounter) return
-
       try {
         const response = await $fetch<{ data: Encounter }>(`/api/encounters/${this.encounter.id}/weather`, {
           method: 'POST',
@@ -1081,510 +513,15 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // ===========================================
-    // Mount / Dismount (feature-004)
-    // ===========================================
-
-    /** Mount a trainer on an adjacent Pokemon with the Mountable capability */
-    async mountRider(riderId: string, mountId: string, skipCheck?: boolean) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            mountResult: {
-              riderId: string
-              mountId: string
-              actionCost: 'standard' | 'free_with_shift'
-              checkRequired: boolean
-              checkAutoSuccess: boolean
-              mounted: boolean
-            }
-          }
-        }>(`/api/encounters/${this.encounter.id}/mount`, {
-          method: 'POST',
-          body: { riderId, mountId, skipCheck }
-        })
-        this.encounter = response.data.encounter
-        return response.data.mountResult
-      } catch (e: any) {
-        this.error = e.message || 'Failed to mount'
-        throw e
-      }
-    },
-
-    /** Dismount a trainer from their mounted Pokemon */
-    async dismountRider(riderId: string, forced?: boolean, skipCheck?: boolean) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            dismountResult: {
-              riderId: string
-              mountId: string
-              riderPosition: GridPosition | null
-              forced: boolean
-              dismounted: boolean
-            }
-          }
-        }>(`/api/encounters/${this.encounter.id}/dismount`, {
-          method: 'POST',
-          body: { riderId, forced, skipCheck }
-        })
-        this.encounter = response.data.encounter
-        return response.data.dismountResult
-      } catch (e: any) {
-        this.error = e.message || 'Failed to dismount'
-        throw e
-      }
-    },
-
-    // ===========================================
-    // Rider Class Feature Activation (feature-004 P2)
-    // ===========================================
-
-    /**
-     * Toggle Agility Training on/off for a mounted pair.
-     * Stored as a persistent flag on mountState (not tempConditions) so it
-     * survives turn-end clearing. Cleared automatically on dismount.
-     * Rider feature doubles the Training bonus: +2 Movement, +8 Initiative.
-     */
-    toggleAgilityTraining(combatantId: string) {
-      if (!this.encounter) return
-      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
-      if (!combatant?.mountState) return
-
-      // Find the mount (the one with isMounted=false)
-      const mountId = combatant.mountState.isMounted ? combatant.mountState.partnerId : combatantId
-      const mount = this.encounter.combatants.find(c => c.id === mountId)
-      if (!mount?.mountState) return
-
-      const newActive = !mount.mountState.agilityTrainingActive
-      mount.mountState = {
-        ...mount.mountState,
-        agilityTrainingActive: newActive
-      }
-
-      // Also set on rider for consistency
-      const riderId = combatant.mountState.isMounted ? combatantId : combatant.mountState.partnerId
-      const rider = this.encounter.combatants.find(c => c.id === riderId)
-      if (rider?.mountState) {
-        rider.mountState = {
-          ...rider.mountState,
-          agilityTrainingActive: newActive
-        }
-      }
-    },
-
-    /**
-     * Activate Conqueror's March for the current round.
-     * Adds CONQUERORS_MARCH_CONDITION temp condition to the mount.
-     * Consumes the rider's Standard Action (it is an Order).
-     * Requires: rider has feature, mount has Run Up, mount is being ridden.
-     */
-    activateConquerorsMarch(riderId: string, mountId: string) {
-      if (!this.encounter) return
-      const mount = this.encounter.combatants.find(c => c.id === mountId)
-      if (!mount) return
-
-      const tempConditions = mount.tempConditions ?? []
-      if (!tempConditions.includes(CONQUERORS_MARCH_CONDITION)) {
-        mount.tempConditions = [...tempConditions, CONQUERORS_MARCH_CONDITION]
-      }
-
-      // Conqueror's March costs a Standard Action (it is an Order)
-      const rider = this.encounter.combatants.find(c => c.id === riderId)
-      if (rider) {
-        rider.turnState = {
-          ...rider.turnState,
-          standardActionUsed: true
-        }
-      }
-    },
-
-    /**
-     * Record a scene-limited feature use (Lean In, Overrun).
-     * Increments usedThisScene for the given feature on the combatant.
-     */
-    useSceneFeature(combatantId: string, featureName: string, maxPerScene: number) {
-      if (!this.encounter) return false
-      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
-      if (!combatant) return false
-
-      const usage = combatant.featureUsage ?? {}
-      const current = usage[featureName] ?? { usedThisScene: 0, maxPerScene }
-
-      if (current.usedThisScene >= current.maxPerScene) return false
-
-      combatant.featureUsage = {
-        ...usage,
-        [featureName]: {
-          usedThisScene: current.usedThisScene + 1,
-          maxPerScene
-        }
-      }
-      return true
-    },
-
-    /**
-     * Set the Ride as One initiative swap flag on a mounted pair.
-     * When the first pair member's turn comes up and the GM chooses the other,
-     * this flag is set to indicate the swap occurred.
-     */
-    setRideAsOneSwapped(combatantId: string, swapped: boolean) {
-      if (!this.encounter) return
-      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
-      if (!combatant?.mountState) return
-
-      combatant.mountState = {
-        ...combatant.mountState,
-        rideAsOneSwapped: swapped
-      }
-
-      // Also set on partner
-      const partner = this.encounter.combatants.find(c => c.id === combatant.mountState!.partnerId)
-      if (partner?.mountState) {
-        partner.mountState = {
-          ...partner.mountState,
-          rideAsOneSwapped: swapped
-        }
-      }
-    },
-
-    /**
-     * Update distance moved this turn for a combatant.
-     * Called by movement handlers when a combatant moves.
-     */
-    addDistanceMoved(combatantId: string, distance: number) {
-      if (!this.encounter) return
-      const combatant = this.encounter.combatants.find(c => c.id === combatantId)
-      if (!combatant) return
-
-      combatant.turnState = {
-        ...combatant.turnState,
-        distanceMovedThisTurn: (combatant.turnState.distanceMovedThisTurn ?? 0) + distance
-      }
-    },
-
-    // ===========================================
-    // Attack of Opportunity (feature-016)
-    // ===========================================
-
-    /** Detect AoO triggers for a given action */
-    async detectAoO(
-      actorId: string,
-      triggerType: AoOTrigger,
-      context?: {
-        previousPosition?: GridPosition
-        newPosition?: GridPosition
-        maneuverTargetIds?: string[]
-        hasAdjacentTarget?: boolean
-      }
-    ) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            triggeredActions: OutOfTurnAction[]
-            encounter: Encounter
-          }
-        }>(`/api/encounters/${this.encounter.id}/aoo-detect`, {
-          method: 'POST',
-          body: {
-            actorId,
-            triggerType,
-            ...context
-          }
-        })
-        this.encounter = response.data.encounter
-        return response.data.triggeredActions
-      } catch (e: any) {
-        this.error = e.message || 'Failed to detect AoO triggers'
-        throw e
-      }
-    },
-
-    /** Resolve a pending AoO (accept or decline) */
-    async resolveAoO(actionId: string, resolution: 'accept' | 'decline', damageRoll?: number) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            resolution: 'accept' | 'decline'
-            struggleAttack?: {
-              actorId: string
-              targetId: string
-              damage: number
-              hit: boolean
-              fainted: boolean
-              isDead: boolean
-            }
-          }
-        }>(`/api/encounters/${this.encounter.id}/aoo-resolve`, {
-          method: 'POST',
-          body: { actionId, resolution, damageRoll }
-        })
-        this.encounter = response.data.encounter
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to resolve AoO'
-        throw e
-      }
-    },
-
-    // ===========================================
-    // Hold Action (P1 — feature-016)
-    // ===========================================
-
-    /** Declare a Hold Action for the current combatant */
-    async holdAction(combatantId: string, holdUntilInitiative: number | null) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{ data: Encounter }>(
-          `/api/encounters/${this.encounter.id}/hold-action`,
-          {
-            method: 'POST',
-            body: { combatantId, holdUntilInitiative }
-          }
-        )
-        this.encounter = response.data
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to hold action'
-        throw e
-      }
-    },
-
-    /** Release a held action (GM manual release) */
-    async releaseHold(combatantId: string) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{ data: Encounter }>(
-          `/api/encounters/${this.encounter.id}/release-hold`,
-          {
-            method: 'POST',
-            body: { combatantId }
-          }
-        )
-        this.encounter = response.data
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to release hold'
-        throw e
-      }
-    },
-
-    // ===========================================
-    // Priority Action (P1 — feature-016)
-    // ===========================================
-
-    /** Declare a Priority action between turns */
-    async declarePriority(
-      combatantId: string,
-      variant: 'standard' | 'limited' | 'advanced',
-      actionDescription?: string
-    ) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            turnInserted: boolean
-            skipNextRound: boolean
-          }
-        }>(`/api/encounters/${this.encounter.id}/priority`, {
-          method: 'POST',
-          body: { combatantId, variant, actionDescription }
-        })
-        this.encounter = response.data.encounter
-        this.betweenTurns = false
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to declare Priority'
-        throw e
-      }
-    },
-
-    /** Enter between-turns state (Priority declaration window) */
-    enterBetweenTurns() {
-      this.betweenTurns = true
-    },
-
-    /** Exit between-turns state (GM clicks Continue) */
-    exitBetweenTurns() {
-      this.betweenTurns = false
-    },
-
-    // ===========================================
-    // Interrupt Action (P1 — feature-016)
-    // ===========================================
-
-    /** Declare an Interrupt action during another combatant's turn */
-    async declareInterrupt(
-      combatantId: string,
-      triggerId: string,
-      triggerType: InterruptTrigger,
-      options?: {
-        interruptAction?: string
-        resolution?: 'accept' | 'decline'
-        context?: {
-          moveName?: string
-          originalTargetId?: string
-          attackerId?: string
-        }
-      }
-    ) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            interruptResolved: boolean
-            pendingActionId?: string
-          }
-        }>(`/api/encounters/${this.encounter.id}/interrupt`, {
-          method: 'POST',
-          body: {
-            combatantId,
-            triggerId,
-            triggerType,
-            interruptAction: options?.interruptAction,
-            resolution: options?.resolution,
-            context: options?.context
-          }
-        })
-        this.encounter = response.data.encounter
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to declare Interrupt'
-        throw e
-      }
-    },
-
-    // ===========================================
-    // Intercept Melee/Ranged (P2 — feature-016)
-    // ===========================================
-
-    /** Execute Intercept Melee maneuver */
-    async interceptMelee(
-      interceptorId: string,
-      targetId: string,
-      attackerId: string,
-      actionId: string,
-      skillCheck: number
-    ) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            interceptSuccess: boolean
-            distanceMoved: number
-            dcRequired: number
-            interceptorNewPosition?: GridPosition
-            targetNewPosition?: GridPosition
-          }
-        }>(`/api/encounters/${this.encounter.id}/intercept-melee`, {
-          method: 'POST',
-          body: { interceptorId, targetId, attackerId, actionId, skillCheck }
-        })
-        this.encounter = response.data.encounter
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to execute Intercept Melee'
-        throw e
-      }
-    },
-
-    /** Execute Intercept Ranged maneuver */
-    async interceptRanged(
-      interceptorId: string,
-      targetSquare: GridPosition,
-      attackerId: string,
-      actionId: string,
-      skillCheck: number
-    ) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            interceptSuccess: boolean
-            distanceMoved: number
-            interceptorNewPosition?: GridPosition
-            reachedTarget: boolean
-          }
-        }>(`/api/encounters/${this.encounter.id}/intercept-ranged`, {
-          method: 'POST',
-          body: { interceptorId, targetSquare, attackerId, actionId, skillCheck }
-        })
-        this.encounter = response.data.encounter
-        return response.data
-      } catch (e: any) {
-        this.error = e.message || 'Failed to execute Intercept Ranged'
-        throw e
-      }
-    },
-
-    // ===========================================
-    // Disengage (P2 — feature-016)
-    // ===========================================
-
-    /** Execute Disengage maneuver */
-    async disengage(combatantId: string) {
-      if (!this.encounter) return null
-
-      try {
-        const response = await $fetch<{
-          data: Encounter
-          disengageResult: {
-            combatantId: string
-            combatantName: string
-            disengaged: boolean
-          }
-        }>(`/api/encounters/${this.encounter.id}/disengage`, {
-          method: 'POST',
-          body: { combatantId }
-        })
-        this.encounter = response.data
-        return response.disengageResult
-      } catch (e: any) {
-        this.error = e.message || 'Failed to disengage'
-        throw e
-      }
-    },
-
-    // ===========================================
-    // Wild Pokemon Spawning (From Encounter Tables)
-    // ===========================================
-
-    // Add wild Pokemon to encounter from generated data
+    // Wild Pokemon Spawning
     async addWildPokemon(
       pokemon: Array<{ speciesId?: string; speciesName: string; level: number }>,
       side: CombatSide = 'enemies'
     ): Promise<Array<{ pokemonId: string; combatantId: string; species: string; level: number }>> {
-      if (!this.encounter) {
-        throw new Error('No active encounter')
-      }
-
+      if (!this.encounter) throw new Error('No active encounter')
       try {
         const response = await $fetch<{
-          data: {
-            encounter: Encounter
-            addedPokemon: Array<{ pokemonId: string; combatantId: string; species: string; level: number }>
-          }
+          data: { encounter: Encounter; addedPokemon: Array<{ pokemonId: string; combatantId: string; species: string; level: number }> }
         }>(`/api/encounters/${this.encounter.id}/wild-spawn`, {
           method: 'POST',
           body: { pokemon, side }
@@ -1597,28 +534,15 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // ===========================================
-    // Significance Multiplier
-    // ===========================================
-
-    // ===========================================
     // Environment Preset (P2: ptu-rule-058)
-    // ===========================================
-
-    /** Set or clear the environment preset on the active encounter */
     async setEnvironmentPreset(encounterId: string, preset: import('~/types').EnvironmentPreset | null) {
       try {
         await $fetch(`/api/encounters/${encounterId}/environment-preset`, {
           method: 'PUT',
           body: { environmentPreset: preset }
         })
-
-        // Update local state immutably
         if (this.encounter && this.encounter.id === encounterId) {
-          this.encounter = {
-            ...this.encounter,
-            environmentPreset: preset
-          }
+          this.encounter = { ...this.encounter, environmentPreset: preset }
         }
       } catch (e: any) {
         this.error = e.message || 'Failed to update environment preset'
@@ -1626,25 +550,17 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // ===========================================
     // Vision Capabilities (decree-048, feature-025)
-    // ===========================================
-
-    /** Toggle a vision capability (Darkvision/Blindsense) on a combatant */
     async toggleVisionCapability(
       combatantId: string,
       capability: import('~/utils/visionRules').VisionCapability,
       enabled: boolean
     ) {
       if (!this.encounter) return
-
       try {
         const response = await $fetch<{ success: boolean; data: Encounter }>(
           `/api/encounters/${this.encounter.id}/combatants/${combatantId}/vision`,
-          {
-            method: 'POST',
-            body: { capability, enabled, source: 'manual' }
-          }
+          { method: 'POST', body: { capability, enabled, source: 'manual' } }
         )
         if (response.success) {
           this.encounter = response.data
@@ -1655,19 +571,13 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
-    // ===========================================
     // Significance Multiplier
-    // ===========================================
-
-    /** Persist the GM-set significance multiplier on the encounter */
     async setSignificance(encounterId: string, significanceMultiplier: number, significanceTier?: SignificanceTier) {
       try {
         await $fetch(`/api/encounters/${encounterId}/significance`, {
           method: 'PUT',
           body: { significanceMultiplier, ...(significanceTier && { significanceTier }) }
         })
-
-        // Update local state immutably
         if (this.encounter && this.encounter.id === encounterId) {
           this.encounter = {
             ...this.encounter,
@@ -1681,5 +591,192 @@ export const useEncounterStore = defineStore('encounter', {
       }
     },
 
+    // Delegated: Combat Actions
+    async nextTurn() {
+      const { nextTurn } = useEncounterCombatActions(this._buildContext())
+      return nextTurn()
+    },
+
+    async submitDeclaration(
+      combatantId: string,
+      actionType: TrainerDeclaration['actionType'],
+      description: string,
+      targetIds?: string[]
+    ) {
+      const { submitDeclaration } = useEncounterCombatActions(this._buildContext())
+      return submitDeclaration(combatantId, actionType, description, targetIds)
+    },
+
+    async executeMove(
+      actorId: string, moveId: string, targetIds: string[],
+      damage?: number, targetDamages?: Record<string, number>, notes?: string
+    ) {
+      const { executeMove } = useEncounterCombatActions(this._buildContext())
+      return executeMove(actorId, moveId, targetIds, damage, targetDamages, notes)
+    },
+
+    async applyDamage(combatantId: string, damage: number, suppressDeath: boolean = false) {
+      const { applyDamage } = useEncounterCombatActions(this._buildContext())
+      return applyDamage(combatantId, damage, suppressDeath)
+    },
+
+    async healCombatant(combatantId: string, amount: number = 0, tempHp: number = 0, healInjuries: number = 0) {
+      const { healCombatant } = useEncounterCombatActions(this._buildContext())
+      return healCombatant(combatantId, amount, tempHp, healInjuries)
+    },
+
+    async useItem(
+      itemName: string, userId: string, targetId: string,
+      options?: { targetAccepts?: boolean; skipInventory?: boolean }
+    ) {
+      const { useItem } = useEncounterCombatActions(this._buildContext())
+      return useItem(itemName, userId, targetId, options)
+    },
+
+    async setReadyAction(combatantId: string, readyAction: string) {
+      const { setReadyAction } = useEncounterCombatActions(this._buildContext())
+      return setReadyAction(combatantId, readyAction)
+    },
+
+    async useAction(combatantId: string, actionType: 'standard' | 'shift' | 'swift') {
+      const { useAction } = useEncounterCombatActions(this._buildContext())
+      return useAction(combatantId, actionType)
+    },
+
+    // Delegated: Undo/Redo Actions
+    captureSnapshot(actionName: string) {
+      const { captureSnapshot } = useEncounterUndoRedo(this._buildContext())
+      captureSnapshot(actionName)
+    },
+
+    async undoAction() {
+      const { undoAction } = useEncounterUndoRedo(this._buildContext())
+      return undoAction()
+    },
+
+    async redoAction() {
+      const { redoAction } = useEncounterUndoRedo(this._buildContext())
+      return redoAction()
+    },
+
+    getUndoRedoState() {
+      const { getUndoRedoState } = useEncounterUndoRedo(this._buildContext())
+      return getUndoRedoState()
+    },
+
+    initializeHistory() {
+      const { initializeHistory } = useEncounterUndoRedo(this._buildContext())
+      initializeHistory()
+    },
+
+    // Delegated: Pokemon Switching Actions
+    async switchPokemon(
+      trainerId: string, recallCombatantId: string, releaseEntityId: string,
+      options?: { faintedSwitch?: boolean; forced?: boolean; releasePosition?: { x: number; y: number } }
+    ) {
+      const { switchPokemon } = useEncounterSwitching(this._buildContext())
+      return switchPokemon(trainerId, recallCombatantId, releaseEntityId, options)
+    },
+
+    async recallPokemon(trainerId: string, pokemonCombatantIds: string[]) {
+      const { recallPokemon } = useEncounterSwitching(this._buildContext())
+      return recallPokemon(trainerId, pokemonCombatantIds)
+    },
+
+    async releasePokemon(trainerId: string, pokemonEntityIds: string[], positions?: Array<{ x: number; y: number } | null>) {
+      const { releasePokemon } = useEncounterSwitching(this._buildContext())
+      return releasePokemon(trainerId, pokemonEntityIds, positions)
+    },
+
+    // Delegated: Out-of-Turn Actions
+    async detectAoO(
+      actorId: string, triggerType: AoOTrigger,
+      context?: { previousPosition?: GridPosition; newPosition?: GridPosition; maneuverTargetIds?: string[]; hasAdjacentTarget?: boolean }
+    ) {
+      const { detectAoO } = useEncounterOutOfTurn(this._buildContext())
+      return detectAoO(actorId, triggerType, context)
+    },
+
+    async resolveAoO(actionId: string, resolution: 'accept' | 'decline', damageRoll?: number) {
+      const { resolveAoO } = useEncounterOutOfTurn(this._buildContext())
+      return resolveAoO(actionId, resolution, damageRoll)
+    },
+
+    async holdAction(combatantId: string, holdUntilInitiative: number | null) {
+      const { holdAction } = useEncounterOutOfTurn(this._buildContext())
+      return holdAction(combatantId, holdUntilInitiative)
+    },
+
+    async releaseHold(combatantId: string) {
+      const { releaseHold } = useEncounterOutOfTurn(this._buildContext())
+      return releaseHold(combatantId)
+    },
+
+    async declarePriority(combatantId: string, variant: 'standard' | 'limited' | 'advanced', actionDescription?: string) {
+      const { declarePriority } = useEncounterOutOfTurn(this._buildContext())
+      return declarePriority(combatantId, variant, actionDescription)
+    },
+
+    enterBetweenTurns() { this.betweenTurns = true },
+    exitBetweenTurns() { this.betweenTurns = false },
+
+    async declareInterrupt(
+      combatantId: string, triggerId: string, triggerType: InterruptTrigger,
+      options?: { interruptAction?: string; resolution?: 'accept' | 'decline'; context?: { moveName?: string; originalTargetId?: string; attackerId?: string } }
+    ) {
+      const { declareInterrupt } = useEncounterOutOfTurn(this._buildContext())
+      return declareInterrupt(combatantId, triggerId, triggerType, options)
+    },
+
+    async interceptMelee(interceptorId: string, targetId: string, attackerId: string, actionId: string, skillCheck: number) {
+      const { interceptMelee } = useEncounterOutOfTurn(this._buildContext())
+      return interceptMelee(interceptorId, targetId, attackerId, actionId, skillCheck)
+    },
+
+    async interceptRanged(interceptorId: string, targetSquare: GridPosition, attackerId: string, actionId: string, skillCheck: number) {
+      const { interceptRanged } = useEncounterOutOfTurn(this._buildContext())
+      return interceptRanged(interceptorId, targetSquare, attackerId, actionId, skillCheck)
+    },
+
+    async disengage(combatantId: string) {
+      const { disengage } = useEncounterOutOfTurn(this._buildContext())
+      return disengage(combatantId)
+    },
+
+    // Delegated: Mount/Dismount & Rider Features
+    async mountRider(riderId: string, mountId: string, skipCheck?: boolean) {
+      const { mountRider } = useEncounterMounts(this._buildContext())
+      return mountRider(riderId, mountId, skipCheck)
+    },
+
+    async dismountRider(riderId: string, forced?: boolean, skipCheck?: boolean) {
+      const { dismountRider } = useEncounterMounts(this._buildContext())
+      return dismountRider(riderId, forced, skipCheck)
+    },
+
+    toggleAgilityTraining(combatantId: string) {
+      const { toggleAgilityTraining } = useEncounterMounts(this._buildContext())
+      toggleAgilityTraining(combatantId)
+    },
+
+    activateConquerorsMarch(riderId: string, mountId: string) {
+      const { activateConquerorsMarch } = useEncounterMounts(this._buildContext())
+      activateConquerorsMarch(riderId, mountId)
+    },
+
+    useSceneFeature(combatantId: string, featureName: string, maxPerScene: number) {
+      const { useSceneFeature } = useEncounterMounts(this._buildContext())
+      return useSceneFeature(combatantId, featureName, maxPerScene)
+    },
+
+    setRideAsOneSwapped(combatantId: string, swapped: boolean) {
+      const { setRideAsOneSwapped } = useEncounterMounts(this._buildContext())
+      setRideAsOneSwapped(combatantId, swapped)
+    },
+
+    addDistanceMoved(combatantId: string, distance: number) {
+      const { addDistanceMoved } = useEncounterMounts(this._buildContext())
+      addDistanceMoved(combatantId, distance)
+    },
   }
 })
