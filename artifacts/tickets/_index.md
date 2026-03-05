@@ -1,20 +1,41 @@
 ---
-generated_at: 2026-03-05T15:02:04.516Z
-total_tickets: 338
-open: 42
+generated_at: 2026-03-05T17:23:48.408Z
+total_tickets: 359
+open: 63
 in_progress: 1
 resolved: 295
 ---
 
 # Tickets Index
 
-## Open Tickets (42)
+## Open Tickets (63)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
 | bug-053 | bug | P0 | healing | Two decree violations in AP management endpoints: |
+| bug-056 | bug | P1 | character-lifecycle | When a character gains enough XP to auto-level past a milest |
+| ptu-rule-151 | ptu-rule | P1 | healing | The Heavily Injured status has a secondary trigger: "taking  |
 | bug-054 | bug | P2 | encounter-tables | `calculateEncounterBudget` references "PTU Core p. 473" whic |
+| bug-057 | bug | P2 | character-lifecycle | The character POST and PUT API endpoints do not enforce a ma |
+| bug-058 | bug | P2 | combat | PTU distinguishes "HP loss" (e.g., Belly Drum, Life Orb reco |
+| bug-060 | bug | P2 | encounter-tables | When exporting and re-importing encounter tables, the densit |
+| bug-062 | bug | P2 | scenes | `resetSceneUsage()` exists to clear scene-frequency move cou |
+| bug-063 | bug | P2 | vtt-grid | `Math.max(modifiedSpeed, 2)` is applied after the Slowed con |
+| ptu-rule-147 | ptu-rule | P2 | combat | Round counter exists but there is no per-effect duration tra |
+| ptu-rule-149 | ptu-rule | P2 | combat | The VTT allows tokens to be repositioned freely without enfo |
+| ptu-rule-150 | ptu-rule | P2 | healing | No "set HP" or "lose HP" flag exists to distinguish direct H |
+| bug-059 | bug | P3 | combat | `Math.trunc` is used instead of `Math.floor` in movementModi |
+| bug-061 | bug | P3 | healing | The AP drain injury healing pathway does not validate that t |
 | ptu-rule-143 | ptu-rule | P3 | combat | Per decree-050, Sprint consumes only the Standard Action (PT |
+| ptu-rule-144 | ptu-rule | P3 | character-lifecycle | At level 5 (Amateur milestone), lifestyle stat points should |
+| ptu-rule-145 | ptu-rule | P3 | character-lifecycle | Level 30 and 40 milestones grant bonus edges/features with s |
+| ptu-rule-146 | ptu-rule | P3 | combat | PTU defaults to rolled damage. The app defaults to set damag |
+| ptu-rule-148 | ptu-rule | P3 | combat | When a Pokemon is released mid-round after initiative has pa |
+| ptu-rule-152 | ptu-rule | P3 | scenes | PTU distinguishes natural weather (narrative, affects travel |
+| ptu-rule-153 | ptu-rule | P3 | scenes | The `naturewalkBypassesTerrain()` utility exists and correct |
+| ptu-rule-154 | ptu-rule | P3 | scenes | Hazard terrain type exists visually on the VTT but has no me |
+| decree-need-050 | decree | P3 | character-lifecycle | Some PTU features include [+Stat] tags (e.g., "[+Attack]") t |
+| decree-need-051 | decree | P3 | character-lifecycle | Categoric Inclination and similar edges have metadata (e.g., |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
 | ptu-rule-141 | ptu-rule | P4 | character-lifecycle | ptu-rule-141: Gas Mask grantedCapabilities uses fabricated c |
 | ptu-rule-142 | ptu-rule | P4 | combat | ptu-rule-142: Implement Permafrost Burn/Poison status tick d |
@@ -61,18 +82,21 @@ resolved: 295
 |----|----------|----------|--------|--------|
 | refactoring-129 | refactoring | P3 | combat | decree-047 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (2)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-050 | P3 | character-lifecycle | — |
+| decree-need-051 | P3 | character-lifecycle | — |
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 3 | 0 | 54 | 57 |
-| ptu-rule | 3 | 0 | 107 | 110 |
+| bug | 11 | 0 | 54 | 65 |
+| ptu-rule | 14 | 0 | 107 | 121 |
 | feature | 0 | 0 | 25 | 25 |
 | ux | 8 | 0 | 10 | 18 |
-| decree | 0 | 0 | 49 | 49 |
+| decree | 2 | 0 | 49 | 51 |
 | refactoring | 27 | 1 | 33 | 61 |
 | docs | 1 | 0 | 17 | 18 |
