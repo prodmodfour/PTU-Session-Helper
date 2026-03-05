@@ -33,6 +33,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Validate source against VisionCapabilitySource type
+  const validSources = ['manual', 'species', 'equipment']
+  if (!validSources.includes(source)) {
+    throw createError({
+      statusCode: 400,
+      message: `Invalid vision source: ${source}`
+    })
+  }
+
   try {
     // Load encounter
     const encounter = await prisma.encounter.findUnique({
