@@ -3,7 +3,8 @@ id: decree-need-051
 title: "Should edges store structured metadata beyond string names?"
 priority: P3
 severity: LOW
-status: open
+status: addressed
+decree_id: decree-052
 domain: character-lifecycle
 source: character-lifecycle-audit.md (session 121, R066 ambiguous)
 created_by: slave-collector (plan-matrix-1772722531)

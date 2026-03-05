@@ -1,9 +1,9 @@
 ---
-generated_at: 2026-03-05T17:24:26.970Z
-total_tickets: 357
+generated_at: 2026-03-05T17:52:05.539Z
+total_tickets: 359
 open: 61
 in_progress: 1
-resolved: 295
+resolved: 297
 ---
 
 # Tickets Index
@@ -22,6 +22,8 @@ resolved: 295
 | ptu-rule-147 | ptu-rule | P2 | combat | Round counter exists but there is no per-effect duration tra |
 | ptu-rule-149 | ptu-rule | P2 | combat | The VTT allows tokens to be repositioned freely without enfo |
 | ptu-rule-150 | ptu-rule | P2 | healing | No "set HP" or "lose HP" flag exists to distinguish direct H |
+| feature-026 | feature | P2 | character-lifecycle | Implement automatic parsing of `[+Stat]` tags in PTU feature |
+| feature-027 | feature | P2 | character-lifecycle | Migrate the edge data model from `string[]` to an array of s |
 | bug-059 | bug | P3 | combat | `Math.trunc` is used instead of `Math.floor` in movementModi |
 | bug-061 | bug | P3 | healing | The AP drain injury healing pathway does not validate that t |
 | ptu-rule-143 | ptu-rule | P3 | combat | Per decree-050, Sprint consumes only the Standard Action (PT |
@@ -32,8 +34,6 @@ resolved: 295
 | ptu-rule-152 | ptu-rule | P3 | scenes | PTU distinguishes natural weather (narrative, affects travel |
 | ptu-rule-153 | ptu-rule | P3 | scenes | The `naturewalkBypassesTerrain()` utility exists and correct |
 | ptu-rule-154 | ptu-rule | P3 | scenes | Hazard terrain type exists visually on the VTT but has no me |
-| decree-need-050 | decree | P3 | character-lifecycle | Some PTU features include [+Stat] tags (e.g., "[+Attack]") t |
-| decree-need-051 | decree | P3 | character-lifecycle | Categoric Inclination and similar edges have metadata (e.g., |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
 | ptu-rule-141 | ptu-rule | P4 | character-lifecycle | ptu-rule-141: Gas Mask grantedCapabilities uses fabricated c |
 | ptu-rule-142 | ptu-rule | P4 | combat | ptu-rule-142: Implement Permafrost Burn/Poison status tick d |
@@ -80,12 +80,9 @@ resolved: 295
 |----|----------|----------|--------|--------|
 | refactoring-129 | refactoring | P3 | combat | decree-047 |
 
-## Open Decree-Needs (2)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-050 | P3 | character-lifecycle | — |
-| decree-need-051 | P3 | character-lifecycle | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
@@ -93,8 +90,8 @@ resolved: 295
 |----------|------|-------------|----------|-------|
 | bug | 9 | 0 | 54 | 63 |
 | ptu-rule | 14 | 0 | 107 | 121 |
-| feature | 0 | 0 | 25 | 25 |
+| feature | 2 | 0 | 25 | 27 |
 | ux | 8 | 0 | 10 | 18 |
-| decree | 2 | 0 | 49 | 51 |
+| decree | 0 | 0 | 51 | 51 |
 | refactoring | 27 | 1 | 33 | 61 |
 | docs | 1 | 0 | 17 | 18 |

@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-05T17:24:26.977Z
-total_decrees: 51
-active: 50
+generated_at: 2026-03-05T17:52:05.573Z
+total_decrees: 53
+active: 52
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (50)
+## Active Decrees (52)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -61,3 +61,5 @@ superseded: 0
 | decree-048 | encounter-tables | dark-cave-blindness-penalties | Use RAW flat Blindness/Total Blindness penalties with two separate cave presets |
 | decree-049 | capture | loyalty-default-by-origin | Use origin-dependent default loyalty: wild catches at 2 (Wary), hatched/gifted at 3 (Neutral) |
 | decree-050 | combat | sprint-action-cost | Sprint consumes only the Standard Action, not the Shift Action |
+| decree-051 | character-lifecycle | auto-parse-stat-feature-tags | Auto-parse [+Stat] feature tags and apply stat bonuses automatically |
+| decree-052 | character-lifecycle | structured-edge-metadata | Store edges as structured objects with type-specific metadata fields |

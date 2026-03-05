@@ -3,7 +3,8 @@ id: decree-need-050
 title: "Should app auto-parse [+Stat] feature tags and apply stat bonuses?"
 priority: P3
 severity: MEDIUM
-status: open
+status: addressed
+decree_id: decree-051
 domain: character-lifecycle
 source: character-lifecycle-audit.md (session 121, R033 ambiguous)
 created_by: slave-collector (plan-matrix-1772722531)
