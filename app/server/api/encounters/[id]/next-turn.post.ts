@@ -120,18 +120,20 @@ export default defineEventHandler(async (event) => {
       // this turn (not just any turn end). Skip declaration phase entirely.
       const standardActionUsed = currentCombatant.turnState?.standardActionUsed === true
       if (currentPhase !== 'trainer_declaration' && standardActionUsed) {
-        const entity = currentCombatant.entity
+        let entity = currentCombatant.entity
         const injuries = entity?.injuries || 0
         const hiCheck = checkHeavilyInjured(injuries)
 
         if (hiCheck.isHeavilyInjured && entity && entity.currentHp > 0) {
           const penalty = applyHeavilyInjuredPenalty(entity.currentHp, injuries)
-          entity.currentHp = penalty.newHp
+          currentCombatant.entity = { ...entity, currentHp: penalty.newHp }
+          entity = currentCombatant.entity
 
           // Check if this caused fainting (decree-005: must clear persistent/volatile
           // conditions and reverse their CS effects)
           if (penalty.newHp === 0) {
             applyFaintStatus(currentCombatant)
+            entity = currentCombatant.entity
           }
 
           // Death check after heavily injured penalty
@@ -146,7 +148,8 @@ export default defineEventHandler(async (event) => {
           if (deathResult.isDead) {
             const conditions: StatusCondition[] = entity.statusConditions || []
             if (!conditions.includes('Dead')) {
-              entity.statusConditions = ['Dead', ...conditions.filter((s: StatusCondition) => s !== 'Dead')]
+              currentCombatant.entity = { ...entity, statusConditions: ['Dead', ...conditions.filter((s: StatusCondition) => s !== 'Dead')] }
+              entity = currentCombatant.entity
             }
           }
 
