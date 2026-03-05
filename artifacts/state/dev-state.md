@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-03-05T13:44:00
+last_updated: 2026-03-05T15:00:00
 updated_by: orchestrator-survey
 ---
 
@@ -12,6 +12,8 @@ updated_by: orchestrator-survey
 ### Bug Tickets (`tickets/open/bug/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
+| bug-053 | P0 | open | Two decree violations in AP management endpoints |
+| bug-054 | P2 | open | calculateEncounterBudget references stale PTU Core page |
 | bug-052 | P4 | open | PlayerCharacterSheet.vue uses bare tag class instead of tag--feature variant |
 
 ### UX Tickets (`tickets/open/ux/`)
@@ -109,13 +111,13 @@ updated_by: orchestrator-survey
 | Metric | Value |
 |--------|-------|
 | Last updated | 2026-03-05 |
-| Open tickets (P0) | 0 |
+| Open tickets (P0) | 1 |
 | Open tickets (P1) | 0 |
-| Open tickets (P2) | 0 |
+| Open tickets (P2) | 1 |
 | Open tickets (P3) | 1 |
 | Open tickets (P4) | 39 |
 | In-progress tickets | 1 (refactoring-129) |
-| Total open + in-progress | 41 |
+| Total open + in-progress | 43 |
 | Decree-needs pending | 0 |
 | Needing review | refactoring-129 |
 | Resolved this session | ptu-rule-121, ptu-rule-125, ptu-rule-126, ptu-rule-130, ptu-rule-133 |
