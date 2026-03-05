@@ -308,6 +308,7 @@ const emit = defineEmits<{
 
 const encounterStore = useEncounterStore()
 const encounterXpStore = useEncounterXpStore()
+const { showToast } = useGmToast()
 
 // Phase: 'configure' or 'results'
 const phase = ref<'configure' | 'results'>('configure')
@@ -589,7 +590,7 @@ const handleApply = async () => {
     phase.value = 'results'
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Failed to distribute XP'
-    alert(`XP distribution failed: ${message}`)
+    showToast(`XP distribution failed: ${message}`, 'error')
   } finally {
     isDistributing.value = false
   }

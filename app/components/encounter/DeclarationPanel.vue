@@ -51,6 +51,7 @@ const emit = defineEmits<{
 }>()
 
 const encounterStore = useEncounterStore()
+const { showToast } = useGmToast()
 
 const actionType = ref('')
 const description = ref('')
@@ -105,7 +106,7 @@ async function submitDeclaration() {
     description.value = ''
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    alert(`Declaration failed: ${message}`)
+    showToast(`Declaration failed: ${message}`, 'error')
   }
 }
 </script>

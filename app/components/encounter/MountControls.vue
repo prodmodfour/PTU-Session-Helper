@@ -219,6 +219,7 @@ import { LEAN_IN_MAX_PER_SCENE, OVERRUN_MAX_PER_SCENE, CONQUERORS_MARCH_CONDITIO
 
 const encounterStore = useEncounterStore()
 const { send } = useWebSocket()
+const { showToast } = useGmToast()
 
 const selectedMountId = ref('')
 const skipCheck = ref(false)
@@ -507,7 +508,7 @@ const handleMount = async () => {
       await broadcastUpdate()
     }
   } catch (e: any) {
-    alert(`Mount failed: ${e.data?.message || e.message || 'Unknown error'}`)
+    showToast(`Mount failed: ${e.data?.message || e.message || 'Unknown error'}`, 'error')
   }
 }
 
@@ -530,7 +531,7 @@ const handleDismount = async (forced: boolean) => {
       await broadcastUpdate()
     }
   } catch (e: any) {
-    alert(`Dismount failed: ${e.data?.message || e.message || 'Unknown error'}`)
+    showToast(`Dismount failed: ${e.data?.message || e.message || 'Unknown error'}`, 'error')
   }
 }
 
@@ -553,7 +554,7 @@ const handleUseLeanIn = () => {
   if (!rider) return
   const used = encounterStore.useSceneFeature(rider.id, 'Lean In', LEAN_IN_MAX_PER_SCENE)
   if (!used) {
-    alert('Lean In: No uses remaining this scene')
+    showToast('Lean In: No uses remaining this scene', 'warning')
     return
   }
   broadcastUpdate()
@@ -564,7 +565,7 @@ const handleUseOverrun = () => {
   if (!rider) return
   const used = encounterStore.useSceneFeature(rider.id, 'Overrun', OVERRUN_MAX_PER_SCENE)
   if (!used) {
-    alert('Overrun: No uses remaining this scene')
+    showToast('Overrun: No uses remaining this scene', 'warning')
     return
   }
   broadcastUpdate()

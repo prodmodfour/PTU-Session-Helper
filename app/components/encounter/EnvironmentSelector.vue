@@ -150,6 +150,7 @@ const props = defineProps<{
 
 const encounterStore = useEncounterStore()
 const { send } = useWebSocket()
+const { showToast } = useGmToast()
 
 // Local state
 const selectedPresetId = ref<string>(props.encounter.environmentPreset?.id ?? '')
@@ -196,7 +197,7 @@ const handlePresetChange = async () => {
     await encounterStore.setEnvironmentPreset(props.encounter.id, preset)
     broadcastUpdate()
   } catch {
-    alert('Failed to set environment preset.')
+    showToast('Failed to set environment preset.', 'error')
   }
 }
 
@@ -220,7 +221,7 @@ const applyCustomPreset = async () => {
     selectedPresetId.value = preset.id
     broadcastUpdate()
   } catch {
-    alert('Failed to apply custom environment preset.')
+    showToast('Failed to apply custom environment preset.', 'error')
   }
 }
 
@@ -230,7 +231,7 @@ const clearPreset = async () => {
     selectedPresetId.value = ''
     broadcastUpdate()
   } catch {
-    alert('Failed to clear environment preset.')
+    showToast('Failed to clear environment preset.', 'error')
   }
 }
 
@@ -260,7 +261,7 @@ const dismissEffect = async (index: number) => {
     }
     broadcastUpdate()
   } catch {
-    alert('Failed to dismiss environment effect.')
+    showToast('Failed to dismiss environment effect.', 'error')
   }
 }
 
