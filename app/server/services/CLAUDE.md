@@ -41,13 +41,13 @@ If you need Pokemon, call one of these. Never build Pokemon records ad-hoc in AP
 | `rest-healing.service.ts` | ~130 | Daily move refresh for Extended Rest (rolling window rule) |
 | `scene.service.ts` | ~74 | Scene-end AP restoration for characters |
 | `status-automation.service.ts` | ~151 | Tick damage at turn end (Burn, Poison, Badly Poisoned, Cursed) |
-| `switching.service.ts` | ~824 | Pokemon switch validation, recall range, initiative insertion, action tracking |
+| `switching.service.ts` | ~829 | Pokemon switch validation, recall range, initiative insertion, action tracking |
 | `ball-condition.service.ts` | ~185 | Build Poke Ball condition context from encounter state for conditional ball modifiers |
 | `mounting.service.ts` | ~561 | Trainer-Pokemon mount/dismount logic, movement sharing, faint auto-dismount |
 | `living-weapon.service.ts` | ~555 | Living Weapon engage/disengage, wield state queries, faint penalty, auto-disengage, equipment overlay, weapon moves |
 | `living-weapon-abilities.service.ts` | ~225 | Living Weapon abilities: Soulstealer (scene-frequency-tracked healing on KO), Weaponize intercept, No Guard suppression |
 | `living-weapon-movement.service.ts` | ~159 | Living Weapon shared movement pool: position sync, speed calculation, movement modifier threading |
-| `weather-automation.service.ts` | ~192 | Weather damage ticks at turn start (Hail, Sandstorm) with type/ability immunities; weather ability effects (Ice Body, Rain Dish, Sun Blanket, Solar Power, Dry Skin, Desert Weather). Note: `WEATHER_ABILITY_EFFECTS` constant lives in `app/utils/weatherRules.ts` |
+| `weather-automation.service.ts` | ~204 | Weather damage ticks at turn start (Hail, Sandstorm) with type/ability immunities and Permafrost damage reduction; weather ability effects (Ice Body, Rain Dish, Sun Blanket, Solar Power, Dry Skin, Desert Weather). Note: `WEATHER_ABILITY_EFFECTS` and `WEATHER_DAMAGE_REDUCTION_ABILITIES` constants live in `app/utils/weatherRules.ts` |
 | `living-weapon-state.ts` | ~51 | Reconstruct wieldRelationships from combatant flags for WebSocket state sync |
 
 ## Dependency Map
