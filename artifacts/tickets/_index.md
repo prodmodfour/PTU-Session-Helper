@@ -1,14 +1,14 @@
 ---
-generated_at: 2026-03-05T08:53:58.065Z
-total_tickets: 327
-open: 49
+generated_at: 2026-03-05T09:58:22.647Z
+total_tickets: 328
+open: 50
 in_progress: 2
 resolved: 276
 ---
 
 # Tickets Index
 
-## Open Tickets (49)
+## Open Tickets (50)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
@@ -60,6 +60,7 @@ resolved: 276
 | refactoring-137 | refactoring | P4 | encounter-tables | `toggleVisionCapability` (encounter store line 567) calls `g |
 | refactoring-138 | refactoring | P4 | combat | Refactoring-098 converted the primary damage/next-turn/move  |
 | refactoring-139 | refactoring | P4 | multiple | In `useGmToast.ts` (lines 72-78), `dismissAll()` iterates th |
+| refactoring-140 | refactoring | P4 | combat | After refactoring-098 converted entity mutations to immutabl |
 | docs-017 | docs | P4 | tooling | The bug-047 ticket resolution log references stale commit ha |
 
 ## In-Progress Tickets (2)
@@ -82,5 +83,5 @@ All decree-needs addressed.
 | feature | 0 | 1 | 24 | 25 |
 | ux | 8 | 0 | 10 | 18 |
 | decree | 0 | 0 | 48 | 48 |
-| refactoring | 32 | 0 | 24 | 56 |
+| refactoring | 33 | 0 | 24 | 57 |
 | docs | 1 | 0 | 17 | 18 |
