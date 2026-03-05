@@ -53,3 +53,24 @@ Replace all `alert()` calls with `useGmToast`'s `showToast()` function, matching
 
 - UX improvement: no more blocking popups anywhere in the app
 - Consistency: all notifications use the same toast system
+
+## Resolution Log
+
+**Status: in-progress**
+
+Replaced 49 `alert()` calls across 16 files with `useGmToast().showToast()`. Moved `GmToastContainer` from `gm/index.vue` to the GM layout so all GM pages can display toasts.
+
+**Excluded:** 2 `alert()` calls in group views (`EncounterView.vue`, `LobbyView.vue`) — these use the `group` layout (TV/projector display) which has no `GmToastContainer` and is not GM-facing. Also found 3 additional files not in the original ticket (`QuestXpDialog.vue`, `sheets.vue`, `encounter.ts` store).
+
+### Commits
+
+| Hash | Files Changed | Description |
+|------|--------------|-------------|
+| ddd7c067 | `layouts/gm.vue`, `pages/gm/index.vue` | Move GmToastContainer to GM layout, replace 2 layout alerts |
+| 064b44e5 | `pages/gm/scenes/[id].vue`, `pages/gm/scenes/index.vue` | Replace 18 scene page alerts |
+| 22dff5ea | `pages/gm/pokemon/[id].vue`, `composables/useEvolutionUndo.ts` | Replace 7 Pokemon sheet alerts |
+| d7e040e4 | `EquipmentCatalogBrowser.vue`, `HumanEquipmentTab.vue` | Replace 3 equipment alerts |
+| bdcad8bc | `MountControls.vue`, `EnvironmentSelector.vue`, `DeclarationPanel.vue`, `XpDistributionModal.vue` | Replace 10 encounter sub-component alerts |
+| e517d779 | `EvolutionConfirmModal.vue`, `XpDistributionResults.vue` | Replace 6 evolution/XP results alerts |
+| cc31867b | `pages/gm/characters/[id].vue`, `TrainerXpPanel.vue` | Replace 2 character domain alerts |
+| 36b27444 | `QuestXpDialog.vue`, `pages/gm/sheets.vue`, `stores/encounter.ts` | Replace 4 alerts in additional files not in original ticket |
