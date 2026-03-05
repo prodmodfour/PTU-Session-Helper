@@ -10,6 +10,7 @@
 import type { PokemonSnapshot } from '~/server/services/evolution.service'
 
 export function useEvolutionUndo() {
+  const { showToast } = useGmToast()
   const undoStack = useState<Map<string, PokemonSnapshot>>(
     'evolution-undo-stack',
     () => new Map()
@@ -41,7 +42,7 @@ export function useEvolutionUndo() {
       return true
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to undo evolution'
-      alert(`Evolution undo failed: ${message}`)
+      showToast(`Evolution undo failed: ${message}`, 'error')
       return false
     }
   }

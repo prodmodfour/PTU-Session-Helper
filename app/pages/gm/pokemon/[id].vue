@@ -233,6 +233,7 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const { showToast } = useGmToast()
 const libraryStore = useLibraryStore()
 const { getSpriteUrl } = usePokemonSprite()
 
@@ -352,7 +353,7 @@ const evolutionSelection = reactive({
 
 function openEvolutionModal(evo: EvolutionOption, checkData?: EvolutionCheckData): void {
   if (!evo.targetBaseStats) {
-    alert('Target species data not found.')
+    showToast('Target species data not found.', 'error')
     return
   }
   evolutionModal.targetSpecies = evo.toSpecies
@@ -397,13 +398,13 @@ const checkEvolution = async () => {
     }>(`/api/pokemon/${pokemon.value.id}/evolution-check`, { method: 'POST' })
 
     if (!response.success) {
-      alert('Failed to check evolution eligibility.')
+      showToast('Failed to check evolution eligibility.', 'error')
       return
     }
 
     // P2: Check for prevention items (Everstone/Eviolite)
     if (response.data.preventedByItem) {
-      alert(`This Pokemon cannot evolve while holding an ${response.data.preventedByItem}.`)
+      showToast(`This Pokemon cannot evolve while holding an ${response.data.preventedByItem}.`, 'warning')
       return
     }
 
@@ -417,9 +418,9 @@ const checkEvolution = async () => {
         const reasons = response.data.ineligible
           .map(i => `${i.toSpecies}: ${i.reason}`)
           .join('\n')
-        alert(`No evolutions currently available.\n\n${reasons}`)
+        showToast(`No evolutions currently available. ${reasons}`, 'warning')
       } else {
-        alert('This Pokemon has no evolution paths.')
+        showToast('This Pokemon has no evolution paths.', 'warning')
       }
       return
     }
@@ -432,7 +433,7 @@ const checkEvolution = async () => {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to check evolution'
-    alert(`Evolution check failed: ${message}`)
+    showToast(`Evolution check failed: ${message}`, 'error')
   } finally {
     checkingEvolution.value = false
   }
@@ -474,7 +475,7 @@ const saveChanges = async () => {
     router.replace({ query: {} })
   } catch (e) {
     console.error('Failed to save Pokemon:', e)
-    alert('Failed to save changes')
+    showToast('Failed to save changes', 'error')
   } finally {
     saving.value = false
   }
