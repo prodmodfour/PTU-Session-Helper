@@ -84,6 +84,7 @@ const emit = defineEmits<{
   awarded: []
 }>()
 
+const { showToast } = useGmToast()
 const xpAmount = ref<number>(1)
 const reason = ref('')
 const isAwarding = ref(false)
@@ -115,7 +116,7 @@ async function handleAward() {
         reason.value || `Quest XP from scene: ${props.sceneName}`
       )
     } catch (e) {
-      alert(`Failed to award XP to ${char.name}: ${e instanceof Error ? e.message : 'Unknown error'}`)
+      showToast(`Failed to award XP to ${char.name}: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
     }
   }
 

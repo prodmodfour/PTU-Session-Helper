@@ -567,7 +567,7 @@ export const useEncounterStore = defineStore('encounter', {
           getHistory().pushSnapshot('Toggle vision capability')
         }
       } catch (e: any) {
-        alert(`Failed to toggle vision capability: ${e?.message || e}`)
+        useGmToast().showToast(`Failed to toggle vision capability: ${e?.message || e}`, 'error')
       }
     },
 

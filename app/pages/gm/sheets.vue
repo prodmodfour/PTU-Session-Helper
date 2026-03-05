@@ -199,6 +199,7 @@ useHead({
 })
 
 const libraryStore = useLibraryStore()
+const { showToast } = useGmToast()
 
 // Load library on mount
 onMounted(async () => {
@@ -291,7 +292,7 @@ const archiveUnownedWild = async () => {
     })
     await libraryStore.loadLibrary()
   } catch (e: any) {
-    alert(`Archive failed: ${e.message || 'Unknown error'}`)
+    showToast(`Archive failed: ${e.message || 'Unknown error'}`, 'error')
   }
 }
 
@@ -306,7 +307,7 @@ const deleteUnownedWild = async () => {
     })
     await libraryStore.loadLibrary()
   } catch (e: any) {
-    alert(`Delete failed: ${e.message || 'Unknown error'}`)
+    showToast(`Delete failed: ${e.message || 'Unknown error'}`, 'error')
   }
 }
 
