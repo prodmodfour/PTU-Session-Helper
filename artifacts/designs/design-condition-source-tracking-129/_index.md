@@ -4,7 +4,7 @@ ticket_id: refactoring-129
 category: REFACTORING
 scope: FULL
 domain: combat
-status: validated
+status: implemented
 decrees:
   - decree-038
   - decree-047
