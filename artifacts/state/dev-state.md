@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-05T17:30:00
-updated_by: slave-collector (plan-1772702519)
+last_updated: 2026-03-05T18:00:00
+updated_by: orchestrator-survey
 ---
 
 # Dev Ecosystem State
@@ -81,6 +81,7 @@ updated_by: slave-collector (plan-1772702519)
 | refactoring-136 | P4 | open | Remove dead enterBetweenTurns/exitBetweenTurns exports from useEncounterOutOfTurn |
 | refactoring-137 | P4 | open | toggleVisionCapability uses direct getHistory() instead of delegated captureSnapshot |
 | refactoring-138 | P4 | open | Remaining entity mutation sites in aoo-resolve, breather, healing-item, living-weapon |
+| refactoring-140 | P4 | open | Update stale 'mutates entity' comment in damage.post.ts |
 
 ## Active Developer Work
 
@@ -117,9 +118,9 @@ updated_by: slave-collector (plan-1772702519)
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 0 |
 | Open tickets (P3) | 1 |
-| Open tickets (P4) | 42 |
+| Open tickets (P4) | 43 |
 | In-progress tickets | 6 (bug-054, bug-055, refactoring-117, refactoring-128, refactoring-139, ptu-rule-135) |
-| Total open + in-progress | 49 |
+| Total open + in-progress | 50 |
 | Needing fix cycles | ptu-rule-135 (fix cycle done in session 118, needs re-review) |
 | Needing review | bug-054, bug-055, refactoring-117, refactoring-128, refactoring-139 (all implemented in session 118) |
 | Resolved this session | feature-025 (APPROVED), refactoring-098 (APPROVED), refactoring-122 (APPROVED), refactoring-113 (dead import removed) |
