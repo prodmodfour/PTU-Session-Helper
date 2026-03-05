@@ -1,18 +1,21 @@
 ---
-generated_at: 2026-03-05T11:28:00.769Z
-total_tickets: 328
-open: 33
+generated_at: 2026-03-05T13:15:59.585Z
+total_tickets: 335
+open: 40
 in_progress: 6
 resolved: 289
 ---
 
 # Tickets Index
 
-## Open Tickets (33)
+## Open Tickets (40)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| decree-need-049 | decree | P3 | combat | The Ambiguity |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
+| ptu-rule-141 | ptu-rule | P4 | character-lifecycle | ptu-rule-141: Gas Mask grantedCapabilities uses fabricated c |
+| ptu-rule-142 | ptu-rule | P4 | combat | ptu-rule-142: Implement Permafrost Burn/Poison status tick d |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
 | ux-011 | ux | P4 | character-lifecycle | ux-011: Custom item form missing grantedCapabilities input f |
 | ux-013 | ux | P4 | character-lifecycle | ux-013: Stacked bonus Skill Edge rank-up display shows incor |
@@ -44,6 +47,10 @@ resolved: 289
 | refactoring-137 | refactoring | P4 | encounter-tables | `toggleVisionCapability` (encounter store line 567) calls `g |
 | refactoring-138 | refactoring | P4 | combat | Refactoring-098 converted the primary damage/next-turn/move  |
 | refactoring-140 | refactoring | P4 | combat | After refactoring-098 converted entity mutations to immutabl |
+| refactoring-141 | refactoring | P4 | combat | refactoring-141: Remove redundant useAction('standard') call |
+| refactoring-142 | refactoring | P4 | combat | refactoring-142: Add unit tests for computeEquipmentBonuses |
+| refactoring-143 | refactoring | P4 | combat | refactoring-143: Add unit tests for checkRecallReleasePair |
+| refactoring-144 | refactoring | P4 | combat | refactoring-144: Update decree-001 citation in weather tick  |
 | docs-017 | docs | P4 | tooling | The bug-047 ticket resolution log references stale commit ha |
 
 ## In-Progress Tickets (6)
@@ -57,18 +64,20 @@ resolved: 289
 | ptu-rule-130 | ptu-rule | P4 | combat | rules-review-225 MEDIUM-001 |
 | ptu-rule-133 | ptu-rule | P4 | scenes | rules-review-275 MED-001 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (1)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-049 | P3 | combat | sprint-shift-action-consumption |
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 0 | 54 | 55 |
-| ptu-rule | 0 | 5 | 102 | 107 |
+| ptu-rule | 2 | 5 | 102 | 109 |
 | feature | 0 | 0 | 25 | 25 |
 | ux | 8 | 0 | 10 | 18 |
-| decree | 0 | 0 | 48 | 48 |
-| refactoring | 23 | 1 | 33 | 57 |
+| decree | 1 | 0 | 48 | 49 |
+| refactoring | 27 | 1 | 33 | 61 |
 | docs | 1 | 0 | 17 | 18 |
