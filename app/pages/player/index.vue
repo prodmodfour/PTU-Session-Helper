@@ -72,6 +72,7 @@
             :my-pokemon-ids="pokemonIds"
             :send="send"
             :on-message="onMessage"
+            :flanking-map="receivedFlankingMap"
           />
           <div v-else-if="activeTab === 'scene'" key="scene">
             <PlayerGroupControl
@@ -162,7 +163,8 @@ const {
   activeScene: playerActiveScene,
   lastActionAck,
   turnNotification,
-  pendingActionCount
+  pendingActionCount,
+  receivedFlankingMap
 } = usePlayerWebSocket()
 
 // Provide the shared send function for child composables (usePlayerCombat)
