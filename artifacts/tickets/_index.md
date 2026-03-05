@@ -1,23 +1,18 @@
 ---
-generated_at: 2026-03-05T11:08:17.590Z
+generated_at: 2026-03-05T11:08:48.341Z
 total_tickets: 328
-open: 43
-in_progress: 7
-resolved: 278
+open: 38
+in_progress: 6
+resolved: 284
 ---
 
 # Tickets Index
 
-## Open Tickets (43)
+## Open Tickets (38)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| refactoring-129 | refactoring | P3 | combat | Per decree-047, whether Other category conditions clear on f |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
-| ptu-rule-125 | ptu-rule | P4 | character-lifecycle | ptu-rule-125: Populate grantedCapabilities on all capability |
-| ptu-rule-126 | ptu-rule | P4 | combat | ptu-rule-126: Snow Boots conditional Overland speed penalty  |
-| ptu-rule-130 | ptu-rule | P4 | combat | PTU-Rule-130: Fainted recall+release pair should not apply L |
-| ptu-rule-133 | ptu-rule | P4 | scenes | ptu-rule-133: Permafrost ability weather damage reduction no |
 | ux-006 | ux | P4 | — | ux-006: PTU injury markers may leak precise HP info in playe |
 | ux-011 | ux | P4 | character-lifecycle | ux-011: Custom item form missing grantedCapabilities input f |
 | ux-013 | ux | P4 | character-lifecycle | ux-013: Stacked bonus Skill Edge rank-up display shows incor |
@@ -56,17 +51,16 @@ resolved: 278
 | refactoring-140 | refactoring | P4 | combat | After refactoring-098 converted entity mutations to immutabl |
 | docs-017 | docs | P4 | tooling | The bug-047 ticket resolution log references stale commit ha |
 
-## In-Progress Tickets (7)
+## In-Progress Tickets (6)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
-| bug-054 | bug | P3 | multiple | code-review-334 HIGH-1 + code-review-334b H1 |
-| refactoring-117 | refactoring | P3 | — | code-review-259 MED-002 |
-| refactoring-128 | refactoring | P3 | combat | code-review-316 MED-001 |
-| bug-055 | bug | P4 | pokemon-lifecycle | code-review-334b M2 |
+| refactoring-129 | refactoring | P3 | combat | decree-047 |
 | ptu-rule-121 | ptu-rule | P4 | combat | combat-audit-report (R113, 2026-02-28) |
-| ptu-rule-135 | ptu-rule | P4 | capture | decree-049 |
-| refactoring-139 | refactoring | P4 | multiple | code-review-334 MEDIUM-1 + code-review-334b M1 |
+| ptu-rule-125 | ptu-rule | P4 | character-lifecycle | code-review-222 M-02 + rules-review-198 MED-02 |
+| ptu-rule-126 | ptu-rule | P4 | combat | rules-review-198 MED-01 |
+| ptu-rule-130 | ptu-rule | P4 | combat | rules-review-225 MEDIUM-001 |
+| ptu-rule-133 | ptu-rule | P4 | scenes | rules-review-275 MED-001 |
 
 ## Open Decree-Needs (0)
 
@@ -76,10 +70,10 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 2 | 52 | 55 |
-| ptu-rule | 4 | 2 | 101 | 107 |
+| bug | 1 | 0 | 54 | 55 |
+| ptu-rule | 0 | 5 | 102 | 107 |
 | feature | 0 | 0 | 25 | 25 |
 | ux | 8 | 0 | 10 | 18 |
 | decree | 0 | 0 | 48 | 48 |
-| refactoring | 29 | 3 | 25 | 57 |
+| refactoring | 28 | 1 | 28 | 57 |
 | docs | 1 | 0 | 17 | 18 |
