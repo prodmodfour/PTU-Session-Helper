@@ -138,6 +138,40 @@ export interface TurnState {
   distanceMovedThisTurn?: number;
 }
 
+// ============================================================
+// Condition Source Tracking (decree-047)
+// ============================================================
+
+/**
+ * Classification of what applied a condition.
+ * Per decree-047: source determines whether Other conditions clear on faint.
+ */
+export type ConditionSourceType =
+  | 'move'        // Applied by a move effect (e.g., Thunder Wave -> Paralysis)
+  | 'ability'     // Applied by an ability (e.g., Effect Spore -> Poisoned)
+  | 'terrain'     // Applied by terrain (e.g., terrain-based Stuck)
+  | 'weather'     // Applied by weather effect
+  | 'item'        // Applied by an item
+  | 'environment' // Applied by environment preset effect
+  | 'manual'      // GM manually applied
+  | 'system'      // Applied by system automation (breather penalties, etc.)
+  | 'unknown'     // Source not recorded (pre-existing conditions on combat entry)
+
+/**
+ * An applied condition with source metadata (decree-047).
+ * Lives on Combatant.conditionInstances[] (combat-scoped).
+ */
+export interface ConditionInstance {
+  /** The status condition name */
+  condition: StatusCondition
+  /** What type of game element applied this condition */
+  sourceType: ConditionSourceType
+  /** Human-readable description of the source */
+  sourceLabel: string
+  /** Combat round when this condition was applied */
+  appliedRound?: number
+}
+
 // Source-tracked combat stage modification (decree-005)
 // Tracks who/what caused a CS change so it can be cleanly reversed.
 // Used for status conditions (Burn → -2 Def, Paralysis → -4 Speed, Poison → -2 SpDef).

@@ -12,6 +12,7 @@ import type {
   TurnState,
   InjuryState,
   StageSource,
+  ConditionInstance,
   TrainerDeclaration,
   SwitchAction,
   OutOfTurnAction,
@@ -55,6 +56,11 @@ export interface Combatant {
   // Source-tracked combat stage modifications (decree-005)
   // Tracks CS changes from status conditions for clean reversal on cure
   stageSources?: StageSource[];
+
+  // Source-tracked condition instances (decree-047)
+  // Combat-scoped: populated on combat entry, consumed by clearing logic.
+  // Kept in sync with entity.statusConditions (the flat string array).
+  conditionInstances?: ConditionInstance[];
 
   // Badly Poisoned escalation round counter (combat-scoped)
   // 0 = not badly poisoned, 1+ = current escalation round
