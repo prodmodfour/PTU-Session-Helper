@@ -417,7 +417,7 @@ const checkEvolution = async () => {
       if (response.data.ineligible.length > 0) {
         const reasons = response.data.ineligible
           .map(i => `${i.toSpecies}: ${i.reason}`)
-          .join('\n')
+          .join('; ')
         showToast(`No evolutions currently available. ${reasons}`, 'warning')
       } else {
         showToast('This Pokemon has no evolution paths.', 'warning')
