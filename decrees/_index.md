@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-05T13:25:11.446Z
-total_decrees: 50
-active: 49
+generated_at: 2026-03-05T13:44:01.192Z
+total_decrees: 51
+active: 50
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (49)
+## Active Decrees (50)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -60,3 +60,4 @@ superseded: 0
 | decree-047 | combat | other-condition-faint-clearing | Other conditions do not clear on faint by default; clearing is source-dependent |
 | decree-048 | encounter-tables | dark-cave-blindness-penalties | Use RAW flat Blindness/Total Blindness penalties with two separate cave presets |
 | decree-049 | capture | loyalty-default-by-origin | Use origin-dependent default loyalty: wild catches at 2 (Wary), hatched/gifted at 3 (Neutral) |
+| decree-050 | combat | sprint-action-cost | Sprint consumes only the Standard Action, not the Shift Action |

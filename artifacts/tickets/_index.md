@@ -1,9 +1,9 @@
 ---
-generated_at: 2026-03-05T13:25:11.439Z
-total_tickets: 335
+generated_at: 2026-03-05T13:44:01.185Z
+total_tickets: 336
 open: 40
 in_progress: 1
-resolved: 294
+resolved: 295
 ---
 
 # Tickets Index
@@ -12,7 +12,7 @@ resolved: 294
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
-| decree-need-049 | decree | P3 | combat | The Ambiguity |
+| ptu-rule-143 | ptu-rule | P3 | combat | Per decree-050, Sprint consumes only the Standard Action (PT |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
 | ptu-rule-141 | ptu-rule | P4 | character-lifecycle | ptu-rule-141: Gas Mask grantedCapabilities uses fabricated c |
 | ptu-rule-142 | ptu-rule | P4 | combat | ptu-rule-142: Implement Permafrost Burn/Poison status tick d |
@@ -59,20 +59,18 @@ resolved: 294
 |----|----------|----------|--------|--------|
 | refactoring-129 | refactoring | P3 | combat | decree-047 |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-049 | P3 | combat | sprint-shift-action-consumption |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
 | bug | 1 | 0 | 54 | 55 |
-| ptu-rule | 2 | 0 | 107 | 109 |
+| ptu-rule | 3 | 0 | 107 | 110 |
 | feature | 0 | 0 | 25 | 25 |
 | ux | 8 | 0 | 10 | 18 |
-| decree | 1 | 0 | 48 | 49 |
+| decree | 0 | 0 | 49 | 49 |
 | refactoring | 27 | 1 | 33 | 61 |
 | docs | 1 | 0 | 17 | 18 |

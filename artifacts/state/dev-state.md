@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-05T23:30:00
-updated_by: slave-collector (plan-1772711294)
+last_updated: 2026-03-05T13:44:00
+updated_by: orchestrator-survey
 ---
 
 # Dev Ecosystem State
@@ -36,11 +36,12 @@ updated_by: slave-collector (plan-1772711294)
 |--------|----------|--------|---------|
 | ptu-rule-141 | P4 | open | Gas Mask uses fabricated capability name in grantedCapabilities |
 | ptu-rule-142 | P4 | open | Implement Permafrost Burn/Poison status tick damage reduction |
+| ptu-rule-143 | P3 | open | Sprint should not consume Shift Action (decree-050) |
 
 ### Decree-Need Tickets (`tickets/open/decree/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| decree-need-049 | P3 | open | Sprint shift action consumption ambiguity |
+*(All decree-needs resolved)*
 
 ### Refactoring Tickets (`tickets/open/refactoring/`)
 | Ticket | Priority | Status | Summary |
@@ -115,5 +116,6 @@ updated_by: slave-collector (plan-1772711294)
 | Open tickets (P4) | 39 |
 | In-progress tickets | 1 (refactoring-129) |
 | Total open + in-progress | 41 |
+| Decree-needs pending | 0 |
 | Needing review | refactoring-129 |
 | Resolved this session | ptu-rule-121, ptu-rule-125, ptu-rule-126, ptu-rule-130, ptu-rule-133 |
