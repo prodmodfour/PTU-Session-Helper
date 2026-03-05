@@ -3,7 +3,7 @@ id: refactoring-091
 title: "Replace alert() calls in create.vue with inline feedback"
 priority: P4
 severity: LOW
-status: open
+status: resolved
 domain: character-lifecycle
 category: EXT-DUPLICATE
 source: code-review-203 M1

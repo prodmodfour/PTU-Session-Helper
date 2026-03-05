@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-05T19:10:00
-updated_by: slave-collector (plan-1772707228)
+last_updated: 2026-03-05T20:00:00
+updated_by: orchestrator-survey (0b refresh)
 ---
 
 # Dev Ecosystem State
@@ -34,11 +34,6 @@ updated_by: slave-collector (plan-1772707228)
 ### Refactoring Tickets (`tickets/open/refactoring/`)
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| refactoring-086 | P4 | open | Code-review-189 MED-1 (combat) |
-| refactoring-087 | P4 | open | Code-review-190 MED-1 (vtt-grid) |
-| refactoring-088 | P4 | open | Code-review-195 MED-1 (vtt-grid) |
-| refactoring-091 | P4 | open | Code-review-203 M1 (character-lifecycle) |
-| refactoring-095 | P4 | open | Guard addEdge() against Skill Edge string injection |
 | refactoring-099 | P4 | open | Extract XP actions from encounter.ts store (806 lines) |
 | refactoring-100 | P4 | open | Reset badlyPoisonedRound on faint in applyDamageToEntity |
 | refactoring-101 | P4 | open | Deduplicate type-badge SCSS across evolution components |
@@ -110,8 +105,8 @@ updated_by: slave-collector (plan-1772707228)
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 0 |
 | Open tickets (P3) | 0 |
-| Open tickets (P4) | 38 |
+| Open tickets (P4) | 33 |
 | In-progress tickets | 6 (ptu-rule-121, ptu-rule-125, ptu-rule-126, ptu-rule-130, ptu-rule-133, refactoring-129) |
-| Total open + in-progress | 44 |
+| Total open + in-progress | 39 |
 | Needing review | ptu-rule-121, ptu-rule-125, ptu-rule-126, ptu-rule-130, ptu-rule-133, refactoring-129 |
 | Resolved this session | bug-054, bug-055, refactoring-117, refactoring-128, refactoring-139, ptu-rule-135 |

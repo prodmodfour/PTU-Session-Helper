@@ -3,7 +3,7 @@ id: refactoring-086
 title: Extract damage application section from useMoveCalculation composable
 priority: P4
 severity: LOW
-status: open
+status: resolved
 domain: combat
 category: EXT-GOD
 source: code-review-189 MED-1, code-review-191 M1

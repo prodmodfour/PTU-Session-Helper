@@ -1,26 +1,24 @@
 ---
-generated_at: 2026-03-05T11:08:48.330Z
-total_reviews: 2
-active_count: 1
+generated_at: 2026-03-05T11:18:03.219Z
+total_reviews: 0
+active_count: 0
 approved_count: 0
 ---
 
 # Reviews Index
 
-## Active Reviews (1)
+## Active Reviews (0)
 
-| Review ID | Verdict | Target | Reviewer | Date |
-|-----------|---------|--------|----------|------|
-| code-review-332 | CHANGES_REQUIRED | ptu-rule-135 | senior-reviewer | 2026-03-05 |
+No active reviews requiring action.
 
 ## Recently Approved (last 10)
 
 
 ## Stats
 
-- Active reviews: 2
-- Needs action: 1
+- Active reviews: 0
+- Needs action: 0
 - Approved/Pass (active): 0
-- Archived: 680
+- Archived: 682
 - Total (active + archived): 682
-- Unique targets reviewed: 2
+- Unique targets reviewed: 0

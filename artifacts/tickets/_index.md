@@ -1,14 +1,14 @@
 ---
-generated_at: 2026-03-05T11:08:48.341Z
+generated_at: 2026-03-05T11:18:03.232Z
 total_tickets: 328
-open: 38
+open: 33
 in_progress: 6
-resolved: 284
+resolved: 289
 ---
 
 # Tickets Index
 
-## Open Tickets (38)
+## Open Tickets (33)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
@@ -21,11 +21,6 @@ resolved: 284
 | ux-016 | ux | P4 | combat | ux-016: hasActed flag not set when all three actions individ |
 | ux-017 | ux | P4 | encounter-tables | The Dim Cave preset description says "Negated by Darkvision" |
 | ux-018 | ux | P4 | encounter-tables | Dim Cave description says "Negated by Darkvision" and Dark C |
-| refactoring-086 | refactoring | P4 | combat | `app/composables/useMoveCalculation.ts` is 801 lines, exceed |
-| refactoring-087 | refactoring | P4 | vtt-grid | `app/tests/unit/stores/terrain.test.ts` is 811 lines, exceed |
-| refactoring-088 | refactoring | P4 | vtt-grid | `combatantsOnGrid` in `useMoveCalculation.ts` falls back to  |
-| refactoring-091 | refactoring | P4 | character-lifecycle | refactoring-091: Replace alert() calls in create.vue with in |
-| refactoring-095 | refactoring | P4 | character-lifecycle | refactoring-095: Guard addEdge() against Skill Edge string i |
 | refactoring-099 | refactoring | P4 | — | refactoring-099: Extract XP actions from encounter.ts store  |
 | refactoring-100 | refactoring | P4 | — | When a combatant faints from any damage source, `applyDamage |
 | refactoring-101 | refactoring | P4 | pokemon-lifecycle | Deduplicate type-badge SCSS across evolution components |
@@ -75,5 +70,5 @@ All decree-needs addressed.
 | feature | 0 | 0 | 25 | 25 |
 | ux | 8 | 0 | 10 | 18 |
 | decree | 0 | 0 | 48 | 48 |
-| refactoring | 28 | 1 | 28 | 57 |
+| refactoring | 23 | 1 | 33 | 57 |
 | docs | 1 | 0 | 17 | 18 |
