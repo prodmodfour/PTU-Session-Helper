@@ -48,6 +48,7 @@
               :is-current-turn="combatant.id === currentCombatant?.id"
               :my-character-id="myCharacterId"
               :my-pokemon-ids="myPokemonIds"
+              :is-flanked="flankingMap?.[combatant.id]?.isFlanked ?? false"
             />
           </div>
         </section>
@@ -63,6 +64,7 @@
               :is-current-turn="combatant.id === currentCombatant?.id"
               :my-character-id="myCharacterId"
               :my-pokemon-ids="myPokemonIds"
+              :is-flanked="flankingMap?.[combatant.id]?.isFlanked ?? false"
             />
           </div>
         </section>
@@ -78,6 +80,7 @@
               :is-current-turn="combatant.id === currentCombatant?.id"
               :my-character-id="myCharacterId"
               :my-pokemon-ids="myPokemonIds"
+              :is-flanked="flankingMap?.[combatant.id]?.isFlanked ?? false"
             />
           </div>
         </section>
@@ -88,13 +91,15 @@
 
 <script setup lang="ts">
 import { PhSword } from '@phosphor-icons/vue'
-import type { WebSocketEvent } from '~/types'
+import type { WebSocketEvent, FlankingMap } from '~/types'
 
 const props = defineProps<{
   myCharacterId: string
   myPokemonIds: string[]
   send: (event: WebSocketEvent) => void
   onMessage: (listener: (msg: WebSocketEvent) => void) => (() => void)
+  /** P2: Flanking map from GM broadcast — combatantId -> FlankingStatus */
+  flankingMap?: FlankingMap
 }>()
 
 const encounterStore = useEncounterStore()
