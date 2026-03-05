@@ -12,21 +12,27 @@
 import { prisma } from '~/server/utils/prisma'
 import { buildEncounterResponse } from '~/server/services/encounter.service'
 import { createDefaultStageModifiers } from '~/server/services/combatant.service'
-import { ENCOUNTER_END_CLEARED_CONDITIONS } from '~/constants/statusConditions'
+import { shouldClearOnEncounterEnd } from '~/constants/conditionSourceRules'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
 import { resetSceneUsage } from '~/utils/moveFrequency'
 import { calculateSceneEndAp } from '~/utils/restHealing'
-import type { Combatant, StatusCondition } from '~/types'
+import type { Combatant, ConditionInstance, StatusCondition } from '~/types'
 import type { Move, Pokemon } from '~/types/character'
 
 /**
  * Remove conditions that clear at encounter end from a combatant's entity.
- * Uses per-condition clearsOnEncounterEnd flags (decree-038).
+ * Uses source-aware clearing for Other conditions (decree-047).
+ * For Persistent/Volatile: uses static clearsOnEncounterEnd flags (decree-038).
  * Returns the updated status conditions array (new reference, no mutation).
  */
-function clearEncounterEndConditions(conditions: StatusCondition[]): StatusCondition[] {
-  const toClear = new Set<string>(ENCOUNTER_END_CLEARED_CONDITIONS)
-  return conditions.filter((s: StatusCondition) => !toClear.has(s))
+function clearEncounterEndConditions(
+  conditions: StatusCondition[],
+  instances?: ConditionInstance[]
+): StatusCondition[] {
+  return conditions.filter(condition => {
+    const instance = instances?.find(i => i.condition === condition)
+    return !shouldClearOnEncounterEnd(condition, instance)
+  })
 }
 
 export default defineEventHandler(async (event) => {
@@ -59,7 +65,7 @@ export default defineEventHandler(async (event) => {
 
     const updatedCombatants = combatants.map(combatant => {
       const currentConditions: StatusCondition[] = combatant.entity?.statusConditions || []
-      const clearedConditions = clearEncounterEndConditions(currentConditions)
+      const clearedConditions = clearEncounterEndConditions(currentConditions, combatant.conditionInstances)
 
       // Reset scene-frequency moves for Pokemon combatants
       let updatedEntity = combatant.entity
