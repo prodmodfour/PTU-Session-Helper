@@ -3,7 +3,7 @@ ticket: refactoring-113
 category: EXT-DEAD-CODE
 priority: P3
 severity: LOW
-status: in-progress
+status: resolved
 domain: combat
 source: code-review-251 MED-001 + rules-review-227 M-1
 created_by: slave-collector (plan-20260301-152500)
