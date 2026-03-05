@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-03-05T15:00:00
+last_updated: 2026-03-05T23:10:00
 updated_by: orchestrator-survey
 ---
 
@@ -9,14 +9,49 @@ updated_by: orchestrator-survey
 
 ## Open Tickets
 
-### Bug Tickets (`tickets/open/bug/`)
+### Bug Tickets (`tickets/open/bug/`) — 13 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| bug-053 | P0 | open | Two decree violations in AP management endpoints |
-| bug-054 | P2 | open | calculateEncounterBudget references stale PTU Core page |
+| bug-056 | P1 | open | Character auto-level past milestone skips milestone grants |
+| bug-064 | P1 | open | Character detail page fails — SCSS $spacing-xs undefined |
+| bug-065 | P1 | open | Encounter tables page HTTP 500 — missing upload-simple.svg |
+| bug-066 | P1 | open | Encounter table editor name mismatch (EncounterTableTableEditor) |
+| bug-057 | P2 | open | Character POST/PUT missing max stat enforcement |
+| bug-058 | P2 | open | No distinction between HP loss and damage for Belly Drum etc |
+| bug-060 | P2 | open | Encounter table export/import loses density significance |
+| bug-062 | P2 | open | resetSceneUsage() exists but scene-frequency move counts not cleared |
+| bug-063 | P2 | open | Slowed speed floor applied after condition instead of before |
+| bug-067 | P2 | open | PlayerPokemonCard expansion crash |
+| bug-059 | P3 | open | Math.trunc vs Math.floor in movementModifier |
+| bug-061 | P3 | open | AP drain injury healing missing validation |
 | bug-052 | P4 | open | PlayerCharacterSheet.vue uses bare tag class instead of tag--feature variant |
 
-### UX Tickets (`tickets/open/ux/`)
+### PTU Rule Tickets (`tickets/open/ptu-rule/`) — 15 open
+| Ticket | Priority | Status | Summary |
+|--------|----------|--------|---------|
+| ptu-rule-151 | P1 | open | Heavily Injured trigger on 50%+ single-hit missing |
+| ptu-rule-147 | P2 | open | No per-effect duration tracking for combat stages |
+| ptu-rule-149 | P2 | open | VTT allows free token repositioning without movement enforcement |
+| ptu-rule-150 | P2 | open | No "set HP" vs "lose HP" flag for direct HP modification |
+| ptu-rule-155 | P2 | open | Player-view R156-R160 implementation gaps |
+| ptu-rule-143 | P3 | open | Sprint should not consume Shift Action (decree-050) |
+| ptu-rule-144 | P3 | open | Amateur milestone lifestyle stat points missing |
+| ptu-rule-145 | P3 | open | Level 30/40 milestones missing bonus edges/features |
+| ptu-rule-146 | P3 | open | App defaults to set damage instead of rolled damage |
+| ptu-rule-148 | P3 | open | Pokemon released mid-round after initiative passed |
+| ptu-rule-152 | P3 | open | No distinction between natural and move-created weather |
+| ptu-rule-153 | P3 | open | Nature Walk terrain bypass utility incomplete |
+| ptu-rule-154 | P3 | open | Hazard terrain has no mechanical effect |
+| ptu-rule-141 | P4 | open | Gas Mask uses fabricated capability name in grantedCapabilities |
+| ptu-rule-142 | P4 | open | Implement Permafrost Burn/Poison status tick damage reduction |
+
+### Feature Tickets (`tickets/open/feature/`) — 2 open
+| Ticket | Priority | Status | Summary |
+|--------|----------|--------|---------|
+| feature-026 | P2 | open | Auto-parse [+Stat] feature tags for stat bonuses |
+| feature-027 | P2 | open | Migrate edge data model from string[] to structured objects |
+
+### UX Tickets (`tickets/open/ux/`) — 8 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | ux-006 | P4 | open | PTU injury markers may leak precise HP info in player mode |
@@ -28,24 +63,7 @@ updated_by: orchestrator-survey
 | ux-017 | P4 | open | Preset descriptions misleadingly imply tier-specific vision negation |
 | ux-018 | P4 | open | Environment preset descriptions imply tier-specific vision negation |
 
-### Docs Tickets (`tickets/open/docs/`)
-| Ticket | Priority | Status | Summary |
-|--------|----------|--------|---------|
-| docs-017 | P4 | open | bug-047 resolution log has stale commit hashes and missing affected_files |
-
-### PTU Rule Tickets (`tickets/open/ptu-rule/`)
-| Ticket | Priority | Status | Summary |
-|--------|----------|--------|---------|
-| ptu-rule-141 | P4 | open | Gas Mask uses fabricated capability name in grantedCapabilities |
-| ptu-rule-142 | P4 | open | Implement Permafrost Burn/Poison status tick damage reduction |
-| ptu-rule-143 | P3 | open | Sprint should not consume Shift Action (decree-050) |
-
-### Decree-Need Tickets (`tickets/open/decree/`)
-| Ticket | Priority | Status | Summary |
-|--------|----------|--------|---------|
-*(All decree-needs resolved)*
-
-### Refactoring Tickets (`tickets/open/refactoring/`)
+### Refactoring Tickets (`tickets/open/refactoring/`) — 27 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | refactoring-099 | P4 | open | Extract XP actions from encounter.ts store (806 lines) |
@@ -66,7 +84,7 @@ updated_by: orchestrator-survey
 | refactoring-124 | P4 | open | Replace hardcoded speed=20 in InterceptPrompt.vue |
 | refactoring-126 | P4 | open | Pokemon PUT/POST endpoints wrap all errors in statusCode 500 |
 | refactoring-130 | P4 | open | Environment preset clearing stores '{}' instead of null in database |
-| refactoring-132 | P4 | open | Extract shared significance preset utilities |
+| refactoring-132 | P4 | open | Add type-narrowing helper for Combatant entity access |
 | refactoring-136 | P4 | open | Remove dead enterBetweenTurns/exitBetweenTurns exports from useEncounterOutOfTurn |
 | refactoring-137 | P4 | open | toggleVisionCapability uses direct getHistory() instead of delegated captureSnapshot |
 | refactoring-138 | P4 | open | Remaining entity mutation sites in aoo-resolve, breather, healing-item, living-weapon |
@@ -76,7 +94,15 @@ updated_by: orchestrator-survey
 | refactoring-143 | P4 | open | Add unit tests for checkRecallReleasePair including isFaintedSwitch path |
 | refactoring-144 | P4 | open | Update decree-001 citation comments in weather tick minimum floor |
 
-### In-Progress Tickets
+### Docs Tickets (`tickets/open/docs/`) — 1 open
+| Ticket | Priority | Status | Summary |
+|--------|----------|--------|---------|
+| docs-017 | P4 | open | bug-047 resolution log has stale commit hashes and missing affected_files |
+
+### Decree-Need Tickets (`tickets/open/decree/`)
+*(All decree-needs resolved)*
+
+### In-Progress Tickets — 1
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | refactoring-129 | P3 | **in-progress** | Condition source-tracking — implemented (P0+P1 complete), needs code+rules review |
@@ -111,13 +137,13 @@ updated_by: orchestrator-survey
 | Metric | Value |
 |--------|-------|
 | Last updated | 2026-03-05 |
-| Open tickets (P0) | 1 |
-| Open tickets (P1) | 0 |
-| Open tickets (P2) | 1 |
-| Open tickets (P3) | 1 |
+| Open tickets (P0) | 0 |
+| Open tickets (P1) | 5 |
+| Open tickets (P2) | 12 |
+| Open tickets (P3) | 10 |
 | Open tickets (P4) | 39 |
 | In-progress tickets | 1 (refactoring-129) |
-| Total open + in-progress | 43 |
+| Total open + in-progress | 67 |
 | Decree-needs pending | 0 |
 | Needing review | refactoring-129 |
 | Resolved this session | ptu-rule-121, ptu-rule-125, ptu-rule-126, ptu-rule-130, ptu-rule-133 |

@@ -1,5 +1,5 @@
 ---
-generated_at: 2026-03-05T23:02:18.325Z
+generated_at: 2026-03-05T23:05:54.994Z
 ---
 
 # Artifact Ecosystem Index
