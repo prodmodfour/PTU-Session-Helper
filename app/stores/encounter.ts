@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, StatusCondition } from '~/types'
-import type { OutOfTurnAction, AoOTrigger, InterruptTrigger } from '~/types/combat'
+import type { AoOTrigger, InterruptTrigger } from '~/types/combat'
 import type { GridPosition } from '~/types/spatial'
 import type { SignificanceTier } from '~/utils/encounterBudget'
 import { getHistory } from '~/composables/useEncounterUndoRedo'
@@ -96,68 +96,7 @@ export const useEncounterStore = defineStore('encounter', {
       ) ?? null
     },
 
-    pendingAoOs: (state): OutOfTurnAction[] => {
-      return (state.encounter?.pendingOutOfTurnActions ?? [])
-        .filter(a => a.category === 'aoo' && a.status === 'pending')
-    },
-
-    pendingOutOfTurnActions: (state): OutOfTurnAction[] => {
-      return (state.encounter?.pendingOutOfTurnActions ?? [])
-        .filter(a => a.status === 'pending')
-    },
-
-    hasAoOPrompts: (state): boolean => {
-      return (state.encounter?.pendingOutOfTurnActions ?? [])
-        .some(a => a.category === 'aoo' && a.status === 'pending')
-    },
-
-    holdQueue: (state) => {
-      return state.encounter?.holdQueue ?? []
-    },
-
-    isBetweenTurns: (state): boolean => {
-      return state.betweenTurns
-    },
-
-    holdingCombatants: (state): Combatant[] => {
-      if (!state.encounter) return []
-      return state.encounter.combatants.filter(c =>
-        c.holdAction?.isHolding === true
-      )
-    },
-
-    pendingInterrupts: (state): OutOfTurnAction[] => {
-      return (state.encounter?.pendingOutOfTurnActions ?? [])
-        .filter(a => a.category === 'interrupt' && a.status === 'pending')
-    },
-
-    pendingInterceptMelee: (state): OutOfTurnAction[] => {
-      return (state.encounter?.pendingOutOfTurnActions ?? [])
-        .filter(a => a.triggerType === 'ally_hit_melee' && a.status === 'pending')
-    },
-
-    pendingInterceptRanged: (state): OutOfTurnAction[] => {
-      return (state.encounter?.pendingOutOfTurnActions ?? [])
-        .filter(a => a.triggerType === 'ranged_in_range' && a.status === 'pending')
-    },
-
-    hasInterceptPrompts: (state): boolean => {
-      return (state.encounter?.pendingOutOfTurnActions ?? [])
-        .some(a =>
-          (a.triggerType === 'ally_hit_melee' || a.triggerType === 'ranged_in_range')
-          && a.status === 'pending'
-        )
-    },
-
-    priorityEligibleCombatants: (state): Combatant[] => {
-      if (!state.encounter) return []
-      return state.encounter.combatants.filter(c => {
-        if (c.entity.currentHp <= 0) return false
-        if (c.outOfTurnUsage?.priorityUsed) return false
-        if (c.holdAction?.isHolding) return false
-        return true
-      })
-    },
+    // Out-of-turn getters extracted to useOutOfTurnState composable (refactoring-117)
 
     mountedRiders: (state): Combatant[] => {
       if (!state.encounter) return []

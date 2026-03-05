@@ -48,7 +48,7 @@
 
       <!-- Priority Action Panel (between-turns window) -->
       <PriorityActionPanel
-        v-if="encounterStore.isBetweenTurns && encounter.isActive"
+        v-if="isBetweenTurns && encounter.isActive"
         :combatants="encounter.combatants"
         @priority="handlePriorityDeclaration"
         @proceed="handlePriorityProceed"
@@ -210,6 +210,7 @@ useHead({
 })
 
 const encounterStore = useEncounterStore()
+const { isBetweenTurns } = useOutOfTurnState()
 const libraryStore = useLibraryStore()
 const settingsStore = useSettingsStore()
 const { send, isConnected, identify, joinEncounter } = useWebSocket()
