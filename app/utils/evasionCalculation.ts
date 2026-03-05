@@ -1,8 +1,7 @@
 import type { Combatant, Pokemon, HumanCharacter, StatusCondition } from '~/types'
 import type { WieldRelationship } from '~/types/combat'
 import { ZERO_EVASION_CONDITIONS } from '~/constants/statusConditions'
-import { computeEquipmentBonuses, computeEffectiveEquipment } from '~/utils/equipmentBonuses'
-import { LIVING_WEAPON_CONFIG } from '~/constants/livingWeapon'
+import { getEffectiveEquipBonuses } from '~/utils/equipmentBonuses'
 
 export interface EvasionValues {
   physical: number
@@ -62,18 +61,8 @@ export function computeTargetEvasions(
   let focusSpDefBonus = 0
   let focusSpeedBonus = 0
   if (target.type === 'human') {
-    // Compute equipment bonuses, accounting for Living Weapon overlay if present
-    let equipment = (entity as HumanCharacter).equipment ?? {}
-    if (wieldRelationships) {
-      const wieldRel = wieldRelationships.find(r => r.wielderId === target.id)
-      if (wieldRel) {
-        const config = LIVING_WEAPON_CONFIG[wieldRel.weaponSpecies]
-        if (config) {
-          equipment = computeEffectiveEquipment(equipment, config, wieldRel.isFainted)
-        }
-      }
-    }
-    const equipBonuses = computeEquipmentBonuses(equipment)
+    // Use shared utility for equipment bonuses (accounts for Living Weapon overlay)
+    const equipBonuses = getEffectiveEquipBonuses(target, wieldRelationships ?? [])
     evasionBonus += equipBonuses.evasionBonus
     focusDefBonus = equipBonuses.statBonuses.defense ?? 0
     focusSpDefBonus = equipBonuses.statBonuses.specialDefense ?? 0
