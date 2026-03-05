@@ -148,11 +148,12 @@ export function applyDamageToEntity(
   combatant: Combatant,
   damageResult: DamageResult
 ): void {
-  const entity = combatant.entity
-
-  entity.currentHp = damageResult.newHp
-  entity.temporaryHp = damageResult.newTempHp
-  entity.injuries = damageResult.newInjuries
+  combatant.entity = {
+    ...combatant.entity,
+    currentHp: damageResult.newHp,
+    temporaryHp: damageResult.newTempHp,
+    injuries: damageResult.newInjuries
+  }
 
   // PTU p248: "When a Pokemon becomes Fainted, they are automatically
   // cured of all Persistent and Volatile Status Conditions."
@@ -181,10 +182,10 @@ export function applyFaintStatus(combatant: Combatant): void {
     reverseStatusCsEffects(combatant, condition)
   }
 
-  const survivingConditions = (entity.statusConditions || []).filter(
+  const survivingConditions = (combatant.entity.statusConditions || []).filter(
     (s: StatusCondition) => !faintClearedSet.has(s) && s !== 'Fainted'
   )
-  entity.statusConditions = ['Fainted', ...survivingConditions]
+  combatant.entity = { ...combatant.entity, statusConditions: ['Fainted', ...survivingConditions] }
 }
 
 // ============================================
@@ -226,34 +227,40 @@ export function applyHealingToEntity(
   if (options.healInjuries !== undefined && options.healInjuries > 0) {
     const previousInjuries = entity.injuries || 0
     const newInjuries = Math.max(0, previousInjuries - options.healInjuries)
-    entity.injuries = newInjuries
+    combatant.entity = { ...combatant.entity, injuries: newInjuries }
     result.injuriesHealed = previousInjuries - newInjuries
     result.newInjuries = newInjuries
   }
 
   // Heal HP (capped at injury-reduced effective max HP, using post-injury-heal count)
   if (options.amount !== undefined && options.amount > 0) {
-    const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
-    const previousHp = entity.currentHp
+    const currentEntity = combatant.entity
+    const effectiveMax = getEffectiveMaxHp(currentEntity.maxHp, currentEntity.injuries || 0)
+    const previousHp = currentEntity.currentHp
     const newHp = Math.min(effectiveMax, previousHp + options.amount)
-    entity.currentHp = newHp
     result.hpHealed = newHp - previousHp
     result.newHp = newHp
 
     // Remove Fainted status if healed from 0 HP
     if (previousHp === 0 && newHp > 0) {
-      entity.statusConditions = (entity.statusConditions || []).filter(
-        (s: StatusCondition) => s !== 'Fainted'
-      )
+      combatant.entity = {
+        ...combatant.entity,
+        currentHp: newHp,
+        statusConditions: (combatant.entity.statusConditions || []).filter(
+          (s: StatusCondition) => s !== 'Fainted'
+        )
+      }
       result.faintedRemoved = true
+    } else {
+      combatant.entity = { ...combatant.entity, currentHp: newHp }
     }
   }
 
   // Grant Temporary HP — PTU: keep whichever is higher (old or new), do NOT stack
   if (options.tempHp !== undefined && options.tempHp > 0) {
-    const previousTempHp = entity.temporaryHp || 0
+    const previousTempHp = combatant.entity.temporaryHp || 0
     const newTempHp = Math.max(previousTempHp, options.tempHp)
-    entity.temporaryHp = newTempHp
+    combatant.entity = { ...combatant.entity, temporaryHp: newTempHp }
     result.tempHpGained = newTempHp - previousTempHp
     result.newTempHp = newTempHp
   }
@@ -298,7 +305,7 @@ export function updateStatusConditions(
     }
   }
 
-  entity.statusConditions = currentStatuses
+  combatant.entity = { ...combatant.entity, statusConditions: currentStatuses }
 
   // Auto-apply/reverse CS effects from status conditions (decree-005)
   let stageChanges: StageChangeResult | undefined
@@ -319,7 +326,7 @@ export function updateStatusConditions(
     // Return the current stage state after all changes
     stageChanges = {
       changes: {},
-      currentStages: { ...(entity.stageModifiers || createDefaultStageModifiers()) }
+      currentStages: { ...(combatant.entity.stageModifiers || createDefaultStageModifiers()) }
     }
   }
 
@@ -359,10 +366,7 @@ export function applyStatusCsEffects(combatant: Combatant, condition: StatusCond
   const csEffect = getStatusCsEffect(condition)
   if (!csEffect) return
 
-  const entity = combatant.entity
-  if (!entity.stageModifiers) {
-    entity.stageModifiers = createDefaultStageModifiers()
-  }
+  const stageModifiers = combatant.entity.stageModifiers || createDefaultStageModifiers()
 
   // Initialize stageSources if needed
   if (!combatant.stageSources) {
@@ -370,13 +374,13 @@ export function applyStatusCsEffects(combatant: Combatant, condition: StatusCond
   }
 
   const { stat, value } = csEffect
-  const currentValue = entity.stageModifiers[stat] || 0
+  const currentValue = stageModifiers[stat] || 0
   const newValue = Math.max(-6, Math.min(6, currentValue + value))
   const actualDelta = newValue - currentValue
 
-  entity.stageModifiers = {
-    ...entity.stageModifiers,
-    [stat]: newValue
+  combatant.entity = {
+    ...combatant.entity,
+    stageModifiers: { ...stageModifiers, [stat]: newValue }
   }
 
   // Record the source entry with the actual delta applied (may differ from
@@ -410,7 +414,7 @@ export function reverseStatusCsEffects(combatant: Combatant, condition: StatusCo
     updatedModifiers = { ...updatedModifiers, [entry.stat]: newValue }
   }
 
-  entity.stageModifiers = updatedModifiers
+  combatant.entity = { ...combatant.entity, stageModifiers: updatedModifiers }
 
   // Remove matching source entries
   combatant.stageSources = combatant.stageSources.filter(s => s.source !== condition)
@@ -491,17 +495,12 @@ export function updateStageModifiers(
   changes: Record<string, number>,
   isAbsolute: boolean = false
 ): StageChangeResult {
-  const entity = combatant.entity
-
-  // Initialize stage modifiers if not present
-  if (!entity.stageModifiers) {
-    entity.stageModifiers = createDefaultStageModifiers()
-  }
+  let stageModifiers = combatant.entity.stageModifiers || createDefaultStageModifiers()
 
   const appliedChanges: Record<string, { previous: number; change: number; current: number }> = {}
 
   for (const [stat, value] of Object.entries(changes)) {
-    const previousValue = entity.stageModifiers[stat as StageStat] || 0
+    const previousValue = stageModifiers[stat as StageStat] || 0
     let newValue: number
 
     if (isAbsolute) {
@@ -510,7 +509,7 @@ export function updateStageModifiers(
       newValue = clampStage(previousValue + value)
     }
 
-    entity.stageModifiers[stat as StageStat] = newValue
+    stageModifiers = { ...stageModifiers, [stat as StageStat]: newValue }
     appliedChanges[stat] = {
       previous: previousValue,
       change: newValue - previousValue,
@@ -518,9 +517,11 @@ export function updateStageModifiers(
     }
   }
 
+  combatant.entity = { ...combatant.entity, stageModifiers }
+
   return {
     changes: appliedChanges,
-    currentStages: { ...entity.stageModifiers }
+    currentStages: { ...stageModifiers }
   }
 }
 
