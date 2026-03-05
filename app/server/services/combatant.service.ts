@@ -5,7 +5,8 @@
  * Entity builders (Prisma record → typed entity) live in entity-builder.service.ts.
  */
 
-import { ALL_STATUS_CONDITIONS, FAINT_CLEARED_CONDITIONS, getStatusCsEffect } from '~/constants/statusConditions'
+import { ALL_STATUS_CONDITIONS, getStatusCsEffect } from '~/constants/statusConditions'
+import { shouldClearOnFaint, buildUnknownSourceInstance, buildManualSourceInstance } from '~/constants/conditionSourceRules'
 import { getEffectiveMaxHp } from '~/utils/restHealing'
 import { v4 as uuidv4 } from 'uuid'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
@@ -13,8 +14,9 @@ import { getEffectiveEquipmentBonuses } from '~/server/services/living-weapon.se
 import type { WieldRelationship } from '~/types/combat'
 import { applyStageModifier, calculateEvasion } from '~/utils/damageCalculation'
 import type {
-  StatusCondition, StageModifiers, StageSource, Combatant,
-  Pokemon, HumanCharacter, CombatSide, GridPosition
+  StatusCondition, StageModifiers, StageSource, ConditionInstance,
+  ConditionSourceType, Combatant, Pokemon, HumanCharacter,
+  CombatSide, GridPosition
 } from '~/types'
 
 // ============================================
@@ -646,6 +648,11 @@ export function buildCombatantFromEntity(options: BuildCombatantOptions): Combat
     tokenSize,
     entity: combatantEntity
   }
+
+  // Seed conditionInstances from pre-existing entity conditions (decree-047)
+  // Pre-existing conditions get 'unknown' source (safe default: no clearing override)
+  const existingConditions: StatusCondition[] = entity.statusConditions || []
+  combatant.conditionInstances = existingConditions.map(c => buildUnknownSourceInstance(c))
 
   // Auto-apply CS effects for pre-existing status conditions (decree-005)
   // e.g., a Burned Pokemon entering combat should start with -2 Def CS
