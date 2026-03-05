@@ -65,6 +65,7 @@ For status moves (no damage base), MoveTargetModal skips the damage section enti
 | `useEncounterStore()` | Core encounter state, turn management, combatant CRUD | DeclarationPanel, GMActionModal, MoveTargetModal, CombatantCard, PriorityActionPanel, SwitchPokemonModal, SignificancePanel, UseItemModal, XpDistributionModal |
 | `useCombatantSwitchButtons` | Switch button visibility/disabled logic (extracted from CombatantGmActions) | CombatantGmActions |
 | `useGmToast` | Non-blocking GM toast notifications | GmToastContainer, useEncounterActions |
+| `useOutOfTurnState()` | Out-of-turn computed getters (pendingAoOs, holdQueue, isBetweenTurns, etc.) | PriorityActionPanel, pages/gm/index.vue |
 | `useFlankingDetection()` | Flanking penalty overlay on target selection | MoveTargetModal |
 
 Shared composables also used: `useTypeChart` (MoveButton), `usePokemonSprite` / `useTrainerSprite` (all card components), `useWebSocket` (PlayerRequestPanel, SignificancePanel).

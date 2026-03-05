@@ -1,6 +1,6 @@
 # Composables CLAUDE.md
 
-62 composables across 15 domains. All follow `use<PascalCaseName>.ts` naming and are auto-imported by Nuxt 3. **VTT composables are exclusively used in VTT grid contexts -- NOT used for non-VTT features.**
+63 composables across 16 domains. All follow `use<PascalCaseName>.ts` naming and are auto-imported by Nuxt 3. **VTT composables are exclusively used in VTT grid contexts -- NOT used for non-VTT features.**
 
 ## Domain Grouping
 
@@ -12,6 +12,7 @@
 | **Combat** (6) | useCombat, useCombatantSwitchButtons, useDamageCalculation, useEncounterActions, useMoveCalculation, useSwitching |
 | **Encounter** (4) | useEncounterBudget, useEncounterCreation, useEncounterHistory, useSwitchModalState |
 | **Encounter Store Delegates** (5) | useEncounterCombatActions, useEncounterMounts, useEncounterOutOfTurn, useEncounterSwitching, useEncounterUndoRedo |
+| **Out-of-Turn State** (1) | useOutOfTurnState |
 | **Character/Trainer** (4) | useCharacterCreation, useCharacterExportImport, useTrainerLevelUp, useTrainerXp |
 | **Pokemon** (4) | useEvolutionUndo, useLevelUpAllocation, usePokemonSheetRolls, usePokemonSprite |
 | **Player View** (7) | usePlayerCapture, usePlayerCombat, usePlayerGridView, usePlayerIdentity, usePlayerRequestHandlers, usePlayerScene, usePlayerWebSocket |
