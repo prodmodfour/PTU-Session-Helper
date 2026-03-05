@@ -45,14 +45,23 @@ export const EQUIPMENT_CATALOG: Record<string, EquippedItem> = {
   'Dark Vision Goggles': {
     name: 'Dark Vision Goggles',
     slot: 'head',
+    grantedCapabilities: ['Darkvision'],
     cost: 1000,
     description: 'Grants the Darkvision Capability while worn.',
   },
   'Gas Mask': {
     name: 'Gas Mask',
     slot: 'head',
+    grantedCapabilities: ['Gas Mask Immunity'],
     cost: 1500,
     description: 'Breathe through toxins/smoke. Immune to powder and gas moves.',
+  },
+  'Re-Breather': {
+    name: 'Re-Breather',
+    slot: 'head',
+    grantedCapabilities: ['Gilled'],
+    cost: 4000,
+    description: 'Grants the Gilled Capability for up to an hour. Refills in 5 minutes in open air.',
   },
 
   // === Off-Hand Slot ===
