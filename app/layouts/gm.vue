@@ -80,6 +80,7 @@
     <main class="gm-main">
       <slot />
     </main>
+    <GmToastContainer />
   </div>
 </template>
 
@@ -88,6 +89,7 @@ import { PhUsers, PhFilmSlate, PhSword, PhMapTrifold } from '@phosphor-icons/vue
 import type { GroupViewTab } from '~/types/scene'
 
 const { newDayGlobal, loading: advancingDay } = useRestHealing()
+const { showToast } = useGmToast()
 const groupViewTabsStore = useGroupViewTabsStore()
 
 // Tab configuration
@@ -106,7 +108,7 @@ const setTab = async (tab: GroupViewTab) => {
   try {
     await groupViewTabsStore.setActiveTab(tab)
   } catch (error) {
-    alert('Failed to switch group view tab')
+    showToast('Failed to switch group view tab', 'error')
   }
 }
 
@@ -119,7 +121,7 @@ const handleAdvanceDay = async () => {
   if (confirm('Advance to a new day? This will reset daily healing limits for all characters and Pokemon.')) {
     const result = await newDayGlobal()
     if (result?.success) {
-      alert(result.message)
+      showToast(result.message, 'success')
     }
   }
 }

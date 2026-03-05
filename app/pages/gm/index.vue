@@ -1,8 +1,5 @@
 <template>
   <div class="gm-encounter">
-    <!-- GM Toast Notifications (non-blocking overlay) -->
-    <GmToastContainer />
-
     <!-- No Active Encounter -->
     <NewEncounterForm
       v-if="!encounter"
