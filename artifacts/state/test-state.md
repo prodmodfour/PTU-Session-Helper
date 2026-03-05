@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-05T23:30:00
-updated_by: slave-collector (plan-1772711294)
+last_updated: 2026-03-06T00:10:00
+updated_by: slave-collector (matrix-1772718722)
 ---
 
 # Matrix Ecosystem State
@@ -9,59 +9,25 @@ updated_by: slave-collector (plan-1772711294)
 
 | Domain | Rules | Capabilities | Matrix | Audit | Tickets | Coverage |
 |--------|-------|-------------|--------|-------|---------|----------|
-| combat | done (135) | **FRESH** (session 120) | stale | stale | created | 71.9% (stale) |
-| capture | done (33) | **FRESH** (session 120) | stale | stale | created | 70.3% (stale) |
-| healing | done (42) | **FRESH** (session 120) | stale | stale | created | 65.0% (stale) |
-| pokemon-lifecycle | done (68) | **FRESH** (session 120) | stale | stale | created | 72.2% (stale) |
-| character-lifecycle | done (68) | **FRESH** (session 120) | stale | stale | created | 73.3% (stale) |
-| encounter-tables | done (27) | **FRESH** (session 120) | stale | stale | created | 77.5% (stale) |
-| scenes | done (42) | **FRESH** (session 120) | stale | stale | created | 70.0% (stale) |
-| vtt-grid | done (42) | **FRESH** (session 120) | stale | stale | created | 65.3% (stale) |
-| player-view | — | **FRESH** (session 120) | — | — | — | — (first-time mapping) |
+| combat | done (135) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 74.8% |
+| capture | done (33) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 96.9% |
+| healing | done (42) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 66.7% |
+| pokemon-lifecycle | done (68) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 68.6% |
+| character-lifecycle | done (68) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 86.1% |
+| encounter-tables | done (27) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 77.5% |
+| scenes | done (42) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 70.0% |
+| vtt-grid | done (42) | **FRESH** (session 120) | **FRESH** (session 121) | stale | created | 83.3% |
+| player-view | done (207) | **FRESH** (session 120) | — (needs coverage analysis) | — | — | — |
 
-**Overall: Capabilities re-mapped in session 120 (plan-1772711294, slaves 2-9). Matrix + Audit remain stale from session 59 (2026-02-28). Coverage percentages are stale — need matrix re-analysis against fresh capabilities. Sessions 12–120 added major new implementations (equipment, XP, character creation, isometric grid, player view, condition source tracking, Sprint, Snow Boots, Permafrost, fainted recall exemption).**
+**Overall: Matrix re-analyzed in session 121 (matrix-1772718722) for all 8 domains against fresh session-120 capabilities. player-view rules extracted (207 rules) — needs coverage analysis next. Audit column remains stale from session 59.**
 
 ## Active Work
 
-Session 120 (plan-1772711294) re-mapped all 8 domain capabilities. Matrix/Audit pipeline is next.
+Session 121 (matrix-1772718722) re-analyzed all 8 domain matrices and extracted player-view rules (207). Audit pipeline is next.
 
 ## Staleness Status
 
-Capabilities are now **FRESH** for all 8 domains + player-view. Matrix and Audit columns are stale — they were last run in session 59 against old capability sets. Coverage percentages are outdated.
-
-### Code changes since last matrix/audit (sessions 12–120)
-
-**combat domain:**
-- ptu-rule-045 P0+P1+P2: Equipment system (DR, evasion, Focus bonuses, Heavy Armor speed, equipment UI)
-- ptu-rule-077: Focus (Speed) stat bonuses for initiative + evasion
-- ptu-rule-079: Helmet conditional DR stacking
-- ptu-rule-121: Sprint action consumption
-- ptu-rule-126: Snow Boots conditional speed penalty
-- ptu-rule-130: Fainted recall+release League exemption
-- ptu-rule-133: Permafrost weather damage reduction
-- refactoring-129: Condition source-tracking (ConditionInstance, source-aware clearing)
-
-**pokemon-lifecycle domain:**
-- ptu-rule-055 P1+P2: XP distribution modal, level-up notifications
-
-**character-lifecycle domain:**
-- ptu-rule-056 P1+P2: Trainer class creation, biography fields
-- ptu-rule-078: Trainer class associatedSkills corrections
-- ptu-rule-080: Level-aware stat/skill/edge validation
-- feature-001 P0: Trainer sprites catalog (180 sprites)
-
-**encounter-tables domain:**
-- ptu-rule-058 P0+P1: Density separation, significance tiers
-- ptu-rule-060 P0+P1: Encounter budgets, significance presets
-- ptu-rule-125: Equipment grantedCapabilities
-
-**vtt-grid domain:**
-- feature-002 P0+P1+P2: Isometric grid, camera controls, overlays, fog of war, terrain painting, measurement modes
-
-**player-view domain (NEW):**
-- feature-003 Track A P0: Player identity, combat actions, encounter view
-- feature-003 Track B P0: JSON export/import, server-info endpoint
-- feature-003 Track C P0: WebSocket sync, player scene view, keepalive
+Capabilities and Matrices are now **FRESH** for all 8 established domains. player-view has rules + capabilities but no matrix yet. Audit column is stale — last run session 59.
 
 ## Audit Correction
 
@@ -69,7 +35,6 @@ Capabilities are now **FRESH** for all 8 domains + player-view. Matrix and Audit
 
 ## Recommended Next Steps
 
-1. Re-run Matrix analysis against fresh capabilities for all 8 domains
-2. Re-run Audit against updated matrices
+1. Run coverage analysis for player-view domain (207 rules vs 89 capabilities)
+2. Re-run Audit against updated matrices for all 9 domains
 3. Create M2 tickets from audit findings
-4. player-view domain needs rules catalog before matrix can be built
