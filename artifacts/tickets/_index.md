@@ -1,17 +1,19 @@
 ---
-generated_at: 2026-03-05T13:44:01.185Z
-total_tickets: 336
-open: 40
+generated_at: 2026-03-05T14:30:32.189Z
+total_tickets: 338
+open: 42
 in_progress: 1
 resolved: 295
 ---
 
 # Tickets Index
 
-## Open Tickets (40)
+## Open Tickets (42)
 
 | ID | Category | Priority | Domain | Summary |
 |----|----------|----------|--------|--------|
+| bug-053 | bug | P0 | healing | Two decree violations in AP management endpoints: |
+| bug-054 | bug | P2 | encounter-tables | `calculateEncounterBudget` references "PTU Core p. 473" whic |
 | ptu-rule-143 | ptu-rule | P3 | combat | Per decree-050, Sprint consumes only the Standard Action (PT |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
 | ptu-rule-141 | ptu-rule | P4 | character-lifecycle | ptu-rule-141: Gas Mask grantedCapabilities uses fabricated c |
@@ -67,7 +69,7 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 1 | 0 | 54 | 55 |
+| bug | 3 | 0 | 54 | 57 |
 | ptu-rule | 3 | 0 | 107 | 110 |
 | feature | 0 | 0 | 25 | 25 |
 | ux | 8 | 0 | 10 | 18 |
