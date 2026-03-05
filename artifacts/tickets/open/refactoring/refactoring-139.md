@@ -4,7 +4,7 @@ title: "dismissAll iterates Map while deleting from it"
 category: CODE-HEALTH
 priority: P4
 severity: LOW
-status: open
+status: in-progress
 domain: multiple
 source: code-review-334 MEDIUM-1 + code-review-334b M1
 created_by: slave-collector (plan-1772695906)
@@ -24,3 +24,8 @@ Iterate `timers.values()` to clear timeouts, then call `timers.clear()`.
 ## Impact
 
 Low — functionally correct but non-idiomatic. Quick fix.
+
+## Resolution Log
+
+- `5085bed3` — Changed `dismissAll` to iterate `timers.values()` then call `timers.clear()`
+- Files changed: `app/composables/useGmToast.ts`
