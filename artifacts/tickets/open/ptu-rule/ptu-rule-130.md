@@ -3,7 +3,7 @@ ticket_id: ptu-rule-130
 category: ptu-rule
 priority: P4
 severity: LOW
-status: open
+status: in-progress
 domain: combat
 source: rules-review-225 MEDIUM-001
 created_by: slave-collector (plan-20260301-143720)
@@ -34,3 +34,12 @@ In the pair detection logic (both endpoints), check whether any of the recalled 
 ## Impact
 
 Low — practical impact is minimal since fainted switches would normally use the full `switch.post.ts` endpoint. The standalone recall+release path for fainted Pokemon is an edge case.
+
+## Resolution Log
+
+- **9cd1d23b** — fix: exempt fainted recall+release pairs from League switch restriction
+  - `app/types/combat.ts` — Added `recalledWasFainted?: boolean` field to `SwitchAction` interface
+  - `app/server/api/encounters/[id]/recall.post.ts` — Record `recalledWasFainted` based on Pokemon HP at time of recall
+  - `app/server/services/switching.service.ts` — `checkRecallReleasePair` now returns `isFaintedSwitch` based on `recalledWasFainted` flags
+  - `app/server/api/encounters/[id]/release.post.ts` — Pass `pairCheckAfter.isFaintedSwitch` to `canSwitchedPokemonBeCommanded`
+  - `app/server/api/encounters/[id]/recall.post.ts` — Same fix for the recall-after-release path
