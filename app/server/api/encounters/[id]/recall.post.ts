@@ -194,6 +194,9 @@ export default defineEventHandler(async (event) => {
       await applyRecallSideEffects(pokemon.entityId)
 
       // Build switch action record
+      // Track fainted state at time of recall for pair detection (ptu-rule-130)
+      // PTU p.229: fainted replacement switches are exempt from League restriction
+      const wasFainted = pokemon.entity.currentHp <= 0
       newSwitchActions.push({
         trainerId,
         recalledCombatantId: combatantId,
@@ -203,7 +206,8 @@ export default defineEventHandler(async (event) => {
         actionType: 'recall_only',
         actionCost: actionType,
         round: record.currentRound,
-        forced: false
+        forced: false,
+        recalledWasFainted: wasFainted
       })
     }
 
@@ -220,10 +224,15 @@ export default defineEventHandler(async (event) => {
     const pairCheckAfter = checkRecallReleasePair(updatedSwitchActions, trainerId, record.currentRound)
     if (pairCheckAfter.countsAsSwitch && isLeague) {
       // Apply League switch restriction to previously released Pokemon
+      // PTU p.229: fainted replacement switches are exempt from League restriction
       for (const releasedEntityId of pairCheckAfter.releasedEntityIds) {
         const released = currentCombatants.find(c => c.entityId === releasedEntityId)
         if (released) {
-          const canBeCommanded = canSwitchedPokemonBeCommanded(true, false, false)
+          const canBeCommanded = canSwitchedPokemonBeCommanded(
+            true, // isLeagueBattle
+            pairCheckAfter.isFaintedSwitch, // true if any recalled Pokemon was fainted
+            false  // not forced switch
+          )
           released.turnState.canBeCommanded = canBeCommanded
         }
       }

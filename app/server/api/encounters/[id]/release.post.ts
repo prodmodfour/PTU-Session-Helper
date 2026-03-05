@@ -274,12 +274,13 @@ export default defineEventHandler(async (event) => {
     const pairCheckAfter = checkRecallReleasePair(updatedSwitchActions, trainerId, record.currentRound)
     if (pairCheckAfter.countsAsSwitch && isLeague) {
       // Apply League switch restriction to newly released Pokemon
+      // PTU p.229: fainted replacement switches are exempt from League restriction
       for (const releasedEntityId of pairCheckAfter.releasedEntityIds) {
         const released = currentCombatants.find(c => c.entityId === releasedEntityId)
         if (released) {
           const canBeCommanded = canSwitchedPokemonBeCommanded(
             true, // isLeagueBattle
-            false, // not fainted switch
+            pairCheckAfter.isFaintedSwitch, // true if any recalled Pokemon was fainted
             false  // not forced switch
           )
           released.turnState.canBeCommanded = canBeCommanded

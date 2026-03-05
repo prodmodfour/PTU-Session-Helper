@@ -194,6 +194,10 @@ export interface SwitchAction {
   round: number;
   /** Whether forced by a move with recall mechanics (Roar, etc.) -- per decree-034, only moves with explicit recall text qualify */
   forced: boolean;
+  /** Whether the recalled Pokemon was fainted at time of recall (HP <= 0).
+   *  Used by recall+release pair detection to grant fainted switch exemption.
+   *  PTU p.229: fainted replacement switches are exempt from League restriction. */
+  recalledWasFainted?: boolean;
 }
 
 // PTU Injury tracking

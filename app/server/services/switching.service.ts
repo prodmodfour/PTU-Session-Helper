@@ -805,14 +805,14 @@ export function checkRecallReleasePair(
   countsAsSwitch: boolean
   recalledEntityIds: string[]
   releasedEntityIds: string[]
+  isFaintedSwitch: boolean
 } {
   const trainerActions = switchActions.filter(
     a => a.trainerId === trainerId && a.round === round
   )
 
-  const recalledEntityIds = trainerActions
-    .filter(a => a.recalledEntityId !== null)
-    .map(a => a.recalledEntityId!)
+  const recallActions = trainerActions.filter(a => a.recalledEntityId !== null)
+  const recalledEntityIds = recallActions.map(a => a.recalledEntityId!)
 
   const releasedEntityIds = trainerActions
     .filter(a => a.releasedEntityId !== null)
@@ -820,5 +820,10 @@ export function checkRecallReleasePair(
 
   const countsAsSwitch = recalledEntityIds.length > 0 && releasedEntityIds.length > 0
 
-  return { countsAsSwitch, recalledEntityIds, releasedEntityIds }
+  // PTU p.229: fainted replacement switches are exempt from League restriction.
+  // If ANY recalled Pokemon was fainted at the time of recall, the pair qualifies
+  // as a fainted switch and the released Pokemon can be commanded this round.
+  const isFaintedSwitch = recallActions.some(a => a.recalledWasFainted === true)
+
+  return { countsAsSwitch, recalledEntityIds, releasedEntityIds, isFaintedSwitch }
 }
