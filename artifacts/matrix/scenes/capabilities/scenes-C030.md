@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C030
-name: scenes-C030
-type: —
+name: Scene-End AP Restoration
+type: service-function
 domain: scenes
 ---
 
 ### scenes-C030
-- **name:** SceneCanvas component
-- **type:** component
-- **location:** `app/components/scene/SceneCanvas.vue`
-- **game_concept:** Scene visual layout
-- **description:** Drag-and-drop canvas for positioning characters, Pokemon, and groups within a scene. Supports background image display.
-- **inputs:** Scene data with positions
-- **outputs:** Position change events
-- **accessible_from:** gm
+- **name:** Scene-End AP Restoration
+- **type:** service-function
+- **location:** `app/server/services/scene.service.ts` -- restoreSceneAp()
+- **game_concept:** PTU Core p221 -- AP regained at scene end
+- **description:** Restores AP for all characters in a scene at scene end. Groups by (level, drainedAp) for batch updates. Unbinds bound AP, restores currentAp to max minus drainedAp.
+- **inputs:** charactersJson (raw JSON string)
+- **outputs:** Number of characters restored
+- **accessible_from:** api-only

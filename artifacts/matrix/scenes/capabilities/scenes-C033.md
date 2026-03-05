@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C033
-name: scenes-C033
-type: —
+name: Significance Presets
+type: constant
 domain: scenes
 ---
 
 ### scenes-C033
-- **name:** ScenePropertiesPanel component
-- **type:** component
-- **location:** `app/components/scene/ScenePropertiesPanel.vue`
-- **game_concept:** Scene metadata editing
-- **description:** Panel for editing scene name, description, location name/image, weather condition.
-- **inputs:** Scene properties
-- **outputs:** Property change events
+- **name:** Significance Presets
+- **type:** constant
+- **location:** `app/utils/encounterBudget.ts` -- SIGNIFICANCE_PRESETS
+- **game_concept:** PTU Core p460 -- XP significance tiers
+- **description:** Array of significance presets for XP scaling: insignificant (x1) through legendary (x4-x5). Capped at x5 per decree-030.
+- **inputs:** N/A (constant)
+- **outputs:** SignificancePreset[]
 - **accessible_from:** gm

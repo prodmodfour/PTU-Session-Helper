@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C016
-name: scenes-C016
-type: —
+name: Activate Scene
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C016
-- **name:** Add/Remove Pokemon from Scene APIs
+- **name:** Activate Scene
 - **type:** api-endpoint
-- **location:** `app/server/api/scenes/[id]/pokemon.post.ts`, `[id]/pokemon/[pokemonId].delete.ts`
-- **game_concept:** Scene Pokemon management
-- **description:** Add Pokemon to scene (with position, optional group). Remove Pokemon from scene. Both update JSON pokemon array and broadcast WebSocket events (scene_pokemon_added, scene_pokemon_removed).
-- **inputs:** URL params: id, pokemonId. Body (add): { pokemonId, position?, groupId? }
-- **outputs:** `{ success, data: ScenePokemon }` or `{ success: true }`
-- **accessible_from:** gm
+- **location:** `app/server/api/scenes/[id]/activate.post.ts`
+- **game_concept:** Scene serving to Group View
+- **description:** Activates a scene: restores AP for characters in active scenes, deactivates others, updates GroupViewState, broadcasts scene_activated.
+- **inputs:** Scene ID (URL param)
+- **outputs:** `{ success, data: Scene }`
+- **accessible_from:** gm (action), group+player (receive broadcast)

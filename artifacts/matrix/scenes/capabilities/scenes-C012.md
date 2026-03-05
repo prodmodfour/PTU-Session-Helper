@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C012
-name: scenes-C012
-type: —
+name: Get Scene by ID
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C012
-- **name:** Get/Update/Delete Scene APIs
+- **name:** Get Scene by ID
 - **type:** api-endpoint
-- **location:** `app/server/api/scenes/[id].get.ts`, `[id].put.ts`, `[id].delete.ts`
-- **game_concept:** Scene CRUD
-- **description:** Get returns full scene with parsed JSON fields. Update accepts partial scene data. Delete removes scene. Update broadcasts scene_update WebSocket event.
-- **inputs:** URL param: id. Body (put): partial scene fields
-- **outputs:** `{ success, data: Scene }` or `{ success: true }`
+- **location:** `app/server/api/scenes/[id].get.ts`
+- **game_concept:** Scene retrieval
+- **description:** Fetches a single scene by ID with all JSON fields parsed.
+- **inputs:** Scene ID (URL param)
+- **outputs:** `{ success, data: Scene }`
 - **accessible_from:** gm

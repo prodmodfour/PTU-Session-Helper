@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C015
-name: scenes-C015
-type: —
+name: Delete Scene
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C015
-- **name:** Add/Remove Character from Scene APIs
+- **name:** Delete Scene
 - **type:** api-endpoint
-- **location:** `app/server/api/scenes/[id]/characters.post.ts`, `[id]/characters/[charId].delete.ts`
-- **game_concept:** Scene character management
-- **description:** Add character to scene (with position, optional group assignment). Remove character from scene. Both update the JSON characters array and broadcast WebSocket events (scene_character_added, scene_character_removed).
-- **inputs:** URL params: id, charId. Body (add): { characterId, position?, groupId? }
-- **outputs:** `{ success, data: SceneCharacter }` or `{ success: true }`
+- **location:** `app/server/api/scenes/[id].delete.ts`
+- **game_concept:** Scene deletion
+- **description:** Deletes a scene by ID. Clears GroupViewState.activeSceneId if scene was active.
+- **inputs:** Scene ID (URL param)
+- **outputs:** `{ success, message }`
 - **accessible_from:** gm

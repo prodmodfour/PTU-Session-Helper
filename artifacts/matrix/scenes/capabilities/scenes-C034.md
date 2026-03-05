@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C034
-name: scenes-C034
-type: —
+name: Apply Trainer XP
+type: utility
 domain: scenes
 ---
 
 ### scenes-C034
-- **name:** SceneHabitatPanel component
-- **type:** component
-- **location:** `app/components/scene/SceneHabitatPanel.vue`
-- **game_concept:** Scene habitat link for wild spawns
-- **description:** Panel for linking a scene to an encounter table (habitat). Enables wild Pokemon generation within the scene context.
-- **inputs:** Current habitatId, available encounter tables
-- **outputs:** Habitat link change events
+- **name:** Apply Trainer XP
+- **type:** utility
+- **location:** `app/utils/trainerExperience.ts` -- applyTrainerXp()
+- **game_concept:** PTU Core p461 -- Trainer Experience Bank
+- **description:** Calculates result of adding XP to trainer's experience bank. Auto-levels at 10 XP. Used by QuestXpDialog for level-up preview.
+- **inputs:** `{ currentXp, currentLevel, xpToAdd }`
+- **outputs:** `{ newXp, newLevel, levelsGained }`
 - **accessible_from:** gm

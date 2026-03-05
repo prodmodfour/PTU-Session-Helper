@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C024
-name: scenes-C024
-type: —
+name: Update Group in Scene
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C024
-- **name:** GroupViewTabs Store — position updates
-- **type:** store-action
-- **location:** `app/stores/groupViewTabs.ts` — updatePositions()
-- **game_concept:** Batch position update via store
-- **description:** PUTs to /api/scenes/:id/positions with position arrays for pokemon, characters, groups.
-- **inputs:** sceneId, positions object
-- **outputs:** API call (no local state update — relies on WebSocket echo)
+- **name:** Update Group in Scene
+- **type:** api-endpoint
+- **location:** `app/server/api/scenes/[id]/groups/[groupId].put.ts`
+- **game_concept:** Group editing (rename, reposition, resize)
+- **description:** Partial update of a group's name, position, width, or height. Broadcasts scene_group_updated.
+- **inputs:** Scene ID, Group ID, `{ name?, position?, width?, height? }`
+- **outputs:** `{ success, data: SceneGroup }`
 - **accessible_from:** gm

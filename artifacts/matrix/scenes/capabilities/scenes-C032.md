@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C032
-name: scenes-C032
-type: —
+name: Encounter Budget Analysis
+type: utility
 domain: scenes
 ---
 
 ### scenes-C032
-- **name:** SceneGroupsPanel component
-- **type:** component
-- **location:** `app/components/scene/SceneGroupsPanel.vue`
-- **game_concept:** Scene group management
-- **description:** Panel for creating, editing, and deleting groups within a scene. Groups visually contain characters/Pokemon.
-- **inputs:** Scene groups data
-- **outputs:** Group CRUD events
+- **name:** Encounter Budget Analysis
+- **type:** utility
+- **location:** `app/utils/encounterBudget.ts` -- analyzeEncounterBudget()
+- **game_concept:** PTU Encounter Creation Guide -- difficulty estimation
+- **description:** Analyzes encounter difficulty based on party level, player count, and enemy levels. Returns budget and difficulty rating (trivial/easy/balanced/hard/deadly).
+- **inputs:** `{ averagePokemonLevel, playerCount }`, enemies `[{ level, isTrainer }]`
+- **outputs:** BudgetAnalysis with difficulty rating
 - **accessible_from:** gm

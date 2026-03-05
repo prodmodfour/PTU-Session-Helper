@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C017
-name: scenes-C017
-type: —
+name: Deactivate Scene
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C017
-- **name:** Scene Group CRUD APIs
+- **name:** Deactivate Scene
 - **type:** api-endpoint
-- **location:** `app/server/api/scenes/[id]/groups.post.ts`, `[id]/groups/[groupId].put.ts`, `[id]/groups/[groupId].delete.ts`
-- **game_concept:** Scene group management (entity grouping)
-- **description:** Create, update, delete groups within a scene. Groups have name, position, width, height. Operations update JSON groups array and broadcast WebSocket events (scene_group_created, scene_group_updated, scene_group_deleted).
-- **inputs:** URL params: id, groupId. Body: { name, position?, width?, height? }
-- **outputs:** `{ success, data: SceneGroup }` or `{ success: true }`
-- **accessible_from:** gm
+- **location:** `app/server/api/scenes/[id]/deactivate.post.ts`
+- **game_concept:** Scene end with AP restoration
+- **description:** Deactivates a scene: restores AP for all characters (PTU Core p221), clears GroupViewState, broadcasts scene_deactivated.
+- **inputs:** Scene ID (URL param)
+- **outputs:** `{ success, message }`
+- **accessible_from:** gm (action), group+player (receive broadcast)

@@ -1,18 +1,16 @@
 ---
 cap_id: scenes-C018
-name: scenes-C018
-type: —
+name: Add Character to Scene
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C018
-- **name:** Batch Update Positions API
+- **name:** Add Character to Scene
 - **type:** api-endpoint
-- **location:** `app/server/api/scenes/[id]/positions.put.ts`
-- **game_concept:** Drag-and-drop position updates
-- **description:** Batch updates positions of pokemon, characters, and groups in a single request. Lightweight alternative to full scene PUT for drag-and-drop operations.
-- **inputs:** URL param: id. Body: { pokemon?: [{id, position, groupId?}], characters?: [{id, position, groupId?}], groups?: [{id, position}] }
-- **outputs:** `{ success: true }`
+- **location:** `app/server/api/scenes/[id]/characters.post.ts`
+- **game_concept:** Placing a trainer/NPC into a scene
+- **description:** Adds a character to the scene's JSON characters array with position and group assignment. Validates not already present. Broadcasts scene_character_added.
+- **inputs:** `{ characterId, name, avatarUrl?, position?, groupId? }`
+- **outputs:** `{ success, data: SceneCharacter }`
 - **accessible_from:** gm
-
-## Store

@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C014
-name: scenes-C014
-type: —
+name: Update Scene
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C014
-- **name:** Activate/Deactivate Scene APIs
+- **name:** Update Scene
 - **type:** api-endpoint
-- **location:** `app/server/api/scenes/[id]/activate.post.ts`, `[id]/deactivate.post.ts`
-- **game_concept:** Scene serving to Group View
-- **description:** Activate sets isActive=true on target scene (deactivates any other active scene), updates GroupViewState to scene tab, broadcasts scene_activated. Deactivate sets isActive=false, updates GroupViewState to lobby, broadcasts scene_deactivated.
-- **inputs:** URL param: id
+- **location:** `app/server/api/scenes/[id].put.ts`
+- **game_concept:** Scene editing (all fields)
+- **description:** Partial update of any scene field. Serializes JSON arrays before storage. Broadcasts WebSocket scene_update if scene is active.
+- **inputs:** Scene ID (URL param), partial scene body
 - **outputs:** `{ success, data: Scene }`
 - **accessible_from:** gm

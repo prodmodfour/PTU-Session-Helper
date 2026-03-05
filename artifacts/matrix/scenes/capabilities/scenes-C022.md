@@ -1,16 +1,16 @@
 ---
 cap_id: scenes-C022
-name: scenes-C022
-type: —
+name: Batch Position Update
+type: api-endpoint
 domain: scenes
 ---
 
 ### scenes-C022
-- **name:** GroupViewTabs Store — tab state management
-- **type:** store-action
-- **location:** `app/stores/groupViewTabs.ts` — fetchTabState(), setActiveTab(), handleTabChange()
-- **game_concept:** Group View tab routing
-- **description:** Fetches/sets active tab via /api/group/tab. handleTabChange processes WebSocket tab change events.
-- **inputs:** tab: GroupViewTab, sceneId?
-- **outputs:** Updated activeTab, activeSceneId state
-- **accessible_from:** gm (set), group (read)
+- **name:** Batch Position Update
+- **type:** api-endpoint
+- **location:** `app/server/api/scenes/[id]/positions.put.ts`
+- **game_concept:** Drag-and-drop layout persistence
+- **description:** Lightweight endpoint for batch-updating positions of pokemon, characters, and groups. Updates groupId assignments on drop. Broadcasts scene_positions_updated.
+- **inputs:** `{ pokemon?: [{id, position, groupId?}], characters?: [{id, position, groupId?}], groups?: [{id, position, width?, height?}] }`
+- **outputs:** `{ success, message }`
+- **accessible_from:** gm
