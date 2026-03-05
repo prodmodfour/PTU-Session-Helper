@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-05T18:00:00
-updated_by: orchestrator-survey
+last_updated: 2026-03-05T19:10:00
+updated_by: slave-collector (plan-1772707228)
 ---
 
 # Dev Ecosystem State
@@ -13,25 +13,6 @@ updated_by: orchestrator-survey
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | bug-052 | P4 | open | PlayerCharacterSheet.vue uses bare tag class instead of tag--feature variant |
-
-### PTU Rule Tickets (`tickets/open/ptu-rule/`)
-| Ticket | Priority | Status | Summary |
-|--------|----------|--------|---------|
-| ptu-rule-121 | P4 | open | Sprint endpoint missing action consumption |
-| ptu-rule-125 | P4 | open | Populate grantedCapabilities on capability-granting catalog entries |
-| ptu-rule-126 | P4 | open | Snow Boots conditional Overland speed penalty not enforced |
-| ptu-rule-130 | P4 | open | Fainted recall+release pair should not apply League switch restriction |
-| ptu-rule-133 | P4 | open | Permafrost ability weather damage reduction not handled |
-
-### In-Progress Tickets
-| Ticket | Priority | Status | Summary |
-|--------|----------|--------|---------|
-| ptu-rule-135 | P4 | **in-progress** | Origin-dependent loyalty defaults — fix cycle complete (slave-6), needs re-review |
-| bug-054 | P3 | **in-progress** | Timer leak in GmToastContainer — fixed (slave-4), needs review |
-| bug-055 | P4 | **in-progress** | Evolution ineligibility toast newline rendering — fixed (slave-4), needs review |
-| refactoring-117 | P3 | **in-progress** | Extract out-of-turn getters from encounter store — done (slave-5), needs review |
-| refactoring-128 | P3 | **in-progress** | Extract getEffectiveEquipBonuses — done (slave-5), needs review |
-| refactoring-139 | P4 | **in-progress** | dismissAll Map iteration fix — done (slave-4), needs review |
 
 ### UX Tickets (`tickets/open/ux/`)
 | Ticket | Priority | Status | Summary |
@@ -75,7 +56,6 @@ updated_by: orchestrator-survey
 | refactoring-123 | P4 | open | Fix distanceMoved to use actual moved value in intercept failure paths |
 | refactoring-124 | P4 | open | Replace hardcoded speed=20 in InterceptPrompt.vue |
 | refactoring-126 | P4 | open | Pokemon PUT/POST endpoints wrap all errors in statusCode 500 |
-| refactoring-129 | P3 | open | Design source-tracking for applied conditions |
 | refactoring-130 | P4 | open | Environment preset clearing stores '{}' instead of null in database |
 | refactoring-132 | P4 | open | Extract shared significance preset utilities |
 | refactoring-136 | P4 | open | Remove dead enterBetweenTurns/exitBetweenTurns exports from useEncounterOutOfTurn |
@@ -83,11 +63,29 @@ updated_by: orchestrator-survey
 | refactoring-138 | P4 | open | Remaining entity mutation sites in aoo-resolve, breather, healing-item, living-weapon |
 | refactoring-140 | P4 | open | Update stale 'mutates entity' comment in damage.post.ts |
 
+### In-Progress Tickets
+| Ticket | Priority | Status | Summary |
+|--------|----------|--------|---------|
+| ptu-rule-121 | P4 | **in-progress** | Sprint endpoint action consumption — implemented (slave-6), needs review |
+| ptu-rule-125 | P4 | **in-progress** | grantedCapabilities on equipment — implemented (slave-7), needs review |
+| ptu-rule-126 | P4 | **in-progress** | Snow Boots conditional penalty — implemented (slave-7), needs review |
+| ptu-rule-130 | P4 | **in-progress** | Fainted recall+release League exemption — implemented (slave-8), needs review |
+| ptu-rule-133 | P4 | **in-progress** | Permafrost weather damage reduction — implemented (slave-9), needs review |
+| refactoring-129 | P3 | **in-progress** | Condition source-tracking design spec — complete (slave-10), needs review |
+
 ## Active Developer Work
 
-**Current status:** Session 118 collection complete. No active slaves.
+**Current status:** Session 119 collection complete. No active slaves.
 
-**Last session (118, 2026-03-05, plan-1772702519):**
+**Last session (119, 2026-03-05, plan-1772707228):**
+- slave-1–5 (review): bug-054+refactoring-139 **APPROVED**, refactoring-117 **APPROVED**, refactoring-128 **APPROVED**, bug-055 **APPROVED**, ptu-rule-135 **APPROVED**. All 6 tickets resolved.
+- slave-6 (dev): ptu-rule-121 — 2 commits. Sprint action consumption added.
+- slave-7 (dev): ptu-rule-125+126 — 3 commits. Equipment grantedCapabilities + Snow Boots penalty.
+- slave-8 (dev): ptu-rule-130 — 2 commits. Fainted recall+release League switch exemption.
+- slave-9 (dev): ptu-rule-133 — 3 commits. Permafrost weather damage reduction.
+- slave-10 (dev): refactoring-129 — 2 commits. Full design spec for condition source tracking.
+
+**Session 118 (2026-03-05, plan-1772702519):**
 - slave-1 (review): feature-025 re-review → code-review-339 **APPROVED**. Feature complete.
 - slave-2 (review): refactoring-098 → code-review-340 **APPROVED**. Immutable patterns verified.
 - slave-3 (review): refactoring-122 → code-review-341 **APPROVED**. Flanking badge wiring verified.
@@ -103,12 +101,6 @@ updated_by: orchestrator-survey
 - slave-5 (dev): refactoring-098 — 5 commits. Immutable spread patterns in damage/next-turn/move endpoints + combatant.service.ts.
 - slave-6 (dev): refactoring-122 — 9 commits. Wired receivedFlankingMap into group + player views.
 
-**Session 116 (2026-03-05, plan-1772668105):**
-- slave-1 (review): feature-025 — 2 commits. **CHANGES_REQUIRED** (code-review-331: 1C+2H+2M). Rules-review-303 APPROVED.
-- slave-2 (dev): refactoring-112 — 9 commits. Encounter store decomposed into 5 composables (970→782 lines)
-- slave-3 (dev): refactoring-131 — 9 commits. Replaced ~46 alert() calls with useGmToast across all non-combat domains
-- slave-4 (dev): ptu-rule-135 — 4 commits. Implemented origin-dependent loyalty defaults (decree-049)
-
 ## Code Health
 
 | Metric | Value |
@@ -117,10 +109,9 @@ updated_by: orchestrator-survey
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
 | Open tickets (P2) | 0 |
-| Open tickets (P3) | 1 |
-| Open tickets (P4) | 43 |
-| In-progress tickets | 6 (bug-054, bug-055, refactoring-117, refactoring-128, refactoring-139, ptu-rule-135) |
-| Total open + in-progress | 50 |
-| Needing fix cycles | ptu-rule-135 (fix cycle done in session 118, needs re-review) |
-| Needing review | bug-054, bug-055, refactoring-117, refactoring-128, refactoring-139 (all implemented in session 118) |
-| Resolved this session | feature-025 (APPROVED), refactoring-098 (APPROVED), refactoring-122 (APPROVED), refactoring-113 (dead import removed) |
+| Open tickets (P3) | 0 |
+| Open tickets (P4) | 38 |
+| In-progress tickets | 6 (ptu-rule-121, ptu-rule-125, ptu-rule-126, ptu-rule-130, ptu-rule-133, refactoring-129) |
+| Total open + in-progress | 44 |
+| Needing review | ptu-rule-121, ptu-rule-125, ptu-rule-126, ptu-rule-130, ptu-rule-133, refactoring-129 |
+| Resolved this session | bug-054, bug-055, refactoring-117, refactoring-128, refactoring-139, ptu-rule-135 |
