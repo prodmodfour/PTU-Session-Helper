@@ -8,23 +8,35 @@ matrix_version: 2
 matrix_session: 121
 previous_audit_session: 59
 total_items: 37
-correct: 28
-incorrect: 3
-approximation: 3
-ambiguous: 3
+correct: 34
+incorrect: 1
+approximation: 1
+ambiguous: 0
+supplemental_correct: 2
+supplemental_approximation: 3
 ---
 
 # Implementation Audit: Healing (v2)
 
 ## Audit Summary
 
+### Queue Items (37 total)
+
 | Classification | Count | Severity Breakdown |
 |---------------|-------|-------------------|
-| Correct | 28 | -- |
-| Incorrect | 3 | 0 CRITICAL, 1 HIGH, 1 MEDIUM, 1 LOW |
-| Approximation | 3 | 0 CRITICAL, 1 HIGH, 1 MEDIUM, 1 LOW |
-| Ambiguous | 3 | -- |
-| **Total** | **37** | |
+| Correct | 34 | -- |
+| Incorrect | 1 | 1 LOW |
+| Approximation | 1 | 1 MEDIUM |
+| Ambiguous | 0 | -- |
+
+(Note: 2 out-of-queue ambiguous observations recorded in Ambiguous Items section but not counted in queue totals.)
+
+### Supplemental Findings (discovered during audit, outside queue)
+
+| Classification | Count | Severity Breakdown |
+|---------------|-------|-------------------|
+| Correct | 2 | -- (scene-end AP, death detection now implemented) |
+| Approximation | 3 | 1 HIGH, 2 LOW |
 
 ### Key Changes from v1 Audit (Session 59)
 
@@ -33,11 +45,9 @@ ambiguous: 3
 - **decree-018 RESOLVED**: Extended rest now accepts duration parameter (was missing in v1).
 - **Healing item system ADDED**: Full item catalog now exists with Potion, Super Potion, Hyper Potion, Antidote, Burn Heal, Ice Heal, Paralyze Heal, Awakening, Full Heal, Full Restore, Revive, Energy Powder, Energy Root, Heal Powder, Revival Herb.
 - **Death detection ADDED**: `checkDeath` in injuryMechanics.ts now detects 10-injury death and HP threshold death.
-- **Heavily Injured penalty ADDED**: `applyHeavilyInjuredPenalty` now applies in damage endpoint.
-
-### Escalation Notes (Ambiguous Items)
-
-3 items classified as Ambiguous -- see individual entries for both interpretations.
+- **Heavily Injured penalty ADDED**: `applyHeavilyInjuredPenalty` now applies in damage endpoint (damage trigger only; Standard Action trigger still missing).
+- **Scene-end AP restoration IMPLEMENTED**: Both encounter-end and scene-end paths now restore AP.
+- **Matrix gap notes outdated**: GAP-HEAL-3 (death detection), GAP-HEAL-4 (scene-end AP), and GAP-HEAL-5 (decree violations) are all resolved.
 
 ---
 
@@ -618,27 +628,9 @@ ambiguous: 3
 
 ---
 
-## Summary Statistics
+## Final Tally
 
-### By Classification
-
-| Classification | Count | Items |
-|---------------|-------|-------|
-| Correct | 28 | 1-22, 24-29, 31-33, 35-37, supplemental (scene-end AP, death detection, extended rest duration, new day move reset, R033 daily cap interaction) |
-| Incorrect | 3 | 34 (AP drain missing validation) |
-| Approximation | 3 | 30 (set/lose HP distinction), R016 supplemental (heavily injured Standard Action trigger), R031 supplemental (fainted timer), item catalog (Max Potion) |
-| Ambiguous | 3 | A1 (continuous rest), A2 (rest activity restriction), Note: R033 daily cap was initially ambiguous but resolved as Correct |
-
-### Corrections to previous count:
-Final tally:
-- **Correct: 28**
-- **Incorrect: 1** (Item 34: AP drain no AP check)
-- **Approximation: 4** (Item 30: set/lose HP, R016: heavily injured standard action, R031: faint timer, R039: Max Potion missing)
-- **Ambiguous: 2** (A1: continuous rest, A2: rest activity restriction)
-
-Wait -- let me recount precisely across all 37 queue items plus supplemental findings:
-
-### Final Tally (37 queue items)
+### Queue Items (37)
 
 | # | Item | Classification | Severity |
 |---|------|---------------|----------|
@@ -680,7 +672,9 @@ Wait -- let me recount precisely across all 37 queue items plus supplemental fin
 | 36 | R006/C048,C049 | Correct | -- |
 | 37 | R010/C048,C049 | Correct | -- |
 
-**Supplemental findings (rules outside queue but discovered during audit):**
+**Queue totals: 34 Correct, 1 Incorrect (LOW), 1 Approximation (MEDIUM), 0 Ambiguous**
+
+### Supplemental Findings (outside queue, discovered during audit)
 
 | Finding | Rule | Classification | Severity |
 |---------|------|---------------|----------|
@@ -690,20 +684,11 @@ Wait -- let me recount precisely across all 37 queue items plus supplemental fin
 | Scene-end AP restoration EXISTS | R042 | Correct (matrix gap note outdated) | -- |
 | Death detection EXISTS | R030 | Correct (matrix gap note outdated) | -- |
 
-### Final Summary
+### Out-of-Queue Ambiguous Observations
 
-| Classification | Queue Items | Supplemental | Total |
-|---------------|------------|-------------|-------|
-| Correct | 32 | 2 | 34 |
-| Incorrect | 1 | 0 | 1 |
-| Approximation | 1 | 3 | 4 |
-| Ambiguous | 2 (A1, A2 embedded in Items 35, 11) | 0 | 2 |
+Two ambiguities noted during data model auditing (Items 35, 11) that concern rest enforcement policy rather than implementation correctness:
 
-Note: Items 35 (R002) and 11 (R009) overlap with Ambiguous items A1/A2 but are classified Correct for the data model tracking portion specifically. The ambiguity is about the rest enforcement policy, not the data model.
+- **A1 (healing-R008):** Whether "continuous half hour" requires interruption tracking or is satisfied by atomic API calls. Recommend decree-need if interruption tracking desired.
+- **A2 (healing-R002):** Whether rest activity restriction should be app-enforced or left to GM judgment. Current approach (GM judgment) is reasonable.
 
-**Revised clean counts for the 37 queue items:**
-- Correct: 34
-- Incorrect: 1 (Item 34)
-- Approximation: 1 (Item 30)
-- Ambiguous: 0 (rest ambiguities are out-of-queue observations)
-- Supplemental findings: 5 (2 correct, 3 approximation)
+These are classified as Correct for queue scoring because the data model portion being audited is correct; the ambiguity is about optional enforcement features.
