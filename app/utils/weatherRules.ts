@@ -96,6 +96,21 @@ export const HAIL_ADJACENT_PROTECTION: string[] = ['Snow Cloak']
 export const SANDSTORM_ADJACENT_PROTECTION: string[] = ['Sand Veil']
 
 /**
+ * Abilities that reduce (but don't eliminate) weather tick damage.
+ * Maps ability name to flat HP reduction amount.
+ *
+ * PTU 10-indices-and-reference.md, p.1993-1997, Ability: Permafrost:
+ * "whenever the user would lose a Tick of Hit Points due to an effect
+ * such as Sandstorm or the Burn Status condition, subtract 5 from
+ * the amount of Hit Points lost."
+ *
+ * After reduction, minimum 1 damage per decree-001.
+ */
+export const WEATHER_DAMAGE_REDUCTION_ABILITIES: Record<string, number> = {
+  'Permafrost': 5,
+}
+
+/**
  * Weather-based combat stage abilities (P1 + P2).
  * Applied when weather is set, reversed when weather changes/expires.
  * Uses source-tracked CS changes per decree-005 (stageSources system).
@@ -261,7 +276,6 @@ export function isImmuneToHail(
     }
   }
 
-  // Permafrost damage reduction not handled (tracked in ptu-rule-133)
   return { immune: false }
 }
 
@@ -341,6 +355,38 @@ export function isImmuneToWeatherDamage(
     case 'sandstorm': return isImmuneToSandstorm(combatant, allCombatants)
     default: return { immune: true, reason: 'type', detail: 'non-damaging weather' }
   }
+}
+
+// ============================================
+// DAMAGE REDUCTION
+// ============================================
+
+export interface WeatherDamageReductionResult {
+  /** Total flat HP reduction to apply */
+  reduction: number
+  /** Which ability provided the reduction */
+  ability?: string
+}
+
+/**
+ * Check if a combatant has abilities that reduce (not eliminate) weather tick damage.
+ *
+ * PTU 10-indices-and-reference.md, p.1993-1997:
+ * Permafrost — "subtract 5 from the amount of Hit Points lost"
+ *
+ * @param combatant - The combatant to check
+ * @returns reduction amount and source ability, or { reduction: 0 } if none
+ */
+export function getWeatherDamageReduction(combatant: Combatant): WeatherDamageReductionResult {
+  const abilities = getCombatantAbilities(combatant)
+
+  for (const [abilityName, reductionAmount] of Object.entries(WEATHER_DAMAGE_REDUCTION_ABILITIES)) {
+    if (abilities.some(a => a.toLowerCase() === abilityName.toLowerCase())) {
+      return { reduction: reductionAmount, ability: abilityName }
+    }
+  }
+
+  return { reduction: 0 }
 }
 
 // ============================================
