@@ -51,3 +51,15 @@ P0 implemented on branch `slave/2-dev-feature-025-1772664485`:
 | 2af11b4f | app/composables/useMoveCalculation.ts | Attacker-aware environment penalty |
 | 8d028a44 | app/components/encounter/VisionCapabilityToggle.vue | GM toggle component |
 | 886fb0d7 | app/components/encounter/CombatantCard.vue | Vision indicator and toggle integration |
+
+## Fix Log (code-review-331)
+
+Fixes for 5 issues identified in code-review-331:
+
+| Commit | Issue | Files | Description |
+|--------|-------|-------|-------------|
+| e003b034 | CRIT-1 | app/stores/encounter.ts | Add visionState to updateFromWebSocket surgical update |
+| 96744537 | HIGH-1 | app/server/api/.../vision.post.ts | Add notifyEncounterUpdate broadcast after persistence |
+| 29ef767e | HIGH-2 | app/stores/encounter.ts | Replace useGmToast with this.error pattern |
+| c96ebb8f | MED-1 | app/server/api/.../vision.post.ts | Validate source against VisionCapabilitySource type |
+| 2282b37c | MED-2 | .claude/skills/references/app-surface.md | Add vision system entries to surface doc |
