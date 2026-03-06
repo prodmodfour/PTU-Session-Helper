@@ -154,7 +154,7 @@
 
 <script setup lang="ts">
 import { PhFirstAidKit } from '@phosphor-icons/vue'
-import type { Combatant, StatusCondition, StageModifiers } from '~/types'
+import type { Combatant, StatusCondition, StageModifiers, HpReductionType } from '~/types'
 
 const props = defineProps<{
   combatant: Combatant
@@ -166,7 +166,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  damage: [combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp']
+  damage: [combatantId: string, damage: number, lossType?: HpReductionType]
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]
   status: [combatantId: string, add: StatusCondition[], remove: StatusCondition[], override: boolean]
@@ -180,7 +180,7 @@ const emit = defineEmits<{
 // Input states
 const damageInput = ref(0)
 const healInput = ref(0)
-const lossTypeInput = ref<'damage' | 'hpLoss' | 'setHp'>('damage')
+const lossTypeInput = ref<HpReductionType>('damage')
 
 // Modal states
 const showTempHpModal = ref(false)

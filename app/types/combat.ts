@@ -62,6 +62,20 @@ export interface MountState {
   agilityTrainingActive?: boolean
 }
 
+// ============================================================
+// HP Reduction Type (bug-058 — PTU p.236, p.250)
+// ============================================================
+
+/**
+ * PTU distinguishes three types of HP reduction (07-combat.md p.236, p.250):
+ * - 'damage': standard attack damage — triggers massive damage injuries, marker injuries, heavily injured penalty
+ * - 'hpLoss': "loses Hit Points" effects (Belly Drum, Life Orb recoil) — skips massive damage injury, skips heavily injured penalty
+ * - 'setHp': "set Hit Points to" effects (Pain Split, Endeavor) — skips massive damage injury, skips heavily injured penalty
+ *
+ * HP marker injuries still apply to all types (PTU only exempts massive damage for hpLoss/setHp).
+ */
+export type HpReductionType = 'damage' | 'hpLoss' | 'setHp'
+
 // Status conditions (PTU 1.05)
 export type StatusCondition =
   | 'Burned' | 'Frozen' | 'Paralyzed' | 'Poisoned' | 'Badly Poisoned'

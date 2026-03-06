@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, StatusCondition } from '~/types'
+import type { Encounter, Combatant, MoveLogEntry, CombatSide, TurnPhase, BattleType, TrainerDeclaration, StatusCondition, HpReductionType } from '~/types'
 import type { AoOTrigger, InterruptTrigger } from '~/types/combat'
 import type { GridPosition } from '~/types/spatial'
 import type { SignificanceTier } from '~/utils/encounterBudget'
@@ -556,7 +556,7 @@ export const useEncounterStore = defineStore('encounter', {
       return executeMove(actorId, moveId, targetIds, damage, targetDamages, notes)
     },
 
-    async applyDamage(combatantId: string, damage: number, suppressDeath: boolean = false, lossType?: 'damage' | 'hpLoss' | 'setHp') {
+    async applyDamage(combatantId: string, damage: number, suppressDeath: boolean = false, lossType?: HpReductionType) {
       const { applyDamage } = useEncounterCombatActions(this._buildContext())
       return applyDamage(combatantId, damage, suppressDeath, lossType)
     },

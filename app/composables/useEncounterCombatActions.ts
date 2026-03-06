@@ -1,5 +1,4 @@
-import type { Encounter, TrainerDeclaration, StatusCondition } from '~/types'
-import type { HpReductionType } from '~/server/services/combatant.service'
+import type { Encounter, TrainerDeclaration, StatusCondition, HpReductionType } from '~/types'
 
 /**
  * Composable for encounter combat actions.

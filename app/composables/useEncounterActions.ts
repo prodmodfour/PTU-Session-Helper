@@ -1,4 +1,4 @@
-import type { StageModifiers, StatusCondition, GridConfig, GridPosition, MovementPreview, Encounter, WebSocketEvent } from '~/types'
+import type { StageModifiers, StatusCondition, GridConfig, GridPosition, MovementPreview, Encounter, WebSocketEvent, HpReductionType } from '~/types'
 import { ptuDiagonalDistance } from '~/utils/gridDistance'
 
 export interface BreatherShiftResult {
@@ -40,7 +40,7 @@ export function useEncounterActions(options: EncounterActionsOptions) {
     }
   }
 
-  const handleDamage = async (combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp') => {
+  const handleDamage = async (combatantId: string, damage: number, lossType?: HpReductionType) => {
     const combatant = findCombatant(combatantId)
     const name = getCombatantName(combatant)
     const typeLabel = lossType === 'hpLoss' ? 'HP loss' : lossType === 'setHp' ? 'set-HP' : 'damage'

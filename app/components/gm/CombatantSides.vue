@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Combatant, CombatSide, StageModifiers, StatusCondition, TurnPhase } from '~/types'
+import type { Combatant, CombatSide, StageModifiers, StatusCondition, TurnPhase, HpReductionType } from '~/types'
 
 const PHASE_LABELS: Record<string, string> = {
   trainer_declaration: 'Declaration (Low \u2192 High)',
@@ -164,7 +164,7 @@ const currentPhaseLabel = computed(() => {
 
 const emit = defineEmits<{
   action: [combatantId: string, action: { type: string; data: unknown }]
-  damage: [combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp']
+  damage: [combatantId: string, damage: number, lossType?: HpReductionType]
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   remove: [combatantId: string]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]

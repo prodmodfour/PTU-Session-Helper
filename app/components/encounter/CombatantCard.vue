@@ -179,7 +179,7 @@
 
 <script setup lang="ts">
 import { PhHorse, PhEye } from '@phosphor-icons/vue'
-import type { Combatant, Pokemon, HumanCharacter, StatusCondition, StageModifiers } from '~/types'
+import type { Combatant, Pokemon, HumanCharacter, StatusCondition, StageModifiers, HpReductionType } from '~/types'
 import type { VisionCapability } from '~/utils/visionRules'
 import { hasVisionCapability, hasSpecificVision, isDarknessBasedPreset } from '~/utils/visionRules'
 
@@ -193,7 +193,7 @@ const props = defineProps<{
 
 defineEmits<{
   action: [combatantId: string, action: { type: string; data: unknown }]
-  damage: [combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp']
+  damage: [combatantId: string, damage: number, lossType?: HpReductionType]
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   remove: [combatantId: string]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]
