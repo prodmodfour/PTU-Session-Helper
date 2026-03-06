@@ -10,6 +10,9 @@
  * - Level cannot exceed TRAINER_MAX_LEVEL (50)
  */
 
+/** Minimum trainer level */
+export const TRAINER_MIN_LEVEL = 1
+
 /** Maximum trainer level (practical PTU limit) */
 export const TRAINER_MAX_LEVEL = 50
 
@@ -18,6 +21,23 @@ export const TRAINER_XP_PER_LEVEL = 10
 
 /** Trainer milestone levels requiring player/GM choices (PTU Core p.19-21) */
 export const TRAINER_MILESTONE_LEVELS = [5, 10, 20, 30, 40] as const
+
+/**
+ * Validate that a trainer level is within the allowed range [TRAINER_MIN_LEVEL, TRAINER_MAX_LEVEL].
+ * Returns an error message string if invalid, or null if valid.
+ */
+export function validateTrainerLevel(level: number): string | null {
+  if (typeof level !== 'number' || !Number.isInteger(level)) {
+    return 'Trainer level must be an integer'
+  }
+  if (level < TRAINER_MIN_LEVEL) {
+    return `Trainer level must be at least ${TRAINER_MIN_LEVEL}`
+  }
+  if (level > TRAINER_MAX_LEVEL) {
+    return `Trainer level cannot exceed ${TRAINER_MAX_LEVEL}`
+  }
+  return null
+}
 
 /**
  * Input for applying XP to a trainer's experience bank.
