@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-06T10:00:00
-updated_by: slave-collector (plan-1772755770)
+last_updated: 2026-03-06T15:00:00
+updated_by: orchestrator-survey
 ---
 
 # Dev Ecosystem State
@@ -16,12 +16,13 @@ updated_by: slave-collector (plan-1772755770)
 | bug-061 | P3 | open | AP drain injury healing missing validation |
 | bug-052 | P4 | open | PlayerCharacterSheet.vue uses bare tag class instead of tag--feature variant |
 
-### PTU Rule Tickets (`tickets/open/ptu-rule/`) — 13 open
+### PTU Rule Tickets (`tickets/open/ptu-rule/`) — 14 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | ptu-rule-147 | P2 | open | No per-effect duration tracking for combat stages |
 | ptu-rule-149 | P2 | open | VTT allows free token repositioning without movement enforcement |
 | ptu-rule-155 | P2 | open | Player-view R156-R160 implementation gaps |
+| ptu-rule-156 | P2 | open | Terrain/weather-sourced Other conditions must re-apply on send-out per decree-053 |
 | ptu-rule-143 | P3 | open | Sprint should not consume Shift Action (decree-050) |
 | ptu-rule-144 | P3 | open | Amateur milestone lifestyle stat points missing |
 | ptu-rule-145 | P3 | open | Level 30/40 milestones missing bonus edges/features |
@@ -90,7 +91,7 @@ updated_by: slave-collector (plan-1772755770)
 ### Decree-Need Tickets (`tickets/open/decree/`)
 *(All decree-needs resolved)*
 
-### In-Progress Tickets — 11
+### In-Progress Tickets — 13
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | refactoring-129 | P3 | **in-progress** | Condition source-tracking — CHANGES_REQUIRED (code-review-347, rules-review-314) |
@@ -140,11 +141,11 @@ updated_by: slave-collector (plan-1772755770)
 | Last updated | 2026-03-06 |
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
-| Open tickets (P2) | 7 |
-| Open tickets (P3) | 12 |
-| Open tickets (P4) | 35 |
+| Open tickets (P2) | 6 |
+| Open tickets (P3) | 10 |
+| Open tickets (P4) | 39 |
 | In-progress tickets | 13 (10 dev bug/rule fixes, refactoring-129, ptu-rule-150, bug-067) |
-| Total open + in-progress | 67 |
+| Total open + in-progress | 68 |
 | Decree-needs pending | 0 |
 | Needing review | 12 newly implemented fixes + refactoring-129 rework |
 | Smoke test | PASSED (all 3 views render) |
