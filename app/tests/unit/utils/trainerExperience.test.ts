@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   applyTrainerXp,
   isNewSpecies,
+  validateTrainerLevel,
+  TRAINER_MIN_LEVEL,
   TRAINER_MAX_LEVEL,
   TRAINER_XP_PER_LEVEL,
   TRAINER_XP_SUGGESTIONS
@@ -226,9 +228,70 @@ describe('isNewSpecies', () => {
 })
 
 /**
+ * T3: validateTrainerLevel utility
+ *
+ * Validates trainer level is an integer within [TRAINER_MIN_LEVEL, TRAINER_MAX_LEVEL].
+ */
+describe('validateTrainerLevel', () => {
+  // Valid levels — should return null
+  it('accepts level 1 (minimum)', () => {
+    expect(validateTrainerLevel(1)).toBeNull()
+  })
+
+  it('accepts level 25 (mid-range)', () => {
+    expect(validateTrainerLevel(25)).toBeNull()
+  })
+
+  it('accepts level 50 (maximum)', () => {
+    expect(validateTrainerLevel(50)).toBeNull()
+  })
+
+  // Invalid levels — should return error string
+  it('rejects level 0 (below minimum)', () => {
+    const result = validateTrainerLevel(0)
+    expect(result).toBeTypeOf('string')
+    expect(result).toContain(`${TRAINER_MIN_LEVEL}`)
+  })
+
+  it('rejects level 51 (above maximum)', () => {
+    const result = validateTrainerLevel(51)
+    expect(result).toBeTypeOf('string')
+    expect(result).toContain(`${TRAINER_MAX_LEVEL}`)
+  })
+
+  it('rejects level -1 (negative)', () => {
+    const result = validateTrainerLevel(-1)
+    expect(result).toBeTypeOf('string')
+    expect(result).toContain(`${TRAINER_MIN_LEVEL}`)
+  })
+
+  it('rejects non-integer (1.5)', () => {
+    const result = validateTrainerLevel(1.5)
+    expect(result).toBeTypeOf('string')
+    expect(result).toContain('integer')
+  })
+
+  it('rejects non-number (string)', () => {
+    const result = validateTrainerLevel('five' as any)
+    expect(result).toBeTypeOf('string')
+    expect(result).toContain('integer')
+  })
+
+  it('rejects NaN', () => {
+    const result = validateTrainerLevel(NaN)
+    expect(result).toBeTypeOf('string')
+    expect(result).toContain('integer')
+  })
+})
+
+/**
  * Constants validation
  */
 describe('constants', () => {
+  it('TRAINER_MIN_LEVEL is 1', () => {
+    expect(TRAINER_MIN_LEVEL).toBe(1)
+  })
+
   it('TRAINER_MAX_LEVEL is 50', () => {
     expect(TRAINER_MAX_LEVEL).toBe(50)
   })
