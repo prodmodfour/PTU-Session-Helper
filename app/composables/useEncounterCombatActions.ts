@@ -1,4 +1,5 @@
 import type { Encounter, TrainerDeclaration, StatusCondition } from '~/types'
+import type { HpReductionType } from '~/server/services/combatant.service'
 
 /**
  * Composable for encounter combat actions.
@@ -119,7 +120,13 @@ export function useEncounterCombatActions(ctx: EncounterCombatActionsContext) {
 
   // Apply damage to combatant
   // Returns damage result with heavily injured and death check info
-  async function applyDamage(combatantId: string, damage: number, suppressDeath: boolean = false) {
+  // lossType: 'damage' (default) | 'hpLoss' (Belly Drum, Life Orb) | 'setHp' (Pain Split, Endeavor)
+  async function applyDamage(
+    combatantId: string,
+    damage: number,
+    suppressDeath: boolean = false,
+    lossType?: HpReductionType
+  ) {
     const encounter = ctx.getEncounter()
     if (!encounter) return null
 
@@ -127,6 +134,7 @@ export function useEncounterCombatActions(ctx: EncounterCombatActionsContext) {
       const response = await $fetch<{
         data: Encounter
         damageResult?: {
+          lossType?: HpReductionType
           heavilyInjured?: boolean
           heavilyInjuredHpLoss?: number
           deathCheck?: {
@@ -146,7 +154,7 @@ export function useEncounterCombatActions(ctx: EncounterCombatActionsContext) {
         }
       }>(`/api/encounters/${encounter.id}/damage`, {
         method: 'POST',
-        body: { combatantId, damage, suppressDeath }
+        body: { combatantId, damage, suppressDeath, ...(lossType && { lossType }) }
       })
       ctx.setEncounter(response.data)
       return response.damageResult ?? null
