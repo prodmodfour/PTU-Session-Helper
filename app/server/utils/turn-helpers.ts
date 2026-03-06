@@ -337,12 +337,15 @@ export async function applyWeatherAbilityEffects(
       effect.newHp = combatant.entity.currentHp
       effect.fainted = false
     } else {
+      // Weather ability damage uses "lose Hit Points" language (PTU pp.311-335)
+      // Bypasses massive damage injury checks per PTU p.236
       const damageResult = calculateDamage(
         effect.amount,
         combatant.entity.currentHp,
         combatant.entity.maxHp,
         combatant.entity.temporaryHp || 0,
-        combatant.entity.injuries || 0
+        combatant.entity.injuries || 0,
+        'hpLoss'
       )
       applyDamageToEntity(combatant, damageResult)
 
