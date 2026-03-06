@@ -9,6 +9,8 @@
  * Since these are scoped, the mixin approach is used — include via @include.
  */
 
+@use 'variables' as *;
+
 // --- Button Styles ---
 @mixin levelup-btn {
   padding: $spacing-xs $spacing-sm;
