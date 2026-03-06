@@ -25,11 +25,10 @@ export interface ConditionClearingOverrides {
 export const SOURCE_CLEARING_RULES: Record<ConditionSourceType, Partial<ConditionClearingOverrides>> = {
   'move':        { clearsOnFaint: true, clearsOnRecall: true, clearsOnEncounterEnd: true },
   'ability':     { clearsOnFaint: true, clearsOnRecall: true, clearsOnEncounterEnd: true },
-  // NOTE: terrain/weather clearsOnRecall is false here but decree-053 rules it
-  // should be true (RAW: switching clears Stuck/Slowed). Pending ptu-rule-156
-  // to set clearsOnRecall: true and add send-out re-apply hook.
-  'terrain':     { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: true },
-  'weather':     { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: true },
+  // Per decree-053: terrain/weather conditions clear on recall (RAW p.248: "may be
+  // removed by switching"). Re-apply on send-out is handled by applyTerrainWeatherConditions().
+  'terrain':     { clearsOnFaint: false, clearsOnRecall: true, clearsOnEncounterEnd: true },
+  'weather':     { clearsOnFaint: false, clearsOnRecall: true, clearsOnEncounterEnd: true },
   'item':        { clearsOnFaint: true, clearsOnRecall: true, clearsOnEncounterEnd: true },
   'environment': { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: false },
   'manual':      { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: false },
