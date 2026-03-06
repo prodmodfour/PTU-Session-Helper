@@ -10,6 +10,7 @@ export interface TrainerXpDistributionResult {
   newXp: number
   newLevel: number
   levelsGained: number
+  milestoneLevelsCrossed: number[]
 }
 
 /**
