@@ -556,9 +556,9 @@ export const useEncounterStore = defineStore('encounter', {
       return executeMove(actorId, moveId, targetIds, damage, targetDamages, notes)
     },
 
-    async applyDamage(combatantId: string, damage: number, suppressDeath: boolean = false) {
+    async applyDamage(combatantId: string, damage: number, suppressDeath: boolean = false, lossType?: 'damage' | 'hpLoss' | 'setHp') {
       const { applyDamage } = useEncounterCombatActions(this._buildContext())
-      return applyDamage(combatantId, damage, suppressDeath)
+      return applyDamage(combatantId, damage, suppressDeath, lossType)
     },
 
     async healCombatant(combatantId: string, amount: number = 0, tempHp: number = 0, healInjuries: number = 0) {

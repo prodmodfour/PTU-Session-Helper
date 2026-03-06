@@ -40,11 +40,12 @@ export function useEncounterActions(options: EncounterActionsOptions) {
     }
   }
 
-  const handleDamage = async (combatantId: string, damage: number) => {
+  const handleDamage = async (combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp') => {
     const combatant = findCombatant(combatantId)
     const name = getCombatantName(combatant)
-    encounterStore.captureSnapshot(`Applied ${damage} damage to ${name}`)
-    const result = await encounterStore.applyDamage(combatantId, damage)
+    const typeLabel = lossType === 'hpLoss' ? 'HP loss' : lossType === 'setHp' ? 'set-HP' : 'damage'
+    encounterStore.captureSnapshot(`Applied ${damage} ${typeLabel} to ${name}`)
+    const result = await encounterStore.applyDamage(combatantId, damage, false, lossType)
     refreshUndoRedoState()
     await broadcastUpdate()
 
