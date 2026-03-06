@@ -22,7 +22,10 @@ import { reconstructWieldRelationships } from '~/server/services/living-weapon-s
 import { HEALING_ITEM_CATALOG } from '~/constants/healingItems'
 import { broadcastToEncounter } from '~/server/utils/websocket'
 import { prisma } from '~/server/utils/prisma'
+import { applyFaintStatus } from '~/server/services/combatant.service'
+import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import type { HumanCharacter, Pokemon, InventoryItem } from '~/types/character'
+import type { StatusCondition } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -185,6 +188,54 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // --- Heavily Injured penalty on Standard Action (PTU p.250, ptu-rule-151) ---
+    // The user consumed a Standard Action to use the item. If heavily injured, lose HP.
+    const isLeagueBattle = record.battleType === 'trainer'
+    let heavilyInjuredHpLoss = 0
+    {
+      let userEntity = user.entity
+      const injuries = userEntity.injuries || 0
+      const hiCheck = checkHeavilyInjured(injuries)
+
+      if (hiCheck.isHeavilyInjured && userEntity.currentHp > 0) {
+        const penalty = applyHeavilyInjuredPenalty(userEntity.currentHp, injuries)
+        heavilyInjuredHpLoss = penalty.hpLost
+        user.entity = { ...userEntity, currentHp: penalty.newHp }
+        userEntity = user.entity
+
+        if (penalty.newHp === 0) {
+          applyFaintStatus(user)
+          userEntity = user.entity
+        }
+
+        const deathResult = checkDeath(
+          userEntity.currentHp, userEntity.maxHp, injuries,
+          isLeagueBattle, penalty.unclampedHp
+        )
+
+        if (deathResult.isDead) {
+          const conditions: StatusCondition[] = userEntity.statusConditions || []
+          if (!conditions.includes('Dead')) {
+            user.entity = { ...userEntity, statusConditions: ['Dead', ...conditions.filter((s: StatusCondition) => s !== 'Dead')] }
+            userEntity = user.entity
+          }
+        }
+
+        if (penalty.hpLost > 0 && user.entityId) {
+          await syncEntityToDatabase(user, {
+            currentHp: userEntity.currentHp,
+            statusConditions: userEntity.statusConditions,
+            ...(penalty.newHp === 0 && userEntity.stageModifiers ? { stageModifiers: userEntity.stageModifiers } : {})
+          })
+        }
+
+        user.turnState = {
+          ...user.turnState,
+          heavilyInjuredPenaltyApplied: true
+        }
+      }
+    }
+
     // P2: Medic Training edge check (Section J — PTU p.139)
     // Medic Training exempts the TARGET from forfeiting actions, not the user's action cost
     const hasMedicTraining = user.type === 'human' &&
@@ -295,7 +346,14 @@ export default defineEventHandler(async (event) => {
         targetForfeitsActions,
         inventoryConsumed,
         ...(remainingQuantity !== undefined && { remainingQuantity })
-      }
+      },
+      ...(heavilyInjuredHpLoss > 0 && {
+        heavilyInjuredPenalty: {
+          combatantId: body.userId,
+          hpLost: heavilyInjuredHpLoss,
+          fainted: user.entity.currentHp === 0
+        }
+      })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
