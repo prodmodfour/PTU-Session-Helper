@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-06T20:00:00
-updated_by: orchestrator-survey
+last_updated: 2026-03-06T21:00:00
+updated_by: slave-collector (plan-1772804713)
 ---
 
 # Dev Ecosystem State
@@ -101,40 +101,34 @@ All decree-needs addressed (decree-need-053 resolved by decree-054).
 ### In-Progress Tickets — 7
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| refactoring-129 | P3 | **in-progress** | Condition source-tracking — rework done (CRIT-001/HIGH-001/MED fixes), needs re-review |
-| bug-056 | P1 | **in-progress** | XP auto-level milestone choices — CHANGES_REQUIRED (code-review-348) |
-| ptu-rule-151 | P1 | **in-progress** | Heavily Injured standard action faint trigger — CHANGES_REQUIRED (code-review-351) |
-| bug-057 | P2 | **in-progress** | Max trainer level (50) enforcement — CHANGES_REQUIRED (code-review-353) |
-| bug-058 | P2 | **in-progress** | HP-loss pathway (Belly Drum/Life Orb) — CHANGES_REQUIRED (code-review-352) |
-| ptu-rule-150 | P2 | **in-progress** | Set-HP/Lose-HP flag — CHANGES_REQUIRED (via bug-058, code-review-352) |
-| bug-060 | P2 | **in-progress** | Encounter table density export/import — CHANGES_REQUIRED (code-review-354) |
+| bug-056 | P1 | **in-progress** | XP auto-level milestone choices — D2 fixes done, needs re-review |
+| ptu-rule-151 | P1 | **in-progress** | Heavily Injured standard action faint trigger — D2 fixes done, needs re-review |
+| bug-060 | P2 | **in-progress** | Encounter table density export/import — D2 fixes done, needs re-review |
+| bug-057 | P2 | **in-progress** | Max trainer level (50) enforcement — CHANGES_REQUIRED (code-review-353), D2 not started |
+| bug-058 | P2 | **in-progress** | HP-loss pathway (Belly Drum/Life Orb) — CHANGES_REQUIRED (code-review-352), D2 not started |
+| ptu-rule-150 | P2 | **in-progress** | Set-HP/Lose-HP flag — CHANGES_REQUIRED (via bug-058, code-review-352), D2 not started |
+| refactoring-129 | P3 | **in-progress** | Condition source-tracking — rework done, verification not started |
 
 ## Active Developer Work
 
-**Current status:** Session 122 collection complete. No active slaves.
+**Current status:** Session 123 partial collection complete. 3/6 slaves merged; 3 never launched (depended on completed slaves).
 
-**Last session (122, 2026-03-06, plan-1772793388):**
+**Last session (123, 2026-03-06, plan-1772804713):**
+- slave-1 (dev): bug-056 — 4 commits. D2 fix: passed fromLevel to LevelUpSummary (HIGH-001), flex-wrap milestone row (MED-001), memoized QuestXpDialog preview (MED-002).
+- slave-2 (dev): ptu-rule-151 — 4 commits. D2 fix: added heavily injured penalty to standard switch (H1), awaited actor penalty DB sync in move.post.ts (H2), updated refactoring-145.
+- slave-3 (dev): bug-060 — 3 commits. D2 fix: added density fallback tests (H1), fixed modal dismiss navigation (M1).
+- slave-4 (dev): bug-057 — never launched (depends_on: [1]).
+- slave-5 (dev): refactoring-129 — never launched (depends_on: [2]).
+- slave-6 (dev): bug-058+ptu-rule-150 — never launched (depends_on: [2, 5]).
+
+**Session 122 (2026-03-06, plan-1772793388):**
 - slave-1 (dev): refactoring-129 — 5 commits. CHANGES_REQUIRED rework: synced conditionInstances on revive Fainted removal (CRIT-001), filtered conditionInstances on encounter-end (HIGH-001), documented system source clearing omission (MED-002), registered conditionSourceRules in app-surface (MED-001).
 - slave-6 (dev): ptu-rule-155 — 1 commit. Reclassified R156/R159/R160 capture rules to Partial in player-view matrix.
-- slave-2 (review): bug-056 — code-review-348 CHANGES_REQUIRED + rules-review-315 APPROVED.
-- slave-3 (review): bug-064 — code-review-349 APPROVED.
-- slave-4 (review): bug-065+066 — code-review-350 APPROVED.
-- slave-5 (review): ptu-rule-151 — code-review-351 CHANGES_REQUIRED + rules-review-316 APPROVED.
-- slave-7 (review): bug-058+ptu-rule-150 — code-review-352 CHANGES_REQUIRED + rules-review-317 APPROVED WITH NOTES.
-- slave-8 (review): bug-057 — code-review-353 CHANGES_REQUIRED.
-- slave-9 (review): bug-060 — code-review-354 CHANGES_REQUIRED.
-- slave-10 (review): bug-062 — code-review-355 APPROVED.
-- slave-11 (review): bug-063 — code-review-356 APPROVED.
-- slave-12 (review): bug-067 — code-review-357 APPROVED.
+- 10 review slaves: code-review-348 through 357, rules-review-315 through 317.
 
 **Session 121 (2026-03-06, plan-1772755770):**
 - slave-1–10 (dev): bug-064, bug-056, bug-065+066, ptu-rule-151, bug-058+ptu-rule-150, bug-057, bug-060, bug-062, bug-063, bug-067 — 61 commits total.
 - slave-11 (reviewers): refactoring-129 — CHANGES_REQUIRED.
-
-**Session 120 (2026-03-05, plan-1772711294):**
-- slave-1 (dev): refactoring-129 — 15 commits. Full condition source-tracking (P0+P1).
-- slave-2–9 (matrix): Re-mapped 8 domains.
-- slave-10–14 (review): 5 reviews, all APPROVED.
 
 ## Code Health
 
@@ -146,8 +140,8 @@ All decree-needs addressed (decree-need-053 resolved by decree-054).
 | Open tickets (P2) | 7 |
 | Open tickets (P3) | 14 |
 | Open tickets (P4) | 40 |
-| In-progress tickets | 7 (5 CHANGES_REQUIRED bugs, ptu-rule-150/151, refactoring-129 rework) |
+| In-progress tickets | 7 (3 D2-done needing re-review, 3 CHANGES_REQUIRED not started, 1 rework pending verification) |
 | Total open + in-progress | 68 |
 | Decree-needs pending | 0 |
-| Needing re-review | refactoring-129 (rework done) |
+| Needing re-review | bug-056, ptu-rule-151, bug-060 (D2 fixes done); refactoring-129 (rework done) |
 | Smoke test | PASSED (all 3 views render) |
