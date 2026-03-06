@@ -3,6 +3,7 @@ import { buildEncounterResponse } from '~/server/services/encounter.service'
 import { sizeToTokenSize, buildOccupiedCellsSet, findPlacementPosition } from '~/server/services/grid-placement.service'
 import { buildPokemonEntityFromRecord, buildHumanEntityFromRecord } from '~/server/services/entity-builder.service'
 import { buildCombatantFromEntity } from '~/server/services/combatant.service'
+import { applyTerrainWeatherConditions } from '~/server/services/switching.service'
 import type { Pokemon, HumanCharacter } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -69,6 +70,11 @@ export default defineEventHandler(async (event) => {
     })
 
     combatants.push(newCombatant)
+
+    // Re-apply terrain/weather conditions on entry (decree-053)
+    // Pass existing combatants (before push) so the new combatant picks up
+    // persisting terrain/weather/environment conditions from active sources.
+    applyTerrainWeatherConditions(newCombatant, combatants, encounter.weather)
 
     await prisma.encounter.update({
       where: { id },
