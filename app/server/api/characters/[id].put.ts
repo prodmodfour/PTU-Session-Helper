@@ -1,6 +1,7 @@
 import { prisma } from '~/server/utils/prisma'
 import { serializeCharacter } from '~/server/utils/serializers'
 import { calculateMaxAp } from '~/utils/restHealing'
+import { validateTrainerLevel } from '~/utils/trainerExperience'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -11,6 +12,14 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       message: 'Character ID is required'
     })
+  }
+
+  // Validate trainer level if provided
+  if (body.level !== undefined) {
+    const levelError = validateTrainerLevel(body.level)
+    if (levelError) {
+      throw createError({ statusCode: 400, message: levelError })
+    }
   }
 
   try {
