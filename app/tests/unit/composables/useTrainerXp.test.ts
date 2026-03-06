@@ -100,7 +100,8 @@ describe('useTrainerXp', () => {
 
     expect(pendingLevelUp.value).toEqual({
       oldLevel: 5,
-      newLevel: 6
+      newLevel: 6,
+      milestoneLevelsCrossed: []
     })
   })
 

@@ -116,7 +116,57 @@ describe('applyTrainerXp', () => {
     })
   })
 
-  // T1.5 Edge Cases
+  // T1.5 Milestone Detection
+  describe('milestoneLevelsCrossed', () => {
+    it('detects milestone at level 5', () => {
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 4, xpToAdd: 10 })
+      expect(result.milestoneLevelsCrossed).toEqual([5])
+    })
+
+    it('detects milestone at level 10', () => {
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 9, xpToAdd: 10 })
+      expect(result.milestoneLevelsCrossed).toEqual([10])
+    })
+
+    it('detects multiple milestones in multi-level jump', () => {
+      // Level 3 -> level 11 (crosses milestones at 5 and 10)
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 3, xpToAdd: 80 })
+      expect(result.newLevel).toBe(11)
+      expect(result.milestoneLevelsCrossed).toEqual([5, 10])
+    })
+
+    it('returns empty array when no milestones crossed', () => {
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 6, xpToAdd: 10 })
+      expect(result.newLevel).toBe(7)
+      expect(result.milestoneLevelsCrossed).toEqual([])
+    })
+
+    it('returns empty array for no level-up', () => {
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 4, xpToAdd: 3 })
+      expect(result.levelsGained).toBe(0)
+      expect(result.milestoneLevelsCrossed).toEqual([])
+    })
+
+    it('does not include milestone at current level', () => {
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 5, xpToAdd: 10 })
+      expect(result.newLevel).toBe(6)
+      expect(result.milestoneLevelsCrossed).toEqual([])
+    })
+
+    it('detects all five milestones in a massive jump', () => {
+      // Level 1 -> level 41 (crosses 5, 10, 20, 30, 40)
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 1, xpToAdd: 400 })
+      expect(result.newLevel).toBe(41)
+      expect(result.milestoneLevelsCrossed).toEqual([5, 10, 20, 30, 40])
+    })
+
+    it('returns empty array at max level', () => {
+      const result = applyTrainerXp({ currentXp: 0, currentLevel: 50, xpToAdd: 10 })
+      expect(result.milestoneLevelsCrossed).toEqual([])
+    })
+  })
+
+  // T1.6 Edge Cases
   describe('edge cases', () => {
     it('handles zero starting XP', () => {
       const result = applyTrainerXp({ currentXp: 0, currentLevel: 1, xpToAdd: 1 })
