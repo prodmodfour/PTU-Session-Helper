@@ -290,6 +290,12 @@ function applyReviveItem(
   entity.statusConditions = (entity.statusConditions || []).filter(
     (s: StatusCondition) => s !== 'Fainted'
   )
+  // Sync conditionInstances to remove stale Fainted entry (decree-047)
+  if (target.conditionInstances) {
+    target.conditionInstances = target.conditionInstances.filter(
+      i => i.condition !== 'Fainted'
+    )
+  }
   effects.revived = true
 
   const effectiveMax = getEffectiveMaxHp(entity.maxHp, entity.injuries || 0)
