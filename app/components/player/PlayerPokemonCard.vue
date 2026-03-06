@@ -53,9 +53,9 @@
     <!-- Expanded Details -->
     <div v-if="expanded" class="pokemon-card__details">
       <!-- Status conditions -->
-      <div v-if="pokemon.statusConditions.length > 0" class="pokemon-card__statuses">
+      <div v-if="(pokemon.statusConditions ?? []).length > 0" class="pokemon-card__statuses">
         <span
-          v-for="status in pokemon.statusConditions"
+          v-for="status in pokemon.statusConditions ?? []"
           :key="status.name"
           class="player-status-badge"
         >
@@ -85,10 +85,10 @@
       </div>
 
       <!-- Abilities -->
-      <div v-if="pokemon.abilities.length > 0" class="pokemon-card__abilities">
+      <div v-if="(pokemon.abilities ?? []).length > 0" class="pokemon-card__abilities">
         <span class="detail-label">Abilities</span>
         <div
-          v-for="ability in pokemon.abilities"
+          v-for="ability in pokemon.abilities ?? []"
           :key="ability.id"
           class="ability-row"
         >
@@ -100,7 +100,7 @@
       <!-- Moves -->
       <div class="pokemon-card__moves">
         <span class="detail-label">Moves</span>
-        <PlayerMoveList :moves="pokemon.moves" />
+        <PlayerMoveList :moves="pokemon.moves ?? []" />
       </div>
 
       <!-- Capabilities -->
@@ -170,15 +170,15 @@ const hpColorClass = computed(() => {
 })
 
 const statEntries = computed(() => {
-  const stats = props.pokemon.currentStats
-  const stages = props.pokemon.stageModifiers
+  const stats = props.pokemon.currentStats ?? {}
+  const stages = props.pokemon.stageModifiers ?? {}
   return [
-    { key: 'hp', label: 'HP', value: stats.hp, stage: stages.hp ?? 0 },
-    { key: 'attack', label: 'ATK', value: stats.attack, stage: stages.attack ?? 0 },
-    { key: 'defense', label: 'DEF', value: stats.defense, stage: stages.defense ?? 0 },
-    { key: 'specialAttack', label: 'SPA', value: stats.specialAttack, stage: stages.specialAttack ?? 0 },
-    { key: 'specialDefense', label: 'SPD', value: stats.specialDefense, stage: stages.specialDefense ?? 0 },
-    { key: 'speed', label: 'SPE', value: stats.speed, stage: stages.speed ?? 0 }
+    { key: 'hp', label: 'HP', value: stats.hp ?? 0, stage: stages.hp ?? 0 },
+    { key: 'attack', label: 'ATK', value: stats.attack ?? 0, stage: stages.attack ?? 0 },
+    { key: 'defense', label: 'DEF', value: stats.defense ?? 0, stage: stages.defense ?? 0 },
+    { key: 'specialAttack', label: 'SPA', value: stats.specialAttack ?? 0, stage: stages.specialAttack ?? 0 },
+    { key: 'specialDefense', label: 'SPD', value: stats.specialDefense ?? 0, stage: stages.specialDefense ?? 0 },
+    { key: 'speed', label: 'SPE', value: stats.speed ?? 0, stage: stages.speed ?? 0 }
   ]
 })
 </script>
