@@ -1,9 +1,9 @@
 ---
-generated_at: 2026-03-06T11:31:48.400Z
-total_tickets: 372
+generated_at: 2026-03-06T11:43:57.841Z
+total_tickets: 373
 open: 61
 in_progress: 7
-resolved: 304
+resolved: 305
 ---
 
 # Tickets Index
@@ -22,6 +22,7 @@ resolved: 304
 | bug-059 | bug | P3 | combat | `Math.trunc` is used instead of `Math.floor` in movementModi |
 | bug-061 | bug | P3 | healing | The AP drain injury healing pathway does not validate that t |
 | bug-068 | bug | P3 | encounter-tables | The `densityMultiplier` field on the `TableModification` mod |
+| bug-069 | bug | P3 | combat | Per decree-054, the `HpReductionType` union must be expanded |
 | ptu-rule-143 | ptu-rule | P3 | combat | Per decree-050, Sprint consumes only the Standard Action (PT |
 | ptu-rule-144 | ptu-rule | P3 | character-lifecycle | At level 5 (Amateur milestone), lifestyle stat points should |
 | ptu-rule-145 | ptu-rule | P3 | character-lifecycle | Level 30 and 40 milestones grant bonus edges/features with s |
@@ -31,7 +32,6 @@ resolved: 304
 | ptu-rule-153 | ptu-rule | P3 | scenes | The `naturewalkBypassesTerrain()` utility exists and correct |
 | ptu-rule-154 | ptu-rule | P3 | scenes | Hazard terrain type exists visually on the VTT but has no me |
 | ptu-rule-158 | ptu-rule | P3 | combat | `pass.post.ts` sets `standardActionUsed: true` (line 34) as  |
-| decree-need-053 | decree | P3 | combat | The new `HpReductionType` system (bug-058) skips Temporary H |
 | refactoring-145 | refactoring | P3 | combat | The heavily injured standard-action faint penalty (ptu-rule- |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
 | ptu-rule-141 | ptu-rule | P4 | character-lifecycle | ptu-rule-141: Gas Mask grantedCapabilities uses fabricated c |
@@ -86,20 +86,18 @@ resolved: 304
 | ptu-rule-150 | ptu-rule | P2 | healing | healing-audit.md (session 121, R012/R035 approximation) |
 | refactoring-129 | refactoring | P3 | combat | decree-047 |
 
-## Open Decree-Needs (1)
+## Open Decree-Needs (0)
 
-| ID | Priority | Domain | Topic |
-|----|----------|--------|-------|
-| decree-need-053 | P3 | combat | — |
+All decree-needs addressed.
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 4 | 4 | 60 | 68 |
+| bug | 5 | 4 | 60 | 69 |
 | ptu-rule | 17 | 2 | 107 | 126 |
 | feature | 2 | 0 | 25 | 27 |
 | ux | 8 | 0 | 10 | 18 |
-| decree | 1 | 0 | 52 | 53 |
+| decree | 0 | 0 | 53 | 53 |
 | refactoring | 28 | 1 | 33 | 62 |
 | docs | 1 | 0 | 17 | 18 |

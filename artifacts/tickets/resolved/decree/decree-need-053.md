@@ -3,7 +3,8 @@ id: decree-need-053
 title: "Does Temporary HP absorb 'lose Hit Points' effects (Belly Drum, Life Orb)?"
 priority: P3
 severity: MEDIUM
-status: open
+status: addressed
+decree_id: decree-054
 domain: combat
 source: code-review-352 MED-001
 created_by: senior-reviewer

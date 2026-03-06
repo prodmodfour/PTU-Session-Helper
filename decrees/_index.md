@@ -1,13 +1,13 @@
 ---
-generated_at: 2026-03-06T11:31:48.409Z
-total_decrees: 54
-active: 53
+generated_at: 2026-03-06T11:43:57.880Z
+total_decrees: 55
+active: 54
 superseded: 0
 ---
 
 # Decrees Index
 
-## Active Decrees (53)
+## Active Decrees (54)
 
 | Decree ID | Domain | Topic | Title |
 |-----------|--------|-------|-------|
@@ -64,3 +64,4 @@ superseded: 0
 | decree-051 | character-lifecycle | auto-parse-stat-feature-tags | Auto-parse [+Stat] feature tags and apply stat bonuses automatically |
 | decree-052 | character-lifecycle | structured-edge-metadata | Store edges as structured objects with type-specific metadata fields |
 | decree-053 | combat | recall-source-dependent-clearing | Other conditions clear on recall per RAW, then re-apply on send-out if source persists |
+| decree-054 | combat | temp-hp-hp-loss-absorption | Split hpLoss into recoil (absorbs temp HP) and self-cost (bypasses temp HP) |
