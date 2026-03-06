@@ -11,6 +11,10 @@
  * - actionType: 'standard' | 'shift' | 'swift'
  */
 import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse } from '~/server/services/encounter.service'
+import { applyFaintStatus } from '~/server/services/combatant.service'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
+import type { StatusCondition } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -64,13 +68,67 @@ export default defineEventHandler(async (event) => {
       [field]: true
     }
 
+    // --- Heavily Injured penalty on Standard Action (PTU p.250, ptu-rule-151) ---
+    let heavilyInjuredHpLoss = 0
+    if (body.actionType === 'standard') {
+      const isLeagueBattle = record.battleType === 'trainer'
+      let entity = combatant.entity
+      const injuries = entity.injuries || 0
+      const hiCheck = checkHeavilyInjured(injuries)
+
+      if (hiCheck.isHeavilyInjured && entity.currentHp > 0) {
+        const penalty = applyHeavilyInjuredPenalty(entity.currentHp, injuries)
+        heavilyInjuredHpLoss = penalty.hpLost
+        combatant.entity = { ...entity, currentHp: penalty.newHp }
+        entity = combatant.entity
+
+        if (penalty.newHp === 0) {
+          applyFaintStatus(combatant)
+          entity = combatant.entity
+        }
+
+        const deathResult = checkDeath(
+          entity.currentHp, entity.maxHp, injuries,
+          isLeagueBattle, penalty.unclampedHp
+        )
+
+        if (deathResult.isDead) {
+          const conditions: StatusCondition[] = entity.statusConditions || []
+          if (!conditions.includes('Dead')) {
+            combatant.entity = { ...entity, statusConditions: ['Dead', ...conditions.filter((s: StatusCondition) => s !== 'Dead')] }
+            entity = combatant.entity
+          }
+        }
+
+        if (penalty.hpLost > 0 && combatant.entityId) {
+          await syncEntityToDatabase(combatant, {
+            currentHp: entity.currentHp,
+            statusConditions: entity.statusConditions,
+            ...(penalty.newHp === 0 && entity.stageModifiers ? { stageModifiers: entity.stageModifiers } : {})
+          })
+        }
+
+        combatant.turnState = {
+          ...combatant.turnState,
+          heavilyInjuredPenaltyApplied: true
+        }
+      }
+    }
+
     await saveEncounterCombatants(id, combatants)
 
     const response = buildEncounterResponse(record, combatants)
 
     return {
       success: true,
-      data: response
+      data: response,
+      ...(heavilyInjuredHpLoss > 0 && {
+        heavilyInjuredPenalty: {
+          combatantId: body.combatantId,
+          hpLost: heavilyInjuredHpLoss,
+          fainted: combatant.entity.currentHp === 0
+        }
+      })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
