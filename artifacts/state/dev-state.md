@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-06T22:30:00
-updated_by: slave-collector (plan-1772810718)
+last_updated: 2026-03-06T23:00:00
+updated_by: slave-collector (plan-1772814666)
 ---
 
 # Dev Ecosystem State
@@ -9,28 +9,24 @@ updated_by: slave-collector (plan-1772810718)
 
 ## Open Tickets
 
-### Bug Tickets (`tickets/open/bug/`) -- 5 open
+### Bug Tickets (`tickets/open/bug/`) -- 3 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | bug-059 | P3 | open | Math.trunc vs Math.floor in movementModifier |
-| bug-061 | P3 | open | AP drain injury healing missing validation |
-| bug-068 | P3 | open | densityMultiplier lost on encounter table export/import round-trip |
 | bug-069 | P3 | open | Split HpReductionType to distinguish recoil from self-cost (decree-054) |
 | bug-052 | P4 | open | PlayerCharacterSheet.vue uses bare tag class instead of tag--feature variant |
 
-### PTU Rule Tickets (`tickets/open/ptu-rule/`) -- 16 open
+### PTU Rule Tickets (`tickets/open/ptu-rule/`) -- 14 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | ptu-rule-147 | P2 | open | No per-effect duration tracking for combat stages |
 | ptu-rule-149 | P2 | open | VTT allows free token repositioning without movement enforcement |
 | ptu-rule-155 | P2 | open | Player-view R156-R160 implementation gaps (R156/R159/R160 reclassified to Partial) |
-| ptu-rule-156 | P2 | open | Terrain/weather-sourced Other conditions must re-apply on send-out per decree-053 |
 | ptu-rule-143 | P3 | open | Sprint should not consume Shift Action (decree-050) |
 | ptu-rule-144 | P3 | open | Amateur milestone lifestyle stat points missing |
 | ptu-rule-145 | P3 | open | Level 30/40 milestones missing bonus edges/features |
 | ptu-rule-146 | P3 | open | App defaults to set damage instead of rolled damage |
 | ptu-rule-148 | P3 | open | Pokemon released mid-round after initiative passed |
-| ptu-rule-152 | P3 | open | No distinction between natural and move-created weather |
 | ptu-rule-153 | P3 | open | Nature Walk terrain bypass utility incomplete |
 | ptu-rule-154 | P3 | open | Hazard terrain has no mechanical effect |
 | ptu-rule-158 | P3 | open | pass.post.ts incorrectly triggers Heavily Injured deferred penalty |
@@ -38,10 +34,9 @@ updated_by: slave-collector (plan-1772810718)
 | ptu-rule-142 | P4 | open | Implement Permafrost Burn/Poison status tick damage reduction |
 | ptu-rule-159 | P4 | open | Pain Split marker injury deferral not implemented |
 
-### Feature Tickets (`tickets/open/feature/`) -- 2 open
+### Feature Tickets (`tickets/open/feature/`) -- 1 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| feature-026 | P2 | open | Auto-parse [+Stat] feature tags for stat bonuses |
 | feature-027 | P2 | open | Migrate edge data model from string[] to structured objects |
 
 ### UX Tickets (`tickets/open/ux/`) -- 8 open
@@ -69,7 +64,7 @@ updated_by: slave-collector (plan-1772810718)
 | refactoring-107 | P4 | open | Extract duplicated SCSS from level-up P1 components |
 | refactoring-109 | P4 | open | Tighten MoveDetail interface types in MoveLearningPanel |
 | refactoring-110 | P4 | open | Hide Level 40 ability button when Level 20 milestone incomplete |
-| refactoring-115 | P4 | open | switching.service.ts exceeds 800-line limit (now 839 lines) |
+| refactoring-115 | P4 | open | switching.service.ts exceeds 800-line limit (now 927 lines) |
 | refactoring-116 | P4 | open | XpDistributionModal.vue exceeds 800-line file limit (1016 lines) |
 | refactoring-118 | P4 | open | Remove unused flankingMap destructure in GridCanvas.vue |
 | refactoring-119 | P4 | open | Update stale interrupt.post.ts file header comment |
@@ -99,19 +94,29 @@ updated_by: slave-collector (plan-1772810718)
 
 All decree-needs addressed (decree-need-053 resolved by decree-054).
 
-### In-Progress Tickets -- 2
+### In-Progress Tickets -- 5
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
-| bug-057 | P2 | **in-progress** | Max trainer level (50) enforcement -- D2 done, needs re-review |
-| bug-058 | P2 | **in-progress** | HP-loss pathway (Belly Drum/Life Orb) -- D2 done, needs re-review |
-
-*Note: ptu-rule-150 resolved jointly with bug-058.*
+| ptu-rule-156 | P2 | **in-progress** | Terrain/weather recall clearing + send-out re-apply (6 commits, needs review) |
+| feature-026 | P2 | **in-progress** | Auto-parse [+Stat] feature tags -- design spec written, needs review |
+| ptu-rule-152 | P3 | **in-progress** | Natural weather vs game Weather Conditions distinction (5 commits, needs review) |
+| bug-061 | P3 | **in-progress** | AP drain injury healing validation (3 commits, needs review) |
+| bug-068 | P3 | **in-progress** | densityMultiplier export/import round-trip (4 commits, needs review) |
 
 ## Active Developer Work
 
-**Current status:** Session 124 full collection complete. 6/6 slaves merged. 4 APPROVED reviews, 2 dev D2 fix cycles.
+**Current status:** Session 125 full collection complete. 7/7 slaves merged. 2 APPROVED re-reviews (bug-057, bug-058 resolved), 5 dev implementations.
 
-**Last session (124, 2026-03-06, plan-1772810718):**
+**Last session (125, 2026-03-06, plan-1772814666):**
+- slave-1 (reviewers): bug-057 -- APPROVED (code-review-362). All 3 D2 issues resolved. Bug resolved.
+- slave-2 (reviewers): bug-058 -- APPROVED (code-review-363). All 3 D2 issues resolved. Bug resolved.
+- slave-3 (dev): ptu-rule-156 -- 6 commits. Set terrain/weather clearsOnRecall=true, added send-out re-apply hook wired into switch/release/combatants endpoints.
+- slave-4 (dev): feature-026 -- 2 commits. Full design spec at artifacts/designs/design-stat-feature-tags-026/ (P0+P1 tiers).
+- slave-5 (dev): bug-061 -- 3 commits. AP >= 2 validation on server, disabled drain button when AP < 2 on frontend.
+- slave-6 (dev): bug-068 -- 4 commits. Added densityMultiplier to export serialization, restore on import, 232-line integration test.
+- slave-7 (dev): ptu-rule-152 -- 5 commits. Stopped copying scene weather to encounter, clarified UI labels, added weatherRules.ts docs.
+
+**Session 124 (2026-03-06, plan-1772810718):**
 - slave-1 (reviewers): bug-056 -- APPROVED (code-review-358, rules-review-318). D2 fixes verified correct.
 - slave-2 (reviewers): ptu-rule-151 -- APPROVED (code-review-359, rules-review-319). D2 fixes verified correct. ptu-rule-157 confirmed resolved.
 - slave-3 (dev): bug-057 -- 4 commits. D2 fix: moved validation before try block (C1), added 9 unit tests for validateTrainerLevel (H1), updated app-surface.md (M1).
@@ -124,11 +129,6 @@ All decree-needs addressed (decree-need-053 resolved by decree-054).
 - slave-2 (dev): ptu-rule-151 -- 4 commits. D2 fix: added heavily injured penalty to standard switch (H1), awaited actor penalty DB sync in move.post.ts (H2), updated refactoring-145.
 - slave-3 (dev): bug-060 -- 3 commits. D2 fix: added density fallback tests (H1), fixed modal dismiss navigation (M1).
 
-**Session 122 (2026-03-06, plan-1772793388):**
-- slave-1 (dev): refactoring-129 -- 5 commits. CHANGES_REQUIRED rework: synced conditionInstances on revive (CRIT-001), filtered conditionInstances on encounter-end (HIGH-001), documented system source clearing (MED-002).
-- slave-6 (dev): ptu-rule-155 -- 1 commit. Reclassified R156/R159/R160 capture rules to Partial.
-- 10 review slaves: code-review-348 through 357, rules-review-315 through 317.
-
 ## Code Health
 
 | Metric | Value |
@@ -136,11 +136,11 @@ All decree-needs addressed (decree-need-053 resolved by decree-054).
 | Last updated | 2026-03-06 |
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
-| Open tickets (P2) | 6 |
-| Open tickets (P3) | 14 |
-| Open tickets (P4) | 42 |
-| In-progress tickets | 2 (both D2-done needing re-review) |
-| Total open + in-progress | 64 |
+| Open tickets (P2) | 4 |
+| Open tickets (P3) | 13 |
+| Open tickets (P4) | 40 |
+| In-progress tickets | 5 (all dev-complete, needs review) |
+| Total open + in-progress | 62 |
 | Decree-needs pending | 0 |
-| Needing re-review | bug-057, bug-058 (D2 fixes done) |
+| Needing review | ptu-rule-156, feature-026, ptu-rule-152, bug-061, bug-068 |
 | Smoke test | PASSED (all 3 views render) |
