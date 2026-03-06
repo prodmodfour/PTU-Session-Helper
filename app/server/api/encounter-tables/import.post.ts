@@ -31,6 +31,7 @@ interface ImportData {
     name: string
     description?: string | null
     imageUrl?: string | null
+    density?: string | null
     levelRange: ImportLevelRange
     entries?: ImportEntry[]
     modifications?: ImportModification[]
@@ -119,6 +120,12 @@ export default defineEventHandler(async (event) => {
 
   const tableData = importData.table
 
+  // Validate density if provided, fall back to 'moderate'
+  const validDensities = ['sparse', 'moderate', 'dense', 'abundant']
+  const density = tableData.density && validDensities.includes(tableData.density)
+    ? tableData.density
+    : 'moderate'
+
   try {
     // Check if table with same name exists, append number if so
     let finalName = tableData.name
@@ -155,6 +162,7 @@ export default defineEventHandler(async (event) => {
         name: finalName,
         description: tableData.description,
         imageUrl: tableData.imageUrl,
+        density,
         levelMin: tableData.levelRange.min,
         levelMax: tableData.levelRange.max,
         entries: {
@@ -218,6 +226,7 @@ export default defineEventHandler(async (event) => {
         name: newTable.name,
         description: newTable.description,
         imageUrl: newTable.imageUrl,
+        density: newTable.density,
         levelRange: {
           min: newTable.levelMin,
           max: newTable.levelMax
