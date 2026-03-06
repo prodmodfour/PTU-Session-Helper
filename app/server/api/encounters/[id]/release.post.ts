@@ -30,8 +30,11 @@ import {
   checkRecallReleasePair,
   canSwitchedPokemonBeCommanded
 } from '~/server/services/switching.service'
+import { applyFaintStatus } from '~/server/services/combatant.service'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import { broadcastToEncounter } from '~/server/utils/websocket'
-import type { SwitchAction } from '~/types/combat'
+import type { SwitchAction, StatusCondition } from '~/types/combat'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -267,6 +270,52 @@ export default defineEventHandler(async (event) => {
       markActionUsed(updatedTrainer, actionType)
     }
 
+    // --- Heavily Injured penalty on Standard Action (PTU p.250, ptu-rule-151) ---
+    let heavilyInjuredHpLoss = 0
+    if (actionType === 'standard' && updatedTrainer) {
+      let entity = updatedTrainer.entity
+      const injuries = entity.injuries || 0
+      const hiCheck = checkHeavilyInjured(injuries)
+
+      if (hiCheck.isHeavilyInjured && entity.currentHp > 0) {
+        const penalty = applyHeavilyInjuredPenalty(entity.currentHp, injuries)
+        heavilyInjuredHpLoss = penalty.hpLost
+        updatedTrainer.entity = { ...entity, currentHp: penalty.newHp }
+        entity = updatedTrainer.entity
+
+        if (penalty.newHp === 0) {
+          applyFaintStatus(updatedTrainer)
+          entity = updatedTrainer.entity
+        }
+
+        const deathResult = checkDeath(
+          entity.currentHp, entity.maxHp, injuries,
+          isLeague, penalty.unclampedHp
+        )
+
+        if (deathResult.isDead) {
+          const conditions: StatusCondition[] = entity.statusConditions || []
+          if (!conditions.includes('Dead')) {
+            updatedTrainer.entity = { ...entity, statusConditions: ['Dead', ...conditions.filter((s: StatusCondition) => s !== 'Dead')] }
+            entity = updatedTrainer.entity
+          }
+        }
+
+        if (penalty.hpLost > 0 && updatedTrainer.entityId) {
+          await syncEntityToDatabase(updatedTrainer, {
+            currentHp: entity.currentHp,
+            statusConditions: entity.statusConditions,
+            ...(penalty.newHp === 0 && entity.stageModifiers ? { stageModifiers: entity.stageModifiers } : {})
+          })
+        }
+
+        updatedTrainer.turnState = {
+          ...updatedTrainer.turnState,
+          heavilyInjuredPenaltyApplied: true
+        }
+      }
+    }
+
     // Build final switch actions array
     const updatedSwitchActions = [...existingSwitchActions, ...newSwitchActions]
 
@@ -338,7 +387,14 @@ export default defineEventHandler(async (event) => {
           count: pokemonEntityIds.length,
           countsAsSwitch: pairCheckAfter.countsAsSwitch
         }
-      }
+      },
+      ...(heavilyInjuredHpLoss > 0 && {
+        heavilyInjuredPenalty: {
+          combatantId: trainerId,
+          hpLost: heavilyInjuredHpLoss,
+          fainted: updatedTrainer?.entity.currentHp === 0
+        }
+      })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
