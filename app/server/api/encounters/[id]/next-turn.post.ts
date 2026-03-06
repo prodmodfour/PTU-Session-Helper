@@ -118,8 +118,11 @@ export default defineEventHandler(async (event) => {
       // during combat... they lose HP equal to the number of Injuries they
       // currently have." Only applies when a Standard Action was actually used
       // this turn (not just any turn end). Skip declaration phase entirely.
+      // Guard: skip if the penalty was already applied inline by the action endpoint
+      // (ptu-rule-151: standard-action endpoints now apply penalty immediately).
       const standardActionUsed = currentCombatant.turnState?.standardActionUsed === true
-      if (currentPhase !== 'trainer_declaration' && standardActionUsed) {
+      const penaltyAlreadyApplied = currentCombatant.turnState?.heavilyInjuredPenaltyApplied === true
+      if (currentPhase !== 'trainer_declaration' && standardActionUsed && !penaltyAlreadyApplied) {
         let entity = currentCombatant.entity
         const injuries = entity?.injuries || 0
         const hiCheck = checkHeavilyInjured(injuries)
