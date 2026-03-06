@@ -770,6 +770,89 @@ describe('Import/Export API', () => {
       expect(result.warnings).toContain('Fakemon')
     })
 
+    it('should fall back to moderate when density is missing', async () => {
+      mockReadBody.mockResolvedValue({
+        version: '1.0',
+        table: {
+          name: 'Old Export Table',
+          description: 'Exported before density existed',
+          levelRange: { min: 1, max: 5 },
+          entries: [],
+          modifications: []
+        }
+      })
+
+      mockPrisma.encounterTable.findMany.mockResolvedValue([])
+      mockPrisma.speciesData.findMany.mockResolvedValue([])
+      mockPrisma.encounterTable.create.mockResolvedValue({
+        id: 'new-table',
+        name: 'Old Export Table',
+        description: 'Exported before density existed',
+        imageUrl: null,
+        density: 'moderate',
+        levelMin: 1,
+        levelMax: 5,
+        entries: [],
+        modifications: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+
+      const { default: handler } = await import('~/server/api/encounter-tables/import.post')
+      const result = await handler(mockEvent as any)
+
+      expect(result.success).toBe(true)
+      expect(result.data.density).toBe('moderate')
+      expect(mockPrisma.encounterTable.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            density: 'moderate'
+          })
+        })
+      )
+    })
+
+    it('should fall back to moderate when density is invalid', async () => {
+      mockReadBody.mockResolvedValue({
+        version: '1.0',
+        table: {
+          name: 'Bad Density Table',
+          density: 'extreme',
+          levelRange: { min: 3, max: 8 },
+          entries: [],
+          modifications: []
+        }
+      })
+
+      mockPrisma.encounterTable.findMany.mockResolvedValue([])
+      mockPrisma.speciesData.findMany.mockResolvedValue([])
+      mockPrisma.encounterTable.create.mockResolvedValue({
+        id: 'new-table',
+        name: 'Bad Density Table',
+        imageUrl: null,
+        density: 'moderate',
+        levelMin: 3,
+        levelMax: 8,
+        entries: [],
+        modifications: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+
+      const { default: handler } = await import('~/server/api/encounter-tables/import.post')
+      const result = await handler(mockEvent as any)
+
+      expect(result.success).toBe(true)
+      expect(result.data.density).toBe('moderate')
+      expect(mockPrisma.encounterTable.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            density: 'moderate'
+          })
+        })
+      )
+    })
+
     it('should reject invalid import data', async () => {
       mockReadBody.mockResolvedValue({
         invalid: 'data'
