@@ -112,7 +112,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'level-up': [payload: { oldLevel: number; newLevel: number; character: HumanCharacter }]
+  'level-up': [payload: { oldLevel: number; newLevel: number; milestoneLevelsCrossed: number[]; character: HumanCharacter }]
   'xp-changed': [payload: { newXp: number; newLevel: number }]
 }>()
 
@@ -139,6 +139,7 @@ async function processXpAward(amount: number, reason: string) {
       emit('level-up', {
         oldLevel: result.previousLevel,
         newLevel: result.newLevel,
+        milestoneLevelsCrossed: result.milestoneLevelsCrossed,
         character: {
           ...props.character,
           level: result.newLevel,
