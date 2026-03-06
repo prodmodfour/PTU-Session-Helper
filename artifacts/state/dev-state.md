@@ -18,14 +18,13 @@ updated_by: slave-collector (plan-1772804713)
 | bug-069 | P3 | open | Split HpReductionType to distinguish recoil from self-cost (decree-054) |
 | bug-052 | P4 | open | PlayerCharacterSheet.vue uses bare tag class instead of tag--feature variant |
 
-### PTU Rule Tickets (`tickets/open/ptu-rule/`) — 17 open
+### PTU Rule Tickets (`tickets/open/ptu-rule/`) — 16 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | ptu-rule-147 | P2 | open | No per-effect duration tracking for combat stages |
 | ptu-rule-149 | P2 | open | VTT allows free token repositioning without movement enforcement |
 | ptu-rule-155 | P2 | open | Player-view R156-R160 implementation gaps (R156/R159/R160 reclassified to Partial) |
 | ptu-rule-156 | P2 | open | Terrain/weather-sourced Other conditions must re-apply on send-out per decree-053 |
-| ptu-rule-157 | P2 | open | switch.post.ts missing inline Heavily Injured standard-action penalty |
 | ptu-rule-143 | P3 | open | Sprint should not consume Shift Action (decree-050) |
 | ptu-rule-144 | P3 | open | Amateur milestone lifestyle stat points missing |
 | ptu-rule-145 | P3 | open | Level 30/40 milestones missing bonus edges/features |
@@ -137,11 +136,11 @@ All decree-needs addressed (decree-need-053 resolved by decree-054).
 | Last updated | 2026-03-06 |
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
-| Open tickets (P2) | 7 |
+| Open tickets (P2) | 6 |
 | Open tickets (P3) | 14 |
 | Open tickets (P4) | 40 |
 | In-progress tickets | 7 (3 D2-done needing re-review, 3 CHANGES_REQUIRED not started, 1 rework pending verification) |
-| Total open + in-progress | 68 |
+| Total open + in-progress | 67 |
 | Decree-needs pending | 0 |
 | Needing re-review | bug-056, ptu-rule-151, bug-060 (D2 fixes done); refactoring-129 (rework done) |
 | Smoke test | PASSED (all 3 views render) |
