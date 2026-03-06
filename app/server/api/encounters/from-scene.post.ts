@@ -47,11 +47,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Create the encounter
+    // NOTE: Scene weather is narrative/natural weather (PTU p.341: "a bright and
+    // sunny day does not count as Sunny Weather"). Game Weather Conditions with
+    // mechanical effects must be set manually by the GM or triggered by moves/abilities.
     const encounter = await prisma.encounter.create({
       data: {
         name: scene.name,
         battleType: battleType || 'full_contact',
-        weather: scene.weather ?? null,
+        weather: null,
         combatants: '[]',
         currentRound: 1,
         currentTurnIndex: 0,
