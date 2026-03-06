@@ -18,11 +18,12 @@ affected_files:
   - app/server/api/encounters/[id]/mount.post.ts
   - app/server/api/encounters/[id]/recall.post.ts
   - app/server/api/encounters/[id]/release.post.ts
+  - app/server/api/encounters/[id]/switch.post.ts
 ---
 
 ## Summary
 
-The heavily injured standard-action faint penalty (ptu-rule-151 implementation) duplicates a ~35-line block across 9 action endpoints, totaling ~300+ lines of duplicated code.
+The heavily injured standard-action faint penalty (ptu-rule-151 implementation) duplicates a ~35-line block across 10 action endpoints (including switch.post.ts added in D2 fix cycle), totaling ~350+ lines of duplicated code.
 
 ## Problem
 
