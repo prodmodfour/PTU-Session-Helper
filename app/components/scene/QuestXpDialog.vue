@@ -47,6 +47,12 @@
         >
           -> Lv.{{ getLevelUpPreview(char) }}
         </span>
+        <span
+          v-if="getMilestonePreview(char).length > 0"
+          class="quest-xp-preview-row__milestone"
+        >
+          Milestone at Lv.{{ getMilestonePreview(char).join(', ') }}
+        </span>
       </div>
     </div>
 
@@ -65,7 +71,7 @@
 
 <script setup lang="ts">
 import { PhX } from '@phosphor-icons/vue'
-import { applyTrainerXp } from '~/utils/trainerExperience'
+import { applyTrainerXp, TRAINER_MILESTONE_LEVELS } from '~/utils/trainerExperience'
 
 interface SceneCharacterXp {
   id: string
@@ -102,22 +108,46 @@ function getLevelUpPreview(char: { level: number; trainerXp: number }): number |
   return result.levelsGained > 0 ? result.newLevel : null
 }
 
+function getMilestonePreview(char: { level: number; trainerXp: number }): number[] {
+  const amount = xpAmount.value
+  if (!amount || amount <= 0) return []
+
+  const result = applyTrainerXp({
+    currentXp: char.trainerXp,
+    currentLevel: char.level,
+    xpToAdd: amount
+  })
+
+  return result.milestoneLevelsCrossed
+}
+
 async function handleAward() {
   if (!xpAmount.value || xpAmount.value < 1 || props.characters.length === 0) return
 
   isAwarding.value = true
   const { awardXp } = useTrainerXp()
+  const milestoneNames: string[] = []
 
   for (const char of props.characters) {
     try {
-      await awardXp(
+      const result = await awardXp(
         char.id,
         xpAmount.value,
         reason.value || `Quest XP from scene: ${props.sceneName}`
       )
+      if (result.milestoneLevelsCrossed.length > 0) {
+        milestoneNames.push(char.name)
+      }
     } catch (e) {
       showToast(`Failed to award XP to ${char.name}: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
     }
+  }
+
+  if (milestoneNames.length > 0) {
+    showToast(
+      `${milestoneNames.join(', ')} crossed milestone level(s) — visit character sheet to complete level-up choices`,
+      'warning'
+    )
   }
 
   isAwarding.value = false
@@ -208,6 +238,12 @@ async function handleAward() {
   &__levelup {
     font-weight: 700;
     color: $color-success;
+  }
+
+  &__milestone {
+    font-size: $font-size-xs;
+    font-weight: 600;
+    color: $color-warning;
   }
 }
 </style>
