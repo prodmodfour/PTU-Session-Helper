@@ -147,7 +147,7 @@
     />
 
     <!-- Import Modal -->
-    <EncounterTableImportTableModal
+    <ImportTableModal
       v-if="showImportModal"
       @close="showImportModal = false"
       @imported="handleImported"
