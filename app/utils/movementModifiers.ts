@@ -4,12 +4,18 @@
  * Extracted to a shared utility so both client-side composables
  * and server-side services can apply movement modifiers consistently.
  *
- * PTU Rules:
- * - Stuck: cannot Shift at all — effective speed 0 (PTU 1.05 p.231)
- * - Tripped: must spend Shift Action to stand up — effective speed 0 (PTU 1.05 p.251)
- * - Slowed: reduce all movement speeds by half
- * - Speed CS: additive bonus/penalty of half stage value (PTU 1.05 p.234), min 2
- * - Sprint (tempCondition): +50% movement speed for the turn
+ * PTU Rules & Application Order:
+ * 1. Stuck: cannot Shift at all — effective speed 0 (PTU 1.05 p.231)
+ * 2. Tripped: must spend Shift Action to stand up — effective speed 0 (PTU 1.05 p.251)
+ * 3. Speed CS: additive bonus/penalty of half stage value (PTU 1.05 p.234), min 2
+ *    — The floor of 2 is specific to the CS reduction itself (PTU 1.05 p.700)
+ * 4. Slowed: halve movement speed, minimum 1 (PTU 1.05 p.1718)
+ * 5. Thermosensitive: halve movement in Hail (PTU p.331)
+ * 6. Sprint (tempCondition): +50% movement speed for the turn
+ *
+ * Speed CS is applied BEFORE Slowed so that Slowed can meaningfully reduce
+ * speed below the CS floor of 2. The CS floor only prevents CS penalties
+ * from reducing below 2; conditions like Slowed operate independently.
  */
 
 import type { Combatant } from '~/types/encounter'
@@ -40,7 +46,23 @@ export function applyMovementModifiers(combatant: Combatant, speed: number, weat
     return 0
   }
 
-  // Slowed: reduce all movement speeds by half
+  // Speed Combat Stage modifier (-6 to +6): additive bonus/penalty
+  // PTU 1.05 p.234: "bonus or penalty to all Movement Speeds equal to
+  // half your current Speed Combat Stage value rounded down"
+  // Applied BEFORE conditions so Slowed/Thermosensitive can reduce below CS floor.
+  const speedStage = combatant.entity.stageModifiers?.speed ?? 0
+  if (speedStage !== 0) {
+    const clamped = Math.max(-6, Math.min(6, speedStage))
+    const stageBonus = Math.trunc(clamped / 2)
+    modifiedSpeed = modifiedSpeed + stageBonus
+    // PTU 1.05 p.700: negative CS may never reduce movement below 2
+    if (stageBonus < 0) {
+      modifiedSpeed = Math.max(modifiedSpeed, 2)
+    }
+  }
+
+  // Slowed: halve movement speed (PTU 1.05 p.1718: "Movement halved (minimum 1)")
+  // Applied AFTER Speed CS so it can meaningfully reduce speed below CS floor of 2.
   if (conditions.includes('Slowed')) {
     modifiedSpeed = Math.floor(modifiedSpeed / 2)
   }
@@ -51,20 +73,6 @@ export function applyMovementModifiers(combatant: Combatant, speed: number, weat
     const abilities = getCombatantAbilities(combatant)
     if (abilities.some(a => a.toLowerCase() === 'thermosensitive')) {
       modifiedSpeed = Math.floor(modifiedSpeed / 2)
-    }
-  }
-
-  // Speed Combat Stage modifier (-6 to +6): additive bonus/penalty
-  // PTU 1.05 p.234: "bonus or penalty to all Movement Speeds equal to
-  // half your current Speed Combat Stage value rounded down"
-  const speedStage = combatant.entity.stageModifiers?.speed ?? 0
-  if (speedStage !== 0) {
-    const clamped = Math.max(-6, Math.min(6, speedStage))
-    const stageBonus = Math.trunc(clamped / 2)
-    modifiedSpeed = modifiedSpeed + stageBonus
-    // PTU 1.05 p.700: negative CS may never reduce movement below 2
-    if (stageBonus < 0) {
-      modifiedSpeed = Math.max(modifiedSpeed, 2)
     }
   }
 
