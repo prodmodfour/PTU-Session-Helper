@@ -214,6 +214,8 @@ CRUD + extensive combat actions.
 
 **Movement modifiers utility:** `utils/movementModifiers.ts` (shared movement modifier calculations — applyMovementModifiers: applies Stuck, Tripped, Slowed, Speed CS, Sprint, and Thermosensitive Hail halving to base speed; used by both client composables and server services for consistent movement budget calculation).
 
+**Condition source rules:** `constants/conditionSourceRules.ts` (source-dependent clearing rules for condition instances per decree-047. SOURCE_CLEARING_RULES maps ConditionSourceType to clearing behavior overrides for Other conditions. Pure functions: shouldClearOnFaint, shouldClearOnRecall, shouldClearOnEncounterEnd — each checks source-based overrides for Other conditions, falls back to static per-condition flags for Persistent/Volatile. Builder helpers: buildUnknownSourceInstance, buildManualSourceInstance. Display: formatConditionDisplay with source labels for GM view).
+
 ### Encounter Templates (`/api/encounter-templates`)
 Full CRUD + save-from/load-to encounter.
 - `GET/POST /api/encounter-templates` — list, create
