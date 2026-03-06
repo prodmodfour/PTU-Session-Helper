@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-03-06T19:30:00
-updated_by: slave-collector (plan-1772793388)
+last_updated: 2026-03-06T20:00:00
+updated_by: orchestrator-survey
 ---
 
 # Dev Ecosystem State
@@ -9,23 +9,23 @@ updated_by: slave-collector (plan-1772793388)
 
 ## Open Tickets
 
-### Bug Tickets (`tickets/open/bug/`) — 4 open
+### Bug Tickets (`tickets/open/bug/`) — 5 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | bug-059 | P3 | open | Math.trunc vs Math.floor in movementModifier |
 | bug-061 | P3 | open | AP drain injury healing missing validation |
 | bug-068 | P3 | open | densityMultiplier lost on encounter table export/import round-trip |
+| bug-069 | P3 | open | Split HpReductionType to distinguish recoil from self-cost (decree-054) |
 | bug-052 | P4 | open | PlayerCharacterSheet.vue uses bare tag class instead of tag--feature variant |
 
-### PTU Rule Tickets (`tickets/open/ptu-rule/`) — 15 open
+### PTU Rule Tickets (`tickets/open/ptu-rule/`) — 17 open
 | Ticket | Priority | Status | Summary |
 |--------|----------|--------|---------|
 | ptu-rule-147 | P2 | open | No per-effect duration tracking for combat stages |
 | ptu-rule-149 | P2 | open | VTT allows free token repositioning without movement enforcement |
 | ptu-rule-155 | P2 | open | Player-view R156-R160 implementation gaps (R156/R159/R160 reclassified to Partial) |
 | ptu-rule-156 | P2 | open | Terrain/weather-sourced Other conditions must re-apply on send-out per decree-053 |
-| ptu-rule-157 | P2 | open | Heavily injured penalty missing faint vs unconscious distinction |
-| ptu-rule-158 | P2 | open | Heavily injured penalty needs action-type scope limitation |
+| ptu-rule-157 | P2 | open | switch.post.ts missing inline Heavily Injured standard-action penalty |
 | ptu-rule-143 | P3 | open | Sprint should not consume Shift Action (decree-050) |
 | ptu-rule-144 | P3 | open | Amateur milestone lifestyle stat points missing |
 | ptu-rule-145 | P3 | open | Level 30/40 milestones missing bonus edges/features |
@@ -34,6 +34,9 @@ updated_by: slave-collector (plan-1772793388)
 | ptu-rule-152 | P3 | open | No distinction between natural and move-created weather |
 | ptu-rule-153 | P3 | open | Nature Walk terrain bypass utility incomplete |
 | ptu-rule-154 | P3 | open | Hazard terrain has no mechanical effect |
+| ptu-rule-158 | P3 | open | pass.post.ts incorrectly triggers Heavily Injured deferred penalty |
+| ptu-rule-141 | P4 | open | Gas Mask grantedCapabilities uses fabricated capability name |
+| ptu-rule-142 | P4 | open | Implement Permafrost Burn/Poison status tick damage reduction |
 | ptu-rule-159 | P4 | open | Pain Split marker injury deferral not implemented |
 
 ### Feature Tickets (`tickets/open/feature/`) — 2 open
@@ -91,10 +94,9 @@ updated_by: slave-collector (plan-1772793388)
 |--------|----------|--------|---------|
 | docs-017 | P4 | open | bug-047 resolution log has stale commit hashes and missing affected_files |
 
-### Decree-Need Tickets (`tickets/open/decree/`) — 1 open
-| Ticket | Priority | Status | Summary |
-|--------|----------|--------|---------|
-| decree-need-053 | P2 | open | HP-loss pathway: should Belly Drum/Life Orb bypass massive damage injury? |
+### Decree-Need Tickets (`tickets/open/decree/`) — 0 open
+
+All decree-needs addressed (decree-need-053 resolved by decree-054).
 
 ### In-Progress Tickets — 7
 | Ticket | Priority | Status | Summary |
@@ -141,11 +143,11 @@ updated_by: slave-collector (plan-1772793388)
 | Last updated | 2026-03-06 |
 | Open tickets (P0) | 0 |
 | Open tickets (P1) | 0 |
-| Open tickets (P2) | 9 |
-| Open tickets (P3) | 11 |
+| Open tickets (P2) | 7 |
+| Open tickets (P3) | 14 |
 | Open tickets (P4) | 40 |
 | In-progress tickets | 7 (5 CHANGES_REQUIRED bugs, ptu-rule-150/151, refactoring-129 rework) |
-| Total open + in-progress | 67 |
-| Decree-needs pending | 1 (decree-need-053) |
+| Total open + in-progress | 68 |
+| Decree-needs pending | 0 |
 | Needing re-review | refactoring-129 (rework done) |
 | Smoke test | PASSED (all 3 views render) |
