@@ -1,5 +1,5 @@
 <template>
-  <EncounterTableTableEditor
+  <TableEditor
     :table-id="tableId"
     back-link="/gm/habitats"
     back-label="Back to Habitats"
@@ -38,7 +38,7 @@
         @cancel="showDeleteModal = false"
       />
     </template>
-  </EncounterTableTableEditor>
+  </TableEditor>
 </template>
 
 <script setup lang="ts">

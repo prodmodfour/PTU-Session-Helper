@@ -1,5 +1,5 @@
 <template>
-  <EncounterTableTableEditor
+  <TableEditor
     :table-id="tableId"
     back-link="/gm/encounter-tables"
     back-label="Back to Tables"
@@ -10,7 +10,7 @@
         Generate
       </button>
     </template>
-  </EncounterTableTableEditor>
+  </TableEditor>
 </template>
 
 <script setup lang="ts">
