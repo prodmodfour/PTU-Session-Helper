@@ -1,9 +1,9 @@
 ---
-generated_at: 2026-03-06T16:02:29.237Z
+generated_at: 2026-03-06T16:03:20.408Z
 total_tickets: 375
 open: 62
-in_progress: 7
-resolved: 306
+in_progress: 2
+resolved: 311
 ---
 
 # Tickets Index
@@ -75,17 +75,12 @@ resolved: 306
 | refactoring-147 | refactoring | P4 | combat | In `next-turn.post.ts` (around line 154), the deferred heavi |
 | docs-017 | docs | P4 | tooling | The bug-047 ticket resolution log references stale commit ha |
 
-## In-Progress Tickets (7)
+## In-Progress Tickets (2)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
-| bug-056 | bug | P1 | character-lifecycle | character-lifecycle-audit.md (session 121, R054) |
-| ptu-rule-151 | ptu-rule | P1 | healing | healing-audit.md (session 121, R016 supplemental approximation) |
 | bug-057 | bug | P2 | character-lifecycle | character-lifecycle-audit.md (session 121, R040) |
 | bug-058 | bug | P2 | combat | combat-audit.md (session 121, R031) |
-| bug-060 | bug | P2 | encounter-tables | encounter-tables-audit.md (session 121, C017) |
-| ptu-rule-150 | ptu-rule | P2 | healing | healing-audit.md (session 121, R012/R035 approximation) |
-| refactoring-129 | refactoring | P3 | combat | decree-047 |
 
 ## Open Decree-Needs (0)
 
@@ -95,10 +90,10 @@ All decree-needs addressed.
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 5 | 4 | 60 | 69 |
-| ptu-rule | 16 | 2 | 108 | 126 |
+| bug | 5 | 2 | 62 | 69 |
+| ptu-rule | 16 | 0 | 110 | 126 |
 | feature | 2 | 0 | 25 | 27 |
 | ux | 8 | 0 | 10 | 18 |
 | decree | 0 | 0 | 53 | 53 |
-| refactoring | 30 | 1 | 33 | 64 |
+| refactoring | 30 | 0 | 34 | 64 |
 | docs | 1 | 0 | 17 | 18 |
