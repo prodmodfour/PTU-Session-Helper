@@ -74,6 +74,7 @@ export default defineEventHandler(async (event) => {
       newXp: result.newXp,
       newLevel: result.newLevel,
       levelsGained: result.levelsGained,
+      milestoneLevelsCrossed: result.milestoneLevelsCrossed,
       character: serializeCharacter(updated)
     }
   }

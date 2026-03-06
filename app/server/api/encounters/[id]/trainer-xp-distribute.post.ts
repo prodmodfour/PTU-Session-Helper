@@ -52,6 +52,7 @@ export default defineEventHandler(async (event) => {
     newXp: number
     newLevel: number
     levelsGained: number
+    milestoneLevelsCrossed: number[]
   }> = []
   let totalXpDistributed = 0
 
@@ -96,7 +97,8 @@ export default defineEventHandler(async (event) => {
       previousLevel: xpCalc.previousLevel,
       newXp: xpCalc.newXp,
       newLevel: xpCalc.newLevel,
-      levelsGained: xpCalc.levelsGained
+      levelsGained: xpCalc.levelsGained,
+      milestoneLevelsCrossed: xpCalc.milestoneLevelsCrossed
     })
 
     totalXpDistributed += entry.xpAmount
