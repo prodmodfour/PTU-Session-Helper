@@ -42,17 +42,28 @@
         </div>
       </div>
       <div class="modal__footer">
-        <button type="button" class="btn btn--secondary" @click="$emit('close')">
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="btn btn--primary"
-          :disabled="!selectedFile || importing"
-          @click="doImport"
-        >
-          {{ importing ? 'Importing...' : 'Import' }}
-        </button>
+        <template v-if="importedTableId">
+          <button
+            type="button"
+            class="btn btn--primary"
+            @click="emit('imported', importedTableId!)"
+          >
+            Continue
+          </button>
+        </template>
+        <template v-else>
+          <button type="button" class="btn btn--secondary" @click="$emit('close')">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn--primary"
+            :disabled="!selectedFile || importing"
+            @click="doImport"
+          >
+            {{ importing ? 'Importing...' : 'Import' }}
+          </button>
+        </template>
       </div>
     </div>
   </div>
@@ -72,6 +83,7 @@ const isDragOver = ref(false)
 const importing = ref(false)
 const importError = ref<string | null>(null)
 const importWarning = ref<string | null>(null)
+const importedTableId = ref<string | null>(null)
 
 const handleFileSelect = (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -109,10 +121,12 @@ const doImport = async () => {
     const result = await tablesStore.importTable(jsonData)
 
     if (result.warnings) {
+      // Show warnings and let user acknowledge before closing
       importWarning.value = result.warnings
+      importedTableId.value = result.table.id
+    } else {
+      emit('imported', result.table.id)
     }
-
-    emit('imported', result.table.id)
   } catch (error: unknown) {
     if (error instanceof SyntaxError) {
       importError.value = 'Invalid JSON file format'
