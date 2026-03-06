@@ -23,6 +23,16 @@ import type {
 // DAMAGE CALCULATION
 // ============================================
 
+/**
+ * PTU distinguishes three types of HP reduction (07-combat.md p.236, p.250):
+ * - 'damage': standard attack damage — triggers massive damage injuries, marker injuries, heavily injured penalty
+ * - 'hpLoss': "loses Hit Points" effects (Belly Drum, Life Orb recoil) — skips massive damage injury, skips heavily injured penalty
+ * - 'setHp': "set Hit Points to" effects (Pain Split, Endeavor) — skips massive damage injury, skips heavily injured penalty
+ *
+ * HP marker injuries still apply to all types (PTU only exempts massive damage for hpLoss/setHp).
+ */
+export type HpReductionType = 'damage' | 'hpLoss' | 'setHp'
+
 export interface DamageResult {
   finalDamage: number
   tempHpAbsorbed: number
@@ -41,6 +51,8 @@ export interface DamageResult {
   totalNewInjuries: number
   newInjuries: number
   fainted: boolean
+  /** The type of HP reduction that produced this result */
+  lossType: HpReductionType
 }
 
 /**
@@ -85,19 +97,25 @@ export function countMarkersCrossed(
  * - Massive Damage rule: 50%+ of max HP = injury (07-combat.md:1843-1848)
  * - HP Marker crossings: 50%, 0%, -50%, -100%, etc. = 1 injury each (07-combat.md:1849-1856)
  * - newHp is clamped to 0 for storage; unclamped value is used for marker detection
+ *
+ * @param lossType - Type of HP reduction:
+ *   'damage' (default): full injury mechanics (massive damage + markers)
+ *   'hpLoss': "loses Hit Points" — skips massive damage injury (PTU p.236, p.250 line 1847)
+ *   'setHp': "set HP to value" — skips massive damage injury, temp HP not absorbed
  */
 export function calculateDamage(
   damage: number,
   currentHp: number,
   maxHp: number,
   temporaryHp: number,
-  currentInjuries: number
+  currentInjuries: number,
+  lossType: HpReductionType = 'damage'
 ): DamageResult {
   let remainingDamage = damage
   let tempHpAbsorbed = 0
 
-  // Temporary HP absorbs damage first
-  if (temporaryHp > 0) {
+  // Temporary HP absorbs damage first (only for standard damage, not HP loss or set-HP)
+  if (lossType === 'damage' && temporaryHp > 0) {
     tempHpAbsorbed = Math.min(temporaryHp, remainingDamage)
     remainingDamage -= tempHpAbsorbed
   }
@@ -113,9 +131,13 @@ export function calculateDamage(
 
   // PTU Massive Damage rule: 50%+ of max HP in one hit = 1 injury
   // Only HP damage counts, not temp HP damage
-  const massiveDamageInjury = hpDamage >= maxHp / 2
+  // PTU p.236 (line 794-798) + p.250 (line 1846-1848):
+  // "Massive Damage Injuries are never gained from Moves that cause you to
+  // 'Set' or 'lose' Hit Points, such as Pain Split or Endeavor."
+  const massiveDamageInjury = lossType === 'damage' && hpDamage >= maxHp / 2
 
   // HP Marker crossings: each marker crossed = 1 injury
+  // These apply to ALL types of HP reduction (PTU only exempts massive damage for hpLoss/setHp)
   const { count: markerInjuries, markers: markersCrossed } = countMarkersCrossed(
     currentHp,
     unclampedHp,
@@ -139,7 +161,8 @@ export function calculateDamage(
     markersCrossed,
     totalNewInjuries,
     newInjuries,
-    fainted
+    fainted,
+    lossType
   }
 }
 
