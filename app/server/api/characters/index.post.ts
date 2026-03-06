@@ -3,17 +3,18 @@ import { serializeCharacter } from '~/server/utils/serializers'
 import { validateTrainerLevel } from '~/utils/trainerExperience'
 
 export default defineEventHandler(async (event) => {
+  const body = await readBody(event)
+
+  // Resolve stats first so we can compute HP formula
+  const level = body.level || 1
+
+  // Validate trainer level is within allowed range [1, 50]
+  const levelError = validateTrainerLevel(level)
+  if (levelError) {
+    throw createError({ statusCode: 400, message: levelError })
+  }
+
   try {
-    const body = await readBody(event)
-
-    // Resolve stats first so we can compute HP formula
-    const level = body.level || 1
-
-    // Validate trainer level is within allowed range [1, 50]
-    const levelError = validateTrainerLevel(level)
-    if (levelError) {
-      throw createError({ statusCode: 400, message: levelError })
-    }
     const hpStat = body.stats?.hp || body.hp || 10
 
     // PTU Trainer HP formula: Level * 2 + HP Stat * 3 + 10
