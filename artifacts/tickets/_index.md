@@ -1,8 +1,8 @@
 ---
-generated_at: 2026-03-05T23:05:55.008Z
-total_tickets: 364
+generated_at: 2026-03-06T10:02:34.696Z
+total_tickets: 365
 open: 66
-in_progress: 1
+in_progress: 2
 resolved: 297
 ---
 
@@ -22,7 +22,6 @@ resolved: 297
 | bug-060 | bug | P2 | encounter-tables | When exporting and re-importing encounter tables, the densit |
 | bug-062 | bug | P2 | scenes | `resetSceneUsage()` exists to clear scene-frequency move cou |
 | bug-063 | bug | P2 | vtt-grid | `Math.max(modifiedSpeed, 2)` is applied after the Slowed con |
-| bug-067 | bug | P2 | player-view | The PlayerPokemonCard summary renders correctly (sprite, nam |
 | ptu-rule-147 | ptu-rule | P2 | combat | Round counter exists but there is no per-effect duration tra |
 | ptu-rule-149 | ptu-rule | P2 | combat | The VTT allows tokens to be repositioned freely without enfo |
 | ptu-rule-150 | ptu-rule | P2 | healing | No "set HP" or "lose HP" flag exists to distinguish direct H |
@@ -39,6 +38,7 @@ resolved: 297
 | ptu-rule-152 | ptu-rule | P3 | scenes | PTU distinguishes natural weather (narrative, affects travel |
 | ptu-rule-153 | ptu-rule | P3 | scenes | The `naturewalkBypassesTerrain()` utility exists and correct |
 | ptu-rule-154 | ptu-rule | P3 | scenes | Hazard terrain type exists visually on the VTT but has no me |
+| decree-need-052 | decree | P3 | combat | The condition source-tracking implementation (refactoring-12 |
 | bug-052 | bug | P4 | character-lifecycle | `PlayerCharacterSheet.vue` renders feature tags with bare `c |
 | ptu-rule-141 | ptu-rule | P4 | character-lifecycle | ptu-rule-141: Gas Mask grantedCapabilities uses fabricated c |
 | ptu-rule-142 | ptu-rule | P4 | combat | ptu-rule-142: Implement Permafrost Burn/Poison status tick d |
@@ -79,24 +79,27 @@ resolved: 297
 | refactoring-144 | refactoring | P4 | combat | refactoring-144: Update decree-001 citation in weather tick  |
 | docs-017 | docs | P4 | tooling | The bug-047 ticket resolution log references stale commit ha |
 
-## In-Progress Tickets (1)
+## In-Progress Tickets (2)
 
 | ID | Category | Priority | Domain | Source |
 |----|----------|----------|--------|--------|
+| bug-067 | bug | P2 | player-view | browser-audit player-view (plan matrix-1772736514) |
 | refactoring-129 | refactoring | P3 | combat | decree-047 |
 
-## Open Decree-Needs (0)
+## Open Decree-Needs (1)
 
-All decree-needs addressed.
+| ID | Priority | Domain | Topic |
+|----|----------|--------|-------|
+| decree-need-052 | P3 | combat | — |
 
 ## Summary by Category
 
 | Category | Open | In-Progress | Resolved | Total |
 |----------|------|-------------|----------|-------|
-| bug | 13 | 0 | 54 | 67 |
+| bug | 12 | 1 | 54 | 67 |
 | ptu-rule | 15 | 0 | 107 | 122 |
 | feature | 2 | 0 | 25 | 27 |
 | ux | 8 | 0 | 10 | 18 |
-| decree | 0 | 0 | 51 | 51 |
+| decree | 1 | 0 | 51 | 52 |
 | refactoring | 27 | 1 | 33 | 61 |
 | docs | 1 | 0 | 17 | 18 |

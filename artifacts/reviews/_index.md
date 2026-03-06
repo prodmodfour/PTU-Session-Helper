@@ -1,24 +1,27 @@
 ---
-generated_at: 2026-03-05T23:05:54.995Z
-total_reviews: 0
-active_count: 0
+generated_at: 2026-03-06T10:02:34.682Z
+total_reviews: 2
+active_count: 2
 approved_count: 0
 ---
 
 # Reviews Index
 
-## Active Reviews (0)
+## Active Reviews (2)
 
-No active reviews requiring action.
+| Review ID | Verdict | Target | Reviewer | Date |
+|-----------|---------|--------|----------|------|
+| code-review-347 | CHANGES_REQUIRED | refactoring-129 | senior-reviewer | 2026-03-06 |
+| rules-review-314 | CHANGES_REQUIRED | refactoring-129 | game-logic-reviewer | 2026-03-06 |
 
 ## Recently Approved (last 10)
 
 
 ## Stats
 
-- Active reviews: 0
-- Needs action: 0
+- Active reviews: 2
+- Needs action: 2
 - Approved/Pass (active): 0
 - Archived: 684
-- Total (active + archived): 684
-- Unique targets reviewed: 0
+- Total (active + archived): 686
+- Unique targets reviewed: 1
