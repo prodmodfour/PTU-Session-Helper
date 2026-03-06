@@ -20,7 +20,7 @@
         :is-gm="true"
         :is-flanked="isTargetFlanked?.(currentCombatant.id) ?? false"
         @action="(id, action) => emit('action', id, action)"
-        @damage="(id, damage) => emit('damage', id, damage)"
+        @damage="(id, damage, lt) => emit('damage', id, damage, lt)"
         @heal="(id, amount, temp, injuries) => emit('heal', id, amount, temp, injuries)"
         @stages="(id, changes, absolute) => emit('stages', id, changes, absolute)"
         @status="(id, add, remove, override) => emit('status', id, add, remove, override)"
@@ -50,7 +50,7 @@
             :is-gm="true"
             :is-flanked="isTargetFlanked?.(combatant.id) ?? false"
             @action="(id, action) => emit('action', id, action)"
-            @damage="(id, damage) => emit('damage', id, damage)"
+            @damage="(id, damage, lt) => emit('damage', id, damage, lt)"
             @heal="(id, amount, temp, injuries) => emit('heal', id, amount, temp, injuries)"
             @remove="(id) => emit('remove', id)"
             @stages="(id, changes, absolute) => emit('stages', id, changes, absolute)"
@@ -83,7 +83,7 @@
             :is-gm="true"
             :is-flanked="isTargetFlanked?.(combatant.id) ?? false"
             @action="(id, action) => emit('action', id, action)"
-            @damage="(id, damage) => emit('damage', id, damage)"
+            @damage="(id, damage, lt) => emit('damage', id, damage, lt)"
             @heal="(id, amount, temp, injuries) => emit('heal', id, amount, temp, injuries)"
             @remove="(id) => emit('remove', id)"
             @stages="(id, changes, absolute) => emit('stages', id, changes, absolute)"
@@ -116,7 +116,7 @@
             :is-gm="true"
             :is-flanked="isTargetFlanked?.(combatant.id) ?? false"
             @action="(id, action) => emit('action', id, action)"
-            @damage="(id, damage) => emit('damage', id, damage)"
+            @damage="(id, damage, lt) => emit('damage', id, damage, lt)"
             @heal="(id, amount, temp, injuries) => emit('heal', id, amount, temp, injuries)"
             @remove="(id) => emit('remove', id)"
             @stages="(id, changes, absolute) => emit('stages', id, changes, absolute)"
@@ -164,7 +164,7 @@ const currentPhaseLabel = computed(() => {
 
 const emit = defineEmits<{
   action: [combatantId: string, action: { type: string; data: unknown }]
-  damage: [combatantId: string, damage: number]
+  damage: [combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp']
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   remove: [combatantId: string]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]

@@ -12,6 +12,15 @@
       <button class="btn btn--sm btn--danger" @click="applyDamage">
         -HP
       </button>
+      <select
+        v-model="lossTypeInput"
+        class="form-select form-select--sm"
+        title="HP reduction type: Damage (injuries), HP Loss (no massive damage), Set HP (no massive damage)"
+      >
+        <option value="damage">DMG</option>
+        <option value="hpLoss">Loss</option>
+        <option value="setHp">Set</option>
+      </select>
     </div>
     <div class="action-row">
       <input
@@ -157,7 +166,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  damage: [combatantId: string, damage: number]
+  damage: [combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp']
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]
   status: [combatantId: string, add: StatusCondition[], remove: StatusCondition[], override: boolean]
@@ -171,6 +180,7 @@ const emit = defineEmits<{
 // Input states
 const damageInput = ref(0)
 const healInput = ref(0)
+const lossTypeInput = ref<'damage' | 'hpLoss' | 'setHp'>('damage')
 
 // Modal states
 const showTempHpModal = ref(false)
@@ -197,7 +207,7 @@ const {
 // Actions
 const applyDamage = () => {
   if (damageInput.value > 0) {
-    emit('damage', props.combatant.id, damageInput.value)
+    emit('damage', props.combatant.id, damageInput.value, lossTypeInput.value)
     damageInput.value = 0
   }
 }
@@ -278,6 +288,22 @@ const handleActClick = () => {
       border-color: $color-accent-scarlet;
       outline: none;
       box-shadow: 0 0 0 2px rgba($color-accent-scarlet, 0.2);
+    }
+  }
+
+  .form-select--sm {
+    width: 56px;
+    padding: 2px;
+    font-size: $font-size-xs;
+    background: $color-bg-tertiary;
+    border: 1px solid $border-color-default;
+    border-radius: $border-radius-sm;
+    color: $color-text;
+    cursor: pointer;
+
+    &:focus {
+      border-color: $color-accent-scarlet;
+      outline: none;
     }
   }
 }

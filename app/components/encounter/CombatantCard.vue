@@ -164,7 +164,7 @@
       :current-stages="stages"
       :status-conditions="statusConditions"
       :entity-types="pokemonTypes as string[]"
-      @damage="(id, dmg) => $emit('damage', id, dmg)"
+      @damage="(id, dmg, lt) => $emit('damage', id, dmg, lt)"
       @heal="(id, amt, tmp, inj) => $emit('heal', id, amt, tmp, inj)"
       @stages="(id, changes, abs) => $emit('stages', id, changes, abs)"
       @status="(id, add, rem, ovr) => $emit('status', id, add, rem, ovr)"
@@ -193,7 +193,7 @@ const props = defineProps<{
 
 defineEmits<{
   action: [combatantId: string, action: { type: string; data: unknown }]
-  damage: [combatantId: string, damage: number]
+  damage: [combatantId: string, damage: number, lossType?: 'damage' | 'hpLoss' | 'setHp']
   heal: [combatantId: string, amount: number, tempHp?: number, healInjuries?: number]
   remove: [combatantId: string]
   stages: [combatantId: string, changes: Partial<StageModifiers>, absolute: boolean]
