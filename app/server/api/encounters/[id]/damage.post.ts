@@ -1,13 +1,19 @@
 /**
  * Apply damage to a combatant with PTU mechanics
  *
+ * Supports three HP reduction types via `lossType` parameter:
+ * - 'damage' (default): standard attack damage — full injury mechanics + heavily injured penalty
+ * - 'hpLoss': "loses Hit Points" effects (Belly Drum, Life Orb) — skips massive damage + heavily injured
+ * - 'setHp': "set Hit Points to" effects (Pain Split, Endeavor) — skips massive damage + heavily injured
+ *
  * After damage application, this endpoint also handles:
- * - Heavily Injured penalty: 5+ injuries causes additional HP loss (PTU p.250)
+ * - Heavily Injured penalty: 5+ injuries causes additional HP loss (PTU p.250) — damage only
  * - Death check: 10+ injuries OR HP below death threshold (PTU p.251)
  * - League Battle exemption: HP-based death suppressed (decree-021)
  */
 import { loadEncounter, findCombatant, saveEncounterCombatants, buildEncounterResponse } from '~/server/services/encounter.service'
 import { calculateDamage, applyDamageToEntity, applyFaintStatus } from '~/server/services/combatant.service'
+import type { HpReductionType } from '~/server/services/combatant.service'
 import { syncDamageToDatabase, syncStagesToDatabase } from '~/server/services/entity-update.service'
 import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import { clearMountOnFaint } from '~/server/services/mounting.service'
@@ -19,6 +25,8 @@ import { areAdjacent } from '~/utils/adjacency'
 import { CAVALIERS_REPRISAL_AP_COST } from '~/constants/trainerClasses'
 import type { DismountCheckInfo } from '~/utils/mountingRules'
 import type { StatusCondition, HumanCharacter } from '~/types'
+
+const VALID_LOSS_TYPES: HpReductionType[] = ['damage', 'hpLoss', 'setHp']
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -38,6 +46,18 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Validate lossType if provided (default: 'damage')
+  const lossType: HpReductionType = body.lossType || 'damage'
+  if (!VALID_LOSS_TYPES.includes(lossType)) {
+    throw createError({
+      statusCode: 400,
+      message: `Invalid lossType: ${body.lossType}. Must be one of: ${VALID_LOSS_TYPES.join(', ')}`
+    })
+  }
+
+  // HP loss and set-HP are not "damage from an attack" (PTU p.250)
+  const isDamageFromAttack = lossType === 'damage'
+
   try {
     const loaded = await loadEncounter(id)
     const { record } = loaded
@@ -49,13 +69,14 @@ export default defineEventHandler(async (event) => {
     // Capture pre-damage HP for unclamped calculation
     const hpBeforeDamage = entity.currentHp
 
-    // Calculate damage with PTU mechanics
+    // Calculate damage with PTU mechanics (lossType controls massive damage check)
     const damageResult = calculateDamage(
       body.damage,
       hpBeforeDamage,
       entity.maxHp,
       entity.temporaryHp || 0,
-      entity.injuries || 0
+      entity.injuries || 0,
+      lossType
     )
 
     // Apply damage to combatant entity (mutates entity)
@@ -67,11 +88,12 @@ export default defineEventHandler(async (event) => {
 
     // --- Heavily Injured penalty (PTU p.250) ---
     // "takes Damage from an attack, they lose Hit Points equal to the number of Injuries"
+    // Only applies to standard damage, NOT to HP loss or set-HP effects.
     // Uses the NEW injury count (damage may have added injuries)
     const heavilyInjuredCheck = checkHeavilyInjured(damageResult.newInjuries)
     let heavilyInjuredHpLoss = 0
 
-    if (heavilyInjuredCheck.isHeavilyInjured && entity.currentHp > 0) {
+    if (isDamageFromAttack && heavilyInjuredCheck.isHeavilyInjured && entity.currentHp > 0) {
       const penalty = applyHeavilyInjuredPenalty(entity.currentHp, damageResult.newInjuries)
       heavilyInjuredHpLoss = penalty.hpLost
       combatant.entity = { ...entity, currentHp: penalty.newHp }
@@ -136,8 +158,9 @@ export default defineEventHandler(async (event) => {
     // Include heavily injured HP loss in the total damage event for threshold evaluation
     // (PTU p.250: heavily injured penalty is damage from an attack).
     // The GM manually resolves the Acrobatics/Athletics vs DC 10 check.
+    // Only applies to standard damage (HP loss/set-HP are not "taking damage").
     let dismountCheck: DismountCheckInfo | null = null
-    if (combatant.mountState && !faintedFromAnySource) {
+    if (isDamageFromAttack && combatant.mountState && !faintedFromAnySource) {
       const totalDamageEvent = damageResult.hpDamage + heavilyInjuredHpLoss
       if (triggersDismountCheck(totalDamageEvent, entity.maxHp)) {
         dismountCheck = buildDismountCheckInfo(combatant, 'damage', combatants)
@@ -167,7 +190,7 @@ export default defineEventHandler(async (event) => {
       attackType: string
     } | undefined
 
-    if (combatant.mountState && !faintedFromAnySource && body.attackerId) {
+    if (isDamageFromAttack && combatant.mountState && !faintedFromAnySource && body.attackerId) {
       // Only triggers when the MOUNT is hit (isMounted=false means this IS the mount)
       if (!combatant.mountState.isMounted) {
         const riderId = combatant.mountState.partnerId
@@ -218,8 +241,9 @@ export default defineEventHandler(async (event) => {
     // P2: Soulstealer ability check (PTU p.2417-2423, feature-005)
     // If the attacker has Soulstealer and the target fainted, heal the attacker.
     // Scene frequency — tracked via response annotation (GM enforces limit).
+    // Only triggers from standard attack damage (not HP loss or set-HP effects).
     let soulstealerResult: { attackerId: string; hpHealed: number; injuriesRemoved: number; isKill: boolean } | null = null
-    if (faintedFromAnySource && body.attackerId) {
+    if (isDamageFromAttack && faintedFromAnySource && body.attackerId) {
       const attacker = combatants.find((c: any) => c.id === body.attackerId)
       if (attacker) {
         const soulstealCheck = checkSoulstealer(attacker, true)
@@ -266,6 +290,8 @@ export default defineEventHandler(async (event) => {
       damageResult: {
         combatantId: body.combatantId,
         ...damageResult,
+        // HP reduction type used
+        lossType,
         // Heavily injured penalty info
         heavilyInjured: heavilyInjuredCheck.isHeavilyInjured,
         heavilyInjuredHpLoss,
