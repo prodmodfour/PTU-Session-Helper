@@ -285,11 +285,11 @@ export default defineEventHandler(async (event) => {
 
         // Sync actor's HP/status to database
         if (penalty.hpLost > 0 && actor.entityId) {
-          dbUpdates.push(syncEntityToDatabase(actor, {
+          await syncEntityToDatabase(actor, {
             currentHp: actorEntity.currentHp,
             statusConditions: actorEntity.statusConditions,
             ...(penalty.newHp === 0 && actorEntity.stageModifiers ? { stageModifiers: actorEntity.stageModifiers } : {})
-          }))
+          })
         }
 
         // Mark penalty as applied so next-turn.post.ts doesn't double-apply
