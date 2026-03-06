@@ -272,12 +272,15 @@ export default defineEventHandler(async (event) => {
         // Check again — a previous tick entry may have caused fainting (E2)
         if (currentCombatant.entity.currentHp <= 0) break
 
+        // Tick damage uses "lose Hit Points" language (PTU p.246-247, p.342)
+        // so it bypasses massive damage injury checks
         const damageResult = calculateDamage(
           entry.damage,
           currentCombatant.entity.currentHp,
           currentCombatant.entity.maxHp,
           currentCombatant.entity.temporaryHp || 0,
-          currentCombatant.entity.injuries || 0
+          currentCombatant.entity.injuries || 0,
+          'hpLoss'
         )
 
         applyDamageToEntity(currentCombatant, damageResult)
@@ -551,12 +554,14 @@ export default defineEventHandler(async (event) => {
 
         if (shouldApply && tick) {
           // Apply damage using existing combatant.service functions
+          // Weather uses "lose Hit Points" language (PTU p.342) — bypasses massive damage
           const weatherDamageResult = calculateDamage(
             tick.amount,
             newCurrent.entity.currentHp,
             newCurrent.entity.maxHp,
             newCurrent.entity.temporaryHp || 0,
-            newCurrent.entity.injuries || 0
+            newCurrent.entity.injuries || 0,
+            'hpLoss'
           )
 
           applyDamageToEntity(newCurrent, weatherDamageResult)
