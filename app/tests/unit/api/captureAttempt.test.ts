@@ -112,7 +112,7 @@ vi.mock('~/constants/pokeBalls', () => ({
 
 vi.mock('~/utils/trainerExperience', () => ({
   applyTrainerXp: vi.fn(() => ({
-    previousXp: 0, newXp: 1, previousLevel: 1, newLevel: 1, levelsGained: 0,
+    previousXp: 0, newXp: 1, previousLevel: 1, newLevel: 1, levelsGained: 0, milestoneLevelsCrossed: [],
   })),
   isNewSpecies: vi.fn(() => false),
 }))
