@@ -46,11 +46,17 @@ Added `heavilyInjuredPenaltyApplied` flag to `TurnState` to prevent double-appli
 - `06a2c4de` — Apply penalty in recall endpoint (`app/server/api/encounters/[id]/recall.post.ts`)
 - `88b8785f` — Apply penalty in release endpoint (`app/server/api/encounters/[id]/release.post.ts`)
 
+### D2 Fix Cycle (code-review-351)
+
+- `517b0140` — Add heavily injured penalty to standard switch path (`app/server/api/encounters/[id]/switch.post.ts`)
+- `eccfdf82` — Await actor penalty DB sync in move endpoint (`app/server/api/encounters/[id]/move.post.ts`)
+- `782d7be7` — Update refactoring-145 to include switch.post.ts
+
 ### Files Changed
 
 - `app/types/combat.ts` — Added `heavilyInjuredPenaltyApplied` to TurnState
 - `app/server/api/encounters/[id]/next-turn.post.ts` — Guard deferred check with flag
-- `app/server/api/encounters/[id]/move.post.ts` — Inline penalty on actor
+- `app/server/api/encounters/[id]/move.post.ts` — Inline penalty on actor; fix unawaited DB sync
 - `app/server/api/encounters/[id]/sprint.post.ts` — Inline penalty
 - `app/server/api/encounters/[id]/breather.post.ts` — Inline penalty
 - `app/server/api/encounters/[id]/action.post.ts` — Inline penalty (standard only)
@@ -59,3 +65,4 @@ Added `heavilyInjuredPenaltyApplied` flag to `TurnState` to prevent double-appli
 - `app/server/api/encounters/[id]/mount.post.ts` — Inline penalty on rider (standard cost only)
 - `app/server/api/encounters/[id]/recall.post.ts` — Inline penalty on trainer (2-Pokemon recall only)
 - `app/server/api/encounters/[id]/release.post.ts` — Inline penalty on trainer (2-Pokemon release only)
+- `app/server/api/encounters/[id]/switch.post.ts` — Inline penalty on standard switch initiator
