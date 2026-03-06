@@ -10,7 +10,11 @@
  */
 import { loadEncounter, buildEncounterResponse, saveEncounterCombatants } from '~/server/services/encounter.service'
 import { executeMount } from '~/server/services/mounting.service'
+import { applyFaintStatus } from '~/server/services/combatant.service'
+import { syncEntityToDatabase } from '~/server/services/entity-update.service'
+import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import { broadcastToEncounter } from '~/server/utils/websocket'
+import type { StatusCondition } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -49,6 +53,57 @@ export default defineEventHandler(async (event) => {
       record.weather
     )
 
+    // --- Heavily Injured penalty on Standard Action (PTU p.250, ptu-rule-151) ---
+    // Mounting at non-expert level costs a Standard Action.
+    const isLeagueBattle = record.battleType === 'trainer'
+    let heavilyInjuredHpLoss = 0
+    if (mountResult.actionCost === 'standard') {
+      const rider = mountResult.updatedCombatants.find(c => c.id === body.riderId)
+      if (rider) {
+        let entity = rider.entity
+        const injuries = entity.injuries || 0
+        const hiCheck = checkHeavilyInjured(injuries)
+
+        if (hiCheck.isHeavilyInjured && entity.currentHp > 0) {
+          const penalty = applyHeavilyInjuredPenalty(entity.currentHp, injuries)
+          heavilyInjuredHpLoss = penalty.hpLost
+          rider.entity = { ...entity, currentHp: penalty.newHp }
+          entity = rider.entity
+
+          if (penalty.newHp === 0) {
+            applyFaintStatus(rider)
+            entity = rider.entity
+          }
+
+          const deathResult = checkDeath(
+            entity.currentHp, entity.maxHp, injuries,
+            isLeagueBattle, penalty.unclampedHp
+          )
+
+          if (deathResult.isDead) {
+            const conditions: StatusCondition[] = entity.statusConditions || []
+            if (!conditions.includes('Dead')) {
+              rider.entity = { ...entity, statusConditions: ['Dead', ...conditions.filter((s: StatusCondition) => s !== 'Dead')] }
+              entity = rider.entity
+            }
+          }
+
+          if (penalty.hpLost > 0 && rider.entityId) {
+            await syncEntityToDatabase(rider, {
+              currentHp: entity.currentHp,
+              statusConditions: entity.statusConditions,
+              ...(penalty.newHp === 0 && entity.stageModifiers ? { stageModifiers: entity.stageModifiers } : {})
+            })
+          }
+
+          rider.turnState = {
+            ...rider.turnState,
+            heavilyInjuredPenaltyApplied: true
+          }
+        }
+      }
+    }
+
     // Persist updated combatants
     await saveEncounterCombatants(id, mountResult.updatedCombatants)
 
@@ -72,7 +127,14 @@ export default defineEventHandler(async (event) => {
           checkAutoSuccess: mountResult.checkAutoSuccess,
           mounted: true
         }
-      }
+      },
+      ...(heavilyInjuredHpLoss > 0 && {
+        heavilyInjuredPenalty: {
+          combatantId: body.riderId,
+          hpLost: heavilyInjuredHpLoss,
+          fainted: mountResult.updatedCombatants.find(c => c.id === body.riderId)?.entity.currentHp === 0
+        }
+      })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
