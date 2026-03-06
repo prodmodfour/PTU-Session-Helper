@@ -15,9 +15,11 @@ import type { Combatant, GridPosition, Pokemon } from '~/types'
 import type { OutOfTurnAction, OutOfTurnUsage } from '~/types/combat'
 import { INTERCEPT_BLOCKING_CONDITIONS } from '~/types/combat'
 import { areAdjacent } from '~/utils/adjacency'
+import { getOverlandSpeed } from '~/utils/combatantCapabilities'
 import { isEnemySide } from '~/utils/combatSides'
 import { ptuDistanceTokensBBox } from '~/utils/gridDistance'
 import { getLineOfAttackCellsMultiTile, canReachLineOfAttack } from '~/utils/lineOfAttack'
+import { applyMovementModifiers } from '~/utils/movementModifiers'
 import { getDefaultOutOfTurnUsage } from '~/server/services/out-of-turn.service'
 
 // ============================================
@@ -167,57 +169,12 @@ function isAllyCombatant(a: Combatant, b: Combatant): boolean {
 
 /**
  * Get the effective movement speed of a combatant in meters.
- * Applies movement-modifying conditions per PTU rules:
- * - Stuck: speed 0 (cannot move)
- * - Tripped: speed 0 (must spend Shift to stand)
- * - Slowed: half speed
- * - Speed CS: additive bonus/penalty (half stage, min 2)
- * - Sprint: +50%
- *
- * Mirrors applyMovementModifiers from useGridMovement.ts for server use.
+ * Delegates to the canonical applyMovementModifiers utility to avoid
+ * duplicate code paths that can drift out of sync.
  */
 function getCombatantSpeed(combatant: Combatant): number {
-  let baseSpeed: number
-  if (combatant.type === 'pokemon') {
-    const pokemon = combatant.entity as Pokemon
-    baseSpeed = pokemon.capabilities?.overland || 5
-  } else {
-    baseSpeed = 5
-  }
-
-  const conditions: string[] = combatant.entity.statusConditions ?? []
-  const tempConditions: string[] = combatant.tempConditions ?? []
-
-  // Stuck: cannot move at all
-  if (conditions.includes('Stuck')) return 0
-
-  // Tripped: must spend Shift to stand before moving
-  if (conditions.includes('Tripped') || tempConditions.includes('Tripped')) return 0
-
-  let speed = baseSpeed
-
-  // Slowed: half speed
-  if (conditions.includes('Slowed')) {
-    speed = Math.floor(speed / 2)
-  }
-
-  // Speed Combat Stage: additive bonus/penalty (half stage value)
-  const speedStage = combatant.entity.stageModifiers?.speed ?? 0
-  if (speedStage !== 0) {
-    const clamped = Math.max(-6, Math.min(6, speedStage))
-    const stageBonus = Math.trunc(clamped / 2)
-    speed = speed + stageBonus
-    if (stageBonus < 0) {
-      speed = Math.max(speed, 2)
-    }
-  }
-
-  // Sprint: +50%
-  if (tempConditions.includes('Sprint')) {
-    speed = Math.floor(speed * 1.5)
-  }
-
-  return Math.max(speed, baseSpeed > 0 ? 1 : 0)
+  const baseSpeed = getOverlandSpeed(combatant)
+  return applyMovementModifiers(combatant, baseSpeed)
 }
 
 /**
