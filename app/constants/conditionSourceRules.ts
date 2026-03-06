@@ -30,6 +30,9 @@ export const SOURCE_CLEARING_RULES: Record<ConditionSourceType, Partial<Conditio
   'item':        { clearsOnFaint: true, clearsOnRecall: true, clearsOnEncounterEnd: true },
   'environment': { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: false },
   'manual':      { clearsOnFaint: false, clearsOnRecall: false, clearsOnEncounterEnd: false },
+  // 'system' intentionally omits clearsOnRecall/clearsOnEncounterEnd so that
+  // breather-applied conditions (Tripped, Vulnerable) fall back to their static
+  // per-condition flags, which correctly clear on recall and encounter end.
   'system':      { clearsOnFaint: false },
   'unknown':     {}                          // No override: use static condition def
 }
