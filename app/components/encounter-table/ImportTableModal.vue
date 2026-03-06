@@ -1,9 +1,9 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
+  <div class="modal-overlay" @click.self="handleDismiss">
     <div class="modal">
       <div class="modal__header">
         <h3>Import Encounter Table</h3>
-        <button class="modal__close" @click="$emit('close')">&times;</button>
+        <button class="modal__close" @click="handleDismiss">&times;</button>
       </div>
       <div class="modal__body">
         <div class="import-zone" :class="{ 'import-zone--dragover': isDragOver }">
@@ -84,6 +84,14 @@ const importing = ref(false)
 const importError = ref<string | null>(null)
 const importWarning = ref<string | null>(null)
 const importedTableId = ref<string | null>(null)
+
+const handleDismiss = () => {
+  if (importedTableId.value) {
+    emit('imported', importedTableId.value)
+  } else {
+    emit('close')
+  }
+}
 
 const handleFileSelect = (event: Event) => {
   const input = event.target as HTMLInputElement
