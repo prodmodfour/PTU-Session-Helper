@@ -220,7 +220,10 @@
               v-for="result in trainerDistributionResults"
               :key="result.characterId"
               class="trainer-xp-result-row"
-              :class="{ 'trainer-xp-result-row--leveled': result.levelsGained > 0 }"
+              :class="{
+                'trainer-xp-result-row--leveled': result.levelsGained > 0,
+                'trainer-xp-result-row--milestone': result.milestoneLevelsCrossed?.length > 0
+              }"
             >
               <span class="trainer-xp-result-row__name">{{ result.characterName }}</span>
               <span class="trainer-xp-result-row__xp">
@@ -230,8 +233,25 @@
               <span v-if="result.levelsGained > 0" class="trainer-xp-result-row__levelup">
                 Lv.{{ result.previousLevel }} -> Lv.{{ result.newLevel }}
               </span>
+              <div v-if="result.milestoneLevelsCrossed?.length > 0" class="trainer-xp-result-row__milestone">
+                <span class="milestone-badge">Milestone choices needed!</span>
+                <NuxtLink
+                  :to="`/gm/characters/${result.characterId}`"
+                  class="milestone-link"
+                >
+                  Open Character Sheet
+                </NuxtLink>
+              </div>
             </div>
           </div>
+        </div>
+
+        <!-- Milestone Warning Banner -->
+        <div v-if="trainerMilestoneResults.length > 0" class="milestone-warning">
+          <span class="milestone-warning__text">
+            {{ trainerMilestoneResults.length }} trainer(s) crossed milestone levels and need level-up choices
+            (stat points, edges, features, milestone options). Visit their character sheets to complete level-up.
+          </span>
         </div>
 
         <!-- Trainer XP Error (partial failure: Pokemon XP succeeded, trainer XP failed) -->
@@ -339,6 +359,11 @@ const xpAllocations = ref<Map<string, number>>(new Map())
 
 // Trainer XP allocation state
 const trainerXpAllocations = ref<Map<string, number>>(new Map())
+
+// Trainers who crossed milestone levels and need level-up choices
+const trainerMilestoneResults = computed(() =>
+  trainerDistributionResults.value.filter(r => r.milestoneLevelsCrossed?.length > 0)
+)
 
 // Fresh trainer data fetched from API (avoids stale combatant entity snapshots)
 const freshTrainerData = ref<Map<string, { level: number; trainerXp: number }>>(new Map())
@@ -998,6 +1023,57 @@ onMounted(async () => {
     font-weight: 700;
     color: $color-success;
     font-size: $font-size-sm;
+  }
+
+  &__milestone {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-xs $spacing-sm;
+    margin-top: $spacing-xs;
+    background: rgba($color-warning, 0.1);
+    border: 1px solid rgba($color-warning, 0.25);
+    border-radius: $border-radius-sm;
+  }
+
+  &--milestone {
+    border-color: rgba($color-warning, 0.4);
+  }
+}
+
+.milestone-badge {
+  font-size: $font-size-xs;
+  font-weight: 700;
+  color: $color-warning;
+}
+
+.milestone-link {
+  font-size: $font-size-xs;
+  color: $color-accent-teal;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Milestone Warning Banner
+.milestone-warning {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  margin-top: $spacing-lg;
+  background: rgba($color-warning, 0.12);
+  border: 1px solid rgba($color-warning, 0.3);
+  border-radius: $border-radius-md;
+
+  &__text {
+    font-size: $font-size-sm;
+    color: $color-warning;
+    line-height: 1.4;
   }
 }
 
