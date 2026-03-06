@@ -4,7 +4,7 @@
       <div class="modal__header">
         <div class="modal__header-text">
           <h2>Level Up: {{ character.name }}</h2>
-          <span class="level-badge">Level {{ character.level }} -> {{ targetLevel }}</span>
+          <span class="level-badge">Level {{ fromLevel ?? character.level }} -> {{ targetLevel }}</span>
         </div>
         <div class="modal__header-right">
           <span class="step-indicator">
@@ -155,6 +155,12 @@ interface Props {
   character: HumanCharacter
   /** Target level to advance to */
   targetLevel: number
+  /**
+   * Explicit starting level for advancement calculation.
+   * When provided, overrides character.level to avoid race conditions
+   * where the server has already updated the character's level.
+   */
+  fromLevel?: number
 }
 
 const props = defineProps<Props>()
@@ -170,8 +176,13 @@ const emit = defineEmits<{
 const levelUp = useTrainerLevelUp()
 
 // Initialize on mount
+// Use fromLevel if provided (avoids race condition when server already updated character.level)
 onMounted(() => {
-  levelUp.initialize(props.character, props.targetLevel)
+  const startLevel = props.fromLevel ?? props.character.level
+  const charForInit = startLevel !== props.character.level
+    ? { ...props.character, level: startLevel }
+    : props.character
+  levelUp.initialize(charForInit, props.targetLevel)
 })
 
 // Cleanup on unmount
