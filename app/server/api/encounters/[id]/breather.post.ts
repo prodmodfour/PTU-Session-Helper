@@ -14,7 +14,8 @@ import {
   reorderInitiativeAfterSpeedChange, saveInitiativeReorder
 } from '~/server/services/encounter.service'
 import { syncEntityToDatabase } from '~/server/services/entity-update.service'
-import { createDefaultStageModifiers, reapplyActiveStatusCsEffects } from '~/server/services/combatant.service'
+import { createDefaultStageModifiers, reapplyActiveStatusCsEffects, applyFaintStatus } from '~/server/services/combatant.service'
+import { checkHeavilyInjured, applyHeavilyInjuredPenalty, checkDeath } from '~/utils/injuryMechanics'
 import { computeEquipmentBonuses } from '~/utils/equipmentBonuses'
 import { STATUS_CONDITION_DEFS } from '~/constants/statusConditions'
 import type { StatusCondition, StageSource, HumanCharacter } from '~/types'
@@ -76,7 +77,7 @@ export default defineEventHandler(async (event) => {
   try {
     const { record, combatants } = await loadEncounter(id)
     const combatant = findCombatant(combatants, body.combatantId)
-    const entity = combatant.entity
+    let entity = combatant.entity
 
     const assisted = body.assisted === true
 
@@ -177,8 +178,47 @@ export default defineEventHandler(async (event) => {
       hasActed: true
     }
 
-    // Sync to database if entity has a record
+    // --- Heavily Injured penalty on Standard Action (PTU p.250, ptu-rule-151) ---
+    const isLeagueBattle = record.battleType === 'trainer'
+    let heavilyInjuredHpLoss = 0
+    {
+      const injuries = entity.injuries || 0
+      const hiCheck = checkHeavilyInjured(injuries)
+
+      if (hiCheck.isHeavilyInjured && entity.currentHp > 0) {
+        const penalty = applyHeavilyInjuredPenalty(entity.currentHp, injuries)
+        heavilyInjuredHpLoss = penalty.hpLost
+        combatant.entity = { ...entity, currentHp: penalty.newHp }
+        entity = combatant.entity
+
+        if (penalty.newHp === 0) {
+          applyFaintStatus(combatant)
+          entity = combatant.entity
+        }
+
+        const deathResult = checkDeath(
+          entity.currentHp, entity.maxHp, injuries,
+          isLeagueBattle, penalty.unclampedHp
+        )
+
+        if (deathResult.isDead) {
+          const conditions: StatusCondition[] = entity.statusConditions || []
+          if (!conditions.includes('Dead')) {
+            combatant.entity = { ...entity, statusConditions: ['Dead', ...conditions.filter((s: StatusCondition) => s !== 'Dead')] }
+            entity = combatant.entity
+          }
+        }
+
+        combatant.turnState = {
+          ...combatant.turnState,
+          heavilyInjuredPenaltyApplied: true
+        }
+      }
+    }
+
+    // Sync to database if entity has a record (includes currentHp for heavily injured penalty)
     await syncEntityToDatabase(combatant, {
+      currentHp: entity.currentHp,
       temporaryHp: entity.temporaryHp,
       stageModifiers: entity.stageModifiers,
       statusConditions: entity.statusConditions
@@ -265,7 +305,14 @@ export default defineEventHandler(async (event) => {
       breatherResult: {
         combatantId: body.combatantId,
         ...result
-      }
+      },
+      ...(heavilyInjuredHpLoss > 0 && {
+        heavilyInjuredPenalty: {
+          combatantId: body.combatantId,
+          hpLost: heavilyInjuredHpLoss,
+          fainted: combatant.entity.currentHp === 0
+        }
+      })
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error
