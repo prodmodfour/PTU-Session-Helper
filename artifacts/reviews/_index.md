@@ -1,8 +1,8 @@
 ---
-generated_at: 2026-03-06T16:03:20.397Z
-total_reviews: 3
+generated_at: 2026-03-06T18:06:27.812Z
+total_reviews: 5
 active_count: 2
-approved_count: 0
+approved_count: 2
 ---
 
 # Reviews Index
@@ -16,12 +16,16 @@ approved_count: 0
 
 ## Recently Approved (last 10)
 
+| Review ID | Target | Reviewer | Date |
+|-----------|--------|----------|------|
+| code-review-363 | bug-058 | senior-reviewer | 2026-03-06 |
+| code-review-362 | bug-057 | senior-reviewer | 2026-03-06 |
 
 ## Stats
 
-- Active reviews: 3
+- Active reviews: 5
 - Needs action: 2
-- Approved/Pass (active): 0
+- Approved/Pass (active): 2
 - Archived: 704
-- Total (active + archived): 707
-- Unique targets reviewed: 3
+- Total (active + archived): 709
+- Unique targets reviewed: 4

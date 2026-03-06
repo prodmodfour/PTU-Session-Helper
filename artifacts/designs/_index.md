@@ -1,6 +1,6 @@
 ---
-generated_at: 2026-03-06T16:03:20.411Z
-total_designs: 29
+generated_at: 2026-03-06T18:06:27.835Z
+total_designs: 30
 ---
 
 # Designs Index
@@ -29,6 +29,7 @@ total_designs: 29
 | design-pokemon-evolution-001 | — | — | — | — | — |
 | design-pokemon-switching-001 | combat | p2-implemented | feature-011 | FULL | FEATURE |
 | design-priority-interrupt-001 | — | — | — | — | — |
+| design-stat-feature-tags-026 | character-lifecycle | complete | feature-026 | FULL | FEATURE_GAP |
 | design-status-automation-001 | combat | p0-implemented | feature-010 | FULL | FEATURE |
 | design-testability-001 | combat | implemented | — | PARTIAL | FEATURE_GAP |
 | design-trainer-level-up-001 | character-lifecycle | p1-fix-applied | feature-008 | FULL | FEATURE_GAP |
